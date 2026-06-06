@@ -1,0 +1,55 @@
+﻿<section class="page-stack">
+  <p *ngIf="loading" class="notice">Cargando invitacion...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="message" class="success">{{ message }}</p>
+
+  <ng-container *ngIf="invitation">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Editor</p>
+        <h1>{{ invitation.content.headline || invitation.slug }}</h1>
+        <p class="muted">Estado: {{ invitation.status }} Â· {{ publicUrl }}</p>
+      </div>
+      <div class="inline-actions">
+        <button class="ghost" type="button" (click)="save()" [disabled]="saving">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
+        <button class="primary" type="button" (click)="publish()" [disabled]="publishing">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
+        <a class="ghost" [routerLink]="['/i', invitation.slug]">Ver publica</a>
+      </div>
+    </header>
+
+    <div class="split-layout editor-layout">
+      <form class="panel" (ngSubmit)="save()">
+        <h2>Contenido</h2>
+        <div class="form-grid">
+          <label>Slug<input name="slug" [(ngModel)]="invitation.slug" required></label>
+          <label>Titular<input name="headline" [(ngModel)]="invitation.content.headline"></label>
+          <label>Subtitulo<input name="subheadline" [(ngModel)]="invitation.content.subheadline"></label>
+          <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl"></label>
+          <label class="wide">Mensaje<textarea name="message" [(ngModel)]="invitation.content.message"></textarea></label>
+          <label>Color principal<input name="primary" [(ngModel)]="invitation.content.palette!.primary"></label>
+          <label>Color fondo<input name="secondary" [(ngModel)]="invitation.content.palette!.secondary"></label>
+          <label>Color acento<input name="accent" [(ngModel)]="invitation.content.palette!.accent"></label>
+        </div>
+      </form>
+
+      <section class="public-preview" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
+        <div class="invite-hero">
+          <p>{{ invitation.content.subheadline }}</p>
+          <h2>{{ invitation.content.headline }}</h2>
+          <span>{{ event?.date | date:'longDate' }}</span>
+        </div>
+        <div class="invite-details">
+          <section>
+            <h3>Mensaje</h3>
+            <p>{{ invitation.content.message }}</p>
+          </section>
+          <section>
+            <h3>Lugar</h3>
+            <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
+            <p>{{ event?.venue?.address }}</p>
+          </section>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</section>

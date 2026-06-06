@@ -1,0 +1,40 @@
+﻿<section class="page-stack">
+  <a routerLink="/events" class="text-link">Volver a eventos</a>
+  <p *ngIf="loading" class="notice">Cargando evento...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+
+  <ng-container *ngIf="event">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">{{ event.type }}</p>
+        <h1>{{ event.title }}</h1>
+        <p class="muted">{{ event.date | date:'fullDate' }} Â· {{ event.venue.name }}</p>
+      </div>
+      <button class="primary" type="button" (click)="createInvitation()" [disabled]="saving">{{ saving ? 'Creando...' : 'Crear invitacion' }}</button>
+    </header>
+
+    <div class="split-layout">
+      <section class="panel">
+        <h2>Detalles</h2>
+        <dl class="detail-list">
+          <div><dt>Anfitriones</dt><dd>{{ event.hosts.join(', ') || 'Sin anfitriones' }}</dd></div>
+          <div><dt>Lugar</dt><dd>{{ event.venue.name || 'Sin lugar' }}</dd></div>
+          <div><dt>Direccion</dt><dd>{{ event.venue.address || 'Sin direccion' }}</dd></div>
+          <div><dt>Estado</dt><dd>{{ event.status }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <h2>Invitaciones</h2>
+        <p *ngIf="!invitations.length" class="muted">Este evento aun no tiene invitaciones.</p>
+        <div class="item-list">
+          <a *ngFor="let invitation of invitations" [routerLink]="['/invitations', getInvitationId(invitation), 'editor']">
+            <strong>{{ invitation.content.headline || invitation.slug }}</strong>
+            <span>/i/{{ invitation.slug }}</span>
+            <small>{{ invitation.status }}</small>
+          </a>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</section>

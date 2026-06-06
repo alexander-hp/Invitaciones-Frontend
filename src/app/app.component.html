@@ -1,0 +1,28 @@
+﻿<div class="app-shell">
+  <header class="app-header">
+    <a routerLink="/dashboard" class="brand" aria-label="Invitaciones dashboard">
+      <span class="brand-mark">I</span>
+      <span>Invitaciones</span>
+    </a>
+
+    <nav *ngIf="auth.isAuthenticated" class="main-nav">
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/events" routerLinkActive="active">Eventos</a>
+    </nav>
+
+    <div class="header-actions">
+      <ng-container *ngIf="user$ | async as user; else guestLinks">
+        <span class="user-label">{{ user.name }}</span>
+        <button type="button" class="ghost small" (click)="logout()">Salir</button>
+      </ng-container>
+      <ng-template #guestLinks>
+        <a routerLink="/login" class="ghost small">Entrar</a>
+        <a routerLink="/register" class="primary small">Registro</a>
+      </ng-template>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

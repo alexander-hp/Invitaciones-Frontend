@@ -1,0 +1,32 @@
+﻿:host { display: block; min-height: 100vh; }
+.app-shell { min-height: 100vh; background: #f5f7f2; color: #172033; }
+.app-header {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid #dde4d7;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; color: #172033; text-decoration: none; font-weight: 800; }
+.brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; background: #1f2a44; color: #ffffff; }
+.main-nav { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.main-nav a, .ghost, .primary { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; padding: 0 13px; text-decoration: none; border: 0; font: inherit; cursor: pointer; }
+.main-nav a { color: #526070; }
+.main-nav a.active, .main-nav a:hover { background: #edf2e8; color: #172033; }
+.header-actions { display: inline-flex; align-items: center; gap: 10px; }
+.user-label { color: #526070; font-size: 14px; }
+.ghost { background: #edf2e8; color: #172033; }
+.primary { background: #1f2a44; color: #ffffff; }
+.small { min-height: 34px; font-size: 14px; }
+.app-main { padding: 28px; }
+@media (max-width: 720px) {
+  .app-header { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px; }
+  .main-nav, .header-actions { width: 100%; flex-wrap: wrap; }
+  .app-main { padding: 18px; }
+}

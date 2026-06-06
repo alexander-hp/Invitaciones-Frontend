@@ -1,0 +1,11 @@
+﻿<section class="auth-page">
+  <form class="panel auth-card" (ngSubmit)="submit()">
+    <p class="eyebrow">Acceso</p>
+    <h1>Entrar a tu cuenta</h1>
+    <label>Email<input name="email" type="email" [(ngModel)]="form.email" required></label>
+    <label>Password<input name="password" type="password" [(ngModel)]="form.password" required></label>
+    <p *ngIf="error" class="error">{{ error }}</p>
+    <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Entrando...' : 'Entrar' }}</button>
+    <a routerLink="/register">Crear cuenta nueva</a>
+  </form>
+</section>

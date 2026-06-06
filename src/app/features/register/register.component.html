@@ -1,0 +1,18 @@
+﻿<section class="auth-page">
+  <form class="panel auth-card" (ngSubmit)="submit()">
+    <p class="eyebrow">Registro</p>
+    <h1>Crear cuenta</h1>
+    <label>Nombre<input name="name" [(ngModel)]="form.name" required></label>
+    <label>Email<input name="email" type="email" [(ngModel)]="form.email" required></label>
+    <label>Password<input name="password" type="password" [(ngModel)]="form.password" minlength="8" required></label>
+    <label>Tipo de cuenta
+      <select name="role" [(ngModel)]="form.role">
+        <option value="client">Cliente</option>
+        <option value="organizer">Organizador</option>
+      </select>
+    </label>
+    <p *ngIf="error" class="error">{{ error }}</p>
+    <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Creando...' : 'Crear cuenta' }}</button>
+    <a routerLink="/login">Ya tengo cuenta</a>
+  </form>
+</section>

@@ -1,0 +1,39 @@
+﻿<p *ngIf="loading" class="notice">Cargando invitacion...</p>
+<p *ngIf="error" class="error">{{ error }}</p>
+
+<section *ngIf="invitation" class="public-page" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
+  <div class="public-hero">
+    <p>{{ invitation.content.subheadline }}</p>
+    <h1>{{ invitation.content.headline }}</h1>
+    <span>{{ event?.date | date:'fullDate' }}</span>
+  </div>
+
+  <div class="public-content">
+    <section>
+      <h2>Mensaje</h2>
+      <p>{{ invitation.content.message }}</p>
+    </section>
+    <section>
+      <h2>Lugar</h2>
+      <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
+      <p>{{ event?.venue?.address }}</p>
+      <a *ngIf="event?.venue?.mapUrl" [href]="event?.venue?.mapUrl" target="_blank" rel="noreferrer">Abrir mapa</a>
+    </section>
+    <form class="rsvp-panel" (ngSubmit)="submit()">
+      <h2>RSVP</h2>
+      <label>Nombre<input name="name" [(ngModel)]="rsvp.name" required></label>
+      <label>Email<input name="email" type="email" [(ngModel)]="rsvp.email"></label>
+      <label>Respuesta
+        <select name="response" [(ngModel)]="rsvp.response">
+          <option value="confirmed">Asistire</option>
+          <option value="declined">No asistire</option>
+        </select>
+      </label>
+      <label>Acompanantes<input name="companions" type="number" min="0" [(ngModel)]="rsvp.companions"></label>
+      <label>Preferencia de comida<input name="mealPreference" [(ngModel)]="rsvp.mealPreference"></label>
+      <label>Mensaje<textarea name="message" [(ngModel)]="rsvp.message"></textarea></label>
+      <p *ngIf="success" class="success">{{ success }}</p>
+      <button class="primary" type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
+    </form>
+  </div>
+</section>

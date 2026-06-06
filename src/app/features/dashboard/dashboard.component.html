@@ -1,0 +1,27 @@
+﻿<section class="page-stack">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Resumen</p>
+      <h1>Dashboard</h1>
+    </div>
+    <a class="primary" routerLink="/events">Crear evento</a>
+  </header>
+
+  <p *ngIf="loading" class="notice">Cargando metricas...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+
+  <div class="metrics-grid">
+    <article><span>Eventos</span><strong>{{ metrics.events }}</strong></article>
+    <article><span>Invitaciones</span><strong>{{ metrics.invitations }}</strong></article>
+    <article><span>Invitados</span><strong>{{ metrics.guests }}</strong></article>
+    <article><span>Confirmados</span><strong>{{ metrics.confirmed }}</strong></article>
+    <article><span>Rechazados</span><strong>{{ metrics.declined }}</strong></article>
+    <article><span>Pendientes</span><strong>{{ metrics.pending }}</strong></article>
+    <article><span>Acompanantes</span><strong>{{ metrics.companions }}</strong></article>
+  </div>
+
+  <section class="panel">
+    <h2>Siguiente flujo</h2>
+    <p class="muted">Crea un evento, genera su invitacion, publica el link y prueba RSVP desde la pagina publica.</p>
+  </section>
+</section>

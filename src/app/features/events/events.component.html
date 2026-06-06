@@ -1,0 +1,47 @@
+﻿<section class="page-stack">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Eventos</p>
+      <h1>Eventos</h1>
+    </div>
+  </header>
+
+  <div class="split-layout">
+    <form class="panel" (ngSubmit)="create()">
+      <h2>Nuevo evento</h2>
+      <div class="form-grid">
+        <label>Tipo
+          <select name="type" [(ngModel)]="form.type">
+            <option value="boda">Boda</option>
+            <option value="xv">XV anos</option>
+            <option value="graduacion">Graduacion</option>
+            <option value="cumpleanos">Cumpleanos</option>
+            <option value="bautizo">Bautizo</option>
+            <option value="otro">Otro</option>
+          </select>
+        </label>
+        <label>Titulo<input name="title" [(ngModel)]="form.title" required></label>
+        <label>Fecha<input name="date" type="date" [(ngModel)]="form.date" required></label>
+        <label>Anfitriones<input name="hosts" [(ngModel)]="form.hosts"></label>
+        <label>Lugar<input name="venueName" [(ngModel)]="form.venueName"></label>
+        <label>Direccion<input name="venueAddress" [(ngModel)]="form.venueAddress"></label>
+        <label class="wide">Mapa<input name="mapUrl" [(ngModel)]="form.mapUrl"></label>
+      </div>
+      <p *ngIf="error" class="error">{{ error }}</p>
+      <button class="primary" type="submit" [disabled]="saving">{{ saving ? 'Creando...' : 'Crear evento' }}</button>
+    </form>
+
+    <section class="panel">
+      <h2>Mis eventos</h2>
+      <p *ngIf="loading" class="notice">Cargando eventos...</p>
+      <p *ngIf="!loading && !events.length" class="muted">Aun no hay eventos.</p>
+      <div class="item-list">
+        <a *ngFor="let event of events" [routerLink]="['/events', getId(event)]">
+          <strong>{{ event.title }}</strong>
+          <span>{{ event.type }} Â· {{ event.date | date:'mediumDate' }}</span>
+          <small>{{ event.status }}</small>
+        </a>
+      </div>
+    </section>
+  </div>
+</section>
