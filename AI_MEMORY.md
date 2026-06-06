@@ -210,3 +210,13 @@ Siguientes pasos frontend:
 5. Planear migracion Angular despues del MVP conectado.
 
 Nota de hosting SPA: las rutas directas como /login, /events/:id y /i/:slug requieren fallback del servidor a index.html en produccion y en cualquier servidor local que no sea el router cliente.
+
+## Actualizacion 2026-06-06 - Integracion E2E e invitados
+
+- `AuthTokenInterceptor` ahora maneja `401`: elimina `invitaciones_token` y redirige a `/login`, excepto en login/register.
+- `ApiService` agrega `listGuests(eventId)` y `createGuest(payload)` contra `/api/guests/event/:eventId` y `/api/guests`.
+- El detalle de evento ahora lista invitados reales, permite alta manual y muestra estado `pending/confirmed/declined`.
+- La importacion CSV/XLSX queda indicada como siguiente iteracion; backend ya expone `/api/guests/import`.
+- Se agrego `nginx.conf` y el Dockerfile lo copia para que rutas SPA directas (`/login`, `/events/:id`, `/i/:slug`) hagan fallback a `index.html`.
+
+Nota QA local SPA: se agrego `npm run serve:spa` para servir `dist/invitaciones-frontend-angular` en `http://localhost:4300` con fallback a `index.html`. Usarlo despues de `npm run build` para probar rutas directas como `/login` y `/i/:slug`.

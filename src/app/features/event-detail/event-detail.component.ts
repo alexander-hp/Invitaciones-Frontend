@@ -1,15 +1,21 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, InvitationModel } from '../../core/models';
+import { EventModel, GuestModel, InvitationModel } from '../../core/models';
 
 @Component({ selector: 'app-event-detail', templateUrl: './event-detail.component.html' })
 export class EventDetailComponent implements OnInit {
   event?: EventModel;
   invitations: InvitationModel[] = [];
+  guests: GuestModel[] = [];
   loading = false;
   saving = false;
+  guestSaving = false;
+  guestsLoading = false;
   error = '';
+  guestError = '';
+  guestMessage = '';
+  guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
 
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
 
@@ -25,6 +31,7 @@ export class EventDetailComponent implements OnInit {
       next: ({ event }) => {
         this.event = event;
         this.loadInvitations(id);
+        this.loadGuests(id);
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar el evento.';
@@ -57,12 +64,43 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  createGuest(): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.guestSaving = true;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.createGuest({
+      event: eventId,
+      name: this.guestForm.name,
+      email: this.guestForm.email || undefined,
+      phone: this.guestForm.phone || undefined,
+      group: this.guestForm.group || undefined,
+      allowedCompanions: Number(this.guestForm.allowedCompanions || 0)
+    }).subscribe({
+      next: ({ guest }) => {
+        this.guests = [guest, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
+        this.guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
+        this.guestMessage = 'Invitado agregado.';
+        this.guestSaving = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo agregar el invitado.';
+        this.guestSaving = false;
+      }
+    });
+  }
+
   getEventId(): string {
     return this.event?._id || this.event?.id || '';
   }
 
   getInvitationId(invitation: InvitationModel): string {
     return invitation._id || invitation.id || '';
+  }
+
+  getGuestId(guest: GuestModel): string {
+    return guest._id || guest.id || '';
   }
 
   private loadInvitations(eventId: string): void {
@@ -77,6 +115,20 @@ export class EventDetailComponent implements OnInit {
       error: () => {
         this.invitations = [];
         this.loading = false;
+      }
+    });
+  }
+
+  private loadGuests(eventId: string): void {
+    this.guestsLoading = true;
+    this.api.listGuests(eventId).subscribe({
+      next: ({ guests }) => {
+        this.guests = guests;
+        this.guestsLoading = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudieron cargar los invitados.';
+        this.guestsLoading = false;
       }
     });
   }

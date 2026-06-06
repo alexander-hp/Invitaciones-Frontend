@@ -8,7 +8,7 @@
       <div>
         <p class="eyebrow">{{ event.type }}</p>
         <h1>{{ event.title }}</h1>
-        <p class="muted">{{ event.date | date:'fullDate' }} Â· {{ event.venue.name }}</p>
+        <p class="muted">{{ event.date | date:'fullDate' }} - {{ event.venue.name }}</p>
       </div>
       <button class="primary" type="button" (click)="createInvitation()" [disabled]="saving">{{ saving ? 'Creando...' : 'Crear invitacion' }}</button>
     </header>
@@ -36,5 +36,54 @@
         </div>
       </section>
     </div>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Invitados</p>
+          <h2>Lista del evento</h2>
+        </div>
+        <span class="count-pill">{{ guests.length }} invitados</span>
+      </div>
+
+      <form class="guest-form" (ngSubmit)="createGuest()">
+        <label>Nombre<input name="guestName" [(ngModel)]="guestForm.name" required></label>
+        <label>Email<input name="guestEmail" type="email" [(ngModel)]="guestForm.email"></label>
+        <label>Telefono<input name="guestPhone" [(ngModel)]="guestForm.phone"></label>
+        <label>Grupo<input name="guestGroup" [(ngModel)]="guestForm.group"></label>
+        <label>Acompanantes<input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions"></label>
+        <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? 'Agregando...' : 'Agregar invitado' }}</button>
+      </form>
+
+      <p *ngIf="guestError" class="error">{{ guestError }}</p>
+      <p *ngIf="guestMessage" class="success">{{ guestMessage }}</p>
+      <p *ngIf="guestsLoading" class="notice">Cargando invitados...</p>
+      <p *ngIf="!guestsLoading && !guests.length" class="muted">Aun no hay invitados registrados.</p>
+
+      <div class="table-wrap" *ngIf="guests.length">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Contacto</th>
+              <th>Grupo</th>
+              <th>Acompanantes</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let guest of guests">
+              <td>{{ guest.name }}</td>
+              <td>{{ guest.email || guest.phone || 'Sin contacto' }}</td>
+              <td>{{ guest.group || 'General' }}</td>
+              <td>{{ guest.allowedCompanions }}</td>
+              <td><span class="status-pill" [class.confirmed]="guest.status === 'confirmed'" [class.declined]="guest.status === 'declined'">{{ guest.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="muted">La importacion CSV/XLSX queda preparada para la siguiente iteracion; el backend ya expone `/api/guests/import`.</p>
+    </section>
   </ng-container>
 </section>

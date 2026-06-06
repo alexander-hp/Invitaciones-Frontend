@@ -118,3 +118,29 @@ export interface RsvpModel extends RsvpPayload {
   event: string;
   createdAt?: string;
 }
+
+export type GuestStatus = 'pending' | 'confirmed' | 'declined';
+
+export interface GuestModel {
+  _id?: string;
+  id?: string;
+  event: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  group?: string;
+  allowedCompanions: number;
+  qrCode?: string;
+  status: GuestStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GuestPayload {
+  event: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  group?: string;
+  allowedCompanions?: number;
+}

@@ -9,6 +9,8 @@ import {
   EventPayload,
   InvitationModel,
   InvitationPayload,
+  GuestModel,
+  GuestPayload,
   RsvpModel,
   RsvpPayload,
   User
@@ -72,7 +74,16 @@ export class ApiService {
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`);
   }
 
+  listGuests(eventId: string): Observable<{ guests: GuestModel[] }> {
+    return this.http.get<{ guests: GuestModel[] }>(`${this.apiUrl}/guests/event/${eventId}`);
+  }
+
+  createGuest(payload: GuestPayload): Observable<{ guest: GuestModel }> {
+    return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/guests`, payload);
+  }
+
   submitRsvp(slug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel }> {
     return this.http.post<{ rsvp: RsvpModel }>(`${this.apiUrl}/rsvps/public/${slug}`, payload);
   }
 }
+
