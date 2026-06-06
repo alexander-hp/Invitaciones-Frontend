@@ -1,21 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, GuestModel, InvitationModel } from '../../core/models';
+import { EventModel, GuestModel, InvitationModel, RsvpModel } from '../../core/models';
 
 @Component({ selector: 'app-event-detail', templateUrl: './event-detail.component.html' })
 export class EventDetailComponent implements OnInit {
   event?: EventModel;
   invitations: InvitationModel[] = [];
   guests: GuestModel[] = [];
+  rsvps: RsvpModel[] = [];
   loading = false;
   saving = false;
   guestSaving = false;
   guestsLoading = false;
+  rsvpsLoading = false;
   importing = false;
   selectedImportFile?: File;
   error = '';
   guestError = '';
+  rsvpError = '';
   guestMessage = '';
   importMessage = '';
   guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
@@ -35,6 +38,7 @@ export class EventDetailComponent implements OnInit {
         this.event = event;
         this.loadInvitations(id);
         this.loadGuests(id);
+        this.loadRsvps(id);
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar el evento.';
@@ -154,6 +158,21 @@ export class EventDetailComponent implements OnInit {
       error: (error) => {
         this.guestError = error.error?.message || 'No se pudieron cargar los invitados.';
         this.guestsLoading = false;
+      }
+    });
+  }
+
+  private loadRsvps(eventId: string): void {
+    this.rsvpsLoading = true;
+    this.rsvpError = '';
+    this.api.listRsvps(eventId).subscribe({
+      next: ({ rsvps }) => {
+        this.rsvps = rsvps;
+        this.rsvpsLoading = false;
+      },
+      error: (error) => {
+        this.rsvpError = error.error?.message || 'No se pudieron cargar las respuestas RSVP.';
+        this.rsvpsLoading = false;
       }
     });
   }

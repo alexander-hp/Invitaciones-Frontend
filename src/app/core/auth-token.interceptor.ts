@@ -2,6 +2,7 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 const TOKEN_KEY = 'invitaciones_token';
 
@@ -11,11 +12,12 @@ export class AuthTokenInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = localStorage.getItem(TOKEN_KEY);
-    const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+    const isApiRequest = req.url.startsWith(environment.apiUrl);
+    const authReq = token && isApiRequest ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
+        if (isApiRequest && error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
           localStorage.removeItem(TOKEN_KEY);
           this.router.navigate(['/login']);
         }

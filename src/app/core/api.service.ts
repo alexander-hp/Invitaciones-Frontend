@@ -6,6 +6,7 @@ import {
   AssetFolder,
   AuthResponse,
   CheckoutResponse,
+  ContactPayload,
   DashboardMetrics,
   EventModel,
   EventPayload,
@@ -15,6 +16,7 @@ import {
   ImportGuestsResponse,
   InvitationModel,
   InvitationPayload,
+  MessageResponse,
   PaymentPackage,
   RsvpModel,
   RsvpPayload,
@@ -40,6 +42,18 @@ export class ApiService {
 
   me(): Observable<{ user: User }> {
     return this.http.get<{ user: User }>(`${this.apiUrl}/auth/me`);
+  }
+
+  requestPasswordReset(payload: { email: string }): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/auth/password-reset`, payload);
+  }
+
+  confirmPasswordReset(payload: { token: string; password: string }): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/auth/password-reset/confirm`, payload);
+  }
+
+  sendContact(payload: ContactPayload): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/contact`, payload);
   }
 
   getDashboard(): Observable<{ metrics: DashboardMetrics }> {
@@ -84,6 +98,10 @@ export class ApiService {
 
   listGuests(eventId: string): Observable<{ guests: GuestModel[] }> {
     return this.http.get<{ guests: GuestModel[] }>(`${this.apiUrl}/guests/event/${eventId}`);
+  }
+
+  listRsvps(eventId: string): Observable<{ rsvps: RsvpModel[] }> {
+    return this.http.get<{ rsvps: RsvpModel[] }>(`${this.apiUrl}/rsvps/event/${eventId}`);
   }
 
   createGuest(payload: GuestPayload): Observable<{ guest: GuestModel }> {

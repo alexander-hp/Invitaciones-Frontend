@@ -27,87 +27,39 @@ http://localhost:4200
 Pantallas/vistas visuales actuales:
 
 - Dashboard:
-  - Muestra metricas demo de eventos, invitaciones, invitados, confirmados, pendientes y acompanantes.
-  - Incluye bloque de alta rapida para crear usuario demo contra el backend.
-  - Muestra diferenciadores del producto.
+  - Muestra metricas desde `GET /api/dashboard/summary`.
 - Editor:
-  - Permite editar estado local de tipo de evento, titulo, fecha, lugar, direccion, slug, titular, subtitulo y mensaje.
-  - Permite seleccionar una plantilla local.
+  - Edita invitaciones reales, selecciona plantillas del backend, sube assets a S3 y persiste URLs en `Invitation.content`.
 - Invitados:
-  - Muestra tabla demo de invitados.
-  - Incluye texto sobre importacion CSV/XLSX.
+  - Lista invitados reales, permite alta manual e importacion CSV/XLSX.
 - Publica:
-  - Muestra preview visual de la invitacion con mensaje, lugar y botones RSVP demo.
+  - Renderiza invitacion por slug, muestra portada/musica/galeria y envia RSVP real.
 
 Servicios existentes en `ApiService`:
 
 ```ts
-getDashboard()
-register(payload)
-createEvent(payload)
-createInvitation(payload)
-publishInvitation(id)
-submitRsvp(slug, payload)
+auth, dashboard, events, invitations, guests/import, templates,
+assets S3, payments checkout, contact, password reset y RSVP
 ```
 
 Auth existente:
 
-- `registerDemo()` llama `POST /api/auth/register`.
-- Si el registro funciona, guarda el JWT en `localStorage` con la key `invitaciones_token`.
+- Login/registro reales contra backend.
+- Si auth funciona, guarda el JWT en `localStorage` con la key `invitaciones_token`.
 - `AuthTokenInterceptor` agrega `Authorization: Bearer <token>` a requests posteriores.
 
-## Que esta simulado
+## Que sigue parcial o inicial
 
-- Metricas del dashboard estan hardcodeadas.
-- Invitados estan hardcodeados.
-- Plantillas estan hardcodeadas en el componente.
-- `saveDraft()` no llama backend; solo actualiza texto local.
-- `publish()` no llama backend; solo cambia `status` local.
-- Vista publica no usa rutas ni slug real.
-- Botones RSVP de preview no envian datos.
-- No hay login real en UI, solo registro demo.
-- No hay logout.
-- No hay guards ni rutas reales por modulo.
-- No hay carga/importacion real de archivos desde UI.
-- No hay integracion visual con Stripe ni S3.
+- Stripe tiene UI inicial y checkout, pero falta confirmar keys/flujo real success/cancel en beta.
+- Assets S3 ya suben, se guardan y se renderizan; falta UX avanzada para borrar/reordenar galeria.
+- Dashboard sigue siendo basico, sin series temporales ni filtros por evento.
+- Formularios siguen con `FormsModule`; migrar a Reactive Forms cuando crezca validacion.
+- Angular 13 sigue pendiente de migracion antes de produccion.
 
 ## Que falta
 
-- Crear estructura de rutas reales:
-  - `/login`
-  - `/register`
-  - `/dashboard`
-  - `/events`
-  - `/events/:id`
-  - `/invitations/:id/editor`
-  - `/i/:slug` para pagina publica.
-- Separar componentes por feature. Hoy casi todo vive en `AppComponent`.
-- Implementar login/logout y manejo de sesion.
-- Agregar route guards para pantallas privadas.
 - Cambiar formularios importantes a Reactive Forms.
-- Conectar dashboard a `GET /api/dashboard/summary`.
-- Crear flujo real:
-  - registrar/login,
-  - crear evento,
-  - crear invitacion asociada,
-  - editar invitacion,
-  - publicar,
-  - abrir link publico,
-  - enviar RSVP.
-- Crear UI real para invitados:
-  - lista por evento,
-  - alta manual,
-  - importacion CSV/XLSX,
-  - estados RSVP.
-- Crear UI para assets:
-  - pedir presigned URL,
-  - subir a S3,
-  - guardar URL en invitacion.
-- Crear UI para pagos premium:
-  - seleccionar paquete,
-  - abrir Stripe Checkout,
-  - manejar success/cancel.
-- Reemplazar datos demo por datos desde API.
+- Completar flujo visual de pagos premium: success/cancel, estados y desbloqueo real.
 - Mejorar manejo de loading, errores, empty states y validaciones.
 - Migrar Angular 13 a una version moderna antes de produccion.
 
@@ -118,22 +70,16 @@ Auth existente:
 - No hay modelos TypeScript completos para respuestas reales del backend.
 - `ApiService` usa `any` en varios metodos.
 - El token se guarda en `localStorage`; es aceptable para MVP, pero debe revisarse seguridad antes de produccion.
-- No hay guards; un usuario podria navegar visualmente a pantallas privadas cuando existan rutas.
 - No hay tests utiles todavia; el spec generado por Angular no cubre los flujos reales.
 - No hay manejo de expiracion de token ni refresh.
 
 ## Proximos pasos recomendados
 
-1. Crear routing real y separar componentes principales.
-2. Implementar auth UI: login, register, logout y guard.
-3. Conectar dashboard al backend.
-4. Convertir editor demo en flujo real de crear evento + crear invitacion.
-5. Crear pagina publica por slug usando `GET /api/invitations/public/:slug`.
-6. Conectar RSVP publico con `POST /api/rsvps/public/:slug`.
-7. Crear gestion real de invitados e importacion.
-8. Agregar manejo de assets con S3.
-9. Agregar flujo visual de pagos con Stripe.
-10. Planear upgrade de Angular.
+1. Cerrar QA beta end-to-end y commitear backend/frontend.
+2. Completar flujo visual de Stripe si hay keys listas; si no, mantener `501` visible.
+3. Mejorar UX de editor/assets: borrar/reordenar galeria y mensajes de carga mas finos.
+4. Agregar pruebas E2E o colecciones Postman para flujos criticos.
+5. Preparar deploy beta y planear upgrade de Angular.
 
 ## Comandos utiles
 
@@ -171,7 +117,7 @@ Backend health: http://localhost:4000/health
 
 ## Reglas para futuras IAs
 
-- No asumir que los botones del frontend guardan/publican de verdad; varias acciones siguen siendo demo.
+- No asumir que Stripe esta listo; confirmar keys y flujo antes de depender de pagos.
 - Mantener frontend separado del backend.
 - Mantener Angular como base inicial porque el usuario lo maneja, aunque se recomienda migrar version antes de produccion.
 - No convertir el frontend en landing page; la primera pantalla debe seguir siendo una experiencia usable del producto.
@@ -229,3 +175,44 @@ Nota QA local SPA: se agrego `npm run serve:spa` para servir `dist/invitaciones-
 - Editor permite seleccionar portada, musica y galeria; si S3 no esta configurado muestra el error `501` del backend.
 - Editor muestra paquetes basic/premium/organizer y abre Stripe Checkout cuando `STRIPE_SECRET_KEY` esta configurado.
 - Para QA local sin S3/Stripe se espera manejo visible de `AWS_S3_BUCKET no configurado` y `STRIPE_SECRET_KEY no configurado`.
+
+## Actualizacion 2026-06-06 - Contacto y password reset
+
+- Se agrego ruta publica `/contact` con formulario `{ name, email, message }` conectado a `POST /api/contact`.
+- `ApiService` agrega `sendContact(payload)` y tipos `ContactPayload`/`MessageResponse`.
+- Se agregaron rutas publicas:
+  - `/password-reset` para solicitar recuperacion con `{ email }`.
+  - `/password-reset/confirm` para confirmar con `{ token, password }`; toma `token` desde query param y permite pegarlo manualmente si falta.
+- `ApiService` agrega `requestPasswordReset({ email })` y `confirmPasswordReset({ token, password })`.
+- Login ahora enlaza a recuperacion de password.
+- El shell muestra acceso a contacto para usuarios autenticados y visitantes.
+- El build Angular pasa con estas rutas nuevas.
+
+Notas de coordinacion con backend:
+
+- Backend genera enlaces usando `FRONTEND_URL`, recomendado local `http://localhost:4200`.
+- La solicitud de reset siempre muestra mensaje generico aunque el email no exista.
+- Emails transaccionales de RSVP/publicacion son best-effort en backend; el frontend no debe asumir que un RSVP/publicacion fallido implica fallo de email.
+
+## Actualizacion 2026-06-06 - QA beta RSVP visible y S3 upload
+
+- `ApiService` agrega `listRsvps(eventId)` contra `GET /api/rsvps/event/:eventId`.
+- El detalle de evento muestra una seccion "Respuestas recibidas" con nombre, email, respuesta, acompanantes, comida, mensaje y fecha.
+- El flujo publico de RSVP puede reflejarse ahora en dos lugares:
+  - en la tabla de RSVPs siempre que se cree la respuesta,
+  - en la tabla de invitados si el email coincide con un invitado del evento y backend lo vincula.
+- `AuthTokenInterceptor` ya solo agrega `Authorization` a requests hacia `environment.apiUrl`; esto evita mandar Bearer token al `PUT` presignado de S3.
+- El editor diferencia errores de preparacion de URL S3 contra errores del `PUT` directo al bucket, con mensajes orientados a region/bucket/credenciales o CORS/permisos.
+
+Notas QA:
+
+- Para probar S3, iniciar sesion, elegir asset, confirmar que `POST /api/assets/upload-url` funciona y que el `PUT` a S3 ya no incluye header `Authorization`.
+- Si el `PUT` sigue fallando con status 0, configurar CORS en el bucket para `PUT` desde `http://localhost:4200`.
+
+## Actualizacion 2026-06-06 - Assets S3 persistidos y visibles
+
+- Al subir portada, musica o galeria desde el editor, el frontend ahora hace autoguardado con `PATCH /api/invitations/:id` despues de que el `PUT` a S3 termina OK.
+- Ya no depende de que el usuario recuerde presionar "Guardar" para conservar URLs de S3.
+- El editor muestra preview de portada, reproductor de musica y galeria cargada.
+- La pagina publica `/i/:slug` renderiza portada, musica y galeria guardadas en `invitation.content`.
+- Si el objeto S3 no es publico o no puede leerse, el tag `img/audio` no renderizara aunque la URL este guardada; revisar acceso `GetObject`/CloudFront.

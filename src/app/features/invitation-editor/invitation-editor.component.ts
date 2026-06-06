@@ -128,17 +128,16 @@ export class InvitationEditorComponent implements OnInit {
             if (folder === 'covers') this.invitation.content.coverImageUrl = upload.publicUrl;
             if (folder === 'music') this.invitation.content.musicUrl = upload.publicUrl;
             if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
-            this.assetMessage = 'Asset subido. Guarda la invitacion para conservarlo.';
-            this.assetUploading = false;
+            this.persistUploadedAsset();
           },
           error: () => {
-            this.error = 'No se pudo subir el archivo a S3.';
+            this.error = 'S3 rechazo la subida. Revisa CORS del bucket, permisos PutObject y que el archivo coincida con el tipo permitido.';
             this.assetUploading = false;
           }
         });
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo preparar la subida.';
+        this.error = error.error?.message || 'No se pudo preparar la URL de subida. Revisa AWS_S3_BUCKET, region, credenciales y tipo de archivo.';
         this.assetUploading = false;
       }
     });
@@ -161,5 +160,26 @@ export class InvitationEditorComponent implements OnInit {
 
   getInvitationId(invitation: InvitationModel): string {
     return invitation._id || invitation.id || '';
+  }
+
+  private persistUploadedAsset(): void {
+    if (!this.invitation) return;
+    this.api.updateInvitation(this.getInvitationId(this.invitation), {
+      slug: this.invitation.slug,
+      template: this.invitation.template,
+      content: this.invitation.content
+    }).subscribe({
+      next: ({ invitation }) => {
+        this.invitation = invitation;
+        if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+        this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
+        this.assetMessage = 'Asset subido y guardado en la invitacion.';
+        this.assetUploading = false;
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'El asset subio a S3, pero no se pudo guardar en la invitacion.';
+        this.assetUploading = false;
+      }
+    });
   }
 }

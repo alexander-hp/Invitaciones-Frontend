@@ -6,6 +6,7 @@
     <label>Password<input name="password" type="password" [(ngModel)]="form.password" required></label>
     <p *ngIf="error" class="error">{{ error }}</p>
     <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Entrando...' : 'Entrar' }}</button>
+    <a routerLink="/password-reset">Olvide mi password</a>
     <a routerLink="/register">Crear cuenta nueva</a>
   </form>
 </section>

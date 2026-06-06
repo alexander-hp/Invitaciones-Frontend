@@ -89,5 +89,46 @@
         </table>
       </div>
     </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">RSVP</p>
+          <h2>Respuestas recibidas</h2>
+        </div>
+        <span class="count-pill">{{ rsvps.length }} respuestas</span>
+      </div>
+
+      <p *ngIf="rsvpError" class="error">{{ rsvpError }}</p>
+      <p *ngIf="rsvpsLoading" class="notice">Cargando respuestas...</p>
+      <p *ngIf="!rsvpsLoading && !rsvps.length" class="muted">Aun no hay respuestas RSVP para este evento.</p>
+
+      <div class="table-wrap" *ngIf="rsvps.length">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Respuesta</th>
+              <th>Acompanantes</th>
+              <th>Comida</th>
+              <th>Mensaje</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rsvp of rsvps">
+              <td>{{ rsvp.name }}</td>
+              <td>{{ rsvp.email || 'Sin email' }}</td>
+              <td><span class="status-pill" [class.confirmed]="rsvp.response === 'confirmed'" [class.declined]="rsvp.response === 'declined'">{{ rsvp.response }}</span></td>
+              <td>{{ rsvp.companions || 0 }}</td>
+              <td>{{ rsvp.mealPreference || 'Sin preferencia' }}</td>
+              <td>{{ rsvp.message || 'Sin mensaje' }}</td>
+              <td>{{ rsvp.createdAt | date:'short' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </ng-container>
 </section>

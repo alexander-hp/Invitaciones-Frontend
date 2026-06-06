@@ -1,0 +1,12 @@
+<section class="auth-page">
+  <form class="panel auth-card" (ngSubmit)="submit()">
+    <p class="eyebrow">Contacto</p>
+    <h1>Escribenos</h1>
+    <label>Nombre<input name="name" [(ngModel)]="form.name" minlength="2" required></label>
+    <label>Email<input name="email" type="email" [(ngModel)]="form.email" required></label>
+    <label>Mensaje<textarea name="message" [(ngModel)]="form.message" minlength="10" required></textarea></label>
+    <p *ngIf="success" class="success">{{ success }}</p>
+    <p *ngIf="error" class="error">{{ error }}</p>
+    <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Enviando...' : 'Enviar mensaje' }}</button>
+  </form>
+</section>

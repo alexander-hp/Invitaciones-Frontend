@@ -13,9 +13,11 @@
     <div class="header-actions">
       <ng-container *ngIf="user$ | async as user; else guestLinks">
         <span class="user-label">{{ user.name }}</span>
+        <a routerLink="/contact" class="ghost small">Contacto</a>
         <button type="button" class="ghost small" (click)="logout()">Salir</button>
       </ng-container>
       <ng-template #guestLinks>
+        <a routerLink="/contact" class="ghost small">Contacto</a>
         <a routerLink="/login" class="ghost small">Entrar</a>
         <a routerLink="/register" class="primary small">Registro</a>
       </ng-template>

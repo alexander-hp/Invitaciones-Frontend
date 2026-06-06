@@ -17,6 +17,16 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface MessageResponse {
+  message: string;
+}
+
+export interface ContactPayload {
+  name: string;
+  email: string;
+  message: string;
+}
+
 export interface DashboardMetrics {
   events: number;
   invitations: number;
