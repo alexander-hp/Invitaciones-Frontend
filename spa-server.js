@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const port = Number(process.env.PORT || 4300);
+const apiTarget = new URL(process.env.API_TARGET || 'http://localhost:4000');
 const root = path.join(__dirname, 'dist', 'invitaciones-frontend-angular');
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -29,7 +30,34 @@ function send(res, filePath) {
   });
 }
 
+function proxyApi(req, res) {
+  const options = {
+    hostname: apiTarget.hostname,
+    port: apiTarget.port || (apiTarget.protocol === 'https:' ? 443 : 80),
+    path: req.url,
+    method: req.method,
+    headers: { ...req.headers, host: apiTarget.host }
+  };
+
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on('error', () => {
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: 'Backend API no disponible' }));
+  });
+
+  req.pipe(proxyReq, { end: true });
+}
+
 http.createServer((req, res) => {
+  if ((req.url || '').startsWith('/api/')) {
+    proxyApi(req, res);
+    return;
+  }
+
   const requestPath = decodeURIComponent((req.url || '/').split('?')[0]);
   const safePath = path.normalize(requestPath).replace(/^(\.\.[/\\])+/, '');
   const candidate = path.join(root, safePath === '/' ? 'index.html' : safePath);
@@ -41,5 +69,7 @@ http.createServer((req, res) => {
 
   send(res, path.join(root, 'index.html'));
 }).listen(port, () => {
-  console.log(`SPA preview listening on http://localhost:${port}`);
+  console.log('SPA preview listening on http://localhost:' + port);
+  console.log('Proxying /api to ' + apiTarget.origin);
 });
+
