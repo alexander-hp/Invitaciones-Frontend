@@ -1,17 +1,21 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, InvitationModel } from '../../core/models';
+import { AssetFolder, EventModel, InvitationModel, PaymentPackage, TemplateModel } from '../../core/models';
 
 @Component({ selector: 'app-invitation-editor', templateUrl: './invitation-editor.component.html' })
 export class InvitationEditorComponent implements OnInit {
   invitation?: InvitationModel;
   event?: EventModel;
+  templates: TemplateModel[] = [];
   loading = false;
   saving = false;
   publishing = false;
+  assetUploading = false;
+  checkoutLoading = '';
   message = '';
   error = '';
+  assetMessage = '';
   publicUrl = '';
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
@@ -35,6 +39,7 @@ export class InvitationEditorComponent implements OnInit {
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
         this.publicUrl = `${window.location.origin}/i/${this.invitation.slug}`;
+        this.loadTemplates();
         this.loading = false;
       },
       error: (error) => {
@@ -44,6 +49,26 @@ export class InvitationEditorComponent implements OnInit {
     });
   }
 
+  loadTemplates(): void {
+    this.api.listTemplates(this.event?.type).subscribe({
+      next: ({ templates }) => this.templates = templates,
+      error: () => this.templates = []
+    });
+  }
+
+  applyTemplate(template: TemplateModel): void {
+    if (!this.invitation) return;
+    this.invitation.template = template._id || template.id;
+    if (template.config?.palette) {
+      this.invitation.content.palette = {
+        ...this.invitation.content.palette,
+        ...template.config.palette
+      };
+    }
+    this.invitation.content.subheadline = template.name;
+    this.message = `Plantilla seleccionada: ${template.name}`;
+  }
+
   save(): void {
     if (!this.invitation) return;
     this.saving = true;
@@ -51,6 +76,7 @@ export class InvitationEditorComponent implements OnInit {
     this.error = '';
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
+      template: this.invitation.template,
       content: this.invitation.content
     }).subscribe({
       next: ({ invitation }) => {
@@ -83,6 +109,52 @@ export class InvitationEditorComponent implements OnInit {
       error: (error) => {
         this.error = error.error?.message || 'No se pudo publicar.';
         this.publishing = false;
+      }
+    });
+  }
+
+  selectAsset(event: Event, folder: AssetFolder): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.invitation) return;
+    this.assetUploading = true;
+    this.assetMessage = '';
+    this.error = '';
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder, size: file.size }).subscribe({
+      next: (upload) => {
+        this.api.uploadAsset(upload.uploadUrl, file).subscribe({
+          next: () => {
+            if (!this.invitation) return;
+            if (folder === 'covers') this.invitation.content.coverImageUrl = upload.publicUrl;
+            if (folder === 'music') this.invitation.content.musicUrl = upload.publicUrl;
+            if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
+            this.assetMessage = 'Asset subido. Guarda la invitacion para conservarlo.';
+            this.assetUploading = false;
+          },
+          error: () => {
+            this.error = 'No se pudo subir el archivo a S3.';
+            this.assetUploading = false;
+          }
+        });
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo preparar la subida.';
+        this.assetUploading = false;
+      }
+    });
+  }
+
+  checkout(pack: PaymentPackage): void {
+    if (!this.invitation) return;
+    this.checkoutLoading = pack;
+    this.error = '';
+    this.api.createCheckout({ package: pack, invitation: this.getInvitationId(this.invitation) }).subscribe({
+      next: ({ checkoutUrl }) => {
+        window.location.href = checkoutUrl;
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo iniciar el checkout.';
+        this.checkoutLoading = '';
       }
     });
   }

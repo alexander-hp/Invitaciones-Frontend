@@ -1,4 +1,4 @@
-﻿export type EventType = 'boda' | 'xv' | 'graduacion' | 'cumpleanos' | 'bautizo' | 'otro';
+export type EventType = 'boda' | 'xv' | 'graduacion' | 'cumpleanos' | 'bautizo' | 'otro';
 export type EventStatus = 'draft' | 'published' | 'archived';
 export type InvitationStatus = 'draft' | 'published' | 'unpublished';
 export type RsvpResponse = 'confirmed' | 'declined';
@@ -143,4 +143,45 @@ export interface GuestPayload {
   phone?: string;
   group?: string;
   allowedCompanions?: number;
+}
+
+export type TemplateTier = 'free' | 'premium';
+
+export interface TemplateModel {
+  _id?: string;
+  id?: string;
+  name: string;
+  eventType: EventType;
+  tier: TemplateTier;
+  previewImageUrl?: string;
+  config?: {
+    palette?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+    };
+    layout?: string;
+    [key: string]: unknown;
+  };
+  active: boolean;
+}
+
+export interface ImportGuestsResponse {
+  imported: number;
+  invalidRows: number;
+  guests: GuestModel[];
+}
+
+export interface UploadUrlResponse {
+  key: string;
+  uploadUrl: string;
+  publicUrl: string;
+}
+
+export type AssetFolder = 'covers' | 'gallery' | 'music' | 'assets';
+export type PaymentPackage = 'basic' | 'premium' | 'organizer';
+
+export interface CheckoutResponse {
+  checkoutUrl: string;
+  sessionId: string;
 }

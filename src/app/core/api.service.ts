@@ -1,18 +1,26 @@
-﻿import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  AssetFolder,
   AuthResponse,
+  CheckoutResponse,
   DashboardMetrics,
   EventModel,
   EventPayload,
-  InvitationModel,
-  InvitationPayload,
+  EventType,
   GuestModel,
   GuestPayload,
+  ImportGuestsResponse,
+  InvitationModel,
+  InvitationPayload,
+  PaymentPackage,
   RsvpModel,
   RsvpPayload,
+  TemplateModel,
+  TemplateTier,
+  UploadUrlResponse,
   User
 } from './models';
 
@@ -82,8 +90,33 @@ export class ApiService {
     return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/guests`, payload);
   }
 
+  importGuests(eventId: string, file: File): Observable<ImportGuestsResponse> {
+    const formData = new FormData();
+    formData.append('event', eventId);
+    formData.append('file', file);
+    return this.http.post<ImportGuestsResponse>(`${this.apiUrl}/guests/import`, formData);
+  }
+
+  listTemplates(eventType?: EventType, tier?: TemplateTier): Observable<{ templates: TemplateModel[] }> {
+    let params = new HttpParams();
+    if (eventType) params = params.set('eventType', eventType);
+    if (tier) params = params.set('tier', tier);
+    return this.http.get<{ templates: TemplateModel[] }>(`${this.apiUrl}/templates`, { params });
+  }
+
+  createUploadUrl(payload: { fileName: string; contentType: string; folder: AssetFolder; size?: number }): Observable<UploadUrlResponse> {
+    return this.http.post<UploadUrlResponse>(`${this.apiUrl}/assets/upload-url`, payload);
+  }
+
+  uploadAsset(uploadUrl: string, file: File): Observable<unknown> {
+    return this.http.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
+  }
+
+  createCheckout(payload: { package: PaymentPackage; invitation?: string }): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.apiUrl}/payments/checkout`, payload);
+  }
+
   submitRsvp(slug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel }> {
     return this.http.post<{ rsvp: RsvpModel }>(`${this.apiUrl}/rsvps/public/${slug}`, payload);
   }
 }
-

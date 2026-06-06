@@ -1,4 +1,4 @@
-﻿<section class="page-stack">
+<section class="page-stack">
   <a routerLink="/events" class="text-link">Volver a eventos</a>
   <p *ngIf="loading" class="notice">Cargando evento...</p>
   <p *ngIf="error" class="error">{{ error }}</p>
@@ -55,8 +55,14 @@
         <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? 'Agregando...' : 'Agregar invitado' }}</button>
       </form>
 
+      <div class="import-row">
+        <label>Importar CSV/XLSX<input type="file" accept=".csv,.xlsx" (change)="selectImportFile($event)"></label>
+        <button class="ghost" type="button" (click)="importGuests()" [disabled]="!selectedImportFile || importing">{{ importing ? 'Importando...' : 'Importar' }}</button>
+      </div>
+
       <p *ngIf="guestError" class="error">{{ guestError }}</p>
       <p *ngIf="guestMessage" class="success">{{ guestMessage }}</p>
+      <p *ngIf="importMessage" class="success">{{ importMessage }}</p>
       <p *ngIf="guestsLoading" class="notice">Cargando invitados...</p>
       <p *ngIf="!guestsLoading && !guests.length" class="muted">Aun no hay invitados registrados.</p>
 
@@ -82,8 +88,6 @@
           </tbody>
         </table>
       </div>
-
-      <p class="muted">La importacion CSV/XLSX queda preparada para la siguiente iteracion; el backend ya expone `/api/guests/import`.</p>
     </section>
   </ng-container>
 </section>

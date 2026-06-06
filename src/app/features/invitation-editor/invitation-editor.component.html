@@ -1,14 +1,15 @@
-﻿<section class="page-stack">
+<section class="page-stack">
   <p *ngIf="loading" class="notice">Cargando invitacion...</p>
   <p *ngIf="error" class="error">{{ error }}</p>
   <p *ngIf="message" class="success">{{ message }}</p>
+  <p *ngIf="assetMessage" class="success">{{ assetMessage }}</p>
 
   <ng-container *ngIf="invitation">
     <header class="page-heading">
       <div>
         <p class="eyebrow">Editor</p>
         <h1>{{ invitation.content.headline || invitation.slug }}</h1>
-        <p class="muted">Estado: {{ invitation.status }} Â· {{ publicUrl }}</p>
+        <p class="muted">Estado: {{ invitation.status }} - {{ publicUrl }}</p>
       </div>
       <div class="inline-actions">
         <button class="ghost" type="button" (click)="save()" [disabled]="saving">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
@@ -30,26 +31,55 @@
           <label>Color fondo<input name="secondary" [(ngModel)]="invitation.content.palette!.secondary"></label>
           <label>Color acento<input name="accent" [(ngModel)]="invitation.content.palette!.accent"></label>
         </div>
+
+        <h2>Assets</h2>
+        <div class="asset-grid">
+          <label>Portada<input type="file" accept="image/*" (change)="selectAsset($event, 'covers')" [disabled]="assetUploading"></label>
+          <label>Musica<input type="file" accept="audio/*" (change)="selectAsset($event, 'music')" [disabled]="assetUploading"></label>
+          <label>Galeria<input type="file" accept="image/*" (change)="selectAsset($event, 'gallery')" [disabled]="assetUploading"></label>
+        </div>
       </form>
 
-      <section class="public-preview" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
-        <div class="invite-hero">
-          <p>{{ invitation.content.subheadline }}</p>
-          <h2>{{ invitation.content.headline }}</h2>
-          <span>{{ event?.date | date:'longDate' }}</span>
-        </div>
-        <div class="invite-details">
-          <section>
-            <h3>Mensaje</h3>
-            <p>{{ invitation.content.message }}</p>
-          </section>
-          <section>
-            <h3>Lugar</h3>
-            <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
-            <p>{{ event?.venue?.address }}</p>
-          </section>
-        </div>
-      </section>
+      <aside class="side-stack">
+        <section class="panel">
+          <h2>Plantillas</h2>
+          <p *ngIf="!templates.length" class="muted">No hay plantillas activas para este tipo de evento.</p>
+          <div class="template-list">
+            <button type="button" *ngFor="let template of templates" (click)="applyTemplate(template)">
+              <strong>{{ template.name }}</strong>
+              <span>{{ template.eventType }} - {{ template.tier }}</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Paquetes</h2>
+          <div class="package-list">
+            <button type="button" class="ghost" (click)="checkout('basic')" [disabled]="checkoutLoading">{{ checkoutLoading === 'basic' ? 'Abriendo...' : 'Basico $199' }}</button>
+            <button type="button" class="ghost" (click)="checkout('premium')" [disabled]="checkoutLoading">{{ checkoutLoading === 'premium' ? 'Abriendo...' : 'Premium $499' }}</button>
+            <button type="button" class="ghost" (click)="checkout('organizer')" [disabled]="checkoutLoading">{{ checkoutLoading === 'organizer' ? 'Abriendo...' : 'Organizador $1499' }}</button>
+          </div>
+        </section>
+      </aside>
     </div>
+
+    <section class="public-preview" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
+      <div class="invite-hero">
+        <p>{{ invitation.content.subheadline }}</p>
+        <h2>{{ invitation.content.headline }}</h2>
+        <span>{{ event?.date | date:'longDate' }}</span>
+      </div>
+      <div class="invite-details">
+        <section>
+          <h3>Mensaje</h3>
+          <p>{{ invitation.content.message }}</p>
+        </section>
+        <section>
+          <h3>Lugar</h3>
+          <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
+          <p>{{ event?.venue?.address }}</p>
+        </section>
+      </div>
+    </section>
   </ng-container>
 </section>

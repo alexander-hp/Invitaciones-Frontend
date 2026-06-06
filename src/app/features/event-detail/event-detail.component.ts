@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { EventModel, GuestModel, InvitationModel } from '../../core/models';
@@ -12,9 +12,12 @@ export class EventDetailComponent implements OnInit {
   saving = false;
   guestSaving = false;
   guestsLoading = false;
+  importing = false;
+  selectedImportFile?: File;
   error = '';
   guestError = '';
   guestMessage = '';
+  importMessage = '';
   guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
 
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
@@ -91,16 +94,38 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  selectImportFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedImportFile = input.files?.[0] || undefined;
+    this.importMessage = this.selectedImportFile ? this.selectedImportFile.name : '';
+  }
+
+  importGuests(): void {
+    const eventId = this.getEventId();
+    if (!eventId || !this.selectedImportFile) return;
+    this.importing = true;
+    this.guestError = '';
+    this.importMessage = '';
+    this.api.importGuests(eventId, this.selectedImportFile).subscribe({
+      next: (result) => {
+        this.guests = [...result.guests, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
+        this.importMessage = `Importados: ${result.imported}. Filas invalidas: ${result.invalidRows}.`;
+        this.selectedImportFile = undefined;
+        this.importing = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo importar el archivo.';
+        this.importing = false;
+      }
+    });
+  }
+
   getEventId(): string {
     return this.event?._id || this.event?.id || '';
   }
 
   getInvitationId(invitation: InvitationModel): string {
     return invitation._id || invitation.id || '';
-  }
-
-  getGuestId(guest: GuestModel): string {
-    return guest._id || guest.id || '';
   }
 
   private loadInvitations(eventId: string): void {

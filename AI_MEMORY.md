@@ -220,3 +220,12 @@ Nota de hosting SPA: las rutas directas como /login, /events/:id y /i/:slug requ
 - Se agrego `nginx.conf` y el Dockerfile lo copia para que rutas SPA directas (`/login`, `/events/:id`, `/i/:slug`) hagan fallback a `index.html`.
 
 Nota QA local SPA: se agrego `npm run serve:spa` para servir `dist/invitaciones-frontend-angular` en `http://localhost:4300` con fallback a `index.html`. Usarlo despues de `npm run build` para probar rutas directas como `/login` y `/i/:slug`.
+
+## Actualizacion 2026-06-06 - Beta templates/assets/payments
+
+- Detalle de evento ahora importa invitados CSV/XLSX usando `/api/guests/import`.
+- `ApiService` consume templates, assets presignados y checkout.
+- Editor de invitacion lista plantillas reales por tipo de evento y guarda `template` junto con el contenido.
+- Editor permite seleccionar portada, musica y galeria; si S3 no esta configurado muestra el error `501` del backend.
+- Editor muestra paquetes basic/premium/organizer y abre Stripe Checkout cuando `STRIPE_SECRET_KEY` esta configurado.
+- Para QA local sin S3/Stripe se espera manejo visible de `AWS_S3_BUCKET no configurado` y `STRIPE_SECRET_KEY no configurado`.

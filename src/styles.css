@@ -1,4 +1,4 @@
-﻿html, body { margin: 0; min-height: 100%; }
+html, body { margin: 0; min-height: 100%; }
 body { background: #f5f7f2; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; }
 * { box-sizing: border-box; }
 button, input, select, textarea { font: inherit; }
@@ -83,3 +83,11 @@ th { color: #607080; font-size: 13px; }
   .section-heading { align-items: flex-start; flex-direction: column; }
   .guest-form { grid-template-columns: 1fr; }
 }
+
+.import-row, .asset-grid, .package-list { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 14px; }
+.asset-grid label { min-width: 180px; flex: 1; }
+.side-stack { display: grid; gap: 18px; }
+.template-list, .package-list { display: grid; gap: 10px; }
+.template-list button { text-align: left; border: 1px solid #dde4d7; background: #fafcf8; border-radius: 8px; padding: 12px; }
+.template-list button strong, .template-list button span { display: block; }
+.template-list button span { color: #607080; margin-top: 4px; }
