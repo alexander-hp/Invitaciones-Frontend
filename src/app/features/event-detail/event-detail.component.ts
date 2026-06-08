@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel, WhatsAppProvider } from '../../core/models';
+import { AlbumAssetModel, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel, WhatsAppMediaAssetModel, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -16,6 +16,7 @@ export class EventDetailComponent implements OnInit {
   rsvps: RsvpModel[] = [];
   tables: EventTableModel[] = [];
   albumAssets: AlbumAssetModel[] = [];
+  whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
   loading = false;
   saving = false;
   guestSaving = false;
@@ -26,7 +27,9 @@ export class EventDetailComponent implements OnInit {
   exportingRsvps = false;
   whatsappSending = '';
   whatsappBulkSending = false;
+  whatsappMediaUploading = false;
   selectedImportFile?: File;
+  selectedWhatsappMediaFile?: File;
   error = '';
   guestError = '';
   rsvpError = '';
@@ -46,6 +49,15 @@ export class EventDetailComponent implements OnInit {
   tableForm = { name: '', capacity: 10, notes: '', order: 0 };
   guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
   selectedMessageType: GuestMessageType = 'invitation';
+  whatsappMedia = {
+    enabled: false,
+    assetId: '',
+    type: 'image' as WhatsAppMediaType,
+    url: '',
+    mimetype: '',
+    filename: '',
+    caption: ''
+  };
   messageTemplates: MessageTemplateOption[] = [
     { value: 'invitation', label: 'Invitacion' },
     { value: 'reminder', label: 'Recordatorio RSVP' },
@@ -72,6 +84,7 @@ export class EventDetailComponent implements OnInit {
         this.loadRsvps(id);
         this.loadTables(id);
         this.loadAlbum(id);
+        this.loadWhatsAppMedia(id);
         this.loadWhatsAppStatus();
       },
       error: (error) => {
@@ -469,10 +482,15 @@ export class EventDetailComponent implements OnInit {
   sendRealWhatsapp(guest: GuestModel): void {
     const guestId = this.getGuestId(guest);
     if (!guestId) return;
+    const media = this.buildWhatsappMediaPayload();
+    if (this.whatsappMedia.enabled && !media) {
+      this.guestError = 'Agrega una URL valida para enviar media por WhatsApp.';
+      return;
+    }
     this.whatsappSending = guestId;
     this.guestError = '';
     this.guestMessage = '';
-    this.api.sendGuestWhatsApp(guestId, { messageType: this.selectedMessageType }).subscribe({
+    this.api.sendGuestWhatsApp(guestId, { messageType: this.selectedMessageType, media }).subscribe({
       next: ({ guest: updatedGuest, provider, status }) => {
         this.guests = this.guests.map((item) => this.getGuestId(item) === guestId ? updatedGuest : item);
         this.guestMessage = `WhatsApp ${status} via ${provider}.`;
@@ -490,12 +508,18 @@ export class EventDetailComponent implements OnInit {
     if (!eventId || !this.filteredGuests.length) return;
     const total = this.filteredGuests.filter((guest) => this.canWhatsappGuest(guest)).length;
     if (!total || !window.confirm(`Enviar WhatsApp "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${total} invitado(s) filtrados?`)) return;
+    const media = this.buildWhatsappMediaPayload();
+    if (this.whatsappMedia.enabled && !media) {
+      this.guestError = 'Agrega una URL valida para enviar media por WhatsApp.';
+      return;
+    }
     this.whatsappBulkSending = true;
     this.guestError = '';
     this.guestMessage = '';
     this.api.sendBulkWhatsApp(eventId, {
       confirm: true,
       messageType: this.selectedMessageType,
+      media,
       guestIds: this.filteredGuests.filter((guest) => this.canWhatsappGuest(guest)).map((guest) => this.getGuestId(guest))
     }).subscribe({
       next: (result) => {
@@ -506,6 +530,107 @@ export class EventDetailComponent implements OnInit {
       error: (error) => {
         this.guestError = error.error?.message || 'No se pudo enviar WhatsApp masivo.';
         this.whatsappBulkSending = false;
+      }
+    });
+  }
+
+  buildWhatsappMediaPayload(): WhatsAppMediaPayload | undefined {
+    if (!this.whatsappMedia.enabled) return undefined;
+    const asset = this.whatsappMediaAssets.find((item) => this.getWhatsAppMediaAssetId(item) === this.whatsappMedia.assetId);
+    if (asset) {
+      return {
+        type: asset.type,
+        url: asset.url,
+        mimetype: asset.mimetype,
+        filename: asset.fileName,
+        caption: this.whatsappMedia.caption.trim() || asset.caption
+      };
+    }
+    const url = this.whatsappMedia.url.trim();
+    if (!url) return undefined;
+    return {
+      type: this.whatsappMedia.type,
+      url,
+      mimetype: this.whatsappMedia.mimetype.trim() || undefined,
+      filename: this.whatsappMedia.filename.trim() || undefined,
+      caption: this.whatsappMedia.caption.trim() || undefined
+    };
+  }
+
+  onWhatsappMediaSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedWhatsappMediaFile = input.files?.[0] || undefined;
+  }
+
+  uploadWhatsappMedia(): void {
+    const eventId = this.getEventId();
+    const file = this.selectedWhatsappMediaFile;
+    if (!eventId || !file) {
+      this.guestError = 'Selecciona un archivo para WhatsApp.';
+      return;
+    }
+    const type = this.mediaTypeFromMime(file.type);
+    if (!type) {
+      this.guestError = 'Tipo de archivo WhatsApp no soportado.';
+      return;
+    }
+    this.whatsappMediaUploading = true;
+    this.guestError = '';
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'whatsapp-media', size: file.size }).subscribe({
+      next: ({ key, uploadUrl, publicUrl }) => {
+        this.api.uploadAsset(uploadUrl, file).subscribe({
+          next: () => {
+            this.api.createWhatsAppMedia(eventId, {
+              key,
+              url: publicUrl,
+              type,
+              fileName: file.name,
+              mimetype: file.type,
+              size: file.size,
+              caption: this.whatsappMedia.caption.trim() || undefined
+            }).subscribe({
+              next: ({ asset }) => {
+                this.whatsappMediaAssets = [asset, ...this.whatsappMediaAssets];
+                this.whatsappMedia.enabled = true;
+                this.whatsappMedia.assetId = this.getWhatsAppMediaAssetId(asset);
+                this.whatsappMedia.type = asset.type;
+                this.whatsappMedia.url = '';
+                this.whatsappMedia.mimetype = '';
+                this.whatsappMedia.filename = '';
+                this.selectedWhatsappMediaFile = undefined;
+                this.guestMessage = 'Media WhatsApp subida y seleccionada.';
+                this.whatsappMediaUploading = false;
+              },
+              error: (error) => {
+                this.guestError = error.error?.message || 'No se pudo registrar la media WhatsApp.';
+                this.whatsappMediaUploading = false;
+              }
+            });
+          },
+          error: () => {
+            this.guestError = 'No se pudo subir la media a S3.';
+            this.whatsappMediaUploading = false;
+          }
+        });
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo preparar la subida de media WhatsApp.';
+        this.whatsappMediaUploading = false;
+      }
+    });
+  }
+
+  deleteWhatsappMedia(asset: WhatsAppMediaAssetModel): void {
+    const eventId = this.getEventId();
+    const assetId = this.getWhatsAppMediaAssetId(asset);
+    if (!eventId || !assetId || !window.confirm(`Quitar "${asset.fileName}" de la media WhatsApp?`)) return;
+    this.api.deleteWhatsAppMedia(eventId, assetId).subscribe({
+      next: () => {
+        this.whatsappMediaAssets = this.whatsappMediaAssets.filter((item) => this.getWhatsAppMediaAssetId(item) !== assetId);
+        if (this.whatsappMedia.assetId === assetId) this.whatsappMedia.assetId = '';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo quitar la media WhatsApp.';
       }
     });
   }
@@ -545,6 +670,10 @@ export class EventDetailComponent implements OnInit {
 
   getTableId(table: EventTableModel): string {
     return table._id || table.id || '';
+  }
+
+  getWhatsAppMediaAssetId(asset: WhatsAppMediaAssetModel): string {
+    return asset._id || asset.id || '';
   }
 
   private resetGuestForm(): void {
@@ -711,6 +840,21 @@ export class EventDetailComponent implements OnInit {
       next: ({ assets }) => this.albumAssets = assets,
       error: () => this.albumAssets = []
     });
+  }
+
+  private loadWhatsAppMedia(eventId: string): void {
+    this.api.listWhatsAppMedia(eventId).subscribe({
+      next: ({ assets }) => this.whatsappMediaAssets = assets,
+      error: () => this.whatsappMediaAssets = []
+    });
+  }
+
+  private mediaTypeFromMime(mimetype: string): WhatsAppMediaType | '' {
+    if (mimetype.startsWith('image/')) return 'image';
+    if (mimetype.startsWith('video/')) return 'video';
+    if (mimetype.startsWith('audio/')) return 'audio';
+    if (mimetype === 'application/pdf') return 'document';
+    return '';
   }
 
   private loadWhatsAppStatus(): void {

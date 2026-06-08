@@ -174,6 +174,30 @@ export type GuestCommunicationStatus = 'pending' | 'sent' | 'delivered' | 'read'
 export type GuestMessageType = 'invitation' | 'reminder' | 'event_reminder' | 'location_change' | 'thanks';
 export type GuestMessageChannel = 'whatsapp' | 'email';
 export type WhatsAppProvider = 'disabled' | 'meta' | 'openwa';
+export type WhatsAppMediaType = 'image' | 'video' | 'audio' | 'document';
+
+export interface WhatsAppMediaPayload {
+  type: WhatsAppMediaType;
+  url?: string;
+  base64?: string;
+  mimetype?: string;
+  filename?: string;
+  caption?: string;
+}
+
+export interface WhatsAppMediaAssetModel {
+  _id?: string;
+  id?: string;
+  event: string;
+  key: string;
+  url: string;
+  type: WhatsAppMediaType;
+  fileName: string;
+  mimetype?: string;
+  size?: number;
+  caption?: string;
+  createdAt?: string;
+}
 
 export interface GuestModel {
   _id?: string;
@@ -311,7 +335,7 @@ export interface UploadUrlResponse {
   publicUrl: string;
 }
 
-export type AssetFolder = 'covers' | 'gallery' | 'music' | 'assets';
+export type AssetFolder = 'covers' | 'gallery' | 'music' | 'assets' | 'whatsapp-media';
 export type PaymentPackage = 'free' | 'event' | 'pro';
 
 export interface PlanDefinition {

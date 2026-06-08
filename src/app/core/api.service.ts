@@ -33,6 +33,8 @@ import {
   UploadUrlResponse,
   User,
   WhatsAppBulkResponse,
+  WhatsAppMediaAssetModel,
+  WhatsAppMediaPayload,
   WhatsAppSendResponse,
   WhatsAppStatusResponse
 } from './models';
@@ -197,11 +199,11 @@ export class ApiService {
     return this.http.get<WhatsAppStatusResponse>(`${this.apiUrl}/guests/whatsapp/status`);
   }
 
-  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string }): Observable<WhatsAppSendResponse> {
+  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string; media?: WhatsAppMediaPayload }): Observable<WhatsAppSendResponse> {
     return this.http.post<WhatsAppSendResponse>(`${this.apiUrl}/guests/${id}/whatsapp`, payload);
   }
 
-  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
+  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; media?: WhatsAppMediaPayload; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
     return this.http.post<WhatsAppBulkResponse>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/bulk`, payload);
   }
 
@@ -238,6 +240,26 @@ export class ApiService {
 
   uploadAsset(uploadUrl: string, file: File): Observable<unknown> {
     return this.http.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
+  }
+
+  listWhatsAppMedia(eventId: string): Observable<{ assets: WhatsAppMediaAssetModel[] }> {
+    return this.http.get<{ assets: WhatsAppMediaAssetModel[] }>(`${this.apiUrl}/assets/events/${eventId}/whatsapp-media`);
+  }
+
+  createWhatsAppMedia(eventId: string, payload: {
+    key: string;
+    url: string;
+    type: WhatsAppMediaPayload['type'];
+    fileName: string;
+    mimetype: string;
+    size?: number;
+    caption?: string;
+  }): Observable<{ asset: WhatsAppMediaAssetModel }> {
+    return this.http.post<{ asset: WhatsAppMediaAssetModel }>(`${this.apiUrl}/assets/events/${eventId}/whatsapp-media`, payload);
+  }
+
+  deleteWhatsAppMedia(eventId: string, assetId: string): Observable<{ asset: WhatsAppMediaAssetModel }> {
+    return this.http.delete<{ asset: WhatsAppMediaAssetModel }>(`${this.apiUrl}/assets/events/${eventId}/whatsapp-media/${assetId}`);
   }
 
   listPlans(): Observable<{ plans: PlanDefinition[] }> {

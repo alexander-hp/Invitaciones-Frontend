@@ -76,6 +76,45 @@
           <button class="ghost" type="button" (click)="showPendingReminders()">Ver pendientes y recordar</button>
           <button class="primary" type="button" (click)="sendBulkWhatsapp()" [disabled]="whatsappBulkSending || !whatsappEnabled || !filteredGuests.length">{{ whatsappBulkSending ? 'Enviando...' : 'Enviar WhatsApp filtrados' }}</button>
         </div>
+        <div class="filter-row">
+          <label class="checkline">
+            <input type="checkbox" name="whatsappMediaEnabled" [(ngModel)]="whatsappMedia.enabled">
+            Adjuntar media
+          </label>
+          <label *ngIf="whatsappMedia.enabled">Media guardada
+            <select name="whatsappMediaAsset" [(ngModel)]="whatsappMedia.assetId">
+              <option value="">URL manual</option>
+              <option *ngFor="let asset of whatsappMediaAssets" [value]="getWhatsAppMediaAssetId(asset)">{{ asset.fileName }} · {{ asset.type }}</option>
+            </select>
+          </label>
+          <label *ngIf="whatsappMedia.enabled">Subir archivo
+            <input type="file" name="whatsappMediaFile" accept="image/*,video/mp4,video/webm,video/quicktime,audio/*,application/pdf" (change)="onWhatsappMediaSelected($event)">
+          </label>
+          <button *ngIf="whatsappMedia.enabled" class="ghost small" type="button" (click)="uploadWhatsappMedia()" [disabled]="whatsappMediaUploading || !selectedWhatsappMediaFile">{{ whatsappMediaUploading ? 'Subiendo...' : 'Subir a S3' }}</button>
+          <label *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId">Tipo
+            <select name="whatsappMediaType" [(ngModel)]="whatsappMedia.type">
+              <option value="image">Imagen</option>
+              <option value="video">Video</option>
+              <option value="audio">Audio</option>
+              <option value="document">Documento</option>
+            </select>
+          </label>
+          <label *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId">URL
+            <input name="whatsappMediaUrl" [(ngModel)]="whatsappMedia.url" placeholder="https://...">
+          </label>
+          <label *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId">MIME
+            <input name="whatsappMediaMime" [(ngModel)]="whatsappMedia.mimetype" placeholder="image/png">
+          </label>
+          <label *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId">Archivo
+            <input name="whatsappMediaFilename" [(ngModel)]="whatsappMedia.filename" placeholder="invitacion.png">
+          </label>
+        </div>
+        <label *ngIf="whatsappMedia.enabled">Caption media
+          <textarea name="whatsappMediaCaption" rows="2" [(ngModel)]="whatsappMedia.caption" placeholder="Texto que acompana la imagen, video o documento"></textarea>
+        </label>
+        <div *ngIf="whatsappMedia.enabled && whatsappMediaAssets.length" class="inline-actions">
+          <button *ngFor="let asset of whatsappMediaAssets.slice(0, 4)" class="ghost small" type="button" (click)="deleteWhatsappMedia(asset)">Quitar {{ asset.fileName }}</button>
+        </div>
         <p *ngIf="!whatsappEnabled" class="muted">Proveedor automatico apagado; usa el boton manual wa.me por invitado.</p>
       </div>
 
