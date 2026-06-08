@@ -1,0 +1,37 @@
+<section class="page-stack staff-page">
+  <p *ngIf="loading" class="notice">Cargando check-in...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="message" class="success">{{ message }}</p>
+
+  <ng-container *ngIf="event">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">Check-in staff</p>
+        <h1>{{ event.title }}</h1>
+        <p class="muted">{{ event.date | date:'short' }} - {{ event.venue?.name || 'Lugar por definir' }}</p>
+      </div>
+      <span class="count-pill">{{ checkedInCount }} / {{ guests.length }}</span>
+    </header>
+
+    <section class="panel">
+      <form class="checkin-row" (ngSubmit)="checkIn()">
+        <label>Codigo QR<input name="code" [(ngModel)]="code" autofocus placeholder="Escanea o escribe el codigo"></label>
+        <button class="primary" type="submit" [disabled]="checking || !code">{{ checking ? 'Registrando...' : 'Registrar' }}</button>
+      </form>
+      <label>Buscar invitado<input name="search" [(ngModel)]="search" placeholder="Nombre, grupo, mesa o codigo"></label>
+    </section>
+
+    <section class="panel">
+      <div class="staff-list">
+        <article *ngFor="let guest of filteredGuests" [class.checked-in]="guest.checkedIn">
+          <div>
+            <strong>{{ guest.name }}</strong>
+            <p>{{ guest.group || 'General' }} - {{ guest.tableName || 'Sin mesa' }} <span *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</span></p>
+            <small>{{ guest.allowedCompanions || 0 }} acompanantes - {{ guest.checkInCode }}</small>
+          </div>
+          <span class="status-pill" [class.confirmed]="guest.checkedIn">{{ guest.checkedIn ? 'registrado' : 'pendiente' }}</span>
+        </article>
+      </div>
+    </section>
+  </ng-container>
+</section>

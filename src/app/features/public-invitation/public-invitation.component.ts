@@ -10,9 +10,12 @@ export class PublicInvitationComponent implements OnInit {
   loading = false;
   sending = false;
   checkingGuest = false;
+  uploadingAlbum = false;
   error = '';
   success = '';
+  albumMessage = '';
   guestAccessEmail = '';
+  selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
   rsvp = {
@@ -111,6 +114,35 @@ export class PublicInvitationComponent implements OnInit {
     });
   }
 
+  selectAlbumFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedAlbumFile = input.files?.[0] || undefined;
+    this.albumMessage = this.selectedAlbumFile ? this.selectedAlbumFile.name : '';
+  }
+
+  uploadAlbumPhoto(): void {
+    if (!this.invitation || !this.selectedAlbumFile) return;
+    this.uploadingAlbum = true;
+    this.error = '';
+    this.albumMessage = '';
+    this.api.uploadPublicAlbumPhoto(this.invitation.slug, {
+      file: this.selectedAlbumFile,
+      name: this.verifiedGuest?.name || this.rsvp.name,
+      email: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail,
+      guest: this.verifiedGuest?.id
+    }).subscribe({
+      next: () => {
+        this.albumMessage = 'Foto enviada para revision.';
+        this.selectedAlbumFile = undefined;
+        this.uploadingAlbum = false;
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo subir la foto.';
+        this.uploadingAlbum = false;
+      }
+    });
+  }
+
   resetGuestAccess(): void {
     this.verifiedGuest = undefined;
     this.success = '';
@@ -152,5 +184,10 @@ export class PublicInvitationComponent implements OnInit {
   get deadlineLabel(): string {
     const deadline = this.invitation?.rsvpSettings?.deadline;
     return deadline ? new Date(deadline).toLocaleString() : '';
+  }
+
+  get guestQrUrl(): string {
+    const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
+    return value ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(value)}` : '';
   }
 }

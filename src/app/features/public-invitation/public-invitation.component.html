@@ -32,6 +32,14 @@
 
       <ng-container *ngIf="!isGuestList || verifiedGuest">
         <p *ngIf="verifiedGuest" class="notice">Invitado validado: {{ verifiedGuest.name }}. Acompanantes permitidos: {{ verifiedGuest.allowedCompanions }}.</p>
+        <div *ngIf="verifiedGuest" class="guest-pass">
+          <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de entrada">
+          <div>
+            <strong>Codigo de entrada: {{ verifiedGuest.checkInCode || verifiedGuest.qrCode || 'Pendiente' }}</strong>
+            <p>{{ verifiedGuest.tableName || 'Mesa pendiente' }} <span *ngIf="verifiedGuest.seatLabel">/ {{ verifiedGuest.seatLabel }}</span></p>
+            <small>{{ verifiedGuest.companions?.length || 0 }} acompanantes nombrados</small>
+          </div>
+        </div>
         <label>Nombre<input name="name" [(ngModel)]="rsvp.name" [readonly]="isGuestList" required></label>
         <label>Email<input name="email" type="email" [(ngModel)]="rsvp.email" [readonly]="isGuestList"></label>
         <div class="phone-grid">
@@ -69,5 +77,15 @@
     <div class="gallery-grid" *ngIf="invitation.content.gallery?.length">
       <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
     </div>
+  </section>
+
+  <section class="public-media" *ngIf="invitation.content.privateAlbumEnabled">
+    <h2>Album privado</h2>
+    <p class="muted">Comparte tus fotos con los anfitriones. Se publicaran cuando sean aprobadas.</p>
+    <div class="import-row">
+      <label>Subir foto<input type="file" accept="image/*" (change)="selectAlbumFile($event)"></label>
+      <button class="ghost" type="button" (click)="uploadAlbumPhoto()" [disabled]="!selectedAlbumFile || uploadingAlbum">{{ uploadingAlbum ? 'Subiendo...' : 'Enviar foto' }}</button>
+    </div>
+    <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
   </section>
 </section>

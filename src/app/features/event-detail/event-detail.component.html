@@ -72,6 +72,51 @@
         </div>
       </div>
 
+      <div class="communication-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Entrada</p>
+            <h2>Check-in staff</h2>
+          </div>
+          <button class="ghost small" type="button" (click)="createCheckInLink()">Generar link staff</button>
+        </div>
+        <p class="muted">Comparte este link con la persona de entrada. Solo permite ver invitados y registrar check-in.</p>
+        <p *ngIf="checkInLink" class="notice">{{ checkInLink }}</p>
+      </div>
+
+      <div class="communication-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Mesas</p>
+            <h2>Mapa por lista</h2>
+          </div>
+          <span class="count-pill">{{ tables.length }} mesas</span>
+        </div>
+        <form class="filter-row" (ngSubmit)="createTable()">
+          <label>Mesa<input name="tableName" [(ngModel)]="tableForm.name" required></label>
+          <label>Capacidad<input name="tableCapacity" type="number" min="1" [(ngModel)]="tableForm.capacity"></label>
+          <label>Orden<input name="tableOrder" type="number" [(ngModel)]="tableForm.order"></label>
+          <button class="primary" type="submit">Agregar mesa</button>
+          <label class="wide">Notas<input name="tableNotes" [(ngModel)]="tableForm.notes"></label>
+        </form>
+        <p *ngIf="tableMessage" class="success">{{ tableMessage }}</p>
+        <div class="table-map-list" *ngIf="tables.length">
+          <article *ngFor="let table of tables" [class.over-capacity]="table.overCapacity">
+            <div class="section-heading">
+              <div>
+                <strong>{{ table.name }}</strong>
+                <p class="muted">{{ table.occupied || 0 }} / {{ table.capacity }} sillas ocupadas</p>
+              </div>
+              <button class="ghost small" type="button" (click)="deleteTable(table)">Eliminar</button>
+            </div>
+            <p *ngIf="table.overCapacity" class="error">Mesa sobre capacidad.</p>
+            <ul class="compact-list">
+              <li *ngFor="let guest of table.guests">{{ guest.name }} - {{ guest.seats }} silla(s) <span *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</span></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
       <form class="guest-form" (ngSubmit)="saveGuest()">
         <label>Nombre<input name="guestName" [(ngModel)]="guestForm.name" required></label>
         <label>Email<input name="guestEmail" type="email" [(ngModel)]="guestForm.email"></label>
@@ -80,6 +125,7 @@
         <label>Mesa<input name="guestTable" [(ngModel)]="guestForm.tableName"></label>
         <label>Asiento<input name="guestSeat" [(ngModel)]="guestForm.seatLabel"></label>
         <label>Acompanantes<input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions"></label>
+        <label class="wide">Acompanantes nombrados<textarea name="guestCompanionNames" [(ngModel)]="companionNames" placeholder="Un nombre por linea"></textarea></label>
         <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : 'Agregar invitado') }}</button>
         <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()" [disabled]="guestSaving">Cancelar</button>
       </form>
@@ -151,7 +197,7 @@
               <td>{{ guest.email || guest.phone || 'Sin contacto' }}</td>
               <td>{{ guest.group || 'General' }}</td>
               <td>{{ guest.tableName || 'Sin mesa' }} <small *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</small></td>
-              <td>{{ guest.allowedCompanions }}</td>
+              <td>{{ guest.allowedCompanions }} <small *ngIf="guest.companions?.length">({{ guest.companions?.length }} nombrados)</small></td>
               <td>
                 <img class="qr-thumb" [src]="getQrImageUrl(guest)" alt="QR check-in">
                 <small>{{ guest.checkInCode || guest.qrCode }}</small>
@@ -220,6 +266,31 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Album</p>
+          <h2>Fotos de invitados</h2>
+        </div>
+        <span class="count-pill">{{ pendingAlbumAssets }} pendientes</span>
+      </div>
+      <p *ngIf="albumError" class="error">{{ albumError }}</p>
+      <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
+      <p *ngIf="!albumAssets.length" class="muted">Aun no hay fotos subidas por invitados.</p>
+      <div class="album-review-grid" *ngIf="albumAssets.length">
+        <article *ngFor="let asset of albumAssets">
+          <img [src]="asset.url" alt="Foto de album" loading="lazy" decoding="async">
+          <strong>{{ asset.uploaderName || 'Invitado' }}</strong>
+          <small>{{ asset.uploaderEmail || 'Sin email' }}</small>
+          <span class="status-pill">{{ asset.status }}</span>
+          <div class="inline-actions">
+            <button class="ghost small" type="button" (click)="updateAlbumAsset(asset, 'approved')">Aprobar</button>
+            <button class="ghost small" type="button" (click)="updateAlbumAsset(asset, 'rejected')">Rechazar</button>
+          </div>
+        </article>
       </div>
     </section>
   </ng-container>

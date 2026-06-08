@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  AlbumAssetModel,
   AssetFolder,
   AuthResponse,
   CheckoutResponse,
@@ -10,6 +11,7 @@ import {
   DashboardMetrics,
   EventModel,
   EventPayload,
+  EventTableModel,
   EventType,
   GuestModel,
   GuestAccessResponse,
@@ -25,6 +27,7 @@ import {
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
+  StaffCheckInSession,
   TemplateModel,
   TemplateTier,
   UploadUrlResponse,
@@ -81,6 +84,34 @@ export class ApiService {
     return this.http.patch<{ event: EventModel }>(`${this.apiUrl}/events/${id}`, payload);
   }
 
+  createCheckInLink(eventId: string, payload: { label?: string; days?: number }): Observable<{ token: string; url: string; expiresAt: string }> {
+    return this.http.post<{ token: string; url: string; expiresAt: string }>(`${this.apiUrl}/events/${eventId}/check-in-link`, payload);
+  }
+
+  listTables(eventId: string): Observable<{ tables: EventTableModel[] }> {
+    return this.http.get<{ tables: EventTableModel[] }>(`${this.apiUrl}/events/${eventId}/tables`);
+  }
+
+  createTable(eventId: string, payload: { name: string; capacity: number; notes?: string; order?: number }): Observable<{ table: EventTableModel }> {
+    return this.http.post<{ table: EventTableModel }>(`${this.apiUrl}/events/${eventId}/tables`, payload);
+  }
+
+  updateTable(eventId: string, tableId: string, payload: Partial<EventTableModel>): Observable<{ table: EventTableModel }> {
+    return this.http.patch<{ table: EventTableModel }>(`${this.apiUrl}/events/${eventId}/tables/${tableId}`, payload);
+  }
+
+  deleteTable(eventId: string, tableId: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/tables/${tableId}`);
+  }
+
+  listAlbum(eventId: string): Observable<{ assets: AlbumAssetModel[] }> {
+    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/events/${eventId}/album`);
+  }
+
+  updateAlbumAsset(eventId: string, assetId: string, status: AlbumAssetModel['status']): Observable<{ asset: AlbumAssetModel }> {
+    return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/events/${eventId}/album/${assetId}`, { status });
+  }
+
   listInvitations(): Observable<{ invitations: InvitationModel[] }> {
     return this.http.get<{ invitations: InvitationModel[] }>(`${this.apiUrl}/invitations`);
   }
@@ -103,6 +134,23 @@ export class ApiService {
 
   checkGuestAccess(slug: string, payload: { email: string }): Observable<GuestAccessResponse> {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
+  }
+
+  uploadPublicAlbumPhoto(slug: string, payload: { file: File; name?: string; email?: string; guest?: string }): Observable<{ asset: { id: string; status: string } }> {
+    const formData = new FormData();
+    formData.append('file', payload.file);
+    if (payload.name) formData.append('name', payload.name);
+    if (payload.email) formData.append('email', payload.email);
+    if (payload.guest) formData.append('guest', payload.guest);
+    return this.http.post<{ asset: { id: string; status: string } }>(`${this.apiUrl}/invitations/public/${slug}/album-upload`, formData);
+  }
+
+  getStaffCheckInSession(token: string): Observable<StaffCheckInSession> {
+    return this.http.get<StaffCheckInSession>(`${this.apiUrl}/check-in/${token}`);
+  }
+
+  staffCheckIn(token: string, code: string): Observable<{ guest: GuestModel }> {
+    return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/check-in/${token}`, { code });
   }
 
   listGuests(eventId: string, filters?: { search?: string; status?: string; communicationStatus?: string; group?: string }): Observable<{ guests: GuestModel[] }> {

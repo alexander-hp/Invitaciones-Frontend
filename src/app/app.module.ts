@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthTokenInterceptor } from './core/auth-token.interceptor';
+import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { EventDetailComponent } from './features/event-detail/event-detail.component';
@@ -20,6 +21,7 @@ import { RegisterComponent } from './features/register/register.component';
 @NgModule({
   declarations: [
     AppComponent,
+    CheckInStaffComponent,
     ContactComponent,
     DashboardComponent,
     EventDetailComponent,

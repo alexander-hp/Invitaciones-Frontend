@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, InvitationModel, RsvpModel } from '../../core/models';
+import { AlbumAssetModel, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel } from '../../core/models';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -14,6 +14,8 @@ export class EventDetailComponent implements OnInit {
   invitations: InvitationModel[] = [];
   guests: GuestModel[] = [];
   rsvps: RsvpModel[] = [];
+  tables: EventTableModel[] = [];
+  albumAssets: AlbumAssetModel[] = [];
   loading = false;
   saving = false;
   guestSaving = false;
@@ -26,12 +28,18 @@ export class EventDetailComponent implements OnInit {
   error = '';
   guestError = '';
   rsvpError = '';
+  albumError = '';
   checkInCode = '';
+  checkInLink = '';
   guestMessage = '';
+  tableMessage = '';
+  albumMessage = '';
   importMessage = '';
   importDuplicateDetails: string[] = [];
   editingGuest?: GuestModel;
   guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+  companionNames = '';
+  tableForm = { name: '', capacity: 10, notes: '', order: 0 };
   guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
   selectedMessageType: GuestMessageType = 'invitation';
   messageTemplates: MessageTemplateOption[] = [
@@ -57,6 +65,8 @@ export class EventDetailComponent implements OnInit {
         this.loadInvitations(id);
         this.loadGuests(id);
         this.loadRsvps(id);
+        this.loadTables(id);
+        this.loadAlbum(id);
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar el evento.';
@@ -103,7 +113,7 @@ export class EventDetailComponent implements OnInit {
     this.guestError = '';
     this.guestMessage = '';
     const wasEditing = Boolean(this.editingGuest);
-    const guestData = {
+    const guestData: Omit<GuestPayload, 'event'> = {
       name: this.guestForm.name,
       email: this.guestForm.email || undefined,
       phone: this.guestForm.phone || undefined,
@@ -112,6 +122,8 @@ export class EventDetailComponent implements OnInit {
       seatLabel: this.guestForm.seatLabel || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0)
     };
+    const companions = this.companionNames.split('\n').map((name) => name.trim()).filter(Boolean).map((name) => ({ name, tableName: this.guestForm.tableName || undefined }));
+    if (companions.length) guestData.companions = companions;
     const request = this.editingGuest
       ? this.api.updateGuest(this.getGuestId(this.editingGuest), guestData)
       : this.api.createGuest({ event: eventId, ...guestData });
@@ -145,6 +157,7 @@ export class EventDetailComponent implements OnInit {
       seatLabel: guest.seatLabel || '',
       allowedCompanions: guest.allowedCompanions || 0
     };
+    this.companionNames = (guest.companions || []).map((companion) => companion.name || '').filter(Boolean).join('\n');
   }
 
   cancelEditGuest(): void {
@@ -223,6 +236,71 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  createTable(): void {
+    const eventId = this.getEventId();
+    if (!eventId || !this.tableForm.name) return;
+    this.tableMessage = '';
+    this.api.createTable(eventId, {
+      name: this.tableForm.name,
+      capacity: Number(this.tableForm.capacity || 1),
+      notes: this.tableForm.notes || undefined,
+      order: Number(this.tableForm.order || 0)
+    }).subscribe({
+      next: () => {
+        this.tableForm = { name: '', capacity: 10, notes: '', order: 0 };
+        this.tableMessage = 'Mesa creada.';
+        this.loadTables(eventId);
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo crear la mesa.';
+      }
+    });
+  }
+
+  deleteTable(table: EventTableModel): void {
+    const eventId = this.getEventId();
+    const tableId = this.getTableId(table);
+    if (!eventId || !tableId || !window.confirm(`Eliminar mesa ${table.name}?`)) return;
+    this.api.deleteTable(eventId, tableId).subscribe({
+      next: () => {
+        this.tableMessage = 'Mesa eliminada.';
+        this.loadTables(eventId);
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo eliminar la mesa.';
+      }
+    });
+  }
+
+  createCheckInLink(): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.api.createCheckInLink(eventId, { label: 'Entrada', days: 7 }).subscribe({
+      next: ({ url }) => {
+        this.checkInLink = url;
+        this.guestMessage = 'Link de staff generado.';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo generar el link de staff.';
+      }
+    });
+  }
+
+  updateAlbumAsset(asset: AlbumAssetModel, status: AlbumAssetModel['status']): void {
+    const eventId = this.getEventId();
+    const assetId = asset._id || asset.id || '';
+    if (!eventId || !assetId) return;
+    this.api.updateAlbumAsset(eventId, assetId, status).subscribe({
+      next: ({ asset: updated }) => {
+        this.albumAssets = this.albumAssets.map((item) => (item._id || item.id) === assetId ? updated : item);
+        this.albumMessage = 'Album actualizado.';
+      },
+      error: (error) => {
+        this.albumError = error.error?.message || 'No se pudo actualizar la foto.';
+      }
+    });
+  }
+
   get filteredGuests(): GuestModel[] {
     const search = this.normalizeSearch(this.guestFilters.search);
     return this.guests.filter((guest) => {
@@ -264,6 +342,10 @@ export class EventDetailComponent implements OnInit {
 
   get confirmedCommunicationGuests(): number {
     return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'confirmed').length;
+  }
+
+  get pendingAlbumAssets(): number {
+    return this.albumAssets.filter((asset) => asset.status === 'pending').length;
   }
 
   get primaryInvitation(): InvitationModel | undefined {
@@ -385,9 +467,14 @@ export class EventDetailComponent implements OnInit {
     return guest._id || guest.id || '';
   }
 
+  getTableId(table: EventTableModel): string {
+    return table._id || table.id || '';
+  }
+
   private resetGuestForm(): void {
     this.editingGuest = undefined;
     this.guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+    this.companionNames = '';
   }
 
   private normalizeEmail(email?: string): string {
@@ -530,6 +617,21 @@ export class EventDetailComponent implements OnInit {
         this.rsvpError = error.error?.message || 'No se pudieron cargar las respuestas RSVP.';
         this.rsvpsLoading = false;
       }
+    });
+  }
+
+  private loadTables(eventId: string): void {
+    this.api.listTables(eventId).subscribe({
+      next: ({ tables }) => this.tables = tables,
+      error: () => this.tables = []
+    });
+  }
+
+  private loadAlbum(eventId: string): void {
+    this.albumError = '';
+    this.api.listAlbum(eventId).subscribe({
+      next: ({ assets }) => this.albumAssets = assets,
+      error: () => this.albumAssets = []
     });
   }
 

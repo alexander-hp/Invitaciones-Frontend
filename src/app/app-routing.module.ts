@@ -1,6 +1,7 @@
 ﻿import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard';
+import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { EventDetailComponent } from './features/event-detail/event-detail.component';
@@ -23,6 +24,7 @@ const routes: Routes = [
   { path: 'events', component: EventsComponent, canActivate: [AuthGuard] },
   { path: 'events/:id', component: EventDetailComponent, canActivate: [AuthGuard] },
   { path: 'invitations/:id/editor', component: InvitationEditorComponent, canActivate: [AuthGuard] },
+  { path: 'check-in/:token', component: CheckInStaffComponent },
   { path: 'i/:slug', component: PublicInvitationComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];

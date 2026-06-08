@@ -166,6 +166,7 @@ export interface GuestModel {
   group?: string;
   tableName?: string;
   seatLabel?: string;
+  companions?: GuestCompanion[];
   allowedCompanions: number;
   qrCode?: string;
   checkInCode?: string;
@@ -188,7 +189,16 @@ export interface GuestPayload {
   group?: string;
   tableName?: string;
   seatLabel?: string;
+  companions?: GuestCompanion[];
   allowedCompanions?: number;
+}
+
+export interface GuestCompanion {
+  name?: string;
+  tableName?: string;
+  seatLabel?: string;
+  checkedIn?: boolean;
+  checkedInAt?: string;
 }
 
 export type TemplateTier = 'free' | 'premium';
@@ -219,6 +229,11 @@ export interface GuestAccessResponse {
     email?: string;
     allowedCompanions: number;
     status: GuestStatus;
+    checkInCode?: string;
+    qrCode?: string;
+    tableName?: string;
+    seatLabel?: string;
+    companions?: GuestCompanion[];
   };
 }
 
@@ -268,4 +283,40 @@ export interface CheckoutResponse {
   sessionId: string | null;
   manualPayment?: boolean;
   message?: string;
+}
+
+export interface EventTableModel {
+  _id?: string;
+  id?: string;
+  name: string;
+  capacity: number;
+  notes?: string;
+  order?: number;
+  occupied?: number;
+  available?: number;
+  overCapacity?: boolean;
+  guests?: Array<{
+    id: string;
+    name: string;
+    group?: string;
+    seatLabel?: string;
+    seats: number;
+    checkedIn?: boolean;
+  }>;
+}
+
+export interface StaffCheckInSession {
+  event: Pick<EventModel, 'title' | 'date' | 'venue'>;
+  guests: GuestModel[];
+  expiresAt: string;
+}
+
+export interface AlbumAssetModel {
+  _id?: string;
+  id?: string;
+  uploaderName?: string;
+  uploaderEmail?: string;
+  url: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt?: string;
 }
