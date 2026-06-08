@@ -60,17 +60,23 @@
         <div class="communication-metrics">
           <article><span>Por enviar</span><strong>{{ pendingCommunicationGuests }}</strong></article>
           <article><span>Enviados</span><strong>{{ sentCommunicationGuests }}</strong></article>
+          <article><span>Entregados</span><strong>{{ deliveredCommunicationGuests }}</strong></article>
+          <article><span>Leidos</span><strong>{{ readCommunicationGuests }}</strong></article>
           <article><span>Abiertos</span><strong>{{ openedCommunicationGuests }}</strong></article>
+          <article><span>Fallidos</span><strong>{{ failedCommunicationGuests }}</strong></article>
           <article><span>Confirmados</span><strong>{{ confirmedCommunicationGuests }}</strong></article>
         </div>
         <div class="filter-row">
+          <span class="count-pill">WhatsApp: {{ whatsappProvider }}</span>
           <label>Plantilla
             <select name="messageTemplate" [(ngModel)]="selectedMessageType">
               <option *ngFor="let template of messageTemplates" [value]="template.value">{{ template.label }}</option>
             </select>
           </label>
           <button class="ghost" type="button" (click)="showPendingReminders()">Ver pendientes y recordar</button>
+          <button class="primary" type="button" (click)="sendBulkWhatsapp()" [disabled]="whatsappBulkSending || !whatsappEnabled || !filteredGuests.length">{{ whatsappBulkSending ? 'Enviando...' : 'Enviar WhatsApp filtrados' }}</button>
         </div>
+        <p *ngIf="!whatsappEnabled" class="muted">Proveedor automatico apagado; usa el boton manual wa.me por invitado.</p>
       </div>
 
       <div class="communication-panel">
@@ -156,7 +162,10 @@
             <option value="">Todos</option>
             <option value="pending">Por enviar</option>
             <option value="sent">Enviados</option>
+            <option value="delivered">Entregados</option>
+            <option value="read">Leidos</option>
             <option value="opened">Abiertos</option>
+            <option value="failed">Fallidos</option>
             <option value="confirmed">Confirmados</option>
           </select>
         </label>
@@ -214,7 +223,8 @@
               <td>
                 <div class="inline-actions">
                   <button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button>
-                  <a *ngIf="canWhatsappGuest(guest)" class="ghost small" [href]="getWhatsappLink(guest)" target="_blank" rel="noopener" (click)="markMessageSent(guest, 'whatsapp')">WhatsApp</a>
+                  <button *ngIf="canSendRealWhatsapp(guest)" class="ghost small" type="button" (click)="sendRealWhatsapp(guest)" [disabled]="whatsappSending === getGuestId(guest)">{{ whatsappSending === getGuestId(guest) ? 'Enviando...' : 'Enviar WA' }}</button>
+                  <a *ngIf="canWhatsappGuest(guest) && !whatsappEnabled" class="ghost small" [href]="getWhatsappLink(guest)" target="_blank" rel="noopener" (click)="markMessageSent(guest, 'whatsapp')">wa.me</a>
                   <a *ngIf="canEmailGuest(guest)" class="ghost small" [href]="getEmailLink(guest)" (click)="markMessageSent(guest, 'email')">Email</a>
                   <button class="ghost small" type="button" (click)="setCommunicationStatus(guest, 'pending')">Pendiente</button>
                   <button class="ghost small" type="button" (click)="deleteGuest(guest)" [disabled]="guestSaving">Eliminar</button>

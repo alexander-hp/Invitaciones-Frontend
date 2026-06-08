@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel } from '../../core/models';
+import { AlbumAssetModel, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel, WhatsAppProvider } from '../../core/models';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -24,6 +24,8 @@ export class EventDetailComponent implements OnInit {
   importing = false;
   exportingGuests = false;
   exportingRsvps = false;
+  whatsappSending = '';
+  whatsappBulkSending = false;
   selectedImportFile?: File;
   error = '';
   guestError = '';
@@ -36,6 +38,8 @@ export class EventDetailComponent implements OnInit {
   albumMessage = '';
   importMessage = '';
   importDuplicateDetails: string[] = [];
+  whatsappProvider: WhatsAppProvider = 'disabled';
+  whatsappEnabled = false;
   editingGuest?: GuestModel;
   guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   companionNames = '';
@@ -45,6 +49,7 @@ export class EventDetailComponent implements OnInit {
   messageTemplates: MessageTemplateOption[] = [
     { value: 'invitation', label: 'Invitacion' },
     { value: 'reminder', label: 'Recordatorio RSVP' },
+    { value: 'event_reminder', label: 'Recordatorio evento' },
     { value: 'location_change', label: 'Cambio de ubicacion' },
     { value: 'thanks', label: 'Agradecimiento' }
   ];
@@ -67,6 +72,7 @@ export class EventDetailComponent implements OnInit {
         this.loadRsvps(id);
         this.loadTables(id);
         this.loadAlbum(id);
+        this.loadWhatsAppStatus();
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar el evento.';
@@ -348,6 +354,18 @@ export class EventDetailComponent implements OnInit {
     return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'opened').length;
   }
 
+  get deliveredCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'delivered').length;
+  }
+
+  get readCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'read').length;
+  }
+
+  get failedCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'failed').length;
+  }
+
   get pendingAlbumAssets(): number {
     return this.albumAssets.filter((asset) => asset.status === 'pending').length;
   }
@@ -412,6 +430,10 @@ export class EventDetailComponent implements OnInit {
     return Boolean(this.toWhatsappPhone(guest.phone) && this.primaryInvitation);
   }
 
+  canSendRealWhatsapp(guest: GuestModel): boolean {
+    return this.whatsappEnabled && this.canWhatsappGuest(guest);
+  }
+
   canEmailGuest(guest: GuestModel): boolean {
     return Boolean(guest.email && this.primaryInvitation);
   }
@@ -440,6 +462,50 @@ export class EventDetailComponent implements OnInit {
       },
       error: (error) => {
         this.guestError = error.error?.message || 'No se pudo marcar el mensaje como enviado.';
+      }
+    });
+  }
+
+  sendRealWhatsapp(guest: GuestModel): void {
+    const guestId = this.getGuestId(guest);
+    if (!guestId) return;
+    this.whatsappSending = guestId;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.sendGuestWhatsApp(guestId, { messageType: this.selectedMessageType }).subscribe({
+      next: ({ guest: updatedGuest, provider, status }) => {
+        this.guests = this.guests.map((item) => this.getGuestId(item) === guestId ? updatedGuest : item);
+        this.guestMessage = `WhatsApp ${status} via ${provider}.`;
+        this.whatsappSending = '';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo enviar WhatsApp.';
+        this.whatsappSending = '';
+      }
+    });
+  }
+
+  sendBulkWhatsapp(): void {
+    const eventId = this.getEventId();
+    if (!eventId || !this.filteredGuests.length) return;
+    const total = this.filteredGuests.filter((guest) => this.canWhatsappGuest(guest)).length;
+    if (!total || !window.confirm(`Enviar WhatsApp "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${total} invitado(s) filtrados?`)) return;
+    this.whatsappBulkSending = true;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.sendBulkWhatsApp(eventId, {
+      confirm: true,
+      messageType: this.selectedMessageType,
+      guestIds: this.filteredGuests.filter((guest) => this.canWhatsappGuest(guest)).map((guest) => this.getGuestId(guest))
+    }).subscribe({
+      next: (result) => {
+        this.guestMessage = `WhatsApp masivo: enviados ${result.sent}, omitidos ${result.skipped}, fallidos ${result.failed}.`;
+        this.loadGuests(eventId);
+        this.whatsappBulkSending = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo enviar WhatsApp masivo.';
+        this.whatsappBulkSending = false;
       }
     });
   }
@@ -508,6 +574,7 @@ export class EventDetailComponent implements OnInit {
   private getMessageSubject(messageType: GuestMessageType): string {
     const title = this.event?.title || 'Invitacion';
     if (messageType === 'reminder') return `Recordatorio RSVP - ${title}`;
+    if (messageType === 'event_reminder') return `Recordatorio del evento - ${title}`;
     if (messageType === 'location_change') return `Actualizacion de ubicacion - ${title}`;
     if (messageType === 'thanks') return `Gracias por confirmar - ${title}`;
     return `Invitacion - ${title}`;
@@ -530,10 +597,11 @@ export class EventDetailComponent implements OnInit {
       ].filter(Boolean).join('\n\n');
     }
 
-    if (messageType === 'location_change') {
+    if (messageType === 'event_reminder' || messageType === 'location_change') {
       return [
-        `Hola ${guest.name}, tenemos una actualizacion de ubicacion para ${eventTitle}.`,
-        locationLine ? `Nueva ubicacion: ${locationLine}` : '',
+        `Hola ${guest.name}, te compartimos un recordatorio para ${eventTitle}.`,
+        date ? `Fecha: ${date}` : '',
+        locationLine ? `Lugar: ${locationLine}` : '',
         publicUrl,
         'Te recomendamos revisar el enlace antes del evento.'
       ].filter(Boolean).join('\n\n');
@@ -642,6 +710,19 @@ export class EventDetailComponent implements OnInit {
     this.api.listAlbum(eventId).subscribe({
       next: ({ assets }) => this.albumAssets = assets,
       error: () => this.albumAssets = []
+    });
+  }
+
+  private loadWhatsAppStatus(): void {
+    this.api.getWhatsAppStatus().subscribe({
+      next: ({ provider, enabled }) => {
+        this.whatsappProvider = provider;
+        this.whatsappEnabled = enabled;
+      },
+      error: () => {
+        this.whatsappProvider = 'disabled';
+        this.whatsappEnabled = false;
+      }
     });
   }
 

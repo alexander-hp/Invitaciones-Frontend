@@ -170,9 +170,10 @@ export interface RsvpModel extends RsvpPayload {
 }
 
 export type GuestStatus = 'pending' | 'confirmed' | 'declined';
-export type GuestCommunicationStatus = 'pending' | 'sent' | 'opened' | 'confirmed';
-export type GuestMessageType = 'invitation' | 'reminder' | 'location_change' | 'thanks';
+export type GuestCommunicationStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'opened' | 'failed' | 'confirmed';
+export type GuestMessageType = 'invitation' | 'reminder' | 'event_reminder' | 'location_change' | 'thanks';
 export type GuestMessageChannel = 'whatsapp' | 'email';
+export type WhatsAppProvider = 'disabled' | 'meta' | 'openwa';
 
 export interface GuestModel {
   _id?: string;
@@ -201,6 +202,34 @@ export interface GuestModel {
   lastMessageSentAt?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface WhatsAppStatusResponse {
+  provider: WhatsAppProvider;
+  enabled: boolean;
+}
+
+export interface WhatsAppSendResponse {
+  guest: GuestModel;
+  provider: WhatsAppProvider;
+  status: 'pending' | 'skipped' | 'sent' | 'delivered' | 'read' | 'failed';
+  manualText?: string;
+  messageLog?: {
+    _id?: string;
+    id?: string;
+    status: string;
+    provider: WhatsAppProvider;
+    messageId?: string;
+  };
+}
+
+export interface WhatsAppBulkResponse {
+  provider: WhatsAppProvider;
+  requested: number;
+  sent: number;
+  skipped: number;
+  failed: number;
+  results: Array<{ guest: string; status: string; provider?: WhatsAppProvider; error?: string }>;
 }
 
 export interface GuestPayload {

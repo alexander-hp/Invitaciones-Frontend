@@ -31,7 +31,10 @@ import {
   TemplateModel,
   TemplateTier,
   UploadUrlResponse,
-  User
+  User,
+  WhatsAppBulkResponse,
+  WhatsAppSendResponse,
+  WhatsAppStatusResponse
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -188,6 +191,18 @@ export class ApiService {
 
   markGuestCommunication(id: string, payload: { communicationStatus: GuestCommunicationStatus; messageType?: GuestMessageType; channel?: GuestMessageChannel }): Observable<{ guest: GuestModel }> {
     return this.http.patch<{ guest: GuestModel }>(`${this.apiUrl}/guests/${id}/communication`, payload);
+  }
+
+  getWhatsAppStatus(): Observable<WhatsAppStatusResponse> {
+    return this.http.get<WhatsAppStatusResponse>(`${this.apiUrl}/guests/whatsapp/status`);
+  }
+
+  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string }): Observable<WhatsAppSendResponse> {
+    return this.http.post<WhatsAppSendResponse>(`${this.apiUrl}/guests/${id}/whatsapp`, payload);
+  }
+
+  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
+    return this.http.post<WhatsAppBulkResponse>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/bulk`, payload);
   }
 
   importGuests(eventId: string, file: File): Observable<ImportGuestsResponse> {
