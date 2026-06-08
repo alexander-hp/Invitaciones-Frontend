@@ -130,6 +130,10 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/guests/${id}`);
   }
 
+  checkInGuest(code: string): Observable<{ guest: GuestModel }> {
+    return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/guests/check-in`, { code });
+  }
+
   markGuestCommunication(id: string, payload: { communicationStatus: GuestCommunicationStatus; messageType?: GuestMessageType; channel?: GuestMessageChannel }): Observable<{ guest: GuestModel }> {
     return this.http.patch<{ guest: GuestModel }>(`${this.apiUrl}/guests/${id}/communication`, payload);
   }

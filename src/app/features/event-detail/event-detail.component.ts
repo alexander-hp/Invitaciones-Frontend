@@ -26,11 +26,12 @@ export class EventDetailComponent implements OnInit {
   error = '';
   guestError = '';
   rsvpError = '';
+  checkInCode = '';
   guestMessage = '';
   importMessage = '';
   importDuplicateDetails: string[] = [];
   editingGuest?: GuestModel;
-  guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
+  guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
   selectedMessageType: GuestMessageType = 'invitation';
   messageTemplates: MessageTemplateOption[] = [
@@ -107,6 +108,8 @@ export class EventDetailComponent implements OnInit {
       email: this.guestForm.email || undefined,
       phone: this.guestForm.phone || undefined,
       group: this.guestForm.group || undefined,
+      tableName: this.guestForm.tableName || undefined,
+      seatLabel: this.guestForm.seatLabel || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0)
     };
     const request = this.editingGuest
@@ -138,6 +141,8 @@ export class EventDetailComponent implements OnInit {
       email: guest.email || '',
       phone: guest.phone || '',
       group: guest.group || '',
+      tableName: guest.tableName || '',
+      seatLabel: guest.seatLabel || '',
       allowedCompanions: guest.allowedCompanions || 0
     };
   }
@@ -202,6 +207,22 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  checkInGuest(): void {
+    const code = this.checkInCode.trim();
+    if (!code) return;
+    this.guestError = '';
+    this.api.checkInGuest(code).subscribe({
+      next: ({ guest }) => {
+        this.guests = this.guests.map((item) => this.getGuestId(item) === this.getGuestId(guest) ? guest : item);
+        this.guestMessage = `${guest.name} marcado como registrado.`;
+        this.checkInCode = '';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo registrar el check-in.';
+      }
+    });
+  }
+
   get filteredGuests(): GuestModel[] {
     const search = this.normalizeSearch(this.guestFilters.search);
     return this.guests.filter((guest) => {
@@ -227,6 +248,10 @@ export class EventDetailComponent implements OnInit {
 
   get declinedGuests(): number {
     return this.guests.filter((guest) => guest.status === 'declined').length;
+  }
+
+  get checkedInGuests(): number {
+    return this.guests.filter((guest) => guest.checkedIn).length;
   }
 
   get pendingCommunicationGuests(): number {
@@ -305,6 +330,11 @@ export class EventDetailComponent implements OnInit {
     return Boolean(guest.email && this.primaryInvitation);
   }
 
+  getQrImageUrl(guest: GuestModel): string {
+    const value = guest.checkInCode || guest.qrCode || this.getGuestId(guest);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(value)}`;
+  }
+
   markMessageSent(guest: GuestModel, channel: GuestMessageChannel): void {
     const guestId = this.getGuestId(guest);
     if (!guestId) return;
@@ -357,7 +387,7 @@ export class EventDetailComponent implements OnInit {
 
   private resetGuestForm(): void {
     this.editingGuest = undefined;
-    this.guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
+    this.guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   }
 
   private normalizeEmail(email?: string): string {

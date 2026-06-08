@@ -21,6 +21,11 @@
     <div class="split-layout editor-layout">
       <form class="panel" (ngSubmit)="save()">
         <h2>Contenido</h2>
+        <div class="tool-strip">
+          <button type="button" class="ghost small" (click)="applyTextVariant('formal')">Texto formal</button>
+          <button type="button" class="ghost small" (click)="applyTextVariant('warm')">Texto calido</button>
+          <button type="button" class="ghost small" (click)="applyTextVariant('brief')">Texto breve</button>
+        </div>
         <div class="form-grid">
           <label>Slug<input name="slug" [(ngModel)]="invitation.slug" required></label>
           <label>Acceso RSVP
@@ -36,6 +41,14 @@
           <label>Color principal<input name="primary" [(ngModel)]="invitation.content.palette!.primary"></label>
           <label>Color fondo<input name="secondary" [(ngModel)]="invitation.content.palette!.secondary"></label>
           <label>Color acento<input name="accent" [(ngModel)]="invitation.content.palette!.accent"></label>
+        </div>
+        <div class="swatch-grid">
+          <button type="button" *ngFor="let palette of palettePresets" (click)="applyPalette(palette)">
+            <span class="swatch" [style.background]="palette.primary"></span>
+            <span class="swatch" [style.background]="palette.secondary"></span>
+            <span class="swatch" [style.background]="palette.accent"></span>
+            <strong>{{ palette.name }}</strong>
+          </button>
         </div>
         <p class="muted" *ngIf="invitation.accessMode === 'guest_list'">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
         <p class="muted" *ngIf="invitation.accessMode === 'open'">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
@@ -54,6 +67,7 @@
           <label>Portada<input type="file" accept="image/*" (change)="selectAsset($event, 'covers')" [disabled]="assetUploading"></label>
           <label>Musica<input type="file" accept="audio/*" (change)="selectAsset($event, 'music')" [disabled]="assetUploading"></label>
           <label>Galeria<input type="file" accept="image/*" (change)="selectAsset($event, 'gallery')" [disabled]="assetUploading"></label>
+          <label>Album privado<input type="file" accept="image/*" (change)="selectAsset($event, 'assets')" [disabled]="assetUploading"></label>
         </div>
 
         <div class="asset-preview-list">
@@ -61,6 +75,9 @@
           <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
           <div class="gallery-strip" *ngIf="invitation.content.gallery?.length">
             <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
+          </div>
+          <div class="gallery-strip" *ngIf="invitation.content.privateAlbum?.length">
+            <img *ngFor="let imageUrl of invitation.content.privateAlbum" [src]="imageUrl" alt="Imagen de album privado" loading="lazy" decoding="async">
           </div>
         </div>
       </form>

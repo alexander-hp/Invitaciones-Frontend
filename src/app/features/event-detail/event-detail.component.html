@@ -53,6 +53,7 @@
         <article><span>Pendientes</span><strong>{{ pendingGuests }}</strong></article>
         <article><span>Confirmados</span><strong>{{ confirmedGuests }}</strong></article>
         <article><span>Rechazados</span><strong>{{ declinedGuests }}</strong></article>
+        <article><span>Check-in</span><strong>{{ checkedInGuests }}</strong></article>
       </div>
 
       <div class="communication-panel">
@@ -76,6 +77,8 @@
         <label>Email<input name="guestEmail" type="email" [(ngModel)]="guestForm.email"></label>
         <label>Telefono<input name="guestPhone" [(ngModel)]="guestForm.phone"></label>
         <label>Grupo<input name="guestGroup" [(ngModel)]="guestForm.group"></label>
+        <label>Mesa<input name="guestTable" [(ngModel)]="guestForm.tableName"></label>
+        <label>Asiento<input name="guestSeat" [(ngModel)]="guestForm.seatLabel"></label>
         <label>Acompanantes<input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions"></label>
         <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : 'Agregar invitado') }}</button>
         <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()" [disabled]="guestSaving">Cancelar</button>
@@ -84,6 +87,11 @@
       <div class="import-row">
         <label>Importar CSV/XLSX<input type="file" accept=".csv,.xlsx" (change)="selectImportFile($event)"></label>
         <button class="ghost" type="button" (click)="importGuests()" [disabled]="!selectedImportFile || importing">{{ importing ? 'Importando...' : 'Importar' }}</button>
+      </div>
+
+      <div class="checkin-row">
+        <label>Check-in por QR/codigo<input name="checkInCode" [(ngModel)]="checkInCode" placeholder="Escanea o escribe el codigo"></label>
+        <button class="primary" type="button" (click)="checkInGuest()" [disabled]="!checkInCode">Registrar entrada</button>
       </div>
 
       <div class="filter-row">
@@ -129,7 +137,9 @@
               <th>Nombre</th>
               <th>Contacto</th>
               <th>Grupo</th>
+              <th>Mesa</th>
               <th>Acompanantes</th>
+              <th>QR</th>
               <th>Estado</th>
               <th>Seguimiento</th>
               <th>Acciones</th>
@@ -140,10 +150,16 @@
               <td>{{ guest.name }}</td>
               <td>{{ guest.email || guest.phone || 'Sin contacto' }}</td>
               <td>{{ guest.group || 'General' }}</td>
+              <td>{{ guest.tableName || 'Sin mesa' }} <small *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</small></td>
               <td>{{ guest.allowedCompanions }}</td>
+              <td>
+                <img class="qr-thumb" [src]="getQrImageUrl(guest)" alt="QR check-in">
+                <small>{{ guest.checkInCode || guest.qrCode }}</small>
+              </td>
               <td><span class="status-pill" [class.confirmed]="guest.status === 'confirmed'" [class.declined]="guest.status === 'declined'">{{ guest.status }}</span></td>
               <td>
                 <span class="status-pill" [class.confirmed]="getCommunicationStatus(guest) === 'confirmed'">{{ getCommunicationStatus(guest) }}</span>
+                <span class="status-pill confirmed" *ngIf="guest.checkedIn">check-in</span>
                 <small *ngIf="guest.lastMessageType"> {{ getMessageTypeLabel(guest.lastMessageType) }}</small>
               </td>
               <td>

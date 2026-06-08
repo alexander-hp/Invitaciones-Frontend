@@ -22,6 +22,12 @@ export class InvitationEditorComponent implements OnInit {
   error = '';
   assetMessage = '';
   publicUrl = '';
+  palettePresets = [
+    { name: 'Clasico editorial', primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
+    { name: 'Jardin elegante', primary: '#244034', secondary: '#f4f7f0', accent: '#9f6f46' },
+    { name: 'Noche formal', primary: '#121826', secondary: '#f7f7fb', accent: '#c9a85d' },
+    { name: 'Celebracion viva', primary: '#7f1d1d', secondary: '#fff7ed', accent: '#2563eb' }
+  ];
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
@@ -82,6 +88,39 @@ export class InvitationEditorComponent implements OnInit {
     }
     this.invitation.content.subheadline = template.name;
     this.message = `Plantilla seleccionada: ${template.name}`;
+  }
+
+  applyPalette(palette: { primary: string; secondary: string; accent: string; name?: string }): void {
+    if (!this.invitation) return;
+    this.invitation.content.palette = {
+      primary: palette.primary,
+      secondary: palette.secondary,
+      accent: palette.accent
+    };
+    this.message = palette.name ? `Estilo aplicado: ${palette.name}` : 'Estilo aplicado.';
+  }
+
+  applyTextVariant(style: 'formal' | 'warm' | 'brief'): void {
+    if (!this.invitation || !this.event) return;
+    const title = this.event.title;
+    const hostText = this.event.hosts?.length ? this.event.hosts.join(' y ') : 'Nosotros';
+    const variants = {
+      formal: {
+        subheadline: `${hostText} tienen el honor de invitarte`,
+        message: `Sera un gusto contar con tu presencia en ${title}. Te invitamos a confirmar tu asistencia y acompanarnos en esta celebracion especial.`
+      },
+      warm: {
+        subheadline: 'Queremos compartir este dia contigo',
+        message: `Estamos preparando ${title} con mucha ilusion. Tu presencia haria este momento aun mas especial; confirma tu asistencia desde esta invitacion.`
+      },
+      brief: {
+        subheadline: 'Estas invitado',
+        message: `Acompananos en ${title}. Confirma tu asistencia y guarda esta invitacion para los detalles del evento.`
+      }
+    };
+    this.invitation.content.subheadline = variants[style].subheadline;
+    this.invitation.content.message = variants[style].message;
+    this.message = 'Variante de texto aplicada.';
   }
 
   save(): void {
@@ -157,6 +196,10 @@ export class InvitationEditorComponent implements OnInit {
             if (folder === 'covers') this.invitation.content.coverImageUrl = upload.publicUrl;
             if (folder === 'music') this.invitation.content.musicUrl = upload.publicUrl;
             if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
+            if (folder === 'assets') {
+              this.invitation.content.privateAlbumEnabled = true;
+              this.invitation.content.privateAlbum = [...(this.invitation.content.privateAlbum || []), upload.publicUrl];
+            }
             this.persistUploadedAsset();
             input.value = '';
           },

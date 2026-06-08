@@ -88,6 +88,8 @@ export interface InvitationContent {
   musicUrl?: string;
   coverImageUrl?: string;
   gallery?: string[];
+  privateAlbum?: string[];
+  privateAlbumEnabled?: boolean;
 }
 
 export interface RsvpSettings {
@@ -162,8 +164,13 @@ export interface GuestModel {
   email?: string;
   phone?: string;
   group?: string;
+  tableName?: string;
+  seatLabel?: string;
   allowedCompanions: number;
   qrCode?: string;
+  checkInCode?: string;
+  checkedIn?: boolean;
+  checkedInAt?: string;
   status: GuestStatus;
   communicationStatus?: GuestCommunicationStatus;
   lastMessageType?: GuestMessageType;
@@ -179,6 +186,8 @@ export interface GuestPayload {
   email?: string;
   phone?: string;
   group?: string;
+  tableName?: string;
+  seatLabel?: string;
   allowedCompanions?: number;
 }
 
