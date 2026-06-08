@@ -37,6 +37,8 @@ export class InvitationEditorComponent implements OnInit {
           return;
         }
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureRsvpSettings();
         this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
         this.publicUrl = `${window.location.origin}/i/${this.invitation.slug}`;
         this.loadTemplates();
@@ -76,12 +78,16 @@ export class InvitationEditorComponent implements OnInit {
     this.error = '';
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
+      accessMode: this.invitation.accessMode,
+      rsvpSettings: this.getRsvpSettingsPayload(),
       template: this.invitation.template,
       content: this.invitation.content
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureRsvpSettings();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
         this.message = 'Invitacion guardada.';
         this.saving = false;
@@ -102,6 +108,8 @@ export class InvitationEditorComponent implements OnInit {
       next: ({ invitation, publicUrl }) => {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureRsvpSettings();
         this.publicUrl = publicUrl || `${window.location.origin}/i/${invitation.slug}`;
         this.message = 'Invitacion publicada.';
         this.publishing = false;
@@ -166,12 +174,16 @@ export class InvitationEditorComponent implements OnInit {
     if (!this.invitation) return;
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
+      accessMode: this.invitation.accessMode,
+      rsvpSettings: this.getRsvpSettingsPayload(),
       template: this.invitation.template,
       content: this.invitation.content
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureRsvpSettings();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
         this.assetMessage = 'Asset subido y guardado en la invitacion.';
         this.assetUploading = false;
@@ -181,5 +193,25 @@ export class InvitationEditorComponent implements OnInit {
         this.assetUploading = false;
       }
     });
+  }
+
+  private ensureRsvpSettings(): void {
+    if (!this.invitation) return;
+    this.invitation.rsvpSettings = {
+      deadline: this.invitation.rsvpSettings?.deadline,
+      allowMaybe: this.invitation.rsvpSettings?.allowMaybe !== false,
+      allowChangesUntilDeadline: this.invitation.rsvpSettings?.allowChangesUntilDeadline !== false,
+      declineRequiresConfirmation: this.invitation.rsvpSettings?.declineRequiresConfirmation !== false,
+      reminderDaysBeforeDeadline: this.invitation.rsvpSettings?.reminderDaysBeforeDeadline ?? 3
+    };
+  }
+
+  private getRsvpSettingsPayload() {
+    if (!this.invitation?.rsvpSettings) return undefined;
+    return {
+      ...this.invitation.rsvpSettings,
+      deadline: this.invitation.rsvpSettings.deadline || undefined,
+      reminderDaysBeforeDeadline: Number(this.invitation.rsvpSettings.reminderDaysBeforeDeadline ?? 3)
+    };
   }
 }

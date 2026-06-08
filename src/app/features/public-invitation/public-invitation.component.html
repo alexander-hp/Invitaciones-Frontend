@@ -22,19 +22,45 @@
     </section>
     <form class="rsvp-panel" (ngSubmit)="submit()">
       <h2>RSVP</h2>
-      <label>Nombre<input name="name" [(ngModel)]="rsvp.name" required></label>
-      <label>Email<input name="email" type="email" [(ngModel)]="rsvp.email"></label>
-      <label>Respuesta
-        <select name="response" [(ngModel)]="rsvp.response">
-          <option value="confirmed">Asistire</option>
-          <option value="declined">No asistire</option>
-        </select>
-      </label>
-      <label>Acompanantes<input name="companions" type="number" min="0" [(ngModel)]="rsvp.companions"></label>
-      <label>Preferencia de comida<input name="mealPreference" [(ngModel)]="rsvp.mealPreference"></label>
-      <label>Mensaje<textarea name="message" [(ngModel)]="rsvp.message"></textarea></label>
+      <p *ngIf="deadlineLabel" class="notice">Fecha limite para responder: {{ deadlineLabel }}</p>
+
+      <div *ngIf="isGuestList && !verifiedGuest" class="guest-access-box">
+        <p class="muted">Esta invitacion es privada. Ingresa el email registrado en la lista de invitados.</p>
+        <label>Email invitado<input name="guestAccessEmail" type="email" [(ngModel)]="guestAccessEmail" required></label>
+        <button class="ghost" type="button" (click)="checkGuestAccess()" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : 'Validar invitado' }}</button>
+      </div>
+
+      <ng-container *ngIf="!isGuestList || verifiedGuest">
+        <p *ngIf="verifiedGuest" class="notice">Invitado validado: {{ verifiedGuest.name }}. Acompanantes permitidos: {{ verifiedGuest.allowedCompanions }}.</p>
+        <label>Nombre<input name="name" [(ngModel)]="rsvp.name" [readonly]="isGuestList" required></label>
+        <label>Email<input name="email" type="email" [(ngModel)]="rsvp.email" [readonly]="isGuestList"></label>
+        <div class="phone-grid">
+          <label>Codigo pais<input name="phoneCountryCode" [(ngModel)]="rsvp.phoneCountryCode" placeholder="+52"></label>
+          <label>Telefono WhatsApp<input name="phoneNationalNumber" inputmode="numeric" [(ngModel)]="rsvp.phoneNationalNumber" placeholder="3312345678"></label>
+        </div>
+        <p class="muted">Usaremos este numero para recordatorios por WhatsApp cuando este disponible.</p>
+        <label>Respuesta
+          <select name="response" [(ngModel)]="rsvp.response" (ngModelChange)="onResponseChange()">
+            <option value="confirmed">Asistire</option>
+            <option value="declined">No asistire</option>
+            <option *ngIf="canUseMaybe" value="maybe">No estoy seguro</option>
+          </select>
+        </label>
+        <ng-container *ngIf="isFinalAttendance">
+          <label>Acompanantes<input name="companions" type="number" min="0" [max]="maxCompanions === null ? null : maxCompanions" [(ngModel)]="rsvp.companions"></label>
+          <label>Preferencia de comida<input name="mealPreference" [(ngModel)]="rsvp.mealPreference"></label>
+        </ng-container>
+        <p *ngIf="rsvp.response === 'maybe'" class="notice">Te enviaremos un recordatorio antes de la fecha limite.</p>
+        <div *ngIf="rsvp.response === 'declined'" class="notice">
+          <p>Si confirmas que no asistiras, tu respuesta puede quedar como definitiva segun la configuracion del evento.</p>
+          <label *ngIf="requiresDeclineConfirmation" class="check-row"><input name="declineConfirmed" type="checkbox" [(ngModel)]="declineConfirmed"> Confirmo que no asistire</label>
+        </div>
+        <label>Mensaje<textarea name="message" [(ngModel)]="rsvp.message"></textarea></label>
+        <button *ngIf="isGuestList" class="ghost" type="button" (click)="resetGuestAccess()">Usar otro email</button>
+      </ng-container>
+
       <p *ngIf="success" class="success">{{ success }}</p>
-      <button class="primary" type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
+      <button class="primary" type="submit" [disabled]="sending || (isGuestList && !verifiedGuest)">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
     </form>
   </div>
 

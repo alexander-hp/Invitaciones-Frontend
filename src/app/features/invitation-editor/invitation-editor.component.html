@@ -23,6 +23,12 @@
         <h2>Contenido</h2>
         <div class="form-grid">
           <label>Slug<input name="slug" [(ngModel)]="invitation.slug" required></label>
+          <label>Acceso RSVP
+            <select name="accessMode" [(ngModel)]="invitation.accessMode">
+              <option value="guest_list">Lista cerrada: solo invitados registrados</option>
+              <option value="open">Abierta: cualquiera con el link</option>
+            </select>
+          </label>
           <label>Titular<input name="headline" [(ngModel)]="invitation.content.headline"></label>
           <label>Subtitulo<input name="subheadline" [(ngModel)]="invitation.content.subheadline"></label>
           <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl"></label>
@@ -30,6 +36,17 @@
           <label>Color principal<input name="primary" [(ngModel)]="invitation.content.palette!.primary"></label>
           <label>Color fondo<input name="secondary" [(ngModel)]="invitation.content.palette!.secondary"></label>
           <label>Color acento<input name="accent" [(ngModel)]="invitation.content.palette!.accent"></label>
+        </div>
+        <p class="muted" *ngIf="invitation.accessMode === 'guest_list'">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
+        <p class="muted" *ngIf="invitation.accessMode === 'open'">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
+
+        <h2>Reglas RSVP</h2>
+        <div class="form-grid">
+          <label>Fecha limite RSVP<input name="rsvpDeadline" type="datetime-local" [(ngModel)]="invitation.rsvpSettings!.deadline"></label>
+          <label>Dias antes para recordatorio<input name="reminderDaysBeforeDeadline" type="number" min="0" max="60" [(ngModel)]="invitation.rsvpSettings!.reminderDaysBeforeDeadline"></label>
+          <label class="check-row"><input name="allowMaybe" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.allowMaybe"> Permitir "No estoy seguro"</label>
+          <label class="check-row"><input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.allowChangesUntilDeadline"> Permitir cambios hasta la fecha limite</label>
+          <label class="check-row wide"><input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.declineRequiresConfirmation"> Pedir confirmacion extra cuando alguien diga que no asistira</label>
         </div>
 
         <h2>Assets</h2>

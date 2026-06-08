@@ -21,6 +21,8 @@ export class EventDetailComponent implements OnInit {
   rsvpError = '';
   guestMessage = '';
   importMessage = '';
+  importDuplicateDetails: string[] = [];
+  editingGuest?: GuestModel;
   guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
 
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
@@ -55,6 +57,7 @@ export class EventDetailComponent implements OnInit {
     this.api.createInvitation({
       event: eventId,
       slug: this.slugify(this.event.title),
+      accessMode: 'guest_list',
       content: {
         headline: this.event.title,
         subheadline: 'Nos encantaria que nos acompanes',
@@ -71,37 +74,69 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  createGuest(): void {
+  saveGuest(): void {
     const eventId = this.getEventId();
     if (!eventId) return;
+    const duplicate = this.findDuplicateGuest(this.editingGuest ? this.getGuestId(this.editingGuest) : undefined);
+    if (duplicate) {
+      this.guestError = `Ese ${duplicate.field === 'email' ? 'correo' : 'telefono'} ya pertenece a ${duplicate.guest.name}. Puedes editar ese invitado en la lista.`;
+      return;
+    }
+
     this.guestSaving = true;
     this.guestError = '';
     this.guestMessage = '';
-    this.api.createGuest({
-      event: eventId,
+    const wasEditing = Boolean(this.editingGuest);
+    const guestData = {
       name: this.guestForm.name,
       email: this.guestForm.email || undefined,
       phone: this.guestForm.phone || undefined,
       group: this.guestForm.group || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0)
-    }).subscribe({
+    };
+    const request = this.editingGuest
+      ? this.api.updateGuest(this.getGuestId(this.editingGuest), guestData)
+      : this.api.createGuest({ event: eventId, ...guestData });
+
+    request.subscribe({
       next: ({ guest }) => {
-        this.guests = [guest, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
-        this.guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
-        this.guestMessage = 'Invitado agregado.';
+        this.guests = this.editingGuest
+          ? this.guests.map((item) => this.getGuestId(item) === this.getGuestId(guest) ? guest : item).sort((a, b) => a.name.localeCompare(b.name))
+          : [guest, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
+        this.resetGuestForm();
+        this.guestMessage = wasEditing ? 'Invitado actualizado.' : 'Invitado agregado.';
         this.guestSaving = false;
       },
       error: (error) => {
-        this.guestError = error.error?.message || 'No se pudo agregar el invitado.';
+        this.guestError = this.buildGuestError(error, this.editingGuest ? 'No se pudo actualizar el invitado.' : 'No se pudo agregar el invitado.');
         this.guestSaving = false;
       }
     });
+  }
+
+  startEditGuest(guest: GuestModel): void {
+    this.editingGuest = guest;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.guestForm = {
+      name: guest.name,
+      email: guest.email || '',
+      phone: guest.phone || '',
+      group: guest.group || '',
+      allowedCompanions: guest.allowedCompanions || 0
+    };
+  }
+
+  cancelEditGuest(): void {
+    this.resetGuestForm();
+    this.guestError = '';
   }
 
   selectImportFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.selectedImportFile = input.files?.[0] || undefined;
     this.importMessage = this.selectedImportFile ? this.selectedImportFile.name : '';
+    this.importDuplicateDetails = [];
   }
 
   importGuests(): void {
@@ -110,10 +145,15 @@ export class EventDetailComponent implements OnInit {
     this.importing = true;
     this.guestError = '';
     this.importMessage = '';
+    this.importDuplicateDetails = [];
     this.api.importGuests(eventId, this.selectedImportFile).subscribe({
       next: (result) => {
         this.guests = [...result.guests, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
-        this.importMessage = `Importados: ${result.imported}. Filas invalidas: ${result.invalidRows}.`;
+        const duplicateRows = result.duplicateRows || 0;
+        this.importMessage = `Importados: ${result.imported}. Filas invalidas: ${result.invalidRows}. Duplicados omitidos: ${duplicateRows}.`;
+        this.importDuplicateDetails = (result.duplicates || []).slice(0, 5).map((duplicate) =>
+          `Fila ${duplicate.row}: ${duplicate.field === 'email' ? 'email' : 'telefono'} ${duplicate.value} ya pertenece a ${duplicate.guestName}.`
+        );
         this.selectedImportFile = undefined;
         this.importing = false;
       },
@@ -130,6 +170,42 @@ export class EventDetailComponent implements OnInit {
 
   getInvitationId(invitation: InvitationModel): string {
     return invitation._id || invitation.id || '';
+  }
+
+  getGuestId(guest: GuestModel): string {
+    return guest._id || guest.id || '';
+  }
+
+  private resetGuestForm(): void {
+    this.editingGuest = undefined;
+    this.guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
+  }
+
+  private normalizeEmail(email?: string): string {
+    return (email || '').toLowerCase().trim();
+  }
+
+  private normalizePhone(phone?: string): string {
+    return (phone || '').trim().replace(/[\s().-]/g, '');
+  }
+
+  private findDuplicateGuest(excludeGuestId?: string): { guest: GuestModel; field: 'email' | 'phone' } | undefined {
+    const email = this.normalizeEmail(this.guestForm.email);
+    const phone = this.normalizePhone(this.guestForm.phone);
+    return this.guests.reduce((found: { guest: GuestModel; field: 'email' | 'phone' } | undefined, guest) => {
+      if (found || this.getGuestId(guest) === excludeGuestId) return found;
+      if (email && this.normalizeEmail(guest.email) === email) return { guest, field: 'email' };
+      if (phone && this.normalizePhone(guest.phone) === phone) return { guest, field: 'phone' };
+      return undefined;
+    }, undefined);
+  }
+
+  private buildGuestError(error: any, fallback: string): string {
+    if (error.status === 409 && error.error?.details?.guestName) {
+      const field = error.error.details.field === 'phone' ? 'telefono' : 'correo';
+      return `Ese ${field} ya pertenece a ${error.error.details.guestName}. Puedes editar ese invitado en la lista.`;
+    }
+    return error.error?.message || fallback;
   }
 
   private loadInvitations(eventId: string): void {

@@ -1,7 +1,8 @@
 export type EventType = 'boda' | 'xv' | 'graduacion' | 'cumpleanos' | 'bautizo' | 'otro';
 export type EventStatus = 'draft' | 'published' | 'archived';
 export type InvitationStatus = 'draft' | 'published' | 'unpublished';
-export type RsvpResponse = 'confirmed' | 'declined';
+export type RsvpResponse = 'confirmed' | 'declined' | 'maybe';
+export type InvitationAccessMode = 'open' | 'guest_list';
 
 export interface User {
   _id?: string;
@@ -89,6 +90,14 @@ export interface InvitationContent {
   gallery?: string[];
 }
 
+export interface RsvpSettings {
+  deadline?: string;
+  allowMaybe?: boolean;
+  allowChangesUntilDeadline?: boolean;
+  declineRequiresConfirmation?: boolean;
+  reminderDaysBeforeDeadline?: number;
+}
+
 export interface InvitationModel {
   _id?: string;
   id?: string;
@@ -96,6 +105,8 @@ export interface InvitationModel {
   event: string | EventModel;
   template?: string;
   slug: string;
+  accessMode?: InvitationAccessMode;
+  rsvpSettings?: RsvpSettings;
   status: InvitationStatus;
   content: InvitationContent;
   premiumLocked?: boolean;
@@ -108,6 +119,8 @@ export interface InvitationPayload {
   event: string;
   template?: string;
   slug?: string;
+  accessMode?: InvitationAccessMode;
+  rsvpSettings?: RsvpSettings;
   content?: InvitationContent;
 }
 
@@ -119,6 +132,9 @@ export interface RsvpPayload {
   companions?: number;
   mealPreference?: string;
   message?: string;
+  declineConfirmed?: boolean;
+  phoneCountryCode?: string;
+  phoneNationalNumber?: string;
 }
 
 export interface RsvpModel extends RsvpPayload {
@@ -126,6 +142,10 @@ export interface RsvpModel extends RsvpPayload {
   id?: string;
   invitation: string;
   event: string;
+  phoneE164?: string;
+  phoneVerified?: boolean;
+  phoneVerificationStatus?: 'not_started' | 'pending' | 'verified' | 'failed';
+  updatedAt?: string;
   createdAt?: string;
 }
 
@@ -176,9 +196,26 @@ export interface TemplateModel {
   active: boolean;
 }
 
+export interface GuestAccessResponse {
+  guest: {
+    id: string;
+    name: string;
+    email?: string;
+    allowedCompanions: number;
+    status: GuestStatus;
+  };
+}
+
 export interface ImportGuestsResponse {
   imported: number;
   invalidRows: number;
+  duplicateRows?: number;
+  duplicates?: Array<{
+    row: number;
+    field: 'email' | 'phone';
+    value: string;
+    guestName: string;
+  }>;
   guests: GuestModel[];
 }
 

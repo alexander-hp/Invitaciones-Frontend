@@ -29,11 +29,12 @@ Pantallas/vistas visuales actuales:
 - Dashboard:
   - Muestra metricas desde `GET /api/dashboard/summary`.
 - Editor:
-  - Edita invitaciones reales, selecciona plantillas del backend, sube assets a S3 y persiste URLs en `Invitation.content`.
+  - Edita invitaciones reales, selecciona plantillas del backend, elige modo de acceso RSVP, sube assets a S3 y persiste URLs en `Invitation.content`.
 - Invitados:
   - Lista invitados reales, permite alta manual e importacion CSV/XLSX.
 - Publica:
   - Renderiza invitacion por slug, muestra portada/musica/galeria y envia RSVP real.
+  - Si la invitacion es `guest_list`, primero valida email contra la lista de invitados.
 
 Servicios existentes en `ApiService`:
 
@@ -52,6 +53,7 @@ Auth existente:
 
 - Stripe tiene UI inicial y checkout, pero falta confirmar keys/flujo real success/cancel en beta.
 - Assets S3 ya suben, se guardan y se renderizan; falta UX avanzada para borrar/reordenar galeria.
+- Lista cerrada usa validacion por email para MVP; falta link unico/codigo QR/token por invitado para mayor seguridad.
 - Dashboard sigue siendo basico, sin series temporales ni filtros por evento.
 - Formularios siguen con `FormsModule`; migrar a Reactive Forms cuando crezca validacion.
 - Angular 13 sigue pendiente de migracion antes de produccion.
@@ -216,3 +218,57 @@ Notas QA:
 - El editor muestra preview de portada, reproductor de musica y galeria cargada.
 - La pagina publica `/i/:slug` renderiza portada, musica y galeria guardadas en `invitation.content`.
 - Si el objeto S3 no es publico o no puede leerse, el tag `img/audio` no renderizara aunque la URL este guardada; revisar acceso `GetObject`/CloudFront.
+
+## Actualizacion 2026-06-06 - RSVP abierto vs lista cerrada
+
+- `InvitationModel` y `InvitationPayload` soportan `accessMode: 'open' | 'guest_list'`.
+- `InvitationModel` y `InvitationPayload` soportan `rsvpSettings` para fecha limite, cambios, `maybe`, confirmacion al declinar y recordatorios.
+- El editor permite elegir:
+  - `guest_list`: solo invitados registrados pueden responder.
+  - `open`: cualquiera con el link puede responder.
+- Al crear invitacion desde detalle de evento, el frontend envia `accessMode: 'guest_list'` por defecto.
+- La pagina publica:
+  - mantiene formulario directo para `open`,
+  - en `guest_list` pide email, llama `POST /api/invitations/public/:slug/guest-access`, precarga nombre/email y limita acompanantes.
+- Invitaciones antiguas sin `accessMode` se tratan como `open` para no romper links ya publicados.
+
+## Actualizacion 2026-06-06 - Reglas RSVP, maybe y duplicados
+
+- `RsvpResponse` ahora permite `confirmed`, `declined` y `maybe`.
+- El editor muestra reglas RSVP:
+  - fecha limite,
+  - permitir "No estoy seguro",
+  - permitir cambios hasta la fecha limite,
+  - confirmacion extra al declinar,
+  - dias antes para recordatorio.
+- La pagina publica muestra la fecha limite si existe.
+- Si el invitado elige `declined`:
+  - oculta acompanantes y comida,
+  - muestra advertencia,
+  - exige checkbox cuando `declineRequiresConfirmation` esta activo.
+- Si el invitado elige `maybe`:
+  - oculta acompanantes y comida,
+  - muestra mensaje de recordatorio antes del deadline.
+- Si el backend actualiza una respuesta existente, la UI muestra "Tu respuesta fue actualizada".
+
+## Actualizacion 2026-06-06 - Telefono internacional RSVP
+
+- `RsvpPayload` soporta telefono opcional:
+  - `phoneCountryCode`,
+  - `phoneNationalNumber`.
+- `RsvpModel` muestra:
+  - `phoneE164`,
+  - `phoneVerified`,
+  - `phoneVerificationStatus`.
+- La pagina publica captura codigo de pais y telefono nacional; default visual `+52`.
+- Si no se captura telefono, el frontend no envia campos vacios para no disparar validacion.
+- El detalle de evento muestra `phoneE164` y estado de verificacion en la tabla RSVP.
+- WhatsApp no esta implementado todavia; el texto indica que se usara para recordatorios cuando este disponible.
+
+## Actualizacion 2026-06-07 - Duplicados y edicion de invitados
+
+- `ApiService` agrega `updateGuest(id, payload)` contra `PATCH /api/guests/:id`.
+- La lista del evento permite editar invitados desde la tabla reutilizando el formulario de alta.
+- El formulario valida localmente email/telefono duplicados dentro del mismo evento antes de enviar.
+- Si backend responde `409`, la UI muestra que el contacto ya pertenece a otro invitado y sugiere editarlo.
+- Importacion CSV/XLSX muestra importados, filas invalidas, duplicados omitidos y hasta 5 detalles de conflicto.

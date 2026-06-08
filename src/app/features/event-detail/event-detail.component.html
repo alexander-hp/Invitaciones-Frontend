@@ -46,13 +46,14 @@
         <span class="count-pill">{{ guests.length }} invitados</span>
       </div>
 
-      <form class="guest-form" (ngSubmit)="createGuest()">
+      <form class="guest-form" (ngSubmit)="saveGuest()">
         <label>Nombre<input name="guestName" [(ngModel)]="guestForm.name" required></label>
         <label>Email<input name="guestEmail" type="email" [(ngModel)]="guestForm.email"></label>
         <label>Telefono<input name="guestPhone" [(ngModel)]="guestForm.phone"></label>
         <label>Grupo<input name="guestGroup" [(ngModel)]="guestForm.group"></label>
         <label>Acompanantes<input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions"></label>
-        <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? 'Agregando...' : 'Agregar invitado' }}</button>
+        <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : 'Agregar invitado') }}</button>
+        <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()" [disabled]="guestSaving">Cancelar</button>
       </form>
 
       <div class="import-row">
@@ -63,6 +64,9 @@
       <p *ngIf="guestError" class="error">{{ guestError }}</p>
       <p *ngIf="guestMessage" class="success">{{ guestMessage }}</p>
       <p *ngIf="importMessage" class="success">{{ importMessage }}</p>
+      <ul *ngIf="importDuplicateDetails.length" class="compact-list">
+        <li *ngFor="let detail of importDuplicateDetails">{{ detail }}</li>
+      </ul>
       <p *ngIf="guestsLoading" class="notice">Cargando invitados...</p>
       <p *ngIf="!guestsLoading && !guests.length" class="muted">Aun no hay invitados registrados.</p>
 
@@ -75,6 +79,7 @@
               <th>Grupo</th>
               <th>Acompanantes</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -84,6 +89,7 @@
               <td>{{ guest.group || 'General' }}</td>
               <td>{{ guest.allowedCompanions }}</td>
               <td><span class="status-pill" [class.confirmed]="guest.status === 'confirmed'" [class.declined]="guest.status === 'declined'">{{ guest.status }}</span></td>
+              <td><button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button></td>
             </tr>
           </tbody>
         </table>
@@ -109,6 +115,7 @@
             <tr>
               <th>Nombre</th>
               <th>Email</th>
+              <th>Telefono</th>
               <th>Respuesta</th>
               <th>Acompanantes</th>
               <th>Comida</th>
@@ -120,6 +127,7 @@
             <tr *ngFor="let rsvp of rsvps">
               <td>{{ rsvp.name }}</td>
               <td>{{ rsvp.email || 'Sin email' }}</td>
+              <td>{{ rsvp.phoneE164 || 'Sin telefono' }} <small *ngIf="rsvp.phoneE164">({{ rsvp.phoneVerificationStatus || 'not_started' }})</small></td>
               <td><span class="status-pill" [class.confirmed]="rsvp.response === 'confirmed'" [class.declined]="rsvp.response === 'declined'">{{ rsvp.response }}</span></td>
               <td>{{ rsvp.companions || 0 }}</td>
               <td>{{ rsvp.mealPreference || 'Sin preferencia' }}</td>

@@ -12,6 +12,7 @@ import {
   EventPayload,
   EventType,
   GuestModel,
+  GuestAccessResponse,
   GuestPayload,
   ImportGuestsResponse,
   InvitationModel,
@@ -96,6 +97,10 @@ export class ApiService {
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`);
   }
 
+  checkGuestAccess(slug: string, payload: { email: string }): Observable<GuestAccessResponse> {
+    return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
+  }
+
   listGuests(eventId: string): Observable<{ guests: GuestModel[] }> {
     return this.http.get<{ guests: GuestModel[] }>(`${this.apiUrl}/guests/event/${eventId}`);
   }
@@ -106,6 +111,10 @@ export class ApiService {
 
   createGuest(payload: GuestPayload): Observable<{ guest: GuestModel }> {
     return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/guests`, payload);
+  }
+
+  updateGuest(id: string, payload: Partial<GuestPayload>): Observable<{ guest: GuestModel }> {
+    return this.http.patch<{ guest: GuestModel }>(`${this.apiUrl}/guests/${id}`, payload);
   }
 
   importGuests(eventId: string, file: File): Observable<ImportGuestsResponse> {
@@ -134,7 +143,7 @@ export class ApiService {
     return this.http.post<CheckoutResponse>(`${this.apiUrl}/payments/checkout`, payload);
   }
 
-  submitRsvp(slug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel }> {
-    return this.http.post<{ rsvp: RsvpModel }>(`${this.apiUrl}/rsvps/public/${slug}`, payload);
+  submitRsvp(slug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
+    return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/rsvps/public/${slug}`, payload);
   }
 }
