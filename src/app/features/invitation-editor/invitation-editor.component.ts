@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AssetFolder, EventModel, InvitationModel, PaymentPackage, TemplateModel } from '../../core/models';
+import { AssetFolder, EventModel, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel } from '../../core/models';
 
 @Component({ selector: 'app-invitation-editor', templateUrl: './invitation-editor.component.html' })
 export class InvitationEditorComponent implements OnInit {
@@ -12,6 +12,7 @@ export class InvitationEditorComponent implements OnInit {
   invitation?: InvitationModel;
   event?: EventModel;
   templates: TemplateModel[] = [];
+  plans: PlanDefinition[] = [];
   loading = false;
   saving = false;
   publishing = false;
@@ -46,6 +47,7 @@ export class InvitationEditorComponent implements OnInit {
         this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
         this.publicUrl = `${window.location.origin}/i/${this.invitation.slug}`;
         this.loadTemplates();
+        this.loadPlans();
         this.loading = false;
       },
       error: (error) => {
@@ -59,6 +61,13 @@ export class InvitationEditorComponent implements OnInit {
     this.api.listTemplates(this.event?.type).subscribe({
       next: ({ templates }) => this.templates = templates,
       error: () => this.templates = []
+    });
+  }
+
+  loadPlans(): void {
+    this.api.listPlans().subscribe({
+      next: ({ plans }) => this.plans = plans,
+      error: () => this.plans = []
     });
   }
 
@@ -172,19 +181,42 @@ export class InvitationEditorComponent implements OnInit {
     if (file.size > maxSize) return isMusic ? 'El audio no debe exceder 10MB.' : 'La imagen no debe exceder 5MB.';
     return '';
   }
-  checkout(pack: PaymentPackage): void {
+  checkout(pack: Exclude<PaymentPackage, 'free'>): void {
     if (!this.invitation) return;
     this.checkoutLoading = pack;
     this.error = '';
     this.api.createCheckout({ package: pack, invitation: this.getInvitationId(this.invitation) }).subscribe({
-      next: ({ checkoutUrl }) => {
-        window.location.href = checkoutUrl;
+      next: ({ checkoutUrl, manualPayment, message }) => {
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+          return;
+        }
+        this.message = manualPayment ? (message || 'Pago manual registrado como pendiente.') : 'Solicitud de pago registrada.';
+        this.checkoutLoading = '';
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo iniciar el checkout.';
         this.checkoutLoading = '';
       }
     });
+  }
+
+  formatPrice(plan: PlanDefinition): string {
+    return plan.amount ? `$${Math.round(plan.amount / 100).toLocaleString('es-MX')} MXN` : 'Gratis';
+  }
+
+  planLimitText(plan: PlanDefinition): string {
+    const limits = plan.limits;
+    const items = [
+      `${limits.guests} invitados`,
+      `${limits.galleryImages} imagenes`,
+      limits.music ? 'musica' : 'sin musica',
+      limits.premiumTemplates ? 'plantillas premium' : 'plantillas free',
+      limits.exportData ? 'exportacion' : 'sin exportacion',
+      limits.customDomain ? 'dominio custom' : '',
+      limits.whiteLabel ? 'marca blanca' : ''
+    ].filter(Boolean);
+    return items.join(' · ');
   }
 
   getInvitationId(invitation: InvitationModel): string {

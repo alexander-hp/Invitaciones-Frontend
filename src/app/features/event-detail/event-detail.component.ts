@@ -1,7 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, GuestModel, InvitationModel, RsvpModel } from '../../core/models';
+import { EventModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, InvitationModel, RsvpModel } from '../../core/models';
+
+interface MessageTemplateOption {
+  value: GuestMessageType;
+  label: string;
+}
 
 @Component({ selector: 'app-event-detail', templateUrl: './event-detail.component.html' })
 export class EventDetailComponent implements OnInit {
@@ -15,6 +20,8 @@ export class EventDetailComponent implements OnInit {
   guestsLoading = false;
   rsvpsLoading = false;
   importing = false;
+  exportingGuests = false;
+  exportingRsvps = false;
   selectedImportFile?: File;
   error = '';
   guestError = '';
@@ -24,6 +31,14 @@ export class EventDetailComponent implements OnInit {
   importDuplicateDetails: string[] = [];
   editingGuest?: GuestModel;
   guestForm = { name: '', email: '', phone: '', group: '', allowedCompanions: 0 };
+  guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
+  selectedMessageType: GuestMessageType = 'invitation';
+  messageTemplates: MessageTemplateOption[] = [
+    { value: 'invitation', label: 'Invitacion' },
+    { value: 'reminder', label: 'Recordatorio RSVP' },
+    { value: 'location_change', label: 'Cambio de ubicacion' },
+    { value: 'thanks', label: 'Agradecimiento' }
+  ];
 
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
 
@@ -132,6 +147,26 @@ export class EventDetailComponent implements OnInit {
     this.guestError = '';
   }
 
+  deleteGuest(guest: GuestModel): void {
+    const guestId = this.getGuestId(guest);
+    if (!guestId || !window.confirm(`Eliminar a ${guest.name} de la lista de invitados?`)) return;
+    this.guestSaving = true;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.deleteGuest(guestId).subscribe({
+      next: () => {
+        this.guests = this.guests.filter((item) => this.getGuestId(item) !== guestId);
+        if (this.editingGuest && this.getGuestId(this.editingGuest) === guestId) this.resetGuestForm();
+        this.guestMessage = 'Invitado eliminado.';
+        this.guestSaving = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo eliminar el invitado.';
+        this.guestSaving = false;
+      }
+    });
+  }
+
   selectImportFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.selectedImportFile = input.files?.[0] || undefined;
@@ -150,10 +185,13 @@ export class EventDetailComponent implements OnInit {
       next: (result) => {
         this.guests = [...result.guests, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
         const duplicateRows = result.duplicateRows || 0;
-        this.importMessage = `Importados: ${result.imported}. Filas invalidas: ${result.invalidRows}. Duplicados omitidos: ${duplicateRows}.`;
-        this.importDuplicateDetails = (result.duplicates || []).slice(0, 5).map((duplicate) =>
-          `Fila ${duplicate.row}: ${duplicate.field === 'email' ? 'email' : 'telefono'} ${duplicate.value} ya pertenece a ${duplicate.guestName}.`
-        );
+        const created = result.created ?? result.imported;
+        const skipped = result.skipped ?? ((result.invalidRows || 0) + duplicateRows);
+        this.importMessage = `Creados: ${created}. Actualizados: ${result.updated || 0}. Omitidos: ${skipped}. Filas invalidas: ${result.invalidRows}. Duplicados: ${duplicateRows}.`;
+        this.importDuplicateDetails = (result.duplicates || []).slice(0, 5).map((duplicate) => {
+          if (duplicate.field === 'plan') return `Fila ${duplicate.row}: omitida por limite de ${duplicate.value} invitados del plan.`;
+          return `Fila ${duplicate.row}: ${duplicate.field === 'email' ? 'email' : 'telefono'} ${duplicate.value} ya pertenece a ${duplicate.guestName}.`;
+        });
         this.selectedImportFile = undefined;
         this.importing = false;
       },
@@ -162,6 +200,147 @@ export class EventDetailComponent implements OnInit {
         this.importing = false;
       }
     });
+  }
+
+  get filteredGuests(): GuestModel[] {
+    const search = this.normalizeSearch(this.guestFilters.search);
+    return this.guests.filter((guest) => {
+      const matchesSearch = !search || [guest.name, guest.email, guest.phone, guest.group].some((value) => this.normalizeSearch(value).includes(search));
+      const matchesStatus = !this.guestFilters.status || guest.status === this.guestFilters.status;
+      const matchesCommunication = !this.guestFilters.communicationStatus || this.getCommunicationStatus(guest) === this.guestFilters.communicationStatus;
+      const matchesGroup = !this.guestFilters.group || (guest.group || 'General') === this.guestFilters.group;
+      return matchesSearch && matchesStatus && matchesCommunication && matchesGroup;
+    });
+  }
+
+  get guestGroups(): string[] {
+    return Array.from(new Set(this.guests.map((guest) => guest.group || 'General'))).sort((a, b) => a.localeCompare(b));
+  }
+
+  get pendingGuests(): number {
+    return this.guests.filter((guest) => guest.status === 'pending').length;
+  }
+
+  get confirmedGuests(): number {
+    return this.guests.filter((guest) => guest.status === 'confirmed').length;
+  }
+
+  get declinedGuests(): number {
+    return this.guests.filter((guest) => guest.status === 'declined').length;
+  }
+
+  get pendingCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'pending').length;
+  }
+
+  get sentCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'sent').length;
+  }
+
+  get confirmedCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'confirmed').length;
+  }
+
+  get primaryInvitation(): InvitationModel | undefined {
+    return this.invitations.find((invitation) => invitation.status === 'published') || this.invitations[0];
+  }
+
+  exportGuests(): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.exportingGuests = true;
+    this.guestError = '';
+    this.api.exportGuests(eventId, this.guestFilters).subscribe({
+      next: (blob) => {
+        this.downloadBlob(blob, `invitados-${eventId}.csv`);
+        this.exportingGuests = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo exportar la lista de invitados.';
+        this.exportingGuests = false;
+      }
+    });
+  }
+
+  exportRsvps(): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.exportingRsvps = true;
+    this.rsvpError = '';
+    this.api.exportRsvps(eventId).subscribe({
+      next: (blob) => {
+        this.downloadBlob(blob, `rsvps-${eventId}.csv`);
+        this.exportingRsvps = false;
+      },
+      error: (error) => {
+        this.rsvpError = error.error?.message || 'No se pudo exportar RSVP.';
+        this.exportingRsvps = false;
+      }
+    });
+  }
+
+  showPendingReminders(): void {
+    this.guestFilters.status = 'pending';
+    this.guestFilters.communicationStatus = '';
+    this.selectedMessageType = 'reminder';
+  }
+
+  getWhatsappLink(guest: GuestModel): string {
+    const phone = this.toWhatsappPhone(guest.phone);
+    const message = this.buildMessage(guest, this.selectedMessageType);
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  getEmailLink(guest: GuestModel): string {
+    const subject = this.getMessageSubject(this.selectedMessageType);
+    const body = this.buildMessage(guest, this.selectedMessageType);
+    return `mailto:${encodeURIComponent(guest.email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  canWhatsappGuest(guest: GuestModel): boolean {
+    return Boolean(this.toWhatsappPhone(guest.phone) && this.primaryInvitation);
+  }
+
+  canEmailGuest(guest: GuestModel): boolean {
+    return Boolean(guest.email && this.primaryInvitation);
+  }
+
+  markMessageSent(guest: GuestModel, channel: GuestMessageChannel): void {
+    const guestId = this.getGuestId(guest);
+    if (!guestId) return;
+    this.api.markGuestCommunication(guestId, {
+      communicationStatus: 'sent',
+      messageType: this.selectedMessageType,
+      channel
+    }).subscribe({
+      next: ({ guest: updatedGuest }) => {
+        this.guests = this.guests.map((item) => this.getGuestId(item) === guestId ? updatedGuest : item);
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo marcar el mensaje como enviado.';
+      }
+    });
+  }
+
+  setCommunicationStatus(guest: GuestModel, communicationStatus: GuestCommunicationStatus): void {
+    const guestId = this.getGuestId(guest);
+    if (!guestId) return;
+    this.api.markGuestCommunication(guestId, { communicationStatus }).subscribe({
+      next: ({ guest: updatedGuest }) => {
+        this.guests = this.guests.map((item) => this.getGuestId(item) === guestId ? updatedGuest : item);
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo actualizar el seguimiento.';
+      }
+    });
+  }
+
+  getCommunicationStatus(guest: GuestModel): GuestCommunicationStatus {
+    return guest.communicationStatus || (guest.status === 'confirmed' ? 'confirmed' : 'pending');
+  }
+
+  getMessageTypeLabel(messageType?: GuestMessageType): string {
+    return this.messageTemplates.find((template) => template.value === messageType)?.label || 'Sin mensaje';
   }
 
   getEventId(): string {
@@ -187,6 +366,77 @@ export class EventDetailComponent implements OnInit {
 
   private normalizePhone(phone?: string): string {
     return (phone || '').trim().replace(/[\s().-]/g, '');
+  }
+
+  private normalizeSearch(value?: string): string {
+    return (value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  }
+
+  private toWhatsappPhone(phone?: string): string {
+    const normalized = this.normalizePhone(phone).replace(/^\+/, '');
+    if (!normalized) return '';
+    return normalized.length === 10 ? `52${normalized}` : normalized;
+  }
+
+  private getMessageSubject(messageType: GuestMessageType): string {
+    const title = this.event?.title || 'Invitacion';
+    if (messageType === 'reminder') return `Recordatorio RSVP - ${title}`;
+    if (messageType === 'location_change') return `Actualizacion de ubicacion - ${title}`;
+    if (messageType === 'thanks') return `Gracias por confirmar - ${title}`;
+    return `Invitacion - ${title}`;
+  }
+
+  private buildMessage(guest: GuestModel, messageType: GuestMessageType): string {
+    const eventTitle = this.event?.title || 'nuestro evento';
+    const date = this.event?.date ? new Date(this.event.date).toLocaleDateString() : '';
+    const venue = this.event?.venue?.name || '';
+    const address = this.event?.venue?.address || '';
+    const publicUrl = this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : '';
+    const locationLine = [venue, address].filter(Boolean).join(' - ');
+
+    if (messageType === 'reminder') {
+      return [
+        `Hola ${guest.name}, te recordamos confirmar tu asistencia a ${eventTitle}.`,
+        date ? `Fecha: ${date}` : '',
+        publicUrl,
+        'Tu confirmacion nos ayuda a organizar mejor el evento.'
+      ].filter(Boolean).join('\n\n');
+    }
+
+    if (messageType === 'location_change') {
+      return [
+        `Hola ${guest.name}, tenemos una actualizacion de ubicacion para ${eventTitle}.`,
+        locationLine ? `Nueva ubicacion: ${locationLine}` : '',
+        publicUrl,
+        'Te recomendamos revisar el enlace antes del evento.'
+      ].filter(Boolean).join('\n\n');
+    }
+
+    if (messageType === 'thanks') {
+      return [
+        `Hola ${guest.name}, gracias por confirmar tu asistencia a ${eventTitle}.`,
+        date ? `Nos vemos el ${date}.` : '',
+        locationLine ? `Lugar: ${locationLine}` : '',
+        'Nos encantara verte ahi.'
+      ].filter(Boolean).join('\n\n');
+    }
+
+    return [
+      `Hola ${guest.name}, te comparto tu invitacion digital para ${eventTitle}.`,
+      date ? `Fecha: ${date}` : '',
+      locationLine ? `Lugar: ${locationLine}` : '',
+      publicUrl,
+      'Por favor confirma tu asistencia desde el enlace.'
+    ].filter(Boolean).join('\n\n');
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   private findDuplicateGuest(excludeGuestId?: string): { guest: GuestModel; field: 'email' | 'phone' } | undefined {

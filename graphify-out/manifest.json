@@ -25,9 +25,9 @@
     "semantic_hash": "e79a77976b26b6b7f9e16219672207c0"
   },
   "src/app/core/api.service.ts": {
-    "mtime": 1780876571.2313683,
-    "ast_hash": "c35d16bb577d1627e6276b35d10a433b",
-    "semantic_hash": "c35d16bb577d1627e6276b35d10a433b"
+    "mtime": 1780896135.1161919,
+    "ast_hash": "6618f1fd3ba1178000338fb10696d2f3",
+    "semantic_hash": ""
   },
   "src/app/core/auth.guard.ts": {
     "mtime": 1780729051.3817577,
@@ -40,9 +40,9 @@
     "semantic_hash": "acd0740881d844415760273cfa4ef8c3"
   },
   "src/app/core/models.ts": {
-    "mtime": 1780876558.9062064,
-    "ast_hash": "40892760a6ad9be35e88ed13f0aa1ea6",
-    "semantic_hash": "40892760a6ad9be35e88ed13f0aa1ea6"
+    "mtime": 1780896125.4472363,
+    "ast_hash": "f51619820137a12fc0676f1e4a492cbc",
+    "semantic_hash": ""
   },
   "src/app/features/contact/contact.component.ts": {
     "mtime": 1780773092.550017,
@@ -55,9 +55,9 @@
     "semantic_hash": "bf34bcbefa72c7320cb08dfb93e4160e"
   },
   "src/app/features/event-detail/event-detail.component.ts": {
-    "mtime": 1780876688.9625342,
-    "ast_hash": "1b3e8dc65cec75b688f7ca9f1f408e79",
-    "semantic_hash": "1b3e8dc65cec75b688f7ca9f1f408e79"
+    "mtime": 1780896183.4381132,
+    "ast_hash": "060dcfa667656b919e8ff42e59a7f81e",
+    "semantic_hash": ""
   },
   "src/app/features/events/events.component.ts": {
     "mtime": 1780729051.3953393,
@@ -65,8 +65,8 @@
     "semantic_hash": "aa83c65edde5c046fc8b30016cf05e01"
   },
   "src/app/features/invitation-editor/invitation-editor.component.ts": {
-    "mtime": 1780886473.8231502,
-    "ast_hash": "3c5471afc313a00e9061c8475dfc05b0",
+    "mtime": 1780896153.754882,
+    "ast_hash": "e3adc169a74f941e7ec21d3958050e34",
     "semantic_hash": ""
   },
   "src/app/features/login/login.component.ts": {

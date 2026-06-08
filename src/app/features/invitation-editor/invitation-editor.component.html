@@ -78,11 +78,17 @@
         </section>
 
         <section class="panel">
-          <h2>Paquetes</h2>
+          <h2>Monetizacion</h2>
+          <p class="muted">Planes simples para vender eventos reales sin depender del checkout durante el lanzamiento.</p>
           <div class="package-list">
-            <button type="button" class="ghost" (click)="checkout('basic')" [disabled]="checkoutLoading">{{ checkoutLoading === 'basic' ? 'Abriendo...' : 'Basico $199' }}</button>
-            <button type="button" class="ghost" (click)="checkout('premium')" [disabled]="checkoutLoading">{{ checkoutLoading === 'premium' ? 'Abriendo...' : 'Premium $499' }}</button>
-            <button type="button" class="ghost" (click)="checkout('organizer')" [disabled]="checkoutLoading">{{ checkoutLoading === 'organizer' ? 'Abriendo...' : 'Organizador $1499' }}</button>
+            <article *ngFor="let plan of plans" class="package-card">
+              <strong>{{ plan.name }}</strong>
+              <span>{{ formatPrice(plan) }}</span>
+              <small>{{ planLimitText(plan) }}</small>
+              <button *ngIf="plan.key !== 'free'" type="button" class="ghost" (click)="checkout(plan.key === 'pro' ? 'pro' : 'event')" [disabled]="checkoutLoading">
+                {{ checkoutLoading === plan.key ? 'Abriendo...' : 'Preparar pago' }}
+              </button>
+            </article>
           </div>
         </section>
       </aside>

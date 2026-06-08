@@ -10,7 +10,7 @@ export interface User {
   name: string;
   email: string;
   role: 'client' | 'organizer' | 'admin';
-  plan?: string;
+  plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
 }
 
 export interface AuthResponse {
@@ -150,6 +150,9 @@ export interface RsvpModel extends RsvpPayload {
 }
 
 export type GuestStatus = 'pending' | 'confirmed' | 'declined';
+export type GuestCommunicationStatus = 'pending' | 'sent' | 'confirmed';
+export type GuestMessageType = 'invitation' | 'reminder' | 'location_change' | 'thanks';
+export type GuestMessageChannel = 'whatsapp' | 'email';
 
 export interface GuestModel {
   _id?: string;
@@ -162,6 +165,10 @@ export interface GuestModel {
   allowedCompanions: number;
   qrCode?: string;
   status: GuestStatus;
+  communicationStatus?: GuestCommunicationStatus;
+  lastMessageType?: GuestMessageType;
+  lastMessageChannel?: GuestMessageChannel;
+  lastMessageSentAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -207,12 +214,16 @@ export interface GuestAccessResponse {
 }
 
 export interface ImportGuestsResponse {
+  created?: number;
+  updated?: number;
+  skipped?: number;
+  errors?: number;
   imported: number;
   invalidRows: number;
   duplicateRows?: number;
   duplicates?: Array<{
     row: number;
-    field: 'email' | 'phone';
+    field: 'email' | 'phone' | 'plan';
     value: string;
     guestName: string;
   }>;
@@ -226,9 +237,26 @@ export interface UploadUrlResponse {
 }
 
 export type AssetFolder = 'covers' | 'gallery' | 'music' | 'assets';
-export type PaymentPackage = 'basic' | 'premium' | 'organizer';
+export type PaymentPackage = 'free' | 'event' | 'pro';
+
+export interface PlanDefinition {
+  key: PaymentPackage;
+  name: string;
+  amount: number;
+  limits: {
+    guests: number;
+    galleryImages: number;
+    music: boolean;
+    premiumTemplates: boolean;
+    exportData: boolean;
+    customDomain: boolean;
+    whiteLabel: boolean;
+  };
+}
 
 export interface CheckoutResponse {
-  checkoutUrl: string;
-  sessionId: string;
+  checkoutUrl: string | null;
+  sessionId: string | null;
+  manualPayment?: boolean;
+  message?: string;
 }

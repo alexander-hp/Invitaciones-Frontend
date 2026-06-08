@@ -12,7 +12,7 @@ a { color: inherit; }
 .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .eyebrow { margin: 0 0 6px; color: #6b7a55; font-size: 12px; font-weight: 800; text-transform: uppercase; }
 .panel, .metrics-grid article { background: #ffffff; border: 1px solid #dde4d7; border-radius: 8px; padding: 18px; }
-.primary, .ghost { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; padding: 0 16px; text-decoration: none; }
+.primary, .ghost { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; padding: 0 16px; text-decoration: none; white-space: nowrap; }
 .primary { background: #1f2a44; color: #ffffff; }
 .ghost { background: #edf2e8; color: #172033; }
 .small { min-height: 34px; padding: 0 10px; }
@@ -82,19 +82,29 @@ textarea { min-height: 112px; resize: vertical; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .count-pill, .status-pill { display: inline-flex; align-items: center; min-height: 28px; border-radius: 999px; padding: 0 10px; background: #edf2e8; color: #405132; font-size: 13px; font-weight: 800; }
 .guest-form { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 12px; align-items: end; margin-bottom: 14px; }
+.guest-summary { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.guest-summary article { border: 1px solid #e3e9de; border-radius: 8px; padding: 12px; background: #fafcf8; }
+.guest-summary span { display: block; color: #607080; font-size: 13px; margin-bottom: 4px; }
+.guest-summary strong { font-size: 24px; }
+.communication-panel { display: grid; gap: 12px; border: 1px solid #e3e9de; border-radius: 8px; padding: 12px; background: #fafcf8; margin-bottom: 14px; }
+.communication-metrics { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 10px; }
+.communication-metrics article { border: 1px solid #e3e9de; border-radius: 8px; padding: 10px; background: #ffffff; }
+.communication-metrics span { display: block; color: #607080; font-size: 13px; margin-bottom: 4px; }
+.communication-metrics strong { font-size: 22px; }
+.filter-row { display: grid; grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(150px, .35fr)); gap: 12px; align-items: end; margin-bottom: 14px; }
 .compact-list { margin: -4px 0 10px; color: #4c5968; font-size: 14px; line-height: 1.5; }
 .table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; min-width: 720px; }
+table { width: 100%; border-collapse: collapse; min-width: 860px; }
 th, td { padding: 12px; border-bottom: 1px solid #e3e9de; text-align: left; }
 th { color: #607080; font-size: 13px; }
 .status-pill.confirmed { background: #dcfce7; color: #166534; }
 .status-pill.declined { background: #fee2e2; color: #991b1b; }
 @media (max-width: 1100px) {
-  .guest-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guest-form, .filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .section-heading { align-items: flex-start; flex-direction: column; }
-  .guest-form { grid-template-columns: 1fr; }
+  .guest-form, .guest-summary, .communication-metrics, .filter-row { grid-template-columns: 1fr; }
 }
 
 .import-row, .asset-grid, .package-list { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 14px; }
@@ -104,3 +114,6 @@ th { color: #607080; font-size: 13px; }
 .template-list button { text-align: left; border: 1px solid #dde4d7; background: #fafcf8; border-radius: 8px; padding: 12px; }
 .template-list button strong, .template-list button span { display: block; }
 .template-list button span { color: #607080; margin-top: 4px; }
+.package-card { display: grid; gap: 8px; border: 1px solid #dde4d7; border-radius: 8px; padding: 12px; background: #fafcf8; }
+.package-card span { color: #172033; font-weight: 800; }
+.package-card small { color: #607080; line-height: 1.45; }

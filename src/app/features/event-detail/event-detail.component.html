@@ -43,7 +43,32 @@
           <p class="eyebrow">Invitados</p>
           <h2>Lista del evento</h2>
         </div>
-        <span class="count-pill">{{ guests.length }} invitados</span>
+        <div class="inline-actions">
+          <span class="count-pill">{{ filteredGuests.length }} de {{ guests.length }} invitados</span>
+          <button class="ghost small" type="button" (click)="exportGuests()" [disabled]="exportingGuests || !guests.length">{{ exportingGuests ? 'Exportando...' : 'Exportar CSV' }}</button>
+        </div>
+      </div>
+
+      <div class="guest-summary">
+        <article><span>Pendientes</span><strong>{{ pendingGuests }}</strong></article>
+        <article><span>Confirmados</span><strong>{{ confirmedGuests }}</strong></article>
+        <article><span>Rechazados</span><strong>{{ declinedGuests }}</strong></article>
+      </div>
+
+      <div class="communication-panel">
+        <div class="communication-metrics">
+          <article><span>Por enviar</span><strong>{{ pendingCommunicationGuests }}</strong></article>
+          <article><span>Enviados</span><strong>{{ sentCommunicationGuests }}</strong></article>
+          <article><span>Confirmados</span><strong>{{ confirmedCommunicationGuests }}</strong></article>
+        </div>
+        <div class="filter-row">
+          <label>Plantilla
+            <select name="messageTemplate" [(ngModel)]="selectedMessageType">
+              <option *ngFor="let template of messageTemplates" [value]="template.value">{{ template.label }}</option>
+            </select>
+          </label>
+          <button class="ghost" type="button" (click)="showPendingReminders()">Ver pendientes y recordar</button>
+        </div>
       </div>
 
       <form class="guest-form" (ngSubmit)="saveGuest()">
@@ -61,6 +86,32 @@
         <button class="ghost" type="button" (click)="importGuests()" [disabled]="!selectedImportFile || importing">{{ importing ? 'Importando...' : 'Importar' }}</button>
       </div>
 
+      <div class="filter-row">
+        <label>Buscar<input name="guestSearch" placeholder="Nombre, email, telefono o grupo" [(ngModel)]="guestFilters.search"></label>
+        <label>Estado
+          <select name="guestStatusFilter" [(ngModel)]="guestFilters.status">
+            <option value="">Todos</option>
+            <option value="pending">Pendientes</option>
+            <option value="confirmed">Confirmados</option>
+            <option value="declined">Rechazados</option>
+          </select>
+        </label>
+        <label>Seguimiento
+          <select name="guestCommunicationFilter" [(ngModel)]="guestFilters.communicationStatus">
+            <option value="">Todos</option>
+            <option value="pending">Por enviar</option>
+            <option value="sent">Enviados</option>
+            <option value="confirmed">Confirmados</option>
+          </select>
+        </label>
+        <label>Grupo
+          <select name="guestGroupFilter" [(ngModel)]="guestFilters.group">
+            <option value="">Todos</option>
+            <option *ngFor="let group of guestGroups" [value]="group">{{ group }}</option>
+          </select>
+        </label>
+      </div>
+
       <p *ngIf="guestError" class="error">{{ guestError }}</p>
       <p *ngIf="guestMessage" class="success">{{ guestMessage }}</p>
       <p *ngIf="importMessage" class="success">{{ importMessage }}</p>
@@ -69,8 +120,9 @@
       </ul>
       <p *ngIf="guestsLoading" class="notice">Cargando invitados...</p>
       <p *ngIf="!guestsLoading && !guests.length" class="muted">Aun no hay invitados registrados.</p>
+      <p *ngIf="!guestsLoading && guests.length && !filteredGuests.length" class="muted">No hay invitados con esos filtros.</p>
 
-      <div class="table-wrap" *ngIf="guests.length">
+      <div class="table-wrap" *ngIf="filteredGuests.length">
         <table>
           <thead>
             <tr>
@@ -79,17 +131,30 @@
               <th>Grupo</th>
               <th>Acompanantes</th>
               <th>Estado</th>
+              <th>Seguimiento</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let guest of guests">
+            <tr *ngFor="let guest of filteredGuests">
               <td>{{ guest.name }}</td>
               <td>{{ guest.email || guest.phone || 'Sin contacto' }}</td>
               <td>{{ guest.group || 'General' }}</td>
               <td>{{ guest.allowedCompanions }}</td>
               <td><span class="status-pill" [class.confirmed]="guest.status === 'confirmed'" [class.declined]="guest.status === 'declined'">{{ guest.status }}</span></td>
-              <td><button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button></td>
+              <td>
+                <span class="status-pill" [class.confirmed]="getCommunicationStatus(guest) === 'confirmed'">{{ getCommunicationStatus(guest) }}</span>
+                <small *ngIf="guest.lastMessageType"> {{ getMessageTypeLabel(guest.lastMessageType) }}</small>
+              </td>
+              <td>
+                <div class="inline-actions">
+                  <button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button>
+                  <a *ngIf="canWhatsappGuest(guest)" class="ghost small" [href]="getWhatsappLink(guest)" target="_blank" rel="noopener" (click)="markMessageSent(guest, 'whatsapp')">WhatsApp</a>
+                  <a *ngIf="canEmailGuest(guest)" class="ghost small" [href]="getEmailLink(guest)" (click)="markMessageSent(guest, 'email')">Email</a>
+                  <button class="ghost small" type="button" (click)="setCommunicationStatus(guest, 'pending')">Pendiente</button>
+                  <button class="ghost small" type="button" (click)="deleteGuest(guest)" [disabled]="guestSaving">Eliminar</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -102,7 +167,10 @@
           <p class="eyebrow">RSVP</p>
           <h2>Respuestas recibidas</h2>
         </div>
-        <span class="count-pill">{{ rsvps.length }} respuestas</span>
+        <div class="inline-actions">
+          <span class="count-pill">{{ rsvps.length }} respuestas</span>
+          <button class="ghost small" type="button" (click)="exportRsvps()" [disabled]="exportingRsvps || !rsvps.length">{{ exportingRsvps ? 'Exportando...' : 'Exportar CSV' }}</button>
+        </div>
       </div>
 
       <p *ngIf="rsvpError" class="error">{{ rsvpError }}</p>

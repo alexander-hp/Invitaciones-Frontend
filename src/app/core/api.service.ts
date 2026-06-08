@@ -13,12 +13,16 @@ import {
   EventType,
   GuestModel,
   GuestAccessResponse,
+  GuestCommunicationStatus,
+  GuestMessageChannel,
+  GuestMessageType,
   GuestPayload,
   ImportGuestsResponse,
   InvitationModel,
   InvitationPayload,
   MessageResponse,
   PaymentPackage,
+  PlanDefinition,
   RsvpModel,
   RsvpPayload,
   TemplateModel,
@@ -101,8 +105,13 @@ export class ApiService {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 
-  listGuests(eventId: string): Observable<{ guests: GuestModel[] }> {
-    return this.http.get<{ guests: GuestModel[] }>(`${this.apiUrl}/guests/event/${eventId}`);
+  listGuests(eventId: string, filters?: { search?: string; status?: string; communicationStatus?: string; group?: string }): Observable<{ guests: GuestModel[] }> {
+    let params = new HttpParams();
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.status) params = params.set('status', filters.status);
+    if (filters?.communicationStatus) params = params.set('communicationStatus', filters.communicationStatus);
+    if (filters?.group) params = params.set('group', filters.group);
+    return this.http.get<{ guests: GuestModel[] }>(`${this.apiUrl}/guests/event/${eventId}`, { params });
   }
 
   listRsvps(eventId: string): Observable<{ rsvps: RsvpModel[] }> {
@@ -117,11 +126,32 @@ export class ApiService {
     return this.http.patch<{ guest: GuestModel }>(`${this.apiUrl}/guests/${id}`, payload);
   }
 
+  deleteGuest(id: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/guests/${id}`);
+  }
+
+  markGuestCommunication(id: string, payload: { communicationStatus: GuestCommunicationStatus; messageType?: GuestMessageType; channel?: GuestMessageChannel }): Observable<{ guest: GuestModel }> {
+    return this.http.patch<{ guest: GuestModel }>(`${this.apiUrl}/guests/${id}/communication`, payload);
+  }
+
   importGuests(eventId: string, file: File): Observable<ImportGuestsResponse> {
     const formData = new FormData();
     formData.append('event', eventId);
     formData.append('file', file);
     return this.http.post<ImportGuestsResponse>(`${this.apiUrl}/guests/import`, formData);
+  }
+
+  exportGuests(eventId: string, filters?: { search?: string; status?: string; communicationStatus?: string; group?: string }): Observable<Blob> {
+    let params = new HttpParams();
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.status) params = params.set('status', filters.status);
+    if (filters?.communicationStatus) params = params.set('communicationStatus', filters.communicationStatus);
+    if (filters?.group) params = params.set('group', filters.group);
+    return this.http.get(`${this.apiUrl}/guests/event/${eventId}/export`, { params, responseType: 'blob' });
+  }
+
+  exportRsvps(eventId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/rsvps/event/${eventId}/export`, { responseType: 'blob' });
   }
 
   listTemplates(eventType?: EventType, tier?: TemplateTier): Observable<{ templates: TemplateModel[] }> {
@@ -139,7 +169,11 @@ export class ApiService {
     return this.http.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
   }
 
-  createCheckout(payload: { package: PaymentPackage; invitation?: string }): Observable<CheckoutResponse> {
+  listPlans(): Observable<{ plans: PlanDefinition[] }> {
+    return this.http.get<{ plans: PlanDefinition[] }>(`${this.apiUrl}/payments/plans`);
+  }
+
+  createCheckout(payload: { package: Exclude<PaymentPackage, 'free'>; invitation?: string }): Observable<CheckoutResponse> {
     return this.http.post<CheckoutResponse>(`${this.apiUrl}/payments/checkout`, payload);
   }
 
