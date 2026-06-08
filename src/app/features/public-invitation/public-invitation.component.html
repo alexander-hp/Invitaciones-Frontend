@@ -1,8 +1,8 @@
-﻿<p *ngIf="loading" class="notice">Cargando invitacion...</p>
+<p *ngIf="loading" class="notice">Cargando invitacion...</p>
 <p *ngIf="error" class="error">{{ error }}</p>
 
 <section *ngIf="invitation" class="public-page" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
-  <img *ngIf="invitation.content.coverImageUrl" class="public-cover" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion">
+  <img *ngIf="invitation.content.coverImageUrl" class="public-cover" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion" loading="eager" decoding="async">
   <div class="public-hero">
     <p>{{ invitation.content.subheadline }}</p>
     <h1>{{ invitation.content.headline }}</h1>
@@ -67,7 +67,7 @@
   <section class="public-media" *ngIf="invitation.content.musicUrl || invitation.content.gallery?.length">
     <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
     <div class="gallery-grid" *ngIf="invitation.content.gallery?.length">
-      <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria">
+      <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
     </div>
   </section>
 </section>

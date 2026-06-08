@@ -5,6 +5,10 @@ import { AssetFolder, EventModel, InvitationModel, PaymentPackage, TemplateModel
 
 @Component({ selector: 'app-invitation-editor', templateUrl: './invitation-editor.component.html' })
 export class InvitationEditorComponent implements OnInit {
+  private readonly imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+  private readonly audioTypes = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav']);
+  private readonly maxImageSize = 5 * 1024 * 1024;
+  private readonly maxAudioSize = 10 * 1024 * 1024;
   invitation?: InvitationModel;
   event?: EventModel;
   templates: TemplateModel[] = [];
@@ -125,6 +129,14 @@ export class InvitationEditorComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file || !this.invitation) return;
+
+    const validationError = this.validateAsset(file, folder);
+    if (validationError) {
+      this.error = validationError;
+      input.value = '';
+      return;
+    }
+
     this.assetUploading = true;
     this.assetMessage = '';
     this.error = '';
@@ -137,6 +149,7 @@ export class InvitationEditorComponent implements OnInit {
             if (folder === 'music') this.invitation.content.musicUrl = upload.publicUrl;
             if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
             this.persistUploadedAsset();
+            input.value = '';
           },
           error: () => {
             this.error = 'S3 rechazo la subida. Revisa CORS del bucket, permisos PutObject y que el archivo coincida con el tipo permitido.';
@@ -145,12 +158,20 @@ export class InvitationEditorComponent implements OnInit {
         });
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo preparar la URL de subida. Revisa AWS_S3_BUCKET, region, credenciales y tipo de archivo.';
+        this.error = error.error?.message || 'No se pudo preparar la URL de subida. Revisa AWS_S3_BUCKET, MEDIA_PUBLIC_BASE_URL, region, credenciales y tipo de archivo.';
         this.assetUploading = false;
       }
     });
   }
 
+  private validateAsset(file: File, folder: AssetFolder): string {
+    const isMusic = folder === 'music';
+    const allowedTypes = isMusic ? this.audioTypes : this.imageTypes;
+    const maxSize = isMusic ? this.maxAudioSize : this.maxImageSize;
+    if (!allowedTypes.has(file.type)) return isMusic ? 'Formato de audio no soportado.' : 'Formato de imagen no soportado.';
+    if (file.size > maxSize) return isMusic ? 'El audio no debe exceder 10MB.' : 'La imagen no debe exceder 5MB.';
+    return '';
+  }
   checkout(pack: PaymentPackage): void {
     if (!this.invitation) return;
     this.checkoutLoading = pack;

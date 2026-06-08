@@ -57,10 +57,10 @@
         </div>
 
         <div class="asset-preview-list">
-          <img *ngIf="invitation.content.coverImageUrl" class="asset-cover-preview" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion">
+          <img *ngIf="invitation.content.coverImageUrl" class="asset-cover-preview" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion" loading="lazy" decoding="async">
           <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
           <div class="gallery-strip" *ngIf="invitation.content.gallery?.length">
-            <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria">
+            <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
           </div>
         </div>
       </form>
@@ -89,7 +89,7 @@
     </div>
 
     <section class="public-preview" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
-      <img *ngIf="invitation.content.coverImageUrl" class="invite-cover" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion">
+      <img *ngIf="invitation.content.coverImageUrl" class="invite-cover" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion" loading="eager" decoding="async">
       <div class="invite-hero">
         <p>{{ invitation.content.subheadline }}</p>
         <h2>{{ invitation.content.headline }}</h2>
@@ -109,7 +109,7 @@
       <section class="invite-media" *ngIf="invitation.content.musicUrl || invitation.content.gallery?.length">
         <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
         <div class="gallery-grid" *ngIf="invitation.content.gallery?.length">
-          <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria">
+          <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
         </div>
       </section>
     </section>

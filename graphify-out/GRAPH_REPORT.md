@@ -1,15 +1,16 @@
-# Graph Report - .  (2026-06-07)
+# Graph Report - Invitaciones-FrontendAngular  (2026-06-07)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 23 files · ~5,384 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 174 nodes · 324 edges · 12 communities (4 shown, 8 thin omitted)
+- 191 nodes · 509 edges · 11 communities (7 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b15d4f60`
+- Built from commit: `6f737a0c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -23,60 +24,78 @@
 - [[_COMMUNITY_Community 6|Community 6]]
 - [[_COMMUNITY_Community 7|Community 7]]
 - [[_COMMUNITY_Community 8|Community 8]]
-- [[_COMMUNITY_Community 9|Community 9]]
 - [[_COMMUNITY_Community 10|Community 10]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `InvitationModel` - 12 edges
-2. `EventModel` - 11 edges
-3. `GuestModel` - 9 edges
-4. `AuthResponse` - 8 edges
-5. `RsvpModel` - 6 edges
-6. `User` - 5 edges
-7. `MessageResponse` - 5 edges
-8. `EventPayload` - 5 edges
-9. `TemplateModel` - 5 edges
-10. `AssetFolder` - 5 edges
+1. `ApiService` - 45 edges
+2. `EventDetailComponent` - 28 edges
+3. `InvitationEditorComponent` - 20 edges
+4. `AuthService` - 19 edges
+5. `PublicInvitationComponent` - 19 edges
+6. `EventModel` - 15 edges
+7. `InvitationModel` - 15 edges
+8. `GuestModel` - 10 edges
+9. `EventsComponent` - 9 edges
+10. `AuthResponse` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
-- None detected - all connections are within the same source files.
+- `EventDetailComponent` --references--> `EventModel`  [EXTRACTED]
+  src/app/features/event-detail/event-detail.component.ts → src/app/core/models.ts
+- `InvitationEditorComponent` --references--> `EventModel`  [EXTRACTED]
+  src/app/features/invitation-editor/invitation-editor.component.ts → src/app/core/models.ts
+- `PublicInvitationComponent` --references--> `EventModel`  [EXTRACTED]
+  src/app/features/public-invitation/public-invitation.component.ts → src/app/core/models.ts
+- `EventDetailComponent` --references--> `InvitationModel`  [EXTRACTED]
+  src/app/features/event-detail/event-detail.component.ts → src/app/core/models.ts
+- `InvitationEditorComponent` --references--> `InvitationModel`  [EXTRACTED]
+  src/app/features/invitation-editor/invitation-editor.component.ts → src/app/core/models.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (12 total, 8 thin omitted)
+## Communities (11 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.10
-Nodes (20): CheckoutResponse, ContactPayload, DashboardMetrics, EventAgendaItem, EventStatus, EventType, GuestAccessResponse, GuestPayload (+12 more)
+Cohesion: 0.11
+Nodes (12): ApiService, CheckoutResponse, ContactPayload, EventPayload, GuestPayload, ImportGuestsResponse, InvitationModel, InvitationPayload (+4 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.10
-Nodes (3): AuthServiceStub, AuthResponse, User
+Cohesion: 0.16
+Nodes (6): AppComponent, AuthServiceStub, AuthGuard, AuthService, AuthResponse, User
+
+### Community 3 - "Community 3"
+Cohesion: 0.14
+Nodes (9): AppModule, AppRoutingModule, routes, ContactComponent, environment, environment, LoginComponent, PasswordResetConfirmComponent (+1 more)
+
+### Community 4 - "Community 4"
+Cohesion: 0.26
+Nodes (4): AssetFolder, PaymentPackage, TemplateModel, InvitationEditorComponent
 
 ### Community 7 - "Community 7"
 Cohesion: 0.20
 Nodes (7): apiTarget, fs, http, path, port, root, types
 
+### Community 8 - "Community 8"
+Cohesion: 0.16
+Nodes (12): DashboardMetrics, EventAgendaItem, EventStatus, EventType, GuestStatus, InvitationAccessMode, InvitationContent, InvitationStatus (+4 more)
+
 ## Knowledge Gaps
-- **16 isolated node(s):** `http`, `fs`, `path`, `port`, `apiTarget` (+11 more)
+- **17 isolated node(s):** `http`, `fs`, `path`, `port`, `apiTarget` (+12 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `InvitationModel` connect `Community 8` to `Community 0`, `Community 2`, `Community 4`, `Community 5`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `EventModel` connect `Community 6` to `Community 0`, `Community 2`, `Community 4`, `Community 5`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+- **Why does `ApiService` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 8`?**
+  _High betweenness centrality (0.117) - this node is a cross-community bridge._
+- **Why does `EventDetailComponent` connect `Community 2` to `Community 0`, `Community 3`, `Community 6`?**
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+- **Why does `InvitationEditorComponent` connect `Community 4` to `Community 0`, `Community 3`, `Community 6`?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
 - **What connects `http`, `fs`, `path` to the rest of the system?**
-  _16 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _17 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.09672830725462304 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.09846153846153846 - nodes in this community are weakly interconnected._
-- **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.1383399209486166 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11282051282051282 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.13157894736842105 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14245014245014245 - nodes in this community are weakly interconnected._

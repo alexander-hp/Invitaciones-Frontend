@@ -9,9 +9,9 @@
       "source_file": "spa-server.js",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "spa_server",
       "community": 7,
-      "norm_label": "spa-server.js",
-      "id": "spa_server"
+      "norm_label": "spa-server.js"
     },
     {
       "label": "http",
@@ -19,9 +19,9 @@
       "source_file": "spa-server.js",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "spa_server_http",
       "community": 7,
-      "norm_label": "http",
-      "id": "spa_server_http"
+      "norm_label": "http"
     },
     {
       "label": "fs",
@@ -29,9 +29,9 @@
       "source_file": "spa-server.js",
       "source_location": "L2",
       "_origin": "ast",
+      "id": "spa_server_fs",
       "community": 7,
-      "norm_label": "fs",
-      "id": "spa_server_fs"
+      "norm_label": "fs"
     },
     {
       "label": "path",
@@ -39,9 +39,9 @@
       "source_file": "spa-server.js",
       "source_location": "L3",
       "_origin": "ast",
+      "id": "spa_server_path",
       "community": 7,
-      "norm_label": "path",
-      "id": "spa_server_path"
+      "norm_label": "path"
     },
     {
       "label": "port",
@@ -49,9 +49,9 @@
       "source_file": "spa-server.js",
       "source_location": "L5",
       "_origin": "ast",
+      "id": "spa_server_port",
       "community": 7,
-      "norm_label": "port",
-      "id": "spa_server_port"
+      "norm_label": "port"
     },
     {
       "label": "apiTarget",
@@ -59,9 +59,9 @@
       "source_file": "spa-server.js",
       "source_location": "L6",
       "_origin": "ast",
+      "id": "spa_server_apitarget",
       "community": 7,
-      "norm_label": "apitarget",
-      "id": "spa_server_apitarget"
+      "norm_label": "apitarget"
     },
     {
       "label": "root",
@@ -69,9 +69,9 @@
       "source_file": "spa-server.js",
       "source_location": "L7",
       "_origin": "ast",
+      "id": "spa_server_root",
       "community": 7,
-      "norm_label": "root",
-      "id": "spa_server_root"
+      "norm_label": "root"
     },
     {
       "label": "types",
@@ -79,9 +79,9 @@
       "source_file": "spa-server.js",
       "source_location": "L8",
       "_origin": "ast",
+      "id": "spa_server_types",
       "community": 7,
-      "norm_label": "types",
-      "id": "spa_server_types"
+      "norm_label": "types"
     },
     {
       "label": "send()",
@@ -89,9 +89,9 @@
       "source_file": "spa-server.js",
       "source_location": "L21",
       "_origin": "ast",
+      "id": "spa_server_send",
       "community": 7,
-      "norm_label": "send()",
-      "id": "spa_server_send"
+      "norm_label": "send()"
     },
     {
       "label": "proxyApi()",
@@ -99,9 +99,9 @@
       "source_file": "spa-server.js",
       "source_location": "L33",
       "_origin": "ast",
+      "id": "spa_server_proxyapi",
       "community": 7,
-      "norm_label": "proxyapi()",
-      "id": "spa_server_proxyapi"
+      "norm_label": "proxyapi()"
     },
     {
       "label": "app-routing.module.ts",
@@ -109,9 +109,9 @@
       "source_file": "src/app/app-routing.module.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_app_routing_module",
       "community": 3,
-      "norm_label": "app-routing.module.ts",
-      "id": "app_app_routing_module"
+      "norm_label": "app-routing.module.ts"
     },
     {
       "label": "routes",
@@ -119,9 +119,19 @@
       "source_file": "src/app/app-routing.module.ts",
       "source_location": "L15",
       "_origin": "ast",
+      "id": "app_app_routing_module_routes",
       "community": 3,
-      "norm_label": "routes",
-      "id": "app_app_routing_module_routes"
+      "norm_label": "routes"
+    },
+    {
+      "label": "AppRoutingModule",
+      "file_type": "code",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L34",
+      "_origin": "ast",
+      "id": "app_app_routing_module_approutingmodule",
+      "community": 3,
+      "norm_label": "approutingmodule"
     },
     {
       "label": "app.component.spec.ts",
@@ -129,9 +139,9 @@
       "source_file": "src/app/app.component.spec.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_app_component_spec",
       "community": 1,
-      "norm_label": "app.component.spec.ts",
-      "id": "app_app_component_spec"
+      "norm_label": "app.component.spec.ts"
     },
     {
       "label": "AuthServiceStub",
@@ -139,9 +149,9 @@
       "source_file": "src/app/app.component.spec.ts",
       "source_location": "L7",
       "_origin": "ast",
+      "id": "app_app_component_spec_authservicestub",
       "community": 1,
-      "norm_label": "authservicestub",
-      "id": "app_app_component_spec_authservicestub"
+      "norm_label": "authservicestub"
     },
     {
       "label": ".loadCurrentUser()",
@@ -149,9 +159,9 @@
       "source_file": "src/app/app.component.spec.ts",
       "source_location": "L10",
       "_origin": "ast",
+      "id": "app_app_component_spec_authservicestub_loadcurrentuser",
       "community": 1,
-      "norm_label": ".loadcurrentuser()",
-      "id": "app_app_component_spec_authservicestub_loadcurrentuser"
+      "norm_label": ".loadcurrentuser()"
     },
     {
       "label": ".logout()",
@@ -159,9 +169,9 @@
       "source_file": "src/app/app.component.spec.ts",
       "source_location": "L11",
       "_origin": "ast",
+      "id": "app_app_component_spec_authservicestub_logout",
       "community": 1,
-      "norm_label": ".logout()",
-      "id": "app_app_component_spec_authservicestub_logout"
+      "norm_label": ".logout()"
     },
     {
       "label": "app.component.ts",
@@ -169,9 +179,19 @@
       "source_file": "src/app/app.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_app_component",
       "community": 1,
-      "norm_label": "app.component.ts",
-      "id": "app_app_component"
+      "norm_label": "app.component.ts"
+    },
+    {
+      "label": "AppComponent",
+      "file_type": "code",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "app_app_component_appcomponent",
+      "community": 1,
+      "norm_label": "appcomponent"
     },
     {
       "label": ".constructor()",
@@ -179,9 +199,9 @@
       "source_file": "src/app/app.component.ts",
       "source_location": "L13",
       "_origin": "ast",
+      "id": "app_app_component_appcomponent_constructor",
       "community": 1,
-      "norm_label": ".constructor()",
-      "id": "app_app_component_appcomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
@@ -189,9 +209,9 @@
       "source_file": "src/app/app.component.ts",
       "source_location": "L15",
       "_origin": "ast",
+      "id": "app_app_component_appcomponent_ngoninit",
       "community": 1,
-      "norm_label": ".ngoninit()",
-      "id": "app_app_component_appcomponent_ngoninit"
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".logout()",
@@ -199,9 +219,9 @@
       "source_file": "src/app/app.component.ts",
       "source_location": "L19",
       "_origin": "ast",
+      "id": "app_app_component_appcomponent_logout",
       "community": 1,
-      "norm_label": ".logout()",
-      "id": "app_app_component_appcomponent_logout"
+      "norm_label": ".logout()"
     },
     {
       "label": "app.module.ts",
@@ -209,9 +229,19 @@
       "source_file": "src/app/app.module.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "app_app_module",
       "community": 3,
-      "norm_label": "app.module.ts",
-      "id": "app_app_module"
+      "norm_label": "app.module.ts"
+    },
+    {
+      "label": "AppModule",
+      "file_type": "code",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "app_app_module_appmodule",
+      "community": 3,
+      "norm_label": "appmodule"
     },
     {
       "label": "api.service.ts",
@@ -219,9 +249,19 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "core_api_service",
       "community": 0,
-      "norm_label": "api.service.ts",
-      "id": "core_api_service"
+      "norm_label": "api.service.ts"
+    },
+    {
+      "label": "ApiService",
+      "file_type": "code",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L31",
+      "_origin": "ast",
+      "id": "core_api_service_apiservice",
+      "community": 0,
+      "norm_label": "apiservice"
     },
     {
       "label": ".constructor()",
@@ -229,9 +269,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L34",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_constructor",
       "community": 0,
-      "norm_label": ".constructor()",
-      "id": "core_api_service_apiservice_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".register()",
@@ -239,9 +279,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L36",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": ".register()",
-      "id": "core_api_service_apiservice_register"
+      "id": "core_api_service_apiservice_register",
+      "community": 0,
+      "norm_label": ".register()"
     },
     {
       "label": ".login()",
@@ -249,9 +289,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L40",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": ".login()",
-      "id": "core_api_service_apiservice_login"
+      "id": "core_api_service_apiservice_login",
+      "community": 0,
+      "norm_label": ".login()"
     },
     {
       "label": ".me()",
@@ -259,9 +299,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L44",
       "_origin": "ast",
-      "community": 1,
-      "norm_label": ".me()",
-      "id": "core_api_service_apiservice_me"
+      "id": "core_api_service_apiservice_me",
+      "community": 0,
+      "norm_label": ".me()"
     },
     {
       "label": ".requestPasswordReset()",
@@ -269,9 +309,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L48",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_requestpasswordreset",
       "community": 0,
-      "norm_label": ".requestpasswordreset()",
-      "id": "core_api_service_apiservice_requestpasswordreset"
+      "norm_label": ".requestpasswordreset()"
     },
     {
       "label": ".confirmPasswordReset()",
@@ -279,9 +319,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L52",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_confirmpasswordreset",
       "community": 0,
-      "norm_label": ".confirmpasswordreset()",
-      "id": "core_api_service_apiservice_confirmpasswordreset"
+      "norm_label": ".confirmpasswordreset()"
     },
     {
       "label": ".sendContact()",
@@ -289,9 +329,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L56",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_sendcontact",
       "community": 0,
-      "norm_label": ".sendcontact()",
-      "id": "core_api_service_apiservice_sendcontact"
+      "norm_label": ".sendcontact()"
     },
     {
       "label": ".getDashboard()",
@@ -299,9 +339,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L60",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_getdashboard",
       "community": 0,
-      "norm_label": ".getdashboard()",
-      "id": "core_api_service_apiservice_getdashboard"
+      "norm_label": ".getdashboard()"
     },
     {
       "label": ".listEvents()",
@@ -309,9 +349,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L64",
       "_origin": "ast",
-      "community": 6,
-      "norm_label": ".listevents()",
-      "id": "core_api_service_apiservice_listevents"
+      "id": "core_api_service_apiservice_listevents",
+      "community": 0,
+      "norm_label": ".listevents()"
     },
     {
       "label": ".createEvent()",
@@ -319,9 +359,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L68",
       "_origin": "ast",
-      "community": 6,
-      "norm_label": ".createevent()",
-      "id": "core_api_service_apiservice_createevent"
+      "id": "core_api_service_apiservice_createevent",
+      "community": 0,
+      "norm_label": ".createevent()"
     },
     {
       "label": ".getEvent()",
@@ -329,9 +369,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L72",
       "_origin": "ast",
-      "community": 6,
-      "norm_label": ".getevent()",
-      "id": "core_api_service_apiservice_getevent"
+      "id": "core_api_service_apiservice_getevent",
+      "community": 0,
+      "norm_label": ".getevent()"
     },
     {
       "label": ".updateEvent()",
@@ -339,9 +379,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L76",
       "_origin": "ast",
-      "community": 6,
-      "norm_label": ".updateevent()",
-      "id": "core_api_service_apiservice_updateevent"
+      "id": "core_api_service_apiservice_updateevent",
+      "community": 0,
+      "norm_label": ".updateevent()"
     },
     {
       "label": ".listInvitations()",
@@ -349,9 +389,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L80",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": ".listinvitations()",
-      "id": "core_api_service_apiservice_listinvitations"
+      "id": "core_api_service_apiservice_listinvitations",
+      "community": 0,
+      "norm_label": ".listinvitations()"
     },
     {
       "label": ".createInvitation()",
@@ -359,9 +399,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L84",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": ".createinvitation()",
-      "id": "core_api_service_apiservice_createinvitation"
+      "id": "core_api_service_apiservice_createinvitation",
+      "community": 0,
+      "norm_label": ".createinvitation()"
     },
     {
       "label": ".updateInvitation()",
@@ -369,9 +409,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L88",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": ".updateinvitation()",
-      "id": "core_api_service_apiservice_updateinvitation"
+      "id": "core_api_service_apiservice_updateinvitation",
+      "community": 0,
+      "norm_label": ".updateinvitation()"
     },
     {
       "label": ".publishInvitation()",
@@ -379,9 +419,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L92",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": ".publishinvitation()",
-      "id": "core_api_service_apiservice_publishinvitation"
+      "id": "core_api_service_apiservice_publishinvitation",
+      "community": 0,
+      "norm_label": ".publishinvitation()"
     },
     {
       "label": ".getPublicInvitation()",
@@ -389,9 +429,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L96",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": ".getpublicinvitation()",
-      "id": "core_api_service_apiservice_getpublicinvitation"
+      "id": "core_api_service_apiservice_getpublicinvitation",
+      "community": 0,
+      "norm_label": ".getpublicinvitation()"
     },
     {
       "label": ".checkGuestAccess()",
@@ -399,9 +439,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L100",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_checkguestaccess",
       "community": 0,
-      "norm_label": ".checkguestaccess()",
-      "id": "core_api_service_apiservice_checkguestaccess"
+      "norm_label": ".checkguestaccess()"
     },
     {
       "label": ".listGuests()",
@@ -409,9 +449,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L104",
       "_origin": "ast",
-      "community": 2,
-      "norm_label": ".listguests()",
-      "id": "core_api_service_apiservice_listguests"
+      "id": "core_api_service_apiservice_listguests",
+      "community": 0,
+      "norm_label": ".listguests()"
     },
     {
       "label": ".listRsvps()",
@@ -419,9 +459,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L108",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_listrsvps",
       "community": 0,
-      "norm_label": ".listrsvps()",
-      "id": "core_api_service_apiservice_listrsvps"
+      "norm_label": ".listrsvps()"
     },
     {
       "label": ".createGuest()",
@@ -429,9 +469,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L112",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_createguest",
       "community": 0,
-      "norm_label": ".createguest()",
-      "id": "core_api_service_apiservice_createguest"
+      "norm_label": ".createguest()"
     },
     {
       "label": ".updateGuest()",
@@ -439,9 +479,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L116",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_updateguest",
       "community": 0,
-      "norm_label": ".updateguest()",
-      "id": "core_api_service_apiservice_updateguest"
+      "norm_label": ".updateguest()"
     },
     {
       "label": ".importGuests()",
@@ -449,9 +489,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L120",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_importguests",
       "community": 0,
-      "norm_label": ".importguests()",
-      "id": "core_api_service_apiservice_importguests"
+      "norm_label": ".importguests()"
     },
     {
       "label": ".listTemplates()",
@@ -459,9 +499,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L127",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": ".listtemplates()",
-      "id": "core_api_service_apiservice_listtemplates"
+      "id": "core_api_service_apiservice_listtemplates",
+      "community": 8,
+      "norm_label": ".listtemplates()"
     },
     {
       "label": ".createUploadUrl()",
@@ -469,9 +509,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L134",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_createuploadurl",
       "community": 0,
-      "norm_label": ".createuploadurl()",
-      "id": "core_api_service_apiservice_createuploadurl"
+      "norm_label": ".createuploadurl()"
     },
     {
       "label": ".uploadAsset()",
@@ -479,9 +519,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L138",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_uploadasset",
       "community": 0,
-      "norm_label": ".uploadasset()",
-      "id": "core_api_service_apiservice_uploadasset"
+      "norm_label": ".uploadasset()"
     },
     {
       "label": ".createCheckout()",
@@ -489,9 +529,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L142",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_createcheckout",
       "community": 0,
-      "norm_label": ".createcheckout()",
-      "id": "core_api_service_apiservice_createcheckout"
+      "norm_label": ".createcheckout()"
     },
     {
       "label": ".submitRsvp()",
@@ -499,9 +539,9 @@
       "source_file": "src/app/core/api.service.ts",
       "source_location": "L146",
       "_origin": "ast",
+      "id": "core_api_service_apiservice_submitrsvp",
       "community": 0,
-      "norm_label": ".submitrsvp()",
-      "id": "core_api_service_apiservice_submitrsvp"
+      "norm_label": ".submitrsvp()"
     },
     {
       "label": "auth.guard.ts",
@@ -509,9 +549,19 @@
       "source_file": "src/app/core/auth.guard.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "core_auth_guard",
       "community": 1,
-      "norm_label": "auth.guard.ts",
-      "id": "core_auth_guard"
+      "norm_label": "auth.guard.ts"
+    },
+    {
+      "label": "AuthGuard",
+      "file_type": "code",
+      "source_file": "src/app/core/auth.guard.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "core_auth_guard_authguard",
+      "community": 1,
+      "norm_label": "authguard"
     },
     {
       "label": ".constructor()",
@@ -519,9 +569,9 @@
       "source_file": "src/app/core/auth.guard.ts",
       "source_location": "L7",
       "_origin": "ast",
+      "id": "core_auth_guard_authguard_constructor",
       "community": 1,
-      "norm_label": ".constructor()",
-      "id": "core_auth_guard_authguard_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".canActivate()",
@@ -529,9 +579,9 @@
       "source_file": "src/app/core/auth.guard.ts",
       "source_location": "L9",
       "_origin": "ast",
+      "id": "core_auth_guard_authguard_canactivate",
       "community": 1,
-      "norm_label": ".canactivate()",
-      "id": "core_auth_guard_authguard_canactivate"
+      "norm_label": ".canactivate()"
     },
     {
       "label": "auth.service.ts",
@@ -539,9 +589,19 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "core_auth_service",
       "community": 1,
-      "norm_label": "auth.service.ts",
-      "id": "core_auth_service"
+      "norm_label": "auth.service.ts"
+    },
+    {
+      "label": "AuthService",
+      "file_type": "code",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "core_auth_service_authservice",
+      "community": 1,
+      "norm_label": "authservice"
     },
     {
       "label": ".constructor()",
@@ -549,9 +609,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L14",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_constructor",
       "community": 1,
-      "norm_label": ".constructor()",
-      "id": "core_auth_service_authservice_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".token()",
@@ -559,9 +619,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L16",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_token",
       "community": 1,
-      "norm_label": ".token()",
-      "id": "core_auth_service_authservice_token"
+      "norm_label": ".token()"
     },
     {
       "label": ".currentUser()",
@@ -569,9 +629,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L20",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_currentuser",
       "community": 1,
-      "norm_label": ".currentuser()",
-      "id": "core_auth_service_authservice_currentuser"
+      "norm_label": ".currentuser()"
     },
     {
       "label": ".isAuthenticated()",
@@ -579,9 +639,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L24",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_isauthenticated",
       "community": 1,
-      "norm_label": ".isauthenticated()",
-      "id": "core_auth_service_authservice_isauthenticated"
+      "norm_label": ".isauthenticated()"
     },
     {
       "label": ".login()",
@@ -589,9 +649,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L28",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_login",
       "community": 1,
-      "norm_label": ".login()",
-      "id": "core_auth_service_authservice_login"
+      "norm_label": ".login()"
     },
     {
       "label": ".register()",
@@ -599,9 +659,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L32",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_register",
       "community": 1,
-      "norm_label": ".register()",
-      "id": "core_auth_service_authservice_register"
+      "norm_label": ".register()"
     },
     {
       "label": ".loadCurrentUser()",
@@ -609,9 +669,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L36",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_loadcurrentuser",
       "community": 1,
-      "norm_label": ".loadcurrentuser()",
-      "id": "core_auth_service_authservice_loadcurrentuser"
+      "norm_label": ".loadcurrentuser()"
     },
     {
       "label": ".logout()",
@@ -619,9 +679,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L44",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_logout",
       "community": 1,
-      "norm_label": ".logout()",
-      "id": "core_auth_service_authservice_logout"
+      "norm_label": ".logout()"
     },
     {
       "label": ".saveSession()",
@@ -629,9 +689,9 @@
       "source_file": "src/app/core/auth.service.ts",
       "source_location": "L50",
       "_origin": "ast",
+      "id": "core_auth_service_authservice_savesession",
       "community": 1,
-      "norm_label": ".savesession()",
-      "id": "core_auth_service_authservice_savesession"
+      "norm_label": ".savesession()"
     },
     {
       "label": "models.ts",
@@ -639,9 +699,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "models.ts",
-      "id": "core_models"
+      "id": "core_models",
+      "community": 8,
+      "norm_label": "models.ts"
     },
     {
       "label": "EventType",
@@ -649,9 +709,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "eventtype",
-      "id": "core_models_eventtype"
+      "id": "core_models_eventtype",
+      "community": 8,
+      "norm_label": "eventtype"
     },
     {
       "label": "EventStatus",
@@ -659,9 +719,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L2",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "eventstatus",
-      "id": "core_models_eventstatus"
+      "id": "core_models_eventstatus",
+      "community": 8,
+      "norm_label": "eventstatus"
     },
     {
       "label": "InvitationStatus",
@@ -669,9 +729,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "invitationstatus",
-      "id": "core_models_invitationstatus"
+      "id": "core_models_invitationstatus",
+      "community": 8,
+      "norm_label": "invitationstatus"
     },
     {
       "label": "RsvpResponse",
@@ -679,9 +739,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L4",
       "_origin": "ast",
-      "community": 5,
-      "norm_label": "rsvpresponse",
-      "id": "core_models_rsvpresponse"
+      "id": "core_models_rsvpresponse",
+      "community": 8,
+      "norm_label": "rsvpresponse"
     },
     {
       "label": "InvitationAccessMode",
@@ -689,9 +749,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L5",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "invitationaccessmode",
-      "id": "core_models_invitationaccessmode"
+      "id": "core_models_invitationaccessmode",
+      "community": 8,
+      "norm_label": "invitationaccessmode"
     },
     {
       "label": "User",
@@ -699,9 +759,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L7",
       "_origin": "ast",
+      "id": "core_models_user",
       "community": 1,
-      "norm_label": "user",
-      "id": "core_models_user"
+      "norm_label": "user"
     },
     {
       "label": "AuthResponse",
@@ -709,9 +769,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L16",
       "_origin": "ast",
+      "id": "core_models_authresponse",
       "community": 1,
-      "norm_label": "authresponse",
-      "id": "core_models_authresponse"
+      "norm_label": "authresponse"
     },
     {
       "label": "MessageResponse",
@@ -719,9 +779,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L21",
       "_origin": "ast",
+      "id": "core_models_messageresponse",
       "community": 0,
-      "norm_label": "messageresponse",
-      "id": "core_models_messageresponse"
+      "norm_label": "messageresponse"
     },
     {
       "label": "ContactPayload",
@@ -729,9 +789,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L25",
       "_origin": "ast",
+      "id": "core_models_contactpayload",
       "community": 0,
-      "norm_label": "contactpayload",
-      "id": "core_models_contactpayload"
+      "norm_label": "contactpayload"
     },
     {
       "label": "DashboardMetrics",
@@ -739,9 +799,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L31",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "dashboardmetrics",
-      "id": "core_models_dashboardmetrics"
+      "id": "core_models_dashboardmetrics",
+      "community": 8,
+      "norm_label": "dashboardmetrics"
     },
     {
       "label": "EventAgendaItem",
@@ -749,9 +809,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L41",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "eventagendaitem",
-      "id": "core_models_eventagendaitem"
+      "id": "core_models_eventagendaitem",
+      "community": 8,
+      "norm_label": "eventagendaitem"
     },
     {
       "label": "EventModel",
@@ -759,9 +819,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L47",
       "_origin": "ast",
+      "id": "core_models_eventmodel",
       "community": 6,
-      "norm_label": "eventmodel",
-      "id": "core_models_eventmodel"
+      "norm_label": "eventmodel"
     },
     {
       "label": "EventPayload",
@@ -769,9 +829,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L65",
       "_origin": "ast",
-      "community": 6,
-      "norm_label": "eventpayload",
-      "id": "core_models_eventpayload"
+      "id": "core_models_eventpayload",
+      "community": 0,
+      "norm_label": "eventpayload"
     },
     {
       "label": "InvitationContent",
@@ -779,9 +839,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L79",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "invitationcontent",
-      "id": "core_models_invitationcontent"
+      "id": "core_models_invitationcontent",
+      "community": 8,
+      "norm_label": "invitationcontent"
     },
     {
       "label": "RsvpSettings",
@@ -789,9 +849,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L93",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "rsvpsettings",
-      "id": "core_models_rsvpsettings"
+      "id": "core_models_rsvpsettings",
+      "community": 8,
+      "norm_label": "rsvpsettings"
     },
     {
       "label": "InvitationModel",
@@ -799,9 +859,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L101",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "invitationmodel",
-      "id": "core_models_invitationmodel"
+      "id": "core_models_invitationmodel",
+      "community": 0,
+      "norm_label": "invitationmodel"
     },
     {
       "label": "InvitationPayload",
@@ -809,9 +869,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L118",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": "invitationpayload",
-      "id": "core_models_invitationpayload"
+      "id": "core_models_invitationpayload",
+      "community": 0,
+      "norm_label": "invitationpayload"
     },
     {
       "label": "RsvpPayload",
@@ -819,9 +879,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L127",
       "_origin": "ast",
+      "id": "core_models_rsvppayload",
       "community": 0,
-      "norm_label": "rsvppayload",
-      "id": "core_models_rsvppayload"
+      "norm_label": "rsvppayload"
     },
     {
       "label": "RsvpModel",
@@ -829,9 +889,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L140",
       "_origin": "ast",
+      "id": "core_models_rsvpmodel",
       "community": 0,
-      "norm_label": "rsvpmodel",
-      "id": "core_models_rsvpmodel"
+      "norm_label": "rsvpmodel"
     },
     {
       "label": "GuestStatus",
@@ -839,9 +899,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L152",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "gueststatus",
-      "id": "core_models_gueststatus"
+      "id": "core_models_gueststatus",
+      "community": 8,
+      "norm_label": "gueststatus"
     },
     {
       "label": "GuestModel",
@@ -849,9 +909,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L154",
       "_origin": "ast",
+      "id": "core_models_guestmodel",
       "community": 2,
-      "norm_label": "guestmodel",
-      "id": "core_models_guestmodel"
+      "norm_label": "guestmodel"
     },
     {
       "label": "GuestPayload",
@@ -859,9 +919,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L169",
       "_origin": "ast",
+      "id": "core_models_guestpayload",
       "community": 0,
-      "norm_label": "guestpayload",
-      "id": "core_models_guestpayload"
+      "norm_label": "guestpayload"
     },
     {
       "label": "TemplateTier",
@@ -869,9 +929,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L178",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "templatetier",
-      "id": "core_models_templatetier"
+      "id": "core_models_templatetier",
+      "community": 8,
+      "norm_label": "templatetier"
     },
     {
       "label": "TemplateModel",
@@ -879,9 +939,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L180",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "templatemodel",
-      "id": "core_models_templatemodel"
+      "id": "core_models_templatemodel",
+      "community": 4,
+      "norm_label": "templatemodel"
     },
     {
       "label": "GuestAccessResponse",
@@ -889,9 +949,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L199",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": "guestaccessresponse",
-      "id": "core_models_guestaccessresponse"
+      "id": "core_models_guestaccessresponse",
+      "community": 5,
+      "norm_label": "guestaccessresponse"
     },
     {
       "label": "ImportGuestsResponse",
@@ -899,9 +959,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L209",
       "_origin": "ast",
+      "id": "core_models_importguestsresponse",
       "community": 0,
-      "norm_label": "importguestsresponse",
-      "id": "core_models_importguestsresponse"
+      "norm_label": "importguestsresponse"
     },
     {
       "label": "UploadUrlResponse",
@@ -909,9 +969,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L222",
       "_origin": "ast",
+      "id": "core_models_uploadurlresponse",
       "community": 0,
-      "norm_label": "uploadurlresponse",
-      "id": "core_models_uploadurlresponse"
+      "norm_label": "uploadurlresponse"
     },
     {
       "label": "AssetFolder",
@@ -919,9 +979,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L228",
       "_origin": "ast",
+      "id": "core_models_assetfolder",
       "community": 4,
-      "norm_label": "assetfolder",
-      "id": "core_models_assetfolder"
+      "norm_label": "assetfolder"
     },
     {
       "label": "PaymentPackage",
@@ -929,9 +989,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L229",
       "_origin": "ast",
+      "id": "core_models_paymentpackage",
       "community": 4,
-      "norm_label": "paymentpackage",
-      "id": "core_models_paymentpackage"
+      "norm_label": "paymentpackage"
     },
     {
       "label": "CheckoutResponse",
@@ -939,9 +999,9 @@
       "source_file": "src/app/core/models.ts",
       "source_location": "L231",
       "_origin": "ast",
+      "id": "core_models_checkoutresponse",
       "community": 0,
-      "norm_label": "checkoutresponse",
-      "id": "core_models_checkoutresponse"
+      "norm_label": "checkoutresponse"
     },
     {
       "label": "contact.component.ts",
@@ -949,9 +1009,19 @@
       "source_file": "src/app/features/contact/contact.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "contact_contact_component",
       "community": 3,
-      "norm_label": "contact.component.ts",
-      "id": "contact_contact_component"
+      "norm_label": "contact.component.ts"
+    },
+    {
+      "label": "ContactComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/contact/contact.component.ts",
+      "source_location": "L5",
+      "_origin": "ast",
+      "id": "contact_contact_component_contactcomponent",
+      "community": 3,
+      "norm_label": "contactcomponent"
     },
     {
       "label": ".constructor()",
@@ -959,9 +1029,9 @@
       "source_file": "src/app/features/contact/contact.component.ts",
       "source_location": "L11",
       "_origin": "ast",
+      "id": "contact_contact_component_contactcomponent_constructor",
       "community": 3,
-      "norm_label": ".constructor()",
-      "id": "contact_contact_component_contactcomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".submit()",
@@ -969,9 +1039,9 @@
       "source_file": "src/app/features/contact/contact.component.ts",
       "source_location": "L13",
       "_origin": "ast",
+      "id": "contact_contact_component_contactcomponent_submit",
       "community": 3,
-      "norm_label": ".submit()",
-      "id": "contact_contact_component_contactcomponent_submit"
+      "norm_label": ".submit()"
     },
     {
       "label": "dashboard.component.ts",
@@ -979,9 +1049,19 @@
       "source_file": "src/app/features/dashboard/dashboard.component.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 3,
-      "norm_label": "dashboard.component.ts",
-      "id": "dashboard_dashboard_component"
+      "id": "dashboard_dashboard_component",
+      "community": 8,
+      "norm_label": "dashboard.component.ts"
+    },
+    {
+      "label": "DashboardComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "dashboard_dashboard_component_dashboardcomponent",
+      "community": 8,
+      "norm_label": "dashboardcomponent"
     },
     {
       "label": ".constructor()",
@@ -989,9 +1069,9 @@
       "source_file": "src/app/features/dashboard/dashboard.component.ts",
       "source_location": "L11",
       "_origin": "ast",
-      "community": 3,
-      "norm_label": ".constructor()",
-      "id": "dashboard_dashboard_component_dashboardcomponent_constructor"
+      "id": "dashboard_dashboard_component_dashboardcomponent_constructor",
+      "community": 8,
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
@@ -999,9 +1079,9 @@
       "source_file": "src/app/features/dashboard/dashboard.component.ts",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 3,
-      "norm_label": ".ngoninit()",
-      "id": "dashboard_dashboard_component_dashboardcomponent_ngoninit"
+      "id": "dashboard_dashboard_component_dashboardcomponent_ngoninit",
+      "community": 8,
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".load()",
@@ -1009,9 +1089,9 @@
       "source_file": "src/app/features/dashboard/dashboard.component.ts",
       "source_location": "L17",
       "_origin": "ast",
-      "community": 3,
-      "norm_label": ".load()",
-      "id": "dashboard_dashboard_component_dashboardcomponent_load"
+      "id": "dashboard_dashboard_component_dashboardcomponent_load",
+      "community": 8,
+      "norm_label": ".load()"
     },
     {
       "label": "event-detail.component.ts",
@@ -1019,9 +1099,19 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component",
       "community": 2,
-      "norm_label": "event-detail.component.ts",
-      "id": "event_detail_event_detail_component"
+      "norm_label": "event-detail.component.ts"
+    },
+    {
+      "label": "EventDetailComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent",
+      "community": 2,
+      "norm_label": "eventdetailcomponent"
     },
     {
       "label": ".constructor()",
@@ -1029,9 +1119,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L28",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_constructor",
       "community": 2,
-      "norm_label": ".constructor()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
@@ -1039,9 +1129,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L30",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_ngoninit",
       "community": 2,
-      "norm_label": ".ngoninit()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_ngoninit"
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".load()",
@@ -1049,9 +1139,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L34",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_load",
       "community": 2,
-      "norm_label": ".load()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_load"
+      "norm_label": ".load()"
     },
     {
       "label": ".createInvitation()",
@@ -1059,9 +1149,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L52",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_createinvitation",
       "community": 2,
-      "norm_label": ".createinvitation()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_createinvitation"
+      "norm_label": ".createinvitation()"
     },
     {
       "label": ".saveGuest()",
@@ -1069,9 +1159,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L77",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_saveguest",
       "community": 2,
-      "norm_label": ".saveguest()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_saveguest"
+      "norm_label": ".saveguest()"
     },
     {
       "label": ".startEditGuest()",
@@ -1079,9 +1169,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L117",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_starteditguest",
       "community": 2,
-      "norm_label": ".starteditguest()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_starteditguest"
+      "norm_label": ".starteditguest()"
     },
     {
       "label": ".cancelEditGuest()",
@@ -1089,9 +1179,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L130",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_canceleditguest",
       "community": 2,
-      "norm_label": ".canceleditguest()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_canceleditguest"
+      "norm_label": ".canceleditguest()"
     },
     {
       "label": ".selectImportFile()",
@@ -1099,9 +1189,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L135",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_selectimportfile",
       "community": 2,
-      "norm_label": ".selectimportfile()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_selectimportfile"
+      "norm_label": ".selectimportfile()"
     },
     {
       "label": ".importGuests()",
@@ -1109,9 +1199,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L142",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_importguests",
       "community": 2,
-      "norm_label": ".importguests()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_importguests"
+      "norm_label": ".importguests()"
     },
     {
       "label": ".getEventId()",
@@ -1119,9 +1209,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L167",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_geteventid",
       "community": 2,
-      "norm_label": ".geteventid()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_geteventid"
+      "norm_label": ".geteventid()"
     },
     {
       "label": ".getInvitationId()",
@@ -1129,9 +1219,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L171",
       "_origin": "ast",
-      "community": 8,
-      "norm_label": ".getinvitationid()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_getinvitationid"
+      "id": "event_detail_event_detail_component_eventdetailcomponent_getinvitationid",
+      "community": 2,
+      "norm_label": ".getinvitationid()"
     },
     {
       "label": ".getGuestId()",
@@ -1139,9 +1229,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L175",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_getguestid",
       "community": 2,
-      "norm_label": ".getguestid()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_getguestid"
+      "norm_label": ".getguestid()"
     },
     {
       "label": ".resetGuestForm()",
@@ -1149,9 +1239,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L179",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_resetguestform",
       "community": 2,
-      "norm_label": ".resetguestform()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_resetguestform"
+      "norm_label": ".resetguestform()"
     },
     {
       "label": ".normalizeEmail()",
@@ -1159,9 +1249,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L184",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_normalizeemail",
       "community": 2,
-      "norm_label": ".normalizeemail()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_normalizeemail"
+      "norm_label": ".normalizeemail()"
     },
     {
       "label": ".normalizePhone()",
@@ -1169,9 +1259,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L188",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_normalizephone",
       "community": 2,
-      "norm_label": ".normalizephone()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_normalizephone"
+      "norm_label": ".normalizephone()"
     },
     {
       "label": ".findDuplicateGuest()",
@@ -1179,9 +1269,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L192",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_findduplicateguest",
       "community": 2,
-      "norm_label": ".findduplicateguest()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_findduplicateguest"
+      "norm_label": ".findduplicateguest()"
     },
     {
       "label": ".buildGuestError()",
@@ -1189,9 +1279,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L203",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_buildguesterror",
       "community": 2,
-      "norm_label": ".buildguesterror()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_buildguesterror"
+      "norm_label": ".buildguesterror()"
     },
     {
       "label": ".loadInvitations()",
@@ -1199,9 +1289,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L211",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_loadinvitations",
       "community": 2,
-      "norm_label": ".loadinvitations()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_loadinvitations"
+      "norm_label": ".loadinvitations()"
     },
     {
       "label": ".loadGuests()",
@@ -1209,9 +1299,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L227",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_loadguests",
       "community": 2,
-      "norm_label": ".loadguests()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_loadguests"
+      "norm_label": ".loadguests()"
     },
     {
       "label": ".loadRsvps()",
@@ -1219,9 +1309,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L241",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_loadrsvps",
       "community": 2,
-      "norm_label": ".loadrsvps()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_loadrsvps"
+      "norm_label": ".loadrsvps()"
     },
     {
       "label": ".slugify()",
@@ -1229,9 +1319,9 @@
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L256",
       "_origin": "ast",
+      "id": "event_detail_event_detail_component_eventdetailcomponent_slugify",
       "community": 2,
-      "norm_label": ".slugify()",
-      "id": "event_detail_event_detail_component_eventdetailcomponent_slugify"
+      "norm_label": ".slugify()"
     },
     {
       "label": "events.component.ts",
@@ -1239,9 +1329,19 @@
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "events_events_component",
       "community": 6,
-      "norm_label": "events.component.ts",
-      "id": "events_events_component"
+      "norm_label": "events.component.ts"
+    },
+    {
+      "label": "EventsComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "events_events_component_eventscomponent",
+      "community": 6,
+      "norm_label": "eventscomponent"
     },
     {
       "label": ".constructor()",
@@ -1249,9 +1349,9 @@
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L22",
       "_origin": "ast",
+      "id": "events_events_component_eventscomponent_constructor",
       "community": 6,
-      "norm_label": ".constructor()",
-      "id": "events_events_component_eventscomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
@@ -1259,9 +1359,9 @@
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L24",
       "_origin": "ast",
+      "id": "events_events_component_eventscomponent_ngoninit",
       "community": 6,
-      "norm_label": ".ngoninit()",
-      "id": "events_events_component_eventscomponent_ngoninit"
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".load()",
@@ -1269,9 +1369,9 @@
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L28",
       "_origin": "ast",
+      "id": "events_events_component_eventscomponent_load",
       "community": 6,
-      "norm_label": ".load()",
-      "id": "events_events_component_eventscomponent_load"
+      "norm_label": ".load()"
     },
     {
       "label": ".create()",
@@ -1279,9 +1379,9 @@
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L43",
       "_origin": "ast",
+      "id": "events_events_component_eventscomponent_create",
       "community": 6,
-      "norm_label": ".create()",
-      "id": "events_events_component_eventscomponent_create"
+      "norm_label": ".create()"
     },
     {
       "label": ".getId()",
@@ -1289,9 +1389,9 @@
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L62",
       "_origin": "ast",
+      "id": "events_events_component_eventscomponent_getid",
       "community": 6,
-      "norm_label": ".getid()",
-      "id": "events_events_component_eventscomponent_getid"
+      "norm_label": ".getid()"
     },
     {
       "label": "invitation-editor.component.ts",
@@ -1299,139 +1399,159 @@
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component",
       "community": 4,
-      "norm_label": "invitation-editor.component.ts",
-      "id": "invitation_editor_invitation_editor_component"
+      "norm_label": "invitation-editor.component.ts"
+    },
+    {
+      "label": "InvitationEditorComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "community": 4,
+      "norm_label": "invitationeditorcomponent"
     },
     {
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L21",
+      "source_location": "L25",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_constructor",
       "community": 4,
-      "norm_label": ".constructor()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L23",
+      "source_location": "L27",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_ngoninit",
       "community": 4,
-      "norm_label": ".ngoninit()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_ngoninit"
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".load()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L27",
+      "source_location": "L31",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_load",
       "community": 4,
-      "norm_label": ".load()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_load"
+      "norm_label": ".load()"
     },
     {
       "label": ".loadTemplates()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L54",
+      "source_location": "L58",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_loadtemplates",
       "community": 4,
-      "norm_label": ".loadtemplates()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_loadtemplates"
+      "norm_label": ".loadtemplates()"
     },
     {
       "label": ".applyTemplate()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L61",
+      "source_location": "L65",
       "_origin": "ast",
-      "community": 0,
-      "norm_label": ".applytemplate()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_applytemplate"
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_applytemplate",
+      "community": 4,
+      "norm_label": ".applytemplate()"
     },
     {
       "label": ".save()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L74",
+      "source_location": "L78",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_save",
       "community": 4,
-      "norm_label": ".save()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_save"
+      "norm_label": ".save()"
     },
     {
       "label": ".publish()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L102",
+      "source_location": "L106",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_publish",
       "community": 4,
-      "norm_label": ".publish()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_publish"
+      "norm_label": ".publish()"
     },
     {
       "label": ".selectAsset()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L124",
+      "source_location": "L128",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_selectasset",
       "community": 4,
-      "norm_label": ".selectasset()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_selectasset"
+      "norm_label": ".selectasset()"
+    },
+    {
+      "label": ".validateAsset()",
+      "file_type": "code",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L167",
+      "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_validateasset",
+      "community": 4,
+      "norm_label": ".validateasset()"
     },
     {
       "label": ".checkout()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L154",
+      "source_location": "L175",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_checkout",
       "community": 4,
-      "norm_label": ".checkout()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_checkout"
+      "norm_label": ".checkout()"
     },
     {
       "label": ".getInvitationId()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L169",
+      "source_location": "L190",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getinvitationid",
       "community": 4,
-      "norm_label": ".getinvitationid()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getinvitationid"
+      "norm_label": ".getinvitationid()"
     },
     {
       "label": ".persistUploadedAsset()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L173",
+      "source_location": "L194",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_persistuploadedasset",
       "community": 4,
-      "norm_label": ".persistuploadedasset()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_persistuploadedasset"
+      "norm_label": ".persistuploadedasset()"
     },
     {
       "label": ".ensureRsvpSettings()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L198",
+      "source_location": "L219",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_ensurersvpsettings",
       "community": 4,
-      "norm_label": ".ensurersvpsettings()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_ensurersvpsettings"
+      "norm_label": ".ensurersvpsettings()"
     },
     {
       "label": ".getRsvpSettingsPayload()",
       "file_type": "code",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
-      "source_location": "L209",
+      "source_location": "L230",
       "_origin": "ast",
+      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getrsvpsettingspayload",
       "community": 4,
-      "norm_label": ".getrsvpsettingspayload()",
-      "id": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getrsvpsettingspayload"
+      "norm_label": ".getrsvpsettingspayload()"
     },
     {
       "label": "login.component.ts",
@@ -1439,9 +1559,19 @@
       "source_file": "src/app/features/login/login.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "login_login_component",
       "community": 3,
-      "norm_label": "login.component.ts",
-      "id": "login_login_component"
+      "norm_label": "login.component.ts"
+    },
+    {
+      "label": "LoginComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/login/login.component.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "login_login_component_logincomponent",
+      "community": 3,
+      "norm_label": "logincomponent"
     },
     {
       "label": ".constructor()",
@@ -1449,9 +1579,9 @@
       "source_file": "src/app/features/login/login.component.ts",
       "source_location": "L11",
       "_origin": "ast",
+      "id": "login_login_component_logincomponent_constructor",
       "community": 3,
-      "norm_label": ".constructor()",
-      "id": "login_login_component_logincomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".submit()",
@@ -1459,9 +1589,9 @@
       "source_file": "src/app/features/login/login.component.ts",
       "source_location": "L13",
       "_origin": "ast",
+      "id": "login_login_component_logincomponent_submit",
       "community": 3,
-      "norm_label": ".submit()",
-      "id": "login_login_component_logincomponent_submit"
+      "norm_label": ".submit()"
     },
     {
       "label": "password-reset-confirm.component.ts",
@@ -1469,9 +1599,19 @@
       "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "password_reset_confirm_password_reset_confirm_component",
       "community": 3,
-      "norm_label": "password-reset-confirm.component.ts",
-      "id": "password_reset_confirm_password_reset_confirm_component"
+      "norm_label": "password-reset-confirm.component.ts"
+    },
+    {
+      "label": "PasswordResetConfirmComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "community": 3,
+      "norm_label": "passwordresetconfirmcomponent"
     },
     {
       "label": ".constructor()",
@@ -1479,9 +1619,9 @@
       "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
       "source_location": "L12",
       "_origin": "ast",
+      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_constructor",
       "community": 3,
-      "norm_label": ".constructor()",
-      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
@@ -1489,9 +1629,9 @@
       "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
       "source_location": "L14",
       "_origin": "ast",
+      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_ngoninit",
       "community": 3,
-      "norm_label": ".ngoninit()",
-      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_ngoninit"
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".submit()",
@@ -1499,9 +1639,9 @@
       "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
       "source_location": "L18",
       "_origin": "ast",
+      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_submit",
       "community": 3,
-      "norm_label": ".submit()",
-      "id": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_submit"
+      "norm_label": ".submit()"
     },
     {
       "label": "public-invitation.component.ts",
@@ -1509,9 +1649,19 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component",
       "community": 5,
-      "norm_label": "public-invitation.component.ts",
-      "id": "public_invitation_public_invitation_component"
+      "norm_label": "public-invitation.component.ts"
+    },
+    {
+      "label": "PublicInvitationComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "community": 5,
+      "norm_label": "publicinvitationcomponent"
     },
     {
       "label": ".constructor()",
@@ -1519,9 +1669,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L29",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_constructor",
       "community": 5,
-      "norm_label": ".constructor()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".ngOnInit()",
@@ -1529,9 +1679,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L31",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_ngoninit",
       "community": 5,
-      "norm_label": ".ngoninit()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_ngoninit"
+      "norm_label": ".ngoninit()"
     },
     {
       "label": ".load()",
@@ -1539,9 +1689,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L35",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_load",
       "community": 5,
-      "norm_label": ".load()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_load"
+      "norm_label": ".load()"
     },
     {
       "label": ".submit()",
@@ -1549,9 +1699,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L53",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_submit",
       "community": 5,
-      "norm_label": ".submit()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_submit"
+      "norm_label": ".submit()"
     },
     {
       "label": ".checkGuestAccess()",
@@ -1559,9 +1709,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L92",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_checkguestaccess",
       "community": 5,
-      "norm_label": ".checkguestaccess()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_checkguestaccess"
+      "norm_label": ".checkguestaccess()"
     },
     {
       "label": ".resetGuestAccess()",
@@ -1569,9 +1719,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L114",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_resetguestaccess",
       "community": 5,
-      "norm_label": ".resetguestaccess()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_resetguestaccess"
+      "norm_label": ".resetguestaccess()"
     },
     {
       "label": ".onResponseChange()",
@@ -1579,9 +1729,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L122",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_onresponsechange",
       "community": 5,
-      "norm_label": ".onresponsechange()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_onresponsechange"
+      "norm_label": ".onresponsechange()"
     },
     {
       "label": ".isGuestList()",
@@ -1589,9 +1739,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L132",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_isguestlist",
       "community": 5,
-      "norm_label": ".isguestlist()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_isguestlist"
+      "norm_label": ".isguestlist()"
     },
     {
       "label": ".maxCompanions()",
@@ -1599,9 +1749,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L136",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_maxcompanions",
       "community": 5,
-      "norm_label": ".maxcompanions()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_maxcompanions"
+      "norm_label": ".maxcompanions()"
     },
     {
       "label": ".isFinalAttendance()",
@@ -1609,9 +1759,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L140",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_isfinalattendance",
       "community": 5,
-      "norm_label": ".isfinalattendance()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_isfinalattendance"
+      "norm_label": ".isfinalattendance()"
     },
     {
       "label": ".canUseMaybe()",
@@ -1619,9 +1769,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L144",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_canusemaybe",
       "community": 5,
-      "norm_label": ".canusemaybe()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_canusemaybe"
+      "norm_label": ".canusemaybe()"
     },
     {
       "label": ".requiresDeclineConfirmation()",
@@ -1629,9 +1779,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L148",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_requiresdeclineconfirmation",
       "community": 5,
-      "norm_label": ".requiresdeclineconfirmation()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_requiresdeclineconfirmation"
+      "norm_label": ".requiresdeclineconfirmation()"
     },
     {
       "label": ".deadlineLabel()",
@@ -1639,9 +1789,9 @@
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L152",
       "_origin": "ast",
+      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_deadlinelabel",
       "community": 5,
-      "norm_label": ".deadlinelabel()",
-      "id": "public_invitation_public_invitation_component_publicinvitationcomponent_deadlinelabel"
+      "norm_label": ".deadlinelabel()"
     },
     {
       "label": "register.component.ts",
@@ -1649,9 +1799,19 @@
       "source_file": "src/app/features/register/register.component.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "register_register_component",
       "community": 3,
-      "norm_label": "register.component.ts",
-      "id": "register_register_component"
+      "norm_label": "register.component.ts"
+    },
+    {
+      "label": "RegisterComponent",
+      "file_type": "code",
+      "source_file": "src/app/features/register/register.component.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "register_register_component_registercomponent",
+      "community": 3,
+      "norm_label": "registercomponent"
     },
     {
       "label": ".constructor()",
@@ -1659,9 +1819,9 @@
       "source_file": "src/app/features/register/register.component.ts",
       "source_location": "L11",
       "_origin": "ast",
+      "id": "register_register_component_registercomponent_constructor",
       "community": 3,
-      "norm_label": ".constructor()",
-      "id": "register_register_component_registercomponent_constructor"
+      "norm_label": ".constructor()"
     },
     {
       "label": ".submit()",
@@ -1669,9 +1829,9 @@
       "source_file": "src/app/features/register/register.component.ts",
       "source_location": "L13",
       "_origin": "ast",
+      "id": "register_register_component_registercomponent_submit",
       "community": 3,
-      "norm_label": ".submit()",
-      "id": "register_register_component_registercomponent_submit"
+      "norm_label": ".submit()"
     },
     {
       "label": "environment.prod.ts",
@@ -1679,9 +1839,19 @@
       "source_file": "src/environments/environment.prod.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 9,
-      "norm_label": "environment.prod.ts",
-      "id": "environments_environment_prod"
+      "id": "environments_environment_prod",
+      "community": 3,
+      "norm_label": "environment.prod.ts"
+    },
+    {
+      "label": "environment",
+      "file_type": "code",
+      "source_file": "src/environments/environment.prod.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "environments_environment_prod_environment",
+      "community": 3,
+      "norm_label": "environment"
     },
     {
       "label": "environment.ts",
@@ -1689,9 +1859,9 @@
       "source_file": "src/environments/environment.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 9,
-      "norm_label": "environment.ts",
-      "id": "environments_environment"
+      "id": "environments_environment",
+      "community": 3,
+      "norm_label": "environment.ts"
     },
     {
       "label": "environment",
@@ -1699,9 +1869,9 @@
       "source_file": "src/environments/environment.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 9,
-      "norm_label": "environment",
-      "id": "environments_environment_environment"
+      "id": "environments_environment_environment",
+      "community": 3,
+      "norm_label": "environment"
     },
     {
       "label": "main.ts",
@@ -1709,9 +1879,9 @@
       "source_file": "src/main.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 9,
-      "norm_label": "main.ts",
-      "id": "src_main"
+      "id": "src_main",
+      "community": 3,
+      "norm_label": "main.ts"
     },
     {
       "label": "polyfills.ts",
@@ -1719,9 +1889,9 @@
       "source_file": "src/polyfills.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "src_polyfills",
       "community": 11,
-      "norm_label": "polyfills.ts",
-      "id": "src_polyfills"
+      "norm_label": "polyfills.ts"
     },
     {
       "label": "test.ts",
@@ -1729,9 +1899,9 @@
       "source_file": "src/test.ts",
       "source_location": "L1",
       "_origin": "ast",
+      "id": "src_test",
       "community": 10,
-      "norm_label": "test.ts",
-      "id": "src_test"
+      "norm_label": "test.ts"
     },
     {
       "label": "context",
@@ -1739,9 +1909,9 @@
       "source_file": "src/test.ts",
       "source_location": "L24",
       "_origin": "ast",
+      "id": "src_test_context",
       "community": 10,
-      "norm_label": "context",
-      "id": "src_test_context"
+      "norm_label": "context"
     }
   ],
   "links": [
@@ -1850,6 +2020,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "app_app_routing_module_approutingmodule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
       "source_location": "L15",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -1868,6 +2048,17 @@
       "target": "contact_contact_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "contact_contact_component_contactcomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -1877,6 +2068,17 @@
       "confidence_score": 1.0,
       "source": "app_app_routing_module",
       "target": "core_auth_guard"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "core_auth_guard_authguard",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -1890,6 +2092,17 @@
       "target": "dashboard_dashboard_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "dashboard_dashboard_component_dashboardcomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -1899,6 +2112,17 @@
       "confidence_score": 1.0,
       "source": "app_app_routing_module",
       "target": "event_detail_event_detail_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "event_detail_event_detail_component_eventdetailcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -1912,6 +2136,17 @@
       "target": "events_events_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "events_events_component_eventscomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -1921,6 +2156,17 @@
       "confidence_score": 1.0,
       "source": "app_app_routing_module",
       "target": "invitation_editor_invitation_editor_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -1934,6 +2180,17 @@
       "target": "login_login_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "login_login_component_logincomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -1943,6 +2200,17 @@
       "confidence_score": 1.0,
       "source": "app_app_routing_module",
       "target": "password_reset_confirm_password_reset_confirm_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -1956,6 +2224,17 @@
       "target": "public_invitation_public_invitation_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -1967,6 +2246,28 @@
       "target": "register_register_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app-routing.module.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "app_app_routing_module",
+      "target": "register_register_component_registercomponent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "app_app_routing_module_approutingmodule",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -1976,6 +2277,17 @@
       "confidence_score": 1.0,
       "source": "app_app_component_spec",
       "target": "app_app_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.spec.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_app_component_spec",
+      "target": "app_app_component_appcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -1999,6 +2311,17 @@
       "target": "core_auth_service"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.spec.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_app_component_spec",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/app/app.component.spec.ts",
@@ -2017,6 +2340,16 @@
       "confidence_score": 1.0,
       "source": "app_app_component_spec_authservicestub",
       "target": "app_app_component_spec_authservicestub_logout"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_app_component",
+      "target": "app_app_component_appcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -2060,6 +2393,17 @@
       "target": "core_auth_service"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_app_component",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2069,6 +2413,47 @@
       "confidence_score": 1.0,
       "source": "app_app_module",
       "target": "app_app_component"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "app_app_component_appcomponent",
+      "target": "app_app_component_appcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "app_app_component_appcomponent",
+      "target": "app_app_component_appcomponent_logout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "app_app_component_appcomponent",
+      "target": "app_app_component_appcomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "app_app_component_appcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -2082,6 +2467,27 @@
       "target": "core_auth_service"
     },
     {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "app_app_component_appcomponent_constructor",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "app_app_module_appmodule",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2091,6 +2497,17 @@
       "confidence_score": 1.0,
       "source": "app_app_module",
       "target": "contact_contact_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "contact_contact_component_contactcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -2104,6 +2521,17 @@
       "target": "dashboard_dashboard_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "dashboard_dashboard_component_dashboardcomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2113,6 +2541,17 @@
       "confidence_score": 1.0,
       "source": "app_app_module",
       "target": "event_detail_event_detail_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "event_detail_event_detail_component_eventdetailcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -2126,6 +2565,17 @@
       "target": "events_events_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "events_events_component_eventscomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2135,6 +2585,17 @@
       "confidence_score": 1.0,
       "source": "app_app_module",
       "target": "invitation_editor_invitation_editor_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -2148,6 +2609,17 @@
       "target": "login_login_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "login_login_component_logincomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2157,6 +2629,17 @@
       "confidence_score": 1.0,
       "source": "app_app_module",
       "target": "password_reset_confirm_password_reset_confirm_component"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -2170,6 +2653,17 @@
       "target": "public_invitation_public_invitation_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2181,6 +2675,17 @@
       "target": "register_register_component"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/app.module.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "app_app_module",
+      "target": "register_register_component_registercomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -2190,6 +2695,17 @@
       "confidence_score": 1.0,
       "source": "src_main",
       "target": "app_app_module"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/main.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_main",
+      "target": "app_app_module_appmodule",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -2212,6 +2728,16 @@
       "confidence_score": 1.0,
       "source": "contact_contact_component_contactcomponent_constructor",
       "target": "core_api_service"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "core_api_service",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -2923,6 +3449,462 @@
       "target": "core_api_service"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/contact/contact.component.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "contact_contact_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/contact/contact.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "contact_contact_component_contactcomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_checkguestaccess",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_confirmpasswordreset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_createcheckout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_createevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_createguest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_createinvitation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L134",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_createuploadurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_getdashboard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_getevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_getpublicinvitation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_importguests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_listevents",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L104",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_listguests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_listinvitations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_listrsvps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L127",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_listtemplates",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_login",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_me",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_publishinvitation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_register",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_requestpasswordreset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_sendcontact",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L146",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_submitrsvp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_updateevent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_updateguest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_updateinvitation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/api.service.ts",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "core_api_service_apiservice",
+      "target": "core_api_service_apiservice_uploadasset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "core_auth_service",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component_dashboardcomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "events_events_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "password_reset_confirm_password_reset_confirm_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent_constructor",
+      "target": "core_api_service_apiservice",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "generic_arg",
       "confidence": "EXTRACTED",
@@ -3341,6 +4323,16 @@
       "target": "core_models_rsvppayload"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.guard.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "core_auth_guard",
+      "target": "core_auth_guard_authguard",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/app/core/auth.guard.ts",
@@ -3372,6 +4364,37 @@
       "target": "core_auth_service"
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.guard.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "core_auth_guard",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.guard.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "core_auth_guard_authguard",
+      "target": "core_auth_guard_authguard_canactivate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.guard.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "core_auth_guard_authguard",
+      "target": "core_auth_guard_authguard_constructor",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -3381,6 +4404,27 @@
       "confidence_score": 1.0,
       "source": "core_auth_guard_authguard_constructor",
       "target": "core_auth_service"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.guard.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "core_auth_guard_authguard_constructor",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "core_auth_service",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -3548,6 +4592,140 @@
       "confidence_score": 1.0,
       "source": "register_register_component_registercomponent_constructor",
       "target": "core_auth_service"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_currentuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_isauthenticated",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_loadcurrentuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_login",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_logout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_register",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_savesession",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/core/auth.service.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "core_auth_service_authservice",
+      "target": "core_auth_service_authservice_token",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/login/login.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "login_login_component",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/login/login.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "login_login_component_logincomponent_constructor",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/register/register.component.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "register_register_component",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/register/register.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "register_register_component_registercomponent_constructor",
+      "target": "core_auth_service_authservice",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -3985,6 +5163,17 @@
       "relation": "references",
       "context": "field",
       "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component_dashboardcomponent",
+      "target": "core_models_dashboardmetrics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L8",
       "weight": 1.0,
@@ -3996,12 +5185,34 @@
       "relation": "references",
       "context": "field",
       "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "core_models_eventmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
       "source_file": "src/app/features/events/events.component.ts",
       "source_location": "L8",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "events_events_component",
       "target": "core_models_eventmodel"
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent",
+      "target": "core_models_eventmodel",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -4029,12 +5240,34 @@
       "relation": "references",
       "context": "field",
       "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "core_models_eventmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
       "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
       "source_location": "L9",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "public_invitation_public_invitation_component",
       "target": "core_models_eventmodel"
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "core_models_eventmodel",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -4060,6 +5293,17 @@
     },
     {
       "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "core_models_invitationmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
@@ -4082,6 +5326,17 @@
     },
     {
       "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "core_models_invitationmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
@@ -4101,6 +5356,17 @@
       "confidence_score": 1.0,
       "source": "public_invitation_public_invitation_component",
       "target": "core_models_invitationmodel"
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "core_models_invitationmodel",
+      "confidence_score": 1.0
     },
     {
       "relation": "inherits",
@@ -4129,11 +5395,33 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "core_models_rsvpmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
       "source_location": "L10",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "event_detail_event_detail_component",
       "target": "core_models_guestmodel"
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "core_models_guestmodel",
+      "confidence_score": 1.0
     },
     {
       "relation": "references",
@@ -4181,6 +5469,17 @@
     },
     {
       "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "core_models_templatemodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
@@ -4200,6 +5499,17 @@
       "confidence_score": 1.0,
       "source": "public_invitation_public_invitation_component",
       "target": "core_models_guestaccessresponse"
+    },
+    {
+      "relation": "references",
+      "context": "field",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "core_models_guestaccessresponse",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -4224,6 +5534,17 @@
       "target": "core_models_assetfolder"
     },
     {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L167",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent_validateasset",
+      "target": "core_models_assetfolder",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -4246,6 +5567,16 @@
       "target": "core_models_paymentpackage"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/contact/contact.component.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "contact_contact_component",
+      "target": "contact_contact_component_contactcomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/contact/contact.component.ts",
@@ -4264,6 +5595,36 @@
       "confidence_score": 1.0,
       "source": "contact_contact_component",
       "target": "contact_contact_component_contactcomponent_submit"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/contact/contact.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "contact_contact_component_contactcomponent",
+      "target": "contact_contact_component_contactcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/contact/contact.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "contact_contact_component_contactcomponent",
+      "target": "contact_contact_component_contactcomponent_submit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component",
+      "target": "dashboard_dashboard_component_dashboardcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -4296,6 +5657,36 @@
       "target": "dashboard_dashboard_component_dashboardcomponent_ngoninit"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component_dashboardcomponent",
+      "target": "dashboard_dashboard_component_dashboardcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component_dashboardcomponent",
+      "target": "dashboard_dashboard_component_dashboardcomponent_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/dashboard/dashboard.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "dashboard_dashboard_component_dashboardcomponent",
+      "target": "dashboard_dashboard_component_dashboardcomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -4305,6 +5696,16 @@
       "confidence_score": 1.0,
       "source": "dashboard_dashboard_component_dashboardcomponent_ngoninit",
       "target": "dashboard_dashboard_component_dashboardcomponent_load"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component",
+      "target": "event_detail_event_detail_component_eventdetailcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -4517,6 +5918,216 @@
       "target": "event_detail_event_detail_component_eventdetailcomponent_starteditguest"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L203",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_buildguesterror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L130",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_canceleditguest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_createinvitation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L192",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_findduplicateguest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L167",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_geteventid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_getguestid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_getinvitationid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_importguests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L227",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_loadguests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L211",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_loadinvitations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L241",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_loadrsvps",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L184",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_normalizeemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L188",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_normalizephone",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L179",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_resetguestform",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_saveguest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_selectimportfile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L256",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_slugify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/event-detail/event-detail.component.ts",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "event_detail_event_detail_component_eventdetailcomponent",
+      "target": "event_detail_event_detail_component_eventdetailcomponent_starteditguest",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -4627,6 +6238,16 @@
       "target": "event_detail_event_detail_component_eventdetailcomponent_normalizephone"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "events_events_component",
+      "target": "events_events_component_eventscomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/events/events.component.ts",
@@ -4677,6 +6298,56 @@
       "target": "events_events_component_eventscomponent_ngoninit"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent",
+      "target": "events_events_component_eventscomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent",
+      "target": "events_events_component_eventscomponent_create",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent",
+      "target": "events_events_component_eventscomponent_getid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent",
+      "target": "events_events_component_eventscomponent_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/events/events.component.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "events_events_component_eventscomponent",
+      "target": "events_events_component_eventscomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -4686,6 +6357,16 @@
       "confidence_score": 1.0,
       "source": "events_events_component_eventscomponent_ngoninit",
       "target": "events_events_component_eventscomponent_load"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -4818,6 +6499,146 @@
       "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_selectasset"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_applytemplate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_checkout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L219",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_ensurersvpsettings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L190",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getinvitationid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L230",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getrsvpsettingspayload",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_loadtemplates",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L194",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_persistuploadedasset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_publish",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_save",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L128",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_selectasset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L167",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_validateasset",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -4866,6 +6687,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
+      "source_location": "L133",
+      "weight": 1.0,
+      "source": "invitation_editor_invitation_editor_component_invitationeditorcomponent_selectasset",
+      "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_validateasset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/invitation-editor/invitation-editor.component.ts",
       "source_location": "L158",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -4895,6 +6727,16 @@
       "target": "invitation_editor_invitation_editor_component_invitationeditorcomponent_getrsvpsettingspayload"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/login/login.component.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "login_login_component",
+      "target": "login_login_component_logincomponent",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/app/features/login/login.component.ts",
@@ -4913,6 +6755,36 @@
       "confidence_score": 1.0,
       "source": "login_login_component",
       "target": "login_login_component_logincomponent_submit"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/login/login.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "login_login_component_logincomponent",
+      "target": "login_login_component_logincomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/login/login.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "login_login_component_logincomponent",
+      "target": "login_login_component_logincomponent_submit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "password_reset_confirm_password_reset_confirm_component",
+      "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -4943,6 +6815,46 @@
       "confidence_score": 1.0,
       "source": "password_reset_confirm_password_reset_confirm_component",
       "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_submit"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/password-reset-confirm/password-reset-confirm.component.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent",
+      "target": "password_reset_confirm_password_reset_confirm_component_passwordresetconfirmcomponent_submit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -5075,6 +6987,136 @@
       "target": "public_invitation_public_invitation_component_publicinvitationcomponent_submit"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L144",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_canusemaybe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_checkguestaccess",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_deadlinelabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_isfinalattendance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L132",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_isguestlist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_maxcompanions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_ngoninit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_onresponsechange",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_requiresdeclineconfirmation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_resetguestaccess",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/public-invitation/public-invitation.component.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "public_invitation_public_invitation_component_publicinvitationcomponent",
+      "target": "public_invitation_public_invitation_component_publicinvitationcomponent_submit",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -5084,6 +7126,16 @@
       "confidence_score": 1.0,
       "source": "public_invitation_public_invitation_component_publicinvitationcomponent_ngoninit",
       "target": "public_invitation_public_invitation_component_publicinvitationcomponent_load"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/register/register.component.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "register_register_component",
+      "target": "register_register_component_registercomponent",
+      "confidence_score": 1.0
     },
     {
       "relation": "method",
@@ -5106,6 +7158,26 @@
       "target": "register_register_component_registercomponent_submit"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/register/register.component.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "register_register_component_registercomponent",
+      "target": "register_register_component_registercomponent_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/features/register/register.component.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "register_register_component_registercomponent",
+      "target": "register_register_component_registercomponent_submit",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/environments/environment.prod.ts",
@@ -5114,6 +7186,16 @@
       "confidence_score": 1.0,
       "source": "environments_environment_prod",
       "target": "environments_environment"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/environments/environment.prod.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "environments_environment_prod",
+      "target": "environments_environment_prod_environment",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -5159,5 +7241,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b15d4f600f0ebfacfea9f44232ee2d2e559881a3"
+  "built_at_commit": "6f737a0cef7c211bb2fce4da8f1d704ab7d535e3"
 }
