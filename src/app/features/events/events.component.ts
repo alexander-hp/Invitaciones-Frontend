@@ -11,8 +11,8 @@ export class EventsComponent implements OnInit {
   error = '';
   form = {
     type: 'boda' as EventType,
-    title: 'Boda de Alex y Sofia',
-    hosts: 'Alex, Sofia',
+    title: 'Boda de Alex y Tania',
+    hosts: 'Alex, Tania',
     date: '2026-11-21',
     venueName: 'Hacienda Santa Lucia',
     venueAddress: 'Camino Real 120, Guadalajara, Jal.',
