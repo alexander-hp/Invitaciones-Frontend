@@ -88,6 +88,10 @@ export interface InvitationContent {
   musicUrl?: string;
   coverImageUrl?: string;
   gallery?: string[];
+  itinerary?: Array<{ time?: string; title?: string; description?: string }>;
+  dressCode?: string;
+  giftRegistry?: Array<{ label?: string; url?: string }>;
+  lodging?: Array<{ name?: string; description?: string; url?: string }>;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
 }
@@ -98,6 +102,15 @@ export interface RsvpSettings {
   allowChangesUntilDeadline?: boolean;
   declineRequiresConfirmation?: boolean;
   reminderDaysBeforeDeadline?: number;
+  customQuestions?: RsvpCustomQuestion[];
+}
+
+export interface RsvpCustomQuestion {
+  key?: string;
+  label: string;
+  type?: 'text' | 'textarea' | 'select' | 'boolean';
+  required?: boolean;
+  options?: string[];
 }
 
 export interface InvitationModel {
@@ -132,7 +145,11 @@ export interface RsvpPayload {
   email?: string;
   response: RsvpResponse;
   companions?: number;
+  companionNames?: string[];
+  dietaryRestrictions?: string;
   mealPreference?: string;
+  menuSelection?: string;
+  customAnswers?: Array<{ key: string; label?: string; value?: string | number | boolean | null }>;
   message?: string;
   declineConfirmed?: boolean;
   phoneCountryCode?: string;
@@ -144,6 +161,7 @@ export interface RsvpModel extends RsvpPayload {
   id?: string;
   invitation: string;
   event: string;
+  attendingCount?: number;
   phoneE164?: string;
   phoneVerified?: boolean;
   phoneVerificationStatus?: 'not_started' | 'pending' | 'verified' | 'failed';
@@ -152,7 +170,7 @@ export interface RsvpModel extends RsvpPayload {
 }
 
 export type GuestStatus = 'pending' | 'confirmed' | 'declined';
-export type GuestCommunicationStatus = 'pending' | 'sent' | 'confirmed';
+export type GuestCommunicationStatus = 'pending' | 'sent' | 'opened' | 'confirmed';
 export type GuestMessageType = 'invitation' | 'reminder' | 'location_change' | 'thanks';
 export type GuestMessageChannel = 'whatsapp' | 'email';
 
@@ -168,6 +186,10 @@ export interface GuestModel {
   seatLabel?: string;
   companions?: GuestCompanion[];
   allowedCompanions: number;
+  invitationToken?: string;
+  personalizedLinkGeneratedAt?: string;
+  invitationOpenedAt?: string;
+  lastLinkCopiedAt?: string;
   qrCode?: string;
   checkInCode?: string;
   checkedIn?: boolean;

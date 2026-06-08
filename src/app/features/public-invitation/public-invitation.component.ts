@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, GuestAccessResponse, InvitationModel, RsvpResponse } from '../../core/models';
+import { EventModel, GuestAccessResponse, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 
 @Component({ selector: 'app-public-invitation', templateUrl: './public-invitation.component.html' })
 export class PublicInvitationComponent implements OnInit {
@@ -18,12 +18,16 @@ export class PublicInvitationComponent implements OnInit {
   selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
+  companionNamesText = '';
+  customAnswers: Record<string, string | boolean> = {};
   rsvp = {
     name: '',
     email: '',
     response: 'confirmed' as RsvpResponse,
     companions: 0,
+    dietaryRestrictions: '',
     mealPreference: '',
+    menuSelection: '',
     message: '',
     phoneCountryCode: '+52',
     phoneNationalNumber: ''
@@ -44,6 +48,7 @@ export class PublicInvitationComponent implements OnInit {
         this.invitation = invitation;
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.event = typeof invitation.event === 'string' ? undefined : invitation.event;
+        this.loadGuestToken();
         this.loading = false;
       },
       error: (error) => {
@@ -77,7 +82,11 @@ export class PublicInvitationComponent implements OnInit {
       name: this.verifiedGuest?.name || this.rsvp.name,
       email: this.verifiedGuest?.email || this.rsvp.email,
       companions: this.isFinalAttendance ? Number(this.rsvp.companions || 0) : 0,
+      companionNames: this.isFinalAttendance ? this.companionNames : [],
       mealPreference: this.isFinalAttendance ? this.rsvp.mealPreference : undefined,
+      dietaryRestrictions: this.isFinalAttendance ? this.rsvp.dietaryRestrictions : undefined,
+      menuSelection: this.isFinalAttendance ? this.rsvp.menuSelection : undefined,
+      customAnswers: this.customQuestionAnswers,
       declineConfirmed: this.declineConfirmed
     };
     this.api.submitRsvp(this.invitation.slug, payload).subscribe({
@@ -148,13 +157,18 @@ export class PublicInvitationComponent implements OnInit {
     this.success = '';
     this.error = '';
     this.declineConfirmed = false;
-    this.rsvp = { name: '', email: '', response: 'confirmed' as RsvpResponse, companions: 0, mealPreference: '', message: '', phoneCountryCode: '+52', phoneNationalNumber: '' };
+    this.companionNamesText = '';
+    this.customAnswers = {};
+    this.rsvp = { name: '', email: '', response: 'confirmed' as RsvpResponse, companions: 0, dietaryRestrictions: '', mealPreference: '', menuSelection: '', message: '', phoneCountryCode: '+52', phoneNationalNumber: '' };
   }
 
   onResponseChange(): void {
     if (!this.isFinalAttendance) {
       this.rsvp.companions = 0;
       this.rsvp.mealPreference = '';
+      this.rsvp.menuSelection = '';
+      this.rsvp.dietaryRestrictions = '';
+      this.companionNamesText = '';
     }
     if (this.rsvp.response !== 'declined') {
       this.declineConfirmed = false;
@@ -186,8 +200,49 @@ export class PublicInvitationComponent implements OnInit {
     return deadline ? new Date(deadline).toLocaleString() : '';
   }
 
+  get companionNames(): string[] {
+    return this.companionNamesText.split('\n').map((name) => name.trim()).filter(Boolean);
+  }
+
+  get customQuestionAnswers(): Array<{ key: string; label?: string; value?: string | boolean }> {
+    return (this.invitation?.rsvpSettings?.customQuestions || []).map((question) => {
+      const key = this.getQuestionKey(question);
+      return { key, label: question.label, value: this.customAnswers[key] };
+    });
+  }
+
+  getQuestionKey(question: RsvpCustomQuestion): string {
+    return question.key || question.label;
+  }
+
+  getCustomAnswer(question: RsvpCustomQuestion): string | boolean {
+    return this.customAnswers[this.getQuestionKey(question)] ?? '';
+  }
+
+  setCustomAnswer(question: RsvpCustomQuestion, value: string | boolean | null | undefined): void {
+    this.customAnswers[this.getQuestionKey(question)] = value ?? '';
+  }
+
   get guestQrUrl(): string {
     const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
     return value ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(value)}` : '';
+  }
+
+  private loadGuestToken(): void {
+    const token = this.route.snapshot.queryParamMap.get('t');
+    if (!this.invitation || !token) return;
+    this.checkingGuest = true;
+    this.api.getGuestByToken(this.invitation.slug, token).subscribe({
+      next: ({ guest }) => {
+        this.verifiedGuest = guest;
+        this.rsvp.name = guest.name;
+        this.rsvp.email = guest.email || '';
+        this.success = `Hola ${guest.name}, tu link personalizado esta listo para confirmar.`;
+        this.checkingGuest = false;
+      },
+      error: () => {
+        this.checkingGuest = false;
+      }
+    });
   }
 }

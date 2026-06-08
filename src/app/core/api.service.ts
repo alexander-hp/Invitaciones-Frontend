@@ -136,6 +136,10 @@ export class ApiService {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 
+  getGuestByToken(slug: string, token: string): Observable<GuestAccessResponse> {
+    return this.http.get<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-token/${encodeURIComponent(token)}`);
+  }
+
   uploadPublicAlbumPhoto(slug: string, payload: { file: File; name?: string; email?: string; guest?: string }): Observable<{ asset: { id: string; status: string } }> {
     const formData = new FormData();
     formData.append('file', payload.file);

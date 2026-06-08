@@ -60,6 +60,7 @@
         <div class="communication-metrics">
           <article><span>Por enviar</span><strong>{{ pendingCommunicationGuests }}</strong></article>
           <article><span>Enviados</span><strong>{{ sentCommunicationGuests }}</strong></article>
+          <article><span>Abiertos</span><strong>{{ openedCommunicationGuests }}</strong></article>
           <article><span>Confirmados</span><strong>{{ confirmedCommunicationGuests }}</strong></article>
         </div>
         <div class="filter-row">
@@ -155,6 +156,7 @@
             <option value="">Todos</option>
             <option value="pending">Por enviar</option>
             <option value="sent">Enviados</option>
+            <option value="opened">Abiertos</option>
             <option value="confirmed">Confirmados</option>
           </select>
         </label>
@@ -207,6 +209,7 @@
                 <span class="status-pill" [class.confirmed]="getCommunicationStatus(guest) === 'confirmed'">{{ getCommunicationStatus(guest) }}</span>
                 <span class="status-pill confirmed" *ngIf="guest.checkedIn">check-in</span>
                 <small *ngIf="guest.lastMessageType"> {{ getMessageTypeLabel(guest.lastMessageType) }}</small>
+                <small *ngIf="guest.invitationOpenedAt"> abierto {{ guest.invitationOpenedAt | date:'short' }}</small>
               </td>
               <td>
                 <div class="inline-actions">

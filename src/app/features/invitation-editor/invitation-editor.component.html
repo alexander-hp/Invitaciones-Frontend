@@ -37,7 +37,11 @@
           <label>Titular<input name="headline" [(ngModel)]="invitation.content.headline"></label>
           <label>Subtitulo<input name="subheadline" [(ngModel)]="invitation.content.subheadline"></label>
           <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl"></label>
+          <label>Dress code<input name="dressCode" [(ngModel)]="invitation.content.dressCode"></label>
           <label class="wide">Mensaje<textarea name="message" [(ngModel)]="invitation.content.message"></textarea></label>
+          <label class="wide">Itinerario<textarea name="itineraryText" [(ngModel)]="itineraryText" placeholder="18:00 | Ceremonia | Jardin principal"></textarea></label>
+          <label class="wide">Mesa de regalos<textarea name="giftRegistryText" [(ngModel)]="giftRegistryText" placeholder="Liverpool | https://..."></textarea></label>
+          <label class="wide">Hospedaje<textarea name="lodgingText" [(ngModel)]="lodgingText" placeholder="Hotel Centro | Tarifa preferente | https://..."></textarea></label>
           <label>Color principal<input name="primary" [(ngModel)]="invitation.content.palette!.primary"></label>
           <label>Color fondo<input name="secondary" [(ngModel)]="invitation.content.palette!.secondary"></label>
           <label>Color acento<input name="accent" [(ngModel)]="invitation.content.palette!.accent"></label>
@@ -60,6 +64,7 @@
           <label class="check-row"><input name="allowMaybe" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.allowMaybe"> Permitir "No estoy seguro"</label>
           <label class="check-row"><input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.allowChangesUntilDeadline"> Permitir cambios hasta la fecha limite</label>
           <label class="check-row wide"><input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.declineRequiresConfirmation"> Pedir confirmacion extra cuando alguien diga que no asistira</label>
+          <label class="wide">Preguntas RSVP<textarea name="customQuestionsText" [(ngModel)]="customQuestionsText" placeholder="Cancion que quieres escuchar | text |&#10;Menu | select | required | Pollo;Vegetariano"></textarea></label>
         </div>
 
         <h2>Assets</h2>
@@ -127,6 +132,13 @@
           <h3>Lugar</h3>
           <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
           <p>{{ event?.venue?.address }}</p>
+        </section>
+        <section *ngIf="invitation.content.dressCode || itineraryText || giftRegistryText || lodgingText">
+          <h3>Detalles</h3>
+          <p *ngIf="invitation.content.dressCode">Dress code: {{ invitation.content.dressCode }}</p>
+          <p *ngIf="itineraryText">Itinerario configurado</p>
+          <p *ngIf="giftRegistryText">Mesa de regalos configurada</p>
+          <p *ngIf="lodgingText">Hospedaje configurado</p>
         </section>
       </div>
       <section class="invite-media" *ngIf="invitation.content.musicUrl || invitation.content.gallery?.length">

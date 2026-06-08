@@ -344,6 +344,10 @@ export class EventDetailComponent implements OnInit {
     return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'confirmed').length;
   }
 
+  get openedCommunicationGuests(): number {
+    return this.guests.filter((guest) => this.getCommunicationStatus(guest) === 'opened').length;
+  }
+
   get pendingAlbumAssets(): number {
     return this.albumAssets.filter((asset) => asset.status === 'pending').length;
   }
@@ -415,6 +419,12 @@ export class EventDetailComponent implements OnInit {
   getQrImageUrl(guest: GuestModel): string {
     const value = guest.checkInCode || guest.qrCode || this.getGuestId(guest);
     return `https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(value)}`;
+  }
+
+  getPersonalizedPublicUrl(guest: GuestModel): string {
+    const publicUrl = this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : '';
+    if (!publicUrl || !guest.invitationToken) return publicUrl;
+    return `${publicUrl}?t=${encodeURIComponent(guest.invitationToken)}`;
   }
 
   markMessageSent(guest: GuestModel, channel: GuestMessageChannel): void {
@@ -508,7 +518,7 @@ export class EventDetailComponent implements OnInit {
     const date = this.event?.date ? new Date(this.event.date).toLocaleDateString() : '';
     const venue = this.event?.venue?.name || '';
     const address = this.event?.venue?.address || '';
-    const publicUrl = this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : '';
+    const publicUrl = this.getPersonalizedPublicUrl(guest);
     const locationLine = [venue, address].filter(Boolean).join(' - ');
 
     if (messageType === 'reminder') {

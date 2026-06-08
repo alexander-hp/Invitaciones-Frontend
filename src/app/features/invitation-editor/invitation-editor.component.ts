@@ -22,6 +22,10 @@ export class InvitationEditorComponent implements OnInit {
   error = '';
   assetMessage = '';
   publicUrl = '';
+  itineraryText = '';
+  giftRegistryText = '';
+  lodgingText = '';
+  customQuestionsText = '';
   palettePresets = [
     { name: 'Clasico editorial', primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
     { name: 'Jardin elegante', primary: '#244034', secondary: '#f4f7f0', accent: '#9f6f46' },
@@ -50,6 +54,7 @@ export class InvitationEditorComponent implements OnInit {
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureRsvpSettings();
+        this.syncEditorTextFields();
         this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
         this.publicUrl = `${window.location.origin}/i/${this.invitation.slug}`;
         this.loadTemplates();
@@ -133,13 +138,14 @@ export class InvitationEditorComponent implements OnInit {
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.getRsvpSettingsPayload(),
       template: this.invitation.template,
-      content: this.invitation.content
+      content: this.getContentPayload()
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureRsvpSettings();
+        this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
         this.message = 'Invitacion guardada.';
         this.saving = false;
@@ -162,6 +168,7 @@ export class InvitationEditorComponent implements OnInit {
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureRsvpSettings();
+        this.syncEditorTextFields();
         this.publicUrl = publicUrl || `${window.location.origin}/i/${invitation.slug}`;
         this.message = 'Invitacion publicada.';
         this.publishing = false;
@@ -273,13 +280,14 @@ export class InvitationEditorComponent implements OnInit {
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.getRsvpSettingsPayload(),
       template: this.invitation.template,
-      content: this.invitation.content
+      content: this.getContentPayload()
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureRsvpSettings();
+        this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
         this.assetMessage = 'Asset subido y guardado en la invitacion.';
         this.assetUploading = false;
@@ -307,7 +315,73 @@ export class InvitationEditorComponent implements OnInit {
     return {
       ...this.invitation.rsvpSettings,
       deadline: this.invitation.rsvpSettings.deadline || undefined,
-      reminderDaysBeforeDeadline: Number(this.invitation.rsvpSettings.reminderDaysBeforeDeadline ?? 3)
+      reminderDaysBeforeDeadline: Number(this.invitation.rsvpSettings.reminderDaysBeforeDeadline ?? 3),
+      customQuestions: this.parseCustomQuestions()
     };
+  }
+
+  private getContentPayload() {
+    if (!this.invitation) return undefined;
+    return {
+      ...this.invitation.content,
+      itinerary: this.parseItinerary(),
+      giftRegistry: this.parsePairs(this.giftRegistryText, 'label'),
+      lodging: this.parseLodging()
+    };
+  }
+
+  private syncEditorTextFields(): void {
+    if (!this.invitation) return;
+    this.itineraryText = (this.invitation.content.itinerary || [])
+      .map((item) => [item.time, item.title, item.description].filter(Boolean).join(' | '))
+      .join('\n');
+    this.giftRegistryText = (this.invitation.content.giftRegistry || [])
+      .map((item) => [item.label, item.url].filter(Boolean).join(' | '))
+      .join('\n');
+    this.lodgingText = (this.invitation.content.lodging || [])
+      .map((item) => [item.name, item.description, item.url].filter(Boolean).join(' | '))
+      .join('\n');
+    this.customQuestionsText = (this.invitation.rsvpSettings?.customQuestions || [])
+      .map((question) => [
+        question.label,
+        question.type || 'text',
+        question.required ? 'required' : '',
+        (question.options || []).join(';')
+      ].filter((value) => value !== '').join(' | '))
+      .join('\n');
+  }
+
+  private parseItinerary() {
+    return this.itineraryText.split('\n').map((line) => {
+      const [time, title, description] = line.split('|').map((part) => part.trim());
+      return { time, title, description };
+    }).filter((item) => item.time || item.title || item.description);
+  }
+
+  private parsePairs(text: string, labelKey: 'label') {
+    return text.split('\n').map((line) => {
+      const [label, url] = line.split('|').map((part) => part.trim());
+      return { [labelKey]: label, url };
+    }).filter((item) => item.label || item.url);
+  }
+
+  private parseLodging() {
+    return this.lodgingText.split('\n').map((line) => {
+      const [name, description, url] = line.split('|').map((part) => part.trim());
+      return { name, description, url };
+    }).filter((item) => item.name || item.description || item.url);
+  }
+
+  private parseCustomQuestions() {
+    return this.customQuestionsText.split('\n').map((line, index) => {
+      const [label, type, required, options] = line.split('|').map((part) => part.trim());
+      return {
+        key: label ? label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || `pregunta_${index + 1}` : `pregunta_${index + 1}`,
+        label,
+        type: ['text', 'textarea', 'select', 'boolean'].includes(type) ? type as 'text' | 'textarea' | 'select' | 'boolean' : 'text',
+        required: required === 'required' || required === 'si' || required === 'true',
+        options: options ? options.split(';').map((option) => option.trim()).filter(Boolean) : []
+      };
+    }).filter((question) => question.label);
   }
 }

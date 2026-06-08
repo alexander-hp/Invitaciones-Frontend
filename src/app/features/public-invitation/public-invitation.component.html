@@ -14,11 +14,31 @@
       <h2>Mensaje</h2>
       <p>{{ invitation.content.message }}</p>
     </section>
-    <section>
-      <h2>Lugar</h2>
-      <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
-      <p>{{ event?.venue?.address }}</p>
-      <a *ngIf="event?.venue?.mapUrl" [href]="event?.venue?.mapUrl" target="_blank" rel="noreferrer">Abrir mapa</a>
+        <section>
+          <h2>Lugar</h2>
+          <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
+          <p>{{ event?.venue?.address }}</p>
+          <a *ngIf="event?.venue?.mapUrl" [href]="event?.venue?.mapUrl" target="_blank" rel="noreferrer">Abrir mapa</a>
+        </section>
+    <section *ngIf="invitation.content.dressCode || invitation.content.itinerary?.length || invitation.content.giftRegistry?.length || invitation.content.lodging?.length">
+      <h2>Detalles</h2>
+      <p *ngIf="invitation.content.dressCode"><strong>Dress code:</strong> {{ invitation.content.dressCode }}</p>
+      <div *ngIf="invitation.content.itinerary?.length">
+        <h3>Itinerario</h3>
+        <p *ngFor="let item of invitation.content.itinerary">{{ item.time }} {{ item.title }} <span *ngIf="item.description">- {{ item.description }}</span></p>
+      </div>
+      <div *ngIf="invitation.content.giftRegistry?.length">
+        <h3>Mesa de regalos</h3>
+        <a *ngFor="let registry of invitation.content.giftRegistry" [href]="registry.url" target="_blank" rel="noreferrer">{{ registry.label || registry.url }}</a>
+      </div>
+      <div *ngIf="invitation.content.lodging?.length">
+        <h3>Hospedaje</h3>
+        <p *ngFor="let hotel of invitation.content.lodging">
+          <a *ngIf="hotel.url; else hotelName" [href]="hotel.url" target="_blank" rel="noreferrer">{{ hotel.name || hotel.url }}</a>
+          <ng-template #hotelName>{{ hotel.name }}</ng-template>
+          <span *ngIf="hotel.description"> - {{ hotel.description }}</span>
+        </p>
+      </div>
     </section>
     <form class="rsvp-panel" (ngSubmit)="submit()">
       <h2>RSVP</h2>
@@ -56,8 +76,23 @@
         </label>
         <ng-container *ngIf="isFinalAttendance">
           <label>Acompanantes<input name="companions" type="number" min="0" [max]="maxCompanions === null ? null : maxCompanions" [(ngModel)]="rsvp.companions"></label>
+          <label class="wide">Nombres de acompanantes<textarea name="companionNamesText" [(ngModel)]="companionNamesText" placeholder="Un nombre por linea"></textarea></label>
           <label>Preferencia de comida<input name="mealPreference" [(ngModel)]="rsvp.mealPreference"></label>
+          <label>Seleccion de menu<input name="menuSelection" [(ngModel)]="rsvp.menuSelection"></label>
+          <label class="wide">Restricciones alimenticias<textarea name="dietaryRestrictions" [(ngModel)]="rsvp.dietaryRestrictions"></textarea></label>
         </ng-container>
+        <div *ngIf="invitation.rsvpSettings?.customQuestions?.length" class="form-grid">
+          <ng-container *ngFor="let question of invitation.rsvpSettings?.customQuestions">
+            <label *ngIf="question.type !== 'boolean' && question.type !== 'select'" class="wide">{{ question.label }}<textarea *ngIf="question.type === 'textarea'; else shortAnswer" [name]="'custom-' + getQuestionKey(question)" [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)" [required]="!!question.required"></textarea><ng-template #shortAnswer><input [name]="'custom-' + getQuestionKey(question)" [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)" [required]="!!question.required"></ng-template></label>
+            <label *ngIf="question.type === 'select'">{{ question.label }}
+              <select [name]="'custom-' + getQuestionKey(question)" [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)" [required]="!!question.required">
+                <option value="">Selecciona</option>
+                <option *ngFor="let option of question.options" [value]="option">{{ option }}</option>
+              </select>
+            </label>
+            <label *ngIf="question.type === 'boolean'" class="check-row"><input type="checkbox" [name]="'custom-' + getQuestionKey(question)" [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"> {{ question.label }}</label>
+          </ng-container>
+        </div>
         <p *ngIf="rsvp.response === 'maybe'" class="notice">Te enviaremos un recordatorio antes de la fecha limite.</p>
         <div *ngIf="rsvp.response === 'declined'" class="notice">
           <p>Si confirmas que no asistiras, tu respuesta puede quedar como definitiva segun la configuracion del evento.</p>
