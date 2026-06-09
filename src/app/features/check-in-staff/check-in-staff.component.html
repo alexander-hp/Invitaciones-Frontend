@@ -3,12 +3,12 @@
   <p *ngIf="error" class="error">{{ error }}</p>
   <p *ngIf="message" class="success">{{ message }}</p>
 
-  <ng-container *ngIf="event">
+  <ng-container *ngIf="event as staffEvent">
     <header class="page-heading">
       <div>
         <p class="eyebrow">Check-in staff</p>
-        <h1>{{ event.title }}</h1>
-        <p class="muted">{{ event.date | date:'short' }} - {{ event.venue?.name || 'Lugar por definir' }}</p>
+        <h1>{{ staffEvent.title }}</h1>
+        <p class="muted">{{ staffEvent.date | date:'short' }} - {{ staffEvent.venue?.name || 'Lugar por definir' }}</p>
       </div>
       <span class="count-pill">{{ checkedInCount }} / {{ guests.length }}</span>
     </header>

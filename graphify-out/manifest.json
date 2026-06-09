@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "src/app/core/api.service.ts": {
-    "mtime": 1780968300.978348,
-    "ast_hash": "3d3838d273e70204aa9a7480c7f8c2e3",
+    "mtime": 1780970245.8714902,
+    "ast_hash": "0568267ee293f1c5f5d07504820a0db2",
     "semantic_hash": ""
   },
   "src/app/core/auth.guard.ts": {
@@ -40,8 +40,8 @@
     "semantic_hash": "acd0740881d844415760273cfa4ef8c3"
   },
   "src/app/core/models.ts": {
-    "mtime": 1780968300.807211,
-    "ast_hash": "1d195d0a88197faf4b74931364c36b38",
+    "mtime": 1780970187.9713466,
+    "ast_hash": "66388f78c70ccb9a1cfae6940dd91dc0",
     "semantic_hash": ""
   },
   "src/app/features/contact/contact.component.ts": {
@@ -50,13 +50,13 @@
     "semantic_hash": "5f29a1fee5d0d8775fcb9ec10b3f5407"
   },
   "src/app/features/dashboard/dashboard.component.ts": {
-    "mtime": 1780729051.3938217,
-    "ast_hash": "bf34bcbefa72c7320cb08dfb93e4160e",
-    "semantic_hash": "bf34bcbefa72c7320cb08dfb93e4160e"
+    "mtime": 1780970380.4265091,
+    "ast_hash": "fb9dc902d415060d827718c97be58485",
+    "semantic_hash": ""
   },
   "src/app/features/event-detail/event-detail.component.ts": {
-    "mtime": 1780968512.876434,
-    "ast_hash": "cf26ae7698db55fd5a3aa646c1cf7f75",
+    "mtime": 1780970534.2044203,
+    "ast_hash": "b7ab63191d8753e5d079fa4ce92a4334",
     "semantic_hash": ""
   },
   "src/app/features/events/events.component.ts": {
@@ -65,8 +65,8 @@
     "semantic_hash": ""
   },
   "src/app/features/invitation-editor/invitation-editor.component.ts": {
-    "mtime": 1780968387.7303147,
-    "ast_hash": "8fa5d466b5d8c067f48b04afcf87438c",
+    "mtime": 1780970467.70854,
+    "ast_hash": "5d0f1dc8ccec86b499a43d5f0e3ffbe1",
     "semantic_hash": ""
   },
   "src/app/features/login/login.component.ts": {
@@ -80,8 +80,8 @@
     "semantic_hash": "70664602a5245e404ff03e9984e72287"
   },
   "src/app/features/public-invitation/public-invitation.component.ts": {
-    "mtime": 1780968452.149883,
-    "ast_hash": "9f14d5911919ce1df5b5aebcdd924636",
+    "mtime": 1780970487.3883877,
+    "ast_hash": "fea4c74c64dacb43f67bdc5d97fce2cd",
     "semantic_hash": ""
   },
   "src/app/features/register/register.component.ts": {

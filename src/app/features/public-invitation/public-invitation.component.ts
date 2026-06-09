@@ -14,6 +14,7 @@ export class PublicInvitationComponent implements OnInit {
   error = '';
   success = '';
   albumMessage = '';
+  publicAlbumAssets: Array<{ url: string; uploaderName?: string; createdAt?: string }> = [];
   guestAccessEmail = '';
   selectedAlbumFile?: File;
   declineConfirmed = false;
@@ -49,6 +50,7 @@ export class PublicInvitationComponent implements OnInit {
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.event = typeof invitation.event === 'string' ? undefined : invitation.event;
         this.loadGuestToken();
+        this.loadPublicAlbum();
         this.loading = false;
       },
       error: (error) => {
@@ -152,6 +154,14 @@ export class PublicInvitationComponent implements OnInit {
     });
   }
 
+  loadPublicAlbum(): void {
+    if (!this.invitation?.content.privateAlbumEnabled) return;
+    this.api.listPublicAlbum(this.invitation.slug).subscribe({
+      next: ({ assets }) => this.publicAlbumAssets = assets,
+      error: () => this.publicAlbumAssets = []
+    });
+  }
+
   resetGuestAccess(): void {
     this.verifiedGuest = undefined;
     this.success = '';
@@ -226,6 +236,25 @@ export class PublicInvitationComponent implements OnInit {
   get guestQrUrl(): string {
     const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
     return value ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(value)}` : '';
+  }
+
+  downloadGuestPass(): void {
+    if (!this.verifiedGuest) return;
+    const lines = [
+      this.event?.title || this.invitation?.content.headline || 'Invitacion',
+      `Invitado: ${this.verifiedGuest.name}`,
+      `Codigo: ${this.verifiedGuest.checkInCode || this.verifiedGuest.qrCode || 'Pendiente'}`,
+      `Mesa: ${this.verifiedGuest.tableName || 'Pendiente'}`,
+      this.verifiedGuest.seatLabel ? `Asiento: ${this.verifiedGuest.seatLabel}` : '',
+      `Acompanantes permitidos: ${this.verifiedGuest.allowedCompanions}`
+    ].filter(Boolean).join('\n');
+    const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pase-${this.verifiedGuest.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.txt`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   get publicQrUrl(): string {

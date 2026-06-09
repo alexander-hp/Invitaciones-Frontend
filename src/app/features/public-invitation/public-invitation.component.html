@@ -4,6 +4,7 @@
 <section *ngIf="invitation" class="public-page" [style.--primary]="invitation.content.palette?.primary || '#1f2a44'" [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'" [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
   <img *ngIf="invitation.content.coverImageUrl" class="public-cover" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion" loading="eager" decoding="async">
   <div class="public-hero">
+    <img *ngIf="invitation.content.brandLogoUrl" class="brand-logo" [src]="invitation.content.brandLogoUrl" alt="Logo del evento">
     <p>{{ invitation.content.subheadline }}</p>
     <h1>{{ invitation.content.headline }}</h1>
     <span>{{ event?.date | date:'fullDate' }}</span>
@@ -51,6 +52,14 @@
         <h3>Mesa de regalos</h3>
         <a *ngFor="let registry of invitation.content.giftRegistry" [href]="registry.url" target="_blank" rel="noreferrer">{{ registry.label || registry.url }}</a>
       </div>
+      <div *ngIf="invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account">
+        <h3>Sobre digital</h3>
+        <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{ invitation.content.digitalEnvelope?.bank }}</p>
+        <p *ngIf="invitation.content.digitalEnvelope?.holder"><strong>Titular:</strong> {{ invitation.content.digitalEnvelope?.holder }}</p>
+        <p *ngIf="invitation.content.digitalEnvelope?.account"><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</p>
+        <p *ngIf="invitation.content.digitalEnvelope?.clabe"><strong>CLABE:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</p>
+        <p *ngIf="invitation.content.digitalEnvelope?.note">{{ invitation.content.digitalEnvelope?.note }}</p>
+      </div>
       <div *ngIf="invitation.content.lodging?.length">
         <h3>Hospedaje</h3>
         <p *ngFor="let hotel of invitation.content.lodging">
@@ -78,6 +87,7 @@
             <strong>Codigo de entrada: {{ verifiedGuest.checkInCode || verifiedGuest.qrCode || 'Pendiente' }}</strong>
             <p>{{ verifiedGuest.tableName || 'Mesa pendiente' }} <span *ngIf="verifiedGuest.seatLabel">/ {{ verifiedGuest.seatLabel }}</span></p>
             <small>{{ verifiedGuest.companions?.length || 0 }} acompanantes nombrados</small>
+            <button class="ghost small" type="button" (click)="downloadGuestPass()">Descargar pase</button>
           </div>
         </div>
         <div *ngIf="!verifiedGuest && publicQrUrl" class="guest-pass">
@@ -149,5 +159,9 @@
       <button class="ghost" type="button" (click)="uploadAlbumPhoto()" [disabled]="!selectedAlbumFile || uploadingAlbum">{{ uploadingAlbum ? 'Subiendo...' : 'Enviar foto' }}</button>
     </div>
     <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
+    <div class="gallery-grid" *ngIf="publicAlbumAssets.length">
+      <img *ngFor="let asset of publicAlbumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'" loading="lazy" decoding="async">
+    </div>
   </section>
+  <p *ngIf="!invitation.content.hideBranding" class="powered-by">Invitacion digital por KyndraSoft</p>
 </section>

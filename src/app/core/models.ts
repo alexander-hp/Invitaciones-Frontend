@@ -36,6 +36,11 @@ export interface DashboardMetrics {
   declined: number;
   pending: number;
   companions: number;
+  emailSent?: number;
+  whatsappSent?: number;
+  opened?: number;
+  failed?: number;
+  checkedIn?: number;
 }
 
 export interface EventAgendaItem {
@@ -101,6 +106,15 @@ export interface InvitationContent {
   locations?: InvitationLocation[];
   dressCode?: string;
   giftRegistry?: Array<{ label?: string; url?: string }>;
+  digitalEnvelope?: {
+    bank?: string;
+    account?: string;
+    clabe?: string;
+    holder?: string;
+    note?: string;
+  };
+  brandLogoUrl?: string;
+  hideBranding?: boolean;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
@@ -241,7 +255,11 @@ export interface GuestModel {
 
 export interface WhatsAppStatusResponse {
   provider: WhatsAppProvider;
+  fallbackProvider?: WhatsAppProvider | '';
   enabled: boolean;
+  fallbackEnabled?: boolean;
+  openWaConfigured?: boolean;
+  metaConfigured?: boolean;
 }
 
 export interface WhatsAppSendResponse {
@@ -375,6 +393,23 @@ export interface PlanDefinition {
     customDomain: boolean;
     whiteLabel: boolean;
   };
+}
+
+export interface PaymentModel {
+  _id?: string;
+  id?: string;
+  package: PaymentPackage | 'basic' | 'premium' | 'organizer';
+  status: 'pending' | 'paid' | 'failed' | 'refunded';
+  amount?: number;
+  currency?: string;
+  paidAt?: string;
+  createdAt?: string;
+}
+
+export interface PaymentStatusResponse {
+  plan: PaymentPackage | 'basic' | 'premium' | 'organizer';
+  planDefinition: PlanDefinition;
+  payments: PaymentModel[];
 }
 
 export interface CheckoutResponse {

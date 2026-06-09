@@ -9,6 +9,25 @@
 
   <p *ngIf="loading" class="notice">Cargando metricas...</p>
   <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="paymentMessage" class="notice">{{ paymentMessage }}</p>
+
+  <section class="panel" *ngIf="currentPlan">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Plan actual</p>
+        <h2>{{ currentPlan.name }}</h2>
+      </div>
+      <span class="count-pill">{{ currentPlan.key }}</span>
+    </div>
+    <p class="muted">Invitados: {{ currentPlan.limits.guests }} · Galeria: {{ currentPlan.limits.galleryImages }} · Musica: {{ currentPlan.limits.music ? 'si' : 'no' }} · Plantillas premium: {{ currentPlan.limits.premiumTemplates ? 'si' : 'no' }}</p>
+    <div *ngIf="payments.length" class="item-list">
+      <article *ngFor="let payment of payments.slice(0, 3)" class="payment-row">
+        <strong>{{ payment.package }} - {{ payment.status }}</strong>
+        <span>{{ formatAmount(payment) }}</span>
+        <small>{{ paymentDate(payment) | date:'short' }}</small>
+      </article>
+    </div>
+  </section>
 
   <div class="metrics-grid">
     <article><span>Eventos</span><strong>{{ metrics.events }}</strong></article>
@@ -18,6 +37,11 @@
     <article><span>Rechazados</span><strong>{{ metrics.declined }}</strong></article>
     <article><span>Pendientes</span><strong>{{ metrics.pending }}</strong></article>
     <article><span>Acompanantes</span><strong>{{ metrics.companions }}</strong></article>
+    <article><span>Email enviados</span><strong>{{ metrics.emailSent || 0 }}</strong></article>
+    <article><span>WhatsApp enviados</span><strong>{{ metrics.whatsappSent || 0 }}</strong></article>
+    <article><span>Abiertas</span><strong>{{ metrics.opened || 0 }}</strong></article>
+    <article><span>Fallidas</span><strong>{{ metrics.failed || 0 }}</strong></article>
+    <article><span>Check-in</span><strong>{{ metrics.checkedIn || 0 }}</strong></article>
   </div>
 
   <section class="panel">

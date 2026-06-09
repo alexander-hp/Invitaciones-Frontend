@@ -58,6 +58,13 @@
 
       <div class="communication-panel">
         <div class="communication-metrics">
+          <article><span>Email enviados</span><strong>{{ eventMetrics.emailSent || 0 }}</strong></article>
+          <article><span>WhatsApp enviados</span><strong>{{ eventMetrics.whatsappSent || 0 }}</strong></article>
+          <article><span>Abiertas</span><strong>{{ eventMetrics.opened || 0 }}</strong></article>
+          <article><span>Fallidas</span><strong>{{ eventMetrics.failed || 0 }}</strong></article>
+          <article><span>Check-in</span><strong>{{ eventMetrics.checkedIn || 0 }}</strong></article>
+        </div>
+        <div class="communication-metrics">
           <article><span>Por enviar</span><strong>{{ pendingCommunicationGuests }}</strong></article>
           <article><span>Enviados</span><strong>{{ sentCommunicationGuests }}</strong></article>
           <article><span>Entregados</span><strong>{{ deliveredCommunicationGuests }}</strong></article>
@@ -68,6 +75,7 @@
         </div>
         <div class="filter-row">
           <span class="count-pill">WhatsApp: {{ whatsappProvider }}</span>
+          <span class="count-pill" *ngIf="whatsappFallbackProvider">Fallback {{ whatsappFallbackProvider }}: {{ whatsappFallbackEnabled ? 'listo' : 'sin configurar' }}</span>
           <label>Plantilla
             <select name="messageTemplate" [(ngModel)]="selectedMessageType">
               <option *ngFor="let template of messageTemplates" [value]="template.value">{{ template.label }}</option>
@@ -331,6 +339,13 @@
           <h2>Fotos de invitados</h2>
         </div>
         <span class="count-pill">{{ pendingAlbumAssets }} pendientes</span>
+      </div>
+      <div class="guest-pass" *ngIf="albumQrUrl">
+        <img [src]="albumQrUrl" alt="QR album">
+        <div>
+          <strong>QR para album y RSVP</strong>
+          <p>{{ albumPublicUrl }}</p>
+        </div>
       </div>
       <p *ngIf="albumError" class="error">{{ albumError }}</p>
       <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>

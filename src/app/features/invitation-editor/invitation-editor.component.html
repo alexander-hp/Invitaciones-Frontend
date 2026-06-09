@@ -37,13 +37,17 @@
           <label>Titular<input name="headline" [(ngModel)]="invitation.content.headline"></label>
           <label>Subtitulo<input name="subheadline" [(ngModel)]="invitation.content.subheadline"></label>
           <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl" placeholder="https://.../cancion.mp3"></label>
+          <label>Logo anfitrion<input name="brandLogoUrl" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png"></label>
           <label>Dress code<input name="dressCode" [(ngModel)]="invitation.content.dressCode"></label>
+          <label class="check-row"><input name="hideBranding" type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()"> Ocultar marca KyndraSoft</label>
           <label class="wide">Mensaje<textarea name="message" [(ngModel)]="invitation.content.message"></textarea></label>
           <label class="wide">Mesa de regalos<textarea name="giftRegistryText" [(ngModel)]="giftRegistryText" placeholder="Liverpool | https://..."></textarea></label>
           <label class="wide">Hospedaje<textarea name="lodgingText" [(ngModel)]="lodgingText" placeholder="Hotel Centro | Tarifa preferente | https://..."></textarea></label>
-          <label>Color principal<input name="primary" [(ngModel)]="invitation.content.palette!.primary"></label>
-          <label>Color fondo<input name="secondary" [(ngModel)]="invitation.content.palette!.secondary"></label>
-          <label>Color acento<input name="accent" [(ngModel)]="invitation.content.palette!.accent"></label>
+          <ng-container *ngIf="invitation.content.palette as palette">
+            <label>Color principal<input name="primary" [(ngModel)]="palette.primary"></label>
+            <label>Color fondo<input name="secondary" [(ngModel)]="palette.secondary"></label>
+            <label>Color acento<input name="accent" [(ngModel)]="palette.accent"></label>
+          </ng-container>
         </div>
         <div class="swatch-grid">
           <button type="button" *ngFor="let palette of palettePresets" (click)="applyPalette(palette)">
@@ -55,6 +59,16 @@
         </div>
         <p class="muted" *ngIf="invitation.accessMode === 'guest_list'">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
         <p class="muted" *ngIf="invitation.accessMode === 'open'">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
+        <p class="muted" *ngIf="!canUseWhiteLabel()">Marca blanca requiere plan Pro.</p>
+
+        <h2>Sobre digital</h2>
+        <div class="form-grid" *ngIf="invitation.content.digitalEnvelope as envelope">
+          <label>Banco<input name="envelopeBank" [(ngModel)]="envelope.bank"></label>
+          <label>Titular<input name="envelopeHolder" [(ngModel)]="envelope.holder"></label>
+          <label>Cuenta<input name="envelopeAccount" [(ngModel)]="envelope.account"></label>
+          <label>CLABE<input name="envelopeClabe" [(ngModel)]="envelope.clabe"></label>
+          <label class="wide">Nota<textarea name="envelopeNote" [(ngModel)]="envelope.note"></textarea></label>
+        </div>
 
         <h2>Itinerario</h2>
         <div class="repeat-list">
@@ -90,12 +104,12 @@
         <button class="ghost" type="button" (click)="addLocation()">Agregar ubicacion</button>
 
         <h2>Reglas RSVP</h2>
-        <div class="form-grid">
-          <label>Fecha limite RSVP<input name="rsvpDeadline" type="datetime-local" [(ngModel)]="invitation.rsvpSettings!.deadline"></label>
-          <label>Dias antes para recordatorio<input name="reminderDaysBeforeDeadline" type="number" min="0" max="60" [(ngModel)]="invitation.rsvpSettings!.reminderDaysBeforeDeadline"></label>
-          <label class="check-row"><input name="allowMaybe" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.allowMaybe"> Permitir "No estoy seguro"</label>
-          <label class="check-row"><input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.allowChangesUntilDeadline"> Permitir cambios hasta la fecha limite</label>
-          <label class="check-row wide"><input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="invitation.rsvpSettings!.declineRequiresConfirmation"> Pedir confirmacion extra cuando alguien diga que no asistira</label>
+        <div class="form-grid" *ngIf="invitation.rsvpSettings as rsvpSettings">
+          <label>Fecha limite RSVP<input name="rsvpDeadline" type="datetime-local" [(ngModel)]="rsvpSettings.deadline"></label>
+          <label>Dias antes para recordatorio<input name="reminderDaysBeforeDeadline" type="number" min="0" max="60" [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline"></label>
+          <label class="check-row"><input name="allowMaybe" type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe"> Permitir "No estoy seguro"</label>
+          <label class="check-row"><input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline"> Permitir cambios hasta la fecha limite</label>
+          <label class="check-row wide"><input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation"> Pedir confirmacion extra cuando alguien diga que no asistira</label>
           <label class="wide">Preguntas RSVP<textarea name="customQuestionsText" [(ngModel)]="customQuestionsText" placeholder="Cancion que quieres escuchar | text |&#10;Menu | select | required | Pollo;Vegetariano"></textarea></label>
         </div>
 
@@ -130,6 +144,7 @@
             <button type="button" *ngFor="let template of templates" (click)="applyTemplate(template)">
               <strong>{{ template.name }}</strong>
               <span>{{ template.eventType }} - {{ template.tier }}</span>
+              <small *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()">Requiere upgrade</small>
             </button>
           </div>
         </section>

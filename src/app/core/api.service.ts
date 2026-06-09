@@ -26,6 +26,7 @@ import {
   InvitationPayload,
   MessageResponse,
   PaymentPackage,
+  PaymentStatusResponse,
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
@@ -75,6 +76,10 @@ export class ApiService {
     return this.http.get<{ metrics: DashboardMetrics }>(`${this.apiUrl}/dashboard/summary`);
   }
 
+  getEventDashboard(eventId: string): Observable<{ metrics: Partial<DashboardMetrics> }> {
+    return this.http.get<{ metrics: Partial<DashboardMetrics> }>(`${this.apiUrl}/dashboard/event/${eventId}`);
+  }
+
   listEvents(): Observable<{ events: EventModel[] }> {
     return this.http.get<{ events: EventModel[] }>(`${this.apiUrl}/events`);
   }
@@ -117,6 +122,10 @@ export class ApiService {
 
   updateAlbumAsset(eventId: string, assetId: string, status: AlbumAssetModel['status']): Observable<{ asset: AlbumAssetModel }> {
     return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/events/${eventId}/album/${assetId}`, { status });
+  }
+
+  listPublicAlbum(slug: string): Observable<{ assets: AlbumAssetModel[] }> {
+    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/invitations/public/${slug}/album`);
   }
 
   listInvitations(): Observable<{ invitations: InvitationModel[] }> {
@@ -274,6 +283,10 @@ export class ApiService {
 
   listPlans(): Observable<{ plans: PlanDefinition[] }> {
     return this.http.get<{ plans: PlanDefinition[] }>(`${this.apiUrl}/payments/plans`);
+  }
+
+  getPaymentStatus(): Observable<PaymentStatusResponse> {
+    return this.http.get<PaymentStatusResponse>(`${this.apiUrl}/payments/status`);
   }
 
   createCheckout(payload: { package: Exclude<PaymentPackage, 'free'>; invitation?: string }): Observable<CheckoutResponse> {

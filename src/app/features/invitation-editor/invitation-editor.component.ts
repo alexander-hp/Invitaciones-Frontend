@@ -13,6 +13,7 @@ export class InvitationEditorComponent implements OnInit {
   event?: EventModel;
   templates: TemplateModel[] = [];
   plans: PlanDefinition[] = [];
+  currentPlan?: PlanDefinition;
   loading = false;
   saving = false;
   publishing = false;
@@ -81,10 +82,18 @@ export class InvitationEditorComponent implements OnInit {
       next: ({ plans }) => this.plans = plans,
       error: () => this.plans = []
     });
+    this.api.getPaymentStatus().subscribe({
+      next: ({ planDefinition }) => this.currentPlan = planDefinition,
+      error: () => this.currentPlan = undefined
+    });
   }
 
   applyTemplate(template: TemplateModel): void {
     if (!this.invitation) return;
+    if (template.tier === 'premium' && !this.currentPlan?.limits.premiumTemplates) {
+      this.error = 'Esta plantilla requiere Evento Individual o Pro.';
+      return;
+    }
     this.invitation.template = template._id || template.id;
     if (template.config?.palette) {
       this.invitation.content.palette = {
@@ -313,6 +322,14 @@ export class InvitationEditorComponent implements OnInit {
     this.assetMessage = 'Musica quitada. Guarda la invitacion para confirmar el cambio.';
   }
 
+  canUsePremiumTemplates(): boolean {
+    return Boolean(this.currentPlan?.limits.premiumTemplates);
+  }
+
+  canUseWhiteLabel(): boolean {
+    return Boolean(this.currentPlan?.limits.whiteLabel);
+  }
+
   onMusicPlaybackError(): void {
     this.error = 'La musica esta guardada, pero no se puede reproducir. Revisa permisos de lectura S3/CloudFront, MEDIA_PUBLIC_BASE_URL y CORS.';
   }
@@ -359,6 +376,7 @@ export class InvitationEditorComponent implements OnInit {
   private ensureContentCollections(): void {
     if (!this.invitation) return;
     if (!this.invitation.content.gallery) this.invitation.content.gallery = [];
+    if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '' };
     if (!this.invitation.content.itinerary) this.invitation.content.itinerary = this.parseItinerary();
     if (!this.invitation.content.locations) {
       const venue = this.event?.venue;

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel, WhatsAppMediaAssetModel, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
+import { AlbumAssetModel, DashboardMetrics, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel, WhatsAppMediaAssetModel, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -44,7 +44,10 @@ export class EventDetailComponent implements OnInit {
   importMessage = '';
   importDuplicateDetails: string[] = [];
   whatsappProvider: WhatsAppProvider = 'disabled';
+  whatsappFallbackProvider: WhatsAppProvider | '' = '';
   whatsappEnabled = false;
+  whatsappFallbackEnabled = false;
+  eventMetrics: Partial<DashboardMetrics> = {};
   editingGuest?: GuestModel;
   guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   companionNames = '';
@@ -86,6 +89,7 @@ export class EventDetailComponent implements OnInit {
         this.loadRsvps(id);
         this.loadTables(id);
         this.loadAlbum(id);
+        this.loadEventMetrics(id);
         this.loadWhatsAppMedia(id);
         this.loadWhatsAppStatus();
       },
@@ -387,6 +391,14 @@ export class EventDetailComponent implements OnInit {
 
   get primaryInvitation(): InvitationModel | undefined {
     return this.invitations.find((invitation) => invitation.status === 'published') || this.invitations[0];
+  }
+
+  get albumPublicUrl(): string {
+    return this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : '';
+  }
+
+  get albumQrUrl(): string {
+    return this.albumPublicUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.albumPublicUrl)}` : '';
   }
 
   exportGuests(): void {
@@ -884,6 +896,13 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  private loadEventMetrics(eventId: string): void {
+    this.api.getEventDashboard(eventId).subscribe({
+      next: ({ metrics }) => this.eventMetrics = metrics,
+      error: () => this.eventMetrics = {}
+    });
+  }
+
   private loadWhatsAppMedia(eventId: string): void {
     this.api.listWhatsAppMedia(eventId).subscribe({
       next: ({ assets }) => this.whatsappMediaAssets = assets,
@@ -901,13 +920,17 @@ export class EventDetailComponent implements OnInit {
 
   private loadWhatsAppStatus(): void {
     this.api.getWhatsAppStatus().subscribe({
-      next: ({ provider, enabled }) => {
+      next: ({ provider, fallbackProvider, enabled, fallbackEnabled }) => {
         this.whatsappProvider = provider;
+        this.whatsappFallbackProvider = fallbackProvider || '';
         this.whatsappEnabled = enabled;
+        this.whatsappFallbackEnabled = Boolean(fallbackEnabled);
       },
       error: () => {
         this.whatsappProvider = 'disabled';
+        this.whatsappFallbackProvider = '';
         this.whatsappEnabled = false;
+        this.whatsappFallbackEnabled = false;
       }
     });
   }
