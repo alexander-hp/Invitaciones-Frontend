@@ -9,6 +9,8 @@ import {
   CheckoutResponse,
   ContactPayload,
   DashboardMetrics,
+  EmailBulkResponse,
+  EmailSendResponse,
   EventModel,
   EventPayload,
   EventTableModel,
@@ -205,6 +207,14 @@ export class ApiService {
 
   sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; media?: WhatsAppMediaPayload; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
     return this.http.post<WhatsAppBulkResponse>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/bulk`, payload);
+  }
+
+  sendGuestEmail(id: string, payload: { messageType?: GuestMessageType }): Observable<EmailSendResponse> {
+    return this.http.post<EmailSendResponse>(`${this.apiUrl}/guests/${id}/send-email`, payload);
+  }
+
+  sendBulkEmail(eventId: string, payload: { confirm: boolean; messageType?: GuestMessageType; guestIds?: string[] }): Observable<EmailBulkResponse> {
+    return this.http.post<EmailBulkResponse>(`${this.apiUrl}/events/${eventId}/send-email`, payload);
   }
 
   importGuests(eventId: string, file: File): Observable<ImportGuestsResponse> {

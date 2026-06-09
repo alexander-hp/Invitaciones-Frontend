@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "src/app/core/api.service.ts": {
-    "mtime": 1780950320.7515144,
-    "ast_hash": "49bdcb508482d67d8e70ca8109040213",
+    "mtime": 1780968300.978348,
+    "ast_hash": "3d3838d273e70204aa9a7480c7f8c2e3",
     "semantic_hash": ""
   },
   "src/app/core/auth.guard.ts": {
@@ -40,8 +40,8 @@
     "semantic_hash": "acd0740881d844415760273cfa4ef8c3"
   },
   "src/app/core/models.ts": {
-    "mtime": 1780950320.5943894,
-    "ast_hash": "57ce3b5b2aacc81f7f42976e394578f6",
+    "mtime": 1780968300.807211,
+    "ast_hash": "1d195d0a88197faf4b74931364c36b38",
     "semantic_hash": ""
   },
   "src/app/features/contact/contact.component.ts": {
@@ -55,8 +55,8 @@
     "semantic_hash": "bf34bcbefa72c7320cb08dfb93e4160e"
   },
   "src/app/features/event-detail/event-detail.component.ts": {
-    "mtime": 1780950360.7155564,
-    "ast_hash": "b55c8150059065357df0fa3bd59f96b9",
+    "mtime": 1780968512.876434,
+    "ast_hash": "cf26ae7698db55fd5a3aa646c1cf7f75",
     "semantic_hash": ""
   },
   "src/app/features/events/events.component.ts": {
@@ -65,8 +65,8 @@
     "semantic_hash": ""
   },
   "src/app/features/invitation-editor/invitation-editor.component.ts": {
-    "mtime": 1780903401.3944006,
-    "ast_hash": "886775a565043c2b6da0f96e28e13d78",
+    "mtime": 1780968387.7303147,
+    "ast_hash": "8fa5d466b5d8c067f48b04afcf87438c",
     "semantic_hash": ""
   },
   "src/app/features/login/login.component.ts": {
@@ -80,8 +80,8 @@
     "semantic_hash": "70664602a5245e404ff03e9984e72287"
   },
   "src/app/features/public-invitation/public-invitation.component.ts": {
-    "mtime": 1780903575.6280298,
-    "ast_hash": "e0df20a3bd61030ada47b525cd7b2073",
+    "mtime": 1780968452.149883,
+    "ast_hash": "9f14d5911919ce1df5b5aebcdd924636",
     "semantic_hash": ""
   },
   "src/app/features/register/register.component.ts": {

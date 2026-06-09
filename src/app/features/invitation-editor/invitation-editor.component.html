@@ -36,10 +36,9 @@
           </label>
           <label>Titular<input name="headline" [(ngModel)]="invitation.content.headline"></label>
           <label>Subtitulo<input name="subheadline" [(ngModel)]="invitation.content.subheadline"></label>
-          <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl"></label>
+          <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl" placeholder="https://.../cancion.mp3"></label>
           <label>Dress code<input name="dressCode" [(ngModel)]="invitation.content.dressCode"></label>
           <label class="wide">Mensaje<textarea name="message" [(ngModel)]="invitation.content.message"></textarea></label>
-          <label class="wide">Itinerario<textarea name="itineraryText" [(ngModel)]="itineraryText" placeholder="18:00 | Ceremonia | Jardin principal"></textarea></label>
           <label class="wide">Mesa de regalos<textarea name="giftRegistryText" [(ngModel)]="giftRegistryText" placeholder="Liverpool | https://..."></textarea></label>
           <label class="wide">Hospedaje<textarea name="lodgingText" [(ngModel)]="lodgingText" placeholder="Hotel Centro | Tarifa preferente | https://..."></textarea></label>
           <label>Color principal<input name="primary" [(ngModel)]="invitation.content.palette!.primary"></label>
@@ -56,6 +55,39 @@
         </div>
         <p class="muted" *ngIf="invitation.accessMode === 'guest_list'">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
         <p class="muted" *ngIf="invitation.accessMode === 'open'">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
+
+        <h2>Itinerario</h2>
+        <div class="repeat-list">
+          <article *ngFor="let item of invitation.content.itinerary; let i = index" class="repeat-item">
+            <div class="form-grid">
+              <label>Hora<input [name]="'itineraryTime' + i" [(ngModel)]="item.time" placeholder="18:00"></label>
+              <label>Momento<input [name]="'itineraryTitle' + i" [(ngModel)]="item.title" placeholder="Ceremonia"></label>
+              <label class="wide">Detalle<input [name]="'itineraryDescription' + i" [(ngModel)]="item.description" placeholder="Jardin principal"></label>
+            </div>
+            <div class="inline-actions">
+              <button class="ghost small" type="button" (click)="moveItineraryItem(i, -1)">Subir</button>
+              <button class="ghost small" type="button" (click)="moveItineraryItem(i, 1)">Bajar</button>
+              <button class="ghost small" type="button" (click)="removeItineraryItem(i)">Quitar</button>
+            </div>
+          </article>
+        </div>
+        <button class="ghost" type="button" (click)="addItineraryItem()">Agregar horario</button>
+
+        <h2>Ubicaciones</h2>
+        <div class="repeat-list">
+          <article *ngFor="let location of invitation.content.locations; let i = index" class="repeat-item">
+            <div class="form-grid">
+              <label>Tipo<input [name]="'locationType' + i" [(ngModel)]="location.type" placeholder="Iglesia, recepcion, hotel"></label>
+              <label>Nombre<input [name]="'locationName' + i" [(ngModel)]="location.name" placeholder="Parroquia / Salon"></label>
+              <label class="wide">Direccion<input [name]="'locationAddress' + i" [(ngModel)]="location.address"></label>
+              <label>Google Maps<input [name]="'locationMapUrl' + i" [(ngModel)]="location.mapUrl" placeholder="https://maps.google.com/..."></label>
+              <label>Waze<input [name]="'locationWazeUrl' + i" [(ngModel)]="location.wazeUrl" placeholder="https://waze.com/..."></label>
+              <label class="wide">Notas<input [name]="'locationNotes' + i" [(ngModel)]="location.notes" placeholder="Entrada por avenida principal"></label>
+            </div>
+            <button class="ghost small" type="button" (click)="removeLocation(i)">Quitar ubicacion</button>
+          </article>
+        </div>
+        <button class="ghost" type="button" (click)="addLocation()">Agregar ubicacion</button>
 
         <h2>Reglas RSVP</h2>
         <div class="form-grid">
@@ -77,7 +109,10 @@
 
         <div class="asset-preview-list">
           <img *ngIf="invitation.content.coverImageUrl" class="asset-cover-preview" [src]="invitation.content.coverImageUrl" alt="Portada de la invitacion" loading="lazy" decoding="async">
-          <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
+          <div *ngIf="invitation.content.musicUrl" class="music-preview">
+            <audio controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()"></audio>
+            <button class="ghost small" type="button" (click)="removeMusic()">Quitar musica</button>
+          </div>
           <div class="gallery-strip" *ngIf="invitation.content.gallery?.length">
             <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
           </div>
@@ -133,16 +168,16 @@
           <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
           <p>{{ event?.venue?.address }}</p>
         </section>
-        <section *ngIf="invitation.content.dressCode || itineraryText || giftRegistryText || lodgingText">
+        <section *ngIf="invitation.content.dressCode || invitation.content.itinerary?.length || giftRegistryText || lodgingText">
           <h3>Detalles</h3>
           <p *ngIf="invitation.content.dressCode">Dress code: {{ invitation.content.dressCode }}</p>
-          <p *ngIf="itineraryText">Itinerario configurado</p>
+          <p *ngIf="invitation.content.itinerary?.length">Itinerario configurado</p>
           <p *ngIf="giftRegistryText">Mesa de regalos configurada</p>
           <p *ngIf="lodgingText">Hospedaje configurado</p>
         </section>
       </div>
       <section class="invite-media" *ngIf="invitation.content.musicUrl || invitation.content.gallery?.length">
-        <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
+        <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()"></audio>
         <div class="gallery-grid" *ngIf="invitation.content.gallery?.length">
           <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
         </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AssetFolder, EventModel, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel } from '../../core/models';
 
 @Component({ selector: 'app-invitation-editor', templateUrl: './invitation-editor.component.html' })
 export class InvitationEditorComponent implements OnInit {
@@ -53,9 +53,10 @@ export class InvitationEditorComponent implements OnInit {
         }
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
+        this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
-        this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
         this.publicUrl = `${window.location.origin}/i/${this.invitation.slug}`;
         this.loadTemplates();
         this.loadPlans();
@@ -144,6 +145,7 @@ export class InvitationEditorComponent implements OnInit {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
@@ -167,6 +169,7 @@ export class InvitationEditorComponent implements OnInit {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
         this.publicUrl = publicUrl || `${window.location.origin}/i/${invitation.slug}`;
@@ -273,6 +276,47 @@ export class InvitationEditorComponent implements OnInit {
     return invitation._id || invitation.id || '';
   }
 
+  addItineraryItem(): void {
+    if (!this.invitation) return;
+    this.ensureContentCollections();
+    this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
+  }
+
+  removeItineraryItem(index: number): void {
+    if (!this.invitation?.content.itinerary) return;
+    this.invitation.content.itinerary.splice(index, 1);
+  }
+
+  moveItineraryItem(index: number, direction: -1 | 1): void {
+    const items = this.invitation?.content.itinerary;
+    if (!items) return;
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= items.length) return;
+    const [item] = items.splice(index, 1);
+    items.splice(nextIndex, 0, item);
+  }
+
+  addLocation(): void {
+    if (!this.invitation) return;
+    this.ensureContentCollections();
+    this.invitation.content.locations!.push({ type: 'recepcion', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '' });
+  }
+
+  removeLocation(index: number): void {
+    if (!this.invitation?.content.locations) return;
+    this.invitation.content.locations.splice(index, 1);
+  }
+
+  removeMusic(): void {
+    if (!this.invitation) return;
+    this.invitation.content.musicUrl = '';
+    this.assetMessage = 'Musica quitada. Guarda la invitacion para confirmar el cambio.';
+  }
+
+  onMusicPlaybackError(): void {
+    this.error = 'La musica esta guardada, pero no se puede reproducir. Revisa permisos de lectura S3/CloudFront, MEDIA_PUBLIC_BASE_URL y CORS.';
+  }
+
   private persistUploadedAsset(): void {
     if (!this.invitation) return;
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
@@ -286,6 +330,8 @@ export class InvitationEditorComponent implements OnInit {
         this.invitation = invitation;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        this.ensureContentCollections();
+        this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
@@ -310,6 +356,18 @@ export class InvitationEditorComponent implements OnInit {
     };
   }
 
+  private ensureContentCollections(): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content.gallery) this.invitation.content.gallery = [];
+    if (!this.invitation.content.itinerary) this.invitation.content.itinerary = this.parseItinerary();
+    if (!this.invitation.content.locations) {
+      const venue = this.event?.venue;
+      this.invitation.content.locations = venue?.name || venue?.address || venue?.mapUrl
+        ? [{ type: 'principal', name: venue.name || '', address: venue.address || '', mapUrl: venue.mapUrl || '', wazeUrl: '', notes: '' }]
+        : [];
+    }
+  }
+
   private getRsvpSettingsPayload() {
     if (!this.invitation?.rsvpSettings) return undefined;
     return {
@@ -324,7 +382,8 @@ export class InvitationEditorComponent implements OnInit {
     if (!this.invitation) return undefined;
     return {
       ...this.invitation.content,
-      itinerary: this.parseItinerary(),
+      itinerary: this.cleanItinerary(this.invitation.content.itinerary || this.parseItinerary()),
+      locations: this.cleanLocations(this.invitation.content.locations || []),
       giftRegistry: this.parsePairs(this.giftRegistryText, 'label'),
       lodging: this.parseLodging()
     };
@@ -356,6 +415,29 @@ export class InvitationEditorComponent implements OnInit {
       const [time, title, description] = line.split('|').map((part) => part.trim());
       return { time, title, description };
     }).filter((item) => item.time || item.title || item.description);
+  }
+
+  private cleanItinerary(items: Array<Partial<EventAgendaItem>>) {
+    return items
+      .map((item) => ({
+        time: String(item.time || '').trim(),
+        title: String(item.title || '').trim(),
+        description: String(item.description || '').trim()
+      }))
+      .filter((item) => item.time || item.title || item.description);
+  }
+
+  private cleanLocations(items: InvitationLocation[]) {
+    return items
+      .map((item) => ({
+        type: String(item.type || '').trim(),
+        name: String(item.name || '').trim(),
+        address: String(item.address || '').trim(),
+        mapUrl: String(item.mapUrl || '').trim(),
+        wazeUrl: String(item.wazeUrl || '').trim(),
+        notes: String(item.notes || '').trim()
+      }))
+      .filter((item) => item.type || item.name || item.address || item.mapUrl || item.wazeUrl || item.notes);
   }
 
   private parsePairs(text: string, labelKey: 'label') {

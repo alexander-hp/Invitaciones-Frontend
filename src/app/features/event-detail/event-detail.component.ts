@@ -25,6 +25,8 @@ export class EventDetailComponent implements OnInit {
   importing = false;
   exportingGuests = false;
   exportingRsvps = false;
+  emailSending = '';
+  emailBulkSending = false;
   whatsappSending = '';
   whatsappBulkSending = false;
   whatsappMediaUploading = false;
@@ -449,6 +451,46 @@ export class EventDetailComponent implements OnInit {
 
   canEmailGuest(guest: GuestModel): boolean {
     return Boolean(guest.email && this.primaryInvitation);
+  }
+
+  sendRealEmail(guest: GuestModel): void {
+    const guestId = this.getGuestId(guest);
+    if (!guestId) return;
+    this.emailSending = guestId;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.sendGuestEmail(guestId, { messageType: this.selectedMessageType }).subscribe({
+      next: ({ guest: updatedGuest }) => {
+        this.guests = this.guests.map((item) => this.getGuestId(item) === guestId ? updatedGuest : item);
+        this.guestMessage = 'Email enviado.';
+        this.emailSending = '';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo enviar email.';
+        this.emailSending = '';
+      }
+    });
+  }
+
+  sendBulkEmail(): void {
+    const eventId = this.getEventId();
+    if (!eventId || !this.filteredGuests.length) return;
+    const guestIds = this.filteredGuests.filter((guest) => this.canEmailGuest(guest)).map((guest) => this.getGuestId(guest));
+    if (!guestIds.length || !window.confirm(`Enviar email "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${guestIds.length} invitado(s) filtrados?`)) return;
+    this.emailBulkSending = true;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.sendBulkEmail(eventId, { confirm: true, messageType: this.selectedMessageType, guestIds }).subscribe({
+      next: (result) => {
+        this.guestMessage = `Email masivo: enviados ${result.sent}, fallidos ${result.failed}.`;
+        this.loadGuests(eventId);
+        this.emailBulkSending = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo enviar email masivo.';
+        this.emailBulkSending = false;
+      }
+    });
   }
 
   getQrImageUrl(guest: GuestModel): string {

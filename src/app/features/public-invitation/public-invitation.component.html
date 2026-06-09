@@ -7,6 +7,11 @@
     <p>{{ invitation.content.subheadline }}</p>
     <h1>{{ invitation.content.headline }}</h1>
     <span>{{ event?.date | date:'fullDate' }}</span>
+    <strong *ngIf="countdownLabel" class="countdown-pill">{{ countdownLabel }}</strong>
+    <div class="inline-actions public-actions">
+      <a *ngIf="calendarUrl" class="ghost" [href]="calendarUrl" target="_blank" rel="noreferrer">Agregar al calendario</a>
+      <a *ngIf="publicInvitationUrl" class="ghost" [href]="publicInvitationUrl">Abrir link</a>
+    </div>
   </div>
 
   <div class="public-content">
@@ -14,18 +19,33 @@
       <h2>Mensaje</h2>
       <p>{{ invitation.content.message }}</p>
     </section>
-        <section>
-          <h2>Lugar</h2>
-          <p>{{ event?.venue?.name || 'Lugar por definir' }}</p>
-          <p>{{ event?.venue?.address }}</p>
-          <a *ngIf="event?.venue?.mapUrl" [href]="event?.venue?.mapUrl" target="_blank" rel="noreferrer">Abrir mapa</a>
-        </section>
+    <section *ngIf="displayLocations.length">
+      <h2>Ubicaciones</h2>
+      <article *ngFor="let location of displayLocations" class="location-card">
+        <span class="status-pill">{{ location.type || 'evento' }}</span>
+        <strong>{{ location.name || 'Ubicacion del evento' }}</strong>
+        <p>{{ location.address }}</p>
+        <small *ngIf="location.notes">{{ location.notes }}</small>
+        <div class="inline-actions">
+          <a *ngIf="location.mapUrl" class="ghost small" [href]="location.mapUrl" target="_blank" rel="noreferrer">Abrir en Maps</a>
+          <a *ngIf="location.wazeUrl" class="ghost small" [href]="location.wazeUrl" target="_blank" rel="noreferrer">Abrir en Waze</a>
+        </div>
+      </article>
+    </section>
     <section *ngIf="invitation.content.dressCode || invitation.content.itinerary?.length || invitation.content.giftRegistry?.length || invitation.content.lodging?.length">
       <h2>Detalles</h2>
       <p *ngIf="invitation.content.dressCode"><strong>Dress code:</strong> {{ invitation.content.dressCode }}</p>
       <div *ngIf="invitation.content.itinerary?.length">
         <h3>Itinerario</h3>
-        <p *ngFor="let item of invitation.content.itinerary">{{ item.time }} {{ item.title }} <span *ngIf="item.description">- {{ item.description }}</span></p>
+        <div class="timeline-list">
+          <article *ngFor="let item of invitation.content.itinerary">
+            <time>{{ item.time }}</time>
+            <div>
+              <strong>{{ item.title }}</strong>
+              <p *ngIf="item.description">{{ item.description }}</p>
+            </div>
+          </article>
+        </div>
       </div>
       <div *ngIf="invitation.content.giftRegistry?.length">
         <h3>Mesa de regalos</h3>
@@ -58,6 +78,13 @@
             <strong>Codigo de entrada: {{ verifiedGuest.checkInCode || verifiedGuest.qrCode || 'Pendiente' }}</strong>
             <p>{{ verifiedGuest.tableName || 'Mesa pendiente' }} <span *ngIf="verifiedGuest.seatLabel">/ {{ verifiedGuest.seatLabel }}</span></p>
             <small>{{ verifiedGuest.companions?.length || 0 }} acompanantes nombrados</small>
+          </div>
+        </div>
+        <div *ngIf="!verifiedGuest && publicQrUrl" class="guest-pass">
+          <img [src]="publicQrUrl" alt="QR de invitacion">
+          <div>
+            <strong>QR de la invitacion</strong>
+            <p>Escanea para abrir este enlace en otro dispositivo.</p>
           </div>
         </div>
         <label>Nombre<input name="name" [(ngModel)]="rsvp.name" [readonly]="isGuestList" required></label>
@@ -108,7 +135,7 @@
   </div>
 
   <section class="public-media" *ngIf="invitation.content.musicUrl || invitation.content.gallery?.length">
-    <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl"></audio>
+    <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()"></audio>
     <div class="gallery-grid" *ngIf="invitation.content.gallery?.length">
       <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
     </div>

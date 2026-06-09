@@ -44,6 +44,15 @@ export interface EventAgendaItem {
   description?: string;
 }
 
+export interface InvitationLocation {
+  type?: string;
+  name?: string;
+  address?: string;
+  mapUrl?: string;
+  wazeUrl?: string;
+  notes?: string;
+}
+
 export interface EventModel {
   _id?: string;
   id?: string;
@@ -89,6 +98,7 @@ export interface InvitationContent {
   coverImageUrl?: string;
   gallery?: string[];
   itinerary?: Array<{ time?: string; title?: string; description?: string }>;
+  locations?: InvitationLocation[];
   dressCode?: string;
   giftRegistry?: Array<{ label?: string; url?: string }>;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
@@ -224,6 +234,7 @@ export interface GuestModel {
   lastMessageType?: GuestMessageType;
   lastMessageChannel?: GuestMessageChannel;
   lastMessageSentAt?: string;
+  lastMessageError?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -254,6 +265,19 @@ export interface WhatsAppBulkResponse {
   skipped: number;
   failed: number;
   results: Array<{ guest: string; status: string; provider?: WhatsAppProvider; error?: string }>;
+}
+
+export interface EmailSendResponse {
+  guest: GuestModel;
+  status: 'sent' | 'failed';
+}
+
+export interface EmailBulkResponse {
+  requested: number;
+  sent: number;
+  skipped: number;
+  failed: number;
+  results: Array<{ guest: string; status: string; error?: string }>;
 }
 
 export interface GuestPayload {

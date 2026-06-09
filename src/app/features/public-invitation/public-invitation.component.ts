@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, GuestAccessResponse, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
+import { EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 
 @Component({ selector: 'app-public-invitation', templateUrl: './public-invitation.component.html' })
 export class PublicInvitationComponent implements OnInit {
@@ -226,6 +226,49 @@ export class PublicInvitationComponent implements OnInit {
   get guestQrUrl(): string {
     const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
     return value ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(value)}` : '';
+  }
+
+  get publicQrUrl(): string {
+    return this.publicInvitationUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(this.publicInvitationUrl)}` : '';
+  }
+
+  get publicInvitationUrl(): string {
+    return this.invitation ? `${window.location.origin}/i/${this.invitation.slug}` : '';
+  }
+
+  get countdownLabel(): string {
+    if (!this.event?.date) return '';
+    const target = new Date(this.event.date).getTime();
+    const diff = target - Date.now();
+    if (Number.isNaN(target)) return '';
+    if (diff <= 0) return 'El evento ya comenzo';
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    if (days > 0) return `Faltan ${days} dia(s) y ${hours} hora(s)`;
+    return `Faltan ${hours} hora(s)`;
+  }
+
+  get calendarUrl(): string {
+    if (!this.event?.date) return '';
+    const start = new Date(this.event.date);
+    if (Number.isNaN(start.getTime())) return '';
+    const end = new Date(start.getTime() + 4 * 60 * 60 * 1000);
+    const format = (date: Date) => date.toISOString().replace(/[-:]|\.\d{3}/g, '');
+    const details = this.publicInvitationUrl ? `Confirma asistencia: ${this.publicInvitationUrl}` : '';
+    const location = [this.event.venue?.name, this.event.venue?.address].filter(Boolean).join(' - ');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(this.event.title)}&dates=${format(start)}/${format(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`;
+  }
+
+  get displayLocations(): InvitationLocation[] {
+    const contentLocations = this.invitation?.content.locations || [];
+    if (contentLocations.length) return contentLocations;
+    const venue = this.event?.venue;
+    if (!venue?.name && !venue?.address && !venue?.mapUrl) return [];
+    return [{ type: 'principal', name: venue.name || 'Lugar del evento', address: venue.address || '', mapUrl: venue.mapUrl || '' }];
+  }
+
+  onMusicPlaybackError(): void {
+    this.error = 'La musica no se pudo reproducir. Los anfitriones deben revisar permisos de lectura del archivo.';
   }
 
   private loadGuestToken(): void {

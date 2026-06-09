@@ -74,6 +74,7 @@
             </select>
           </label>
           <button class="ghost" type="button" (click)="showPendingReminders()">Ver pendientes y recordar</button>
+          <button class="ghost" type="button" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !filteredGuests.length">{{ emailBulkSending ? 'Enviando email...' : 'Enviar email filtrados' }}</button>
           <button class="primary" type="button" (click)="sendBulkWhatsapp()" [disabled]="whatsappBulkSending || !whatsappEnabled || !filteredGuests.length">{{ whatsappBulkSending ? 'Enviando...' : 'Enviar WhatsApp filtrados' }}</button>
         </div>
         <div class="filter-row">
@@ -258,13 +259,15 @@
                 <span class="status-pill confirmed" *ngIf="guest.checkedIn">check-in</span>
                 <small *ngIf="guest.lastMessageType"> {{ getMessageTypeLabel(guest.lastMessageType) }}</small>
                 <small *ngIf="guest.invitationOpenedAt"> abierto {{ guest.invitationOpenedAt | date:'short' }}</small>
+                <small *ngIf="guest.lastMessageError" class="error-inline">{{ guest.lastMessageError }}</small>
               </td>
               <td>
                 <div class="inline-actions">
                   <button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button>
+                  <button *ngIf="canEmailGuest(guest)" class="ghost small" type="button" (click)="sendRealEmail(guest)" [disabled]="emailSending === getGuestId(guest)">{{ emailSending === getGuestId(guest) ? 'Enviando...' : 'Enviar email' }}</button>
                   <button *ngIf="canSendRealWhatsapp(guest)" class="ghost small" type="button" (click)="sendRealWhatsapp(guest)" [disabled]="whatsappSending === getGuestId(guest)">{{ whatsappSending === getGuestId(guest) ? 'Enviando...' : 'Enviar WA' }}</button>
                   <a *ngIf="canWhatsappGuest(guest) && !whatsappEnabled" class="ghost small" [href]="getWhatsappLink(guest)" target="_blank" rel="noopener" (click)="markMessageSent(guest, 'whatsapp')">wa.me</a>
-                  <a *ngIf="canEmailGuest(guest)" class="ghost small" [href]="getEmailLink(guest)" (click)="markMessageSent(guest, 'email')">Email</a>
+                  <a *ngIf="canEmailGuest(guest)" class="ghost small" [href]="getEmailLink(guest)" (click)="markMessageSent(guest, 'email')">mailto</a>
                   <button class="ghost small" type="button" (click)="setCommunicationStatus(guest, 'pending')">Pendiente</button>
                   <button class="ghost small" type="button" (click)="deleteGuest(guest)" [disabled]="guestSaving">Eliminar</button>
                 </div>
