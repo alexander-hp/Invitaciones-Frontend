@@ -53,6 +53,8 @@
       <div class="grid" id="gallery"></div>
       <div class="locations" id="locations"></div>
       <div class="locations" id="sections"></div>
+      <div class="locations" id="gifts"></div>
+      <div class="locations" id="dedications"></div>
     </section>
 
     <section class="section">
@@ -107,6 +109,14 @@ Acompanante Demo 2</textarea></label>
           <button type="submit">Subir foto</button>
           <p class="muted" id="albumResult">La foto queda pendiente de revision.</p>
         </form>
+
+        <form class="panel" id="dedicationForm">
+          <strong>5. Dedicatoria</strong>
+          <label>Nombre publico<input id="dedicationName" value="Hdezpp Alex"></label>
+          <label>Mensaje<textarea id="dedicationText">Muchas felicidades desde pagina externa API.</textarea></label>
+          <button type="submit">Enviar dedicatoria</button>
+          <p class="muted" id="dedicationResult">La dedicatoria queda pendiente de revision.</p>
+        </form>
       </div>
     </section>
 
@@ -120,6 +130,10 @@ Acompanante Demo 2</textarea></label>
         <div class="panel">
           <strong>Mis canciones</strong>
           <div class="activity-list" id="mySongs"><p class="muted">Identifica al invitado para ver sus solicitudes.</p></div>
+        </div>
+        <div class="panel">
+          <strong>Mis dedicatorias</strong>
+          <div class="activity-list" id="myDedications"><p class="muted">Identifica al invitado para ver sus mensajes.</p></div>
         </div>
       </div>
     </section>
@@ -175,6 +189,14 @@ Acompanante Demo 2</textarea></label>
           </article>
         `).join('')
         : '<p class="muted">Sin canciones solicitadas todavia.</p>';
+      document.getElementById('myDedications').innerHTML = (status.dedications || []).length
+        ? status.dedications.map((item) => `
+          <article class="activity-item">
+            <div></div>
+            <div><strong>${label(item.status)}</strong><p>${item.message}</p></div>
+          </article>
+        `).join('')
+        : '<p class="muted">Sin dedicatorias enviadas todavia.</p>';
     }
 
     function render(content) {
@@ -197,6 +219,25 @@ Acompanante Demo 2</textarea></label>
           ${section.url ? `<a href="${section.url}" target="_blank" rel="noreferrer">Abrir link</a>` : ''}
         </article>
       `).join('');
+      document.getElementById('gifts').innerHTML = `
+        <article class="panel">
+          <strong>Mesa de regalos</strong>
+          <p class="muted">${(content.giftSettings && content.giftSettings.introText) || 'Opciones de regalo consumidas por API.'}</p>
+          ${(content.giftRegistry || []).map((gift) => `<p><a href="${gift.url || '#'}" target="_blank" rel="noreferrer">${gift.title || gift.label || gift.store || 'Mesa de regalos'}</a> ${gift.note || ''}</p>`).join('')}
+        </article>
+        <article class="panel">
+          <strong>Sobre digital</strong>
+          <p>${(content.digitalEnvelope && content.digitalEnvelope.bank) || ''}</p>
+          <p>${(content.digitalEnvelope && content.digitalEnvelope.clabe) || ''}</p>
+        </article>
+      `;
+      fetch(`${apiBase}/external/${encodeURIComponent(portal)}/dedications`)
+        .then((response) => response.json())
+        .then(({ dedications }) => {
+          document.getElementById('dedications').innerHTML = (dedications || []).map((item) => `
+            <article class="panel"><strong>${item.publicName || 'Invitado'}</strong><p>${item.message}</p></article>
+          `).join('') || '<article class="panel"><strong>Dedicatorias</strong><p class="muted">Sin dedicatorias aprobadas todavia.</p></article>';
+        }).catch(() => {});
     }
 
     async function boot() {
@@ -306,6 +347,22 @@ Acompanante Demo 2</textarea></label>
         await loadMyStatus();
       } catch (error) {
         text('albumResult', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('dedicationForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const result = await postJson('/dedications', {
+          guest: identifiedGuest && identifiedGuest.id,
+          publicName: document.getElementById('dedicationName').value.trim(),
+          message: document.getElementById('dedicationText').value.trim(),
+          type: 'dedication'
+        });
+        text('dedicationResult', `Dedicatoria enviada. Estado: ${result.dedication.status}`);
+        await loadMyStatus();
+      } catch (error) {
+        text('dedicationResult', `Error: ${error.message}`);
       }
     });
 

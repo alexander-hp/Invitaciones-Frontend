@@ -54,6 +54,27 @@
       <p *ngIf="success" class="success">{{ success }}</p>
       <button class="primary" type="submit" [disabled]="sending || !verifiedGuest">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
     </form>
+
+    <section *ngIf="event.externalContent?.giftSettings?.enabled !== false">
+      <h2>Mesa de regalos</h2>
+      <p>{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
+      <div class="gift-grid" *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
+        <article *ngFor="let gift of event.externalContent?.giftRegistry" class="gift-card">
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" alt="Mesa de regalos">
+          <strong>{{ gift.title || gift.label || gift.store || 'Mesa de regalos' }}</strong>
+          <p>{{ gift.note }}</p>
+          <a *ngIf="gift.url" class="ghost small" [href]="gift.url" target="_blank" rel="noreferrer">Abrir mesa</a>
+        </article>
+      </div>
+      <article class="gift-card" *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)">
+        <img *ngIf="event.externalContent?.digitalEnvelope?.qrImageUrl" [src]="event.externalContent?.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
+        <strong>Sobre digital</strong>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.bank">Banco: {{ event.externalContent?.digitalEnvelope?.bank }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.holder">Titular: {{ event.externalContent?.digitalEnvelope?.holder }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.account">Cuenta: {{ event.externalContent?.digitalEnvelope?.account }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.clabe">CLABE: {{ event.externalContent?.digitalEnvelope?.clabe }}</p>
+      </article>
+    </section>
   </div>
 
   <section class="public-media" *ngIf="event.externalPortalSettings?.albumEnabled !== false">
@@ -66,6 +87,22 @@
     <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
     <div class="gallery-grid" *ngIf="albumAssets.length">
       <img *ngFor="let asset of albumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'" loading="lazy" decoding="async">
+    </div>
+  </section>
+  <section class="public-media" *ngIf="event.externalContent?.dedicationSettings?.enabled !== false">
+    <h2>Dedicatorias</h2>
+    <p class="muted">{{ event.externalContent?.dedicationSettings?.introText || 'Deja un mensaje para los anfitriones.' }}</p>
+    <form class="rsvp-panel" (ngSubmit)="submitDedication()">
+      <label>Nombre publico<input name="dedicationName" [(ngModel)]="dedication.publicName" [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'"></label>
+      <label class="wide">Mensaje<textarea name="dedicationMessage" [(ngModel)]="dedication.message" required></textarea></label>
+      <button class="primary" type="submit" [disabled]="sending || !dedication.message">Enviar dedicatoria</button>
+      <p *ngIf="dedicationMessage" class="success">{{ dedicationMessage }}</p>
+    </form>
+    <div class="status-list" *ngIf="dedications.length">
+      <article *ngFor="let item of dedications" class="location-card">
+        <strong>{{ item.publicName || 'Invitado' }}</strong>
+        <p>{{ item.message }}</p>
+      </article>
     </div>
   </section>
 </section>

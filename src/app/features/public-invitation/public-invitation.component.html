@@ -48,12 +48,21 @@
           </article>
         </div>
       </div>
-      <div *ngIf="invitation.content.giftRegistry?.length">
+      <div *ngIf="invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length">
         <h3>Mesa de regalos</h3>
-        <a *ngFor="let registry of invitation.content.giftRegistry" [href]="registry.url" target="_blank" rel="noreferrer">{{ registry.label || registry.url }}</a>
+        <p class="muted">{{ invitation.content.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
+        <div class="gift-grid">
+          <article *ngFor="let registry of invitation.content.giftRegistry" class="gift-card">
+            <img *ngIf="registry.imageUrl" [src]="registry.imageUrl" alt="Mesa de regalos" loading="lazy" decoding="async">
+            <strong>{{ registry.title || registry.label || registry.store || 'Mesa de regalos' }}</strong>
+            <p>{{ registry.note }}</p>
+            <a *ngIf="registry.url" class="ghost small" [href]="registry.url" target="_blank" rel="noreferrer">Abrir mesa</a>
+          </article>
+        </div>
       </div>
-      <div *ngIf="invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account">
+      <div *ngIf="invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)">
         <h3>Sobre digital</h3>
+        <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl" class="qr-thumb" [src]="invitation.content.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
         <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{ invitation.content.digitalEnvelope?.bank }}</p>
         <p *ngIf="invitation.content.digitalEnvelope?.holder"><strong>Titular:</strong> {{ invitation.content.digitalEnvelope?.holder }}</p>
         <p *ngIf="invitation.content.digitalEnvelope?.account"><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</p>
@@ -161,6 +170,30 @@
     <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
     <div class="gallery-grid" *ngIf="publicAlbumAssets.length">
       <img *ngFor="let asset of publicAlbumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'" loading="lazy" decoding="async">
+    </div>
+  </section>
+  <section class="public-media" *ngIf="invitation.content.dedicationSettings?.enabled !== false">
+    <h2>Dedicatorias</h2>
+    <p class="muted">{{ invitation.content.dedicationSettings?.introText || 'Deja un mensaje para los anfitriones.' }}</p>
+    <form class="rsvp-panel" (ngSubmit)="submitDedication()">
+      <label>Nombre publico<input name="dedicationPublicName" [(ngModel)]="dedication.publicName" [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'"></label>
+      <label>Tipo
+        <select name="dedicationType" [(ngModel)]="dedication.type">
+          <option value="dedication">Dedicatoria</option>
+          <option value="wish">Buenos deseos</option>
+          <option value="memory">Recuerdo</option>
+          <option value="toast">Brindis</option>
+        </select>
+      </label>
+      <label class="wide">Mensaje<textarea name="dedicationText" [(ngModel)]="dedication.message" required></textarea></label>
+      <button class="primary" type="submit" [disabled]="sending || !dedication.message">Enviar dedicatoria</button>
+      <p *ngIf="dedicationMessage" class="success">{{ dedicationMessage }}</p>
+    </form>
+    <div class="status-list" *ngIf="dedications.length">
+      <article *ngFor="let item of dedications" class="location-card">
+        <strong>{{ item.publicName || 'Invitado' }}</strong>
+        <p>{{ item.message }}</p>
+      </article>
     </div>
   </section>
   <p *ngIf="!invitation.content.hideBranding" class="powered-by">Invitacion digital por KyndraSoft</p>

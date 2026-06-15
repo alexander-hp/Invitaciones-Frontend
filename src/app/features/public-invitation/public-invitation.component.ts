@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
+import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 
 @Component({ selector: 'app-public-invitation', templateUrl: './public-invitation.component.html' })
 export class PublicInvitationComponent implements OnInit {
@@ -14,13 +14,16 @@ export class PublicInvitationComponent implements OnInit {
   error = '';
   success = '';
   albumMessage = '';
+  dedicationMessage = '';
   publicAlbumAssets: Array<{ url: string; uploaderName?: string; createdAt?: string }> = [];
+  dedications: DedicationModel[] = [];
   guestAccessEmail = '';
   selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
   companionNamesText = '';
   customAnswers: Record<string, string | boolean> = {};
+  dedication = { publicName: '', message: '', type: 'dedication' };
   rsvp = {
     name: '',
     email: '',
@@ -51,6 +54,7 @@ export class PublicInvitationComponent implements OnInit {
         this.event = typeof invitation.event === 'string' ? undefined : invitation.event;
         this.loadGuestToken();
         this.loadPublicAlbum();
+        this.loadDedications();
         this.loading = false;
       },
       error: (error) => {
@@ -154,11 +158,43 @@ export class PublicInvitationComponent implements OnInit {
     });
   }
 
+  submitDedication(): void {
+    if (!this.invitation || !this.dedication.message.trim()) return;
+    this.sending = true;
+    this.error = '';
+    this.dedicationMessage = '';
+    this.api.createPublicInvitationDedication(this.invitation.slug, {
+      guest: this.verifiedGuest?.id,
+      publicName: this.dedication.publicName || this.verifiedGuest?.name || this.rsvp.name,
+      email: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail,
+      message: this.dedication.message,
+      type: this.dedication.type
+    }).subscribe({
+      next: () => {
+        this.dedicationMessage = 'Dedicatoria enviada para revision.';
+        this.dedication = { publicName: '', message: '', type: 'dedication' };
+        this.sending = false;
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo enviar la dedicatoria.';
+        this.sending = false;
+      }
+    });
+  }
+
   loadPublicAlbum(): void {
     if (!this.invitation?.content.privateAlbumEnabled) return;
     this.api.listPublicAlbum(this.invitation.slug).subscribe({
       next: ({ assets }) => this.publicAlbumAssets = assets,
       error: () => this.publicAlbumAssets = []
+    });
+  }
+
+  loadDedications(): void {
+    if (this.invitation?.content.dedicationSettings?.enabled === false) return;
+    this.api.listPublicInvitationDedications(this.invitation?.slug || '').subscribe({
+      next: ({ dedications }) => this.dedications = dedications,
+      error: () => this.dedications = []
     });
   }
 

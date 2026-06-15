@@ -131,7 +131,7 @@ export interface ExternalContent {
   locations?: InvitationLocation[];
   sections?: Array<{
     key?: string;
-    type?: 'text' | 'image' | 'video' | 'cta' | 'iframe' | 'timeline';
+    type?: 'text' | 'image' | 'video' | 'cta' | 'iframe' | 'timeline' | 'story' | 'dress_code' | 'gift_registry' | 'dedications' | 'lodging' | 'faq' | 'people';
     title?: string;
     body?: string;
     url?: string;
@@ -145,6 +145,10 @@ export interface ExternalContent {
     maxRequestsPerGuest?: number;
     allowDedications?: boolean;
   };
+  giftRegistry?: GiftRegistryItem[];
+  digitalEnvelope?: DigitalEnvelope;
+  giftSettings?: GiftSettings;
+  dedicationSettings?: DedicationSettings;
 }
 
 export interface InvitationContent {
@@ -162,14 +166,10 @@ export interface InvitationContent {
   itinerary?: Array<{ time?: string; title?: string; description?: string }>;
   locations?: InvitationLocation[];
   dressCode?: string;
-  giftRegistry?: Array<{ label?: string; url?: string }>;
-  digitalEnvelope?: {
-    bank?: string;
-    account?: string;
-    clabe?: string;
-    holder?: string;
-    note?: string;
-  };
+  giftRegistry?: GiftRegistryItem[];
+  digitalEnvelope?: DigitalEnvelope;
+  giftSettings?: GiftSettings;
+  dedicationSettings?: DedicationSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
@@ -644,6 +644,57 @@ export interface SongRequestPayload {
   sourceUrl?: string;
 }
 
+export interface GiftRegistryItem {
+  store?: string;
+  title?: string;
+  label?: string;
+  url?: string;
+  imageUrl?: string;
+  note?: string;
+  priority?: number;
+}
+
+export interface DigitalEnvelope {
+  bank?: string;
+  account?: string;
+  clabe?: string;
+  holder?: string;
+  note?: string;
+  qrImageUrl?: string;
+}
+
+export interface GiftSettings {
+  enabled?: boolean;
+  introText?: string;
+  showRegistry?: boolean;
+  showEnvelope?: boolean;
+}
+
+export interface DedicationSettings {
+  enabled?: boolean;
+  requireApproval?: boolean;
+  introText?: string;
+}
+
+export type DedicationStatus = 'pending' | 'approved' | 'rejected' | 'hidden';
+export type DedicationType = 'dedication' | 'wish' | 'memory' | 'toast';
+
+export interface DedicationModel {
+  _id?: string;
+  id?: string;
+  event?: string;
+  invitation?: string;
+  guest?: string | Partial<GuestModel>;
+  publicName?: string;
+  email?: string;
+  message: string;
+  type: DedicationType;
+  status: DedicationStatus;
+  visibility?: 'public' | 'hosts_only';
+  createdAt?: string;
+  reviewedAt?: string;
+}
+
 export interface EmbedManifestResponse {
   portalSlug: string;
   widgets: Record<string, string>;
@@ -667,6 +718,7 @@ export interface ExternalGuestStatusResponse {
   rsvp: RsvpModel | null;
   albumUploads: AlbumAssetModel[];
   songRequests: SongRequestModel[];
+  dedications?: DedicationModel[];
 }
 
 export interface SongLookupResponse {

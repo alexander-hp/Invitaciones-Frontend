@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventModel, GuestAccessResponse, RsvpResponse, SongRequestModel } from '../../core/models';
+import { AlbumAssetModel, DedicationModel, EventModel, GuestAccessResponse, RsvpResponse, SongRequestModel } from '../../core/models';
 
 @Component({ selector: 'app-external-embed', templateUrl: './external-embed.component.html' })
 export class ExternalEmbedComponent implements OnInit, OnDestroy {
@@ -9,12 +9,15 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
   albumAssets: AlbumAssetModel[] = [];
   myAlbumUploads: AlbumAssetModel[] = [];
   mySongRequests: SongRequestModel[] = [];
+  dedications: DedicationModel[] = [];
+  myDedications: DedicationModel[] = [];
   guest?: GuestAccessResponse['guest'];
   guestSessionToken = '';
   identifier = '';
   identifierMode: 'email' | 'phone' | 'token' = 'email';
   companionNamesText = '';
   song = { query: '', title: '', artist: '', dedication: '', sourceUrl: '' };
+  dedication = { publicName: '', message: '', type: 'dedication' };
   songPreview?: Partial<SongRequestModel>;
   rsvp = { response: 'confirmed' as RsvpResponse, companions: 0, mealPreference: '', dietaryRestrictions: '', menuSelection: '', message: '' };
   selectedAlbumFile?: File;
@@ -24,6 +27,7 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
   message = '';
   private albumTimer?: ReturnType<typeof setInterval>;
   private statusTimer?: ReturnType<typeof setInterval>;
+  private dedicationTimer?: ReturnType<typeof setInterval>;
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
@@ -44,6 +48,10 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
         if (['album', 'gallery', 'full-portal'].includes(this.widget)) {
           this.loadAlbum();
           this.startAlbumPolling();
+        }
+        if (['dedications', 'full-details', 'full-portal'].includes(this.widget)) {
+          this.loadDedications();
+          this.startDedicationPolling();
         }
         this.loading = false;
       },
@@ -157,6 +165,31 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
     });
   }
 
+  submitDedication(): void {
+    const message = this.dedication.message.trim();
+    if (!message) return;
+    this.sending = true;
+    this.api.createExternalDedication(this.portalSlug, {
+      guest: this.guest?.id,
+      publicName: this.dedication.publicName || this.guest?.name,
+      email: this.guest?.email,
+      message,
+      type: this.dedication.type
+    }, this.guestSessionToken).subscribe({
+      next: ({ dedication }) => {
+        this.message = 'Dedicatoria enviada para revision.';
+        this.myDedications = [dedication, ...this.myDedications.filter((item) => item.id !== dedication.id && item._id !== dedication._id)];
+        this.dedication = { publicName: '', message: '', type: 'dedication' };
+        this.sending = false;
+        this.loadMyStatus();
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo enviar la dedicatoria.';
+        this.sending = false;
+      }
+    });
+  }
+
   lookupSong(): void {
     const value = this.song.query.trim();
     const sourceUrl = /^https?:\/\//i.test(value) ? value : this.song.sourceUrl.trim();
@@ -191,10 +224,17 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadDedications(): void {
+    this.api.listExternalDedications(this.portalSlug).subscribe({
+      next: ({ dedications }) => this.dedications = dedications,
+      error: () => this.dedications = []
+    });
+  }
+
   loadMyStatus(): void {
     if (!this.guestSessionToken) return;
     this.api.getExternalGuestStatus(this.portalSlug, this.guestSessionToken).subscribe({
-      next: ({ guest, rsvp, albumUploads, songRequests }) => {
+      next: ({ guest, rsvp, albumUploads, songRequests, dedications }) => {
         this.guest = guest;
         if (rsvp) {
           this.rsvp.response = rsvp.response;
@@ -207,6 +247,7 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
         }
         this.myAlbumUploads = albumUploads || [];
         this.mySongRequests = songRequests || [];
+        this.myDedications = dedications || [];
       },
       error: () => {
         this.stopStatusPolling();
@@ -229,7 +270,7 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
   }
 
   get showIdentity(): boolean {
-    return ['rsvp', 'guest-pass', 'song-requests', 'full-portal'].includes(this.widget);
+    return ['rsvp', 'guest-pass', 'song-requests', 'dedications', 'full-portal'].includes(this.widget);
   }
 
   get locations(): any[] {
@@ -267,6 +308,11 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
     this.statusTimer = setInterval(() => this.loadMyStatus(), 10000);
   }
 
+  private startDedicationPolling(): void {
+    if (this.dedicationTimer) return;
+    this.dedicationTimer = setInterval(() => this.loadDedications(), 15000);
+  }
+
   private stopStatusPolling(): void {
     if (this.statusTimer) clearInterval(this.statusTimer);
     this.statusTimer = undefined;
@@ -275,6 +321,8 @@ export class ExternalEmbedComponent implements OnInit, OnDestroy {
   private stopPolling(): void {
     if (this.albumTimer) clearInterval(this.albumTimer);
     this.albumTimer = undefined;
+    if (this.dedicationTimer) clearInterval(this.dedicationTimer);
+    this.dedicationTimer = undefined;
     this.stopStatusPolling();
   }
 }

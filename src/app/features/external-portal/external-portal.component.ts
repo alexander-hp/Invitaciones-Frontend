@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventModel, GuestAccessResponse, RsvpResponse } from '../../core/models';
+import { AlbumAssetModel, DedicationModel, EventModel, GuestAccessResponse, RsvpResponse } from '../../core/models';
 
 @Component({ selector: 'app-external-portal', templateUrl: './external-portal.component.html' })
 export class ExternalPortalComponent implements OnInit {
@@ -13,10 +13,13 @@ export class ExternalPortalComponent implements OnInit {
   error = '';
   success = '';
   albumMessage = '';
+  dedicationMessage = '';
   guestAccessEmail = '';
   verifiedGuest?: GuestAccessResponse['guest'];
   selectedAlbumFile?: File;
   albumAssets: AlbumAssetModel[] = [];
+  dedications: DedicationModel[] = [];
+  dedication = { publicName: '', message: '', type: 'dedication' };
   companionNamesText = '';
   rsvp = {
     name: '',
@@ -40,11 +43,12 @@ export class ExternalPortalComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.error = '';
-    this.api.getPublicExternalEvent(this.portalSlug).subscribe({
+    this.api.getExternalConfig(this.portalSlug).subscribe({
       next: ({ event }) => {
         this.event = event;
         this.loadGuestToken();
         this.loadAlbum();
+        this.loadDedications();
         this.loading = false;
       },
       error: (error) => {
@@ -135,11 +139,43 @@ export class ExternalPortalComponent implements OnInit {
     });
   }
 
+  submitDedication(): void {
+    if (!this.dedication.message.trim()) return;
+    this.sending = true;
+    this.error = '';
+    this.dedicationMessage = '';
+    this.api.createExternalDedication(this.portalSlug, {
+      guest: this.verifiedGuest?.id,
+      publicName: this.dedication.publicName || this.verifiedGuest?.name || this.rsvp.name,
+      email: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail,
+      message: this.dedication.message,
+      type: this.dedication.type
+    }).subscribe({
+      next: () => {
+        this.dedicationMessage = 'Dedicatoria enviada para revision.';
+        this.dedication = { publicName: '', message: '', type: 'dedication' };
+        this.sending = false;
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo enviar la dedicatoria.';
+        this.sending = false;
+      }
+    });
+  }
+
   loadAlbum(): void {
     if (this.event?.externalPortalSettings?.albumEnabled === false) return;
     this.api.listPublicExternalAlbum(this.portalSlug).subscribe({
       next: ({ assets }) => this.albumAssets = assets,
       error: () => this.albumAssets = []
+    });
+  }
+
+  loadDedications(): void {
+    if (this.event?.externalContent?.dedicationSettings?.enabled === false) return;
+    this.api.listExternalDedications(this.portalSlug).subscribe({
+      next: ({ dedications }) => this.dedications = dedications,
+      error: () => this.dedications = []
     });
   }
 

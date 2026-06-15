@@ -338,6 +338,17 @@ export class InvitationEditorComponent implements OnInit {
     this.invitation.content.locations.splice(index, 1);
   }
 
+  addGiftRegistryItem(): void {
+    if (!this.invitation) return;
+    this.ensureContentCollections();
+    this.invitation.content.giftRegistry!.push({ store: '', title: '', label: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
+  }
+
+  removeGiftRegistryItem(index: number): void {
+    if (!this.invitation?.content.giftRegistry) return;
+    this.invitation.content.giftRegistry.splice(index, 1);
+  }
+
   removeMusic(): void {
     if (!this.invitation) return;
     this.invitation.content.musicUrl = '';
@@ -398,7 +409,10 @@ export class InvitationEditorComponent implements OnInit {
   private ensureContentCollections(): void {
     if (!this.invitation) return;
     if (!this.invitation.content.gallery) this.invitation.content.gallery = [];
-    if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '' };
+    if (!this.invitation.content.giftRegistry) this.invitation.content.giftRegistry = [];
+    if (!this.invitation.content.giftSettings) this.invitation.content.giftSettings = { enabled: true, introText: '', showRegistry: true, showEnvelope: true };
+    if (!this.invitation.content.dedicationSettings) this.invitation.content.dedicationSettings = { enabled: true, requireApproval: true, introText: '' };
+    if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
     if (!this.invitation.content.itinerary) this.invitation.content.itinerary = this.parseItinerary();
     if (!this.invitation.content.locations) {
       const venue = this.event?.venue;
@@ -424,7 +438,7 @@ export class InvitationEditorComponent implements OnInit {
       ...this.invitation.content,
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || this.parseItinerary()),
       locations: this.cleanLocations(this.invitation.content.locations || []),
-      giftRegistry: this.parsePairs(this.giftRegistryText, 'label'),
+      giftRegistry: this.cleanGiftRegistry(this.invitation.content.giftRegistry || []),
       lodging: this.parseLodging()
     };
   }
@@ -434,9 +448,7 @@ export class InvitationEditorComponent implements OnInit {
     this.itineraryText = (this.invitation.content.itinerary || [])
       .map((item) => [item.time, item.title, item.description].filter(Boolean).join(' | '))
       .join('\n');
-    this.giftRegistryText = (this.invitation.content.giftRegistry || [])
-      .map((item) => [item.label, item.url].filter(Boolean).join(' | '))
-      .join('\n');
+    this.giftRegistryText = '';
     this.lodgingText = (this.invitation.content.lodging || [])
       .map((item) => [item.name, item.description, item.url].filter(Boolean).join(' | '))
       .join('\n');
@@ -485,6 +497,18 @@ export class InvitationEditorComponent implements OnInit {
       const [label, url] = line.split('|').map((part) => part.trim());
       return { [labelKey]: label, url };
     }).filter((item) => item.label || item.url);
+  }
+
+  private cleanGiftRegistry(values: any[] = []) {
+    return (values || []).map((item, index) => ({
+      store: String(item.store || '').trim() || undefined,
+      title: String(item.title || '').trim() || undefined,
+      label: String(item.label || item.title || item.store || '').trim() || undefined,
+      url: String(item.url || '').trim() || undefined,
+      imageUrl: String(item.imageUrl || '').trim() || undefined,
+      note: String(item.note || '').trim() || undefined,
+      priority: item.priority !== '' && item.priority !== undefined && item.priority !== null ? Number(item.priority) : index
+    })).filter((item) => item.store || item.title || item.label || item.url || item.imageUrl || item.note);
   }
 
   private parseLodging() {

@@ -145,6 +145,13 @@
                   <option value="cta">CTA</option>
                   <option value="iframe">Iframe</option>
                   <option value="timeline">Timeline</option>
+                  <option value="story">Historia</option>
+                  <option value="dress_code">Dress code</option>
+                  <option value="gift_registry">Mesa de regalos</option>
+                  <option value="dedications">Dedicatorias</option>
+                  <option value="lodging">Hospedaje</option>
+                  <option value="faq">FAQ</option>
+                  <option value="people">Personas</option>
                 </select>
               </label>
               <label>Titulo<input formControlName="title" placeholder="Dress code"></label>
@@ -156,6 +163,49 @@
               <button class="ghost small" type="button" (click)="removeArrayItem('sections', i)">Eliminar</button>
             </article>
           </div>
+        </div>
+
+        <div class="wide communication-panel" formArrayName="giftRegistry">
+          <div class="section-heading">
+            <div><p class="eyebrow">Regalos</p><h2>Mesa de regalos externa</h2></div>
+            <button class="ghost small" type="button" (click)="addGift()">Agregar mesa</button>
+          </div>
+          <label class="checkline"><input type="checkbox" formControlName="giftEnabled"> Mostrar modulo de regalos</label>
+          <label class="wide">Texto introductorio<textarea formControlName="giftIntroText" rows="2"></textarea></label>
+          <label class="checkline"><input type="checkbox" formControlName="giftShowRegistry"> Mostrar mesas de regalos</label>
+          <label class="checkline"><input type="checkbox" formControlName="giftShowEnvelope"> Mostrar sobre digital</label>
+          <div class="item-list">
+            <article *ngFor="let group of giftItems.controls; let i = index" [formGroupName]="i">
+              <label>Tienda<input formControlName="store" placeholder="Liverpool, Amazon, Palacio"></label>
+              <label>Titulo<input formControlName="title" placeholder="Mesa de regalos"></label>
+              <label class="wide">URL<input formControlName="url" placeholder="https://..."></label>
+              <label class="wide">Logo / imagen<input formControlName="imageUrl" placeholder="https://.../logo.png"></label>
+              <label class="wide">Nota<input formControlName="note" placeholder="Opcional"></label>
+              <label>Prioridad<input formControlName="priority" type="number"></label>
+              <button class="ghost small" type="button" (click)="removeArrayItem('giftRegistry', i)">Eliminar</button>
+            </article>
+          </div>
+        </div>
+
+        <div class="wide communication-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">Sobre digital</p><h2>Datos bancarios opcionales</h2></div>
+          </div>
+          <label>Banco<input formControlName="envelopeBank"></label>
+          <label>Titular<input formControlName="envelopeHolder"></label>
+          <label>Cuenta<input formControlName="envelopeAccount"></label>
+          <label>CLABE<input formControlName="envelopeClabe"></label>
+          <label class="wide">Nota<textarea formControlName="envelopeNote" rows="2"></textarea></label>
+          <label class="wide">QR / imagen<input formControlName="envelopeQrImageUrl" placeholder="https://.../qr.png"></label>
+        </div>
+
+        <div class="wide communication-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">Dedicatorias</p><h2>Libro de mensajes</h2></div>
+          </div>
+          <label class="checkline"><input type="checkbox" formControlName="dedicationsEnabled"> Permitir dedicatorias</label>
+          <label class="checkline"><input type="checkbox" formControlName="dedicationsRequireApproval"> Requerir aprobacion</label>
+          <label class="wide">Texto introductorio<textarea formControlName="dedicationsIntroText" rows="2"></textarea></label>
         </div>
 
         <label class="checkline"><input type="checkbox" formControlName="songRequestsEnabled"> Solicitudes al DJ</label>
@@ -182,7 +232,7 @@
   .then(({ event }) => console.log(event.content));</textarea>
             <textarea readonly rows="6">{{ externalIdentifyExample }}</textarea>
             <textarea readonly rows="8">{{ externalRsvpExample }}</textarea>
-            <textarea readonly rows="7">{{ externalSongRequestExample }}</textarea>
+              <textarea readonly rows="7">{{ externalSongRequestExample }}</textarea>
           </div>
         </div>
         <div class="item-list">
@@ -227,6 +277,28 @@
               <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'approved')">Aprobar</button>
               <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'played')">Tocada</button>
               <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'rejected')">Rechazar</button>
+            </div>
+          </article>
+        </div>
+      </div>
+      <div class="communication-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Dedicatorias</p>
+            <h2>Mensajes para revisar</h2>
+          </div>
+          <span class="count-pill">{{ dedications.length }} mensajes</span>
+        </div>
+        <p *ngIf="!dedications.length" class="muted">Aun no hay dedicatorias.</p>
+        <div class="item-list" *ngIf="dedications.length">
+          <article *ngFor="let dedication of dedications">
+            <strong>{{ dedication.publicName || 'Invitado' }}</strong>
+            <span>{{ dedication.message }}</span>
+            <small>{{ dedication.status }} / {{ dedication.type }}</small>
+            <div class="inline-actions">
+              <button class="ghost small" type="button" (click)="updateDedication(dedication, 'approved')">Aprobar</button>
+              <button class="ghost small" type="button" (click)="updateDedication(dedication, 'hidden')">Ocultar</button>
+              <button class="ghost small" type="button" (click)="updateDedication(dedication, 'rejected')">Rechazar</button>
             </div>
           </article>
         </div>

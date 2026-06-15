@@ -9,6 +9,8 @@ import {
   CheckoutResponse,
   ContactPayload,
   DashboardMetrics,
+  DedicationModel,
+  DedicationStatus,
   EmailBulkResponse,
   EmailSendResponse,
   EventModel,
@@ -120,6 +122,10 @@ export class ApiService {
     return this.http.get<ExternalAssetsResponse>(`${this.apiUrl}/external/${portalSlug}/assets`, { params: new HttpParams().set('type', type) });
   }
 
+  getExternalGifts(portalSlug: string): Observable<{ gifts: { giftRegistry?: unknown[]; digitalEnvelope?: Record<string, unknown>; giftSettings?: Record<string, unknown> } }> {
+    return this.http.get<{ gifts: { giftRegistry?: unknown[]; digitalEnvelope?: Record<string, unknown>; giftSettings?: Record<string, unknown> } }>(`${this.apiUrl}/external/${portalSlug}/gifts`);
+  }
+
   identifyExternalGuest(portalSlug: string, payload: { email?: string; phone?: string; token?: string }): Observable<GuestAccessResponse> {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/external/${portalSlug}/guest/identify`, payload);
   }
@@ -142,6 +148,15 @@ export class ApiService {
     return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${portalSlug}/song-requests`, payload);
   }
 
+  listExternalDedications(portalSlug: string): Observable<{ dedications: DedicationModel[] }> {
+    return this.http.get<{ dedications: DedicationModel[] }>(`${this.apiUrl}/external/${portalSlug}/dedications`);
+  }
+
+  createExternalDedication(portalSlug: string, payload: { guest?: string; publicName?: string; email?: string; message: string; type?: string; visibility?: string }, guestSessionToken?: string): Observable<{ dedication: DedicationModel }> {
+    const options = guestSessionToken ? { headers: { Authorization: `Bearer ${guestSessionToken}` } } : {};
+    return this.http.post<{ dedication: DedicationModel }>(`${this.apiUrl}/external/${portalSlug}/dedications`, payload, options);
+  }
+
   getExternalEmbedManifest(portalSlug: string): Observable<EmbedManifestResponse> {
     return this.http.get<EmbedManifestResponse>(`${this.apiUrl}/external/${portalSlug}/embed-manifest`);
   }
@@ -152,6 +167,14 @@ export class ApiService {
 
   updateSongRequest(eventId: string, songRequestId: string, status: SongRequestStatus): Observable<{ songRequest: SongRequestModel }> {
     return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, { status });
+  }
+
+  listDedications(eventId: string): Observable<{ dedications: DedicationModel[] }> {
+    return this.http.get<{ dedications: DedicationModel[] }>(`${this.apiUrl}/events/${eventId}/dedications`);
+  }
+
+  updateDedication(eventId: string, dedicationId: string, status: DedicationStatus): Observable<{ dedication: DedicationModel }> {
+    return this.http.patch<{ dedication: DedicationModel }>(`${this.apiUrl}/events/${eventId}/dedications/${dedicationId}`, { status });
   }
 
   checkExternalGuestAccess(portalSlug: string, payload: { email: string }): Observable<GuestAccessResponse> {
@@ -230,6 +253,14 @@ export class ApiService {
 
   listPublicAlbum(slug: string): Observable<{ assets: AlbumAssetModel[] }> {
     return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/invitations/public/${slug}/album`);
+  }
+
+  listPublicInvitationDedications(slug: string): Observable<{ dedications: DedicationModel[] }> {
+    return this.http.get<{ dedications: DedicationModel[] }>(`${this.apiUrl}/invitations/public/${slug}/dedications`);
+  }
+
+  createPublicInvitationDedication(slug: string, payload: { guest?: string; publicName?: string; email?: string; message: string; type?: string; visibility?: string }): Observable<{ dedication: DedicationModel }> {
+    return this.http.post<{ dedication: DedicationModel }>(`${this.apiUrl}/invitations/public/${slug}/dedications`, payload);
   }
 
   listInvitations(): Observable<{ invitations: InvitationModel[] }> {

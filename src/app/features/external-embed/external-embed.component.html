@@ -64,6 +64,38 @@
       </article>
     </section>
 
+    <section *ngIf="widget === 'gifts' || widget === 'full-details' || widget === 'full-portal'" class="public-media">
+      <h2>Mesa de regalos</h2>
+      <p class="muted">{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
+      <div class="gift-grid" *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
+        <article *ngFor="let gift of event.externalContent?.giftRegistry" class="gift-card">
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" alt="Mesa de regalos">
+          <strong>{{ gift.title || gift.label || gift.store || 'Mesa de regalos' }}</strong>
+          <p>{{ gift.note }}</p>
+          <a *ngIf="gift.url" class="ghost small" [href]="gift.url" target="_blank" rel="noreferrer">Abrir mesa</a>
+        </article>
+      </div>
+      <article *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)" class="gift-card">
+        <img *ngIf="event.externalContent?.digitalEnvelope?.qrImageUrl" [src]="event.externalContent?.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
+        <strong>Sobre digital</strong>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.bank">Banco: {{ event.externalContent?.digitalEnvelope?.bank }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.holder">Titular: {{ event.externalContent?.digitalEnvelope?.holder }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.account">Cuenta: {{ event.externalContent?.digitalEnvelope?.account }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.clabe">CLABE: {{ event.externalContent?.digitalEnvelope?.clabe }}</p>
+        <small>{{ event.externalContent?.digitalEnvelope?.note }}</small>
+      </article>
+    </section>
+
+    <section *ngIf="widget === 'full-details' || widget === 'full-portal'" class="public-media">
+      <article *ngFor="let section of event.externalContent?.sections" class="location-card">
+        <span class="status-pill">{{ section.type }}</span>
+        <strong>{{ section.title || section.key }}</strong>
+        <p>{{ section.body }}</p>
+        <img *ngIf="section.imageUrl" [src]="section.imageUrl" alt="Seccion" loading="lazy" decoding="async">
+        <a *ngIf="section.url" class="ghost small" [href]="section.url" target="_blank" rel="noreferrer">Abrir</a>
+      </article>
+    </section>
+
     <section *ngIf="widget === 'album' || widget === 'full-portal'" class="public-media">
       <h2>Album</h2>
       <label>Subir foto<input type="file" accept="image/*" (change)="selectAlbumFile($event)"></label>
@@ -110,6 +142,39 @@
             <p>{{ request.artist || request.sourceProvider || 'Sin artista' }} / {{ statusLabel(request.status) }}</p>
             <small *ngIf="request.dedication">{{ request.dedication }}</small>
           </div>
+        </article>
+      </div>
+    </form>
+
+    <form *ngIf="widget === 'dedications' || widget === 'full-portal'" class="rsvp-panel" (ngSubmit)="submitDedication()">
+      <h2>Dedicatorias</h2>
+      <p class="muted">{{ event.externalContent?.dedicationSettings?.introText || 'Deja un mensaje para los anfitriones.' }}</p>
+      <label>Nombre publico<input name="dedicationName" [(ngModel)]="dedication.publicName" [placeholder]="guest?.name || 'Tu nombre'"></label>
+      <label>Tipo
+        <select name="dedicationType" [(ngModel)]="dedication.type">
+          <option value="dedication">Dedicatoria</option>
+          <option value="wish">Buenos deseos</option>
+          <option value="memory">Recuerdo</option>
+          <option value="toast">Brindis</option>
+        </select>
+      </label>
+      <label class="wide">Mensaje<textarea name="dedicationMessage" [(ngModel)]="dedication.message" required></textarea></label>
+      <button class="primary" type="submit" [disabled]="sending || !dedication.message">Enviar dedicatoria</button>
+      <div *ngIf="myDedications.length" class="status-list wide">
+        <h3>Mis dedicatorias</h3>
+        <article *ngFor="let item of myDedications" class="status-item">
+          <div></div>
+          <div>
+            <strong>{{ statusLabel(item.status) }}</strong>
+            <p>{{ item.message }}</p>
+          </div>
+        </article>
+      </div>
+      <div *ngIf="dedications.length" class="status-list wide">
+        <h3>Publicadas</h3>
+        <article *ngFor="let item of dedications" class="location-card">
+          <strong>{{ item.publicName || 'Invitado' }}</strong>
+          <p>{{ item.message }}</p>
         </article>
       </div>
     </form>

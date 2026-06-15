@@ -48,6 +48,8 @@
       <a href="#pass">Pase</a>
       <a href="#album">Album</a>
       <a href="#dj">DJ</a>
+      <a href="#gifts">Regalos</a>
+      <a href="#dedications">Dedicatorias</a>
       <a href="#portal">Portal</a>
     </nav>
     <p class="status" id="status">Leyendo API publica...</p>
@@ -66,6 +68,8 @@
       <div id="pass"><div class="section-head"><div><p class="eyebrow muted">Widget</p><h2>Pase QR</h2></div></div><iframe id="passFrame" height="520"></iframe></div>
       <div id="album"><div class="section-head"><div><p class="eyebrow muted">Widget</p><h2>Album</h2></div></div><iframe id="albumFrame" height="820"></iframe></div>
       <div id="dj"><div class="section-head"><div><p class="eyebrow muted">Widget</p><h2>DJ</h2></div></div><iframe id="djFrame" height="720"></iframe></div>
+      <div id="gifts"><div class="section-head"><div><p class="eyebrow muted">Widget</p><h2>Regalos</h2></div></div><iframe id="giftsFrame" height="560"></iframe></div>
+      <div id="dedications"><div class="section-head"><div><p class="eyebrow muted">Widget</p><h2>Dedicatorias</h2></div></div><iframe id="dedicationsFrame" height="720"></iframe></div>
       <div class="wide" id="portal"><div class="section-head"><div><p class="eyebrow muted">Widget</p><h2>Portal completo</h2></div></div><iframe id="portalFrame" height="900"></iframe></div>
     </section>
   </main>
@@ -100,6 +104,8 @@
       document.getElementById('passFrame').src = widget('guest-pass');
       document.getElementById('albumFrame').src = widget('album');
       document.getElementById('djFrame').src = widget('song-requests');
+      document.getElementById('giftsFrame').src = widget('gifts');
+      document.getElementById('dedicationsFrame').src = widget('dedications');
       document.getElementById('portalFrame').src = widget('full-portal');
       const response = await fetch(`${apiBase}/external/${encodeURIComponent(portal)}/config`);
       if (!response.ok) throw new Error(`API ${response.status}`);

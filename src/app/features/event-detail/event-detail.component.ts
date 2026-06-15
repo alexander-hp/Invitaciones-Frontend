@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, AssetFolder, DashboardMetrics, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel, ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel, SongRequestStatus, WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
+import { AlbumAssetModel, AssetFolder, DashboardMetrics, DedicationModel, DedicationStatus, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel, ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel, SongRequestStatus, WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
 import { environment } from '../../../environments/environment';
 
 interface MessageTemplateOption {
@@ -21,6 +21,7 @@ export class EventDetailComponent implements OnInit {
   whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
   eventAccessLinks: EventAccessLinkModel[] = [];
   songRequests: SongRequestModel[] = [];
+  dedications: DedicationModel[] = [];
   embedManifest?: EmbedManifestResponse;
   loading = false;
   saving = false;
@@ -93,6 +94,20 @@ export class EventDetailComponent implements OnInit {
     audioSections: new FormArray([]),
     locations: new FormArray([]),
     sections: new FormArray([]),
+    giftRegistry: new FormArray([]),
+    giftEnabled: new FormControl(true),
+    giftIntroText: new FormControl(''),
+    giftShowRegistry: new FormControl(true),
+    giftShowEnvelope: new FormControl(true),
+    envelopeBank: new FormControl(''),
+    envelopeHolder: new FormControl(''),
+    envelopeAccount: new FormControl(''),
+    envelopeClabe: new FormControl(''),
+    envelopeNote: new FormControl(''),
+    envelopeQrImageUrl: new FormControl(''),
+    dedicationsEnabled: new FormControl(true),
+    dedicationsRequireApproval: new FormControl(true),
+    dedicationsIntroText: new FormControl(''),
     songRequestsEnabled: new FormControl(true),
     songRequestsMax: new FormControl(3),
     songRequestsDedications: new FormControl(true)
@@ -135,6 +150,7 @@ export class EventDetailComponent implements OnInit {
         this.loadPaymentStatus();
         this.loadAccessLinks(id);
         this.loadSongRequests(id);
+        this.loadDedications(id);
         this.loadEmbedManifest(event);
       },
       error: (error) => {
@@ -507,6 +523,26 @@ export class EventDetailComponent implements OnInit {
         enabled: Boolean(formValue.songRequestsEnabled),
         maxRequestsPerGuest: Number(formValue.songRequestsMax || 3),
         allowDedications: Boolean(formValue.songRequestsDedications)
+      },
+      giftRegistry: this.cleanGiftRegistry(formValue.giftRegistry),
+      digitalEnvelope: {
+        bank: formValue.envelopeBank || undefined,
+        holder: formValue.envelopeHolder || undefined,
+        account: formValue.envelopeAccount || undefined,
+        clabe: formValue.envelopeClabe || undefined,
+        note: formValue.envelopeNote || undefined,
+        qrImageUrl: formValue.envelopeQrImageUrl || undefined
+      },
+      giftSettings: {
+        enabled: Boolean(formValue.giftEnabled),
+        introText: formValue.giftIntroText || undefined,
+        showRegistry: Boolean(formValue.giftShowRegistry),
+        showEnvelope: Boolean(formValue.giftShowEnvelope)
+      },
+      dedicationSettings: {
+        enabled: Boolean(formValue.dedicationsEnabled),
+        requireApproval: Boolean(formValue.dedicationsRequireApproval),
+        introText: formValue.dedicationsIntroText || undefined
       }
     };
     this.api.updateEvent(eventId, {
@@ -554,11 +590,15 @@ export class EventDetailComponent implements OnInit {
     return this.externalForm.get('sections') as FormArray;
   }
 
+  get giftItems(): FormArray {
+    return this.externalForm.get('giftRegistry') as FormArray;
+  }
+
   addUrlItem(arrayName: 'carousel' | 'gallery' | 'spectacularImages', value = ''): void {
     (this.externalForm.get(arrayName) as FormArray).push(new FormControl(value));
   }
 
-  removeArrayItem(arrayName: 'carousel' | 'gallery' | 'spectacularImages' | 'audioSections' | 'locations' | 'sections', index: number): void {
+  removeArrayItem(arrayName: 'carousel' | 'gallery' | 'spectacularImages' | 'audioSections' | 'locations' | 'sections' | 'giftRegistry', index: number): void {
     (this.externalForm.get(arrayName) as FormArray).removeAt(index);
   }
 
@@ -592,6 +632,18 @@ export class EventDetailComponent implements OnInit {
       imageUrl: new FormControl(value.imageUrl || ''),
       rolesText: new FormControl((value.roles || []).join(', ')),
       order: new FormControl(value.order ?? this.sectionItems.length)
+    }));
+  }
+
+  addGift(value: any = {}): void {
+    this.giftItems.push(new FormGroup({
+      store: new FormControl(value.store || ''),
+      title: new FormControl(value.title || value.label || ''),
+      label: new FormControl(value.label || ''),
+      url: new FormControl(value.url || ''),
+      imageUrl: new FormControl(value.imageUrl || ''),
+      note: new FormControl(value.note || ''),
+      priority: new FormControl(value.priority || 0)
     }));
   }
 
@@ -1368,6 +1420,26 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  private loadDedications(eventId: string): void {
+    this.api.listDedications(eventId).subscribe({
+      next: ({ dedications }) => this.dedications = dedications,
+      error: () => this.dedications = []
+    });
+  }
+
+  updateDedication(dedication: DedicationModel, status: DedicationStatus): void {
+    const eventId = this.getEventId();
+    const dedicationId = dedication._id || dedication.id || '';
+    if (!eventId || !dedicationId) return;
+    this.api.updateDedication(eventId, dedicationId, status).subscribe({
+      next: ({ dedication: updated }) => {
+        this.dedications = this.dedications.map((item) => (item._id || item.id) === dedicationId ? updated : item);
+        this.guestMessage = 'Dedicatoria actualizada.';
+      },
+      error: (error) => this.guestError = error.error?.message || 'No se pudo actualizar la dedicatoria.'
+    });
+  }
+
   private loadEmbedManifest(event: EventModel): void {
     if (event.mode !== 'external_dashboard' || !event.externalPortalSlug) {
       this.embedManifest = undefined;
@@ -1392,7 +1464,20 @@ export class EventDetailComponent implements OnInit {
       musicUrl: content.musicUrl || '',
       songRequestsEnabled: content.songRequestSettings?.enabled !== false,
       songRequestsMax: content.songRequestSettings?.maxRequestsPerGuest || 3,
-      songRequestsDedications: content.songRequestSettings?.allowDedications !== false
+      songRequestsDedications: content.songRequestSettings?.allowDedications !== false,
+      giftEnabled: content.giftSettings?.enabled !== false,
+      giftIntroText: content.giftSettings?.introText || '',
+      giftShowRegistry: content.giftSettings?.showRegistry !== false,
+      giftShowEnvelope: content.giftSettings?.showEnvelope !== false,
+      envelopeBank: content.digitalEnvelope?.bank || '',
+      envelopeHolder: content.digitalEnvelope?.holder || '',
+      envelopeAccount: content.digitalEnvelope?.account || '',
+      envelopeClabe: content.digitalEnvelope?.clabe || '',
+      envelopeNote: content.digitalEnvelope?.note || '',
+      envelopeQrImageUrl: content.digitalEnvelope?.qrImageUrl || '',
+      dedicationsEnabled: content.dedicationSettings?.enabled !== false,
+      dedicationsRequireApproval: content.dedicationSettings?.requireApproval !== false,
+      dedicationsIntroText: content.dedicationSettings?.introText || ''
     });
     this.resetUrlArray(this.carouselItems, content.carousel || []);
     this.resetUrlArray(this.galleryItems, content.gallery || []);
@@ -1403,6 +1488,8 @@ export class EventDetailComponent implements OnInit {
     (content.locations || []).forEach((item) => this.addLocation(item));
     this.resetFormArray(this.sectionItems);
     (content.sections || []).forEach((item) => this.addSection(item));
+    this.resetFormArray(this.giftItems);
+    (content.giftRegistry || []).forEach((item) => this.addGift(item));
   }
 
   private loadWhatsAppStatus(): void {
@@ -1502,7 +1589,7 @@ export class EventDetailComponent implements OnInit {
       const type = String(item.type || 'text').trim();
       return {
         key: String(item.key || '').trim() || undefined,
-        type: ['text', 'image', 'video', 'cta', 'iframe', 'timeline'].includes(type) ? type as any : 'text',
+        type: ['text', 'image', 'video', 'cta', 'iframe', 'timeline', 'story', 'dress_code', 'gift_registry', 'dedications', 'lodging', 'faq', 'people'].includes(type) ? type as any : 'text',
         title: String(item.title || '').trim() || undefined,
         body: String(item.body || '').trim() || undefined,
         url: String(item.url || '').trim() || undefined,
@@ -1511,6 +1598,18 @@ export class EventDetailComponent implements OnInit {
         order: item.order !== '' && item.order !== undefined && item.order !== null ? Number(item.order) : index
       };
     }).filter((item) => item.title || item.body || item.url || item.imageUrl);
+  }
+
+  private cleanGiftRegistry(values: any[] = []): ExternalContent['giftRegistry'] {
+    return (values || []).map((item, index) => ({
+      store: String(item.store || '').trim() || undefined,
+      title: String(item.title || '').trim() || undefined,
+      label: String(item.label || '').trim() || undefined,
+      url: String(item.url || '').trim() || undefined,
+      imageUrl: String(item.imageUrl || '').trim() || undefined,
+      note: String(item.note || '').trim() || undefined,
+      priority: item.priority !== '' && item.priority !== undefined && item.priority !== null ? Number(item.priority) : index
+    })).filter((item) => item.store || item.title || item.label || item.url || item.imageUrl || item.note);
   }
 
   private externalAssetFolder(target: 'cover' | 'hero' | 'music' | 'carousel' | 'gallery' | 'spectacular' | 'audioSection' | 'sectionImage'): AssetFolder {
