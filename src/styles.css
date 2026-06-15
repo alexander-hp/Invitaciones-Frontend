@@ -126,6 +126,10 @@ th { color: #607080; font-size: 13px; }
 .staff-list article.checked-in { background: #f0fdf4; border-color: #bbf7d0; }
 .guest-pass { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 14px; align-items: center; border: 1px solid #d8cbbb; border-radius: 8px; padding: 12px; background: rgba(255,255,255,.55); }
 .guest-pass img { width: 160px; height: 160px; border-radius: 8px; background: #fff; }
+.status-list { display: grid; gap: 10px; }
+.status-item, .song-preview { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; align-items: center; border: 1px solid #d8cbbb; border-radius: 8px; padding: 10px; background: rgba(255,255,255,.55); }
+.status-item img, .song-preview img { width: 82px; height: 62px; object-fit: cover; border-radius: 6px; border: 1px solid #d8cbbb; background: #fff; }
+.status-item p, .status-item small, .song-preview p, .song-preview small { margin: 2px 0 0; color: #607080; }
 .powered-by { margin: 0; padding: 18px; text-align: center; color: #607080; background: rgba(255,255,255,.45); }
 .payment-row { display: grid; gap: 4px; padding: 12px; border: 1px solid #dde4d7; border-radius: 8px; background: #fafcf8; }
 .premium-strip { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); gap: 14px; align-items: center; border: 1px solid #d5dfd0; border-radius: 8px; padding: 14px; margin-bottom: 16px; background: #f7fbf4; }

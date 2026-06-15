@@ -68,6 +68,18 @@
       <h2>Album</h2>
       <label>Subir foto<input type="file" accept="image/*" (change)="selectAlbumFile($event)"></label>
       <button class="ghost" type="button" (click)="uploadAlbum()" [disabled]="!selectedAlbumFile || sending">Enviar foto</button>
+      <div *ngIf="myAlbumUploads.length" class="status-list">
+        <h3>Mis fotos</h3>
+        <article *ngFor="let asset of myAlbumUploads" class="status-item">
+          <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto subida'" loading="lazy" decoding="async">
+          <div>
+            <strong>{{ statusLabel(asset.status) }}</strong>
+            <p>{{ asset.createdAt | date:'short' }}</p>
+            <small *ngIf="asset.reviewedAt">Revisada: {{ asset.reviewedAt | date:'short' }}</small>
+          </div>
+        </article>
+      </div>
+      <h3 *ngIf="albumAssets.length">Fotos aprobadas</h3>
       <div class="gallery-grid">
         <img *ngFor="let asset of albumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" loading="lazy" decoding="async">
       </div>
@@ -75,10 +87,31 @@
 
     <form *ngIf="widget === 'song-requests' || widget === 'full-portal'" class="rsvp-panel" (ngSubmit)="requestSong()">
       <h2>Cancion para DJ</h2>
+      <label class="wide">Buscar o pegar link<input name="songQuery" [(ngModel)]="song.query" placeholder="Spotify, YouTube o nombre de cancion"></label>
+      <button class="ghost" type="button" (click)="lookupSong()" [disabled]="sending || (!song.query && !song.title)">Identificar</button>
+      <div *ngIf="songPreview" class="song-preview">
+        <img *ngIf="songPreview.thumbnailUrl" [src]="songPreview.thumbnailUrl" alt="Preview cancion">
+        <div>
+          <strong>{{ songPreview.title }}</strong>
+          <p>{{ songPreview.artist || songPreview.sourceProvider || 'Revisa antes de enviar' }}</p>
+          <small *ngIf="songPreview.sourceUrl">{{ songPreview.sourceUrl }}</small>
+        </div>
+      </div>
       <label>Cancion<input name="songTitle" [(ngModel)]="song.title" required></label>
       <label>Artista<input name="songArtist" [(ngModel)]="song.artist"></label>
       <label class="wide">Dedicatoria<textarea name="songDedication" [(ngModel)]="song.dedication"></textarea></label>
       <button class="primary" type="submit" [disabled]="sending || !song.title">Solicitar</button>
+      <div *ngIf="mySongRequests.length" class="status-list wide">
+        <h3>Mis solicitudes</h3>
+        <article *ngFor="let request of mySongRequests" class="status-item">
+          <img *ngIf="request.thumbnailUrl" [src]="request.thumbnailUrl" alt="Preview cancion">
+          <div>
+            <strong>{{ request.title }}</strong>
+            <p>{{ request.artist || request.sourceProvider || 'Sin artista' }} / {{ statusLabel(request.status) }}</p>
+            <small *ngIf="request.dedication">{{ request.dedication }}</small>
+          </div>
+        </article>
+      </div>
     </form>
   </ng-container>
 </section>

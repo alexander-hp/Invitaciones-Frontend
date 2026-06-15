@@ -441,6 +441,7 @@ export interface GuestAccessResponse {
     seatLabel?: string;
     companions?: GuestCompanion[];
   };
+  guestSessionToken?: string;
 }
 
 export type SongRequestStatus = 'pending' | 'approved' | 'rejected' | 'played';
@@ -455,8 +456,17 @@ export interface SongRequestModel {
   title: string;
   artist?: string;
   dedication?: string;
+  sourceProvider?: 'manual' | 'spotify' | 'youtube' | 'url';
+  sourceUrl?: string;
+  externalId?: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  durationMs?: number;
   status: SongRequestStatus;
+  reviewedAt?: string;
+  playedAt?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ImportGuestsResponse {
@@ -626,9 +636,12 @@ export interface SongRequestPayload {
   guest?: string;
   requesterName?: string;
   requesterEmail?: string;
-  title: string;
+  title?: string;
   artist?: string;
   dedication?: string;
+  query?: string;
+  url?: string;
+  sourceUrl?: string;
 }
 
 export interface EmbedManifestResponse {
@@ -644,5 +657,21 @@ export interface AlbumAssetModel {
   uploaderEmail?: string;
   url: string;
   status: 'pending' | 'approved' | 'rejected';
+  reviewedAt?: string;
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ExternalGuestStatusResponse {
+  guest: GuestAccessResponse['guest'];
+  rsvp: RsvpModel | null;
+  albumUploads: AlbumAssetModel[];
+  songRequests: SongRequestModel[];
+}
+
+export interface SongLookupResponse {
+  song: Partial<SongRequestModel> & {
+    title: string;
+    artist?: string;
+  };
 }

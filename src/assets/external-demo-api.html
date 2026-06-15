@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KyndraSoft Demo API Directa</title>
+  <style>
+    :root { --ink:#182033; --muted:#657084; --line:#d9e0ea; --paper:#f6f8fb; --panel:#fff; --accent:#0f766e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,Segoe UI,Arial,sans-serif; }
+    .hero { min-height:70vh; display:grid; align-items:end; padding:40px 18px; color:white; background:linear-gradient(180deg,rgba(10,15,28,.16),rgba(10,15,28,.85)),#273347 center/cover; }
+    .hero-inner, main { width:min(1120px,calc(100% - 32px)); margin:auto; }
+    h1 { margin:0; font-size:clamp(40px,7vw,86px); line-height:.96; letter-spacing:0; }
+    h2 { margin:0; font-size:24px; letter-spacing:0; }
+    .eyebrow { margin:0 0 8px; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    .muted { color:var(--muted); }
+    main { padding:30px 0 70px; }
+    .section { margin:0 0 32px; }
+    .section-head { display:flex; justify-content:space-between; gap:14px; align-items:end; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:14px; }
+    .status,.panel { background:var(--panel); border:1px solid var(--line); padding:16px; }
+    .grid,.forms,.locations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .card { min-height:210px; border:1px solid var(--line); background:white; overflow:hidden; }
+    .card img { width:100%; height:100%; min-height:210px; object-fit:cover; display:block; }
+    form { display:grid; gap:10px; }
+    label { display:grid; gap:5px; color:var(--muted); font-size:13px; font-weight:800; }
+    input,select,textarea { min-height:40px; border:1px solid var(--line); padding:9px 10px; font:inherit; color:var(--ink); background:white; width:100%; }
+    textarea { min-height:74px; resize:vertical; }
+    button { min-height:42px; border:0; background:var(--accent); color:white; font-weight:900; padding:0 14px; cursor:pointer; }
+    audio { width:100%; margin-top:12px; }
+    .activity-list { display:grid; gap:10px; margin-top:10px; }
+    .activity-item { display:grid; grid-template-columns:82px minmax(0,1fr); gap:10px; align-items:center; border:1px solid var(--line); background:white; padding:10px; }
+    .activity-item img { width:82px; height:62px; object-fit:cover; background:#eef2f7; }
+    .pill { display:inline-flex; min-height:24px; align-items:center; padding:0 8px; background:#e8f5f1; color:#0f766e; font-size:12px; font-weight:900; }
+    @media (max-width:820px) { .grid,.forms,.locations { grid-template-columns:1fr; } .section-head { display:block; } }
+  </style>
+</head>
+<body>
+  <header class="hero" id="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Demo API directa</p>
+      <h1 id="eventTitle">Cargando demo...</h1>
+      <p id="eventIntro">Esta pagina consume la API publica KyndraSoft con fetch.</p>
+      <audio id="mainAudio" controls></audio>
+    </div>
+  </header>
+
+  <main>
+    <p class="status" id="status">Leyendo configuracion publica...</p>
+
+    <section class="section">
+      <div class="section-head"><div><p class="eyebrow muted">API config</p><h2>Contenido renderizado por esta pagina</h2></div></div>
+      <div class="grid" id="gallery"></div>
+      <div class="locations" id="locations"></div>
+      <div class="locations" id="sections"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><p class="eyebrow muted">Formularios propios</p><h2>POST directo a KyndraSoft</h2></div></div>
+      <div class="forms">
+        <form class="panel" id="identifyForm">
+          <strong>1. Identificar invitado</strong>
+          <label>Buscar por
+            <select id="identifyMode">
+              <option value="email">Email</option>
+              <option value="phone">Telefono</option>
+              <option value="token">Token</option>
+            </select>
+          </label>
+          <label>Dato<input id="identifyValue" value="hdezppalex@gmail.com"></label>
+          <button type="submit">Identificar</button>
+          <p class="muted" id="identifyResult">Sin invitado identificado.</p>
+        </form>
+
+        <form class="panel" id="rsvpForm">
+          <strong>2. RSVP</strong>
+          <label>Respuesta
+            <select id="response">
+              <option value="confirmed">Asistire</option>
+              <option value="declined">No asistire</option>
+              <option value="maybe">No estoy seguro</option>
+            </select>
+          </label>
+          <label>Acompanantes<input id="companions" type="number" min="0" value="2"></label>
+          <label>Nombres<textarea id="companionNames">Acompanante Demo 1
+Acompanante Demo 2</textarea></label>
+          <label>Mensaje<textarea id="rsvpMessage">Confirmado desde pagina externa API.</textarea></label>
+          <button type="submit">Enviar RSVP</button>
+          <p class="muted" id="rsvpResult">Identifica primero al invitado.</p>
+        </form>
+
+        <form class="panel" id="songForm">
+          <strong>3. Solicitud DJ</strong>
+          <label>Link o busqueda<input id="songQuery" value="https://www.youtube.com/watch?v=Gs069dndIYk"></label>
+          <button type="button" id="lookupSong">Identificar cancion</button>
+          <p class="muted" id="songPreview">Sin preview.</p>
+          <label>Cancion<input id="songTitle" value="September"></label>
+          <label>Artista<input id="songArtist" value="Earth, Wind & Fire"></label>
+          <label>Dedicatoria<textarea id="songDedication">Para probar API directa.</textarea></label>
+          <button type="submit">Solicitar cancion</button>
+          <p class="muted" id="songResult">Pendiente de enviar.</p>
+        </form>
+
+        <form class="panel" id="albumForm">
+          <strong>4. Album publico</strong>
+          <label>Foto<input id="albumFile" type="file" accept="image/*"></label>
+          <button type="submit">Subir foto</button>
+          <p class="muted" id="albumResult">La foto queda pendiente de revision.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><p class="eyebrow muted">Polling seguro</p><h2>Mi actividad desde KyndraSoft</h2></div></div>
+      <div class="forms">
+        <div class="panel">
+          <strong>Mis fotos</strong>
+          <div class="activity-list" id="myPhotos"><p class="muted">Identifica al invitado para ver sus envios.</p></div>
+        </div>
+        <div class="panel">
+          <strong>Mis canciones</strong>
+          <div class="activity-list" id="mySongs"><p class="muted">Identifica al invitado para ver sus solicitudes.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const portal = params.get('portal') || 'kyndrasoft-demo-dashboard-externo';
+    const apiBase = params.get('api') || 'http://localhost:4000/api';
+    let identifiedGuest = null;
+    let guestSessionToken = '';
+    let statusTimer = null;
+    let songPreview = null;
+    const text = (id, value) => { document.getElementById(id).textContent = value || ''; };
+    const label = (status) => ({ pending:'Pendiente', approved:'Aprobado', rejected:'Rechazado', played:'Tocada' }[status] || status || '');
+
+    async function postJson(path, payload) {
+      const response = await fetch(`${apiBase}/external/${encodeURIComponent(portal)}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.message || `API ${response.status}`);
+      return json;
+    }
+
+    async function getJson(path, token) {
+      const response = await fetch(`${apiBase}/external/${encodeURIComponent(portal)}${path}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.message || `API ${response.status}`);
+      return json;
+    }
+
+    async function loadMyStatus() {
+      if (!guestSessionToken) return;
+      const status = await getJson('/my-status', guestSessionToken);
+      document.getElementById('myPhotos').innerHTML = (status.albumUploads || []).length
+        ? status.albumUploads.map((asset) => `
+          <article class="activity-item">
+            <img src="${asset.url}" alt="Foto subida">
+            <div><strong>${label(asset.status)}</strong><p class="muted">${new Date(asset.createdAt).toLocaleString()}</p></div>
+          </article>
+        `).join('')
+        : '<p class="muted">Sin fotos subidas todavia.</p>';
+      document.getElementById('mySongs').innerHTML = (status.songRequests || []).length
+        ? status.songRequests.map((request) => `
+          <article class="activity-item">
+            ${request.thumbnailUrl ? `<img src="${request.thumbnailUrl}" alt="Cancion">` : '<div></div>'}
+            <div><strong>${request.title}</strong><p>${request.artist || request.sourceProvider || ''} <span class="pill">${label(request.status)}</span></p></div>
+          </article>
+        `).join('')
+        : '<p class="muted">Sin canciones solicitadas todavia.</p>';
+    }
+
+    function render(content) {
+      const images = [...(content.carousel || []), ...(content.gallery || []), ...(content.spectacularImages || [])];
+      document.getElementById('gallery').innerHTML = images.map((url) => `<article class="card"><img src="${url}" alt="Asset KyndraSoft" loading="lazy"></article>`).join('');
+      document.getElementById('locations').innerHTML = (content.locations || []).map((location) => `
+        <article class="panel">
+          <strong>${location.name || location.type || 'Ubicacion'}</strong>
+          <p class="muted">${location.address || ''}</p>
+          <p>${location.notes || ''}</p>
+          ${location.time ? `<p><strong>Hora</strong> ${location.time}</p>` : ''}
+          ${location.mapUrl ? `<a href="${location.mapUrl}" target="_blank" rel="noreferrer">Abrir mapa</a>` : ''}
+        </article>
+      `).join('');
+      document.getElementById('sections').innerHTML = (content.sections || []).map((section) => `
+        <article class="panel">
+          <p class="eyebrow muted">${section.type || 'section'}</p>
+          <strong>${section.title || section.key || 'Seccion'}</strong>
+          <p>${section.body || ''}</p>
+          ${section.url ? `<a href="${section.url}" target="_blank" rel="noreferrer">Abrir link</a>` : ''}
+        </article>
+      `).join('');
+    }
+
+    async function boot() {
+      const response = await fetch(`${apiBase}/external/${encodeURIComponent(portal)}/config`);
+      if (!response.ok) throw new Error(`API ${response.status}`);
+      const { event } = await response.json();
+      const content = event.externalContent || event.content || {};
+      text('eventTitle', event.title);
+      text('eventIntro', `${new Date(event.date).toLocaleDateString()} - ${(event.hosts || []).join(' & ')}`);
+      text('status', `Conectado - ${portal}`);
+      if (content.heroImageUrl || content.coverImageUrl) document.getElementById('hero').style.backgroundImage = `linear-gradient(180deg,rgba(10,15,28,.16),rgba(10,15,28,.85)),url("${content.heroImageUrl || content.coverImageUrl}")`;
+      if (content.musicUrl) document.getElementById('mainAudio').src = content.musicUrl;
+      render(content);
+    }
+
+    document.getElementById('identifyForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const mode = document.getElementById('identifyMode').value;
+        const value = document.getElementById('identifyValue').value.trim();
+        const result = await postJson('/guest/identify', { [mode]: value });
+        identifiedGuest = result.guest;
+        guestSessionToken = result.guestSessionToken || '';
+        text('identifyResult', `${identifiedGuest.name} - ${identifiedGuest.relationshipLabel || identifiedGuest.group || 'Invitado'} - ${identifiedGuest.id}`);
+        text('rsvpResult', 'Invitado listo para confirmar.');
+        await loadMyStatus();
+        if (statusTimer) clearInterval(statusTimer);
+        statusTimer = setInterval(() => loadMyStatus().catch(() => {}), 10000);
+      } catch (error) {
+        identifiedGuest = null;
+        guestSessionToken = '';
+        text('identifyResult', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('lookupSong').addEventListener('click', async () => {
+      try {
+        const value = document.getElementById('songQuery').value.trim();
+        const isUrl = /^https?:\/\//i.test(value);
+        const result = await postJson('/song-lookup', isUrl ? { url: value } : { query: value });
+        songPreview = result.song;
+        document.getElementById('songTitle').value = songPreview.title || document.getElementById('songTitle').value;
+        document.getElementById('songArtist').value = songPreview.artist || document.getElementById('songArtist').value;
+        text('songPreview', `${songPreview.title} ${songPreview.artist ? '- ' + songPreview.artist : ''} ${songPreview.sourceProvider ? '(' + songPreview.sourceProvider + ')' : ''}`);
+      } catch (error) {
+        text('songPreview', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('rsvpForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        if (!identifiedGuest) throw new Error('Identifica primero al invitado');
+        const result = await postJson('/rsvp', {
+          guest: identifiedGuest.id,
+          response: document.getElementById('response').value,
+          companions: Number(document.getElementById('companions').value || 0),
+          companionNames: document.getElementById('companionNames').value.split('\n').map((name) => name.trim()).filter(Boolean),
+          message: document.getElementById('rsvpMessage').value.trim()
+        });
+        text('rsvpResult', `RSVP guardado: ${result.rsvp.response}`);
+        await loadMyStatus();
+      } catch (error) {
+        text('rsvpResult', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('songForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const result = await postJson('/song-requests', {
+          guest: identifiedGuest && identifiedGuest.id,
+          requesterName: identifiedGuest && identifiedGuest.name,
+          title: document.getElementById('songTitle').value.trim(),
+          artist: document.getElementById('songArtist').value.trim(),
+          query: document.getElementById('songQuery').value.trim(),
+          sourceUrl: songPreview && songPreview.sourceUrl,
+          dedication: document.getElementById('songDedication').value.trim()
+        });
+        text('songResult', `Cancion enviada. Estado: ${result.songRequest.status}`);
+        await loadMyStatus();
+      } catch (error) {
+        text('songResult', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('albumForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const file = document.getElementById('albumFile').files[0];
+        if (!file) throw new Error('Selecciona una foto');
+        const data = new FormData();
+        data.append('file', file);
+        if (identifiedGuest) {
+          data.append('guest', identifiedGuest.id);
+          data.append('name', identifiedGuest.name);
+          if (identifiedGuest.email) data.append('email', identifiedGuest.email);
+        }
+        const response = await fetch(`${apiBase}/external/${encodeURIComponent(portal)}/album`, {
+          method: 'POST',
+          headers: guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : {},
+          body: data
+        });
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(json.message || `API ${response.status}`);
+        text('albumResult', `Foto enviada. Estado: ${json.asset.status}`);
+        await loadMyStatus();
+      } catch (error) {
+        text('albumResult', `Error: ${error.message}`);
+      }
+    });
+
+    boot().catch((error) => text('status', `Error: ${error.message}`));
+  </script>
+</body>
+</html>

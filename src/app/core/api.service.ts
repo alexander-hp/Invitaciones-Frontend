@@ -21,6 +21,7 @@ import {
   EmbedManifestResponse,
   ExternalAssetsResponse,
   ExternalConfigResponse,
+  ExternalGuestStatusResponse,
   GuestModel,
   GuestAccessResponse,
   GuestCommunicationStatus,
@@ -39,6 +40,7 @@ import {
   SongRequestPayload,
   SongRequestModel,
   SongRequestStatus,
+  SongLookupResponse,
   StaffCheckInSession,
   TemplateModel,
   TemplateTier,
@@ -122,12 +124,22 @@ export class ApiService {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/external/${portalSlug}/guest/identify`, payload);
   }
 
+  getExternalGuestStatus(portalSlug: string, guestSessionToken: string): Observable<ExternalGuestStatusResponse> {
+    return this.http.get<ExternalGuestStatusResponse>(`${this.apiUrl}/external/${portalSlug}/my-status`, {
+      headers: { Authorization: `Bearer ${guestSessionToken}` }
+    });
+  }
+
   submitExternalApiRsvp(portalSlug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
     return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/external/${portalSlug}/rsvp`, payload);
   }
 
-  createExternalSongRequest(portalSlug: string, payload: SongRequestPayload): Observable<{ songRequest: { id: string; status: string } }> {
-    return this.http.post<{ songRequest: { id: string; status: string } }>(`${this.apiUrl}/external/${portalSlug}/song-requests`, payload);
+  lookupExternalSong(portalSlug: string, payload: { query?: string; url?: string; title?: string; artist?: string }): Observable<SongLookupResponse> {
+    return this.http.post<SongLookupResponse>(`${this.apiUrl}/external/${portalSlug}/song-lookup`, payload);
+  }
+
+  createExternalSongRequest(portalSlug: string, payload: SongRequestPayload): Observable<{ songRequest: SongRequestModel }> {
+    return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${portalSlug}/song-requests`, payload);
   }
 
   getExternalEmbedManifest(portalSlug: string): Observable<EmbedManifestResponse> {
@@ -151,16 +163,17 @@ export class ApiService {
   }
 
   listPublicExternalAlbum(portalSlug: string): Observable<{ assets: AlbumAssetModel[] }> {
-    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/events/public/${portalSlug}/album`);
+    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/external/${portalSlug}/album`);
   }
 
-  uploadPublicExternalAlbumPhoto(portalSlug: string, payload: { file: File; name?: string; email?: string; guest?: string }): Observable<{ asset: { id: string; status: string } }> {
+  uploadPublicExternalAlbumPhoto(portalSlug: string, payload: { file: File; name?: string; email?: string; guest?: string; guestSessionToken?: string }): Observable<{ asset: AlbumAssetModel }> {
     const formData = new FormData();
     formData.append('file', payload.file);
     if (payload.name) formData.append('name', payload.name);
     if (payload.email) formData.append('email', payload.email);
     if (payload.guest) formData.append('guest', payload.guest);
-    return this.http.post<{ asset: { id: string; status: string } }>(`${this.apiUrl}/events/public/${portalSlug}/album`, formData);
+    const options = payload.guestSessionToken ? { headers: { Authorization: `Bearer ${payload.guestSessionToken}` } } : {};
+    return this.http.post<{ asset: AlbumAssetModel }>(`${this.apiUrl}/external/${portalSlug}/album`, formData, options);
   }
 
   listEventAccessLinks(eventId: string): Observable<{ links: EventAccessLinkModel[] }> {
