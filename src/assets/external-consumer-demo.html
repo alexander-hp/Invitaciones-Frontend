@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo cliente externo | KyndraSoft</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #647084;
+      --line: #d8dee8;
+      --paper: #f8fafc;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --rose: #be4764;
+      --gold: #b7791f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--paper);
+    }
+
+    a { color: inherit; }
+
+    .hero {
+      min-height: 78vh;
+      display: grid;
+      align-items: end;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(13, 20, 34, .20), rgba(13, 20, 34, .78)),
+        url("https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1800&q=80") center/cover;
+    }
+
+    .hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(11, 18, 32, .18), rgba(11, 18, 32, .78));
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 96px 0 54px;
+      color: white;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 880px;
+      margin: 0;
+      font-size: clamp(42px, 8vw, 92px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 680px;
+      margin: 18px 0 0;
+      color: rgba(255, 255, 255, .86);
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, .38);
+      background: rgba(255, 255, 255, .92);
+      color: #111827;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .button.secondary {
+      background: rgba(17, 24, 39, .24);
+      color: white;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 70px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .nav a {
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .section {
+      margin: 0 0 34px;
+      padding: 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .muted { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .media-card {
+      min-height: 220px;
+      background: #dbe3ee;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .media-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 18px;
+    }
+
+    .panel strong { display: block; margin-bottom: 6px; }
+
+    iframe {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: white;
+    }
+
+    .widget-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .widget-grid .wide { grid-column: 1 / -1; }
+
+    .status {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .api-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .api-form label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .api-form input,
+    .api-form select,
+    .api-form textarea {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      padding: 9px 10px;
+      font: inherit;
+    }
+
+    .api-form textarea { min-height: 76px; resize: vertical; }
+
+    @media (max-width: 820px) {
+      .hero { min-height: 70vh; }
+      .grid, .info-grid, .widget-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero" id="hero">
+    <div class="hero-content">
+      <p class="eyebrow" id="eventType">Evento externo</p>
+      <h1 id="eventTitle">Cargando evento...</h1>
+      <p id="eventIntro">Esta pagina simula una web hecha por un cliente externo. El contenido y las funciones vienen desde KyndraSoft.</p>
+      <div class="actions">
+        <a class="button" href="#rsvp">Confirmar asistencia</a>
+        <a class="button secondary" href="#album">Ver album</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <nav class="nav">
+      <a href="#galeria">Galeria</a>
+      <a href="#mapa">Mapa</a>
+      <a href="#rsvp">RSVP</a>
+      <a href="#pase">Pase QR</a>
+      <a href="#album">Album</a>
+      <a href="#dj">DJ</a>
+    </nav>
+
+    <p class="status" id="status">Leyendo configuracion publica...</p>
+
+    <section class="section" id="galeria">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Contenido via API JSON</p>
+          <h2>Galeria del cliente</h2>
+        </div>
+        <span class="muted" id="assetCount"></span>
+      </div>
+      <div class="grid" id="galleryGrid"></div>
+    </section>
+
+    <section class="section" id="mapa">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Ubicaciones</p>
+          <h2>Mapa y puntos importantes</h2>
+        </div>
+      </div>
+      <div class="info-grid" id="locationsGrid"></div>
+    </section>
+
+    <section class="section" id="rsvp">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Widget iframe</p>
+          <h2>Confirmacion RSVP</h2>
+        </div>
+      </div>
+      <iframe id="rsvpFrame" title="RSVP KyndraSoft" height="720"></iframe>
+    </section>
+
+    <section class="section" id="api-directa">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Modo API directa</p>
+          <h2>Formulario propio de la pagina externa</h2>
+        </div>
+      </div>
+      <div class="widget-grid">
+        <form class="panel api-form" id="identifyForm">
+          <strong>1. Identificar invitado</strong>
+          <label>Buscar por
+            <select id="identifyMode">
+              <option value="email">Email</option>
+              <option value="phone">Telefono</option>
+              <option value="token">Token</option>
+            </select>
+          </label>
+          <label>Dato<input id="identifyValue" placeholder="correo, telefono o token"></label>
+          <button class="button" type="submit">Identificar</button>
+          <p class="muted" id="identifyResult">Sin invitado identificado.</p>
+        </form>
+
+        <form class="panel api-form" id="directRsvpForm">
+          <strong>2. Confirmar RSVP</strong>
+          <label>Respuesta
+            <select id="directResponse">
+              <option value="confirmed">Asistire</option>
+              <option value="declined">No asistire</option>
+              <option value="maybe">No estoy seguro</option>
+            </select>
+          </label>
+          <label>Acompanantes<input id="directCompanions" type="number" min="0" value="0"></label>
+          <label>Mensaje<textarea id="directMessage" placeholder="Mensaje opcional"></textarea></label>
+          <button class="button" type="submit">Enviar RSVP</button>
+          <p class="muted" id="rsvpResult">Identifica primero al invitado.</p>
+        </form>
+
+        <form class="panel api-form wide" id="directSongForm">
+          <strong>3. Solicitar cancion al DJ</strong>
+          <label>Cancion<input id="songTitle" placeholder="September"></label>
+          <label>Artista<input id="songArtist" placeholder="Earth, Wind & Fire"></label>
+          <label>Dedicatoria<textarea id="songDedication" placeholder="Para bailar despues de la cena"></textarea></label>
+          <button class="button" type="submit">Solicitar cancion</button>
+          <p class="muted" id="songResult">La solicitud se guarda en KyndraSoft y aparece en el dashboard.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" id="pase">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Widget iframe</p>
+          <h2>Pase QR y datos del invitado</h2>
+        </div>
+      </div>
+      <iframe id="passFrame" title="Pase QR KyndraSoft" height="520"></iframe>
+    </section>
+
+    <section class="section" id="album">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Widget iframe</p>
+          <h2>Album colaborativo</h2>
+        </div>
+      </div>
+      <iframe id="albumFrame" title="Album KyndraSoft" height="720"></iframe>
+    </section>
+
+    <section class="section" id="dj">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow muted">Widget iframe</p>
+          <h2>Solicitud de canciones para DJ</h2>
+        </div>
+      </div>
+      <iframe id="djFrame" title="DJ KyndraSoft" height="520"></iframe>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const portalSlug = params.get('portal') || 'evento-externo-api-widgets-20260613130708';
+    const apiBase = params.get('api') || 'http://localhost:4000/api';
+    const appBase = params.get('app') || (window.location.origin.startsWith('http') ? window.location.origin : 'http://localhost:4200');
+    let identifiedGuest = null;
+
+    const fallbackImages = [
+      'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1000&q=80'
+    ];
+
+    function setText(id, value) {
+      const node = document.getElementById(id);
+      if (node) node.textContent = value || '';
+    }
+
+    function widgetUrl(name) {
+      return `${appBase}/embed/${encodeURIComponent(portalSlug)}/${name}`;
+    }
+
+    function renderImages(images) {
+      const grid = document.getElementById('galleryGrid');
+      const list = images.length ? images : fallbackImages;
+      grid.innerHTML = list.slice(0, 9).map((url) => `
+        <article class="media-card">
+          <img src="${url}" alt="Imagen del evento" loading="lazy" decoding="async">
+        </article>
+      `).join('');
+      setText('assetCount', `${list.length} imagen(es)`);
+    }
+
+    function renderLocations(locations) {
+      const grid = document.getElementById('locationsGrid');
+      grid.innerHTML = (locations || []).map((location) => `
+        <article class="panel">
+          <strong>${location.name || location.type || 'Ubicacion'}</strong>
+          <p class="muted">${location.address || ''}</p>
+          <p>${location.notes || ''}</p>
+          ${location.time ? `<p><strong>Horario</strong> ${location.time}</p>` : ''}
+          ${location.mapUrl ? `<a class="button" href="${location.mapUrl}" target="_blank" rel="noreferrer">Abrir Maps</a>` : ''}
+        </article>
+      `).join('') || '<article class="panel"><strong>Sin ubicaciones configuradas</strong><p class="muted">El dashboard externo puede publicar aqui ceremonia, recepcion, hoteles, estacionamiento y after.</p></article>';
+    }
+
+    async function boot() {
+      document.getElementById('rsvpFrame').src = widgetUrl('rsvp');
+      document.getElementById('passFrame').src = widgetUrl('guest-pass');
+      document.getElementById('albumFrame').src = widgetUrl('album');
+      document.getElementById('djFrame').src = widgetUrl('song-requests');
+
+      const response = await fetch(`${apiBase}/external/${encodeURIComponent(portalSlug)}/config`);
+      if (!response.ok) throw new Error(`API ${response.status}`);
+      const { event } = await response.json();
+      const content = event.externalContent || event.content || {};
+      const heroImage = content.heroImageUrl || content.coverImageUrl;
+      if (heroImage) {
+        document.getElementById('hero').style.backgroundImage = `linear-gradient(180deg, rgba(13, 20, 34, .20), rgba(13, 20, 34, .78)), url("${heroImage}")`;
+      }
+      setText('eventType', `${event.type || 'evento'} externo`);
+      setText('eventTitle', event.title);
+      setText('eventIntro', `${new Date(event.date).toLocaleDateString()} · ${(event.hosts || []).join(' & ')}`);
+      renderImages([...(content.carousel || []), ...(content.gallery || []), ...(content.spectacularImages || [])]);
+      renderLocations(content.locations || []);
+      setText('status', `Conectado a KyndraSoft · portal ${portalSlug}`);
+    }
+
+    async function postJson(path, payload) {
+      const response = await fetch(`${apiBase}/external/${encodeURIComponent(portalSlug)}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json.message || `API ${response.status}`);
+      return json;
+    }
+
+    document.getElementById('identifyForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const mode = document.getElementById('identifyMode').value;
+        const value = document.getElementById('identifyValue').value.trim();
+        const payload = { [mode]: value };
+        const result = await postJson('/guest/identify', payload);
+        identifiedGuest = result.guest;
+        setText('identifyResult', `${identifiedGuest.name} · ${identifiedGuest.relationshipLabel || identifiedGuest.group || 'Invitado'} · ID ${identifiedGuest.id}`);
+        setText('rsvpResult', 'Invitado listo para confirmar.');
+      } catch (error) {
+        identifiedGuest = null;
+        setText('identifyResult', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('directRsvpForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        if (!identifiedGuest) throw new Error('Identifica primero al invitado');
+        const result = await postJson('/rsvp', {
+          guest: identifiedGuest.id,
+          response: document.getElementById('directResponse').value,
+          companions: Number(document.getElementById('directCompanions').value || 0),
+          message: document.getElementById('directMessage').value.trim()
+        });
+        setText('rsvpResult', `RSVP guardado: ${result.rsvp.response}`);
+      } catch (error) {
+        setText('rsvpResult', `Error: ${error.message}`);
+      }
+    });
+
+    document.getElementById('directSongForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const result = await postJson('/song-requests', {
+          guest: identifiedGuest && identifiedGuest.id,
+          requesterName: identifiedGuest && identifiedGuest.name,
+          title: document.getElementById('songTitle').value.trim(),
+          artist: document.getElementById('songArtist').value.trim(),
+          dedication: document.getElementById('songDedication').value.trim()
+        });
+        setText('songResult', `Cancion enviada. Estado: ${result.songRequest.status}`);
+      } catch (error) {
+        setText('songResult', `Error: ${error.message}`);
+      }
+    });
+
+    boot().catch((error) => {
+      setText('status', `No se pudo cargar la configuracion externa: ${error.message}`);
+      renderImages([]);
+      renderLocations([]);
+    });
+  </script>
+</body>
+</html>

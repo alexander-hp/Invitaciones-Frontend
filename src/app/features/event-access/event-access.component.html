@@ -1,0 +1,69 @@
+<section class="page-stack">
+  <p *ngIf="loading" class="notice">Cargando acceso...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="message" class="success">{{ message }}</p>
+
+  <ng-container *ngIf="session">
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">{{ session.role }}</p>
+        <h1>{{ session.event.title }}</h1>
+        <p class="muted">Expira {{ session.expiresAt | date:'short' }}</p>
+      </div>
+      <a *ngIf="session.event.externalSiteUrl" class="ghost" [href]="session.event.externalSiteUrl" target="_blank" rel="noreferrer">Pagina externa</a>
+    </header>
+
+    <section class="panel" *ngIf="hasPermission('check_in')">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Entrada</p>
+          <h2>Check-in</h2>
+        </div>
+        <span class="count-pill">{{ checkedInCount }} / {{ session.guests.length }}</span>
+      </div>
+      <div class="checkin-row">
+        <label>Codigo<input name="checkInCode" [(ngModel)]="code" placeholder="Escanea o escribe el codigo"></label>
+        <button class="primary" type="button" (click)="checkIn()" [disabled]="!code || checking">{{ checking ? 'Registrando...' : 'Registrar entrada' }}</button>
+      </div>
+      <label>Buscar<input name="search" [(ngModel)]="search" placeholder="Nombre, grupo, mesa o codigo"></label>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Mesa</th><th>Codigo</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let guest of filteredGuests">
+              <td>{{ guest.name }}</td>
+              <td>{{ guest.tableName || 'Sin mesa' }} <small *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</small></td>
+              <td>{{ guest.checkInCode }}</td>
+              <td><span class="status-pill" [class.confirmed]="guest.checkedIn">{{ guest.checkedIn ? 'check-in' : guest.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="hasPermission('client_view')">
+      <h2>Resumen cliente</h2>
+      <div class="guest-summary">
+        <article><span>Invitados</span><strong>{{ session.guests.length }}</strong></article>
+        <article><span>RSVP</span><strong>{{ session.rsvps.length }}</strong></article>
+        <article><span>Mesas</span><strong>{{ session.tables.length }}</strong></article>
+      </div>
+    </section>
+
+    <section class="panel" *ngIf="hasPermission('album_review')">
+      <h2>Revision de album</h2>
+      <p *ngIf="!session.albumAssets.length" class="muted">No hay fotos para revisar.</p>
+      <div class="album-review-grid">
+        <article *ngFor="let asset of session.albumAssets">
+          <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" loading="lazy" decoding="async">
+          <strong>{{ asset.uploaderName || 'Invitado' }}</strong>
+          <span class="status-pill">{{ asset.status }}</span>
+          <div class="inline-actions">
+            <button class="ghost small" type="button" (click)="updateAlbum(asset, 'approved')">Aprobar</button>
+            <button class="ghost small" type="button" (click)="updateAlbum(asset, 'rejected')">Rechazar</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </ng-container>
+</section>

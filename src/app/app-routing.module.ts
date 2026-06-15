@@ -6,6 +6,9 @@ import { ContactComponent } from './features/contact/contact.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { EventDetailComponent } from './features/event-detail/event-detail.component';
 import { EventsComponent } from './features/events/events.component';
+import { EventAccessComponent } from './features/event-access/event-access.component';
+import { ExternalPortalComponent } from './features/external-portal/external-portal.component';
+import { ExternalEmbedComponent } from './features/external-embed/external-embed.component';
 import { InvitationEditorComponent } from './features/invitation-editor/invitation-editor.component';
 import { LoginComponent } from './features/login/login.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
@@ -25,7 +28,10 @@ const routes: Routes = [
   { path: 'events/:id', component: EventDetailComponent, canActivate: [AuthGuard] },
   { path: 'invitations/:id/editor', component: InvitationEditorComponent, canActivate: [AuthGuard] },
   { path: 'check-in/:token', component: CheckInStaffComponent },
+  { path: 'external-access/:token', component: EventAccessComponent },
   { path: 'i/:slug', component: PublicInvitationComponent },
+  { path: 'e/:portalSlug', component: ExternalPortalComponent },
+  { path: 'embed/:portalSlug/:widget', component: ExternalEmbedComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

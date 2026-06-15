@@ -1,0 +1,84 @@
+<section class="embed-shell">
+  <p *ngIf="loading" class="notice">Cargando...</p>
+  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="message" class="success">{{ message }}</p>
+
+  <ng-container *ngIf="event">
+    <header *ngIf="widget === 'full-portal'" class="public-hero">
+      <img *ngIf="event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl" class="public-cover" [src]="event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl" alt="Portada">
+      <h1>{{ event.title }}</h1>
+      <p>{{ event.date | date:'fullDate' }}</p>
+      <a *ngIf="event.externalSiteUrl" class="primary" [href]="event.externalSiteUrl" target="_blank" rel="noreferrer">{{ event.externalSiteLabel || 'Abrir pagina del evento' }}</a>
+    </header>
+
+    <div *ngIf="showIdentity" class="guest-access-box">
+      <label>Identificar por
+        <select name="identifierMode" [(ngModel)]="identifierMode">
+          <option value="email">Email</option>
+          <option value="phone">Telefono</option>
+          <option value="token">Token</option>
+        </select>
+      </label>
+      <label>Dato<input name="identifier" [(ngModel)]="identifier" placeholder="correo, telefono o token"></label>
+      <button class="ghost" type="button" (click)="identify()">Identificarme</button>
+    </div>
+
+    <form *ngIf="widget === 'rsvp' || widget === 'full-portal'" class="rsvp-panel" (ngSubmit)="submitRsvp()">
+      <h2>Confirmacion</h2>
+      <p *ngIf="guest" class="notice">{{ guest.name }} · {{ guest.relationshipLabel || guest.group || 'Invitado' }}</p>
+      <label>Respuesta
+        <select name="response" [(ngModel)]="rsvp.response">
+          <option value="confirmed">Asistire</option>
+          <option value="declined">No asistire</option>
+          <option value="maybe">No estoy seguro</option>
+        </select>
+      </label>
+      <label>Acompanantes<input name="companions" type="number" min="0" [max]="guest?.allowedCompanions || 0" [(ngModel)]="rsvp.companions"></label>
+      <label class="wide">Nombres acompanantes<textarea name="companionsText" [(ngModel)]="companionNamesText"></textarea></label>
+      <label>Comida<input name="meal" [(ngModel)]="rsvp.mealPreference"></label>
+      <label class="wide">Mensaje<textarea name="messageText" [(ngModel)]="rsvp.message"></textarea></label>
+      <button class="primary" type="submit" [disabled]="sending || !guest">{{ sending ? 'Enviando...' : 'Confirmar' }}</button>
+    </form>
+
+    <section *ngIf="widget === 'guest-pass' || widget === 'full-portal'" class="guest-pass">
+      <img *ngIf="qrUrl" [src]="qrUrl" alt="QR pase">
+      <div>
+        <strong>{{ guest?.name || 'Identificate para ver tu pase' }}</strong>
+        <p>{{ guest?.tableName || 'Mesa pendiente' }} <span *ngIf="guest?.seatLabel">/ {{ guest?.seatLabel }}</span></p>
+        <small>{{ guest?.roles?.join(', ') }}</small>
+      </div>
+    </section>
+
+    <section *ngIf="widget === 'gallery' || widget === 'full-portal'" class="public-media">
+      <div class="gallery-grid">
+        <img *ngFor="let imageUrl of (event.externalContent?.carousel?.length ? event.externalContent?.carousel : event.externalContent?.gallery)" [src]="imageUrl" alt="Imagen" loading="lazy" decoding="async">
+      </div>
+    </section>
+
+    <section *ngIf="widget === 'map' || widget === 'full-portal'" class="public-media">
+      <article *ngFor="let location of locations" class="location-card">
+        <strong>{{ location.name || location.type }}</strong>
+        <p>{{ location.address }}</p>
+        <small>{{ location.notes }}</small>
+        <a *ngIf="location.mapUrl" class="ghost small" [href]="location.mapUrl" target="_blank" rel="noreferrer">Maps</a>
+      </article>
+    </section>
+
+    <section *ngIf="widget === 'album' || widget === 'full-portal'" class="public-media">
+      <h2>Album</h2>
+      <label>Subir foto<input type="file" accept="image/*" (change)="selectAlbumFile($event)"></label>
+      <button class="ghost" type="button" (click)="uploadAlbum()" [disabled]="!selectedAlbumFile || sending">Enviar foto</button>
+      <div class="gallery-grid">
+        <img *ngFor="let asset of albumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" loading="lazy" decoding="async">
+      </div>
+    </section>
+
+    <form *ngIf="widget === 'song-requests' || widget === 'full-portal'" class="rsvp-panel" (ngSubmit)="requestSong()">
+      <h2>Cancion para DJ</h2>
+      <label>Cancion<input name="songTitle" [(ngModel)]="song.title" required></label>
+      <label>Artista<input name="songArtist" [(ngModel)]="song.artist"></label>
+      <label class="wide">Dedicatoria<textarea name="songDedication" [(ngModel)]="song.dedication"></textarea></label>
+      <button class="primary" type="submit" [disabled]="sending || !song.title">Solicitar</button>
+    </form>
+  </ng-container>
+</section>

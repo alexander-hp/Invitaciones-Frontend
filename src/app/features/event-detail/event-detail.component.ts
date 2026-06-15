@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, DashboardMetrics, EventModel, EventTableModel, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, RsvpModel, WhatsAppMediaAssetModel, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
+import { AlbumAssetModel, AssetFolder, DashboardMetrics, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel, ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel, SongRequestStatus, WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
+import { environment } from '../../../environments/environment';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -17,6 +19,9 @@ export class EventDetailComponent implements OnInit {
   tables: EventTableModel[] = [];
   albumAssets: AlbumAssetModel[] = [];
   whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
+  eventAccessLinks: EventAccessLinkModel[] = [];
+  songRequests: SongRequestModel[] = [];
+  embedManifest?: EmbedManifestResponse;
   loading = false;
   saving = false;
   guestSaving = false;
@@ -30,6 +35,8 @@ export class EventDetailComponent implements OnInit {
   whatsappSending = '';
   whatsappBulkSending = false;
   whatsappMediaUploading = false;
+  externalAssetUploading = '';
+  checkoutLoading = '';
   selectedImportFile?: File;
   selectedWhatsappMediaFile?: File;
   error = '';
@@ -47,9 +54,17 @@ export class EventDetailComponent implements OnInit {
   whatsappFallbackProvider: WhatsAppProvider | '' = '';
   whatsappEnabled = false;
   whatsappFallbackEnabled = false;
+  openWaReady = false;
+  openWaStatus = '';
+  mediaInspection?: WhatsAppMediaInspection;
+  mediaInspecting = false;
   eventMetrics: Partial<DashboardMetrics> = {};
+  currentPlan?: PlanDefinition;
+  eventPlanActive = false;
+  eventPlanExpiresAt = '';
+  subscriptionActive = false;
   editingGuest?: GuestModel;
-  guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+  guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   companionNames = '';
   tableForm = { name: '', capacity: 10, notes: '', order: 0 };
   guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
@@ -63,6 +78,26 @@ export class EventDetailComponent implements OnInit {
     filename: '',
     caption: ''
   };
+  externalForm = new FormGroup({
+    externalSiteUrl: new FormControl(''),
+    externalSiteLabel: new FormControl(''),
+    externalPortalEnabled: new FormControl(true),
+    welcomeMessage: new FormControl(''),
+    brandLabel: new FormControl(''),
+    coverImageUrl: new FormControl(''),
+    heroImageUrl: new FormControl(''),
+    musicUrl: new FormControl(''),
+    carousel: new FormArray([]),
+    gallery: new FormArray([]),
+    spectacularImages: new FormArray([]),
+    audioSections: new FormArray([]),
+    locations: new FormArray([]),
+    sections: new FormArray([]),
+    songRequestsEnabled: new FormControl(true),
+    songRequestsMax: new FormControl(3),
+    songRequestsDedications: new FormControl(true)
+  });
+  accessLinkForm = { role: 'check_in' as EventAccessRole, label: '', days: 7 };
   messageTemplates: MessageTemplateOption[] = [
     { value: 'invitation', label: 'Invitacion' },
     { value: 'reminder', label: 'Recordatorio RSVP' },
@@ -70,6 +105,10 @@ export class EventDetailComponent implements OnInit {
     { value: 'location_change', label: 'Cambio de ubicacion' },
     { value: 'thanks', label: 'Agradecimiento' }
   ];
+  private readonly imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+  private readonly audioTypes = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav']);
+  private readonly maxImageSize = 5 * 1024 * 1024;
+  private readonly maxAudioSize = 10 * 1024 * 1024;
 
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
 
@@ -84,6 +123,7 @@ export class EventDetailComponent implements OnInit {
     this.api.getEvent(id).subscribe({
       next: ({ event }) => {
         this.event = event;
+        this.syncExternalConfig(event);
         this.loadInvitations(id);
         this.loadGuests(id);
         this.loadRsvps(id);
@@ -92,6 +132,10 @@ export class EventDetailComponent implements OnInit {
         this.loadEventMetrics(id);
         this.loadWhatsAppMedia(id);
         this.loadWhatsAppStatus();
+        this.loadPaymentStatus();
+        this.loadAccessLinks(id);
+        this.loadSongRequests(id);
+        this.loadEmbedManifest(event);
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar el evento.';
@@ -102,6 +146,10 @@ export class EventDetailComponent implements OnInit {
 
   createInvitation(): void {
     if (!this.event) return;
+    if (this.event.mode === 'external_dashboard') {
+      this.error = 'Este evento esta en modo dashboard externo. Puedes manejar invitados, mesas, RSVP, album y check-in sin crear invitacion publica.';
+      return;
+    }
     this.saving = true;
     this.error = '';
     const eventId = this.getEventId();
@@ -143,6 +191,10 @@ export class EventDetailComponent implements OnInit {
       email: this.guestForm.email || undefined,
       phone: this.guestForm.phone || undefined,
       group: this.guestForm.group || undefined,
+      roles: this.splitCsv(this.guestForm.rolesText),
+      tags: this.splitCsv(this.guestForm.tagsText),
+      relationshipLabel: this.guestForm.relationshipLabel || undefined,
+      visibilityGroup: this.guestForm.visibilityGroup || undefined,
       tableName: this.guestForm.tableName || undefined,
       seatLabel: this.guestForm.seatLabel || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0)
@@ -178,6 +230,10 @@ export class EventDetailComponent implements OnInit {
       email: guest.email || '',
       phone: guest.phone || '',
       group: guest.group || '',
+      rolesText: (guest.roles || []).join(', '),
+      tagsText: (guest.tags || []).join(', '),
+      relationshipLabel: guest.relationshipLabel || '',
+      visibilityGroup: guest.visibilityGroup || '',
       tableName: guest.tableName || '',
       seatLabel: guest.seatLabel || '',
       allowedCompanions: guest.allowedCompanions || 0
@@ -264,6 +320,10 @@ export class EventDetailComponent implements OnInit {
   createTable(): void {
     const eventId = this.getEventId();
     if (!eventId || !this.tableForm.name) return;
+    if (!this.hasPlanFeature('seating')) {
+      this.guestError = this.featureLockedMessage('seating');
+      return;
+    }
     this.tableMessage = '';
     this.api.createTable(eventId, {
       name: this.tableForm.name,
@@ -300,6 +360,10 @@ export class EventDetailComponent implements OnInit {
   createCheckInLink(): void {
     const eventId = this.getEventId();
     if (!eventId) return;
+    if (!this.hasPlanFeature('checkIn')) {
+      this.guestError = this.featureLockedMessage('checkIn');
+      return;
+    }
     this.api.createCheckInLink(eventId, { label: 'Entrada', days: 7 }).subscribe({
       next: ({ url }) => {
         this.checkInLink = url;
@@ -401,9 +465,333 @@ export class EventDetailComponent implements OnInit {
     return this.albumPublicUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.albumPublicUrl)}` : '';
   }
 
+  checkoutPlan(pack: Exclude<PaymentPackage, 'free'>): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.checkoutLoading = pack;
+    this.guestError = '';
+    this.api.createCheckout({ package: pack, event: eventId }).subscribe({
+      next: ({ checkoutUrl, manualPayment, message }) => {
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+          return;
+        }
+        this.guestMessage = manualPayment ? (message || 'Pago manual registrado como pendiente.') : 'Solicitud de pago registrada.';
+        this.checkoutLoading = '';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo iniciar el checkout.';
+        this.checkoutLoading = '';
+      }
+    });
+  }
+
+  saveExternalConfig(): void {
+    const eventId = this.getEventId();
+    if (!eventId || !this.event) return;
+    this.guestError = '';
+    this.guestMessage = '';
+    const formValue: any = this.externalForm.value;
+    const externalContent: ExternalContent = {
+      ...(this.event.externalContent || {}),
+      coverImageUrl: formValue.coverImageUrl || undefined,
+      heroImageUrl: formValue.heroImageUrl || undefined,
+      carousel: this.cleanStringList(formValue.carousel),
+      gallery: this.cleanStringList(formValue.gallery),
+      spectacularImages: this.cleanStringList(formValue.spectacularImages),
+      musicUrl: formValue.musicUrl || undefined,
+      audioSections: this.cleanAudioSections(formValue.audioSections),
+      locations: this.cleanLocations(formValue.locations),
+      sections: this.cleanSections(formValue.sections),
+      songRequestSettings: {
+        enabled: Boolean(formValue.songRequestsEnabled),
+        maxRequestsPerGuest: Number(formValue.songRequestsMax || 3),
+        allowDedications: Boolean(formValue.songRequestsDedications)
+      }
+    };
+    this.api.updateEvent(eventId, {
+      externalSiteUrl: formValue.externalSiteUrl || '',
+      externalSiteLabel: formValue.externalSiteLabel || '',
+      externalPortalEnabled: Boolean(formValue.externalPortalEnabled),
+      externalPortalSettings: {
+        ...(this.event.externalPortalSettings || {}),
+        welcomeMessage: formValue.welcomeMessage || undefined,
+        brandLabel: formValue.brandLabel || undefined
+      },
+      externalContent
+    }).subscribe({
+      next: ({ event }) => {
+        this.event = event;
+        this.syncExternalConfig(event);
+        this.loadEmbedManifest(event);
+        this.guestMessage = 'Integracion externa actualizada.';
+      },
+      error: (error) => this.guestError = error.error?.message || 'No se pudo guardar la integracion externa.'
+    });
+  }
+
+  get carouselItems(): FormArray {
+    return this.externalForm.get('carousel') as FormArray;
+  }
+
+  get galleryItems(): FormArray {
+    return this.externalForm.get('gallery') as FormArray;
+  }
+
+  get spectacularItems(): FormArray {
+    return this.externalForm.get('spectacularImages') as FormArray;
+  }
+
+  get audioSectionItems(): FormArray {
+    return this.externalForm.get('audioSections') as FormArray;
+  }
+
+  get locationItems(): FormArray {
+    return this.externalForm.get('locations') as FormArray;
+  }
+
+  get sectionItems(): FormArray {
+    return this.externalForm.get('sections') as FormArray;
+  }
+
+  addUrlItem(arrayName: 'carousel' | 'gallery' | 'spectacularImages', value = ''): void {
+    (this.externalForm.get(arrayName) as FormArray).push(new FormControl(value));
+  }
+
+  removeArrayItem(arrayName: 'carousel' | 'gallery' | 'spectacularImages' | 'audioSections' | 'locations' | 'sections', index: number): void {
+    (this.externalForm.get(arrayName) as FormArray).removeAt(index);
+  }
+
+  addAudioSection(value: { title?: string; url?: string; description?: string } = {}): void {
+    this.audioSectionItems.push(new FormGroup({
+      title: new FormControl(value.title || ''),
+      url: new FormControl(value.url || ''),
+      description: new FormControl(value.description || '')
+    }));
+  }
+
+  addLocation(value: any = {}): void {
+    this.locationItems.push(new FormGroup({
+      type: new FormControl(value.type || ''),
+      name: new FormControl(value.name || ''),
+      address: new FormControl(value.address || ''),
+      mapUrl: new FormControl(value.mapUrl || ''),
+      wazeUrl: new FormControl(value.wazeUrl || ''),
+      notes: new FormControl(value.notes || ''),
+      time: new FormControl(value.time || '')
+    }));
+  }
+
+  addSection(value: any = {}): void {
+    this.sectionItems.push(new FormGroup({
+      key: new FormControl(value.key || ''),
+      type: new FormControl(value.type || 'text'),
+      title: new FormControl(value.title || ''),
+      body: new FormControl(value.body || ''),
+      url: new FormControl(value.url || ''),
+      imageUrl: new FormControl(value.imageUrl || ''),
+      rolesText: new FormControl((value.roles || []).join(', ')),
+      order: new FormControl(value.order ?? this.sectionItems.length)
+    }));
+  }
+
+  uploadExternalAsset(event: Event, target: 'cover' | 'hero' | 'music' | 'carousel' | 'gallery' | 'spectacular' | 'audioSection' | 'sectionImage', index?: number): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const eventId = this.getEventId();
+    if (!file || !eventId) return;
+    const folder = this.externalAssetFolder(target);
+    const validationError = this.validateExternalAsset(file, folder);
+    if (validationError) {
+      this.guestError = validationError;
+      input.value = '';
+      return;
+    }
+    const uploadKey = `${target}-${index ?? 'main'}`;
+    this.externalAssetUploading = uploadKey;
+    this.guestError = '';
+    this.guestMessage = '';
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder, event: eventId, size: file.size }).subscribe({
+      next: (upload) => {
+        this.api.uploadAsset(upload.uploadUrl, file).subscribe({
+          next: () => {
+            this.applyExternalAssetUrl(target, upload.publicUrl, index);
+            this.guestMessage = 'Archivo subido. Guarda la integracion para publicarlo.';
+            this.externalAssetUploading = '';
+            input.value = '';
+          },
+          error: () => {
+            this.guestError = 'S3 rechazo la subida. Revisa CORS del bucket, permisos PutObject y que el archivo coincida con el tipo permitido.';
+            this.externalAssetUploading = '';
+            input.value = '';
+          }
+        });
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo preparar la subida. Revisa AWS_S3_BUCKET, MEDIA_PUBLIC_BASE_URL, region, credenciales y tipo de archivo.';
+        this.externalAssetUploading = '';
+        input.value = '';
+      }
+    });
+  }
+
+  createAccessLink(): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.api.createEventAccessLink(eventId, this.accessLinkForm).subscribe({
+      next: ({ link }) => {
+        this.eventAccessLinks = [link, ...this.eventAccessLinks];
+        this.guestMessage = 'Link externo creado.';
+      },
+      error: (error) => this.guestError = error.error?.message || 'No se pudo crear el link externo.'
+    });
+  }
+
+  revokeAccessLink(link: EventAccessLinkModel): void {
+    const eventId = this.getEventId();
+    const linkId = link.id || link._id || '';
+    if (!eventId || !linkId || !window.confirm('Revocar este link externo?')) return;
+    this.api.revokeEventAccessLink(eventId, linkId).subscribe({
+      next: () => {
+        this.guestMessage = 'Link revocado.';
+        this.loadAccessLinks(eventId);
+      },
+      error: (error) => this.guestError = error.error?.message || 'No se pudo revocar el link.'
+    });
+  }
+
+  inspectWhatsappMediaUrl(): void {
+    const url = this.whatsappMedia.url.trim();
+    if (!url) {
+      this.guestError = 'Agrega una URL para analizar.';
+      return;
+    }
+    this.mediaInspecting = true;
+    this.guestError = '';
+    this.mediaInspection = undefined;
+    this.api.inspectAssetUrl(url).subscribe({
+      next: (inspection) => {
+        this.mediaInspection = inspection;
+        this.whatsappMedia.type = inspection.type;
+        this.whatsappMedia.mimetype = inspection.mimetype;
+        this.whatsappMedia.filename = inspection.filename;
+        this.mediaInspecting = false;
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo analizar la URL.';
+        this.mediaInspecting = false;
+      }
+    });
+  }
+
+  get externalPortalUrl(): string {
+    return this.event?.externalPortalSlug ? `${window.location.origin}/e/${this.event.externalPortalSlug}` : '';
+  }
+
+  get externalPortalQrUrl(): string {
+    return this.externalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.externalPortalUrl)}` : '';
+  }
+
+  get rsvpIframeSnippet(): string {
+    return this.externalPortalUrl ? `<iframe src="${this.externalPortalUrl}" width="100%" height="720" style="border:0"></iframe>` : '';
+  }
+
+  get externalApiConfigUrl(): string {
+    return this.event?.externalPortalSlug ? `${this.apiBaseUrl}/external/${this.event.externalPortalSlug}/config` : '';
+  }
+
+  get externalApiAssetsUrl(): string {
+    return this.event?.externalPortalSlug ? `${this.apiBaseUrl}/external/${this.event.externalPortalSlug}/assets?type=all` : '';
+  }
+
+  get externalIdentifyExample(): string {
+    const slug = this.event?.externalPortalSlug || ':portalSlug';
+    return `fetch('${this.apiBaseUrl}/external/${slug}/guest/identify', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: 'invitado@email.com' })
+}).then((res) => res.json());`;
+  }
+
+  get externalRsvpExample(): string {
+    const slug = this.event?.externalPortalSlug || ':portalSlug';
+    return `fetch('${this.apiBaseUrl}/external/${slug}/rsvp', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    guest: 'GUEST_ID_IDENTIFICADO',
+    response: 'confirmed',
+    companions: 1,
+    companionNames: ['Acompanante']
+  })
+}).then((res) => res.json());`;
+  }
+
+  get externalSongRequestExample(): string {
+    const slug = this.event?.externalPortalSlug || ':portalSlug';
+    return `fetch('${this.apiBaseUrl}/external/${slug}/song-requests', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    guest: 'GUEST_ID_IDENTIFICADO',
+    title: 'September',
+    artist: 'Earth, Wind & Fire'
+  })
+}).then((res) => res.json());`;
+  }
+
+  get embedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
+    const widgets = this.embedManifest?.widgets || {};
+    const snippets = this.embedManifest?.snippets || {};
+    return [
+      { key: 'rsvp', label: 'RSVP', url: widgets['rsvp'] || this.widgetUrl('rsvp'), snippet: snippets['rsvp'] || this.iframeSnippet('rsvp', 720) },
+      { key: 'guestPass', label: 'Pase QR', url: widgets['guestPass'] || this.widgetUrl('guest-pass'), snippet: this.iframeSnippet('guest-pass', 520) },
+      { key: 'album', label: 'Album', url: widgets['album'] || this.widgetUrl('album'), snippet: snippets['album'] || this.iframeSnippet('album', 720) },
+      { key: 'gallery', label: 'Galeria', url: widgets['gallery'] || this.widgetUrl('gallery'), snippet: this.iframeSnippet('gallery', 520) },
+      { key: 'map', label: 'Mapa', url: widgets['map'] || this.widgetUrl('map'), snippet: snippets['map'] || this.iframeSnippet('map', 480) },
+      { key: 'songRequests', label: 'DJ', url: widgets['songRequests'] || this.widgetUrl('song-requests'), snippet: snippets['songRequests'] || this.iframeSnippet('song-requests', 520) },
+      { key: 'fullPortal', label: 'Portal completo', url: widgets['fullPortal'] || this.widgetUrl('full-portal'), snippet: this.iframeSnippet('full-portal', 900) }
+    ].filter((item) => item.url);
+  }
+
+  get bulkWhatsappPreview(): string {
+    const guest = this.filteredGuests.find((item) => this.canWhatsappGuest(item));
+    if (!guest) return 'Selecciona invitados con telefono para previsualizar el mensaje.';
+    return this.buildMessage(guest, this.selectedMessageType);
+  }
+
+  get whatsappRecipientCount(): number {
+    return this.filteredGuests.filter((guest) => this.canWhatsappGuest(guest)).length;
+  }
+
+  get whatsappMissingPhoneCount(): number {
+    return this.filteredGuests.filter((guest) => !this.toWhatsappPhone(guest.phone)).length;
+  }
+
+  get eventPlanExpiresLabel(): string {
+    return this.eventPlanExpiresAt ? new Date(this.eventPlanExpiresAt).toLocaleDateString() : '';
+  }
+
+  updateSongRequest(songRequest: SongRequestModel, status: SongRequestStatus): void {
+    const eventId = this.getEventId();
+    const songRequestId = songRequest._id || songRequest.id || '';
+    if (!eventId || !songRequestId) return;
+    this.api.updateSongRequest(eventId, songRequestId, status).subscribe({
+      next: ({ songRequest: updated }) => {
+        this.songRequests = this.songRequests.map((item) => (item._id || item.id) === songRequestId ? updated : item);
+        this.guestMessage = 'Solicitud de DJ actualizada.';
+      },
+      error: (error) => this.guestError = error.error?.message || 'No se pudo actualizar la solicitud.'
+    });
+  }
+
   exportGuests(): void {
     const eventId = this.getEventId();
     if (!eventId) return;
+    if (!this.hasPlanFeature('exportData')) {
+      this.guestError = this.featureLockedMessage('exportData');
+      return;
+    }
     this.exportingGuests = true;
     this.guestError = '';
     this.api.exportGuests(eventId, this.guestFilters).subscribe({
@@ -421,6 +809,10 @@ export class EventDetailComponent implements OnInit {
   exportRsvps(): void {
     const eventId = this.getEventId();
     if (!eventId) return;
+    if (!this.hasPlanFeature('exportData')) {
+      this.rsvpError = this.featureLockedMessage('exportData');
+      return;
+    }
     this.exportingRsvps = true;
     this.rsvpError = '';
     this.api.exportRsvps(eventId).subscribe({
@@ -454,7 +846,7 @@ export class EventDetailComponent implements OnInit {
   }
 
   canWhatsappGuest(guest: GuestModel): boolean {
-    return Boolean(this.toWhatsappPhone(guest.phone) && this.primaryInvitation);
+    return Boolean(this.toWhatsappPhone(guest.phone) && (this.primaryInvitation || this.event?.mode === 'external_dashboard'));
   }
 
   canSendRealWhatsapp(guest: GuestModel): boolean {
@@ -511,7 +903,9 @@ export class EventDetailComponent implements OnInit {
   }
 
   getPersonalizedPublicUrl(guest: GuestModel): string {
-    const publicUrl = this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : '';
+    const publicUrl = this.primaryInvitation
+      ? `${window.location.origin}/i/${this.primaryInvitation.slug}`
+      : this.externalPortalUrl;
     if (!publicUrl || !guest.invitationToken) return publicUrl;
     return `${publicUrl}?t=${encodeURIComponent(guest.invitationToken)}`;
   }
@@ -536,9 +930,17 @@ export class EventDetailComponent implements OnInit {
   sendRealWhatsapp(guest: GuestModel): void {
     const guestId = this.getGuestId(guest);
     if (!guestId) return;
+    if (!this.hasPlanFeature('whatsappMessaging')) {
+      this.guestError = this.featureLockedMessage('whatsappMessaging');
+      return;
+    }
+    if (this.whatsappProvider === 'openwa' && !this.openWaReady) {
+      this.guestError = `WhatsApp conectado pero no listo (${this.openWaStatus || 'desconocido'}).`;
+      return;
+    }
     const media = this.buildWhatsappMediaPayload();
     if (this.whatsappMedia.enabled && !media) {
-      this.guestError = 'Agrega una URL valida para enviar media por WhatsApp.';
+      this.guestError = 'Analiza una URL valida o selecciona media guardada antes de enviar WhatsApp.';
       return;
     }
     this.whatsappSending = guestId;
@@ -560,11 +962,19 @@ export class EventDetailComponent implements OnInit {
   sendBulkWhatsapp(): void {
     const eventId = this.getEventId();
     if (!eventId || !this.filteredGuests.length) return;
+    if (!this.hasPlanFeature('whatsappBulk')) {
+      this.guestError = this.featureLockedMessage('whatsappBulk');
+      return;
+    }
+    if (this.whatsappProvider === 'openwa' && !this.openWaReady) {
+      this.guestError = `WhatsApp conectado pero no listo (${this.openWaStatus || 'desconocido'}).`;
+      return;
+    }
     const total = this.filteredGuests.filter((guest) => this.canWhatsappGuest(guest)).length;
     if (!total || !window.confirm(`Enviar WhatsApp "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${total} invitado(s) filtrados?`)) return;
     const media = this.buildWhatsappMediaPayload();
     if (this.whatsappMedia.enabled && !media) {
-      this.guestError = 'Agrega una URL valida para enviar media por WhatsApp.';
+      this.guestError = 'Analiza una URL valida o selecciona media guardada antes de enviar WhatsApp.';
       return;
     }
     this.whatsappBulkSending = true;
@@ -602,11 +1012,12 @@ export class EventDetailComponent implements OnInit {
     }
     const url = this.whatsappMedia.url.trim();
     if (!url) return undefined;
+    if (!this.mediaInspection || this.mediaInspection.url !== url) return undefined;
     return {
-      type: this.whatsappMedia.type,
+      type: this.mediaInspection.type,
       url,
-      mimetype: this.whatsappMedia.mimetype.trim() || undefined,
-      filename: this.whatsappMedia.filename.trim() || undefined,
+      mimetype: this.whatsappMedia.mimetype.trim() || this.mediaInspection.mimetype,
+      filename: this.whatsappMedia.filename.trim() || this.mediaInspection.filename,
       caption: this.whatsappMedia.caption.trim() || undefined
     };
   }
@@ -619,6 +1030,10 @@ export class EventDetailComponent implements OnInit {
   uploadWhatsappMedia(): void {
     const eventId = this.getEventId();
     const file = this.selectedWhatsappMediaFile;
+    if (!this.hasPlanFeature('whatsappMedia')) {
+      this.guestError = this.featureLockedMessage('whatsappMedia');
+      return;
+    }
     if (!eventId || !file) {
       this.guestError = 'Selecciona un archivo para WhatsApp.';
       return;
@@ -630,7 +1045,7 @@ export class EventDetailComponent implements OnInit {
     }
     this.whatsappMediaUploading = true;
     this.guestError = '';
-    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'whatsapp-media', size: file.size }).subscribe({
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'whatsapp-media', event: eventId, size: file.size }).subscribe({
       next: ({ key, uploadUrl, publicUrl }) => {
         this.api.uploadAsset(uploadUrl, file).subscribe({
           next: () => {
@@ -706,6 +1121,23 @@ export class EventDetailComponent implements OnInit {
     return guest.communicationStatus || (guest.status === 'confirmed' ? 'confirmed' : 'pending');
   }
 
+  hasPlanFeature(feature: keyof PlanDefinition['limits']): boolean {
+    return Boolean(this.currentPlan?.limits?.[feature]);
+  }
+
+  featureLockedMessage(feature: keyof PlanDefinition['limits']): string {
+    const labels: Record<string, string> = {
+      exportData: 'La exportacion CSV',
+      whatsappMessaging: 'El envio de WhatsApp',
+      whatsappBulk: 'El envio masivo por WhatsApp',
+      whatsappMedia: 'La media para WhatsApp',
+      checkIn: 'El check-in con QR',
+      seating: 'La gestion de mesas',
+      guestAlbum: 'El album colaborativo'
+    };
+    return `${labels[String(feature)] || 'Esta funcion'} requiere ${feature === 'whatsappBulk' ? 'plan Pro' : 'Evento Individual o Pro'}.`;
+  }
+
   getMessageTypeLabel(messageType?: GuestMessageType): string {
     return this.messageTemplates.find((template) => template.value === messageType)?.label || 'Sin mensaje';
   }
@@ -732,7 +1164,7 @@ export class EventDetailComponent implements OnInit {
 
   private resetGuestForm(): void {
     this.editingGuest = undefined;
-    this.guestForm = { name: '', email: '', phone: '', group: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+    this.guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
     this.companionNames = '';
   }
 
@@ -769,13 +1201,17 @@ export class EventDetailComponent implements OnInit {
     const venue = this.event?.venue?.name || '';
     const address = this.event?.venue?.address || '';
     const publicUrl = this.getPersonalizedPublicUrl(guest);
+    const externalUrl = this.event?.mode === 'external_dashboard' ? this.event.externalSiteUrl : '';
     const locationLine = [venue, address].filter(Boolean).join(' - ');
+    const links = this.event?.mode === 'external_dashboard'
+      ? [externalUrl ? `Pagina del evento: ${externalUrl}` : '', publicUrl ? `RSVP, pase y album: ${publicUrl}` : ''].filter(Boolean)
+      : [publicUrl];
 
     if (messageType === 'reminder') {
       return [
         `Hola ${guest.name}, te recordamos confirmar tu asistencia a ${eventTitle}.`,
         date ? `Fecha: ${date}` : '',
-        publicUrl,
+        ...links,
         'Tu confirmacion nos ayuda a organizar mejor el evento.'
       ].filter(Boolean).join('\n\n');
     }
@@ -785,7 +1221,7 @@ export class EventDetailComponent implements OnInit {
         `Hola ${guest.name}, te compartimos un recordatorio para ${eventTitle}.`,
         date ? `Fecha: ${date}` : '',
         locationLine ? `Lugar: ${locationLine}` : '',
-        publicUrl,
+        ...links,
         'Te recomendamos revisar el enlace antes del evento.'
       ].filter(Boolean).join('\n\n');
     }
@@ -803,7 +1239,7 @@ export class EventDetailComponent implements OnInit {
       `Hola ${guest.name}, te comparto tu invitacion digital para ${eventTitle}.`,
       date ? `Fecha: ${date}` : '',
       locationLine ? `Lugar: ${locationLine}` : '',
-      publicUrl,
+      ...links,
       'Por favor confirma tu asistencia desde el enlace.'
     ].filter(Boolean).join('\n\n');
   }
@@ -918,24 +1354,189 @@ export class EventDetailComponent implements OnInit {
     return '';
   }
 
+  private loadAccessLinks(eventId: string): void {
+    this.api.listEventAccessLinks(eventId).subscribe({
+      next: ({ links }) => this.eventAccessLinks = links,
+      error: () => this.eventAccessLinks = []
+    });
+  }
+
+  private loadSongRequests(eventId: string): void {
+    this.api.listSongRequests(eventId).subscribe({
+      next: ({ songRequests }) => this.songRequests = songRequests,
+      error: () => this.songRequests = []
+    });
+  }
+
+  private loadEmbedManifest(event: EventModel): void {
+    if (event.mode !== 'external_dashboard' || !event.externalPortalSlug) {
+      this.embedManifest = undefined;
+      return;
+    }
+    this.api.getExternalEmbedManifest(event.externalPortalSlug).subscribe({
+      next: (manifest) => this.embedManifest = manifest,
+      error: () => this.embedManifest = undefined
+    });
+  }
+
+  private syncExternalConfig(event: EventModel): void {
+    const content = event.externalContent || {};
+    this.externalForm.patchValue({
+      externalSiteUrl: event.externalSiteUrl || '',
+      externalSiteLabel: event.externalSiteLabel || '',
+      externalPortalEnabled: event.externalPortalEnabled !== false,
+      welcomeMessage: event.externalPortalSettings?.welcomeMessage || '',
+      brandLabel: event.externalPortalSettings?.brandLabel || '',
+      coverImageUrl: content.coverImageUrl || '',
+      heroImageUrl: content.heroImageUrl || '',
+      musicUrl: content.musicUrl || '',
+      songRequestsEnabled: content.songRequestSettings?.enabled !== false,
+      songRequestsMax: content.songRequestSettings?.maxRequestsPerGuest || 3,
+      songRequestsDedications: content.songRequestSettings?.allowDedications !== false
+    });
+    this.resetUrlArray(this.carouselItems, content.carousel || []);
+    this.resetUrlArray(this.galleryItems, content.gallery || []);
+    this.resetUrlArray(this.spectacularItems, content.spectacularImages || []);
+    this.resetFormArray(this.audioSectionItems);
+    (content.audioSections || []).forEach((item) => this.addAudioSection(item));
+    this.resetFormArray(this.locationItems);
+    (content.locations || []).forEach((item) => this.addLocation(item));
+    this.resetFormArray(this.sectionItems);
+    (content.sections || []).forEach((item) => this.addSection(item));
+  }
+
   private loadWhatsAppStatus(): void {
     this.api.getWhatsAppStatus().subscribe({
-      next: ({ provider, fallbackProvider, enabled, fallbackEnabled }) => {
+      next: ({ provider, fallbackProvider, enabled, fallbackEnabled, openWaSession }) => {
         this.whatsappProvider = provider;
         this.whatsappFallbackProvider = fallbackProvider || '';
         this.whatsappEnabled = enabled;
         this.whatsappFallbackEnabled = Boolean(fallbackEnabled);
+        this.openWaReady = provider !== 'openwa' || Boolean(openWaSession?.ready);
+        this.openWaStatus = openWaSession?.status || '';
       },
       error: () => {
         this.whatsappProvider = 'disabled';
         this.whatsappFallbackProvider = '';
         this.whatsappEnabled = false;
         this.whatsappFallbackEnabled = false;
+        this.openWaReady = false;
+        this.openWaStatus = '';
+      }
+    });
+  }
+
+  private loadPaymentStatus(): void {
+    this.api.getPaymentStatus(this.getEventId()).subscribe({
+      next: ({ eventPlanDefinition, planDefinition, eventPlanActive, eventPlanExpiresAt, subscriptionActive }) => {
+        this.currentPlan = eventPlanDefinition || planDefinition;
+        this.eventPlanActive = Boolean(eventPlanActive);
+        this.eventPlanExpiresAt = eventPlanExpiresAt || '';
+        this.subscriptionActive = Boolean(subscriptionActive);
+      },
+      error: () => {
+        this.currentPlan = undefined;
+        this.eventPlanActive = false;
+        this.eventPlanExpiresAt = '';
+        this.subscriptionActive = false;
       }
     });
   }
 
   private slugify(value: string): string {
     return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  private get apiBaseUrl(): string {
+    return environment.apiUrl.replace(/\/$/, '');
+  }
+
+  private widgetUrl(widget: string): string {
+    return this.event?.externalPortalSlug ? `${window.location.origin}/embed/${this.event.externalPortalSlug}/${widget}` : '';
+  }
+
+  private iframeSnippet(widget: string, height: number): string {
+    const url = this.widgetUrl(widget);
+    return url ? `<iframe src="${url}" width="100%" height="${height}" style="border:0"></iframe>` : '';
+  }
+
+  private splitCsv(value: string): string[] {
+    return (value || '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean);
+  }
+
+  private resetFormArray(array: FormArray): void {
+    while (array.length) array.removeAt(0);
+  }
+
+  private resetUrlArray(array: FormArray, values: string[]): void {
+    this.resetFormArray(array);
+    values.forEach((value) => array.push(new FormControl(value)));
+  }
+
+  private cleanStringList(values: string[] = []): string[] {
+    return (values || []).map((item) => String(item || '').trim()).filter(Boolean);
+  }
+
+  private cleanAudioSections(values: any[] = []): ExternalContent['audioSections'] {
+    return (values || []).map((item) => ({
+      title: String(item.title || '').trim() || undefined,
+      url: String(item.url || '').trim(),
+      description: String(item.description || '').trim() || undefined
+    })).filter((item) => item.url);
+  }
+
+  private cleanLocations(values: any[] = []): ExternalContent['locations'] {
+    return (values || []).map((item) => ({
+      type: String(item.type || '').trim() || undefined,
+      name: String(item.name || '').trim() || undefined,
+      address: String(item.address || '').trim() || undefined,
+      mapUrl: String(item.mapUrl || '').trim() || undefined,
+      wazeUrl: String(item.wazeUrl || '').trim() || undefined,
+      notes: String(item.notes || '').trim() || undefined,
+      time: String(item.time || '').trim() || undefined
+    }) as any).filter((item) => item.name || item.address || item.mapUrl);
+  }
+
+  private cleanSections(values: any[] = []): ExternalContent['sections'] {
+    return (values || []).map((item, index) => {
+      const type = String(item.type || 'text').trim();
+      return {
+        key: String(item.key || '').trim() || undefined,
+        type: ['text', 'image', 'video', 'cta', 'iframe', 'timeline'].includes(type) ? type as any : 'text',
+        title: String(item.title || '').trim() || undefined,
+        body: String(item.body || '').trim() || undefined,
+        url: String(item.url || '').trim() || undefined,
+        imageUrl: String(item.imageUrl || '').trim() || undefined,
+        roles: this.splitCsv(item.rolesText || ''),
+        order: item.order !== '' && item.order !== undefined && item.order !== null ? Number(item.order) : index
+      };
+    }).filter((item) => item.title || item.body || item.url || item.imageUrl);
+  }
+
+  private externalAssetFolder(target: 'cover' | 'hero' | 'music' | 'carousel' | 'gallery' | 'spectacular' | 'audioSection' | 'sectionImage'): AssetFolder {
+    if (target === 'music' || target === 'audioSection') return 'music';
+    if (target === 'cover' || target === 'hero') return 'covers';
+    if (target === 'sectionImage') return 'assets';
+    return 'gallery';
+  }
+
+  private validateExternalAsset(file: File, folder: AssetFolder): string {
+    const isMusic = folder === 'music';
+    const allowedTypes = isMusic ? this.audioTypes : this.imageTypes;
+    const maxSize = isMusic ? this.maxAudioSize : this.maxImageSize;
+    if (!allowedTypes.has(file.type)) return isMusic ? 'Formato de audio no soportado. Usa MP3 o WAV.' : 'Formato de imagen no soportado. Usa JPG, PNG, WEBP o GIF.';
+    if (file.size > maxSize) return isMusic ? 'El audio no debe exceder 10MB.' : 'La imagen no debe exceder 5MB.';
+    return '';
+  }
+
+  private applyExternalAssetUrl(target: 'cover' | 'hero' | 'music' | 'carousel' | 'gallery' | 'spectacular' | 'audioSection' | 'sectionImage', url: string, index?: number): void {
+    if (target === 'cover') this.externalForm.patchValue({ coverImageUrl: url });
+    if (target === 'hero') this.externalForm.patchValue({ heroImageUrl: url });
+    if (target === 'music') this.externalForm.patchValue({ musicUrl: url });
+    if (target === 'carousel' && index !== undefined) this.carouselItems.at(index)?.setValue(url);
+    if (target === 'gallery' && index !== undefined) this.galleryItems.at(index)?.setValue(url);
+    if (target === 'spectacular' && index !== undefined) this.spectacularItems.at(index)?.setValue(url);
+    if (target === 'audioSection' && index !== undefined) (this.audioSectionItems.at(index) as FormGroup | undefined)?.patchValue({ url });
+    if (target === 'sectionImage' && index !== undefined) (this.sectionItems.at(index) as FormGroup | undefined)?.patchValue({ imageUrl: url });
   }
 }

@@ -19,7 +19,18 @@
       </div>
       <span class="count-pill">{{ currentPlan.key }}</span>
     </div>
-    <p class="muted">Invitados: {{ currentPlan.limits.guests }} · Galeria: {{ currentPlan.limits.galleryImages }} · Musica: {{ currentPlan.limits.music ? 'si' : 'no' }} · Plantillas premium: {{ currentPlan.limits.premiumTemplates ? 'si' : 'no' }}</p>
+    <p class="muted">Este es el plan legacy de la cuenta. Los pagos de Evento Individual y Dashboard Externo se reflejan dentro de cada evento.</p>
+    <p class="notice">Suscripcion Planner Pro: {{ subscriptionStatus }} <span *ngIf="subscriptionEndLabel()">- periodo hasta {{ subscriptionEndLabel() }}</span></p>
+    <p class="muted">Invitados: {{ currentPlan.limits.guests }} - Galeria: {{ currentPlan.limits.galleryImages }} - Musica: {{ currentPlan.limits.music ? 'si' : 'no' }} - Plantillas premium: {{ currentPlan.limits.premiumTemplates ? 'si' : 'no' }}</p>
+    <div class="feature-pill-list">
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.whatsappMessaging">WhatsApp</span>
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.whatsappBulk">WhatsApp masivo</span>
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.checkIn">Check-in QR</span>
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.seating">Mesas</span>
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.guestAlbum">Album invitados</span>
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.exportData">Export CSV</span>
+      <span class="feature-pill" [class.locked]="!currentPlan.limits.whiteLabel">White label</span>
+    </div>
     <div *ngIf="payments.length" class="item-list">
       <article *ngFor="let payment of payments.slice(0, 3)" class="payment-row">
         <strong>{{ payment.package }} - {{ payment.status }}</strong>

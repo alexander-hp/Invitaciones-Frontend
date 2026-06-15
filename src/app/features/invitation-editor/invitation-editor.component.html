@@ -150,16 +150,19 @@
         </section>
 
         <section class="panel">
-          <h2>Monetizacion</h2>
-          <p class="muted">Planes simples para vender eventos reales sin depender del checkout durante el lanzamiento.</p>
+          <h2>Plan del evento</h2>
+          <p class="muted">Un evento puede tener varias invitaciones segmentadas. El plan Evento Individual desbloquea este evento completo; Pro desbloquea toda la cuenta.</p>
+          <p *ngIf="currentPlan" class="notice">Plan activo para este editor: {{ currentPlan.name }}</p>
           <div class="package-list">
             <article *ngFor="let plan of plans" class="package-card">
               <strong>{{ plan.name }}</strong>
               <span>{{ formatPrice(plan) }}</span>
+              <small>{{ checkoutScopeText(plan) }}</small>
               <small>{{ planLimitText(plan) }}</small>
-              <button *ngIf="plan.key !== 'free'" type="button" class="ghost" (click)="checkout(plan.key === 'pro' ? 'pro' : 'event')" [disabled]="checkoutLoading">
+              <button *ngIf="canCheckoutPlan(plan)" type="button" class="ghost" (click)="checkout(plan.key)" [disabled]="checkoutLoading">
                 {{ checkoutLoading === plan.key ? 'Abriendo...' : 'Preparar pago' }}
               </button>
+              <small *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'" class="muted">Ya cubierto por el plan activo.</small>
             </article>
           </div>
         </section>

@@ -12,9 +12,15 @@ import {
   EmailBulkResponse,
   EmailSendResponse,
   EventModel,
+  EventAccessLinkModel,
+  EventAccessRole,
+  EventAccessSession,
   EventPayload,
   EventTableModel,
   EventType,
+  EmbedManifestResponse,
+  ExternalAssetsResponse,
+  ExternalConfigResponse,
   GuestModel,
   GuestAccessResponse,
   GuestCommunicationStatus,
@@ -30,12 +36,16 @@ import {
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
+  SongRequestPayload,
+  SongRequestModel,
+  SongRequestStatus,
   StaffCheckInSession,
   TemplateModel,
   TemplateTier,
   UploadUrlResponse,
   User,
   WhatsAppBulkResponse,
+  WhatsAppMediaInspection,
   WhatsAppMediaAssetModel,
   WhatsAppMediaPayload,
   WhatsAppSendResponse,
@@ -94,6 +104,87 @@ export class ApiService {
 
   updateEvent(id: string, payload: Partial<EventPayload>): Observable<{ event: EventModel }> {
     return this.http.patch<{ event: EventModel }>(`${this.apiUrl}/events/${id}`, payload);
+  }
+
+  getPublicExternalEvent(portalSlug: string): Observable<{ event: EventModel }> {
+    return this.http.get<{ event: EventModel }>(`${this.apiUrl}/events/public/${portalSlug}`);
+  }
+
+  getExternalConfig(portalSlug: string): Observable<ExternalConfigResponse> {
+    return this.http.get<ExternalConfigResponse>(`${this.apiUrl}/external/${portalSlug}/config`);
+  }
+
+  getExternalAssets(portalSlug: string, type: 'cover' | 'carousel' | 'gallery' | 'audio' | 'map' | 'all' = 'all'): Observable<ExternalAssetsResponse> {
+    return this.http.get<ExternalAssetsResponse>(`${this.apiUrl}/external/${portalSlug}/assets`, { params: new HttpParams().set('type', type) });
+  }
+
+  identifyExternalGuest(portalSlug: string, payload: { email?: string; phone?: string; token?: string }): Observable<GuestAccessResponse> {
+    return this.http.post<GuestAccessResponse>(`${this.apiUrl}/external/${portalSlug}/guest/identify`, payload);
+  }
+
+  submitExternalApiRsvp(portalSlug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
+    return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/external/${portalSlug}/rsvp`, payload);
+  }
+
+  createExternalSongRequest(portalSlug: string, payload: SongRequestPayload): Observable<{ songRequest: { id: string; status: string } }> {
+    return this.http.post<{ songRequest: { id: string; status: string } }>(`${this.apiUrl}/external/${portalSlug}/song-requests`, payload);
+  }
+
+  getExternalEmbedManifest(portalSlug: string): Observable<EmbedManifestResponse> {
+    return this.http.get<EmbedManifestResponse>(`${this.apiUrl}/external/${portalSlug}/embed-manifest`);
+  }
+
+  listSongRequests(eventId: string): Observable<{ songRequests: SongRequestModel[] }> {
+    return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/events/${eventId}/song-requests`);
+  }
+
+  updateSongRequest(eventId: string, songRequestId: string, status: SongRequestStatus): Observable<{ songRequest: SongRequestModel }> {
+    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, { status });
+  }
+
+  checkExternalGuestAccess(portalSlug: string, payload: { email: string }): Observable<GuestAccessResponse> {
+    return this.http.post<GuestAccessResponse>(`${this.apiUrl}/events/public/${portalSlug}/guest-access`, payload);
+  }
+
+  getExternalGuestByToken(portalSlug: string, token: string): Observable<GuestAccessResponse> {
+    return this.http.get<GuestAccessResponse>(`${this.apiUrl}/events/public/${portalSlug}/guest-token/${encodeURIComponent(token)}`);
+  }
+
+  listPublicExternalAlbum(portalSlug: string): Observable<{ assets: AlbumAssetModel[] }> {
+    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/events/public/${portalSlug}/album`);
+  }
+
+  uploadPublicExternalAlbumPhoto(portalSlug: string, payload: { file: File; name?: string; email?: string; guest?: string }): Observable<{ asset: { id: string; status: string } }> {
+    const formData = new FormData();
+    formData.append('file', payload.file);
+    if (payload.name) formData.append('name', payload.name);
+    if (payload.email) formData.append('email', payload.email);
+    if (payload.guest) formData.append('guest', payload.guest);
+    return this.http.post<{ asset: { id: string; status: string } }>(`${this.apiUrl}/events/public/${portalSlug}/album`, formData);
+  }
+
+  listEventAccessLinks(eventId: string): Observable<{ links: EventAccessLinkModel[] }> {
+    return this.http.get<{ links: EventAccessLinkModel[] }>(`${this.apiUrl}/events/${eventId}/access-links`);
+  }
+
+  createEventAccessLink(eventId: string, payload: { role: EventAccessRole; label?: string; days?: number }): Observable<{ link: EventAccessLinkModel }> {
+    return this.http.post<{ link: EventAccessLinkModel }>(`${this.apiUrl}/events/${eventId}/access-links`, payload);
+  }
+
+  revokeEventAccessLink(eventId: string, linkId: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/access-links/${linkId}`);
+  }
+
+  getEventAccessSession(token: string): Observable<EventAccessSession> {
+    return this.http.get<EventAccessSession>(`${this.apiUrl}/event-access/${token}`);
+  }
+
+  eventAccessCheckIn(token: string, code: string): Observable<{ guest: GuestModel }> {
+    return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/event-access/${token}/check-in`, { code });
+  }
+
+  updateEventAccessAlbum(token: string, assetId: string, status: AlbumAssetModel['status']): Observable<{ asset: AlbumAssetModel }> {
+    return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album/${assetId}`, { status });
   }
 
   createCheckInLink(eventId: string, payload: { label?: string; days?: number }): Observable<{ token: string; url: string; expiresAt: string }> {
@@ -253,8 +344,12 @@ export class ApiService {
     return this.http.get<{ templates: TemplateModel[] }>(`${this.apiUrl}/templates`, { params });
   }
 
-  createUploadUrl(payload: { fileName: string; contentType: string; folder: AssetFolder; size?: number }): Observable<UploadUrlResponse> {
+  createUploadUrl(payload: { fileName: string; contentType: string; folder: AssetFolder; event?: string; size?: number }): Observable<UploadUrlResponse> {
     return this.http.post<UploadUrlResponse>(`${this.apiUrl}/assets/upload-url`, payload);
+  }
+
+  inspectAssetUrl(url: string): Observable<WhatsAppMediaInspection> {
+    return this.http.post<WhatsAppMediaInspection>(`${this.apiUrl}/assets/inspect-url`, { url });
   }
 
   uploadAsset(uploadUrl: string, file: File): Observable<unknown> {
@@ -285,15 +380,20 @@ export class ApiService {
     return this.http.get<{ plans: PlanDefinition[] }>(`${this.apiUrl}/payments/plans`);
   }
 
-  getPaymentStatus(): Observable<PaymentStatusResponse> {
-    return this.http.get<PaymentStatusResponse>(`${this.apiUrl}/payments/status`);
+  getPaymentStatus(eventId?: string): Observable<PaymentStatusResponse> {
+    const options = eventId ? { params: new HttpParams().set('eventId', eventId) } : {};
+    return this.http.get<PaymentStatusResponse>(`${this.apiUrl}/payments/status`, options);
   }
 
-  createCheckout(payload: { package: Exclude<PaymentPackage, 'free'>; invitation?: string }): Observable<CheckoutResponse> {
+  createCheckout(payload: { package: Exclude<PaymentPackage, 'free'>; event?: string; billingCycle?: 'monthly' | 'yearly'; invitation?: string }): Observable<CheckoutResponse> {
     return this.http.post<CheckoutResponse>(`${this.apiUrl}/payments/checkout`, payload);
   }
 
   submitRsvp(slug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
     return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/rsvps/public/${slug}`, payload);
+  }
+
+  submitExternalRsvp(portalSlug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
+    return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/rsvps/public-event/${portalSlug}`, payload);
   }
 }

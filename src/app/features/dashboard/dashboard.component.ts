@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { DashboardMetrics, PaymentModel, PlanDefinition } from '../../core/models';
+import { DashboardMetrics, PaymentModel, PlanDefinition, SubscriptionStatus } from '../../core/models';
 
 @Component({ selector: 'app-dashboard', templateUrl: './dashboard.component.html' })
 export class DashboardComponent implements OnInit {
@@ -10,6 +10,9 @@ export class DashboardComponent implements OnInit {
   paymentMessage = '';
   metrics: DashboardMetrics = { events: 0, invitations: 0, guests: 0, confirmed: 0, declined: 0, pending: 0, companions: 0 };
   currentPlan?: PlanDefinition;
+  subscriptionStatus: SubscriptionStatus = 'inactive';
+  subscriptionActive = false;
+  subscriptionCurrentPeriodEnd = '';
   payments: PaymentModel[] = [];
 
   constructor(private api: ApiService, private route: ActivatedRoute) {}
@@ -39,12 +42,18 @@ export class DashboardComponent implements OnInit {
 
   loadPaymentStatus(): void {
     this.api.getPaymentStatus().subscribe({
-      next: ({ planDefinition, payments }) => {
+      next: ({ planDefinition, payments, subscriptionStatus, subscriptionActive, subscriptionCurrentPeriodEnd }) => {
         this.currentPlan = planDefinition;
+        this.subscriptionStatus = subscriptionStatus || 'inactive';
+        this.subscriptionActive = Boolean(subscriptionActive);
+        this.subscriptionCurrentPeriodEnd = subscriptionCurrentPeriodEnd || '';
         this.payments = payments;
       },
       error: () => {
         this.currentPlan = undefined;
+        this.subscriptionStatus = 'inactive';
+        this.subscriptionActive = false;
+        this.subscriptionCurrentPeriodEnd = '';
         this.payments = [];
       }
     });
@@ -56,5 +65,9 @@ export class DashboardComponent implements OnInit {
 
   paymentDate(payment: PaymentModel): string | undefined {
     return payment.paidAt || payment.createdAt;
+  }
+
+  subscriptionEndLabel(): string {
+    return this.subscriptionCurrentPeriodEnd ? new Date(this.subscriptionCurrentPeriodEnd).toLocaleDateString() : '';
   }
 }

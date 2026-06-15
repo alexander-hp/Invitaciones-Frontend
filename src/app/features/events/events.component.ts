@@ -1,7 +1,7 @@
 ﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, EventPayload, EventType } from '../../core/models';
+import { EventMode, EventModel, EventPayload, EventType } from '../../core/models';
 
 @Component({ selector: 'app-events', templateUrl: './events.component.html' })
 export class EventsComponent implements OnInit {
@@ -10,13 +10,16 @@ export class EventsComponent implements OnInit {
   saving = false;
   error = '';
   form = {
+    mode: 'invitation' as EventMode,
     type: 'boda' as EventType,
     title: 'Boda de Alex y Tania',
     hosts: 'Alex, Tania',
     date: '2026-11-21',
     venueName: 'Hacienda Santa Lucia',
     venueAddress: 'Camino Real 120, Guadalajara, Jal.',
-    mapUrl: 'https://maps.google.com'
+    mapUrl: 'https://maps.google.com',
+    externalSiteUrl: '',
+    externalSiteLabel: 'Abrir pagina del evento'
   };
 
   constructor(private api: ApiService, private router: Router) {}
@@ -44,11 +47,14 @@ export class EventsComponent implements OnInit {
     this.saving = true;
     this.error = '';
     const payload: EventPayload = {
+      mode: this.form.mode,
       type: this.form.type,
       title: this.form.title,
       hosts: this.form.hosts.split(',').map((host) => host.trim()).filter(Boolean),
       date: this.form.date,
-      venue: { name: this.form.venueName, address: this.form.venueAddress, mapUrl: this.form.mapUrl }
+      venue: { name: this.form.venueName, address: this.form.venueAddress, mapUrl: this.form.mapUrl },
+      externalSiteUrl: this.form.mode === 'external_dashboard' ? this.form.externalSiteUrl : undefined,
+      externalSiteLabel: this.form.mode === 'external_dashboard' ? this.form.externalSiteLabel : undefined
     };
     this.api.createEvent(payload).subscribe({
       next: ({ event }) => this.router.navigate(['/events', this.getId(event)]),

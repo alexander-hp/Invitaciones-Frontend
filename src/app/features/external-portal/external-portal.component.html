@@ -1,0 +1,71 @@
+<p *ngIf="loading" class="notice">Cargando portal...</p>
+<p *ngIf="error" class="error">{{ error }}</p>
+
+<section *ngIf="event" class="public-page">
+  <div class="public-hero">
+    <p>{{ event.externalPortalSettings?.brandLabel || 'KyndraSoft' }}</p>
+    <h1>{{ event.title }}</h1>
+    <span>{{ event.date | date:'fullDate' }}</span>
+    <p>{{ event.externalPortalSettings?.welcomeMessage || 'Confirma tu asistencia, consulta tu pase y comparte fotos del evento.' }}</p>
+    <div class="inline-actions public-actions">
+      <a *ngIf="event.externalSiteUrl" class="primary" [href]="event.externalSiteUrl" target="_blank" rel="noreferrer">{{ event.externalSiteLabel || 'Abrir pagina del evento' }}</a>
+      <a *ngIf="calendarUrl && event.externalPortalSettings?.calendarEnabled !== false" class="ghost" [href]="calendarUrl" target="_blank" rel="noreferrer">Agregar al calendario</a>
+    </div>
+  </div>
+
+  <div class="public-content">
+    <section *ngIf="event.externalPortalSettings?.showLocation !== false">
+      <h2>Ubicacion</h2>
+      <p>{{ event.venue?.name }}</p>
+      <p>{{ event.venue?.address }}</p>
+      <a *ngIf="event.venue?.mapUrl" class="ghost small" [href]="event.venue?.mapUrl" target="_blank" rel="noreferrer">Abrir mapa</a>
+    </section>
+
+    <form class="rsvp-panel" (ngSubmit)="submit()" *ngIf="event.externalPortalSettings?.rsvpEnabled !== false">
+      <h2>RSVP y pase</h2>
+      <div *ngIf="!verifiedGuest" class="guest-access-box">
+        <p class="muted">Ingresa el email registrado en la lista de invitados.</p>
+        <label>Email invitado<input name="guestAccessEmail" type="email" [(ngModel)]="guestAccessEmail" required></label>
+        <button class="ghost" type="button" (click)="checkGuestAccess()" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : 'Validar invitado' }}</button>
+      </div>
+
+      <ng-container *ngIf="verifiedGuest">
+        <p class="notice">Invitado validado: {{ verifiedGuest.name }}. Acompanantes permitidos: {{ verifiedGuest.allowedCompanions }}.</p>
+        <div class="guest-pass" *ngIf="event.externalPortalSettings?.passEnabled !== false">
+          <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de entrada">
+          <div>
+            <strong>Codigo de entrada: {{ verifiedGuest.checkInCode || verifiedGuest.qrCode || 'Pendiente' }}</strong>
+            <p>{{ verifiedGuest.tableName || 'Mesa pendiente' }} <span *ngIf="verifiedGuest.seatLabel">/ {{ verifiedGuest.seatLabel }}</span></p>
+          </div>
+        </div>
+        <label>Respuesta
+          <select name="response" [(ngModel)]="rsvp.response">
+            <option value="confirmed">Asistire</option>
+            <option value="declined">No asistire</option>
+            <option value="maybe">No estoy seguro</option>
+          </select>
+        </label>
+        <label>Acompanantes<input name="companions" type="number" min="0" [max]="verifiedGuest.allowedCompanions" [(ngModel)]="rsvp.companions"></label>
+        <label class="wide">Nombres de acompanantes<textarea name="companionNamesText" [(ngModel)]="companionNamesText" placeholder="Un nombre por linea"></textarea></label>
+        <label>Preferencia de comida<input name="mealPreference" [(ngModel)]="rsvp.mealPreference"></label>
+        <label class="wide">Mensaje<textarea name="message" [(ngModel)]="rsvp.message"></textarea></label>
+      </ng-container>
+
+      <p *ngIf="success" class="success">{{ success }}</p>
+      <button class="primary" type="submit" [disabled]="sending || !verifiedGuest">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
+    </form>
+  </div>
+
+  <section class="public-media" *ngIf="event.externalPortalSettings?.albumEnabled !== false">
+    <h2>Album privado</h2>
+    <p class="muted">Comparte fotos con los anfitriones. Se publicaran cuando sean aprobadas.</p>
+    <div class="import-row">
+      <label>Subir foto<input type="file" accept="image/*" (change)="selectAlbumFile($event)"></label>
+      <button class="ghost" type="button" (click)="uploadAlbumPhoto()" [disabled]="!selectedAlbumFile || uploadingAlbum">{{ uploadingAlbum ? 'Subiendo...' : 'Enviar foto' }}</button>
+    </div>
+    <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
+    <div class="gallery-grid" *ngIf="albumAssets.length">
+      <img *ngFor="let asset of albumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'" loading="lazy" decoding="async">
+    </div>
+  </section>
+</section>

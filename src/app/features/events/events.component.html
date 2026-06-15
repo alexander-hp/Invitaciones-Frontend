@@ -10,6 +10,12 @@
     <form class="panel" (ngSubmit)="create()">
       <h2>Nuevo evento</h2>
       <div class="form-grid">
+        <label class="wide">Modo
+          <select name="mode" [(ngModel)]="form.mode">
+            <option value="invitation">Invitacion digital completa</option>
+            <option value="external_dashboard">Solo dashboard para evento externo</option>
+          </select>
+        </label>
         <label>Tipo
           <select name="type" [(ngModel)]="form.type">
             <option value="boda">Boda</option>
@@ -26,6 +32,8 @@
         <label>Lugar<input name="venueName" [(ngModel)]="form.venueName"></label>
         <label>Direccion<input name="venueAddress" [(ngModel)]="form.venueAddress"></label>
         <label class="wide">Mapa<input name="mapUrl" [(ngModel)]="form.mapUrl"></label>
+        <label *ngIf="form.mode === 'external_dashboard'" class="wide">URL pagina externa<input name="externalSiteUrl" [(ngModel)]="form.externalSiteUrl" placeholder="https://..."></label>
+        <label *ngIf="form.mode === 'external_dashboard'">Etiqueta externa<input name="externalSiteLabel" [(ngModel)]="form.externalSiteLabel"></label>
       </div>
       <p *ngIf="error" class="error">{{ error }}</p>
       <button class="primary" type="submit" [disabled]="saving">{{ saving ? 'Creando...' : 'Crear evento' }}</button>
@@ -38,7 +46,7 @@
       <div class="item-list">
         <a *ngFor="let event of events" [routerLink]="['/events', getId(event)]">
           <strong>{{ event.title }}</strong>
-          <span>{{ event.type }} Â· {{ event.date | date:'mediumDate' }}</span>
+          <span>{{ event.type }} - {{ event.mode === 'external_dashboard' ? 'Dashboard externo' : 'Invitacion digital' }} - {{ event.date | date:'mediumDate' }}</span>
           <small>{{ event.status }}</small>
         </a>
       </div>

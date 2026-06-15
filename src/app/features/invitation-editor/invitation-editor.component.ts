@@ -82,8 +82,8 @@ export class InvitationEditorComponent implements OnInit {
       next: ({ plans }) => this.plans = plans,
       error: () => this.plans = []
     });
-    this.api.getPaymentStatus().subscribe({
-      next: ({ planDefinition }) => this.currentPlan = planDefinition,
+    this.api.getPaymentStatus(this.getEventId()).subscribe({
+      next: ({ eventPlanDefinition, planDefinition }) => this.currentPlan = eventPlanDefinition || planDefinition,
       error: () => this.currentPlan = undefined
     });
   }
@@ -207,7 +207,7 @@ export class InvitationEditorComponent implements OnInit {
     this.assetUploading = true;
     this.assetMessage = '';
     this.error = '';
-    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder, size: file.size }).subscribe({
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder, event: this.getEventId(), size: file.size }).subscribe({
       next: (upload) => {
         this.api.uploadAsset(upload.uploadUrl, file).subscribe({
           next: () => {
@@ -243,11 +243,11 @@ export class InvitationEditorComponent implements OnInit {
     if (file.size > maxSize) return isMusic ? 'El audio no debe exceder 10MB.' : 'La imagen no debe exceder 5MB.';
     return '';
   }
-  checkout(pack: Exclude<PaymentPackage, 'free'>): void {
-    if (!this.invitation) return;
+  checkout(pack: PaymentPackage): void {
+    if (!this.invitation || pack === 'free') return;
     this.checkoutLoading = pack;
     this.error = '';
-    this.api.createCheckout({ package: pack, invitation: this.getInvitationId(this.invitation) }).subscribe({
+    this.api.createCheckout({ package: pack, event: this.getEventId(), invitation: this.getInvitationId(this.invitation) }).subscribe({
       next: ({ checkoutUrl, manualPayment, message }) => {
         if (checkoutUrl) {
           window.location.href = checkoutUrl;
@@ -275,14 +275,36 @@ export class InvitationEditorComponent implements OnInit {
       limits.music ? 'musica' : 'sin musica',
       limits.premiumTemplates ? 'plantillas premium' : 'plantillas free',
       limits.exportData ? 'exportacion' : 'sin exportacion',
+      limits.whatsappMessaging ? 'WhatsApp individual' : '',
+      limits.whatsappBulk ? 'WhatsApp masivo' : '',
+      limits.checkIn ? 'check-in QR' : '',
+      limits.seating ? 'mesas' : '',
+      limits.guestAlbum ? 'album invitados' : '',
       limits.customDomain ? 'dominio custom' : '',
       limits.whiteLabel ? 'marca blanca' : ''
     ].filter(Boolean);
-    return items.join(' · ');
+    return items.join(' - ');
+  }
+
+  canCheckoutPlan(plan: PlanDefinition): boolean {
+    if (plan.key === 'free') return false;
+    if (this.currentPlan?.key === 'pro') return false;
+    if (plan.key === 'event' && this.currentPlan?.key === 'event') return false;
+    return true;
+  }
+
+  checkoutScopeText(plan: PlanDefinition): string {
+    if (plan.key === 'event') return 'Aplica a este evento completo y a todas sus invitaciones: general, damas, padrinos, familia o cualquier segmento.';
+    if (plan.key === 'pro') return 'Aplica a toda la cuenta y desbloquea funciones Pro para todos tus eventos.';
+    return 'Plan gratuito para pruebas iniciales.';
   }
 
   getInvitationId(invitation: InvitationModel): string {
     return invitation._id || invitation.id || '';
+  }
+
+  getEventId(): string {
+    return this.event?._id || this.event?.id || '';
   }
 
   addItineraryItem(): void {

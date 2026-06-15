@@ -1,4 +1,5 @@
 export type EventType = 'boda' | 'xv' | 'graduacion' | 'cumpleanos' | 'bautizo' | 'otro';
+export type EventMode = 'invitation' | 'external_dashboard';
 export type EventStatus = 'draft' | 'published' | 'archived';
 export type InvitationStatus = 'draft' | 'published' | 'unpublished';
 export type RsvpResponse = 'confirmed' | 'declined' | 'maybe';
@@ -11,6 +12,9 @@ export interface User {
   email: string;
   role: 'client' | 'organizer' | 'admin';
   plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
+  subscriptionPlan?: PaymentPackage;
+  subscriptionStatus?: SubscriptionStatus;
+  subscriptionCurrentPeriodEnd?: string;
 }
 
 export interface AuthResponse {
@@ -61,6 +65,13 @@ export interface InvitationLocation {
 export interface EventModel {
   _id?: string;
   id?: string;
+  mode?: EventMode;
+  externalSiteUrl?: string;
+  externalSiteLabel?: string;
+  externalPortalSlug?: string;
+  externalPortalEnabled?: boolean;
+  externalPortalSettings?: ExternalPortalSettings;
+  externalContent?: ExternalContent;
   type: EventType;
   title: string;
   hosts: string[];
@@ -71,12 +82,21 @@ export interface EventModel {
     mapUrl?: string;
   };
   agenda?: EventAgendaItem[];
+  plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
+  planActivatedAt?: string;
   status: EventStatus;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface EventPayload {
+  mode?: EventMode;
+  externalSiteUrl?: string;
+  externalSiteLabel?: string;
+  externalPortalSlug?: string;
+  externalPortalEnabled?: boolean;
+  externalPortalSettings?: ExternalPortalSettings;
+  externalContent?: ExternalContent;
   type: EventType;
   title: string;
   hosts?: string[];
@@ -88,6 +108,43 @@ export interface EventPayload {
   };
   agenda?: EventAgendaItem[];
   status?: EventStatus;
+}
+
+export interface ExternalPortalSettings {
+  rsvpEnabled?: boolean;
+  albumEnabled?: boolean;
+  passEnabled?: boolean;
+  calendarEnabled?: boolean;
+  showLocation?: boolean;
+  brandLabel?: string;
+  welcomeMessage?: string;
+}
+
+export interface ExternalContent {
+  coverImageUrl?: string;
+  heroImageUrl?: string;
+  gallery?: string[];
+  carousel?: string[];
+  spectacularImages?: string[];
+  musicUrl?: string;
+  audioSections?: Array<{ title?: string; url: string; description?: string }>;
+  locations?: InvitationLocation[];
+  sections?: Array<{
+    key?: string;
+    type?: 'text' | 'image' | 'video' | 'cta' | 'iframe' | 'timeline';
+    title?: string;
+    body?: string;
+    url?: string;
+    imageUrl?: string;
+    roles?: string[];
+    order?: number;
+  }>;
+  rsvpSettings?: RsvpSettings;
+  songRequestSettings?: {
+    enabled?: boolean;
+    maxRequestsPerGuest?: number;
+    allowDedications?: boolean;
+  };
 }
 
 export interface InvitationContent {
@@ -223,6 +280,17 @@ export interface WhatsAppMediaAssetModel {
   createdAt?: string;
 }
 
+export interface WhatsAppMediaInspection {
+  url: string;
+  type: WhatsAppMediaType;
+  mimetype: string;
+  filename: string;
+  size?: number;
+  previewKind: WhatsAppMediaType | 'document';
+  previewUrl: string;
+  warnings: string[];
+}
+
 export interface GuestModel {
   _id?: string;
   id?: string;
@@ -231,6 +299,10 @@ export interface GuestModel {
   email?: string;
   phone?: string;
   group?: string;
+  roles?: string[];
+  tags?: string[];
+  relationshipLabel?: string;
+  visibilityGroup?: string;
   tableName?: string;
   seatLabel?: string;
   companions?: GuestCompanion[];
@@ -260,6 +332,14 @@ export interface WhatsAppStatusResponse {
   fallbackEnabled?: boolean;
   openWaConfigured?: boolean;
   metaConfigured?: boolean;
+  openWaSession?: {
+    configured: boolean;
+    ready: boolean;
+    status: string;
+    phone?: string;
+    pushName?: string;
+    error?: string;
+  };
 }
 
 export interface WhatsAppSendResponse {
@@ -304,6 +384,10 @@ export interface GuestPayload {
   email?: string;
   phone?: string;
   group?: string;
+  roles?: string[];
+  tags?: string[];
+  relationshipLabel?: string;
+  visibilityGroup?: string;
   tableName?: string;
   seatLabel?: string;
   companions?: GuestCompanion[];
@@ -344,6 +428,11 @@ export interface GuestAccessResponse {
     id: string;
     name: string;
     email?: string;
+    group?: string;
+    roles?: string[];
+    tags?: string[];
+    relationshipLabel?: string;
+    visibilityGroup?: string;
     allowedCompanions: number;
     status: GuestStatus;
     checkInCode?: string;
@@ -352,6 +441,22 @@ export interface GuestAccessResponse {
     seatLabel?: string;
     companions?: GuestCompanion[];
   };
+}
+
+export type SongRequestStatus = 'pending' | 'approved' | 'rejected' | 'played';
+
+export interface SongRequestModel {
+  _id?: string;
+  id?: string;
+  event: string;
+  guest?: string | Partial<GuestModel>;
+  requesterName?: string;
+  requesterEmail?: string;
+  title: string;
+  artist?: string;
+  dedication?: string;
+  status: SongRequestStatus;
+  createdAt?: string;
 }
 
 export interface ImportGuestsResponse {
@@ -378,18 +483,33 @@ export interface UploadUrlResponse {
 }
 
 export type AssetFolder = 'covers' | 'gallery' | 'music' | 'assets' | 'whatsapp-media';
-export type PaymentPackage = 'free' | 'event' | 'pro';
+export type PaymentPackage = 'free' | 'event' | 'pro' | 'event_12m' | 'external_dashboard_12m' | 'planner_pro_monthly' | 'planner_pro_yearly';
+export type BillingType = 'free' | 'one_time' | 'subscription';
+export type PlanScope = 'event' | 'account';
+export type SubscriptionStatus = 'inactive' | 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete';
 
 export interface PlanDefinition {
   key: PaymentPackage;
   name: string;
   amount: number;
+  billingType?: BillingType;
+  scope?: PlanScope;
+  billingCycle?: 'monthly' | 'yearly';
+  durationMonths?: number;
+  stripePackage?: string | null;
+  stripePriceEnv?: string | null;
   limits: {
     guests: number;
     galleryImages: number;
     music: boolean;
     premiumTemplates: boolean;
     exportData: boolean;
+    whatsappMessaging: boolean;
+    whatsappBulk: boolean;
+    whatsappMedia: boolean;
+    checkIn: boolean;
+    seating: boolean;
+    guestAlbum: boolean;
     customDomain: boolean;
     whiteLabel: boolean;
   };
@@ -398,23 +518,41 @@ export interface PlanDefinition {
 export interface PaymentModel {
   _id?: string;
   id?: string;
+  event?: string;
+  invitation?: string;
   package: PaymentPackage | 'basic' | 'premium' | 'organizer';
+  billingType?: 'one_time' | 'subscription';
+  scope?: PlanScope;
+  stripeSessionId?: string;
+  stripeEventId?: string;
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   amount?: number;
   currency?: string;
   paidAt?: string;
+  expiresAt?: string;
   createdAt?: string;
 }
 
 export interface PaymentStatusResponse {
   plan: PaymentPackage | 'basic' | 'premium' | 'organizer';
   planDefinition: PlanDefinition;
+  subscriptionPlan?: PaymentPackage;
+  subscriptionStatus?: SubscriptionStatus;
+  subscriptionActive?: boolean;
+  subscriptionCurrentPeriodEnd?: string;
+  eventPlan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
+  eventPlanDefinition?: PlanDefinition;
+  eventPlanActive?: boolean;
+  eventPlanActivatedAt?: string;
+  eventPlanExpiresAt?: string;
+  eventMode?: EventMode;
   payments: PaymentModel[];
 }
 
 export interface CheckoutResponse {
   checkoutUrl: string | null;
   sessionId: string | null;
+  payment?: PaymentModel;
   manualPayment?: boolean;
   message?: string;
 }
@@ -443,6 +581,60 @@ export interface StaffCheckInSession {
   event: Pick<EventModel, 'title' | 'date' | 'venue'>;
   guests: GuestModel[];
   expiresAt: string;
+}
+
+export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops';
+
+export interface EventAccessLinkModel {
+  id?: string;
+  _id?: string;
+  role: EventAccessRole;
+  label?: string;
+  expiresAt: string;
+  revokedAt?: string;
+  lastUsedAt?: string;
+  createdAt?: string;
+  url: string;
+}
+
+export interface EventAccessSession {
+  role: EventAccessRole;
+  permissions: string[];
+  event: Pick<EventModel, 'title' | 'type' | 'date' | 'venue' | 'mode' | 'externalSiteUrl' | 'externalSiteLabel' | 'externalPortalSlug'>;
+  guests: GuestModel[];
+  rsvps: RsvpModel[];
+  tables: EventTableModel[];
+  albumAssets: AlbumAssetModel[];
+  expiresAt: string;
+}
+
+export interface ExternalConfigResponse {
+  event: EventModel & {
+    portalSlug?: string;
+    settings?: ExternalPortalSettings;
+    content?: ExternalContent;
+    features?: Record<string, boolean>;
+  };
+}
+
+export interface ExternalAssetsResponse {
+  type: string;
+  assets: Partial<ExternalContent>;
+}
+
+export interface SongRequestPayload {
+  guest?: string;
+  requesterName?: string;
+  requesterEmail?: string;
+  title: string;
+  artist?: string;
+  dedication?: string;
+}
+
+export interface EmbedManifestResponse {
+  portalSlug: string;
+  widgets: Record<string, string>;
+  snippets: Record<string, string>;
 }
 
 export interface AlbumAssetModel {
