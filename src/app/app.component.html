@@ -1,4 +1,4 @@
-﻿<div class="app-shell">
+<div class="app-shell">
   <header class="app-header">
     <a routerLink="/dashboard" class="brand" aria-label="Invitaciones dashboard">
       <span class="brand-mark">I</span>
@@ -8,6 +8,7 @@
     <nav *ngIf="auth.isAuthenticated" class="main-nav">
       <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
       <a routerLink="/events" routerLinkActive="active">Eventos</a>
+      <a routerLink="/new/dashboard" routerLinkActive="active" style="background:linear-gradient(135deg,#7c5cfc,#a78bfa);color:#fff;border-radius:6px;padding:6px 12px;">✨ Nuevo diseño</a>
     </nav>
 
     <div class="header-actions">

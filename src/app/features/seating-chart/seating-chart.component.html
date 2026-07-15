@@ -1,0 +1,211 @@
+<div class="nw-shell">
+  <aside class="nw-sidebar">
+    <a routerLink="/new/dashboard" class="nw-sidebar-brand">
+      <span class="nw-brand-icon">I</span><span>Invitaciones</span>
+    </a>
+    <span class="nw-sidebar-label">Croquis</span>
+    <nav>
+      <a style="cursor:pointer" (click)="goBack()"><span class="nav-icon">←</span> Volver al evento</a>
+      <a style="cursor:pointer" (click)="openCreateModal()"><span class="nav-icon">➕</span> Nueva mesa</a>
+      <a style="cursor:pointer" (click)="showVenueSettings = !showVenueSettings"><span class="nav-icon">📐</span> Dimensiones</a>
+    </nav>
+    <div *ngIf="showVenueSettings" style="padding: 12px 20px;">
+      <label class="nw-label" style="margin-bottom:10px;">Ancho (px) <input class="nw-input" type="number" [(ngModel)]="venueWidth" min="400" max="4000" (change)="resetView()"></label>
+      <label class="nw-label">Alto (px) <input class="nw-input" type="number" [(ngModel)]="venueHeight" min="400" max="4000" (change)="resetView()"></label>
+    </div>
+    <span class="nw-sidebar-label" *ngIf="selectedTable">Mesa seleccionada</span>
+    <div *ngIf="selectedTable" style="padding: 10px 20px;">
+      <p style="margin:0 0 6px; font-weight:700; font-size:16px;">{{ selectedTable.name }}</p>
+      <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-2);">
+        <span class="nw-pill" [class.danger]="selectedTable.overCapacity" [class.success]="!selectedTable.overCapacity" style="margin-right:6px;">
+          {{ selectedTable.occupied || 0 }}/{{ selectedTable.capacity }}
+        </span>
+        {{ selectedTable.shape }}
+      </p>
+      <div *ngIf="selectedTable.guests?.length" style="margin-top:10px; display:grid; gap:4px;">
+        <div *ngFor="let g of selectedTable.guests" style="display:flex; align-items:center; justify-content:space-between; padding:6px 8px; background:var(--nw-surface-2); border-radius:6px; font-size:13px;">
+          <span>{{ g.name }} <span style="color:var(--nw-text-3)">({{ g.seats }})</span></span>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" style="min-height:24px; padding:0 6px; font-size:11px;" (click)="unassignGuest(g)">✕</button>
+        </div>
+      </div>
+      <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:12px; width:100%;" (click)="deleteTable(selectedTable)">🗑️ Eliminar mesa</button>
+    </div>
+  </aside>
+
+  <main class="nw-main" style="padding:0; display:flex; flex-direction:column; height:100vh;">
+    <div style="padding:16px 20px; border-bottom:1px solid var(--nw-border); display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <h1 style="margin:0; font-size:20px; font-family:var(--nw-font-display);">🪑 Croquis de mesas</h1>
+        <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-3);" *ngIf="event">{{ event.title }} · {{ tables.length }} mesa{{ tables.length !== 1 ? 's' : '' }}</p>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <p *ngIf="message" class="nw-pill success" style="margin:0;">{{ message }}</p>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="zoomOut()" title="Alejar">−</button>
+        <span style="font-size:13px; color:var(--nw-text-3); min-width:40px; text-align:center;">{{ (zoom * 100) | number:'1.0-0' }}%</span>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="zoomIn()" title="Acercar">+</button>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="resetView()" title="Reset">↺</button>
+        <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="openCreateModal()">+ Mesa</button>
+      </div>
+    </div>
+
+    <p *ngIf="loading" class="nw-alert info nw-loading" style="margin:20px;">Cargando croquis...</p>
+    <p *ngIf="error" class="nw-alert error" style="margin:20px;">{{ error }}</p>
+
+    <div class="nw-seating-wrap" *ngIf="!loading" style="flex:1; margin:0; height:auto;">
+      <!-- SVG Canvas -->
+      <div class="nw-canvas-container">
+        <svg #svgCanvas
+          [attr.viewBox]="viewBoxStr"
+          width="100%" height="100%"
+          style="cursor: grab; display: block;"
+          (mousedown)="onSvgMouseDown($event)"
+          (mousemove)="onSvgMouseMove($event)"
+          (mouseup)="onSvgMouseUp()"
+          (mouseleave)="onSvgMouseUp()">
+
+          <!-- Venue background -->
+          <rect class="venue-bg" x="0" y="0" [attr.width]="venueWidth" [attr.height]="venueHeight"
+                fill="var(--nw-surface-2)" rx="8" stroke="var(--nw-border-2)" stroke-width="2"/>
+
+          <!-- Grid dots -->
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <circle cx="20" cy="20" r="1" fill="var(--nw-text-3)" opacity="0.3"/>
+          </pattern>
+          <rect [attr.width]="venueWidth" [attr.height]="venueHeight" fill="url(#grid)"/>
+
+          <!-- Tables -->
+          <g *ngFor="let t of tables" [attr.transform]="'translate(0,0)'"
+             (mousedown)="onTableMouseDown($event, t)"
+             (mouseenter)="hoveredTable = t"
+             (mouseleave)="hoveredTable = undefined"
+             (dragover)="onTableDragOver($event)"
+             (drop)="onTableDrop($event, t)"
+             style="cursor: grab;">
+
+            <!-- Shape -->
+            <ng-container [ngSwitch]="t.shape">
+              <!-- Round -->
+              <ellipse *ngSwitchCase="'round'"
+                [attr.cx]="tableCx(t)" [attr.cy]="tableCy(t)"
+                [attr.rx]="tableRx(t)" [attr.ry]="tableRy(t)"
+                [attr.fill]="tableFill(t)"
+                [attr.stroke]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 'var(--nw-accent)' : tableColor(t)"
+                [attr.stroke-width]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 3 : 2"
+                style="transition: stroke 0.2s;"/>
+
+              <!-- Oval -->
+              <ellipse *ngSwitchCase="'oval'"
+                [attr.cx]="tableCx(t)" [attr.cy]="tableCy(t)"
+                [attr.rx]="tableRx(t)" [attr.ry]="tableRy(t) * 0.65"
+                [attr.fill]="tableFill(t)"
+                [attr.stroke]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 'var(--nw-accent)' : tableColor(t)"
+                [attr.stroke-width]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 3 : 2"/>
+
+              <!-- Rect -->
+              <rect *ngSwitchCase="'rect'"
+                [attr.x]="t.x" [attr.y]="t.y"
+                [attr.width]="t.width" [attr.height]="t.height"
+                rx="6"
+                [attr.fill]="tableFill(t)"
+                [attr.stroke]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 'var(--nw-accent)' : tableColor(t)"
+                [attr.stroke-width]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 3 : 2"/>
+
+              <!-- Square -->
+              <rect *ngSwitchCase="'square'"
+                [attr.x]="t.x" [attr.y]="t.y"
+                [attr.width]="t.width" [attr.height]="t.width"
+                rx="6"
+                [attr.fill]="tableFill(t)"
+                [attr.stroke]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 'var(--nw-accent)' : tableColor(t)"
+                [attr.stroke-width]="selectedTable && getTableId(selectedTable) === getTableId(t) ? 3 : 2"/>
+
+              <!-- Default -->
+              <ellipse *ngSwitchDefault
+                [attr.cx]="tableCx(t)" [attr.cy]="tableCy(t)"
+                [attr.rx]="tableRx(t)" [attr.ry]="tableRy(t)"
+                [attr.fill]="tableFill(t)"
+                [attr.stroke]="tableColor(t)" stroke-width="2"/>
+            </ng-container>
+
+            <!-- Seat circles around table -->
+            <circle *ngFor="let seat of seatPositions(t); let si = index"
+              [attr.cx]="seat.cx" [attr.cy]="seat.cy" r="8"
+              [attr.fill]="si < occupiedSeats(t) ? tableColor(t) : 'var(--nw-surface-3)'"
+              [attr.stroke]="tableColor(t)" stroke-width="1" opacity="0.7"/>
+
+            <!-- Table name -->
+            <text [attr.x]="tableCx(t)" [attr.y]="tableCy(t) - 6"
+              text-anchor="middle" dominant-baseline="middle"
+              [attr.fill]="'var(--nw-text)'" font-size="13" font-weight="700"
+              style="pointer-events: none;">
+              {{ t.name }}
+            </text>
+
+            <!-- Occupancy -->
+            <text [attr.x]="tableCx(t)" [attr.y]="tableCy(t) + 12"
+              text-anchor="middle" dominant-baseline="middle"
+              [attr.fill]="tableColor(t)" font-size="12" font-weight="600"
+              style="pointer-events: none;">
+              {{ t.occupied || 0 }}/{{ t.capacity }}
+            </text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Guest Panel -->
+      <div class="nw-guest-panel">
+        <div class="nw-guest-panel-header">
+          👥 Invitados sin mesa ({{ unassignedGuests.length }})
+        </div>
+        <div class="nw-guest-panel-search">
+          <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar invitado...">
+        </div>
+        <div class="nw-guest-panel-list">
+          <div *ngIf="unassignedGuests.length === 0" style="padding:20px; text-align:center; color:var(--nw-text-3); font-size:13px;">
+            {{ guestSearch ? 'Sin resultados' : 'Todos los invitados tienen mesa asignada' }}
+          </div>
+          <div *ngFor="let g of unassignedGuests"
+            class="nw-guest-chip"
+            draggable="true"
+            (dragstart)="startDragGuest($event, g)"
+            (dragend)="draggedGuest = undefined">
+            <span class="nw-guest-avatar">{{ guestInitials(g.name) }}</span>
+            <div style="display:grid; gap:1px; overflow:hidden;">
+              <span style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ g.name }}</span>
+              <span style="font-size:11px; color:var(--nw-text-3);">{{ g.group || 'Sin grupo' }} · +{{ g.allowedCompanions || 0 }}</span>
+            </div>
+            <span class="nw-pill" [ngClass]="{'success': g.status === 'confirmed', 'warning': g.status === 'pending', 'danger': g.status === 'declined'}" style="margin-left:auto; font-size:10px;">
+              {{ g.status === 'confirmed' ? '✓' : g.status === 'declined' ? '✕' : '…' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Table Modal -->
+    <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="showCreateModal = false">
+      <div class="nw-modal" (click)="$event.stopPropagation()">
+        <h2>Nueva mesa</h2>
+        <p *ngIf="createError" class="nw-alert error" style="margin-bottom:14px;">{{ createError }}</p>
+        <div class="nw-form-grid">
+          <label class="nw-label nw-form-wide">Nombre <input class="nw-input" [(ngModel)]="newTable.name" placeholder="Mesa 1"></label>
+          <label class="nw-label">Capacidad <input class="nw-input" type="number" [(ngModel)]="newTable.capacity" min="1" max="100"></label>
+          <label class="nw-label">
+            Forma
+            <select class="nw-select" [(ngModel)]="newTable.shape">
+              <option *ngFor="let s of shapes" [value]="s.value">{{ s.icon }} {{ s.label }}</option>
+            </select>
+          </label>
+          <label class="nw-label">Ancho (px) <input class="nw-input" type="number" [(ngModel)]="newTable.width" min="40" max="600"></label>
+          <label class="nw-label">Alto (px) <input class="nw-input" type="number" [(ngModel)]="newTable.height" min="40" max="600"></label>
+        </div>
+        <div class="nw-modal-actions">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating" (click)="createTable()">
+            {{ creating ? 'Creando...' : 'Crear mesa' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

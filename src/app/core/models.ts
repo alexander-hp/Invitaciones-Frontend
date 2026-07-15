@@ -567,6 +567,8 @@ export interface CheckoutResponse {
   message?: string;
 }
 
+export type TableShape = 'round' | 'rect' | 'oval' | 'square';
+
 export interface EventTableModel {
   _id?: string;
   id?: string;
@@ -574,6 +576,11 @@ export interface EventTableModel {
   capacity: number;
   notes?: string;
   order?: number;
+  x?: number;
+  y?: number;
+  shape?: TableShape;
+  width?: number;
+  height?: number;
   occupied?: number;
   available?: number;
   overCapacity?: boolean;

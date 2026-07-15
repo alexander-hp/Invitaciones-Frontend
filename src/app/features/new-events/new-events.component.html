@@ -1,0 +1,126 @@
+<div class="nw-shell">
+  <aside class="nw-sidebar">
+    <a routerLink="/new/dashboard" class="nw-sidebar-brand">
+      <span class="nw-brand-icon">I</span><span>Invitaciones</span>
+    </a>
+    <span class="nw-sidebar-label">Principal</span>
+    <nav>
+      <a routerLink="/new/dashboard" routerLinkActive="active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a routerLink="/new/events" routerLinkActive="active"><span class="nav-icon">🎉</span> Eventos</a>
+    </nav>
+    <span class="nw-sidebar-label">Cuenta</span>
+    <nav>
+      <a routerLink="/contact"><span class="nav-icon">✉️</span> Contacto</a>
+      <a routerLink="/dashboard"><span class="nav-icon">↩️</span> Vista clásica</a>
+    </nav>
+  </aside>
+
+  <main class="nw-main">
+    <div class="nw-page-header">
+      <div>
+        <h1>Eventos</h1>
+        <p>Gestiona todos tus eventos y sus invitaciones</p>
+      </div>
+      <button class="nw-btn nw-btn-primary" (click)="showCreateModal = true">+ Nuevo evento</button>
+    </div>
+
+    <p *ngIf="loading" class="nw-alert info nw-loading">Cargando eventos...</p>
+    <p *ngIf="error" class="nw-alert error">{{ error }}</p>
+
+    <!-- Filters -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;" *ngIf="events.length > 0">
+      <select class="nw-select" style="width: auto; min-width: 150px;" [(ngModel)]="filterType">
+        <option value="">Todos los tipos</option>
+        <option value="boda">💍 Boda</option>
+        <option value="xv">👑 XV Años</option>
+        <option value="graduacion">🎓 Graduación</option>
+        <option value="cumpleanos">🎂 Cumpleaños</option>
+        <option value="bautizo">⛪ Bautizo</option>
+        <option value="otro">🎉 Otro</option>
+      </select>
+      <select class="nw-select" style="width: auto; min-width: 150px;" [(ngModel)]="filterStatus">
+        <option value="">Todos los estados</option>
+        <option value="draft">Borrador</option>
+        <option value="published">Publicado</option>
+        <option value="archived">Archivado</option>
+      </select>
+      <span class="nw-pill" style="align-self: center;">{{ filteredEvents.length }} evento{{ filteredEvents.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- Events Grid -->
+    <div *ngIf="!loading && filteredEvents.length === 0 && events.length === 0" class="nw-empty">
+      <span class="empty-icon">🎪</span>
+      <h3>Aún no tienes eventos</h3>
+      <p>Crea tu primer evento para comenzar a gestionar invitados, mesas y RSVP.</p>
+      <button class="nw-btn nw-btn-primary" style="margin-top: 16px;" (click)="showCreateModal = true">Crear evento</button>
+    </div>
+
+    <div *ngIf="!loading && filteredEvents.length === 0 && events.length > 0" class="nw-empty">
+      <h3>Sin resultados</h3>
+      <p>No hay eventos que coincidan con los filtros seleccionados.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;" *ngIf="filteredEvents.length > 0">
+      <div class="nw-event-card" *ngFor="let ev of filteredEvents" (click)="goToEvent(ev)" style="cursor: pointer;">
+        <div class="card-banner">{{ eventTypeIcon(ev.type) }}</div>
+        <div class="card-body">
+          <h4 class="card-title">{{ ev.title }}</h4>
+          <p class="card-meta">
+            {{ eventTypeLabel(ev.type) }} · {{ formatDate(ev.date) }}
+            <span *ngIf="ev.venue?.name"><br>📍 {{ ev.venue.name }}</span>
+          </p>
+          <div class="card-stats">
+            <span class="nw-pill" [class.success]="ev.status === 'published'" [class.warning]="ev.status === 'draft'">
+              {{ ev.status === 'published' ? 'Publicado' : ev.status === 'draft' ? 'Borrador' : 'Archivado' }}
+            </span>
+            <span class="nw-pill danger" *ngIf="isPast(ev)">Pasado</span>
+            <span class="nw-pill accent" *ngIf="ev.mode === 'external_dashboard'">Dashboard externo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="showCreateModal = false">
+      <div class="nw-modal" (click)="$event.stopPropagation()">
+        <h2>Nuevo evento</h2>
+        <p *ngIf="createError" class="nw-alert error" style="margin-bottom: 14px;">{{ createError }}</p>
+        <div class="nw-form-grid">
+          <label class="nw-label nw-form-wide">
+            Título del evento
+            <input class="nw-input" [(ngModel)]="newEvent.title" placeholder="Ej: Boda Ana & Carlos">
+          </label>
+          <label class="nw-label">
+            Tipo
+            <select class="nw-select" [(ngModel)]="newEvent.type">
+              <option value="boda">💍 Boda</option>
+              <option value="xv">👑 XV Años</option>
+              <option value="graduacion">🎓 Graduación</option>
+              <option value="cumpleanos">🎂 Cumpleaños</option>
+              <option value="bautizo">⛪ Bautizo</option>
+              <option value="otro">🎉 Otro</option>
+            </select>
+          </label>
+          <label class="nw-label">
+            Fecha
+            <input class="nw-input" type="date" [(ngModel)]="newEvent.date">
+          </label>
+          <label class="nw-label">
+            Lugar (nombre)
+            <input class="nw-input" [(ngModel)]="newEvent.venueName" placeholder="Salón Versalles">
+          </label>
+          <label class="nw-label">
+            Dirección
+            <input class="nw-input" [(ngModel)]="newEvent.venueAddress" placeholder="Av. Reforma 123">
+          </label>
+        </div>
+        <div class="nw-modal-actions">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating" (click)="createEvent()">
+            {{ creating ? 'Creando...' : 'Crear evento' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

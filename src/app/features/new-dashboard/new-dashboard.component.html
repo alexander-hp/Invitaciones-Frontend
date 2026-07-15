@@ -1,0 +1,128 @@
+<div class="nw-shell">
+  <!-- Sidebar -->
+  <aside class="nw-sidebar">
+    <a routerLink="/new/dashboard" class="nw-sidebar-brand">
+      <span class="nw-brand-icon">I</span>
+      <span>Invitaciones</span>
+    </a>
+
+    <span class="nw-sidebar-label">Principal</span>
+    <nav>
+      <a routerLink="/new/dashboard" routerLinkActive="active">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a routerLink="/new/events" routerLinkActive="active">
+        <span class="nav-icon">🎉</span> Eventos
+      </a>
+    </nav>
+
+    <span class="nw-sidebar-label">Cuenta</span>
+    <nav>
+      <a routerLink="/contact">
+        <span class="nav-icon">✉️</span> Contacto
+      </a>
+      <a routerLink="/dashboard">
+        <span class="nav-icon">↩️</span> Vista clásica
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="nw-main">
+    <div class="nw-page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Resumen general de tus eventos e invitaciones</p>
+      </div>
+      <a routerLink="/new/events" class="nw-btn nw-btn-primary">
+        + Nuevo evento
+      </a>
+    </div>
+
+    <!-- Loading -->
+    <p *ngIf="loading" class="nw-alert info nw-loading">Cargando métricas...</p>
+    <p *ngIf="error" class="nw-alert error">{{ error }}</p>
+
+    <!-- Metrics -->
+    <section class="nw-metrics" *ngIf="!loading">
+      <div class="nw-metric accent">
+        <span class="metric-label">Eventos</span>
+        <span class="metric-value">{{ metrics.events }}</span>
+        <span class="metric-icon">🎉</span>
+      </div>
+      <div class="nw-metric info">
+        <span class="metric-label">Invitados</span>
+        <span class="metric-value">{{ metrics.guests }}</span>
+        <span class="metric-icon">👥</span>
+      </div>
+      <div class="nw-metric success">
+        <span class="metric-label">Confirmados</span>
+        <span class="metric-value">{{ metrics.confirmed }}</span>
+        <span class="metric-icon">✅</span>
+      </div>
+      <div class="nw-metric warning">
+        <span class="metric-label">Pendientes</span>
+        <span class="metric-value">{{ metrics.pending }}</span>
+        <span class="metric-icon">⏳</span>
+      </div>
+      <div class="nw-metric danger">
+        <span class="metric-label">Rechazados</span>
+        <span class="metric-value">{{ metrics.declined }}</span>
+        <span class="metric-icon">❌</span>
+      </div>
+      <div class="nw-metric">
+        <span class="metric-label">Acompañantes</span>
+        <span class="metric-value">{{ metrics.companions }}</span>
+        <span class="metric-icon">👫</span>
+      </div>
+    </section>
+
+    <!-- Confirmation Rate -->
+    <section class="nw-card" style="margin-top: 20px;" *ngIf="!loading && metrics.guests > 0">
+      <div class="nw-card-header">
+        <h3>Tasa de confirmación</h3>
+        <span class="nw-pill accent">{{ confirmRate }}%</span>
+      </div>
+      <div class="nw-progress">
+        <div class="nw-progress-fill" [style.width.%]="confirmRate"></div>
+      </div>
+    </section>
+
+    <!-- Recent Events -->
+    <section style="margin-top: 24px;">
+      <div class="nw-card-header">
+        <h3>Eventos recientes</h3>
+        <a routerLink="/new/events" class="nw-btn nw-btn-ghost nw-btn-sm">Ver todos</a>
+      </div>
+
+      <div *ngIf="events.length === 0 && !loading" class="nw-empty">
+        <span class="empty-icon">🎪</span>
+        <h3>Sin eventos aún</h3>
+        <p>Crea tu primer evento para comenzar a gestionar invitados y mesas.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;" *ngIf="events.length > 0">
+        <div class="nw-event-card" *ngFor="let event of events" (click)="goToEvent(event)" style="cursor: pointer;">
+          <div class="card-banner">{{ eventTypeIcon(event.type) }}</div>
+          <div class="card-body">
+            <h4 class="card-title">{{ event.title }}</h4>
+            <p class="card-meta">
+              {{ formatDate(event.date) }}
+              <span *ngIf="event.venue?.name"> · {{ event.venue.name }}</span>
+            </p>
+            <div class="card-stats">
+              <span class="card-stat">
+                <span class="nw-pill" [class.success]="event.status === 'published'" [class.warning]="event.status === 'draft'">
+                  {{ event.status === 'published' ? 'Publicado' : event.status === 'draft' ? 'Borrador' : 'Archivado' }}
+                </span>
+              </span>
+              <span class="card-stat" *ngIf="isPastEvent(event)">
+                <span class="nw-pill danger">Pasado</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

@@ -1,4 +1,4 @@
-﻿import { NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard';
 import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
@@ -11,6 +11,10 @@ import { ExternalPortalComponent } from './features/external-portal/external-por
 import { ExternalEmbedComponent } from './features/external-embed/external-embed.component';
 import { InvitationEditorComponent } from './features/invitation-editor/invitation-editor.component';
 import { LoginComponent } from './features/login/login.component';
+import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.component';
+import { NewEventsComponent } from './features/new-events/new-events.component';
+import { NewEventDetailComponent } from './features/new-event-detail/new-event-detail.component';
+import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
 import { PublicInvitationComponent } from './features/public-invitation/public-invitation.component';
@@ -32,6 +36,11 @@ const routes: Routes = [
   { path: 'i/:slug', component: PublicInvitationComponent },
   { path: 'e/:portalSlug', component: ExternalPortalComponent },
   { path: 'embed/:portalSlug/:widget', component: ExternalEmbedComponent },
+  // ── New pages ──
+  { path: 'new/dashboard', component: NewDashboardComponent, canActivate: [AuthGuard] },
+  { path: 'new/events', component: NewEventsComponent, canActivate: [AuthGuard] },
+  { path: 'new/events/:id', component: NewEventDetailComponent, canActivate: [AuthGuard] },
+  { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

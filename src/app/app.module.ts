@@ -1,4 +1,4 @@
-﻿import { NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -16,6 +16,10 @@ import { ExternalPortalComponent } from './features/external-portal/external-por
 import { ExternalEmbedComponent } from './features/external-embed/external-embed.component';
 import { InvitationEditorComponent } from './features/invitation-editor/invitation-editor.component';
 import { LoginComponent } from './features/login/login.component';
+import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.component';
+import { NewEventsComponent } from './features/new-events/new-events.component';
+import { NewEventDetailComponent } from './features/new-event-detail/new-event-detail.component';
+import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
 import { PublicInvitationComponent } from './features/public-invitation/public-invitation.component';
@@ -34,6 +38,10 @@ import { RegisterComponent } from './features/register/register.component';
     ExternalPortalComponent,
     InvitationEditorComponent,
     LoginComponent,
+    NewDashboardComponent,
+    NewEventsComponent,
+    NewEventDetailComponent,
+    SeatingChartComponent,
     PasswordResetConfirmComponent,
     PasswordResetComponent,
     PublicInvitationComponent,

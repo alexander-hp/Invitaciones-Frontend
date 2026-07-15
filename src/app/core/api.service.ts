@@ -231,7 +231,7 @@ export class ApiService {
     return this.http.get<{ tables: EventTableModel[] }>(`${this.apiUrl}/events/${eventId}/tables`);
   }
 
-  createTable(eventId: string, payload: { name: string; capacity: number; notes?: string; order?: number }): Observable<{ table: EventTableModel }> {
+  createTable(eventId: string, payload: { name: string; capacity: number; notes?: string; order?: number; x?: number; y?: number; shape?: string; width?: number; height?: number }): Observable<{ table: EventTableModel }> {
     return this.http.post<{ table: EventTableModel }>(`${this.apiUrl}/events/${eventId}/tables`, payload);
   }
 
