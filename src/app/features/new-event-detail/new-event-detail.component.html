@@ -78,6 +78,67 @@
           </div>
         </div>
 
+        <!-- Planes y Pagos (Stripe) -->
+        <div class="nw-card" style="margin-top:16px;">
+          <div class="nw-card-header">
+            <h3>Planes y Pagos</h3>
+            <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
+            <span class="nw-pill warning" *ngIf="!currentPlan">Plan Gratuito</span>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <p *ngIf="eventPlanActive" class="nw-alert success" style="margin-bottom: 12px;">
+              ¡El plan de este evento está activo! Expiración: {{ formatShortDate(eventPlanExpiresAt) }}
+            </p>
+            <p *ngIf="subscriptionActive" class="nw-alert info" style="margin-bottom: 12px;">
+              Tienes una suscripción activa a Planner Pro.
+            </p>
+            <p *ngIf="!eventPlanActive && !subscriptionActive" class="nw-alert warning" style="margin-bottom: 12px; background: rgba(251,191,36,0.06); border: 1px dashed rgba(251,191,36,0.3); color: var(--nw-warning);">
+              Este evento se encuentra en el Plan Gratuito. Elige uno de los siguientes planes premium para desbloquear funciones avanzadas.
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            <!-- Event Plan One-time -->
+            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px; border-color: rgba(255,255,255,0.04);">
+              <strong>Evento Individual</strong>
+              <span style="font-size: 13px; color: var(--nw-text-3);">Pago único por 12 meses</span>
+              <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" 
+                      class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
+                      (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== ''">
+                {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Evento' : 'Activar Evento') }}
+              </button>
+              <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" 
+                      class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
+                      (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading !== ''">
+                {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Dashboard' : 'Activar Dashboard') }}
+              </button>
+            </div>
+
+            <!-- Planner Pro Monthly -->
+            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px; border-color: rgba(255,255,255,0.04);">
+              <strong>Planner Pro (Mensual)</strong>
+              <span style="font-size: 13px; color: var(--nw-text-3);">Acceso ilimitado a todos tus eventos</span>
+              <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
+                      (click)="checkoutPlan('planner_pro_monthly')" 
+                      [disabled]="checkoutLoading !== '' || subscriptionActive">
+                {{ checkoutLoading === 'planner_pro_monthly' ? 'Cargando...' : (subscriptionActive ? 'Suscripción Activa' : 'Activar Planner Pro') }}
+              </button>
+            </div>
+
+            <!-- Planner Pro Yearly -->
+            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px; border-color: rgba(255,255,255,0.04);">
+              <strong>Planner Pro (Anual)</strong>
+              <span style="font-size: 13px; color: var(--nw-text-3);">Acceso anual (ahorra hasta 20%)</span>
+              <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
+                      (click)="checkoutPlan('planner_pro_yearly')" 
+                      [disabled]="checkoutLoading !== '' || subscriptionActive">
+                {{ checkoutLoading === 'planner_pro_yearly' ? 'Cargando...' : (subscriptionActive ? 'Suscripción Activa' : 'Activar Anual') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="nw-card" style="margin-top:16px;" *ngIf="invitations.length > 0">
           <div class="nw-card-header"><h3>Invitaciones</h3></div>
           <div style="display:grid; gap:8px;">

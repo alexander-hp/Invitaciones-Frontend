@@ -23,6 +23,8 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
   error = '';
   message = '';
 
+  Math = Math;
+
   // Canvas state
   viewBox = { x: 0, y: 0, w: 1200, h: 800 };
   zoom = 1;
@@ -36,7 +38,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
 
   // Create modal
   showCreateModal = false;
-  newTable = { name: '', capacity: 8, shape: 'round' as TableShape, width: 120, height: 120 };
+  newTable = { name: '', capacity: 8, shape: 'round' as TableShape, width: 1.2, height: 1.2 };
   creating = false;
   createError = '';
 
@@ -44,9 +46,9 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
   guestSearch = '';
   draggedGuest?: GuestModel;
 
-  // Venue dimensions
-  venueWidth = 1200;
-  venueHeight = 800;
+  // Venue dimensions (in meters)
+  venueWidth = 12;
+  venueHeight = 8;
   showVenueSettings = false;
 
   shapes: { value: TableShape; label: string; icon: string }[] = [
@@ -109,19 +111,41 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     });
   }
 
+  get missingTables(): Array<{ name: string; guests: number; seats: number }> {
+    const tableNames = new Set(this.tables.map(t => t.name.trim().toLowerCase()));
+    const missingMap = new Map<string, { name: string; guests: number; seats: number }>();
+    
+    this.guests.forEach(g => {
+      if (g.tableName && g.tableName.trim()) {
+        const nameTrimmed = g.tableName.trim();
+        const nameLower = nameTrimmed.toLowerCase();
+        if (!tableNames.has(nameLower)) {
+          const current = missingMap.get(nameLower) || { name: nameTrimmed, guests: 0, seats: 0 };
+          current.guests += 1;
+          current.seats += 1 + (g.allowedCompanions || 0);
+          missingMap.set(nameLower, current);
+        }
+      }
+    });
+    
+    return Array.from(missingMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   getTableId(t: EventTableModel): string { return (t as any)._id || (t as any).id || ''; }
   getGuestId(g: GuestModel): string { return (g as any)._id || (g as any).id || ''; }
 
   tableColor(t: EventTableModel): string {
-    if (t.overCapacity) return 'var(--nw-danger)';
-    if ((t.available || 0) <= 0) return 'var(--nw-warning)';
-    return 'var(--nw-success)';
+    const occupied = t.occupied || 0;
+    if (occupied > t.capacity) return 'var(--nw-danger)';    // Red (over capacity)
+    if (occupied === t.capacity) return 'var(--nw-success)'; // Green (full/complete)
+    return 'var(--nw-info)';                                 // Blue (has empty seats / gaps)
   }
 
   tableFill(t: EventTableModel): string {
-    if (t.overCapacity) return 'rgba(248,113,113,.12)';
-    if ((t.available || 0) <= 0) return 'rgba(251,191,36,.12)';
-    return 'rgba(52,211,153,.08)';
+    const occupied = t.occupied || 0;
+    if (occupied > t.capacity) return 'rgba(248,113,113,.15)';    // Translucent Red
+    if (occupied === t.capacity) return 'rgba(52,211,153,.15)';   // Translucent Green
+    return 'rgba(96,165,250,.12)';                                // Translucent Blue
   }
 
   occupancyPercent(t: EventTableModel): number {
@@ -130,7 +154,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
 
   // ── Create Table ──
   openCreateModal(): void {
-    this.newTable = { name: `Mesa ${this.tables.length + 1}`, capacity: 8, shape: 'round', width: 120, height: 120 };
+    this.newTable = { name: `Mesa ${this.tables.length + 1}`, capacity: 8, shape: 'round', width: 1.2, height: 1.2 };
     this.createError = '';
     this.showCreateModal = true;
   }
@@ -148,18 +172,89 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       name: this.newTable.name,
       capacity: this.newTable.capacity,
       shape: this.newTable.shape,
-      width: this.newTable.width,
-      height: this.newTable.height,
+      width: Math.round(this.newTable.width * 100),
+      height: Math.round(this.newTable.height * 100),
       x, y, order: this.tables.length
     }).subscribe({
       next: ({ table }) => {
-        this.tables = [...this.tables, { ...table, x: table.x || x, y: table.y || y, shape: table.shape || this.newTable.shape, width: table.width || this.newTable.width, height: table.height || this.newTable.height, guests: [] }];
+        this.tables = [...this.tables, { 
+          ...table, 
+          x: table.x || x, 
+          y: table.y || y, 
+          shape: table.shape || this.newTable.shape, 
+          width: table.width || Math.round(this.newTable.width * 100), 
+          height: table.height || Math.round(this.newTable.height * 100), 
+          guests: [] 
+        }];
         this.showCreateModal = false;
         this.creating = false;
         this.message = `Mesa "${table.name}" creada`;
         setTimeout(() => this.message = '', 3000);
       },
       error: (err) => { this.createError = err.error?.message || 'Error creando mesa'; this.creating = false; }
+    });
+  }
+
+  createMissingTable(name: string, capacity: number): void {
+    this.creating = true;
+    const x = 80 + (this.tables.length % 5) * 180;
+    const y = 80 + Math.floor(this.tables.length / 5) * 180;
+
+    // Use default capacity of 8, or dynamic capacity if more seats are needed
+    const defaultCapacity = Math.max(8, capacity);
+
+    this.api.createTable(this.eventId, {
+      name: name,
+      capacity: defaultCapacity,
+      shape: 'round',
+      width: 120,
+      height: 120,
+      x, y, order: this.tables.length
+    }).subscribe({
+      next: ({ table }) => {
+        this.tables = [...this.tables, { 
+          ...table, 
+          x: table.x || x, 
+          y: table.y || y, 
+          shape: table.shape || 'round', 
+          width: table.width || 120, 
+          height: table.height || 120, 
+          guests: [] 
+        }];
+        this.creating = false;
+        // Reload to recalculate occupancies and assigned guests lists
+        this.loadTables(this.eventId);
+        this.loadGuests(this.eventId);
+        this.message = `Mesa "${name}" colocada en el croquis`;
+        setTimeout(() => this.message = '', 3000);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error al colocar mesa faltante';
+        this.creating = false;
+      }
+    });
+  }
+
+  updateTableProperties(t: EventTableModel): void {
+    const tableId = this.getTableId(t);
+    if (!this.eventId || !tableId) return;
+    this.api.updateTable(this.eventId, tableId, {
+      name: t.name,
+      capacity: Number(t.capacity),
+      shape: t.shape,
+      width: Number(t.width),
+      height: Number(t.height)
+    } as any).subscribe({
+      next: () => {
+        // Reload to recalculate occupied seats and overCapacity flags
+        this.loadTables(this.eventId);
+        this.loadGuests(this.eventId);
+        this.message = `Mesa "${t.name}" actualizada`;
+        setTimeout(() => this.message = '', 2000);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error al actualizar la mesa';
+      }
     });
   }
 
@@ -210,8 +305,8 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
 
       const table = this.tables.find(t => this.getTableId(t) === this.drag.tableId);
       if (table) {
-        table.x = Math.max(0, Math.min(this.venueWidth - (table.width || 120), this.drag.tableStartX + dx));
-        table.y = Math.max(0, Math.min(this.venueHeight - (table.height || 120), this.drag.tableStartY + dy));
+        table.x = Math.max(0, Math.min((this.venueWidth * 100) - (table.width || 120), this.drag.tableStartX + dx));
+        table.y = Math.max(0, Math.min((this.venueHeight * 100) - (table.height || 120), this.drag.tableStartY + dy));
       }
     } else if (this.isPanning) {
       const dx = (event.clientX - this.panStart.x) / this.zoom;
@@ -256,12 +351,12 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
 
   resetView(): void {
     this.zoom = 1;
-    this.viewBox = { x: 0, y: 0, w: this.venueWidth, h: this.venueHeight };
+    this.viewBox = { x: 0, y: 0, w: this.venueWidth * 100, h: this.venueHeight * 100 };
   }
 
   private updateViewBox(): void {
-    this.viewBox.w = this.venueWidth / this.zoom;
-    this.viewBox.h = this.venueHeight / this.zoom;
+    this.viewBox.w = (this.venueWidth * 100) / this.zoom;
+    this.viewBox.h = (this.venueHeight * 100) / this.zoom;
   }
 
   get viewBoxStr(): string {
@@ -323,14 +418,55 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
   // Generate seat positions around the table
   seatPositions(t: EventTableModel): Array<{ cx: number; cy: number }> {
     const seats: Array<{ cx: number; cy: number }> = [];
-    const cx = this.tableCx(t);
-    const cy = this.tableCy(t);
-    const rx = this.tableRx(t) + 18;
-    const ry = this.tableRy(t) + 18;
     const count = t.capacity;
-    for (let i = 0; i < count; i++) {
-      const angle = (2 * Math.PI * i) / count - Math.PI / 2;
-      seats.push({ cx: cx + rx * Math.cos(angle), cy: cy + ry * Math.sin(angle) });
+    const shape = t.shape || 'round';
+
+    if (shape === 'rect' || shape === 'square') {
+      const x = t.x || 0;
+      const y = t.y || 0;
+      const w = t.width || 120;
+      const h = shape === 'square' ? w : (t.height || 120);
+      const offset = 14; // Distance from table edge to seat center (radius 8 + gap 6)
+
+      // Total perimeter length of the table
+      const L = 2 * w + 2 * h;
+      const step = L / count;
+
+      for (let i = 0; i < count; i++) {
+        // Distribute seats evenly along the perimeter path
+        const d = (i * step) + (step / 2);
+        let cx = 0;
+        let cy = 0;
+
+        if (d <= w) {
+          // Top edge
+          cx = x + d;
+          cy = y - offset;
+        } else if (d <= w + h) {
+          // Right edge
+          cx = x + w + offset;
+          cy = y + (d - w);
+        } else if (d <= 2 * w + h) {
+          // Bottom edge
+          cx = x + w - (d - (w + h));
+          cy = y + h + offset;
+        } else {
+          // Left edge
+          cx = x - offset;
+          cy = y + h - (d - (2 * w + h));
+        }
+        seats.push({ cx, cy });
+      }
+    } else {
+      // Oval, round or default (ellipse distribution)
+      const cx = this.tableCx(t);
+      const cy = this.tableCy(t);
+      const rx = this.tableRx(t) + 18;
+      const ry = t.shape === 'oval' ? (this.tableRy(t) * 0.65) + 18 : this.tableRy(t) + 18;
+      for (let i = 0; i < count; i++) {
+        const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+        seats.push({ cx: cx + rx * Math.cos(angle), cy: cy + ry * Math.sin(angle) });
+      }
     }
     return seats;
   }

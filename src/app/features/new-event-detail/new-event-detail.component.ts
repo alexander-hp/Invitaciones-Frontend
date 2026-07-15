@@ -15,6 +15,12 @@ export class NewEventDetailComponent implements OnInit {
   rsvps: RsvpModel[] = [];
   tables: EventTableModel[] = [];
 
+  checkoutLoading = '';
+  currentPlan?: any;
+  eventPlanActive = false;
+  eventPlanExpiresAt = '';
+  subscriptionActive = false;
+
   loading = true;
   saving = false;
   error = '';
@@ -59,6 +65,7 @@ export class NewEventDetailComponent implements OnInit {
     this.loadGuests(eventId);
     this.api.listRsvps(eventId).subscribe({ next: ({ rsvps }) => this.rsvps = rsvps, error: () => {} });
     this.api.listTables(eventId).subscribe({ next: ({ tables }) => this.tables = tables, error: () => {} });
+    this.loadPaymentStatus(eventId);
   }
 
   private loadGuests(eventId: string): void {
@@ -190,5 +197,42 @@ export class NewEventDetailComponent implements OnInit {
 
   statusLabel(status: string): string {
     return ({ confirmed: 'Confirmado', declined: 'Rechazado', pending: 'Pendiente', maybe: 'Tal vez' } as any)[status] || status;
+  }
+
+  private loadPaymentStatus(eventId: string): void {
+    this.api.getPaymentStatus(eventId).subscribe({
+      next: ({ eventPlanDefinition, planDefinition, eventPlanActive, eventPlanExpiresAt, subscriptionActive }) => {
+        this.currentPlan = eventPlanDefinition || planDefinition;
+        this.eventPlanActive = Boolean(eventPlanActive);
+        this.eventPlanExpiresAt = eventPlanExpiresAt || '';
+        this.subscriptionActive = Boolean(subscriptionActive);
+      },
+      error: () => {
+        this.currentPlan = undefined;
+        this.eventPlanActive = false;
+        this.eventPlanExpiresAt = '';
+        this.subscriptionActive = false;
+      }
+    });
+  }
+
+  checkoutPlan(pack: string): void {
+    if (!this.eventId) return;
+    this.checkoutLoading = pack;
+    this.guestError = '';
+    this.api.createCheckout({ package: pack as any, event: this.eventId }).subscribe({
+      next: ({ checkoutUrl, manualPayment, message }) => {
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+          return;
+        }
+        this.guestMessage = manualPayment ? (message || 'Pago manual registrado como pendiente.') : 'Solicitud de pago registrada.';
+        this.checkoutLoading = '';
+      },
+      error: (error) => {
+        this.guestError = error.error?.message || 'No se pudo iniciar el checkout.';
+        this.checkoutLoading = '';
+      }
+    });
   }
 }
