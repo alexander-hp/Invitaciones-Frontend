@@ -19,6 +19,8 @@ import { PasswordResetConfirmComponent } from './features/password-reset-confirm
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
 import { PublicInvitationComponent } from './features/public-invitation/public-invitation.component';
 import { RegisterComponent } from './features/register/register.component';
+import { NewContactComponent } from './features/new-contact/new-contact.component';
+import { NewPlanComponent } from './features/new-plan/new-plan.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -41,6 +43,8 @@ const routes: Routes = [
   { path: 'new/events', component: NewEventsComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id', component: NewEventDetailComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
+  { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
+  { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

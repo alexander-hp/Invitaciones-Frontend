@@ -1,32 +1,37 @@
-<div class="app-shell">
-  <header class="app-header">
-    <a routerLink="/dashboard" class="brand" aria-label="Invitaciones dashboard">
-      <span class="brand-mark">I</span>
-      <span>Invitaciones</span>
-    </a>
+<ng-container *ngIf="isNewLayout; else classicLayout">
+  <router-outlet></router-outlet>
+</ng-container>
 
-    <nav *ngIf="auth.isAuthenticated" class="main-nav">
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/events" routerLinkActive="active">Eventos</a>
-      <a routerLink="/new/dashboard" routerLinkActive="active" style="background:linear-gradient(135deg,#7c5cfc,#a78bfa);color:#fff;border-radius:6px;padding:6px 12px;margin-right:6px;">✨ Nuevo Dashboard</a>
-      <a routerLink="/new/events" routerLinkActive="active" style="background:linear-gradient(135deg,#7c5cfc,#a78bfa);color:#fff;border-radius:6px;padding:6px 12px;">✨ Nuevos Eventos</a>
-    </nav>
+<ng-template #classicLayout>
+  <div class="app-shell">
+    <header class="app-header">
+      <a routerLink="/dashboard" class="brand" aria-label="Invitaciones dashboard">
+        <span class="brand-mark">I</span>
+        <span>Invitaciones</span>
+      </a>
 
-    <div class="header-actions">
-      <ng-container *ngIf="user$ | async as user; else guestLinks">
-        <span class="user-label">{{ user.name }}</span>
-        <a routerLink="/contact" class="ghost small">Contacto</a>
-        <button type="button" class="ghost small" (click)="logout()">Salir</button>
-      </ng-container>
-      <ng-template #guestLinks>
-        <a routerLink="/contact" class="ghost small">Contacto</a>
-        <a routerLink="/login" class="ghost small">Entrar</a>
-        <a routerLink="/register" class="primary small">Registro</a>
-      </ng-template>
-    </div>
-  </header>
+      <nav *ngIf="auth.isAuthenticated" class="main-nav">
+        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/events" routerLinkActive="active">Eventos</a>
+        <a routerLink="/new/dashboard" routerLinkActive="active" style="background:linear-gradient(135deg,#c09c78,#db8d80);color:#fff;border-radius:6px;padding:6px 12px;">✨ Nuevo Dashboard</a>
+      </nav>
 
-  <main class="app-main">
-    <router-outlet></router-outlet>
-  </main>
-</div>
+      <div class="header-actions">
+        <ng-container *ngIf="user$ | async as user; else guestLinks">
+          <span class="user-label">{{ user.name }}</span>
+          <a routerLink="/contact" class="ghost small">Contacto</a>
+          <button type="button" class="ghost small" (click)="logout()">Salir</button>
+        </ng-container>
+        <ng-template #guestLinks>
+          <a routerLink="/contact" class="ghost small">Contacto</a>
+          <a routerLink="/login" class="ghost small">Entrar</a>
+          <a routerLink="/register" class="primary small">Registro</a>
+        </ng-template>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</ng-template>

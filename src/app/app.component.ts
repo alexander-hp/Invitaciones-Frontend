@@ -1,4 +1,5 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from './core/auth.service';
 
 @Component({
@@ -10,7 +11,7 @@ export class AppComponent implements OnInit {
   title = 'Invitaciones';
   user$ = this.auth.user$;
 
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, public router: Router) {}
 
   ngOnInit(): void {
     this.auth.loadCurrentUser();
@@ -18,5 +19,9 @@ export class AppComponent implements OnInit {
 
   logout(): void {
     this.auth.logout();
+  }
+
+  get isNewLayout(): boolean {
+    return this.router.url.startsWith('/new');
   }
 }

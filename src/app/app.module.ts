@@ -24,6 +24,9 @@ import { PasswordResetConfirmComponent } from './features/password-reset-confirm
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
 import { PublicInvitationComponent } from './features/public-invitation/public-invitation.component';
 import { RegisterComponent } from './features/register/register.component';
+import { NewContactComponent } from './features/new-contact/new-contact.component';
+import { NewSidebarComponent } from './features/new-sidebar/new-sidebar.component';
+import { NewPlanComponent } from './features/new-plan/new-plan.component';
 
 @NgModule({
   declarations: [
@@ -45,7 +48,10 @@ import { RegisterComponent } from './features/register/register.component';
     PasswordResetConfirmComponent,
     PasswordResetComponent,
     PublicInvitationComponent,
-    RegisterComponent
+    RegisterComponent,
+    NewContactComponent,
+    NewSidebarComponent,
+    NewPlanComponent
   ],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true }],
