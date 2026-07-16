@@ -1,23 +1,12 @@
 <div class="nw-shell">
-  <aside class="nw-sidebar">
-    <a routerLink="/new/dashboard" class="nw-sidebar-brand">
-      <span class="nw-brand-icon">I</span><span>Invitaciones</span>
-    </a>
-    <span class="nw-sidebar-label">Principal</span>
-    <nav>
-      <a routerLink="/new/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
-      <a routerLink="/new/events" routerLinkActive="active"><span class="nav-icon">🎉</span> Eventos</a>
-    </nav>
+  <aside class="nw-sidebar" app-new-sidebar>
     <span class="nw-sidebar-label" *ngIf="event">{{ event.title }}</span>
     <nav *ngIf="event">
       <a (click)="activeTab = 'info'" [class.active]="activeTab === 'info'" style="cursor:pointer"><span class="nav-icon">ℹ️</span> Información</a>
       <a (click)="activeTab = 'guests'" [class.active]="activeTab === 'guests'" style="cursor:pointer"><span class="nav-icon">👥</span> Invitados <span class="nw-pill" style="margin-left:auto">{{ guests.length }}</span></a>
       <a (click)="activeTab = 'tables'" [class.active]="activeTab === 'tables'" style="cursor:pointer"><span class="nav-icon">🪑</span> Mesas <span class="nw-pill" style="margin-left:auto">{{ tables.length }}</span></a>
       <a (click)="activeTab = 'rsvps'" [class.active]="activeTab === 'rsvps'" style="cursor:pointer"><span class="nav-icon">💌</span> RSVPs <span class="nw-pill" style="margin-left:auto">{{ rsvps.length }}</span></a>
-    </nav>
-    <span class="nw-sidebar-label">Cuenta</span>
-    <nav>
-      <a routerLink="/dashboard"><span class="nav-icon">↩️</span> Vista clásica</a>
+      <a *ngIf="event.mode === 'external_dashboard'" (click)="activeTab = 'integration'" [class.active]="activeTab === 'integration'" style="cursor:pointer"><span class="nav-icon">🔌</span> Integración</a>
     </nav>
   </aside>
 
@@ -42,9 +31,12 @@
       <!-- Tabs -->
       <div class="nw-tabs">
         <button class="nw-tab" [class.active]="activeTab === 'info'" (click)="activeTab = 'info'">Información</button>
-        <button class="nw-tab" [class.active]="activeTab === 'guests'" (click)="activeTab = 'guests'">Invitados ({{ guests.length }})</button>
-        <button class="nw-tab" [class.active]="activeTab === 'tables'" (click)="activeTab = 'tables'">Mesas ({{ tables.length }})</button>
-        <button class="nw-tab" [class.active]="activeTab === 'rsvps'" (click)="activeTab = 'rsvps'">RSVPs ({{ rsvps.length }})</button>
+        <button class="nw-tab" [class.active]="activeTab === 'guests'" (click)="activeTab = 'guests'">Invitados ({{
+          guests.length }})</button>
+        <button class="nw-tab" [class.active]="activeTab === 'tables'" (click)="activeTab = 'tables'">Mesas ({{
+          tables.length }})</button>
+        <button class="nw-tab" [class.active]="activeTab === 'rsvps'" (click)="activeTab = 'rsvps'">RSVPs ({{
+          rsvps.length }})</button>
       </div>
 
       <!-- TAB: Info -->
@@ -69,12 +61,32 @@
         </div>
 
         <div class="nw-card" style="margin-top:20px;">
-          <div class="nw-card-header"><h3>Detalles del evento</h3></div>
+          <div class="nw-card-header">
+            <h3>Detalles del evento</h3>
+          </div>
           <div class="nw-form-grid" style="gap:16px;">
-            <div><span style="font-size:13px; color:var(--nw-text-3)">Tipo</span><p style="margin:4px 0 0; font-weight:600">{{ eventTypeIcon(event.type) }} {{ event.type }}</p></div>
-            <div><span style="font-size:13px; color:var(--nw-text-3)">Estado</span><p style="margin:4px 0 0"><span class="nw-pill" [class.success]="event.status === 'published'" [class.warning]="event.status === 'draft'">{{ event.status }}</span></p></div>
-            <div *ngIf="event.venue?.name"><span style="font-size:13px; color:var(--nw-text-3)">Lugar</span><p style="margin:4px 0 0; font-weight:600">{{ event.venue.name }}</p></div>
-            <div *ngIf="event.venue?.address"><span style="font-size:13px; color:var(--nw-text-3)">Dirección</span><p style="margin:4px 0 0">{{ event.venue.address }}</p></div>
+            <div><span style="font-size:13px; color:var(--nw-text-3)">Tipo</span>
+              <p style="margin:4px 0 0; font-weight:600">{{ eventTypeIcon(event.type) }} {{ event.type }}</p>
+            </div>
+            <div>
+              <span style="font-size:13px; color:var(--nw-text-3)">Estado</span>
+              <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                <span class="nw-pill" [class.success]="event.status === 'published'" [class.warning]="event.status === 'draft'" [class.danger]="event.status === 'archived'">
+                  {{ event.status === 'published' ? 'Publicado' : (event.status === 'draft' ? 'Borrador' : 'Archivado') }}
+                </span>
+                <select class="nw-select" style="padding: 4px 8px; font-size: 12px; height: 32px; width: auto; min-width: 110px;" [ngModel]="event.status" (ngModelChange)="changeStatus($event)" [disabled]="saving">
+                  <option value="draft">📁 Borrador</option>
+                  <option value="published">🌐 Publicado</option>
+                  <option value="archived">🗄️ Archivado</option>
+                </select>
+              </div>
+            </div>
+            <div *ngIf="event.venue?.name"><span style="font-size:13px; color:var(--nw-text-3)">Lugar</span>
+              <p style="margin:4px 0 0; font-weight:600">{{ event.venue.name }}</p>
+            </div>
+            <div *ngIf="event.venue?.address"><span style="font-size:13px; color:var(--nw-text-3)">Dirección</span>
+              <p style="margin:4px 0 0">{{ event.venue.address }}</p>
+            </div>
           </div>
         </div>
 
@@ -85,7 +97,7 @@
             <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
             <span class="nw-pill warning" *ngIf="!currentPlan">Plan Gratuito</span>
           </div>
-          
+
           <div style="margin-bottom: 16px;">
             <p *ngIf="eventPlanActive" class="nw-alert success" style="margin-bottom: 12px;">
               ¡El plan de este evento está activo! Expiración: {{ formatShortDate(eventPlanExpiresAt) }}
@@ -93,61 +105,70 @@
             <p *ngIf="subscriptionActive" class="nw-alert info" style="margin-bottom: 12px;">
               Tienes una suscripción activa a Planner Pro.
             </p>
-            <p *ngIf="!eventPlanActive && !subscriptionActive" class="nw-alert warning" style="margin-bottom: 12px; background: rgba(251,191,36,0.06); border: 1px dashed rgba(251,191,36,0.3); color: var(--nw-warning);">
-              Este evento se encuentra en el Plan Gratuito. Elige uno de los siguientes planes premium para desbloquear funciones avanzadas.
+            <p *ngIf="!eventPlanActive && !subscriptionActive" class="nw-alert warning"
+              style="margin-bottom: 12px; background: rgba(251,191,36,0.06); border: 1px dashed rgba(251,191,36,0.3); color: var(--nw-warning);">
+              Este evento se encuentra en el Plan Gratuito. Elige uno de los siguientes planes premium para desbloquear
+              funciones avanzadas.
             </p>
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
             <!-- Event Plan One-time -->
-            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px; border-color: rgba(255,255,255,0.04);">
+            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px;">
               <strong>Evento Individual</strong>
               <span style="font-size: 13px; color: var(--nw-text-3);">Pago único por 12 meses</span>
-              <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" 
-                      class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
-                      (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== ''">
-                {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Evento' : 'Activar Evento') }}
+              <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive"
+                class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="checkoutPlan('event_12m')"
+                [disabled]="checkoutLoading !== ''">
+                {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Evento' : 'Activar
+                Evento') }}
               </button>
-              <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" 
-                      class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
-                      (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading !== ''">
-                {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Dashboard' : 'Activar Dashboard') }}
+              <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive"
+                class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="checkoutPlan('external_dashboard_12m')"
+                [disabled]="checkoutLoading !== ''">
+                {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Dashboard'
+                : 'Activar Dashboard') }}
               </button>
             </div>
 
             <!-- Planner Pro Monthly -->
-            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px; border-color: rgba(255,255,255,0.04);">
+            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px;">
               <strong>Planner Pro (Mensual)</strong>
               <span style="font-size: 13px; color: var(--nw-text-3);">Acceso ilimitado a todos tus eventos</span>
-              <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
-                      (click)="checkoutPlan('planner_pro_monthly')" 
-                      [disabled]="checkoutLoading !== '' || subscriptionActive">
-                {{ checkoutLoading === 'planner_pro_monthly' ? 'Cargando...' : (subscriptionActive ? 'Suscripción Activa' : 'Activar Planner Pro') }}
+              <button class="nw-btn nw-btn-primary nw-btn-sm" type="button"
+                (click)="checkoutPlan('planner_pro_monthly')" [disabled]="checkoutLoading !== '' || subscriptionActive">
+                {{ checkoutLoading === 'planner_pro_monthly' ? 'Cargando...' : (subscriptionActive ? 'Suscripción
+                Activa' : 'Activar Planner Pro') }}
               </button>
             </div>
 
             <!-- Planner Pro Yearly -->
-            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px; border-color: rgba(255,255,255,0.04);">
+            <div class="nw-card" style="background: var(--nw-surface-2); padding: 14px; display: grid; gap: 8px;">
               <strong>Planner Pro (Anual)</strong>
               <span style="font-size: 13px; color: var(--nw-text-3);">Acceso anual (ahorra hasta 20%)</span>
-              <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" 
-                      (click)="checkoutPlan('planner_pro_yearly')" 
-                      [disabled]="checkoutLoading !== '' || subscriptionActive">
-                {{ checkoutLoading === 'planner_pro_yearly' ? 'Cargando...' : (subscriptionActive ? 'Suscripción Activa' : 'Activar Anual') }}
+              <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="checkoutPlan('planner_pro_yearly')"
+                [disabled]="checkoutLoading !== '' || subscriptionActive">
+                {{ checkoutLoading === 'planner_pro_yearly' ? 'Cargando...' : (subscriptionActive ? 'Suscripción Activa'
+                : 'Activar Anual') }}
               </button>
             </div>
           </div>
         </div>
 
         <div class="nw-card" style="margin-top:16px;" *ngIf="invitations.length > 0">
-          <div class="nw-card-header"><h3>Invitaciones</h3></div>
+          <div class="nw-card-header">
+            <h3>Invitaciones</h3>
+          </div>
           <div style="display:grid; gap:8px;">
-            <div *ngFor="let inv of invitations" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+            <div *ngFor="let inv of invitations"
+              style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
               <div>
                 <strong>{{ inv.slug }}</strong>
-                <span class="nw-pill" style="margin-left:8px;" [class.success]="inv.status === 'published'" [class.warning]="inv.status === 'draft'">{{ inv.status }}</span>
+                <span class="nw-pill" style="margin-left:8px;" [class.success]="inv.status === 'published'"
+                  [class.warning]="inv.status === 'draft'">{{ inv.status }}</span>
               </div>
-              <a [routerLink]="['/invitations', inv._id || inv.id, 'editor']" class="nw-btn nw-btn-ghost nw-btn-sm">Editar</a>
+              <a [routerLink]="['/invitations', inv._id || inv.id, 'editor']"
+                class="nw-btn nw-btn-ghost nw-btn-sm">Editar</a>
             </div>
           </div>
         </div>
@@ -159,7 +180,8 @@
         <p *ngIf="guestError" class="nw-alert error" style="margin-bottom:14px;">{{ guestError }}</p>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-          <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar por nombre, email, teléfono..." style="max-width:320px;">
+          <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar por nombre, email, teléfono..."
+            style="max-width:320px;">
           <select class="nw-select" [(ngModel)]="guestStatusFilter" style="width:auto; min-width:140px;">
             <option value="">Todos los estados</option>
             <option value="pending">Pendiente</option>
@@ -172,7 +194,8 @@
               📁 Importar
               <input type="file" accept=".csv,.xlsx" (change)="selectImportFile($event)" style="display:none;">
             </label>
-            <button *ngIf="importFile" class="nw-btn nw-btn-primary nw-btn-sm" [disabled]="importing" (click)="importGuests()">
+            <button *ngIf="importFile" class="nw-btn nw-btn-primary nw-btn-sm" [disabled]="importing"
+              (click)="importGuests()">
               {{ importing ? 'Importando...' : 'Subir ' + importFile.name }}
             </button>
           </div>
@@ -213,7 +236,8 @@
                 <td style="color:var(--nw-text-2)">{{ g.email || '—' }}</td>
                 <td style="color:var(--nw-text-2)">{{ g.phone || '—' }}</td>
                 <td><span class="nw-pill" *ngIf="g.group">{{ g.group }}</span></td>
-                <td><span class="nw-pill accent" *ngIf="g.tableName">{{ g.tableName }}</span><span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span></td>
+                <td><span class="nw-pill accent" *ngIf="g.tableName">{{ g.tableName }}</span><span *ngIf="!g.tableName"
+                    style="color:var(--nw-text-3)">—</span></td>
                 <td><span class="nw-pill" [ngClass]="statusPillClass(g.status)">{{ statusLabel(g.status) }}</span></td>
                 <td>{{ g.allowedCompanions || 0 }}</td>
                 <td>
@@ -233,12 +257,18 @@
             <h2>{{ editingGuest ? 'Editar invitado' : 'Nuevo invitado' }}</h2>
             <p *ngIf="guestError" class="nw-alert error" style="margin-bottom:14px;">{{ guestError }}</p>
             <div class="nw-form-grid">
-              <label class="nw-label nw-form-wide">Nombre <input class="nw-input" [(ngModel)]="guestForm.name" placeholder="Nombre completo"></label>
-              <label class="nw-label">Email <input class="nw-input" [(ngModel)]="guestForm.email" placeholder="correo@ejemplo.com"></label>
-              <label class="nw-label">Teléfono <input class="nw-input" [(ngModel)]="guestForm.phone" placeholder="+52 1234567890"></label>
-              <label class="nw-label">Grupo <input class="nw-input" [(ngModel)]="guestForm.group" placeholder="Familia, Amigos..."></label>
-              <label class="nw-label">Mesa <input class="nw-input" [(ngModel)]="guestForm.tableName" placeholder="Mesa 1"></label>
-              <label class="nw-label">Acompañantes <input class="nw-input" type="number" [(ngModel)]="guestForm.allowedCompanions" min="0"></label>
+              <label class="nw-label nw-form-wide">Nombre <input class="nw-input" [(ngModel)]="guestForm.name"
+                  placeholder="Nombre completo"></label>
+              <label class="nw-label">Email <input class="nw-input" [(ngModel)]="guestForm.email"
+                  placeholder="correo@ejemplo.com"></label>
+              <label class="nw-label">Teléfono <input class="nw-input" [(ngModel)]="guestForm.phone"
+                  placeholder="+52 1234567890"></label>
+              <label class="nw-label">Grupo <input class="nw-input" [(ngModel)]="guestForm.group"
+                  placeholder="Familia, Amigos..."></label>
+              <label class="nw-label">Mesa <input class="nw-input" [(ngModel)]="guestForm.tableName"
+                  placeholder="Mesa 1"></label>
+              <label class="nw-label">Acompañantes <input class="nw-input" type="number"
+                  [(ngModel)]="guestForm.allowedCompanions" min="0"></label>
             </div>
             <div class="nw-modal-actions">
               <button class="nw-btn nw-btn-ghost" (click)="showGuestForm = false">Cancelar</button>
@@ -255,7 +285,8 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <div>
             <h3 style="margin:0; color:var(--nw-text)">Organización de mesas</h3>
-            <p style="margin:4px 0 0; font-size:14px; color:var(--nw-text-3)">Arrastra y organiza las mesas en el croquis visual</p>
+            <p style="margin:4px 0 0; font-size:14px; color:var(--nw-text-3)">Arrastra y organiza las mesas en el
+              croquis visual</p>
           </div>
           <button class="nw-btn nw-btn-primary" (click)="goToSeating()">🪑 Abrir croquis interactivo</button>
         </div>
@@ -267,25 +298,33 @@
           <button class="nw-btn nw-btn-primary" style="margin-top:14px;" (click)="goToSeating()">Crear mesas</button>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px;" *ngIf="tables.length > 0">
-          <div class="nw-card" *ngFor="let t of tables" [style.border-left]="'3px solid ' + (t.overCapacity ? 'var(--nw-danger)' : (t.available === 0 ? 'var(--nw-warning)' : 'var(--nw-success)'))">
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px;"
+          *ngIf="tables.length > 0">
+          <div class="nw-card" *ngFor="let t of tables"
+            [style.border-left]="'3px solid ' + (t.overCapacity ? 'var(--nw-danger)' : (t.available === 0 ? 'var(--nw-warning)' : 'var(--nw-success)'))">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
               <strong style="font-size:16px;">{{ t.name }}</strong>
-              <span class="nw-pill" [class.danger]="t.overCapacity" [class.warning]="!t.overCapacity && t.available === 0" [class.success]="!t.overCapacity && (t.available || 0) > 0">
+              <span class="nw-pill" [class.danger]="t.overCapacity"
+                [class.warning]="!t.overCapacity && t.available === 0"
+                [class.success]="!t.overCapacity && (t.available || 0) > 0">
                 {{ t.occupied || 0 }}/{{ t.capacity }}
               </span>
             </div>
             <div class="nw-progress" style="margin-bottom:10px;">
-              <div class="nw-progress-fill" [style.width.%]="Math.min(100, ((t.occupied || 0) / t.capacity) * 100)" [style.background]="t.overCapacity ? 'var(--nw-danger)' : ''"></div>
+              <div class="nw-progress-fill" [style.width.%]="Math.min(100, ((t.occupied || 0) / t.capacity) * 100)"
+                [style.background]="t.overCapacity ? 'var(--nw-danger)' : ''"></div>
             </div>
             <div *ngIf="t.guests?.length" style="display:grid; gap:4px;">
-              <div *ngFor="let g of t.guests" style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0;">
+              <div *ngFor="let g of t.guests"
+                style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0;">
                 <span class="nw-guest-avatar">{{ g.name.charAt(0).toUpperCase() }}</span>
                 <span>{{ g.name }}</span>
-                <span class="nw-pill" style="margin-left:auto; font-size:11px;">{{ g.seats }} lugar{{ g.seats !== 1 ? 'es' : '' }}</span>
+                <span class="nw-pill" style="margin-left:auto; font-size:11px;">{{ g.seats }} lugar{{ g.seats !== 1 ?
+                  'es' : '' }}</span>
               </div>
             </div>
-            <p *ngIf="!t.guests?.length" style="font-size:13px; color:var(--nw-text-3); margin:0;">Sin invitados asignados</p>
+            <p *ngIf="!t.guests?.length" style="font-size:13px; color:var(--nw-text-3); margin:0;">Sin invitados
+              asignados</p>
           </div>
         </div>
       </section>
@@ -314,9 +353,12 @@
               <tr *ngFor="let r of rsvps">
                 <td><strong>{{ r.name }}</strong></td>
                 <td style="color:var(--nw-text-2)">{{ r.email || '—' }}</td>
-                <td><span class="nw-pill" [ngClass]="statusPillClass(r.response)">{{ statusLabel(r.response) }}</span></td>
+                <td><span class="nw-pill" [ngClass]="statusPillClass(r.response)">{{ statusLabel(r.response) }}</span>
+                </td>
                 <td>{{ r.companions || 0 }}</td>
-                <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--nw-text-2)">{{ r.message || '—' }}</td>
+                <td
+                  style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--nw-text-2)">
+                  {{ r.message || '—' }}</td>
                 <td style="color:var(--nw-text-3)">{{ formatShortDate(r.createdAt || '') }}</td>
               </tr>
             </tbody>
