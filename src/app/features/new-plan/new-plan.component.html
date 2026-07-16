@@ -1,0 +1,135 @@
+<div class="nw-shell">
+  <!-- Sidebar -->
+  <aside class="nw-sidebar" app-new-sidebar></aside>
+
+  <!-- Main Content -->
+  <main class="nw-main">
+    <div class="nw-page-header">
+      <div>
+        <h1>Plan y Facturación</h1>
+        <p>Gestiona tu suscripción, revisa tus límites y ve tu historial de pagos.</p>
+      </div>
+    </div>
+
+    <!-- Loading / Error -->
+    <p *ngIf="loading" class="nw-alert info nw-loading">Cargando detalles del plan...</p>
+    <p *ngIf="error" class="nw-alert error">{{ error }}</p>
+
+    <div *ngIf="!loading && currentPlan" style="display: grid; gap: 24px; margin-top: 24px; max-width: 900px;">
+      
+      <!-- Plan Info Card -->
+      <section class="nw-card">
+        <div class="nw-card-header" style="align-items: flex-start; margin-bottom: 24px;">
+          <div>
+            <p style="text-transform: uppercase; font-size: 11px; font-weight: 700; color: var(--nw-accent); margin: 0 0 4px; letter-spacing: 0.05em;">Plan Actual</p>
+            <h2 style="font-size: 26px; font-weight: 800; font-family: var(--nw-font-display); margin: 0;">
+              {{ currentPlan.name }}
+            </h2>
+          </div>
+          <span class="nw-pill accent" style="text-transform: uppercase; font-size: 11px; padding: 6px 14px;">
+            {{ currentPlan.key }}
+          </span>
+        </div>
+
+        <p style="color: var(--nw-text-2); font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+          Este es el plan de tu cuenta. Los cobros específicos de Evento Individual y Dashboard Externo se gestionan de manera independiente dentro del menú de cada evento.
+        </p>
+
+        <!-- Subscription Info Banner -->
+        <div style="background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
+          <span style="font-size: 24px;">🛡️</span>
+          <div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--nw-text);">
+              Estado de suscripción Planner Pro: 
+              <span class="nw-pill" [class.success]="subscriptionActive" [class.danger]="!subscriptionActive" style="margin-left: 6px; text-transform: capitalize;">
+                {{ subscriptionStatus }}
+              </span>
+            </div>
+            <p *ngIf="subscriptionActive && subscriptionEndDateLabel" style="font-size: 12px; color: var(--nw-text-3); margin: 4px 0 0;">
+              Periodo activo hasta el {{ subscriptionEndDateLabel }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Limits Summary -->
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--nw-text); margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Límites de tu cuenta</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px;">
+          <div style="background: var(--nw-surface-2); padding: 12px 16px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3); margin-bottom: 4px;">Invitados</div>
+            <strong style="font-size: 20px; color: var(--nw-text);">{{ currentPlan.limits.guests }}</strong>
+          </div>
+          <div style="background: var(--nw-surface-2); padding: 12px 16px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3); margin-bottom: 4px;">Galería</div>
+            <strong style="font-size: 20px; color: var(--nw-text);">{{ currentPlan.limits.galleryImages }} imágenes</strong>
+          </div>
+          <div style="background: var(--nw-surface-2); padding: 12px 16px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3); margin-bottom: 4px;">Música externa</div>
+            <strong style="font-size: 16px; color: var(--nw-text); display: block; margin-top: 4px;">
+              {{ currentPlan.limits.music ? '✅ Incluida' : '❌ No incluida' }}
+            </strong>
+          </div>
+          <div style="background: var(--nw-surface-2); padding: 12px 16px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3); margin-bottom: 4px;">Plantillas premium</div>
+            <strong style="font-size: 16px; color: var(--nw-text); display: block; margin-top: 4px;">
+              {{ currentPlan.limits.premiumTemplates ? '✅ Incluidas' : '❌ No incluidas' }}
+            </strong>
+          </div>
+        </div>
+
+        <!-- Features Details -->
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--nw-text); margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Características del Plan</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span class="nw-pill" [class.accent]="currentPlan.limits.whatsappMessaging" [style.opacity]="currentPlan.limits.whatsappMessaging ? 1 : 0.4">
+            💬 WhatsApp {{ currentPlan.limits.whatsappMessaging ? '' : '🔒' }}
+          </span>
+          <span class="nw-pill" [class.accent]="currentPlan.limits.whatsappBulk" [style.opacity]="currentPlan.limits.whatsappBulk ? 1 : 0.4">
+            📢 WhatsApp masivo {{ currentPlan.limits.whatsappBulk ? '' : '🔒' }}
+          </span>
+          <span class="nw-pill" [class.accent]="currentPlan.limits.checkIn" [style.opacity]="currentPlan.limits.checkIn ? 1 : 0.4">
+            🎟️ Check-in QR {{ currentPlan.limits.checkIn ? '' : '🔒' }}
+          </span>
+          <span class="nw-pill" [class.accent]="currentPlan.limits.seating" [style.opacity]="currentPlan.limits.seating ? 1 : 0.4">
+            🪑 Mesas/Croquis {{ currentPlan.limits.seating ? '' : '🔒' }}
+          </span>
+          <span class="nw-pill" [class.accent]="currentPlan.limits.guestAlbum" [style.opacity]="currentPlan.limits.guestAlbum ? 1 : 0.4">
+            📸 Álbum de invitados {{ currentPlan.limits.guestAlbum ? '' : '🔒' }}
+          </span>
+          <span class="nw-pill" [class.accent]="currentPlan.limits.exportData" [style.opacity]="currentPlan.limits.exportData ? 1 : 0.4">
+            📥 Exportar CSV {{ currentPlan.limits.exportData ? '' : '🔒' }}
+          </span>
+          <span class="nw-pill" [class.accent]="currentPlan.limits.whiteLabel" [style.opacity]="currentPlan.limits.whiteLabel ? 1 : 0.4">
+            🏷️ Marca blanca {{ currentPlan.limits.whiteLabel ? '' : '🔒' }}
+          </span>
+        </div>
+      </section>
+
+      <!-- Billing History Card -->
+      <section class="nw-card">
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--nw-text); margin: 0 0 16px; font-family: var(--nw-font-display);">
+          Historial de pagos
+        </h3>
+
+        <div *ngIf="payments.length === 0" style="padding: 20px 0; color: var(--nw-text-3); text-align: center; font-size: 14px;">
+          No hay transacciones registradas en tu historial.
+        </div>
+
+        <div *ngIf="payments.length > 0" style="display: grid; gap: 10px;">
+          <div *ngFor="let payment of payments" 
+               style="display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); transition: border-color var(--nw-duration) var(--nw-ease);">
+            <div style="display: grid; gap: 4px;">
+              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text);">{{ payment.package }}</span>
+              <span style="font-size: 11px; color: var(--nw-text-3);">{{ paymentDate(payment) | date:'medium' }}</span>
+            </div>
+            <div style="text-align: right; display: grid; gap: 4px;">
+              <span style="font-size: 15px; font-weight: 700; color: var(--nw-text);">{{ formatAmount(payment) }}</span>
+              <span class="nw-pill success" style="font-size: 10px; padding: 2px 8px; text-transform: uppercase;">
+                {{ payment.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
