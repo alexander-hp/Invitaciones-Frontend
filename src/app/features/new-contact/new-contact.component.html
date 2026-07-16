@@ -1,0 +1,56 @@
+<div class="nw-shell">
+  <!-- Sidebar -->
+  <aside class="nw-sidebar" app-new-sidebar></aside>
+
+  <!-- Main Content -->
+  <main class="nw-main">
+    <div class="nw-page-header">
+      <div>
+        <h1>Contacto</h1>
+        <p>Escríbenos y nos pondremos en contacto contigo lo antes posible.</p>
+      </div>
+    </div>
+
+    <!-- Contact Form Section -->
+    <div style="max-width: 600px; margin-top: 24px;">
+      <form class="nw-card" (ngSubmit)="submit()" style="display: grid; gap: 20px;">
+        <h2
+          style="margin: 0 0 10px; font-size: 20px; font-family: var(--nw-font-display); font-weight: 700; color: var(--nw-text);">
+          Enviar un mensaje
+        </h2>
+
+        <label class="nw-label">
+          Nombre
+          <input class="nw-input" name="name" [(ngModel)]="form.name" minlength="2" required placeholder="Tu nombre">
+        </label>
+
+        <label class="nw-label">
+          Email
+          <input class="nw-input" name="email" type="email" [(ngModel)]="form.email" required
+            placeholder="tu@correo.com">
+        </label>
+
+        <label class="nw-label">
+          Mensaje
+          <textarea class="nw-textarea" name="message" [(ngModel)]="form.message" minlength="10" required
+            placeholder="Escribe tu mensaje aquí..." style="min-height: 120px; resize: vertical;"></textarea>
+        </label>
+
+        <p *ngIf="success" class="nw-pill success"
+          style="padding: 10px 16px; border-radius: var(--nw-radius-sm); font-size: 13px; font-weight: 500; text-align: center; display: block; min-height: auto;">
+          {{ success }}
+        </p>
+        <p *ngIf="error" class="nw-pill danger"
+          style="padding: 10px 16px; border-radius: var(--nw-radius-sm); font-size: 13px; font-weight: 500; text-align: center; display: block; min-height: auto;">
+          {{ error }}
+        </p>
+
+        <button class="nw-btn nw-btn-primary" type="submit"
+          [disabled]="loading || !form.name || !form.email || !form.message"
+          style="justify-content: center; width: 100%;">
+          {{ loading ? 'Enviando...' : 'Enviar mensaje' }}
+        </button>
+      </form>
+    </div>
+  </main>
+</div>
