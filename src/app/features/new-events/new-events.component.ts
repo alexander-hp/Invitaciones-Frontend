@@ -10,14 +10,20 @@ export class NewEventsComponent implements OnInit {
   events: EventModel[] = [];
   filterType = '';
   filterStatus = '';
+  filterSearch = '';
   showCreateModal = false;
 
   newEvent = {
-    title: '',
+    mode: 'invitation',
     type: 'boda' as EventType,
+    title: '',
     date: '',
+    hosts: '',
     venueName: '',
-    venueAddress: ''
+    venueAddress: '',
+    mapUrl: '',
+    externalSiteUrl: '',
+    externalSiteLabel: ''
   };
   creating = false;
   createError = '';
@@ -40,20 +46,49 @@ export class NewEventsComponent implements OnInit {
     return this.events.filter(ev => {
       if (this.filterType && ev.type !== this.filterType) return false;
       if (this.filterStatus && ev.status !== this.filterStatus) return false;
+      if (this.filterSearch) {
+        const query = this.filterSearch.toLowerCase().trim();
+        const titleMatch = ev.title?.toLowerCase().includes(query);
+        const venueNameMatch = ev.venue?.name?.toLowerCase().includes(query);
+        const venueAddressMatch = ev.venue?.address?.toLowerCase().includes(query);
+        const hostsMatch = ev.hosts?.some((h: string) => h.toLowerCase().includes(query));
+        if (!titleMatch && !venueNameMatch && !venueAddressMatch && !hostsMatch) return false;
+      }
       return true;
     });
+  }
+
+  openGoogleMapsSearch(): void {
+    const venue = this.newEvent.venueName || '';
+    const address = this.newEvent.venueAddress || '';
+    const query = encodeURIComponent(`${venue} ${address}`.trim() || 'Salón de eventos');
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   }
 
   createEvent(): void {
     if (!this.newEvent.title || !this.newEvent.date) { this.createError = 'Título y fecha son requeridos'; return; }
     this.creating = true;
     this.createError = '';
-    this.api.createEvent({
-      title: this.newEvent.title,
+    
+    const payload: any = {
+      mode: this.newEvent.mode,
       type: this.newEvent.type,
+      title: this.newEvent.title,
       date: this.newEvent.date,
-      venue: { name: this.newEvent.venueName, address: this.newEvent.venueAddress }
-    }).subscribe({
+      hosts: this.newEvent.hosts ? this.newEvent.hosts.split(',').map(s => s.trim()) : [],
+      venue: { 
+        name: this.newEvent.venueName, 
+        address: this.newEvent.venueAddress,
+        mapUrl: this.newEvent.mapUrl
+      }
+    };
+
+    if (this.newEvent.mode === 'external_dashboard') {
+      payload.externalSiteUrl = this.newEvent.externalSiteUrl || undefined;
+      payload.externalSiteLabel = this.newEvent.externalSiteLabel || undefined;
+    }
+
+    this.api.createEvent(payload).subscribe({
       next: ({ event }) => {
         this.showCreateModal = false;
         this.creating = false;
