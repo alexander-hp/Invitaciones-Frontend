@@ -1,0 +1,48 @@
+<a routerLink="/new/dashboard" class="nw-sidebar-brand">
+  <span class="nw-brand-icon">I</span>
+  <span>Invitaciones</span>
+</a>
+
+<!-- User Profile -->
+<div class="nw-sidebar-user" *ngIf="auth.user$ | async as user">
+  <div class="nw-user-avatar">
+    {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
+  </div>
+  <div class="nw-user-details">
+    <div class="nw-user-name">{{ user.name }}</div>
+    <div class="nw-user-email">{{ user.email }}</div>
+  </div>
+</div>
+
+<span class="nw-sidebar-label">Principal</span>
+<nav>
+  <a routerLink="/new/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+    <span class="nav-icon">📊</span> Dashboard
+  </a>
+  <a routerLink="/new/events" routerLinkActive="active">
+    <span class="nav-icon">🎉</span> Eventos
+  </a>
+</nav>
+
+<!-- Projected content (e.g. event-specific tabs) -->
+<ng-content></ng-content>
+
+<span class="nw-sidebar-label">Cuenta</span>
+<nav>
+  <a routerLink="/new/plan" routerLinkActive="active">
+    <span class="nav-icon">💎</span> Plan actual
+  </a>
+  <a routerLink="/new/contact" routerLinkActive="active">
+    <span class="nav-icon">✉️</span> Contacto
+  </a>
+  <a style="cursor: pointer;" (click)="auth.logout()">
+    <span class="nav-icon">🚪</span> Salir
+  </a>
+</nav>
+
+<span class="nw-sidebar-label">Orígenes</span>
+<nav>
+  <a routerLink="/dashboard">
+    <span class="nav-icon">↩️</span> Vista clásica
+  </a>
+</nav>
