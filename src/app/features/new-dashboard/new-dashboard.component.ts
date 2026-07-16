@@ -7,7 +7,20 @@ import { DashboardMetrics, EventModel } from '../../core/models';
 export class NewDashboardComponent implements OnInit {
   loading = true;
   error = '';
-  metrics: DashboardMetrics = { events: 0, invitations: 0, guests: 0, confirmed: 0, declined: 0, pending: 0, companions: 0 };
+  metrics: DashboardMetrics = {
+    events: 0,
+    invitations: 0,
+    guests: 0,
+    confirmed: 0,
+    declined: 0,
+    pending: 0,
+    companions: 0,
+    emailSent: 0,
+    whatsappSent: 0,
+    opened: 0,
+    failed: 0,
+    checkedIn: 0
+  };
   events: EventModel[] = [];
 
   constructor(private api: ApiService, private router: Router) {}
@@ -34,6 +47,21 @@ export class NewDashboardComponent implements OnInit {
   get confirmRate(): number {
     const total = this.metrics.confirmed + this.metrics.declined + this.metrics.pending;
     return total ? Math.round((this.metrics.confirmed / total) * 100) : 0;
+  }
+
+  get attendanceTotal(): number {
+    return this.metrics.confirmed + this.metrics.companions;
+  }
+
+  get totalSent(): number {
+    return (this.metrics.whatsappSent || 0) + (this.metrics.emailSent || 0);
+  }
+
+  get deliverySuccessRate(): number {
+    const total = this.totalSent;
+    if (!total) return 0;
+    const successful = total - (this.metrics.failed || 0);
+    return Math.round((successful / total) * 100);
   }
 
   eventTypeIcon(type: string): string {

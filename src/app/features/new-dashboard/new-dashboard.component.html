@@ -1,31 +1,6 @@
 <div class="nw-shell">
   <!-- Sidebar -->
-  <aside class="nw-sidebar">
-    <a routerLink="/new/dashboard" class="nw-sidebar-brand">
-      <span class="nw-brand-icon">I</span>
-      <span>Invitaciones</span>
-    </a>
-
-    <span class="nw-sidebar-label">Principal</span>
-    <nav>
-      <a routerLink="/new/dashboard" routerLinkActive="active">
-        <span class="nav-icon">📊</span> Dashboard
-      </a>
-      <a routerLink="/new/events" routerLinkActive="active">
-        <span class="nav-icon">🎉</span> Eventos
-      </a>
-    </nav>
-
-    <span class="nw-sidebar-label">Cuenta</span>
-    <nav>
-      <a routerLink="/contact">
-        <span class="nav-icon">✉️</span> Contacto
-      </a>
-      <a routerLink="/dashboard">
-        <span class="nav-icon">↩️</span> Vista clásica
-      </a>
-    </nav>
-  </aside>
+  <aside class="nw-sidebar" app-new-sidebar></aside>
 
   <!-- Main -->
   <main class="nw-main">
@@ -49,6 +24,11 @@
         <span class="metric-label">Eventos</span>
         <span class="metric-value">{{ metrics.events }}</span>
         <span class="metric-icon">🎉</span>
+      </div>
+      <div class="nw-metric accent">
+        <span class="metric-label">Invitaciones</span>
+        <span class="metric-value">{{ metrics.invitations }}</span>
+        <span class="metric-icon">💌</span>
       </div>
       <div class="nw-metric info">
         <span class="metric-label">Invitados</span>
@@ -75,18 +55,91 @@
         <span class="metric-value">{{ metrics.companions }}</span>
         <span class="metric-icon">👫</span>
       </div>
+      <div class="nw-metric success">
+        <span class="metric-label">WhatsApp enviados</span>
+        <span class="metric-value">{{ metrics.whatsappSent || 0 }}</span>
+        <span class="metric-icon">💬</span>
+      </div>
+      <div class="nw-metric info">
+        <span class="metric-label">Emails enviados</span>
+        <span class="metric-value">{{ metrics.emailSent || 0 }}</span>
+        <span class="metric-icon">✉️</span>
+      </div>
+      <div class="nw-metric info">
+        <span class="metric-label">Vistas / Abiertas</span>
+        <span class="metric-value">{{ metrics.opened || 0 }}</span>
+        <span class="metric-icon">👁️</span>
+      </div>
+      <div class="nw-metric success">
+        <span class="nw-sidebar-label" style="padding:0; margin:0; font-size:11px; color:var(--nw-text-3);">Check-ins QR</span>
+        <span class="metric-value" style="font-family:var(--nw-font-display); font-size:36px; font-weight:800; color:var(--nw-text); line-height:1.1; margin-top: 8px;">{{ metrics.checkedIn || 0 }}</span>
+        <span class="metric-icon">🎟️</span>
+      </div>
+      <div class="nw-metric danger">
+        <span class="metric-label">Entregas fallidas</span>
+        <span class="metric-value">{{ metrics.failed || 0 }}</span>
+        <span class="metric-icon">🚫</span>
+      </div>
     </section>
 
-    <!-- Confirmation Rate -->
-    <section class="nw-card" style="margin-top: 20px;" *ngIf="!loading && metrics.guests > 0">
-      <div class="nw-card-header">
-        <h3>Tasa de confirmación</h3>
-        <span class="nw-pill accent">{{ confirmRate }}%</span>
-      </div>
-      <div class="nw-progress">
-        <div class="nw-progress-fill" [style.width.%]="confirmRate"></div>
-      </div>
-    </section>
+    <!-- Additional Stats & Utilities Section -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;" *ngIf="!loading && metrics.guests > 0">
+      
+      <!-- Confirmation Rate -->
+      <section class="nw-card" style="display: flex; flex-direction: column;">
+        <div class="nw-card-header">
+          <h3>Tasa de confirmación</h3>
+          <span class="nw-pill accent">{{ confirmRate }}%</span>
+        </div>
+        <p style="font-size: 13px; color: var(--nw-text-2); margin: -10px 0 16px;">
+          Proporción de invitados que han aceptado la invitación sobre el total.
+        </p>
+        <div class="nw-progress" style="margin-top: auto;">
+          <div class="nw-progress-fill" [style.width.%]="confirmRate"></div>
+        </div>
+      </section>
+
+      <!-- Message Delivery Health -->
+      <section class="nw-card" style="display: flex; flex-direction: column;">
+        <div class="nw-card-header">
+          <h3>Efectividad de envío</h3>
+          <span class="nw-pill success" *ngIf="deliverySuccessRate >= 80">{{ deliverySuccessRate }}%</span>
+          <span class="nw-pill warning" *ngIf="deliverySuccessRate < 80">{{ deliverySuccessRate }}%</span>
+        </div>
+        <p style="font-size: 13px; color: var(--nw-text-2); margin: -10px 0 16px;">
+          Porcentaje de mensajes de WhatsApp y correo entregados con éxito.
+        </p>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--nw-text-3); margin-bottom: 8px; margin-top: auto;">
+          <span>Enviados: {{ totalSent }}</span>
+          <span>Fallidos: {{ metrics.failed || 0 }}</span>
+        </div>
+        <div class="nw-progress">
+          <div class="nw-progress-fill" [style.width.%]="deliverySuccessRate" [style.background]="deliverySuccessRate < 80 ? 'var(--nw-warning)' : 'var(--nw-success)'"></div>
+        </div>
+      </section>
+
+      <!-- Attendance Summary -->
+      <section class="nw-card" style="display: flex; flex-direction: column;">
+        <div class="nw-card-header">
+          <h3>Asistencia estimada</h3>
+          <span class="nw-pill info">{{ attendanceTotal }} personas</span>
+        </div>
+        <p style="font-size: 13px; color: var(--nw-text-2); margin: -10px 0 16px;">
+          Total proyectado sumando invitados confirmados y acompañantes.
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-top: auto;">
+          <div style="background: var(--nw-surface-2); padding: 8px 12px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+            <div style="color: var(--nw-text-3); font-size: 10px; font-weight: 700; text-transform: uppercase;">Invitados</div>
+            <strong style="font-size: 16px; color: var(--nw-text);">{{ metrics.confirmed }}</strong>
+          </div>
+          <div style="background: var(--nw-surface-2); padding: 8px 12px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+            <div style="color: var(--nw-text-3); font-size: 10px; font-weight: 700; text-transform: uppercase;">Acompañantes</div>
+            <strong style="font-size: 16px; color: var(--nw-text);">{{ metrics.companions }}</strong>
+          </div>
+        </div>
+      </section>
+
+    </div>
 
     <!-- Recent Events -->
     <section style="margin-top: 24px;">
@@ -101,7 +154,8 @@
         <p>Crea tu primer evento para comenzar a gestionar invitados y mesas.</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;" *ngIf="events.length > 0">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;"
+        *ngIf="events.length > 0">
         <div class="nw-event-card" *ngFor="let event of events" (click)="goToEvent(event)" style="cursor: pointer;">
           <div class="card-banner">{{ eventTypeIcon(event.type) }}</div>
           <div class="card-body">
@@ -112,7 +166,8 @@
             </p>
             <div class="card-stats">
               <span class="card-stat">
-                <span class="nw-pill" [class.success]="event.status === 'published'" [class.warning]="event.status === 'draft'">
+                <span class="nw-pill" [class.success]="event.status === 'published'"
+                  [class.warning]="event.status === 'draft'">
                   {{ event.status === 'published' ? 'Publicado' : event.status === 'draft' ? 'Borrador' : 'Archivado' }}
                 </span>
               </span>
