@@ -279,6 +279,10 @@ export class ApiService {
     return this.http.post<{ invitation: InvitationModel; publicUrl: string }>(`${this.apiUrl}/invitations/${id}/publish`, {});
   }
 
+  deleteInvitation(id: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/${id}`);
+  }
+
   getPublicInvitation(slug: string): Observable<{ invitation: InvitationModel }> {
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`);
   }

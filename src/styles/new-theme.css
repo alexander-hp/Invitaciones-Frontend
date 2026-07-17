@@ -624,6 +624,8 @@
   border-radius: var(--nw-radius-lg);
   padding: 32px;
   width: min(540px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--nw-shadow-lg);
   animation: nw-slideUp 0.25s var(--nw-ease);
 }

@@ -10,6 +10,7 @@ import { EventAccessComponent } from './features/event-access/event-access.compo
 import { ExternalPortalComponent } from './features/external-portal/external-portal.component';
 import { ExternalEmbedComponent } from './features/external-embed/external-embed.component';
 import { InvitationEditorComponent } from './features/invitation-editor/invitation-editor.component';
+import { NewInvitationEditorComponent } from './features/new-invitation-editor/new-invitation-editor.component';
 import { LoginComponent } from './features/login/login.component';
 import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.component';
 import { NewEventsComponent } from './features/new-events/new-events.component';
@@ -21,6 +22,8 @@ import { PublicInvitationComponent } from './features/public-invitation/public-i
 import { RegisterComponent } from './features/register/register.component';
 import { NewContactComponent } from './features/new-contact/new-contact.component';
 import { NewPlanComponent } from './features/new-plan/new-plan.component';
+import { NewEventAccessComponent } from './features/new-event-access/new-event-access.component';
+import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -45,6 +48,9 @@ const routes: Routes = [
   { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
+  { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
+  { path: 'new/external-access/:token', component: NewEventAccessComponent },
+  { path: 'new/check-in/:token', component: NewCheckInStaffComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
