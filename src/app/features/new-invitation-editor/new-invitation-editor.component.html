@@ -1,0 +1,427 @@
+<div class="nw-shell">
+  <aside class="nw-sidebar" app-new-sidebar></aside>
+
+  <main class="nw-main">
+    <p *ngIf="loading" class="nw-alert info nw-loading">Cargando invitación...</p>
+    <p *ngIf="error" class="nw-alert error">{{ error }}</p>
+    <p *ngIf="message" class="nw-alert success">{{ message }}</p>
+    <p *ngIf="assetMessage" class="nw-alert success">{{ assetMessage }}</p>
+
+    <ng-container *ngIf="invitation">
+      <!-- Header -->
+      <div class="nw-page-header">
+        <div>
+          <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-3)">
+            <a (click)="goBackToEvent()" style="color:var(--nw-accent-2); text-decoration:none; cursor:pointer">← Evento</a>
+          </p>
+          <h1>✏️ {{ invitation.content.headline || invitation.slug }}</h1>
+          <p>
+            <span class="nw-pill" [class.success]="invitation.status === 'published'" [class.warning]="invitation.status === 'draft'">
+              {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
+            </span>
+            <a [href]="publicUrl" target="_blank" style="margin-left:8px; color:var(--nw-accent-2); font-size:13px;">{{ publicUrl }}</a>
+          </p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="nw-btn nw-btn-ghost" (click)="save()" [disabled]="saving">{{ saving ? 'Guardando...' : '💾 Guardar' }}</button>
+          <button class="nw-btn nw-btn-primary" (click)="publish()" [disabled]="publishing">{{ publishing ? 'Publicando...' : '🌐 Publicar' }}</button>
+          <a class="nw-btn nw-btn-ghost" [routerLink]="['/i', invitation.slug]" target="_blank">👁️ Ver pública</a>
+        </div>
+      </div>
+
+      <!-- ═══════════ 1. CONTENIDO ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>📝 Contenido</h3></div>
+        <div class="nw-form-grid" style="gap:16px;">
+          <label class="nw-label nw-form-wide">Slug (URL)
+            <input class="nw-input" [(ngModel)]="invitation.slug" required placeholder="mi-boda">
+          </label>
+          <label class="nw-label">Acceso RSVP
+            <select class="nw-select" [(ngModel)]="invitation.accessMode">
+              <option value="guest_list">Lista cerrada: solo invitados registrados</option>
+              <option value="open">Abierta: cualquiera con el link</option>
+            </select>
+          </label>
+          <label class="nw-label">Titular
+            <input class="nw-input" [(ngModel)]="invitation.content.headline" placeholder="Boda Ana & Carlos">
+          </label>
+          <label class="nw-label">Subtítulo
+            <input class="nw-input" [(ngModel)]="invitation.content.subheadline" placeholder="Nos encantaría que nos acompañes">
+          </label>
+          <label class="nw-label nw-form-wide">Mensaje
+            <textarea class="nw-input" [(ngModel)]="invitation.content.message" rows="3" placeholder="Confirma tu asistencia..."></textarea>
+          </label>
+          <label class="nw-label">Dress code
+            <input class="nw-input" [(ngModel)]="invitation.content.dressCode" placeholder="Formal / Casual elegante">
+          </label>
+          <label class="nw-label">Logo anfitrión
+            <input class="nw-input" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png">
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px; padding-top:24px;">
+            <input type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()"> Ocultar marca KyndraSoft
+          </label>
+        </div>
+        <p *ngIf="invitation.accessMode === 'guest_list'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
+        <p *ngIf="invitation.accessMode === 'open'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
+        <p *ngIf="!canUseWhiteLabel()" style="font-size:13px; color:var(--nw-warning); margin:8px 0 0;">Marca blanca requiere plan Pro.</p>
+
+        <!-- Variantes de texto -->
+        <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
+          <span style="font-size:13px; color:var(--nw-text-3); align-self:center;">Variantes rápidas:</span>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyTextVariant('formal')">Texto formal</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyTextVariant('warm')">Texto cálido</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyTextVariant('brief')">Texto breve</button>
+        </div>
+      </div>
+
+      <!-- ═══════════ 2. ESTILO ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>🎨 Estilo y colores</h3></div>
+        <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.content.palette as palette">
+          <label class="nw-label">Color principal
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input class="nw-input" [(ngModel)]="palette.primary" style="flex:1;">
+              <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);" [style.background]="palette.primary"></span>
+            </div>
+          </label>
+          <label class="nw-label">Color fondo
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input class="nw-input" [(ngModel)]="palette.secondary" style="flex:1;">
+              <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);" [style.background]="palette.secondary"></span>
+            </div>
+          </label>
+          <label class="nw-label">Color acento
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input class="nw-input" [(ngModel)]="palette.accent" style="flex:1;">
+              <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);" [style.background]="palette.accent"></span>
+            </div>
+          </label>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+          <button *ngFor="let preset of palettePresets" class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyPalette(preset)" style="display:flex; align-items:center; gap:6px;">
+            <span style="display:flex; gap:2px;">
+              <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.primary"></span>
+              <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.secondary"></span>
+              <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.accent"></span>
+            </span>
+            {{ preset.name }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════ 3. ITINERARIO ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header">
+          <h3>🕐 Itinerario</h3>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addItineraryItem()">+ Agregar horario</button>
+        </div>
+        <p *ngIf="!invitation.content.itinerary?.length" style="font-size:14px; color:var(--nw-text-3);">Sin horarios configurados. Agrega momentos del evento.</p>
+        <div style="display:grid; gap:12px;">
+          <div *ngFor="let item of invitation.content.itinerary; let i = index" style="display:flex; gap:10px; align-items:flex-start; padding:12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+            <div style="flex:1; display:grid; grid-template-columns:100px 1fr; gap:8px;">
+              <input class="nw-input" [(ngModel)]="item.time" placeholder="18:00">
+              <input class="nw-input" [(ngModel)]="item.title" placeholder="Ceremonia">
+              <input class="nw-input" [(ngModel)]="item.description" placeholder="Jardín principal" style="grid-column:span 2;">
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem(i, -1)" [disabled]="i === 0">↑</button>
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem(i, 1)" [disabled]="i === invitation.content.itinerary!.length - 1">↓</button>
+              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeItineraryItem(i)">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 4. UBICACIONES ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header">
+          <h3>📍 Ubicaciones</h3>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLocation()">+ Agregar ubicación</button>
+        </div>
+        <p *ngIf="!invitation.content.locations?.length" style="font-size:14px; color:var(--nw-text-3);">Sin ubicaciones configuradas.</p>
+        <div style="display:grid; gap:12px;">
+          <div *ngFor="let location of invitation.content.locations; let i = index" style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+            <div class="nw-form-grid" style="gap:10px;">
+              <label class="nw-label">Tipo <input class="nw-input" [(ngModel)]="location.type" placeholder="Iglesia, recepción, hotel"></label>
+              <label class="nw-label">Nombre <input class="nw-input" [(ngModel)]="location.name" placeholder="Parroquia / Salón"></label>
+              <label class="nw-label nw-form-wide">Dirección <input class="nw-input" [(ngModel)]="location.address"></label>
+              <label class="nw-label">Google Maps <input class="nw-input" [(ngModel)]="location.mapUrl" placeholder="https://maps.google.com/..."></label>
+              <label class="nw-label">Waze <input class="nw-input" [(ngModel)]="location.wazeUrl" placeholder="https://waze.com/..."></label>
+              <label class="nw-label nw-form-wide">Notas <input class="nw-input" [(ngModel)]="location.notes" placeholder="Entrada por avenida principal"></label>
+            </div>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLocation(i)" style="margin-top:8px;">Quitar ubicación</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 5. RSVP ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>💌 Reglas RSVP</h3></div>
+        <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.rsvpSettings as rsvpSettings">
+          <label class="nw-label">Fecha límite RSVP
+            <input class="nw-input" type="datetime-local" [(ngModel)]="rsvpSettings.deadline">
+          </label>
+          <label class="nw-label">Días antes para recordatorio
+            <input class="nw-input" type="number" min="0" max="60" [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline">
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px; padding-top:24px;">
+            <input type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe"> Permitir "No estoy seguro"
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px; padding-top:24px;">
+            <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline"> Permitir cambios hasta la fecha límite
+          </label>
+          <label class="nw-label nw-form-wide" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation"> Pedir confirmación extra cuando alguien diga que no asistirá
+          </label>
+          <label class="nw-label nw-form-wide">Preguntas personalizadas
+            <textarea class="nw-input" rows="3" [(ngModel)]="customQuestionsText" placeholder="Canción que quieres escuchar | text |&#10;Menú | select | required | Pollo;Vegetariano"></textarea>
+            <span style="font-size:11px; color:var(--nw-text-3); margin-top:4px; display:block;">Formato: Pregunta | tipo (text/textarea/select/boolean) | required | Opción1;Opción2</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ═══════════ 6. REGALOS & SOBRE DIGITAL ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header">
+          <h3>🎁 Regalos y Sobre Digital</h3>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addGiftRegistryItem()">+ Agregar mesa de regalos</button>
+        </div>
+        <div class="nw-form-grid" style="gap:12px; margin-bottom:16px;" *ngIf="invitation.content.giftSettings as giftSettings">
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="giftSettings.enabled"> Mostrar sección de regalos
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="giftSettings.showRegistry"> Mostrar mesa de regalos
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="giftSettings.showEnvelope"> Mostrar sobre digital
+          </label>
+          <label class="nw-label nw-form-wide">Texto introductorio
+            <textarea class="nw-input" rows="2" [(ngModel)]="giftSettings.introText" placeholder="Tu presencia es el mejor regalo..."></textarea>
+          </label>
+        </div>
+
+        <!-- Gift Registry Items -->
+        <div style="display:grid; gap:12px; margin-bottom:16px;">
+          <div *ngFor="let gift of invitation.content.giftRegistry; let i = index" style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+            <div class="nw-form-grid" style="gap:10px;">
+              <label class="nw-label">Tienda <input class="nw-input" [(ngModel)]="gift.store" placeholder="Liverpool"></label>
+              <label class="nw-label">Título <input class="nw-input" [(ngModel)]="gift.title" placeholder="Mesa de regalos"></label>
+              <label class="nw-label nw-form-wide">URL <input class="nw-input" [(ngModel)]="gift.url" placeholder="https://..."></label>
+              <label class="nw-label nw-form-wide">Imagen/logo <input class="nw-input" [(ngModel)]="gift.imageUrl" placeholder="https://.../logo.png"></label>
+              <label class="nw-label nw-form-wide">Nota <input class="nw-input" [(ngModel)]="gift.note"></label>
+              <label class="nw-label">Prioridad <input class="nw-input" type="number" [(ngModel)]="gift.priority"></label>
+            </div>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGiftRegistryItem(i)" style="margin-top:8px;">Quitar mesa</button>
+          </div>
+        </div>
+
+        <!-- Sobre Digital -->
+        <div *ngIf="invitation.content.digitalEnvelope as envelope" style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+          <strong style="display:block; margin-bottom:10px;">💳 Datos bancarios (sobre digital)</strong>
+          <div class="nw-form-grid" style="gap:10px;">
+            <label class="nw-label">Banco <input class="nw-input" [(ngModel)]="envelope.bank"></label>
+            <label class="nw-label">Titular <input class="nw-input" [(ngModel)]="envelope.holder"></label>
+            <label class="nw-label">Cuenta <input class="nw-input" [(ngModel)]="envelope.account"></label>
+            <label class="nw-label">CLABE <input class="nw-input" [(ngModel)]="envelope.clabe"></label>
+            <label class="nw-label nw-form-wide">QR / imagen <input class="nw-input" [(ngModel)]="envelope.qrImageUrl" placeholder="https://.../qr.png"></label>
+            <label class="nw-label nw-form-wide">Nota <textarea class="nw-input" rows="2" [(ngModel)]="envelope.note"></textarea></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 7. DEDICATORIAS ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>💬 Dedicatorias</h3></div>
+        <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.dedicationSettings as dedicationSettings">
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="dedicationSettings.enabled"> Permitir dedicatorias
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="dedicationSettings.requireApproval"> Requerir aprobación
+          </label>
+          <label class="nw-label nw-form-wide">Texto introductorio
+            <textarea class="nw-input" rows="2" [(ngModel)]="dedicationSettings.introText" placeholder="Deja un mensaje para los anfitriones."></textarea>
+          </label>
+        </div>
+      </div>
+
+      <!-- ═══════════ 8. ÁLBUM DE INVITADOS ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header">
+          <h3>📸 Álbum de invitados</h3>
+          <span class="nw-pill" [class.success]="invitation.content.privateAlbumEnabled" [class.warning]="!invitation.content.privateAlbumEnabled">
+            {{ invitation.content.privateAlbumEnabled ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Permite que los invitados suban fotos desde su invitación. Las fotos aparecerán en el tab de Álbum del evento para revisión.</p>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px; margin:0;">
+            <input type="checkbox" [checked]="invitation.content.privateAlbumEnabled" (change)="togglePrivateAlbum()"> Habilitar álbum de invitados
+          </label>
+        </div>
+        <div *ngIf="invitation.content.privateAlbumEnabled">
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+              📁 Subir imagen al álbum
+              <input type="file" accept="image/*" (change)="selectAsset($event, 'assets')" [disabled]="assetUploading" style="display:none;">
+            </label>
+            <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo...</span>
+          </div>
+          <div *ngIf="invitation.content.privateAlbum?.length" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
+            <div *ngFor="let url of invitation.content.privateAlbum; let i = index" style="position:relative;">
+              <img [src]="url" alt="Foto álbum" loading="lazy" decoding="async" style="width:100%; height:100px; object-fit:cover; border-radius:var(--nw-radius-sm);">
+              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removePrivateAlbumImage(i)" style="position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px;">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 9. HOSPEDAJE ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>🏨 Hospedaje</h3></div>
+        <label class="nw-label nw-form-wide">Opciones de hospedaje
+          <textarea class="nw-input" rows="3" [(ngModel)]="lodgingText" placeholder="Hotel Centro | Tarifa preferente | https://...&#10;Hotel Sur | Convenio especial | https://..."></textarea>
+          <span style="font-size:11px; color:var(--nw-text-3); margin-top:4px; display:block;">Formato: Nombre | Descripción | URL (un hotel por línea)</span>
+        </label>
+      </div>
+
+      <!-- ═══════════ 10. ASSETS ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>🖼️ Assets (Portada, Música, Galería)</h3></div>
+
+        <!-- Portada -->
+        <div style="margin-bottom:16px;">
+          <strong style="font-size:14px; display:block; margin-bottom:8px;">Portada</strong>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+              📁 Subir portada
+              <input type="file" accept="image/*" (change)="selectAsset($event, 'covers')" [disabled]="assetUploading" style="display:none;">
+            </label>
+            <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo...</span>
+          </div>
+          <div *ngIf="invitation.content.coverImageUrl" style="margin-top:10px; position:relative; display:inline-block;">
+            <img [src]="invitation.content.coverImageUrl" alt="Portada" loading="lazy" decoding="async" style="max-width:300px; max-height:200px; border-radius:var(--nw-radius-sm); object-fit:cover;">
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover()" style="position:absolute; top:6px; right:6px;">✕ Quitar</button>
+          </div>
+        </div>
+
+        <!-- Música -->
+        <div style="margin-bottom:16px;">
+          <strong style="font-size:14px; display:block; margin-bottom:8px;">Música</strong>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+              🎵 Subir música
+              <input type="file" accept="audio/*" (change)="selectAsset($event, 'music')" [disabled]="assetUploading" style="display:none;">
+            </label>
+            <input class="nw-input" [(ngModel)]="invitation.content.musicUrl" placeholder="O pega URL directa: https://.../cancion.mp3" style="flex:1; max-width:400px;">
+          </div>
+          <div *ngIf="invitation.content.musicUrl" style="margin-top:10px; display:flex; align-items:center; gap:10px; padding:10px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+            <audio controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()" style="flex:1;"></audio>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeMusic()">✕ Quitar</button>
+          </div>
+        </div>
+
+        <!-- Galería -->
+        <div>
+          <strong style="font-size:14px; display:block; margin-bottom:8px;">Galería</strong>
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+              📁 Agregar imagen
+              <input type="file" accept="image/*" (change)="selectAsset($event, 'gallery')" [disabled]="assetUploading" style="display:none;">
+            </label>
+            <span style="font-size:13px; color:var(--nw-text-3);">{{ invitation.content.gallery?.length || 0 }} imágenes</span>
+          </div>
+          <div *ngIf="invitation.content.gallery?.length" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
+            <div *ngFor="let url of invitation.content.gallery; let i = index" style="position:relative;">
+              <img [src]="url" alt="Galería" loading="lazy" decoding="async" style="width:100%; height:100px; object-fit:cover; border-radius:var(--nw-radius-sm);">
+              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGalleryImage(i)" style="position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px;">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ 11. PLANTILLAS ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;" *ngIf="templates.length">
+        <div class="nw-card-header"><h3>🎨 Plantillas</h3></div>
+        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Selecciona una plantilla para aplicar estilo predefinido.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+          <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button" (click)="applyTemplate(template)" style="display:flex; flex-direction:column; align-items:flex-start; padding:12px; text-align:left;">
+            <strong>{{ template.name }}</strong>
+            <span style="font-size:12px; color:var(--nw-text-3);">{{ template.eventType }} · {{ template.tier }}</span>
+            <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning" style="margin-top:6px; font-size:11px;">Requiere upgrade</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════ 12. PLAN ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header">
+          <h3>💎 Plan del evento</h3>
+          <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
+          <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
+        </div>
+        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Un evento puede tener varias invitaciones segmentadas. El plan desbloquea este evento completo.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+          <div *ngFor="let plan of plans" class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+            <strong>{{ plan.name }}</strong>
+            <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
+            <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
+            <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
+            <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="checkout(plan.key)" [disabled]="!!checkoutLoading">
+              {{ checkoutLoading === plan.key ? 'Abriendo...' : 'Preparar pago' }}
+            </button>
+            <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'" style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ VISTA PREVIA ═══════════ -->
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>👁️ Vista previa</h3></div>
+        <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
+             [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
+             [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"
+             [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
+          <div *ngIf="invitation.content.coverImageUrl" style="width:100%; height:200px; overflow:hidden;">
+            <img [src]="invitation.content.coverImageUrl" alt="Portada" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'" style="padding:32px; text-align:center;">
+            <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="text-transform:uppercase; font-size:13px; letter-spacing:2px; margin:0 0 8px;">{{ invitation.content.subheadline }}</p>
+            <h2 [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-family:var(--nw-font-display); font-size:28px; font-weight:800; margin:0 0 8px;">{{ invitation.content.headline }}</h2>
+            <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size:14px; margin:0;">{{ event?.date | date:'fullDate' }}</p>
+          </div>
+          <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'" style="padding:0 32px 32px; display:grid; gap:16px;">
+            <div *ngIf="invitation.content.message">
+              <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:16px; margin:0 0 6px;">Mensaje</h3>
+              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:14px; opacity:0.8; margin:0; line-height:1.6;">{{ invitation.content.message }}</p>
+            </div>
+            <div *ngIf="event?.venue?.name">
+              <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:16px; margin:0 0 6px;">Lugar</h3>
+              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:14px; opacity:0.8; margin:0;">{{ event?.venue?.name }}</p>
+              <p *ngIf="event?.venue?.address" [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:13px; opacity:0.6; margin:4px 0 0;">{{ event?.venue?.address }}</p>
+            </div>
+            <div *ngIf="invitation.content.dressCode">
+              <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:16px; margin:0 0 6px;">Detalles</h3>
+              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:14px; opacity:0.8; margin:0;">Dress code: {{ invitation.content.dressCode }}</p>
+            </div>
+            <div *ngIf="invitation.content.itinerary?.length" style="text-align:left;">
+              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:13px; opacity:0.6; margin:0;">✓ Itinerario configurado ({{ invitation.content.itinerary?.length }} momentos)</p>
+            </div>
+            <div *ngIf="invitation.content.giftRegistry?.length" style="text-align:left;">
+              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:13px; opacity:0.6; margin:0;">✓ Mesa de regalos configurada</p>
+            </div>
+            <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align:left;">
+              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'" style="font-size:13px; opacity:0.6; margin:0;">✓ Álbum de invitados activo</p>
+            </div>
+          </div>
+          <!-- Gallery preview -->
+          <div *ngIf="invitation.content.gallery?.length" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
+            <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy" decoding="async" style="width:100%; height:80px; object-fit:cover;">
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+  </main>
+</div>
