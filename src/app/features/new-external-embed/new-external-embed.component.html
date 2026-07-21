@@ -1,0 +1,381 @@
+<section class="nw-embed-shell">
+  <div class="nw-embed-container">
+    
+    <!-- Alerts -->
+    <div *ngIf="loading" class="nw-embed-alert nw-embed-loading">Cargando...</div>
+    <div *ngIf="error" class="nw-embed-alert nw-embed-error">{{ error }}</div>
+    <div *ngIf="message" class="nw-embed-alert nw-embed-success">{{ message }}</div>
+
+    <ng-container *ngIf="event">
+      
+      <!-- HEADER (only for full-portal) -->
+      <header *ngIf="widget === 'full-portal'" class="nw-embed-hero">
+        <div class="nw-embed-hero-bg" [style.backgroundImage]="event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl ? 'url(' + (event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl) + ')' : ''"></div>
+        <div class="nw-embed-hero-overlay"></div>
+        <div class="nw-embed-hero-content">
+          <h1>{{ event.title }}</h1>
+          <p class="date">{{ event.date | date:'fullDate' }}</p>
+          <a *ngIf="event.externalSiteUrl" class="nw-embed-btn nw-embed-btn-primary" [href]="event.externalSiteUrl" target="_blank" rel="noreferrer">
+            {{ event.externalSiteLabel || 'Abrir página del evento' }}
+          </a>
+        </div>
+      </header>
+
+      <!-- GUEST ACCESS / IDENTIFICATION BOX -->
+      <div *ngIf="showIdentity && !guest" class="nw-embed-card nw-embed-identity-box">
+        <div class="nw-embed-card-header">
+          <h3>🔐 Confirmar Asistencia</h3>
+          <p>Identifícate para confirmar tus datos, ver tu pase y más.</p>
+        </div>
+        
+        <div class="nw-embed-form-row">
+          <div class="nw-embed-field">
+            <label>Identificar por</label>
+            <select class="nw-embed-select" name="identifierMode" [(ngModel)]="identifierMode">
+              <option value="email">📧 Correo electrónico</option>
+              <option value="phone">📱 Teléfono móvil</option>
+              <option value="token">🔑 Código de acceso (Token)</option>
+            </select>
+          </div>
+          
+          <div class="nw-embed-field">
+            <label>Ingresa tu dato</label>
+            <input class="nw-embed-input" name="identifier" [(ngModel)]="identifier" placeholder="ej: correo, celular o código">
+          </div>
+        </div>
+
+        <button class="nw-embed-btn nw-embed-btn-gold nw-embed-btn-full" type="button" (click)="identify()">
+          Ingresar al portal
+        </button>
+      </div>
+
+      <!-- RSVP FORM -->
+      <form *ngIf="widget === 'rsvp' || (widget === 'full-portal' && guest)" class="nw-embed-card" (ngSubmit)="submitRsvp()">
+        <div class="nw-embed-card-header">
+          <h3>💌 Confirmación de Asistencia</h3>
+          <p *ngIf="guest">Invitado: <strong>{{ guest.name }}</strong> · Rol: {{ guest.relationshipLabel || guest.group || 'Invitado' }}</p>
+          <p *ngIf="!guest" class="nw-embed-text-error">Por favor identifícate arriba para confirmar.</p>
+        </div>
+
+        <div class="nw-embed-form-grid" *ngIf="guest">
+          <div class="nw-embed-field">
+            <label>¿Asistirás al evento?</label>
+            <select class="nw-embed-select" name="response" [(ngModel)]="rsvp.response">
+              <option value="confirmed">✅ Sí, asistiré</option>
+              <option value="declined">❌ No podré asistir</option>
+              <option value="maybe">❓ Por confirmar</option>
+            </select>
+          </div>
+
+          <div class="nw-embed-field" *ngIf="rsvp.response === 'confirmed'">
+            <label>Acompañantes adicionales (Máx: {{ guest.allowedCompanions || 0 }})</label>
+            <input class="nw-embed-input" name="companions" type="number" min="0" [max]="guest.allowedCompanions || 0" [(ngModel)]="rsvp.companions">
+          </div>
+
+          <div class="nw-embed-field nw-embed-wide" *ngIf="rsvp.response === 'confirmed' && rsvp.companions > 0">
+            <label>Nombres de los acompañantes (uno por línea)</label>
+            <textarea class="nw-embed-textarea" name="companionsText" [(ngModel)]="companionNamesText" rows="3" placeholder="Nombre completo del acompañante"></textarea>
+          </div>
+
+          <div class="nw-embed-field nw-embed-wide">
+            <label>Preferencia alimenticia (Opcional)</label>
+            <input class="nw-embed-input" name="meal" [(ngModel)]="rsvp.mealPreference" placeholder="Ej: Vegetariano, Vegano, Alergia a nueces...">
+          </div>
+
+          <div class="nw-embed-field nw-embed-wide">
+            <label>Mensaje especial para los anfitriones</label>
+            <textarea class="nw-embed-textarea" name="messageText" [(ngModel)]="rsvp.message" rows="3" placeholder="Escribe un mensaje aquí..."></textarea>
+          </div>
+        </div>
+
+        <button class="nw-embed-btn nw-embed-btn-gold nw-embed-btn-full" type="submit" [disabled]="sending || !guest" style="margin-top: 16px;">
+          {{ sending ? 'Guardando respuesta...' : 'Enviar confirmación' }}
+        </button>
+      </form>
+
+      <!-- GUEST PASS (QR) -->
+      <section *ngIf="widget === 'guest-pass' || (widget === 'full-portal' && guest)" class="nw-embed-card nw-embed-pass-ticket">
+        <div class="nw-embed-ticket-header">
+          <h3>🎟️ Pase de Entrada Digital</h3>
+          <p>Muestra este código QR al ingresar al evento.</p>
+        </div>
+
+        <div class="nw-embed-ticket-body">
+          <div class="nw-embed-qr-wrapper">
+            <img *ngIf="qrUrl" [src]="qrUrl" alt="Pase QR">
+            <div *ngIf="!qrUrl" class="nw-embed-qr-placeholder">🔍</div>
+          </div>
+          
+          <div class="nw-embed-ticket-info" *ngIf="guest">
+            <h4>{{ guest.name }}</h4>
+            <p class="nw-embed-table">🪑 {{ guest.tableName || 'Mesa pendiente' }} <span *ngIf="guest.seatLabel">/ Asiento {{ guest.seatLabel }}</span></p>
+            <div class="nw-embed-badge-list" *ngIf="guest.roles?.length">
+              <span *ngFor="let role of guest.roles" class="nw-embed-badge">{{ role }}</span>
+            </div>
+          </div>
+          
+          <div class="nw-embed-ticket-info" *ngIf="!guest">
+            <h4 class="nw-embed-muted-text">Identifícate arriba para generar tu pase QR</h4>
+          </div>
+        </div>
+      </section>
+
+      <!-- GALLERY / CAROUSEL -->
+      <section *ngIf="widget === 'gallery' || widget === 'full-portal'" class="nw-embed-card">
+        <div class="nw-embed-card-header">
+          <h3>🖼️ Galería del Evento</h3>
+          <p>Imágenes destacadas compartidas por los anfitriones.</p>
+        </div>
+        <div class="nw-embed-gallery-grid">
+          <div class="nw-embed-gallery-item" *ngFor="let imageUrl of (event.externalContent?.carousel?.length ? event.externalContent?.carousel : event.externalContent?.gallery)">
+            <img [src]="imageUrl" alt="Foto del evento" loading="lazy" decoding="async">
+          </div>
+        </div>
+      </section>
+
+      <!-- MAPS / LOCATIONS -->
+      <section *ngIf="widget === 'map' || widget === 'full-portal'" class="nw-embed-card">
+        <div class="nw-embed-card-header">
+          <h3>📍 Ubicación y Horarios</h3>
+          <p>Consulta cómo llegar y los horarios de cada actividad.</p>
+        </div>
+        <div class="nw-embed-locations-list">
+          <article *ngFor="let location of locations" class="nw-embed-location-card">
+            <div class="nw-embed-loc-icon">⛪</div>
+            <div class="nw-embed-loc-info">
+              <strong>{{ location.name || location.type }}</strong>
+              <p class="address" *ngIf="location.address">{{ location.address }}</p>
+              <p class="time" *ngIf="location.time">⏰ Horario: {{ location.time }}</p>
+              <p class="notes" *ngIf="location.notes">📝 Nota: {{ location.notes }}</p>
+              <div class="nw-embed-loc-actions" style="margin-top:10px; display:flex; gap:8px;">
+                <a *ngIf="location.mapUrl" class="nw-embed-btn nw-embed-btn-sm nw-embed-btn-gold" [href]="location.mapUrl" target="_blank" rel="noreferrer">🗺️ Google Maps</a>
+                <a *ngIf="location.wazeUrl" class="nw-embed-btn nw-embed-btn-sm nw-embed-btn-ghost" [href]="location.wazeUrl" target="_blank" rel="noreferrer">🚗 Waze</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- GIFT REGISTRY / DIGITAL ENVELOPE -->
+      <section *ngIf="widget === 'gifts' || widget === 'full-details' || widget === 'full-portal'" class="nw-embed-card">
+        <div class="nw-embed-card-header">
+          <h3>🎁 Mesa de Regalos</h3>
+          <p class="muted">{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
+        </div>
+        
+        <!-- Stores registry -->
+        <div class="nw-embed-gift-grid" *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
+          <article *ngFor="let gift of event.externalContent?.giftRegistry" class="nw-embed-gift-card">
+            <div class="nw-embed-gift-logo" *ngIf="gift.imageUrl" [style.backgroundImage]="'url(' + gift.imageUrl + ')'"></div>
+            <div class="nw-embed-gift-details">
+              <strong>{{ gift.title || gift.label || gift.store || 'Mesa de regalos' }}</strong>
+              <p *ngIf="gift.note">{{ gift.note }}</p>
+              <a *ngIf="gift.url" class="nw-embed-btn nw-embed-btn-sm nw-embed-btn-gold" [href]="gift.url" target="_blank" rel="noreferrer">Abrir mesa</a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Envelope -->
+        <article *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)" class="nw-embed-envelope-card" style="margin-top:16px;">
+          <div class="nw-embed-envelope-header">
+            <h4>✉️ Sobre Digital</h4>
+            <p>Datos bancarios para transferencia.</p>
+          </div>
+          <div class="nw-embed-envelope-body">
+            <div class="nw-embed-envelope-qr" *ngIf="event.externalContent?.digitalEnvelope?.qrImageUrl">
+              <img [src]="event.externalContent?.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
+            </div>
+            <div class="nw-embed-envelope-details">
+              <p *ngIf="event.externalContent?.digitalEnvelope?.bank"><strong>Banco:</strong> {{ event.externalContent?.digitalEnvelope?.bank }}</p>
+              <p *ngIf="event.externalContent?.digitalEnvelope?.holder"><strong>Titular:</strong> {{ event.externalContent?.digitalEnvelope?.holder }}</p>
+              <p *ngIf="event.externalContent?.digitalEnvelope?.account"><strong>Cuenta:</strong> {{ event.externalContent?.digitalEnvelope?.account }}</p>
+              <p *ngIf="event.externalContent?.digitalEnvelope?.clabe"><strong>CLABE:</strong> {{ event.externalContent?.digitalEnvelope?.clabe }}</p>
+              <small class="notes" *ngIf="event.externalContent?.digitalEnvelope?.note">{{ event.externalContent?.digitalEnvelope?.note }}</small>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- FREE SECTIONS -->
+      <section *ngIf="widget === 'full-details' || widget === 'full-portal'" class="nw-embed-sections">
+        <article *ngFor="let section of event.externalContent?.sections" class="nw-embed-card nw-embed-section-card">
+          <div class="nw-embed-card-header">
+            <span class="nw-embed-section-badge">{{ section.type }}</span>
+            <h3>{{ section.title || section.key }}</h3>
+          </div>
+          <div class="nw-embed-section-body">
+            <p>{{ section.body }}</p>
+            <div class="nw-embed-section-img" *ngIf="section.imageUrl">
+              <img [src]="section.imageUrl" alt="Imagen de sección" loading="lazy" decoding="async">
+            </div>
+            <a *ngIf="section.url" class="nw-embed-btn nw-embed-btn-gold nw-embed-btn-full" [href]="section.url" target="_blank" rel="noreferrer" style="margin-top:12px;">
+              Ver más detalles
+            </a>
+          </div>
+        </article>
+      </section>
+
+      <!-- ALBUM -->
+      <section *ngIf="widget === 'album' || widget === 'full-portal'" class="nw-embed-card">
+        <div class="nw-embed-card-header">
+          <h3>📸 Álbum de Fotos de los Invitados</h3>
+          <p>¡Comparte tus momentos favoritos del evento con los demás!</p>
+        </div>
+        
+        <div class="nw-embed-upload-box">
+          <label class="nw-embed-upload-label">
+            <span>➕ Seleccionar foto para subir</span>
+            <input type="file" accept="image/*" (change)="selectAlbumFile($event)" style="display:none;">
+          </label>
+          <p *ngIf="selectedAlbumFile" style="margin: 8px 0; font-weight:600; font-size:13px; color:var(--nw-accent);">Archivo seleccionado: {{ selectedAlbumFile.name }}</p>
+          <button class="nw-embed-btn nw-embed-btn-gold nw-embed-btn-full" type="button" (click)="uploadAlbum()" [disabled]="!selectedAlbumFile || sending" style="margin-top: 10px;">
+            Enviar foto al álbum
+          </button>
+        </div>
+
+        <!-- My uploads -->
+        <div *ngIf="myAlbumUploads.length" class="nw-embed-uploads-history" style="margin-top:20px;">
+          <h4>Mis Fotos Subidas</h4>
+          <div class="nw-embed-uploads-grid">
+            <div *ngFor="let asset of myAlbumUploads" class="nw-embed-upload-thumb">
+              <img [src]="asset.url" alt="Mi foto" loading="lazy" decoding="async">
+              <span class="nw-embed-status-badge" [class.success]="asset.status === 'approved'" [class.warning]="asset.status === 'pending'" [class.danger]="asset.status === 'rejected'">
+                {{ statusLabel(asset.status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approved gallery -->
+        <div *ngIf="albumAssets.length" style="margin-top:24px;">
+          <h4>Fotos Aprobadas</h4>
+          <div class="nw-embed-gallery-grid">
+            <div class="nw-embed-gallery-item" *ngFor="let asset of albumAssets">
+              <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" loading="lazy" decoding="async">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DJ (SONG REQUESTS) -->
+      <form *ngIf="widget === 'song-requests' || widget === 'full-portal'" class="nw-embed-card" (ngSubmit)="requestSong()">
+        <div class="nw-embed-card-header">
+          <h3>🎵 Peticiones al DJ</h3>
+          <p>¡Pide tus canciones favoritas para la pista de baile!</p>
+        </div>
+
+        <div class="nw-embed-form-grid">
+          <div class="nw-embed-field nw-embed-wide">
+            <label>Buscar canción o pegar enlace (Spotify/YouTube)</label>
+            <div style="display:flex; gap:8px;">
+              <input class="nw-embed-input" style="flex:1;" name="songQuery" [(ngModel)]="song.query" placeholder="Ej: September Earth Wind Fire">
+              <button class="nw-embed-btn nw-embed-btn-gold" type="button" (click)="lookupSong()" [disabled]="sending || (!song.query && !song.title)">
+                Buscar
+              </button>
+            </div>
+          </div>
+
+          <!-- Song preview -->
+          <div *ngIf="songPreview" class="nw-embed-song-preview nw-embed-wide">
+            <img *ngIf="songPreview.thumbnailUrl" [src]="songPreview.thumbnailUrl" alt="Canción">
+            <div class="nw-embed-song-info">
+              <strong>{{ songPreview.title }}</strong>
+              <p>{{ songPreview.artist || songPreview.sourceProvider }}</p>
+            </div>
+          </div>
+
+          <div class="nw-embed-field">
+            <label>Título de la canción</label>
+            <input class="nw-embed-input" name="songTitle" [(ngModel)]="song.title" required placeholder="Ej: September">
+          </div>
+
+          <div class="nw-embed-field">
+            <label>Artista / Grupo</label>
+            <input class="nw-embed-input" name="songArtist" [(ngModel)]="song.artist" placeholder="Ej: Earth, Wind & Fire">
+          </div>
+
+          <div class="nw-embed-field nw-embed-wide">
+            <label>Dedicatoria o comentario (Opcional)</label>
+            <textarea class="nw-embed-textarea" name="songDedication" [(ngModel)]="song.dedication" rows="2" placeholder="Ej: Dedicada a los novios..."></textarea>
+          </div>
+        </div>
+
+        <button class="nw-embed-btn nw-embed-btn-gold nw-embed-btn-full" type="submit" [disabled]="sending || !song.title" style="margin-top:16px;">
+          Pedir canción
+        </button>
+
+        <!-- My song requests -->
+        <div *ngIf="mySongRequests.length" class="nw-embed-song-requests-list" style="margin-top:20px;">
+          <h4>Mis Solicitudes</h4>
+          <div class="nw-embed-songs-grid">
+            <div *ngFor="let request of mySongRequests" class="nw-embed-song-card">
+              <div class="icon">🎵</div>
+              <div class="info">
+                <strong>{{ request.title }}</strong>
+                <p>{{ request.artist || 'Sin artista' }} · <span class="status" [class.success]="request.status === 'approved' || request.status === 'played'" [class.warning]="request.status === 'pending'" [class.danger]="request.status === 'rejected'">{{ statusLabel(request.status) }}</span></p>
+                <small *ngIf="request.dedication">"{{ request.dedication }}"</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- DEDICATIONS -->
+      <form *ngIf="widget === 'dedications' || widget === 'full-portal'" class="nw-embed-card" (ngSubmit)="submitDedication()">
+        <div class="nw-embed-card-header">
+          <h3>💬 Libro de Dedicatorias y Deseos</h3>
+          <p>{{ event.externalContent?.dedicationSettings?.introText || 'Deja un mensaje especial para los anfitriones en este día inolvidable.' }}</p>
+        </div>
+
+        <div class="nw-embed-form-grid">
+          <div class="nw-embed-field">
+            <label>Nombre para mostrar</label>
+            <input class="nw-embed-input" name="dedicationName" [(ngModel)]="dedication.publicName" [placeholder]="guest?.name || 'Tu nombre'">
+          </div>
+
+          <div class="nw-embed-field">
+            <label>Tipo de mensaje</label>
+            <select class="nw-embed-select" name="dedicationType" [(ngModel)]="dedication.type">
+              <option value="dedication">✍️ Dedicatoria</option>
+              <option value="wish">💖 Buenos deseos</option>
+              <option value="memory">⭐ Recuerdo</option>
+              <option value="toast">🥂 Brindis</option>
+            </select>
+          </div>
+
+          <div class="nw-embed-field nw-embed-wide">
+            <label>Mensaje</label>
+            <textarea class="nw-embed-textarea" name="dedicationMessage" [(ngModel)]="dedication.message" required rows="3" placeholder="Escribe tus palabras aquí..."></textarea>
+          </div>
+        </div>
+
+        <button class="nw-embed-btn nw-embed-btn-gold nw-embed-btn-full" type="submit" [disabled]="sending || !dedication.message" style="margin-top:16px;">
+          Enviar dedicatoria
+        </button>
+
+        <!-- My dedications -->
+        <div *ngIf="myDedications.length" class="nw-embed-my-dedications" style="margin-top:20px;">
+          <h4>Mis Mensajes</h4>
+          <div class="nw-embed-dedication-grid">
+            <div *ngFor="let item of myDedications" class="nw-embed-dedication-bubble">
+              <p>{{ item.message }}</p>
+              <small>Estado: <span class="status" [class.success]="item.status === 'approved'" [class.warning]="item.status === 'pending'">{{ statusLabel(item.status) }}</span></small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approved dedications -->
+        <div *ngIf="dedications.length" class="nw-embed-public-dedications" style="margin-top:24px;">
+          <h4>Mensajes Compartidos</h4>
+          <div class="nw-embed-comments-list">
+            <div *ngFor="let item of dedications" class="nw-embed-comment-card">
+              <strong>{{ item.publicName || 'Invitado' }}</strong>
+              <p>{{ item.message }}</p>
+            </div>
+          </div>
+        </div>
+      </form>
+
+    </ng-container>
+  </div>
+</section>
