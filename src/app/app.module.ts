@@ -30,6 +30,8 @@ import { NewSidebarComponent } from './features/new-sidebar/new-sidebar.componen
 import { NewPlanComponent } from './features/new-plan/new-plan.component';
 import { NewEventAccessComponent } from './features/new-event-access/new-event-access.component';
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
+import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
+import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 
 @NgModule({
   declarations: [
@@ -57,7 +59,9 @@ import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-chec
     NewSidebarComponent,
     NewPlanComponent,
     NewEventAccessComponent,
-    NewCheckInStaffComponent
+    NewCheckInStaffComponent,
+    NewExternalEmbedComponent,
+    NewExternalPortalComponent
   ],
   imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true }],
