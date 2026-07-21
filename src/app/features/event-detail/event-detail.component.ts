@@ -744,8 +744,20 @@ export class EventDetailComponent implements OnInit {
     return this.externalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.externalPortalUrl)}` : '';
   }
 
+  get newExternalPortalUrl(): string {
+    return this.event?.externalPortalSlug ? `${window.location.origin}/new/e/${this.event.externalPortalSlug}` : '';
+  }
+
+  get newExternalPortalQrUrl(): string {
+    return this.newExternalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.newExternalPortalUrl)}` : '';
+  }
+
   get rsvpIframeSnippet(): string {
     return this.externalPortalUrl ? `<iframe src="${this.externalPortalUrl}" width="100%" height="720" style="border:0"></iframe>` : '';
+  }
+
+  get newRsvpIframeSnippet(): string {
+    return this.newExternalPortalUrl ? `<iframe src="${this.newExternalPortalUrl}" width="100%" height="900" style="border:0"></iframe>` : '';
   }
 
   get externalApiConfigUrl(): string {
@@ -795,7 +807,8 @@ export class EventDetailComponent implements OnInit {
   get embedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
     const widgets = this.embedManifest?.widgets || {};
     const snippets = this.embedManifest?.snippets || {};
-    return [
+    const appOrigin = window.location.origin;
+    const list = [
       { key: 'rsvp', label: 'RSVP', url: widgets['rsvp'] || this.widgetUrl('rsvp'), snippet: snippets['rsvp'] || this.iframeSnippet('rsvp', 720) },
       { key: 'guestPass', label: 'Pase QR', url: widgets['guestPass'] || this.widgetUrl('guest-pass'), snippet: this.iframeSnippet('guest-pass', 520) },
       { key: 'album', label: 'Album', url: widgets['album'] || this.widgetUrl('album'), snippet: snippets['album'] || this.iframeSnippet('album', 720) },
@@ -803,7 +816,11 @@ export class EventDetailComponent implements OnInit {
       { key: 'map', label: 'Mapa', url: widgets['map'] || this.widgetUrl('map'), snippet: snippets['map'] || this.iframeSnippet('map', 480) },
       { key: 'songRequests', label: 'DJ', url: widgets['songRequests'] || this.widgetUrl('song-requests'), snippet: snippets['songRequests'] || this.iframeSnippet('song-requests', 520) },
       { key: 'fullPortal', label: 'Portal completo', url: widgets['fullPortal'] || this.widgetUrl('full-portal'), snippet: this.iframeSnippet('full-portal', 900) }
-    ].filter((item) => item.url);
+    ];
+    if (this.newExternalPortalUrl) {
+      list.push({ key: 'rsvpWidget', label: 'Widget RSVP (Div + Script)', url: this.widgetUrl('rsvp'), snippet: `<div data-kyndra-widget="rsvp" data-portal="${this.event?.externalPortalSlug || ''}"></div>\n<script src="${appOrigin}/assets/kyndra-embed.js"></script>` });
+    }
+    return list.filter((item) => item.url);
   }
 
   get bulkWhatsappPreview(): string {
@@ -1539,7 +1556,9 @@ export class EventDetailComponent implements OnInit {
   }
 
   private widgetUrl(widget: string): string {
-    return this.event?.externalPortalSlug ? `${window.location.origin}/embed/${this.event.externalPortalSlug}/${widget}` : '';
+    if (!this.event?.externalPortalSlug) return '';
+    const prefix = this.newExternalPortalUrl ? 'new/embed' : 'embed';
+    return `${window.location.origin}/${prefix}/${this.event.externalPortalSlug}/${widget}`;
   }
 
   private iframeSnippet(widget: string, height: number): string {

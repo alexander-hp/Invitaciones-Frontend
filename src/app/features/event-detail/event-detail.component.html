@@ -244,12 +244,20 @@
         </div>
         <textarea *ngIf="embedManifest?.snippets?.['script']" readonly rows="2">{{ embedManifest?.snippets?.['script'] }}</textarea>
       </div>
-      <div class="guest-pass" *ngIf="externalPortalUrl">
+      <div class="guest-pass" *ngIf="externalPortalUrl && !newExternalPortalUrl" style="margin-bottom: 12px;">
         <img [src]="externalPortalQrUrl" alt="QR portal">
         <div>
-          <strong>Portal KyndraSoft</strong>
+          <strong>Portal KyndraSoft (Clásico)</strong>
           <p>{{ externalPortalUrl }}</p>
           <textarea readonly rows="2">{{ rsvpIframeSnippet }}</textarea>
+        </div>
+      </div>
+      <div class="guest-pass" *ngIf="newExternalPortalUrl">
+        <img [src]="newExternalPortalQrUrl" alt="QR portal nuevo">
+        <div>
+          <strong>Portal KyndraSoft (Nuevo /new/)</strong>
+          <p>{{ newExternalPortalUrl }}</p>
+          <textarea readonly rows="2">{{ newRsvpIframeSnippet }}</textarea>
         </div>
       </div>
       <div class="feature-pill-list">
