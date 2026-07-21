@@ -251,6 +251,14 @@ export class NewEventDetailComponent implements OnInit {
     return this.externalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.externalPortalUrl)}` : '';
   }
 
+  get newExternalPortalUrl(): string {
+    return this.event?.externalPortalSlug ? `${window.location.origin}/new/e/${this.event.externalPortalSlug}` : '';
+  }
+
+  get newExternalPortalQrUrl(): string {
+    return this.newExternalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.newExternalPortalUrl)}` : '';
+  }
+
   get eventPlanExpiresLabel(): string {
     return this.eventPlanExpiresAt ? new Date(this.eventPlanExpiresAt).toLocaleDateString() : '';
   }
@@ -277,6 +285,10 @@ export class NewEventDetailComponent implements OnInit {
     return this.externalPortalUrl ? `<iframe src="${this.externalPortalUrl}" width="100%" height="720" style="border:0"></iframe>` : '';
   }
 
+  get newRsvpIframeSnippet(): string {
+    return this.newExternalPortalUrl ? `<iframe src="${this.newExternalPortalUrl}" width="100%" height="900" style="border:0"></iframe>` : '';
+  }
+
   get externalApiConfigUrl(): string {
     return this.event?.externalPortalSlug ? `${this.apiBaseUrl}/external/${this.event.externalPortalSlug}/config` : '';
   }
@@ -285,18 +297,51 @@ export class NewEventDetailComponent implements OnInit {
     return this.event?.externalPortalSlug ? `${this.apiBaseUrl}/external/${this.event.externalPortalSlug}/assets?type=all` : '';
   }
 
-  get embedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
+  get classicEmbedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
     const widgets = this.embedManifest?.widgets || {};
     const snippets = this.embedManifest?.snippets || {};
+    const appOrigin = window.location.origin;
     return [
-      { key: 'rsvp', label: 'RSVP', url: widgets['rsvp'] || this.widgetUrl('rsvp'), snippet: snippets['rsvp'] || this.iframeSnippet('rsvp', 720) },
-      { key: 'guestPass', label: 'Pase QR', url: widgets['guestPass'] || this.widgetUrl('guest-pass'), snippet: this.iframeSnippet('guest-pass', 520) },
-      { key: 'album', label: 'Álbum', url: widgets['album'] || this.widgetUrl('album'), snippet: snippets['album'] || this.iframeSnippet('album', 720) },
-      { key: 'gallery', label: 'Galería', url: widgets['gallery'] || this.widgetUrl('gallery'), snippet: this.iframeSnippet('gallery', 520) },
-      { key: 'map', label: 'Mapa', url: widgets['map'] || this.widgetUrl('map'), snippet: snippets['map'] || this.iframeSnippet('map', 480) },
-      { key: 'songRequests', label: 'DJ', url: widgets['songRequests'] || this.widgetUrl('song-requests'), snippet: snippets['songRequests'] || this.iframeSnippet('song-requests', 520) },
-      { key: 'fullPortal', label: 'Portal completo', url: widgets['fullPortal'] || this.widgetUrl('full-portal'), snippet: this.iframeSnippet('full-portal', 900) }
+      { key: 'rsvp', label: 'RSVP', url: widgets['rsvp'] || this.classicWidgetUrl('rsvp'), snippet: snippets['rsvp'] || this.classicIframeSnippet('rsvp', 720) },
+      { key: 'guestPass', label: 'Pase QR', url: widgets['guestPass'] || this.classicWidgetUrl('guest-pass'), snippet: this.classicIframeSnippet('guest-pass', 520) },
+      { key: 'album', label: 'Álbum', url: widgets['album'] || this.classicWidgetUrl('album'), snippet: snippets['album'] || this.classicIframeSnippet('album', 720) },
+      { key: 'gallery', label: 'Galería', url: widgets['gallery'] || this.classicWidgetUrl('gallery'), snippet: this.classicIframeSnippet('gallery', 520) },
+      { key: 'map', label: 'Mapa', url: widgets['map'] || this.classicWidgetUrl('map'), snippet: snippets['map'] || this.classicIframeSnippet('map', 480) },
+      { key: 'songRequests', label: 'DJ', url: widgets['songRequests'] || this.classicWidgetUrl('song-requests'), snippet: snippets['songRequests'] || this.classicIframeSnippet('song-requests', 520) },
+      { key: 'fullPortal', label: 'Portal completo', url: widgets['fullPortal'] || this.classicWidgetUrl('full-portal'), snippet: this.classicIframeSnippet('full-portal', 900) },
+      { key: 'rsvpWidget', label: 'Widget RSVP (Div + Script)', url: this.classicWidgetUrl('rsvp'), snippet: `<div data-kyndra-widget="rsvp" data-portal="${this.event?.externalPortalSlug || ''}"></div>\n<script src="${appOrigin}/assets/kyndra-embed.js"></script>` }
     ].filter(item => item.url);
+  }
+
+  get newEmbedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
+    const widgets = this.embedManifest?.widgets || {};
+    const snippets = this.embedManifest?.snippets || {};
+    const appOrigin = window.location.origin;
+
+    const getNewUrl = (key: string, fallback: string) => {
+      const original = widgets[key];
+      return original ? original.replace('/embed/', '/new/embed/') : fallback;
+    };
+
+    const getNewSnippet = (key: string, fallback: string) => {
+      const original = snippets[key];
+      return original ? original.replace(/\/embed\//g, '/new/embed/') : fallback;
+    };
+
+    return [
+      { key: 'rsvp', label: 'RSVP', url: getNewUrl('rsvp', this.newWidgetUrl('rsvp')), snippet: getNewSnippet('rsvp', this.newIframeSnippet('rsvp', 720)) },
+      { key: 'guestPass', label: 'Pase QR', url: getNewUrl('guestPass', this.newWidgetUrl('guest-pass')), snippet: this.newIframeSnippet('guest-pass', 520) },
+      { key: 'album', label: 'Álbum', url: getNewUrl('album', this.newWidgetUrl('album')), snippet: getNewSnippet('album', this.newIframeSnippet('album', 720)) },
+      { key: 'gallery', label: 'Galería', url: getNewUrl('gallery', this.newWidgetUrl('gallery')), snippet: this.newIframeSnippet('gallery', 520) },
+      { key: 'map', label: 'Mapa', url: getNewUrl('map', this.newWidgetUrl('map')), snippet: getNewSnippet('map', this.newIframeSnippet('map', 480)) },
+      { key: 'songRequests', label: 'DJ', url: getNewUrl('songRequests', this.newWidgetUrl('song-requests')), snippet: getNewSnippet('songRequests', this.newIframeSnippet('song-requests', 520)) },
+      { key: 'fullPortal', label: 'Portal completo', url: getNewUrl('fullPortal', this.newWidgetUrl('full-portal')), snippet: this.newIframeSnippet('full-portal', 900) },
+      { key: 'rsvpWidget', label: 'Widget RSVP (Div + Script)', url: this.newWidgetUrl('rsvp'), snippet: `<div data-kyndra-widget="rsvp" data-portal="${this.event?.externalPortalSlug || ''}"></div>\n<script src="${appOrigin}/assets/kyndra-embed.js"></script>` }
+    ].filter(item => item.url);
+  }
+
+  get embedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
+    return this.newEmbedWidgets;
   }
 
   // ── Invitation ──
@@ -1234,8 +1279,10 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   private get apiBaseUrl(): string { return environment.apiUrl.replace(/\/$/, ''); }
-  private widgetUrl(widget: string): string { return this.event?.externalPortalSlug ? `${window.location.origin}/embed/${this.event.externalPortalSlug}/${widget}` : ''; }
-  private iframeSnippet(widget: string, height: number): string { const url = this.widgetUrl(widget); return url ? `<iframe src="${url}" width="100%" height="${height}" style="border:0"></iframe>` : ''; }
+  private classicWidgetUrl(widget: string): string { return this.event?.externalPortalSlug ? `${window.location.origin}/embed/${this.event.externalPortalSlug}/${widget}` : ''; }
+  private classicIframeSnippet(widget: string, height: number): string { const url = this.classicWidgetUrl(widget); return url ? `<iframe src="${url}" width="100%" height="${height}" style="border:0"></iframe>` : ''; }
+  private newWidgetUrl(widget: string): string { return this.event?.externalPortalSlug ? `${window.location.origin}/new/embed/${this.event.externalPortalSlug}/${widget}` : ''; }
+  private newIframeSnippet(widget: string, height: number): string { const url = this.newWidgetUrl(widget); return url ? `<iframe src="${url}" width="100%" height="${height}" style="border:0"></iframe>` : ''; }
   private mediaTypeFromMime(mimetype: string): WhatsAppMediaType | '' { if (mimetype.startsWith('image/')) return 'image'; if (mimetype.startsWith('video/')) return 'video'; if (mimetype.startsWith('audio/')) return 'audio'; if (mimetype === 'application/pdf') return 'document'; return ''; }
   private resetFormArray(array: FormArray): void { while (array.length) array.removeAt(0); }
   private resetUrlArray(array: FormArray, values: string[]): void { this.resetFormArray(array); values.forEach(v => array.push(new FormControl(v))); }

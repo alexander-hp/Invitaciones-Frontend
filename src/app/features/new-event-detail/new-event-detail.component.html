@@ -45,6 +45,7 @@
         <button class="nw-tab" [class.active]="activeTab === 'communication'" (click)="activeTab = 'communication'">📱 Comunicación</button>
         <button class="nw-tab" [class.active]="activeTab === 'dj'" (click)="activeTab = 'dj'">🎵 DJ ({{ songRequests.length }})</button>
         <button class="nw-tab" [class.active]="activeTab === 'dedications'" (click)="activeTab = 'dedications'">💬 ({{ dedications.length }})</button>
+        <button *ngIf="event.mode === 'external_dashboard'" class="nw-tab" [class.active]="activeTab === 'integration'" (click)="activeTab = 'integration'">🔌 Integración</button>
       </div>
 
       <!-- ═══════════════ TAB: Info ═══════════════ -->
@@ -579,7 +580,13 @@
 
       <!-- ═══════════════ TAB: Integration (external_dashboard) ═══════════════ -->
       <section *ngIf="activeTab === 'integration' && event.mode === 'external_dashboard'">
-        <h3 style="margin:0 0 16px;">🔌 Integración externa</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="margin:0;">🔌 Integración externa</h3>
+          <div style="display:flex; gap:8px;">
+            <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-gold nw-btn-sm" [href]="'/assets/demo-integraciones.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">🌐 Ver Demo de Integraciones</a>
+            <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary nw-btn-sm" [href]="'/assets/demo-integraciones-2.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">💌 Ver Demo de Invitación Completa</a>
+          </div>
+        </div>
         <p *ngIf="externalSuccess" class="nw-alert success" style="margin-bottom:14px;">{{ externalSuccess }}</p>
         <p *ngIf="externalError" class="nw-alert error" style="margin-bottom:14px;">{{ externalError }}</p>
 
@@ -635,6 +642,178 @@
               </div>
             </div>
 
+            <!-- Carrusel -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="carousel">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Carrusel (Imágenes principales)</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addUrlItem('carousel')">+ Agregar Imagen</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div *ngFor="let control of carouselItems.controls; let i = index" style="display:flex; gap:8px; align-items:center;">
+                  <label class="nw-label" style="flex:1;">URL Imagen {{ i + 1 }}
+                    <input class="nw-input" [formControlName]="i" placeholder="https://.../imagen.jpg">
+                  </label>
+                  <div style="display:flex; flex-direction:column; gap:4px; margin-top:16px;">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" #carouselFile (change)="uploadExternalAsset($event, 'carousel', i)">
+                    <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="carouselFile.click()">Subir</button>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:16px;" type="button" (click)="removeArrayItem('carousel', i)">🗑️</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Galería -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="gallery">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Galería (Fotos)</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addUrlItem('gallery')">+ Agregar Foto</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div *ngFor="let control of galleryItems.controls; let i = index" style="display:flex; gap:8px; align-items:center;">
+                  <label class="nw-label" style="flex:1;">URL Foto {{ i + 1 }}
+                    <input class="nw-input" [formControlName]="i" placeholder="https://.../foto.jpg">
+                  </label>
+                  <div style="display:flex; flex-direction:column; gap:4px; margin-top:16px;">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" #galleryFile (change)="uploadExternalAsset($event, 'gallery', i)">
+                    <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="galleryFile.click()">Subir</button>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:16px;" type="button" (click)="removeArrayItem('gallery', i)">🗑️</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Espectaculares -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="spectacularImages">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Espectaculares (Imágenes destacadas)</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addUrlItem('spectacularImages')">+ Agregar Espectacular</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div *ngFor="let control of spectacularItems.controls; let i = index" style="display:flex; gap:8px; align-items:center;">
+                  <label class="nw-label" style="flex:1;">URL Espectacular {{ i + 1 }}
+                    <input class="nw-input" [formControlName]="i" placeholder="https://.../destacada.jpg">
+                  </label>
+                  <div style="display:flex; flex-direction:column; gap:4px; margin-top:16px;">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" #spectacularFile (change)="uploadExternalAsset($event, 'spectacular', i)">
+                    <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="spectacularFile.click()">Subir</button>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:16px;" type="button" (click)="removeArrayItem('spectacularImages', i)">🗑️</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audios por Sección -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="audioSections">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Audios por Sección</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addAudioSection()">+ Agregar Audio</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div *ngFor="let group of audioSectionItems.controls; let i = index" [formGroupName]="i" class="nw-card" style="background:var(--nw-surface); padding:12px; border: 1px solid var(--nw-border);">
+                  <div class="nw-form-grid">
+                    <label class="nw-label">Título <input class="nw-input" formControlName="title" placeholder="Ej: Ceremonia"></label>
+                    <label class="nw-label">Descripción <input class="nw-input" formControlName="description" placeholder="Ej: Canción de entrada"></label>
+                    <label class="nw-label nw-form-wide">URL Audio
+                      <input class="nw-input" formControlName="url" placeholder="https://.../audio.mp3">
+                      <div style="margin-top:6px;">
+                        <input type="file" accept="audio/mpeg,audio/mp3,audio/wav" style="display:none;" #audioFile (change)="uploadExternalAsset($event, 'audioSection', i)">
+                        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="audioFile.click()">Subir archivo de audio</button>
+                      </div>
+                    </label>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:10px;" type="button" (click)="removeArrayItem('audioSections', i)">🗑️ Eliminar Sección de Audio</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mapa y Ubicaciones -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="locations">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Ubicaciones y Puntos de Interés</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLocation()">+ Agregar Ubicación</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div *ngFor="let group of locationItems.controls; let i = index" [formGroupName]="i" class="nw-card" style="background:var(--nw-surface); padding:12px; border: 1px solid var(--nw-border);">
+                  <div class="nw-form-grid">
+                    <label class="nw-label">Tipo <input class="nw-input" formControlName="type" placeholder="ceremonia, recepcion, hotel"></label>
+                    <label class="nw-label">Nombre <input class="nw-input" formControlName="name" placeholder="Ej: Salón Central"></label>
+                    <label class="nw-label nw-form-wide">Dirección <input class="nw-input" formControlName="address" placeholder="Calle, número, colonia, ciudad"></label>
+                    <label class="nw-label">Google Maps URL <input class="nw-input" formControlName="mapUrl" placeholder="https://maps.google.com/..."></label>
+                    <label class="nw-label">Waze URL <input class="nw-input" formControlName="wazeUrl" placeholder="https://waze.com/..."></label>
+                    <label class="nw-label">Horario <input class="nw-input" formControlName="time" placeholder="18:00"></label>
+                    <label class="nw-label nw-form-wide">Notas <input class="nw-input" formControlName="notes" placeholder="Ej: Estacionamiento por la puerta norte"></label>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:10px;" type="button" (click)="removeArrayItem('locations', i)">🗑️ Eliminar Ubicación</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Secciones Libres -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="sections">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Secciones Libres (Contenido Extra)</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addSection()">+ Agregar Sección Libre</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div *ngFor="let group of sectionItems.controls; let i = index" [formGroupName]="i" class="nw-card" style="background:var(--nw-surface); padding:12px; border: 1px solid var(--nw-border);">
+                  <div class="nw-form-grid">
+                    <label class="nw-label">Key <input class="nw-input" formControlName="key" placeholder="Ej: dress-code"></label>
+                    <label class="nw-label">Tipo
+                      <select class="nw-select" formControlName="type">
+                        <option value="text">Texto</option>
+                        <option value="image">Imagen</option>
+                        <option value="video">Video</option>
+                        <option value="cta">CTA (Botón)</option>
+                        <option value="iframe">Iframe</option>
+                        <option value="timeline">Timeline (Cronograma)</option>
+                        <option value="story">Historia</option>
+                        <option value="dress_code">Dress code</option>
+                        <option value="gift_registry">Mesa de regalos</option>
+                        <option value="dedications">Dedicatorias</option>
+                        <option value="lodging">Hospedaje</option>
+                        <option value="faq">FAQ</option>
+                        <option value="people">Personas</option>
+                      </select>
+                    </label>
+                    <label class="nw-label">Título <input class="nw-input" formControlName="title" placeholder="Ej: Dress Code"></label>
+                    <label class="nw-label">Orden <input class="nw-input" formControlName="order" type="number"></label>
+                    <label class="nw-label nw-form-wide">Cuerpo del texto <textarea class="nw-input" formControlName="body" rows="3"></textarea></label>
+                    <label class="nw-label nw-form-wide">URL Enlace / CTA <input class="nw-input" formControlName="url" placeholder="https://..."></label>
+                    <label class="nw-label nw-form-wide">Imagen Sección
+                      <input class="nw-input" formControlName="imageUrl" placeholder="https://.../imagen.jpg">
+                      <div style="margin-top:6px;">
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" #sectionFile (change)="uploadExternalAsset($event, 'sectionImage', i)">
+                        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="sectionFile.click()">Subir imagen</button>
+                      </div>
+                    </label>
+                    <label class="nw-label nw-form-wide">Roles visibles (separados por coma) <input class="nw-input" formControlName="rolesText" placeholder="familia, vip, padrino"></label>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:10px;" type="button" (click)="removeArrayItem('sections', i)">🗑️ Eliminar Sección</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Regalos (Mesa de Regalos) -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;" formArrayName="giftRegistry">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong>Tiendas de Mesa de Regalos</strong>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addGift()">+ Agregar Tienda</button>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div *ngFor="let group of giftItems.controls; let i = index" [formGroupName]="i" class="nw-card" style="background:var(--nw-surface); padding:12px; border: 1px solid var(--nw-border);">
+                  <div class="nw-form-grid">
+                    <label class="nw-label">Tienda <input class="nw-input" formControlName="store" placeholder="Ej: Liverpool, Amazon"></label>
+                    <label class="nw-label">Título <input class="nw-input" formControlName="title" placeholder="Mesa de regalos"></label>
+                    <label class="nw-label nw-form-wide">URL Mesa <input class="nw-input" formControlName="url" placeholder="https://..."></label>
+                    <label class="nw-label nw-form-wide">URL Logo / Imagen <input class="nw-input" formControlName="imageUrl" placeholder="https://.../logo.png"></label>
+                    <label class="nw-label nw-form-wide">Nota <input class="nw-input" formControlName="note" placeholder="Ej: Código de mesa 123456"></label>
+                    <label class="nw-label">Prioridad <input class="nw-input" formControlName="priority" type="number"></label>
+                  </div>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:10px;" type="button" (click)="removeArrayItem('giftRegistry', i)">🗑️ Eliminar Tienda</button>
+                </div>
+              </div>
+            </div>
+
             <button class="nw-btn nw-btn-primary" type="submit" [disabled]="externalSaving">{{ externalSaving ? 'Guardando...' : 'Guardar integración' }}</button>
           </form>
         </div>
@@ -650,14 +829,20 @@
 
         <!-- API + Widgets -->
         <div class="nw-card" *ngIf="externalApiConfigUrl" style="margin-bottom:16px;">
-          <div class="nw-card-header"><h3>API + Widgets</h3></div>
+          <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <h3>API + Widgets</h3>
+            <div style="display:flex; gap:8px;">
+              <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-gold nw-btn-sm" [href]="'/assets/demo-integraciones.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">🌐 Ver Demo de Integraciones</a>
+              <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary nw-btn-sm" [href]="'/assets/demo-integraciones-2.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">💌 Ver Demo de Invitación Completa</a>
+            </div>
+          </div>
           <p style="color:var(--nw-text-3); font-size:14px; margin-bottom:12px;">Usa iframe para Webflow/WordPress o JSON para React, Angular.</p>
           <div style="display:grid; gap:8px;">
             <div style="padding:8px 12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
               <strong>API JSON pública</strong>
               <p style="font-size:13px; color:var(--nw-text-3); word-break:break-all; margin:4px 0;">{{ externalApiConfigUrl }}</p>
             </div>
-            <div *ngFor="let widget of embedWidgets" style="padding:8px 12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+            <div *ngFor="let widget of newEmbedWidgets" style="padding:8px 12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
               <strong>{{ widget.label }}</strong>
               <p style="font-size:12px; color:var(--nw-text-3); word-break:break-all; margin:4px 0;">{{ widget.url }}</p>
               <textarea readonly rows="2" style="width:100%; font-size:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:6px; color:var(--nw-text-2);">{{ widget.snippet }}</textarea>
@@ -666,12 +851,16 @@
         </div>
 
         <!-- Portal link -->
-        <div class="nw-card" *ngIf="externalPortalUrl" style="margin-bottom:16px;">
-          <div style="display:flex; align-items:center; gap:16px;">
-            <img [src]="externalPortalQrUrl" alt="QR portal" style="width:100px; height:100px; border-radius:8px;">
-            <div>
-              <strong>Portal KyndraSoft</strong>
-              <p style="color:var(--nw-text-3); margin:4px 0 0; word-break:break-all;">{{ externalPortalUrl }}</p>
+        <div class="nw-card" *ngIf="newExternalPortalUrl" style="margin-bottom:16px;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
+            <!-- New Portal -->
+            <div style="display:flex; align-items:center; gap:16px;">
+              <img [src]="newExternalPortalQrUrl" alt="QR portal nuevo" style="width:100px; height:100px; border-radius:8px;">
+              <div>
+                <strong>Portal KyndraSoft</strong>
+                <p style="color:var(--nw-text-3); margin:4px 0 0; word-break:break-all;">{{ newExternalPortalUrl }}</p>
+                <textarea readonly rows="2" style="width:100%; font-size:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:6px; color:var(--nw-text-2); margin-top:8px;">{{ newRsvpIframeSnippet }}</textarea>
+              </div>
             </div>
           </div>
         </div>
