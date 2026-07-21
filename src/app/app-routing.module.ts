@@ -24,6 +24,8 @@ import { NewContactComponent } from './features/new-contact/new-contact.componen
 import { NewPlanComponent } from './features/new-plan/new-plan.component';
 import { NewEventAccessComponent } from './features/new-event-access/new-event-access.component';
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
+import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
+import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -51,6 +53,8 @@ const routes: Routes = [
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
   { path: 'new/external-access/:token', component: NewEventAccessComponent },
   { path: 'new/check-in/:token', component: NewCheckInStaffComponent },
+  { path: 'new/embed/:portalSlug/:widget', component: NewExternalEmbedComponent },
+  { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
