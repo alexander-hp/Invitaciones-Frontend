@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyndra - Gestión de Bodas | Demo</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&family=Great+Vibes&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --gold: #c9a96e;
+            --gold-light: #e0d5c1;
+            --gold-dark: #a68a4c;
+            --cream: #faf7f2;
+            --white: #ffffff;
+            --charcoal: #2c2c2c;
+            --text: #4a4a4a;
+            --text-light: #7a7a7a;
+            --border: #e8e0d5;
+            --rose: #d4a0a0;
+            --rose-light: #f9f0f0;
+            --sage: #a8b5a2;
+            --sage-light: #eef2ec;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+            --shadow-gold: 0 4px 24px rgba(201, 169, 110, 0.25);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --transition: 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #f5f0e8;
+            background-image:
+                radial-gradient(ellipse at 20% 10%, rgba(201, 169, 110, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 90%, rgba(212, 160, 160, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 50%, rgba(168, 181, 162, 0.04) 0%, transparent 70%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============ TOP NAV ============ */
+        .top-nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--charcoal);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-brand .icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .nav-actions .badge {
+            background: var(--sage-light);
+            color: #5a6b52;
+            padding: 0.35rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* ============ MAIN LAYOUT ============ */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 3rem;
+        }
+
+        /* ============ HERO / WEDDING HEADER ============ */
+        .wedding-hero {
+            text-align: center;
+            padding: 2.5rem 2rem 2rem;
+            position: relative;
+        }
+
+        .wedding-hero .ornament {
+            font-size: 2rem;
+            color: var(--gold);
+            letter-spacing: 6px;
+            opacity: 0.7;
+            margin-bottom: 0.3rem;
+        }
+
+        .wedding-hero h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3.4rem;
+            color: var(--charcoal);
+            font-weight: 400;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            margin-bottom: 0.2rem;
+        }
+
+        .wedding-hero .ampersand {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 2rem;
+            color: var(--gold);
+            display: block;
+            margin: -0.1rem 0 0.1rem;
+        }
+
+        .wedding-hero .date-line {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .wedding-hero .divider {
+            width: 80px;
+            height: 1.5px;
+            background: var(--gold);
+            margin: 1rem auto;
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        /* ============ TAB SWITCHER ============ */
+        .tab-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 0.7rem 1.8rem;
+            border-radius: 30px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.4px;
+            transition: var(--transition);
+            color: var(--text);
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold-dark);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-gold);
+            font-weight: 600;
+        }
+
+        .tab-btn .tab-icon {
+            margin-right: 6px;
+        }
+
+        /* ============ SECTION TITLES ============ */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--charcoal);
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            margin-left: 0.5rem;
+            opacity: 0.6;
+        }
+
+        .section-subtitle {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-light);
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+
+        /* ============ GRID LAYOUTS ============ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-grid.wide-left {
+            grid-template-columns: 1.2fr 0.8fr;
+        }
+
+        .dashboard-grid.wide-right {
+            grid-template-columns: 0.8fr 1.2fr;
+        }
+
+        .dashboard-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .dashboard-grid.full-width {
+            grid-template-columns: 1fr;
+        }
+
+        @media (max-width: 900px) {
+
+            .dashboard-grid,
+            .dashboard-grid.wide-left,
+            .dashboard-grid.wide-right,
+            .dashboard-grid.three-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============ IFRAME CARD ============ */
+        .iframe-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .iframe-card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        .iframe-card-header {
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fdfcf9;
+        }
+
+        .iframe-card-header .card-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .iframe-card-header .card-label .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot.gold {
+            background: var(--gold);
+        }
+
+        .dot.rose {
+            background: var(--rose);
+        }
+
+        .dot.sage {
+            background: var(--sage);
+        }
+
+        .dot.charcoal {
+            background: var(--charcoal);
+        }
+
+        .iframe-card-header .version-tag {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .version-tag.old {
+            background: #f0ebe0;
+            color: #8a7a5a;
+        }
+
+        .version-tag.new {
+            background: #e8f5e9;
+            color: #3a7d44;
+        }
+
+        .iframe-wrapper {
+            position: relative;
+            flex: 1;
+            min-height: 200px;
+            background: #fafaf8;
+        }
+
+        .iframe-wrapper iframe {
+            display: block;
+            width: 100%;
+            border: none;
+            background: #fafaf8;
+        }
+
+        .iframe-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+            text-align: center;
+            color: #c5c0b5;
+            font-size: 0.85rem;
+            gap: 0.5rem;
+            min-height: 180px;
+            background: linear-gradient(180deg, #fdfdfc 0%, #f9f7f2 100%);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+
+        .iframe-placeholder .ph-icon {
+            font-size: 2.5rem;
+            opacity: 0.5;
+        }
+
+        .iframe-placeholder .ph-text {
+            font-size: 0.75rem;
+            letter-spacing: 0.3px;
+            opacity: 0.7;
+        }
+
+        .iframe-placeholder .ph-url {
+            font-size: 0.65rem;
+            background: #f5f2ea;
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #a09580;
+            word-break: break-all;
+            max-width: 90%;
+        }
+
+        /* ============ INVITATION CARD (para vista completa) ============ */
+        .invitation-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            border: 2px solid var(--gold-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .invitation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--rose), var(--gold));
+            opacity: 0.7;
+        }
+
+        .invitation-card .invite-names {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.8rem;
+            color: var(--charcoal);
+            letter-spacing: 1px;
+        }
+
+        .invitation-card .invite-details {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        /* ============ WIDGET DEMO AREA ============ */
+        .widget-demo {
+            background: #fdfcf9;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .widget-demo .widget-label {
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 0.8rem;
+        }
+
+        .widget-demo .mock-widget {
+            display: inline-block;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.2rem 2rem;
+            box-shadow: var(--shadow-sm);
+            font-weight: 500;
+            color: var(--charcoal);
+            letter-spacing: 0.5px;
+        }
+
+        .widget-demo code {
+            display: block;
+            font-size: 0.7rem;
+            background: #2c2c2c;
+            color: #e0d5c1;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            margin-top: 0.8rem;
+            text-align: left;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ============ BADGES & TAGS ============ */
+        .section-badge {
+            display: inline-block;
+            font-size: 0.68rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 0.25rem 0.8rem;
+            border-radius: 20px;
+            margin-bottom: 0.8rem;
+        }
+
+        .section-badge.complete {
+            background: #fdf2f2;
+            color: #b56565;
+        }
+
+        .section-badge.dashboard-only {
+            background: #eef5ed;
+            color: #4a7c4f;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .wedding-hero h1 {
+                font-size: 2.4rem;
+            }
+
+            .tab-btn {
+                padding: 0.5rem 1.2rem;
+                font-size: 0.75rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .invitation-card {
+                padding: 1.5rem;
+            }
+
+            .invitation-card .invite-names {
+                font-size: 2rem;
+            }
+        }
+
+        /* ============ TOOLTIP ============ */
+        .info-tooltip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            color: var(--gold-dark);
+            font-size: 0.6rem;
+            font-weight: 700;
+            cursor: help;
+            margin-left: 4px;
+        }
+
+        /* ============ ANIMATIONS ============ */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .delay-1 {
+            animation-delay: 0.05s;
+            opacity: 0;
+        }
+
+        .delay-2 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+
+        .delay-3 {
+            animation-delay: 0.15s;
+            opacity: 0;
+        }
+
+        .delay-4 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+
+        .delay-5 {
+            animation-delay: 0.25s;
+            opacity: 0;
+        }
+
+        .delay-6 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .visible-section {
+            display: block;
+        }
+
+        /* ============ DYNAMIC SECTIONS STYLING ============ */
+        .dynamic-sec-container {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .dynamic-section-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 2.2rem 2rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .dynamic-section-card:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gold-light);
+        }
+
+        .dynamic-section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--charcoal);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+
+        .dynamic-section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 1.5px;
+            background: var(--gold);
+            margin: 0.5rem auto 0;
+            opacity: 0.7;
+        }
+
+        /* Locations grid */
+        .loc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .loc-card {
+            background: var(--cream);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            border: 1px solid rgba(201, 169, 110, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .loc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+            border-color: var(--gold-light);
+        }
+
+        .loc-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loc-badge {
+            background: var(--gold-light);
+            color: var(--gold-dark);
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .loc-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .loc-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .loc-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .loc-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gold-light);
+            background: white;
+            color: var(--gold-dark);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .loc-btn:hover {
+            background: var(--gold-light);
+            color: var(--charcoal);
+        }
+
+        /* Gifts section */
+        .gifts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .store-card {
+            background: #fff;
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+
+        .store-card:hover {
+            border-color: var(--gold);
+        }
+
+        .store-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--cream);
+            border: 1px solid var(--border);
+        }
+
+        .store-info {
+            flex: 1;
+        }
+
+        .store-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .store-link {
+            font-size: 0.75rem;
+            color: var(--gold-dark);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .store-link:hover {
+            text-decoration: underline;
+        }
+
+        .envelope-card {
+            background: var(--cream);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            border: 1px solid rgba(201, 169, 110, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .envelope-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            border-bottom: 1px dashed rgba(201, 169, 110, 0.15);
+            padding-bottom: 0.4rem;
+        }
+
+        .envelope-row:last-child {
+            border: none;
+            padding: 0;
+        }
+
+        .envelope-val {
+            font-weight: 600;
+            color: var(--charcoal);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(201, 169, 110, 0.15);
+            color: var(--gold-dark);
+            transition: var(--transition);
+        }
+
+        .copy-btn:hover {
+            background: var(--gold-dark);
+            color: white;
+        }
+
+        /* FAQ accordion */
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 0.8rem 0;
+            text-align: left;
+        }
+
+        .faq-item:last-child {
+            border: none;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--charcoal);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+            display: none;
+            line-height: 1.5;
+        }
+
+        .faq-answer.open {
+            display: block;
+        }
+
+        /* Dress code styling */
+        .dress-code-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .dress-code-icon {
+            font-size: 2.2rem;
+            color: var(--gold-dark);
+        }
+
+        .dress-code-text {
+            max-width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==================== TOP NAVIGATION ==================== -->
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <div class="icon">💍</div>
+            Kyndra<span style="font-weight:300;color:var(--text-light);">.io</span>
+        </div>
+        <div class="nav-actions">
+            <span class="badge" id="nav-date">📅 15 · Junio · 2026</span>
+            <span class="badge" id="nav-hosts" style="background:#fdf2f2;color:#b56565;">❤️ Ana & Carlos</span>
+        </div>
+    </nav>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="main-container">
+
+        <!-- ============ WEDDING HERO ============ -->
+        <div class="wedding-hero">
+            <div class="ornament">✦ ✦ ✦</div>
+            <h1 id="hero-title">Ana <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;">&</span> Carlos</h1>
+            <span class="date-line" id="hero-details">15 · Junio · 2026 &nbsp;|&nbsp; Hacienda El Paraíso</span>
+            <div class="divider"></div>
+        </div>
+
+        <!-- ============ TAB SWITCHER ============ -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" onclick="switchTab('complete')" id="tab-complete">
+                <span class="tab-icon">💌</span> Invitación Digital Completa
+            </button>
+            <button class="tab-btn" onclick="switchTab('dashboard')" id="tab-dashboard">
+                <span class="tab-icon">📊</span> Solo Dashboard
+            </button>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- VISTA 1: INVITACIÓN DIGITAL COMPLETA -->
+        <!-- ================================================================ -->
+        <div id="view-complete" class="visible-section">
+
+            <span class="section-badge complete">✨ Vista Completa · Invitación + Dashboard</span>
+
+            <!-- INVITACIÓN FORMAL -->
+            <div class="dashboard-grid full-width animate-in delay-1">
+                <div class="invitation-card" id="main-invitation-card">
+                    <div
+                        style="font-family:'Cormorant Garamond',serif;font-size:0.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--text-light);">
+                        Con la bendición de Dios y nuestros padres</div>
+                    <div class="invite-names" id="invite-hosts" style="margin:0.8rem 0;">Ana & Carlos</div>
+                    <div style="font-family:'Montserrat',sans-serif;font-size:0.85rem;color:var(--text);">Tenemos el
+                        honor de invitarte a celebrar<br>nuestra unión el día</div>
+                    <div class="invite-date" id="invite-date"
+                        style="font-size:1.8rem;font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--charcoal);margin:0.6rem 0;">
+                        15 · Junio · 2026</div>
+                    <div id="invite-details" style="font-family:'Montserrat',sans-serif;font-size:0.8rem;color:var(--text-light);">5:00 PM
+                        &nbsp;|&nbsp; Hacienda El Paraíso</div>
+                    <div style="margin-top:1.2rem;font-size:0.75rem;letter-spacing:1px;color:var(--gold-dark);">
+                        Recepción · Cena · Baile</div>
+                    <div style="margin-top:0.8rem;font-size:0.7rem;color:var(--text-light);">Se agradece confirmar
+                        asistencia</div>
+                </div>
+            </div>
+
+            <!-- DYNAMIC SECTIONS: LOCATIONS, GIFTS, ETC. -->
+            <div id="dynamic-invitation-sections" class="animate-in delay-2" style="margin-top: 2rem;"></div>
+
+            <!-- IFRAMES DEL DASHBOARD (VERSIONES ORIGINALES "OLD") -->
+            <p class="section-subtitle" style="margin-top:2rem;">📋 Dashboard Integrado · Versión Original</p>
+            <div class="section-title">Componentes del Evento</div>
+
+            <!-- RSVP + Pase QR -->
+            <div class="dashboard-grid wide-left animate-in delay-2">
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot gold"></span> RSVP · Confirmación</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/rsvp" width="100%" height="400"
+                            style="border:0" title="RSVP"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">📝</span>
+                            <span class="ph-text">RSVP Embed · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/rsvp</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot rose"></span> Pase QR</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/guest-pass" width="100%"
+                            height="400" style="border:0" title="Pase QR"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">📱</span>
+                            <span class="ph-text">Guest Pass · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/guest-pass</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Álbum + Galería -->
+            <div class="dashboard-grid wide-right animate-in delay-3">
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot sage"></span> Álbum</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/album" width="100%" height="400"
+                            style="border:0" title="Álbum"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">📸</span>
+                            <span class="ph-text">Álbum Embed · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/album</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot sage"></span> Galería</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/gallery" width="100%"
+                            height="400" style="border:0" title="Galería"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">🖼️</span>
+                            <span class="ph-text">Gallery Embed · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/gallery</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa + DJ -->
+            <div class="dashboard-grid wide-left animate-in delay-4">
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot charcoal"></span> Mapa</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/map" width="100%" height="360"
+                            style="border:0" title="Mapa"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">📍</span>
+                            <span class="ph-text">Map Embed · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/map</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot rose"></span> DJ · Song Requests</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/song-requests" width="100%"
+                            height="360" style="border:0" title="DJ Song Requests"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">🎵</span>
+                            <span class="ph-text">Song Requests · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/song-requests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portal Completo + Widget RSVP -->
+            <div class="dashboard-grid full-width animate-in delay-5">
+                <div class="iframe-card">
+                    <div class="iframe-card-header">
+                        <span class="card-label"><span class="dot gold"></span> Portal Completo</span>
+                        <span class="version-tag old">v1 · old</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboaard-eventos-old/full-portal" width="100%"
+                            height="600" style="border:0" title="Portal Completo"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(250,247,242,0.85);">
+                            <span class="ph-icon">🏛️</span>
+                            <span class="ph-text">Full Portal · localhost:4200</span>
+                            <span class="ph-url">/embed/dashboaard-eventos-old/full-portal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget RSVP -->
+            <div class="widget-demo animate-in delay-6">
+                <div class="widget-label">🔌 Widget RSVP (Div + Script Embed)</div>
+                <div class="mock-widget">✅ RSVP Widget Activo — "Confirma tu asistencia"</div>
+                <code>&lt;div data-kyndra-widget="rsvp" data-portal="dashboaard-eventos-old"&gt;&lt;/div&gt;
+                    &lt;script src="http://localhost:4200/assets/kyndra-embed.js"&gt;&lt;/script&gt;</code>
+                <p style="font-size:0.7rem;color:var(--text-light);margin-top:0.5rem;">Este widget se incrusta en
+                    cualquier página externa para capturar confirmaciones RSVP.</p>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- VISTA 2: SOLO DASHBOARD (NUEVO DISEÑO · VERSIONES "NEW") -->
+        <!-- ================================================================ -->
+        <div id="view-dashboard" class="hidden-section">
+
+            <span class="section-badge dashboard-only">📊 Vista Solo Dashboard · Sin invitación formal</span>
+
+            <p class="section-subtitle">Panel de Gestión</p>
+            <div class="section-title">Dashboard del Evento <span class="info-tooltip"
+                    title="Esta vista omite la invitación formal y se enfoca en las herramientas de gestión. Los iframes usan las nuevas versiones 'new' con diseño actualizado.">?</span>
+            </div>
+
+            <!-- DESCRIPCIÓN BREVE -->
+            <div
+                style="background:var(--sage-light);border-radius:var(--radius-md);padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:0.82rem;color:#4a5e44;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+                <span style="font-size:1.5rem;">💡</span>
+                <span>En esta modalidad, <strong>tú creas la invitación digital por tu cuenta</strong> (en otra
+                    plataforma o diseño propio) y <strong>nosotros proporcionamos los iframes del dashboard</strong>
+                    para gestionar RSVP, pases QR, álbum, galería, mapa, solicitudes de canciones y más. Todos los
+                    componentes usan las <strong>versiones "new"</strong> con diseño renovado.</span>
+            </div>
+
+            <!-- ============ IFRAMES VERSIÓN "NEW" ============ -->
+            <!-- RSVP NEW + Pase QR NEW -->
+            <div class="dashboard-grid wide-left animate-in delay-1">
+                <div class="iframe-card" style="border:2px solid #e8f5e9;">
+                    <div class="iframe-card-header" style="background:#f8fdf8;">
+                        <span class="card-label"><span class="dot gold"></span> RSVP · Confirmación</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/rsvp" width="100%" height="420"
+                            style="border:0" title="RSVP New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(248,253,248,0.88);">
+                            <span class="ph-icon">✅</span>
+                            <span class="ph-text">RSVP v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/rsvp</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iframe-card" style="border:2px solid #fdf2f2;">
+                    <div class="iframe-card-header" style="background:#fefafa;">
+                        <span class="card-label"><span class="dot rose"></span> Pase QR</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/guest-pass" width="100%"
+                            height="420" style="border:0" title="Guest Pass New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(254,250,250,0.88);">
+                            <span class="ph-icon">🎫</span>
+                            <span class="ph-text">Guest Pass v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/guest-pass</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Álbum NEW + Galería NEW -->
+            <div class="dashboard-grid wide-right animate-in delay-2">
+                <div class="iframe-card" style="border:2px solid #eef5ed;">
+                    <div class="iframe-card-header" style="background:#f9fdf8;">
+                        <span class="card-label"><span class="dot sage"></span> Álbum</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/album" width="100%" height="420"
+                            style="border:0" title="Álbum New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(249,253,248,0.88);">
+                            <span class="ph-icon">📸</span>
+                            <span class="ph-text">Álbum v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/album</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iframe-card" style="border:2px solid #eef5ed;">
+                    <div class="iframe-card-header" style="background:#f9fdf8;">
+                        <span class="card-label"><span class="dot sage"></span> Galería</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/gallery" width="100%"
+                            height="420" style="border:0" title="Galería New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(249,253,248,0.88);">
+                            <span class="ph-icon">🖼️</span>
+                            <span class="ph-text">Gallery v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/gallery</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa NEW + DJ NEW -->
+            <div class="dashboard-grid wide-left animate-in delay-3">
+                <div class="iframe-card" style="border:2px solid #f5f5f5;">
+                    <div class="iframe-card-header" style="background:#fdfdfd;">
+                        <span class="card-label"><span class="dot charcoal"></span> Mapa</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/map" width="100%" height="380"
+                            style="border:0" title="Mapa New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(253,253,253,0.88);">
+                            <span class="ph-icon">📍</span>
+                            <span class="ph-text">Map v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/map</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iframe-card" style="border:2px solid #fdf2f2;">
+                    <div class="iframe-card-header" style="background:#fefafa;">
+                        <span class="card-label"><span class="dot rose"></span> DJ · Song Requests</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/song-requests" width="100%"
+                            height="380" style="border:0" title="DJ New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(254,250,250,0.88);">
+                            <span class="ph-icon">🎵</span>
+                            <span class="ph-text">Song Requests v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/song-requests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portal Completo NEW -->
+            <div class="dashboard-grid full-width animate-in delay-4">
+                <div class="iframe-card" style="border:2px solid #e8f5e9;">
+                    <div class="iframe-card-header" style="background:#f8fdf8;">
+                        <span class="card-label"><span class="dot gold"></span> Portal Completo</span>
+                        <span class="version-tag new">✨ v2 · new</span>
+                    </div>
+                    <div class="iframe-wrapper">
+                        <iframe src="http://localhost:4200/embed/dashboard-eventos-new/full-portal" width="100%"
+                            height="620" style="border:0" title="Portal Completo New"></iframe>
+                        <div class="iframe-placeholder"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;background:rgba(248,253,248,0.88);">
+                            <span class="ph-icon">🏛️</span>
+                            <span class="ph-text">Full Portal v2 · Nuevo diseño</span>
+                            <span class="ph-url">/embed/dashboard-eventos-new/full-portal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget RSVP NEW -->
+            <div class="widget-demo animate-in delay-5" style="border-color:#c8e6c9;background:#f9fdf8;">
+                <div class="widget-label">🔌 Widget RSVP · Versión New (Div + Script)</div>
+                <div class="mock-widget" style="background:#e8f5e9;color:#2e5a30;">✨ RSVP Widget v2 — "Confirma tu
+                    asistencia" · Diseño renovado</div>
+                <code>&lt;div data-kyndra-widget="rsvp" data-portal="dashboard-eventos-new"&gt;&lt;/div&gt;
+                    &lt;script src="http://localhost:4200/assets/kyndra-embed-v2.js"&gt;&lt;/script&gt;</code>
+                <p style="font-size:0.7rem;color:var(--text-light);margin-top:0.5rem;">Widget actualizado con el nuevo
+                    diseño. Se integra fácilmente en cualquier sitio externo.</p>
+            </div>
+
+            <!-- COMPARATIVA RÁPIDA -->
+            <div class="animate-in delay-6" style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+                <div
+                    style="flex:1;min-width:250px;background:white;border-radius:var(--radius-md);padding:1.2rem;box-shadow:var(--shadow-sm);border-left:3px solid var(--gold);">
+                    <strong style="font-size:0.85rem;">📦 Versión Old</strong>
+                    <p style="font-size:0.75rem;color:var(--text-light);margin-top:0.3rem;">URL: <code
+                            style="font-size:0.7rem;">/embed/dashboaard-eventos-old/...</code></p>
+                    <p style="font-size:0.75rem;color:var(--text-light);">Diseño clásico, integrado con invitación
+                        completa.</p>
+                </div>
+                <div
+                    style="flex:1;min-width:250px;background:white;border-radius:var(--radius-md);padding:1.2rem;box-shadow:var(--shadow-sm);border-left:3px solid #4caf50;">
+                    <strong style="font-size:0.85rem;">✨ Versión New</strong>
+                    <p style="font-size:0.75rem;color:var(--text-light);margin-top:0.3rem;">URL: <code
+                            style="font-size:0.7rem;">/embed/dashboard-eventos-new/...</code></p>
+                    <p style="font-size:0.75rem;color:var(--text-light);">Diseño moderno, para integración con
+                        invitaciones externas.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div
+        style="text-align:center;padding:1.5rem;font-size:0.7rem;color:var(--text-light);letter-spacing:0.5px;border-top:1px solid var(--border);margin-top:1rem;">
+        Kyndra · Plataforma de Gestión de Bodas &nbsp;|&nbsp; Los iframes se cargan desde <code>localhost:4200</code>
+        &nbsp;|&nbsp; Demo 2026
+    </div>
+
+    <script>
+        function switchTab(view) {
+            // Ocultar ambas vistas
+            document.getElementById('view-complete').classList.add('hidden-section');
+            document.getElementById('view-complete').classList.remove('visible-section');
+            document.getElementById('view-dashboard').classList.add('hidden-section');
+            document.getElementById('view-dashboard').classList.remove('visible-section');
+
+            // Mostrar la seleccionada
+            if (view === 'complete') {
+                document.getElementById('view-complete').classList.remove('hidden-section');
+                document.getElementById('view-complete').classList.add('visible-section');
+                document.getElementById('tab-complete').classList.add('active');
+                document.getElementById('tab-dashboard').classList.remove('active');
+            } else {
+                document.getElementById('view-dashboard').classList.remove('hidden-section');
+                document.getElementById('view-dashboard').classList.add('visible-section');
+                document.getElementById('tab-dashboard').classList.add('active');
+                document.getElementById('tab-complete').classList.remove('active');
+            }
+
+            // Re-trigger animations
+            const visibleCards = document.querySelectorAll('.visible-section .animate-in');
+            visibleCards.forEach(card => {
+                card.style.animation = 'none';
+                card.offsetHeight;
+                card.style.animation = '';
+            });
+
+            // Scroll suave al inicio de la vista
+            const target = document.getElementById(view === 'complete' ? 'view-complete' : 'view-dashboard');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function formatSpanishDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    const day = parseInt(parts[2], 10);
+                    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    return `${day} · ${months[month]} · ${year}`;
+                }
+            } catch (e) {
+                console.error('Error formatting date:', e);
+            }
+            return dateStr;
+        }
+
+        function copyToClipboard(text, btnElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnElement.textContent;
+                btnElement.textContent = '📋 ¡Copiado!';
+                btnElement.style.background = '#4caf50';
+                btnElement.style.color = '#ffffff';
+                setTimeout(() => {
+                    btnElement.textContent = originalText;
+                    btnElement.style.background = '';
+                    btnElement.style.color = '';
+                }, 1500);
+            }).catch(err => {
+                console.error('Error copying text: ', err);
+            });
+        }
+
+        function toggleFaq(el) {
+            const answer = el.nextElementSibling;
+            const arrow = el.querySelector('span:last-child');
+            if (answer.classList.contains('open')) {
+                answer.classList.remove('open');
+                arrow.textContent = '▼';
+            } else {
+                answer.classList.add('open');
+                arrow.textContent = '▲';
+            }
+        }
+
+        function renderDynamicSections(event) {
+            const container = document.getElementById('dynamic-invitation-sections');
+            if (!container) return;
+
+            let html = '<div class="dynamic-sec-container">';
+            const content = event.externalContent || {};
+
+            // 1. LOCATIONS SECTION
+            const locations = content.locations || [];
+            const hasMainVenue = event.venue && event.venue.name;
+            if (hasMainVenue || locations.length > 0) {
+                html += `
+                <div class="dynamic-section-card">
+                    <h2 class="dynamic-section-title">📍 Ubicación e Itinerario</h2>
+                    <div class="loc-grid">`;
+                
+                if (hasMainVenue) {
+                    html += `
+                    <div class="loc-card">
+                        <div class="loc-header">
+                            <span class="loc-badge">Principal</span>
+                            <span class="loc-name">${event.venue.name}</span>
+                        </div>
+                        <div class="loc-meta">
+                            ${event.venue.address ? `<span><strong>Dirección:</strong> ${event.venue.address}</span>` : ''}
+                            <span><strong>Evento:</strong> Recepción principal</span>
+                        </div>
+                        <div class="loc-actions">
+                            ${event.venue.mapUrl ? `<a class="loc-btn" href="${event.venue.mapUrl}" target="_blank">🗺️ Google Maps</a>` : ''}
+                        </div>
+                    </div>`;
+                }
+
+                locations.forEach(loc => {
+                    html += `
+                    <div class="loc-card">
+                        <div class="loc-header">
+                            <span class="loc-badge">${loc.type || 'Evento'}</span>
+                            <span class="loc-name">${loc.name || 'Ubicación'}</span>
+                        </div>
+                        <div class="loc-meta">
+                            ${loc.address ? `<span><strong>Dirección:</strong> ${loc.address}</span>` : ''}
+                            ${loc.time ? `<span><strong>Hora:</strong> ${loc.time}</span>` : ''}
+                            ${loc.notes ? `<span><strong>Nota:</strong> ${loc.notes}</span>` : ''}
+                        </div>
+                        <div class="loc-actions">
+                            ${loc.mapUrl ? `<a class="loc-btn" href="${loc.mapUrl}" target="_blank">🗺️ Google Maps</a>` : ''}
+                            ${loc.wazeUrl ? `<a class="loc-btn" href="${loc.wazeUrl}" target="_blank">🚙 Waze</a>` : ''}
+                        </div>
+                    </div>`;
+                });
+
+                html += `
+                    </div>
+                </div>`;
+            }
+
+            // 2. GIFT REGISTRY SECTION
+            const giftSettings = content.giftSettings || {};
+            if (giftSettings.enabled !== false) {
+                const registry = content.giftRegistry || [];
+                const envelope = content.digitalEnvelope || {};
+                const hasRegistry = giftSettings.showRegistry !== false && registry.length > 0;
+                const hasEnvelope = giftSettings.showEnvelope !== false && (envelope.bank || envelope.clabe || envelope.account);
+
+                if (hasRegistry || hasEnvelope) {
+                    html += `
+                    <div class="dynamic-section-card">
+                        <h2 class="dynamic-section-title">🎁 Mesa de Regalos</h2>
+                        <p style="font-size:0.85rem; color:var(--text-light); text-align:center; margin-bottom:1.5rem; max-width:600px; margin-left:auto; margin-right:auto;">
+                            ${giftSettings.introText || 'Tu presencia es nuestro mayor regalo, pero si deseas hacernos un detalle, te dejamos nuestras opciones.'}
+                        </p>
+                        <div class="gifts-grid">`;
+
+                    if (hasRegistry) {
+                        html += `<div style="display:flex; flex-direction:column; gap:1rem;">`;
+                        registry.forEach(gift => {
+                            const storeLabel = gift.store || gift.title || gift.label || 'Tienda';
+                            const noteText = gift.note ? `<p style="font-size:0.75rem; color:var(--text-light);">${gift.note}</p>` : '';
+                            html += `
+                            <div class="store-card">
+                                <div class="store-img" style="${gift.imageUrl ? `background-image: url('${gift.imageUrl}')` : ''}"></div>
+                                <div class="store-info">
+                                    <div class="store-title">${storeLabel}</div>
+                                    ${noteText}
+                                    ${gift.url ? `<a class="store-link" href="${gift.url}" target="_blank">Ver Mesa de Regalos →</a>` : ''}
+                                </div>
+                            </div>`;
+                        });
+                        html += `</div>`;
+                    }
+
+                    if (hasEnvelope) {
+                        html += `
+                        <div class="envelope-card">
+                            <h3 style="font-size: 1rem; color: var(--charcoal); margin-bottom: 0.5rem; text-align:center;">✉️ Transferencia Bancaria</h3>
+                            <div style="display:flex; flex-direction:column; gap:0.6rem;">`;
+                        
+                        if (envelope.bank) {
+                            html += `
+                            <div class="envelope-row">
+                                <span>Banco</span>
+                                <span class="envelope-val">${envelope.bank}</span>
+                            </div>`;
+                        }
+                        if (envelope.holder) {
+                            html += `
+                            <div class="envelope-row">
+                                <span>Titular</span>
+                                <span class="envelope-val">${envelope.holder}</span>
+                            </div>`;
+                        }
+                        if (envelope.account) {
+                            html += `
+                            <div class="envelope-row">
+                                <span>Cuenta</span>
+                                <span class="envelope-val">
+                                    <code>${envelope.account}</code>
+                                    <button class="copy-btn" onclick="copyToClipboard('${envelope.account}', this)">📋 Copiar</button>
+                                </span>
+                            </div>`;
+                        }
+                        if (envelope.clabe) {
+                            html += `
+                            <div class="envelope-row">
+                                <span>CLABE</span>
+                                <span class="envelope-val">
+                                    <code>${envelope.clabe}</code>
+                                    <button class="copy-btn" onclick="copyToClipboard('${envelope.clabe}', this)">📋 Copiar</button>
+                                </span>
+                            </div>`;
+                        }
+                        if (envelope.note) {
+                            html += `
+                            <p style="font-size:0.75rem; color:var(--text-light); text-align:center; font-style:italic; margin-top:0.4rem;">
+                                ${envelope.note}
+                            </p>`;
+                        }
+
+                        if (envelope.qrImageUrl) {
+                            html += `
+                            <div style="text-align:center; margin-top: 0.8rem;">
+                                <img src="${envelope.qrImageUrl}" alt="QR Transferencia" style="max-width: 120px; border-radius: 8px; border: 1px solid var(--border);">
+                            </div>`;
+                        }
+
+                        html += `
+                            </div>
+                        </div>`;
+                    }
+
+                    html += `
+                        </div>
+                    </div>`;
+                }
+            }
+
+            // 3. DRESS CODE & SECTIONS
+            const sections = content.sections || [];
+            const faqs = sections.filter(sec => sec.type === 'faq');
+            const otherSections = sections.filter(sec => sec.type !== 'faq' && sec.type !== 'dress_code');
+
+            // Render Dress Code
+            const dressCode = sections.find(sec => sec.type === 'dress_code');
+            if (dressCode) {
+                html += `
+                <div class="dynamic-section-card">
+                    <h2 class="dynamic-section-title">${dressCode.title || '👗 Código de Vestimenta'}</h2>
+                    <div class="dress-code-container">
+                        <div class="dress-code-icon">👗👔</div>
+                        <div class="dress-code-text">
+                            <p style="font-size: 0.95rem; color: var(--charcoal); font-weight: 500;">${dressCode.body || ''}</p>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // Render other custom sections
+            otherSections.forEach(sec => {
+                html += `
+                <div class="dynamic-section-card">
+                    <h2 class="dynamic-section-title">${sec.title || sec.key || 'Información'}</h2>
+                    <div style="display:flex; flex-direction:column; gap:1rem; align-items:center; text-align:center;">
+                        ${sec.imageUrl ? `<img src="${sec.imageUrl}" alt="${sec.title || 'Sección'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-md); object-fit:cover;">` : ''}
+                        <p style="font-size:0.85rem; color:var(--text-light); max-width:600px; line-height:1.6;">${sec.body || ''}</p>
+                        ${sec.url ? `<a class="loc-btn" href="${sec.url}" target="_blank" style="max-width:200px;">Ver más detalles</a>` : ''}
+                    </div>
+                </div>`;
+            });
+
+            // Render FAQs
+            if (faqs.length > 0) {
+                html += `
+                <div class="dynamic-section-card">
+                    <h2 class="dynamic-section-title">❓ Preguntas Frecuentes</h2>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem; text-align:left;">`;
+                
+                faqs.forEach(faq => {
+                    html += `
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>${faq.title || faq.key || 'Pregunta'}</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="faq-answer">${faq.body || ''}</div>
+                    </div>`;
+                });
+
+                html += `
+                    </div>
+                </div>`;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function updatePageWithEventData(event) {
+            const formattedDate = formatSpanishDate(event.date);
+            const hostsText = event.hosts && event.hosts.length > 0 ? event.hosts.join(' & ') : event.title;
+
+            // Document Title
+            document.title = `Kyndra - Gestión de Bodas | Demo - ${event.title}`;
+
+            // Nav bar
+            const navDate = document.getElementById('nav-date');
+            if (navDate) navDate.innerHTML = `📅 ${formattedDate}`;
+            const navHosts = document.getElementById('nav-hosts');
+            if (navHosts) navHosts.innerHTML = `❤️ ${hostsText}`;
+
+            // Hero
+            const heroTitle = document.getElementById('hero-title');
+            if (heroTitle) {
+                if (event.hosts && event.hosts.length >= 2) {
+                    heroTitle.innerHTML = `${event.hosts[0]} <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;">&</span> ${event.hosts.slice(1).join(' & ')}`;
+                } else {
+                    heroTitle.textContent = event.title;
+                }
+            }
+            const heroDetails = document.getElementById('hero-details');
+            if (heroDetails) {
+                heroDetails.innerHTML = `${formattedDate} &nbsp;|&nbsp; ${event.venue?.name || 'Hacienda El Paraíso'}`;
+            }
+
+            // Invitation Card
+            const inviteHosts = document.getElementById('invite-hosts');
+            if (inviteHosts) {
+                if (event.hosts && event.hosts.length >= 2) {
+                    inviteHosts.innerHTML = `${event.hosts[0]} & ${event.hosts.slice(1).join(' & ')}`;
+                } else {
+                    inviteHosts.textContent = event.title;
+                }
+            }
+            const inviteDate = document.getElementById('invite-date');
+            if (inviteDate) inviteDate.textContent = formattedDate;
+            
+            const inviteDetails = document.getElementById('invite-details');
+            if (inviteDetails) {
+                inviteDetails.innerHTML = `5:00 PM &nbsp;|&nbsp; ${event.venue?.name || 'Hacienda El Paraíso'}<br><span style="font-size:0.75rem; text-transform:none; color:var(--text-light);">${event.venue?.address || ''}</span>`;
+            }
+
+            // Cover banner background
+            const coverUrl = event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl;
+            if (coverUrl) {
+                const heroEl = document.querySelector('.wedding-hero');
+                if (heroEl) {
+                    heroEl.style.backgroundImage = `linear-gradient(rgba(245, 240, 232, 0.85), rgba(245, 240, 232, 0.85)), url('${coverUrl}')`;
+                    heroEl.style.backgroundSize = 'cover';
+                    heroEl.style.backgroundPosition = 'center';
+                    heroEl.style.borderRadius = 'var(--radius-lg)';
+                    heroEl.style.padding = '3.5rem 2rem 3rem';
+                }
+            }
+
+            // Render dynamic content
+            renderDynamicSections(event);
+        }
+
+        // Global exposing
+        window.copyToClipboard = copyToClipboard;
+        window.toggleFaq = toggleFaq;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const portal = params.get('portal') || 'solo-dashboard';
+            const origin = window.location.origin;
+
+            // Determine dynamic API URL based on environment
+            const apiBaseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                ? 'http://localhost:4000/api' 
+                : '/api';
+
+            // 1. Fetch Event Configuration
+            fetch(`${apiBaseUrl}/external/${portal}/config`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Failed to load event config');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.event) {
+                        updatePageWithEventData(data.event);
+                    }
+                })
+                .catch(err => {
+                    console.error('Could not fetch event dynamic data:', err);
+                });
+
+            // 2. Walk through all iframe-wrapper elements and set to NEW embed paths
+            const iframeCards = document.querySelectorAll('.iframe-card');
+            iframeCards.forEach(card => {
+                const iframe = card.querySelector('iframe');
+                const phUrl = card.querySelector('.ph-url');
+
+                if (iframe) {
+                    let title = iframe.getAttribute('title') || '';
+                    let widget = '';
+                    if (title.toLowerCase().includes('rsvp')) widget = 'rsvp';
+                    else if (title.toLowerCase().includes('pass') || title.toLowerCase().includes('pase')) widget = 'guest-pass';
+                    else if (title.toLowerCase().includes('álbum') || title.toLowerCase().includes('album')) widget = 'album';
+                    else if (title.toLowerCase().includes('galería') || title.toLowerCase().includes('gallery')) widget = 'gallery';
+                    else if (title.toLowerCase().includes('mapa') || title.toLowerCase().includes('map')) widget = 'map';
+                    else if (title.toLowerCase().includes('song') || title.toLowerCase().includes('dj')) widget = 'song-requests';
+                    else if (title.toLowerCase().includes('portal')) widget = 'full-portal';
+
+                    if (widget) {
+                        // ALWAYS use `/new/embed/` routes as requested
+                        const path = `/new/embed/${portal}/${widget}`;
+                        const fullUrl = `${origin}${path}`;
+                        iframe.setAttribute('src', fullUrl);
+                        if (phUrl) {
+                            phUrl.textContent = path;
+                        }
+                    }
+                }
+            });
+
+            // 3. Update all <code> blocks and code texts to use /new/embed/
+            const codeBlocks = document.querySelectorAll('code');
+            codeBlocks.forEach(code => {
+                let html = code.innerHTML;
+                if (html) {
+                    html = html.replace(/http:\/\/localhost:4200/g, origin);
+                    html = html.replace(/dashboaard-event-old/g, portal);
+                    html = html.replace(/dashboaard-eventos-old/g, portal);
+                    html = html.replace(/dashboard-eventos-new/g, portal);
+                    // Ensure code snippets show the new route
+                    html = html.replace(/\/embed\//g, '/new/embed/');
+                    code.innerHTML = html;
+                }
+            });
+
+            // 4. Update comparative text / urls
+            const pCodes = document.querySelectorAll('p code');
+            pCodes.forEach(code => {
+                let text = code.textContent;
+                if (text && (text.includes('dashboard-eventos-new') || text.includes('dashboaard-eventos-old') || text.includes('/embed/'))) {
+                    text = text.replace('dashboaard-eventos-old', portal);
+                    text = text.replace('dashboard-eventos-new', portal);
+                    text = text.replace('/embed/', '/new/embed/');
+                    code.textContent = text;
+                }
+            });
+
+            // Update footer local server
+            const footerCode = document.querySelector('div[style*="text-align:center"] code');
+            if (footerCode) {
+                footerCode.textContent = window.location.host;
+            }
+
+            // Asegurar que las animaciones se ejecuten al cargar
+            const animatedElements = document.querySelectorAll('.visible-section .animate-in');
+            animatedElements.forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight;
+                el.style.animation = '';
+            });
+
+            // Configurar interactividad de los placeholders (hacer clic para ocultar)
+            const placeholders = document.querySelectorAll('.iframe-placeholder');
+            placeholders.forEach(ph => {
+                ph.style.pointerEvents = 'auto';
+                ph.style.cursor = 'pointer';
+                ph.style.transition = 'opacity 0.3s ease, background-color 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease';
+                ph.style.backdropFilter = 'blur(4px)';
+                ph.style.webkitBackdropFilter = 'blur(4px)';
+                
+                // Agregar un indicador visual sutil de "hacer clic"
+                const clickHint = document.createElement('span');
+                clickHint.textContent = '🖱️ Haz clic para interactuar';
+                clickHint.style.fontSize = '0.65rem';
+                clickHint.style.marginTop = '10px';
+                clickHint.style.padding = '4px 10px';
+                clickHint.style.background = 'rgba(0, 0, 0, 0.05)';
+                clickHint.style.borderRadius = '20px';
+                clickHint.style.color = '#5a5a5a';
+                clickHint.style.fontWeight = '500';
+                clickHint.style.transition = 'all 0.3s ease';
+                ph.appendChild(clickHint);
+
+                // Efectos de hover
+                ph.addEventListener('mouseenter', () => {
+                    ph.style.backdropFilter = 'blur(1px)';
+                    ph.style.webkitBackdropFilter = 'blur(1px)';
+                    clickHint.style.background = 'rgba(0, 0, 0, 0.08)';
+                    clickHint.style.transform = 'scale(1.05)';
+                });
+                
+                ph.addEventListener('mouseleave', () => {
+                    ph.style.backdropFilter = 'blur(4px)';
+                    ph.style.webkitBackdropFilter = 'blur(4px)';
+                    clickHint.style.background = 'rgba(0, 0, 0, 0.05)';
+                    clickHint.style.transform = 'scale(1)';
+                });
+                
+                // Clic para revelar el iframe
+                ph.addEventListener('click', () => {
+                    ph.style.opacity = '0';
+                    ph.style.pointerEvents = 'none';
+                    setTimeout(() => {
+                        ph.style.display = 'none';
+                    }, 300);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
