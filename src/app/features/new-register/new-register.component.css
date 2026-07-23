@@ -1,0 +1,529 @@
+/* ===============================================================
+   NEW REGISTER COMPONENT STYLES - Premium Event Theme
+   =============================================================== */
+
+.nw-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 10% 20%, rgba(250, 247, 242, 1) 0%, rgba(245, 237, 226, 1) 90.1%);
+  padding: 24px;
+  font-family: var(--nw-font);
+  color: var(--nw-text);
+}
+
+.nw-auth-card {
+  width: 100%;
+  max-width: 1000px;
+  min-height: 720px;
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  border-radius: 24px;
+  box-shadow: var(--nw-shadow-lg);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s var(--nw-ease), box-shadow 0.3s var(--nw-ease);
+}
+
+/* --- Form Column --- */
+.nw-auth-form-col {
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nw-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.nw-auth-logo {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--nw-accent), var(--nw-accent-2));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(192, 156, 120, 0.2);
+}
+
+.nw-brand-text {
+  font-family: var(--nw-font-display);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--nw-text), var(--nw-text-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nw-auth-header {
+  margin-bottom: 20px;
+}
+
+.nw-auth-header h1 {
+  font-family: var(--nw-font-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  color: var(--nw-text);
+}
+
+.nw-auth-header p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--nw-text-2);
+  margin: 0;
+}
+
+/* --- Form & Fields --- */
+.nw-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nw-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nw-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nw-input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--nw-text-3);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  transition: color var(--nw-duration) var(--nw-ease);
+}
+
+.nw-input {
+  width: 100%;
+  height: 46px;
+  padding: 12px 16px;
+  border-radius: var(--nw-radius-sm);
+  border: 1.5px solid var(--nw-border);
+  background: var(--nw-surface);
+  color: var(--nw-text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--nw-duration) var(--nw-ease);
+}
+
+.nw-input.with-icon {
+  padding-left: 44px;
+}
+
+.nw-input:focus {
+  outline: none;
+  border-color: var(--nw-accent);
+  box-shadow: 0 0 0 4px var(--nw-accent-glow);
+  background: #fff;
+}
+
+.nw-input:focus + .nw-input-icon,
+.nw-input-wrapper:focus-within .nw-input-icon {
+  color: var(--nw-accent);
+}
+
+.nw-password-toggle {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--nw-text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color var(--nw-duration) var(--nw-ease);
+}
+
+.nw-password-toggle:hover {
+  color: var(--nw-text);
+}
+
+/* --- Premium Role Selector --- */
+.nw-role-selector {
+  display: flex;
+  gap: 12px;
+}
+
+.nw-role-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1.5px solid var(--nw-border);
+  border-radius: var(--nw-radius-sm);
+  background: var(--nw-surface);
+  cursor: pointer;
+  transition: all var(--nw-duration) var(--nw-ease);
+  text-align: left;
+}
+
+.nw-role-btn:hover {
+  border-color: var(--nw-border-2);
+  background: var(--nw-surface-2);
+}
+
+.nw-role-btn.active {
+  border-color: var(--nw-accent);
+  background: var(--nw-accent-glow);
+  box-shadow: 0 0 0 4px var(--nw-accent-glow);
+}
+
+.role-icon {
+  font-size: 20px;
+  transition: transform var(--nw-duration) var(--nw-ease);
+}
+
+.nw-role-btn.active .role-icon {
+  transform: scale(1.15);
+}
+
+.role-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.role-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nw-text);
+}
+
+.role-desc {
+  font-size: 10px;
+  color: var(--nw-text-3);
+}
+
+/* --- Submit Button & Spinner --- */
+.nw-btn-submit {
+  width: 100%;
+  height: 46px;
+  border-radius: var(--nw-radius-sm);
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nw-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: nw-spin 0.8s linear infinite;
+}
+
+@keyframes nw-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Error Alert --- */
+.nw-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--nw-danger-bg);
+  border: 1px solid rgba(183, 89, 89, 0.15);
+  color: var(--nw-danger);
+  padding: 10px 14px;
+  border-radius: var(--nw-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  animation: nw-shake 0.4s var(--nw-ease);
+}
+
+@keyframes nw-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* --- Divider --- */
+.nw-auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--nw-text-3);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 18px 0 12px;
+}
+
+.nw-auth-divider::before,
+.nw-auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1.5px solid var(--nw-border);
+}
+
+.nw-auth-divider:not(:empty)::before {
+  margin-right: 16px;
+}
+
+.nw-auth-divider:not(:empty)::after {
+  margin-left: 16px;
+}
+
+/* --- Social Buttons --- */
+.nw-social-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.nw-social-btn {
+  flex: 1;
+  height: 44px;
+  border: 1.5px solid var(--nw-border);
+  border-radius: var(--nw-radius-sm);
+  background: var(--nw-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--nw-duration) var(--nw-ease);
+}
+
+.nw-social-btn:hover {
+  background: var(--nw-surface-2);
+  border-color: var(--nw-border-2);
+  transform: translateY(-1px);
+  box-shadow: var(--nw-shadow-sm);
+}
+
+.nw-social-btn:active {
+  transform: translateY(0);
+}
+
+/* --- Footer --- */
+.nw-auth-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--nw-text-2);
+}
+
+.nw-auth-footer a {
+  font-weight: 700;
+  color: var(--nw-accent);
+  text-decoration: none;
+  transition: color var(--nw-duration) var(--nw-ease);
+}
+
+.nw-auth-footer a:hover {
+  color: var(--nw-accent-2);
+}
+
+/* --- RIGHT SIDE: Visual Banner Column --- */
+.nw-auth-visual-col {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  padding: 40px;
+}
+
+.nw-visual-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(46, 38, 33, 0.1) 0%, rgba(46, 38, 33, 0.75) 100%);
+  z-index: 1;
+}
+
+.nw-testimonial-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 0;
+}
+
+.nw-quote-icon {
+  font-family: var(--nw-font-display);
+  font-size: 80px;
+  line-height: 0.1;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 24px;
+}
+
+.nw-testimonial-slides {
+  position: relative;
+  min-height: 100px;
+}
+
+.nw-testimonial-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.nw-testimonial-slide.active {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+}
+
+.nw-testimonial-quote {
+  font-family: var(--nw-font-display);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #ffffff;
+  margin: 0 0 16px;
+}
+
+.nw-testimonial-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nw-testimonial-author {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nw-accent-2);
+}
+
+.nw-testimonial-event {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- Carousel Controls --- */
+.nw-carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 20px;
+}
+
+.nw-carousel-indicators {
+  display: flex;
+  gap: 8px;
+}
+
+.nw-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all var(--nw-duration) var(--nw-ease);
+}
+
+.nw-indicator.active {
+  background: #ffffff;
+  width: 20px;
+  border-radius: 4px;
+}
+
+.nw-carousel-arrows {
+  display: flex;
+  gap: 8px;
+}
+
+.nw-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--nw-duration) var(--nw-ease);
+}
+
+.nw-arrow-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+  transform: scale(1.05);
+}
+
+.nw-arrow-btn:active {
+  transform: scale(0.95);
+}
+
+/* ===============================================================
+   RESPONSIVE LAYOUTS
+   =============================================================== */
+
+@media (max-width: 960px) {
+  .nw-auth-card {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    min-height: auto;
+  }
+
+  .nw-auth-visual-col {
+    display: none; /* Hide visual banner on tablets/phones to focus on signup */
+  }
+
+  .nw-auth-form-col {
+    padding: 40px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nw-auth-page {
+    padding: 16px;
+  }
+
+  .nw-auth-form-col {
+    padding: 32px 20px;
+  }
+
+  .nw-auth-header h1 {
+    font-size: 26px;
+  }
+
+  .nw-role-selector {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .nw-social-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
