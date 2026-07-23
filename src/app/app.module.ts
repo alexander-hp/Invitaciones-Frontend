@@ -17,6 +17,8 @@ import { ExternalEmbedComponent } from './features/external-embed/external-embed
 import { InvitationEditorComponent } from './features/invitation-editor/invitation-editor.component';
 import { NewInvitationEditorComponent } from './features/new-invitation-editor/new-invitation-editor.component';
 import { LoginComponent } from './features/login/login.component';
+import { NewLoginComponent } from './features/new-login/new-login.component';
+import { NewRegisterComponent } from './features/new-register/new-register.component';
 import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.component';
 import { NewEventsComponent } from './features/new-events/new-events.component';
 import { NewEventDetailComponent } from './features/new-event-detail/new-event-detail.component';
@@ -47,6 +49,8 @@ import { NewExternalPortalComponent } from './features/new-external-portal/new-e
     InvitationEditorComponent,
     NewInvitationEditorComponent,
     LoginComponent,
+    NewLoginComponent,
+    NewRegisterComponent,
     NewDashboardComponent,
     NewEventsComponent,
     NewEventDetailComponent,

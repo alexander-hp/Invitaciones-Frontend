@@ -12,6 +12,8 @@ import { ExternalEmbedComponent } from './features/external-embed/external-embed
 import { InvitationEditorComponent } from './features/invitation-editor/invitation-editor.component';
 import { NewInvitationEditorComponent } from './features/new-invitation-editor/new-invitation-editor.component';
 import { LoginComponent } from './features/login/login.component';
+import { NewLoginComponent } from './features/new-login/new-login.component';
+import { NewRegisterComponent } from './features/new-register/new-register.component';
 import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.component';
 import { NewEventsComponent } from './features/new-events/new-events.component';
 import { NewEventDetailComponent } from './features/new-event-detail/new-event-detail.component';
@@ -44,6 +46,8 @@ const routes: Routes = [
   { path: 'e/:portalSlug', component: ExternalPortalComponent },
   { path: 'embed/:portalSlug/:widget', component: ExternalEmbedComponent },
   // ── New pages ──
+  { path: 'new/login', component: NewLoginComponent },
+  { path: 'new/register', component: NewRegisterComponent },
   { path: 'new/dashboard', component: NewDashboardComponent, canActivate: [AuthGuard] },
   { path: 'new/events', component: NewEventsComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id', component: NewEventDetailComponent, canActivate: [AuthGuard] },
