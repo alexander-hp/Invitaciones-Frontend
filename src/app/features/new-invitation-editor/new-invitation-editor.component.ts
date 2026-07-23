@@ -15,6 +15,7 @@ export class NewInvitationEditorComponent implements OnInit {
   templates: TemplateModel[] = [];
   plans: PlanDefinition[] = [];
   currentPlan?: PlanDefinition;
+  payments: any[] = [];
 
   loading = false;
   saving = false;
@@ -90,9 +91,19 @@ export class NewInvitationEditorComponent implements OnInit {
       error: () => this.plans = []
     });
     this.api.getPaymentStatus(this.getEventId()).subscribe({
-      next: ({ eventPlanDefinition, planDefinition }) => this.currentPlan = eventPlanDefinition || planDefinition,
-      error: () => this.currentPlan = undefined
+      next: ({ eventPlanDefinition, planDefinition, payments }) => {
+        this.currentPlan = eventPlanDefinition || planDefinition;
+        this.payments = payments || [];
+      },
+      error: () => {
+        this.currentPlan = undefined;
+        this.payments = [];
+      }
     });
+  }
+
+  hasPendingPayment(pack: string): boolean {
+    return this.payments.some(p => p.package === pack && p.status === 'pending');
   }
 
   applyTemplate(template: TemplateModel): void {
@@ -260,14 +271,16 @@ export class NewInvitationEditorComponent implements OnInit {
     if (!this.invitation || pack === 'free') return;
     this.checkoutLoading = pack;
     this.error = '';
+    this.message = '';
     this.api.createCheckout({ package: pack, event: this.getEventId(), invitation: this.getInvitationId(this.invitation) }).subscribe({
       next: ({ checkoutUrl, manualPayment, message }) => {
         if (checkoutUrl) {
           window.location.href = checkoutUrl;
           return;
         }
-        this.message = manualPayment ? (message || 'Pago manual registrado como pendiente.') : 'Solicitud de pago registrada.';
+        this.message = manualPayment ? (message || 'Pago manual registrado como pendiente.') : (message || 'Plan activado con éxito.');
         this.checkoutLoading = '';
+        this.loadPlans();
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo iniciar el checkout.';

@@ -368,8 +368,8 @@
             <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
             <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
             <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
-            <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="checkout(plan.key)" [disabled]="!!checkoutLoading">
-              {{ checkoutLoading === plan.key ? 'Abriendo...' : 'Preparar pago' }}
+            <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="checkout(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)">
+              {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar pago') }}
             </button>
             <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'" style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
           </div>
