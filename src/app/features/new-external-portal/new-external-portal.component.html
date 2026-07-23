@@ -306,11 +306,14 @@
               </div>
 
               <!-- Preview selection -->
-              <div class="song-preview-box" *ngIf="songPreview">
-                <img *ngIf="songPreview.thumbnailUrl" [src]="songPreview.thumbnailUrl" alt="Cover">
-                <div class="song-info">
-                  <strong>{{ songPreview.title }}</strong>
-                  <p>{{ songPreview.artist || songPreview.sourceProvider }}</p>
+              <div class="song-preview-box" *ngIf="songPreview" style="display:flex; align-items:center; gap:12px; background:var(--nw-surface-2); padding:12px; border-radius:8px; border:1px solid var(--nw-border); margin-bottom:12px;">
+                <a *ngIf="songPreview.thumbnailUrl" [href]="songPreview.sourceUrl" target="_blank" style="display:block; flex-shrink:0;">
+                  <img [src]="songPreview.thumbnailUrl" alt="Cover" style="width:56px; height:56px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); cursor:pointer;" title="Escuchar">
+                </a>
+                <div class="song-info" style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                  <strong style="color:var(--nw-text-1); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ songPreview.title }}</strong>
+                  <span style="font-size:13px; color:var(--nw-text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ songPreview.artist || songPreview.sourceProvider }}</span>
+                  <audio *ngIf="songPreview.previewUrl" [src]="songPreview.previewUrl" controls style="margin-top:6px; height:24px; width:100%; max-width:220px;"></audio>
                 </div>
               </div>
 
