@@ -95,17 +95,31 @@
           </div>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
             <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>Evento Individual</strong><span style="font-size:13px; color:var(--nw-text-3);">Pago único 12 meses</span>
-              <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== ''">{{ checkoutLoading === 'event_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar' : 'Activar') }}</button>
-              <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading !== ''">{{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (eventPlanActive ? 'Renovar Dashboard' : 'Activar Dashboard') }}</button>
+              <strong>Evento Individual</strong>
+              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice(event.mode === 'external_dashboard' ? 'external_dashboard_12m' : 'event_12m') }}</span>
+              <span style="font-size:13px; color:var(--nw-text-3);">Pago único 12 meses</span>
+              <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('event_12m')">
+                {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (hasPendingPayment('event_12m') ? 'Pendiente' : (eventPlanActive ? 'Renovar' : 'Activar')) }}
+              </button>
+              <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('external_dashboard_12m')">
+                {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (hasPendingPayment('external_dashboard_12m') ? 'Pendiente' : (eventPlanActive ? 'Renovar Dashboard' : 'Activar Dashboard')) }}
+              </button>
             </div>
             <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>Planner Pro (Mensual)</strong><span style="font-size:13px; color:var(--nw-text-3);">Acceso ilimitado</span>
-              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_monthly')" [disabled]="checkoutLoading !== '' || subscriptionActive">{{ subscriptionActive ? 'Activa' : 'Activar Pro' }}</button>
+              <strong>Planner Pro (Mensual)</strong>
+              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_monthly') }}</span>
+              <span style="font-size:13px; color:var(--nw-text-3);">Acceso ilimitado</span>
+              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_monthly')" [disabled]="checkoutLoading !== '' || subscriptionActive || hasPendingPayment('planner_pro_monthly')">
+                {{ subscriptionActive ? 'Activa' : (hasPendingPayment('planner_pro_monthly') ? 'Pendiente' : 'Activar Pro') }}
+              </button>
             </div>
             <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>Planner Pro (Anual)</strong><span style="font-size:13px; color:var(--nw-text-3);">Ahorra hasta 20%</span>
-              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_yearly')" [disabled]="checkoutLoading !== '' || subscriptionActive">{{ subscriptionActive ? 'Activa' : 'Activar Anual' }}</button>
+              <strong>Planner Pro (Anual)</strong>
+              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_yearly') }}</span>
+              <span style="font-size:13px; color:var(--nw-text-3);">Ahorra hasta 20%</span>
+              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_yearly')" [disabled]="checkoutLoading !== '' || subscriptionActive || hasPendingPayment('planner_pro_yearly')">
+                {{ subscriptionActive ? 'Activa' : (hasPendingPayment('planner_pro_yearly') ? 'Pendiente' : 'Activar Anual') }}
+              </button>
             </div>
           </div>
         </div>
@@ -529,17 +543,29 @@
         </div>
 
         <div style="display:grid; gap:10px;" *ngIf="songRequests.length">
-          <div *ngFor="let sr of songRequests" class="nw-card" style="padding:12px 16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <strong style="font-size:15px;">{{ sr.title }} <span *ngIf="sr.artist" style="color:var(--nw-text-2); font-weight:400;">— {{ sr.artist }}</span></strong>
-                <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">{{ sr.requesterName || 'Invitado' }} <span *ngIf="sr.dedication">· "{{ sr.dedication }}"</span></p>
+          <div *ngFor="let sr of songRequests" class="nw-card" style="padding:12px 16px; display:flex; align-items:center; gap:14px;">
+            <a *ngIf="sr.thumbnailUrl" [href]="sr.sourceUrl" target="_blank" style="display:block; flex-shrink:0;">
+              <img [src]="sr.thumbnailUrl" alt="Cover" style="width:48px; height:48px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); cursor:pointer;" title="Escuchar en YouTube">
+            </a>
+            <div *ngIf="!sr.thumbnailUrl" style="width:48px; height:48px; border-radius:6px; background:var(--nw-surface-2); border:1px solid var(--nw-border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; color:var(--nw-text-3);">
+              🎵
+            </div>
+            <div style="flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+              <div style="min-width:0;">
+                <strong style="font-size:15px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ sr.title }} <span *ngIf="sr.artist" style="color:var(--nw-text-2); font-weight:400;">— {{ sr.artist }}</span>
+                </strong>
+                <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ sr.requesterName || 'Invitado' }} <span *ngIf="sr.dedication" style="font-style:italic;">· "{{ sr.dedication }}"</span>
+                </p>
               </div>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <span class="nw-pill" [class.success]="sr.status === 'approved'" [class.warning]="sr.status === 'pending'" [class.danger]="sr.status === 'rejected'">{{ sr.status }}</span>
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="updateSongRequest(sr, 'approved')">✅</button>
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="updateSongRequest(sr, 'played')">▶️</button>
-                <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="updateSongRequest(sr, 'rejected')">❌</button>
+              <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                <span class="nw-pill" [class.success]="sr.status === 'approved'" [class.warning]="sr.status === 'pending'" [class.danger]="sr.status === 'rejected'" style="text-transform:capitalize;">
+                  {{ sr.status === 'played' ? 'Tocada' : (sr.status === 'approved' ? 'Aprobada' : (sr.status === 'pending' ? 'Pendiente' : 'Rechazada')) }}
+                </span>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="updateSongRequest(sr, 'approved')" title="Aprobar">✅</button>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="updateSongRequest(sr, 'played')" title="Reproducir / Marcar como Tocada">▶️</button>
+                <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="updateSongRequest(sr, 'rejected')" title="Rechazar">❌</button>
               </div>
             </div>
           </div>

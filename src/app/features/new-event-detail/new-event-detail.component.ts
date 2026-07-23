@@ -90,6 +90,8 @@ export class NewEventDetailComponent implements OnInit {
   eventPlanActive = false;
   eventPlanExpiresAt = '';
   subscriptionActive = false;
+  plans: PlanDefinition[] = [];
+  payments: any[] = [];
 
   // Guest form
   showGuestForm = false;
@@ -189,6 +191,7 @@ export class NewEventDetailComponent implements OnInit {
     this.loadWhatsAppMedia(eventId);
     this.loadWhatsAppStatus();
     this.loadPaymentStatus(eventId);
+    this.loadPlans();
     this.loadAccessLinks(eventId);
     this.loadSongRequests(eventId);
     this.loadDedications(eventId);
@@ -772,6 +775,9 @@ export class NewEventDetailComponent implements OnInit {
   updateSongRequest(songRequest: SongRequestModel, status: SongRequestStatus): void {
     const songRequestId = songRequest._id || songRequest.id || '';
     if (!this.eventId || !songRequestId) return;
+    if (status === 'played' && songRequest.sourceUrl) {
+      window.open(songRequest.sourceUrl, '_blank');
+    }
     this.api.updateSongRequest(this.eventId, songRequestId, status).subscribe({
       next: ({ songRequest: updated }) => {
         this.songRequests = this.songRequests.map(item => (item._id || item.id) === songRequestId ? updated : item);
@@ -832,11 +838,13 @@ export class NewEventDetailComponent implements OnInit {
     if (!this.eventId) return;
     this.checkoutLoading = pack;
     this.guestError = '';
+    this.guestMessage = '';
     this.api.createCheckout({ package: pack as any, event: this.eventId }).subscribe({
       next: ({ checkoutUrl, manualPayment, message }) => {
         if (checkoutUrl) { window.location.href = checkoutUrl; return; }
-        this.guestMessage = manualPayment ? (message || 'Pago manual pendiente.') : 'Solicitud registrada.';
+        this.guestMessage = manualPayment ? (message || 'Pago manual pendiente.') : (message || 'Plan activado con éxito.');
         this.checkoutLoading = '';
+        this.loadPaymentStatus(this.eventId);
       },
       error: (err) => { this.guestError = err.error?.message || 'Error en checkout.'; this.checkoutLoading = ''; }
     });
@@ -1119,14 +1127,36 @@ export class NewEventDetailComponent implements OnInit {
 
   private loadPaymentStatus(eventId: string): void {
     this.api.getPaymentStatus(eventId).subscribe({
-      next: ({ eventPlanDefinition, planDefinition, eventPlanActive, eventPlanExpiresAt, subscriptionActive }) => {
+      next: ({ eventPlanDefinition, planDefinition, eventPlanActive, eventPlanExpiresAt, subscriptionActive, payments }) => {
         this.currentPlan = eventPlanDefinition || planDefinition;
         this.eventPlanActive = Boolean(eventPlanActive);
         this.eventPlanExpiresAt = eventPlanExpiresAt || '';
         this.subscriptionActive = Boolean(subscriptionActive);
+        this.payments = payments || [];
       },
-      error: () => { this.currentPlan = undefined; this.eventPlanActive = false; this.subscriptionActive = false; }
+      error: () => {
+        this.currentPlan = undefined;
+        this.eventPlanActive = false;
+        this.subscriptionActive = false;
+        this.payments = [];
+      }
     });
+  }
+
+  loadPlans(): void {
+    this.api.listPlans().subscribe({
+      next: ({ plans }) => this.plans = plans,
+      error: () => this.plans = []
+    });
+  }
+
+  hasPendingPayment(pack: string): boolean {
+    return this.payments.some(p => p.package === pack && p.status === 'pending');
+  }
+
+  getPlanPrice(key: string): string {
+    const plan = this.plans.find(p => p.key === key);
+    return plan && plan.amount ? `$${Math.round(plan.amount / 100).toLocaleString('es-MX')} MXN` : '';
   }
 
   private loadAccessLinks(eventId: string): void {
