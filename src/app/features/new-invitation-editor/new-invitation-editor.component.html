@@ -38,7 +38,9 @@
           </label>
           <label class="nw-label">Acceso RSVP
             <select class="nw-select" [(ngModel)]="invitation.accessMode">
+              <option value="public">Publica: todos pueden verla y confirmar</option>
               <option value="guest_list">Lista cerrada: solo invitados registrados</option>
+              <option value="specific_users">Usuarios especificos: roles, grupos, correos o telefonos</option>
               <option value="open">Abierta: cualquiera con el link</option>
             </select>
           </label>
@@ -61,8 +63,9 @@
             <input type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()"> Ocultar marca KyndraSoft
           </label>
         </div>
-        <p *ngIf="invitation.accessMode === 'guest_list'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
-        <p *ngIf="invitation.accessMode === 'open'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
+        <p *ngIf="invitation.accessMode === 'guest_list'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En lista cerrada, la persona debe validar su correo o telefono antes de confirmar asistencia.</p>
+        <p *ngIf="invitation.accessMode === 'specific_users'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">Usa roles, grupos, correos o telefonos para una invitacion segmentada: padrinos, damas, VIP o familia.</p>
+        <p *ngIf="invitation.accessMode === 'open' || invitation.accessMode === 'public'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo publico, cualquiera con el link puede ver la invitacion y enviar RSVP.</p>
         <p *ngIf="!canUseWhiteLabel()" style="font-size:13px; color:var(--nw-warning); margin:8px 0 0;">Marca blanca requiere plan Pro.</p>
 
         <!-- Variantes de texto -->
@@ -106,6 +109,23 @@
             </span>
             {{ preset.name }}
           </button>
+        </div>
+      </div>
+
+      <div class="nw-card" style="margin-bottom:16px;">
+        <div class="nw-card-header"><h3>Secciones visibles</h3></div>
+        <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.sectionSettings as sections">
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.story"> Nuestra historia y mensaje</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.locations"> Ubicaciones y como llegar</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.itinerary"> Itinerario</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.dressCode"> Codigo de vestimenta</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.rsvp"> RSVP</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.giftRegistry"> Mesa de regalos</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.digitalEnvelope"> Sobre digital</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.lodging"> Hospedaje recomendado</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.gallery"> Galeria de fotos</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.guestAlbum"> Album colectivo</label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.dedications"> Muro de dedicatorias</label>
         </div>
       </div>
 
@@ -173,6 +193,27 @@
           <label class="nw-label nw-form-wide" style="display:flex; align-items:center; gap:8px;">
             <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation"> Pedir confirmación extra cuando alguien diga que no asistirá
           </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')" (change)="toggleIdentityMethod('email', $any($event.target).checked)"> Confirmar por correo
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')" (change)="toggleIdentityMethod('phone', $any($event.target).checked)"> Confirmar por telefono
+          </label>
+          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault"> Permitir acompanantes por default
+          </label>
+          <label class="nw-label">Maximo acompanantes default
+            <input class="nw-input" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions">
+          </label>
+          <label class="nw-label">Maximo asistentes total
+            <input class="nw-input" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150">
+          </label>
+          <ng-container *ngIf="invitation.accessMode === 'specific_users'">
+            <label class="nw-label">Roles permitidos<textarea class="nw-input" rows="3" [(ngModel)]="allowedRolesText" placeholder="padrino&#10;dama_honor&#10;vip"></textarea></label>
+            <label class="nw-label">Grupos permitidos<textarea class="nw-input" rows="3" [(ngModel)]="allowedGroupsText" placeholder="Familia novia&#10;Mesa VIP"></textarea></label>
+            <label class="nw-label">Correos permitidos<textarea class="nw-input" rows="3" [(ngModel)]="allowedEmailsText" placeholder="correo@dominio.com"></textarea></label>
+            <label class="nw-label">Telefonos permitidos<textarea class="nw-input" rows="3" [(ngModel)]="allowedPhonesText" placeholder="2727088143"></textarea></label>
+          </ng-container>
           <label class="nw-label nw-form-wide">Preguntas personalizadas
             <textarea class="nw-input" rows="3" [(ngModel)]="customQuestionsText" placeholder="Canción que quieres escuchar | text |&#10;Menú | select | required | Pollo;Vegetariano"></textarea>
             <span style="font-size:11px; color:var(--nw-text-3); margin-top:4px; display:block;">Formato: Pregunta | tipo (text/textarea/select/boolean) | required | Opción1;Opción2</span>

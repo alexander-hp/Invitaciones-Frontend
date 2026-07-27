@@ -27,6 +27,10 @@ export class InvitationEditorComponent implements OnInit {
   giftRegistryText = '';
   lodgingText = '';
   customQuestionsText = '';
+  allowedRolesText = '';
+  allowedGroupsText = '';
+  allowedEmailsText = '';
+  allowedPhonesText = '';
   palettePresets = [
     { name: 'Clasico editorial', primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
     { name: 'Jardin elegante', primary: '#244034', secondary: '#f4f7f0', accent: '#9f6f46' },
@@ -349,6 +353,14 @@ export class InvitationEditorComponent implements OnInit {
     this.invitation.content.giftRegistry.splice(index, 1);
   }
 
+  toggleIdentityMethod(method: 'email' | 'phone', checked: boolean): void {
+    if (!this.invitation?.rsvpSettings) return;
+    const current = this.invitation.rsvpSettings.identityMethods || [];
+    this.invitation.rsvpSettings.identityMethods = checked
+      ? Array.from(new Set([...current, method]))
+      : current.filter((item) => item !== method);
+  }
+
   removeMusic(): void {
     if (!this.invitation) return;
     this.invitation.content.musicUrl = '';
@@ -402,7 +414,11 @@ export class InvitationEditorComponent implements OnInit {
       allowMaybe: this.invitation.rsvpSettings?.allowMaybe !== false,
       allowChangesUntilDeadline: this.invitation.rsvpSettings?.allowChangesUntilDeadline !== false,
       declineRequiresConfirmation: this.invitation.rsvpSettings?.declineRequiresConfirmation !== false,
-      reminderDaysBeforeDeadline: this.invitation.rsvpSettings?.reminderDaysBeforeDeadline ?? 3
+      reminderDaysBeforeDeadline: this.invitation.rsvpSettings?.reminderDaysBeforeDeadline ?? 3,
+      identityMethods: this.invitation.rsvpSettings?.identityMethods?.length ? this.invitation.rsvpSettings.identityMethods : ['email', 'phone'],
+      allowCompanionsDefault: this.invitation.rsvpSettings?.allowCompanionsDefault === true,
+      defaultAllowedCompanions: this.invitation.rsvpSettings?.defaultAllowedCompanions ?? 0,
+      maxAttendees: this.invitation.rsvpSettings?.maxAttendees
     };
   }
 
@@ -412,6 +428,19 @@ export class InvitationEditorComponent implements OnInit {
     if (!this.invitation.content.giftRegistry) this.invitation.content.giftRegistry = [];
     if (!this.invitation.content.giftSettings) this.invitation.content.giftSettings = { enabled: true, introText: '', showRegistry: true, showEnvelope: true };
     if (!this.invitation.content.dedicationSettings) this.invitation.content.dedicationSettings = { enabled: true, requireApproval: true, introText: '' };
+    this.invitation.content.sectionSettings = {
+      story: this.invitation.content.sectionSettings?.story !== false,
+      locations: this.invitation.content.sectionSettings?.locations !== false,
+      itinerary: this.invitation.content.sectionSettings?.itinerary !== false,
+      dressCode: this.invitation.content.sectionSettings?.dressCode !== false,
+      rsvp: this.invitation.content.sectionSettings?.rsvp !== false,
+      giftRegistry: this.invitation.content.sectionSettings?.giftRegistry !== false,
+      digitalEnvelope: this.invitation.content.sectionSettings?.digitalEnvelope !== false,
+      lodging: this.invitation.content.sectionSettings?.lodging !== false,
+      gallery: this.invitation.content.sectionSettings?.gallery !== false,
+      guestAlbum: this.invitation.content.sectionSettings?.guestAlbum !== false,
+      dedications: this.invitation.content.sectionSettings?.dedications !== false
+    };
     if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
     if (!this.invitation.content.itinerary) this.invitation.content.itinerary = this.parseItinerary();
     if (!this.invitation.content.locations) {
@@ -428,6 +457,13 @@ export class InvitationEditorComponent implements OnInit {
       ...this.invitation.rsvpSettings,
       deadline: this.invitation.rsvpSettings.deadline || undefined,
       reminderDaysBeforeDeadline: Number(this.invitation.rsvpSettings.reminderDaysBeforeDeadline ?? 3),
+      identityMethods: (this.invitation.rsvpSettings.identityMethods?.length ? this.invitation.rsvpSettings.identityMethods : ['email', 'phone']) as Array<'email' | 'phone'>,
+      defaultAllowedCompanions: Number(this.invitation.rsvpSettings.defaultAllowedCompanions || 0),
+      maxAttendees: this.invitation.rsvpSettings.maxAttendees ? Number(this.invitation.rsvpSettings.maxAttendees) : undefined,
+      allowedRoles: this.parseLines(this.allowedRolesText),
+      allowedGroups: this.parseLines(this.allowedGroupsText),
+      allowedEmails: this.parseLines(this.allowedEmailsText),
+      allowedPhones: this.parseLines(this.allowedPhonesText),
       customQuestions: this.parseCustomQuestions()
     };
   }
@@ -460,6 +496,10 @@ export class InvitationEditorComponent implements OnInit {
         (question.options || []).join(';')
       ].filter((value) => value !== '').join(' | '))
       .join('\n');
+    this.allowedRolesText = (this.invitation.rsvpSettings?.allowedRoles || []).join('\n');
+    this.allowedGroupsText = (this.invitation.rsvpSettings?.allowedGroups || []).join('\n');
+    this.allowedEmailsText = (this.invitation.rsvpSettings?.allowedEmails || []).join('\n');
+    this.allowedPhonesText = (this.invitation.rsvpSettings?.allowedPhones || []).join('\n');
   }
 
   private parseItinerary() {
@@ -529,5 +569,9 @@ export class InvitationEditorComponent implements OnInit {
         options: options ? options.split(';').map((option) => option.trim()).filter(Boolean) : []
       };
     }).filter((question) => question.label);
+  }
+
+  private parseLines(text: string): string[] {
+    return text.split('\n').map((value) => value.trim()).filter(Boolean);
   }
 }

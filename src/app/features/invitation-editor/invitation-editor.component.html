@@ -30,7 +30,9 @@
           <label>Slug<input name="slug" [(ngModel)]="invitation.slug" required></label>
           <label>Acceso RSVP
             <select name="accessMode" [(ngModel)]="invitation.accessMode">
+              <option value="public">Publica: todos pueden verla y confirmar</option>
               <option value="guest_list">Lista cerrada: solo invitados registrados</option>
+              <option value="specific_users">Usuarios especificos: roles, grupos, correos o telefonos</option>
               <option value="open">Abierta: cualquiera con el link</option>
             </select>
           </label>
@@ -56,9 +58,25 @@
             <strong>{{ palette.name }}</strong>
           </button>
         </div>
-        <p class="muted" *ngIf="invitation.accessMode === 'guest_list'">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
-        <p class="muted" *ngIf="invitation.accessMode === 'open'">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
+        <p class="muted" *ngIf="invitation.accessMode === 'guest_list'">En lista cerrada, la persona debe validar su correo o telefono antes de confirmar asistencia.</p>
+        <p class="muted" *ngIf="invitation.accessMode === 'specific_users'">Usa roles, grupos, correos o telefonos para una invitacion segmentada: padrinos, damas, VIP o familia.</p>
+        <p class="muted" *ngIf="invitation.accessMode === 'open' || invitation.accessMode === 'public'">En modo publico, cualquiera con el link puede ver la invitacion y enviar RSVP.</p>
         <p class="muted" *ngIf="!canUseWhiteLabel()">Marca blanca requiere plan Pro.</p>
+
+        <h2>Secciones visibles</h2>
+        <div class="form-grid" *ngIf="invitation.content.sectionSettings as sections">
+          <label class="check-row"><input name="sectionStory" type="checkbox" [(ngModel)]="sections.story"> Nuestra historia y mensaje</label>
+          <label class="check-row"><input name="sectionLocations" type="checkbox" [(ngModel)]="sections.locations"> Ubicaciones y como llegar</label>
+          <label class="check-row"><input name="sectionItinerary" type="checkbox" [(ngModel)]="sections.itinerary"> Itinerario</label>
+          <label class="check-row"><input name="sectionDressCode" type="checkbox" [(ngModel)]="sections.dressCode"> Codigo de vestimenta</label>
+          <label class="check-row"><input name="sectionRsvp" type="checkbox" [(ngModel)]="sections.rsvp"> RSVP</label>
+          <label class="check-row"><input name="sectionGiftRegistry" type="checkbox" [(ngModel)]="sections.giftRegistry"> Mesa de regalos</label>
+          <label class="check-row"><input name="sectionDigitalEnvelope" type="checkbox" [(ngModel)]="sections.digitalEnvelope"> Sobre digital</label>
+          <label class="check-row"><input name="sectionLodging" type="checkbox" [(ngModel)]="sections.lodging"> Hospedaje recomendado</label>
+          <label class="check-row"><input name="sectionGallery" type="checkbox" [(ngModel)]="sections.gallery"> Galeria de fotos</label>
+          <label class="check-row"><input name="sectionGuestAlbum" type="checkbox" [(ngModel)]="sections.guestAlbum"> Album colectivo</label>
+          <label class="check-row"><input name="sectionDedications" type="checkbox" [(ngModel)]="sections.dedications"> Muro de dedicatorias</label>
+        </div>
 
         <h2>Sobre digital</h2>
         <div class="form-grid" *ngIf="invitation.content.giftSettings as giftSettings">
@@ -137,6 +155,17 @@
           <label class="check-row"><input name="allowMaybe" type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe"> Permitir "No estoy seguro"</label>
           <label class="check-row"><input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline"> Permitir cambios hasta la fecha limite</label>
           <label class="check-row wide"><input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation"> Pedir confirmacion extra cuando alguien diga que no asistira</label>
+          <label class="check-row"><input name="identityEmail" type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')" (change)="toggleIdentityMethod('email', $any($event.target).checked)"> Confirmar por correo</label>
+          <label class="check-row"><input name="identityPhone" type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')" (change)="toggleIdentityMethod('phone', $any($event.target).checked)"> Confirmar por telefono</label>
+          <label class="check-row"><input name="allowCompanionsDefault" type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault"> Permitir acompanantes por default</label>
+          <label>Maximo acompanantes default<input name="defaultAllowedCompanions" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions"></label>
+          <label>Maximo asistentes total<input name="maxAttendees" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150"></label>
+          <ng-container *ngIf="invitation.accessMode === 'specific_users'">
+            <label>Roles permitidos<textarea name="allowedRolesText" [(ngModel)]="allowedRolesText" placeholder="padrino&#10;dama_honor&#10;vip"></textarea></label>
+            <label>Grupos permitidos<textarea name="allowedGroupsText" [(ngModel)]="allowedGroupsText" placeholder="Familia novia&#10;Mesa VIP"></textarea></label>
+            <label>Correos permitidos<textarea name="allowedEmailsText" [(ngModel)]="allowedEmailsText" placeholder="correo@dominio.com"></textarea></label>
+            <label>Telefonos permitidos<textarea name="allowedPhonesText" [(ngModel)]="allowedPhonesText" placeholder="2727088143"></textarea></label>
+          </ng-container>
           <label class="wide">Preguntas RSVP<textarea name="customQuestionsText" [(ngModel)]="customQuestionsText" placeholder="Cancion que quieres escuchar | text |&#10;Menu | select | required | Pollo;Vegetariano"></textarea></label>
         </div>
 

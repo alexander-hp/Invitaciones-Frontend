@@ -3,7 +3,7 @@ export type EventMode = 'invitation' | 'external_dashboard';
 export type EventStatus = 'draft' | 'published' | 'archived';
 export type InvitationStatus = 'draft' | 'published' | 'unpublished';
 export type RsvpResponse = 'confirmed' | 'declined' | 'maybe';
-export type InvitationAccessMode = 'open' | 'guest_list';
+export type InvitationAccessMode = 'open' | 'public' | 'guest_list' | 'specific_users';
 
 export interface User {
   _id?: string;
@@ -172,6 +172,7 @@ export interface InvitationContent {
   dedicationSettings?: DedicationSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;
+  sectionSettings?: InvitationSectionSettings;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
@@ -183,7 +184,30 @@ export interface RsvpSettings {
   allowChangesUntilDeadline?: boolean;
   declineRequiresConfirmation?: boolean;
   reminderDaysBeforeDeadline?: number;
+  identityMethods?: Array<'email' | 'phone'>;
+  allowCompanionsDefault?: boolean;
+  defaultAllowedCompanions?: number;
+  maxAttendees?: number;
+  allowedGuestIds?: string[];
+  allowedRoles?: string[];
+  allowedGroups?: string[];
+  allowedEmails?: string[];
+  allowedPhones?: string[];
   customQuestions?: RsvpCustomQuestion[];
+}
+
+export interface InvitationSectionSettings {
+  story?: boolean;
+  locations?: boolean;
+  itinerary?: boolean;
+  dressCode?: boolean;
+  rsvp?: boolean;
+  giftRegistry?: boolean;
+  digitalEnvelope?: boolean;
+  lodging?: boolean;
+  gallery?: boolean;
+  guestAlbum?: boolean;
+  dedications?: boolean;
 }
 
 export interface RsvpCustomQuestion {
@@ -233,6 +257,7 @@ export interface RsvpPayload {
   customAnswers?: Array<{ key: string; label?: string; value?: string | number | boolean | null }>;
   message?: string;
   declineConfirmed?: boolean;
+  phone?: string;
   phoneCountryCode?: string;
   phoneNationalNumber?: string;
 }

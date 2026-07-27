@@ -177,7 +177,7 @@ export class ApiService {
     return this.http.patch<{ dedication: DedicationModel }>(`${this.apiUrl}/events/${eventId}/dedications/${dedicationId}`, { status });
   }
 
-  checkExternalGuestAccess(portalSlug: string, payload: { email: string }): Observable<GuestAccessResponse> {
+  checkExternalGuestAccess(portalSlug: string, payload: { email?: string; phone?: string }): Observable<GuestAccessResponse> {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/events/public/${portalSlug}/guest-access`, payload);
   }
 
@@ -287,7 +287,7 @@ export class ApiService {
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`);
   }
 
-  checkGuestAccess(slug: string, payload: { email: string }): Observable<GuestAccessResponse> {
+  checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<GuestAccessResponse> {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 
