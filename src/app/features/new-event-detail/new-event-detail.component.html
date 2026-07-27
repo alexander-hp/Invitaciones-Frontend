@@ -154,6 +154,7 @@
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
             <select class="nw-select" [(ngModel)]="accessLinkForm.role" style="width:auto; min-width:140px;">
               <option value="check_in">Check-in</option><option value="album_review">Revisión álbum</option><option value="client_view">Vista cliente</option><option value="guest_ops">Operación invitados</option>
+              <option value="dj">DJ</option>
             </select>
             <input class="nw-input" [(ngModel)]="accessLinkForm.label" placeholder="Etiqueta" style="max-width:180px;">
             <input class="nw-input" type="number" min="1" max="90" [(ngModel)]="accessLinkForm.days" style="width:80px;">
@@ -614,6 +615,7 @@
               <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="songRequestsEnabled"> Solicitudes DJ</label>
               <label class="nw-label" style="width:80px;">Max canciones <input class="nw-input" formControlName="songRequestsMax" type="number" min="1" max="20"></label>
               <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="songRequestsDedications"> Dedicatoria en DJ</label>
+              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="songRequestsRequireApproval"> Revisar canciones</label>
             </div>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
@@ -790,6 +792,22 @@
                   </div>
                   <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top:10px;" type="button" (click)="removeArrayItem('sections', i)">🗑️ Eliminar Sección</button>
                 </div>
+              </div>
+            </div>
+
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; margin-bottom:12px;">
+              <strong>Moderacion automatica</strong>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="moderationNotifyOnReview"> Avisar por email al revisar</label>
+                <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="moderationAutoApproveAlbum"> Autoaprobar fotos</label>
+                <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="moderationAutoApproveSongs"> Autoaprobar canciones</label>
+                <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="moderationAutoApproveDedications"> Autoaprobar dedicatorias</label>
+              </div>
+              <div class="nw-form-grid" style="margin-top:10px;">
+                <label class="nw-label">Roles autoaprobados <input class="nw-input" formControlName="moderationAutoApproveRolesText" placeholder="vip, familia, padrino"></label>
+                <label class="nw-label">Grupos autoaprobados <textarea class="nw-input" formControlName="moderationAutoApproveGroupsText" rows="3" placeholder="Familia novia&#10;Mesa VIP"></textarea></label>
+                <label class="nw-label">Correos autoaprobados <textarea class="nw-input" formControlName="moderationAutoApproveEmailsText" rows="3" placeholder="correo@dominio.com"></textarea></label>
+                <label class="nw-label">Telefonos autoaprobados <textarea class="nw-input" formControlName="moderationAutoApprovePhonesText" rows="3" placeholder="2727088143"></textarea></label>
               </div>
             </div>
 

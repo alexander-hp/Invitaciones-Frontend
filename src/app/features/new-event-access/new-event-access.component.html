@@ -161,6 +161,36 @@
           </article>
         </div>
       </section>
+
+      <section class="nw-card" *ngIf="hasPermission('song_review')">
+        <div class="nw-card-header" style="margin-bottom: 24px;">
+          <div>
+            <span class="nw-pill accent" style="text-transform: uppercase; font-size: 11px;">DJ</span>
+            <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Solicitudes de canciones</h2>
+          </div>
+          <span class="nw-pill accent" style="font-size: 14px; font-weight: 700;">{{ session.songRequests.length }} solicitudes</span>
+        </div>
+        <p *ngIf="!session.songRequests.length" style="color: var(--nw-text-3); text-align: center; padding: 48px; border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm);">
+          Aun no hay canciones solicitadas.
+        </p>
+        <div style="display:grid; gap:12px;">
+          <article *ngFor="let song of session.songRequests" class="nw-card" style="padding:12px;">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+              <div>
+                <strong>{{ song.title }} <span *ngIf="song.artist" style="color:var(--nw-text-2); font-weight:400;">- {{ song.artist }}</span></strong>
+                <p style="margin:4px 0 0; color:var(--nw-text-3); font-size:13px;">{{ song.requesterName || 'Invitado' }} <span *ngIf="song.dedication">- "{{ song.dedication }}"</span></p>
+                <a *ngIf="song.sourceUrl" [href]="song.sourceUrl" target="_blank" rel="noreferrer" style="font-size:12px; color:var(--nw-accent-2);">Abrir enlace</a>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="nw-pill" [class.success]="song.status === 'approved' || song.status === 'played'" [class.warning]="song.status === 'pending'" [class.danger]="song.status === 'rejected'">{{ song.status }}</span>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="updateSong(song, 'approved')">Aprobar</button>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="updateSong(song, 'played')">Tocada</button>
+                <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="updateSong(song, 'rejected')">Rechazar</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
     </ng-container>
   </div>
 </div>

@@ -144,6 +144,17 @@ export interface ExternalContent {
     enabled?: boolean;
     maxRequestsPerGuest?: number;
     allowDedications?: boolean;
+    requireApproval?: boolean;
+  };
+  moderationSettings?: {
+    notifyOnReview?: boolean;
+    autoApproveRoles?: string[];
+    autoApproveGroups?: string[];
+    autoApproveEmails?: string[];
+    autoApprovePhones?: string[];
+    autoApproveAlbum?: boolean;
+    autoApproveSongs?: boolean;
+    autoApproveDedications?: boolean;
   };
   giftRegistry?: GiftRegistryItem[];
   digitalEnvelope?: DigitalEnvelope;
@@ -487,6 +498,7 @@ export interface SongRequestModel {
   thumbnailUrl?: string;
   previewUrl?: string;
   durationMs?: number;
+  sortOrder?: number;
   status: SongRequestStatus;
   reviewedAt?: string;
   playedAt?: string;
@@ -625,7 +637,7 @@ export interface StaffCheckInSession {
   expiresAt: string;
 }
 
-export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops';
+export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops' | 'dj';
 
 export interface EventAccessLinkModel {
   id?: string;
@@ -647,6 +659,7 @@ export interface EventAccessSession {
   rsvps: RsvpModel[];
   tables: EventTableModel[];
   albumAssets: AlbumAssetModel[];
+  songRequests: SongRequestModel[];
   expiresAt: string;
 }
 

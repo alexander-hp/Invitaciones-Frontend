@@ -165,8 +165,9 @@ export class ApiService {
     return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/events/${eventId}/song-requests`);
   }
 
-  updateSongRequest(eventId: string, songRequestId: string, status: SongRequestStatus): Observable<{ songRequest: SongRequestModel }> {
-    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, { status });
+  updateSongRequest(eventId: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
+    const body = typeof payload === 'string' ? { status: payload } : payload;
+    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, body);
   }
 
   listDedications(eventId: string): Observable<{ dedications: DedicationModel[] }> {
@@ -221,6 +222,11 @@ export class ApiService {
 
   updateEventAccessAlbum(token: string, assetId: string, status: AlbumAssetModel['status']): Observable<{ asset: AlbumAssetModel }> {
     return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album/${assetId}`, { status });
+  }
+
+  updateEventAccessSong(token: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
+    const body = typeof payload === 'string' ? { status: payload } : payload;
+    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests/${songRequestId}`, body);
   }
 
   createCheckInLink(eventId: string, payload: { label?: string; days?: number }): Observable<{ token: string; url: string; expiresAt: string }> {

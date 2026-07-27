@@ -152,7 +152,16 @@ export class NewEventDetailComponent implements OnInit {
     dedicationsIntroText: new FormControl(''),
     songRequestsEnabled: new FormControl(true),
     songRequestsMax: new FormControl(3),
-    songRequestsDedications: new FormControl(true)
+    songRequestsDedications: new FormControl(true),
+    songRequestsRequireApproval: new FormControl(true),
+    moderationNotifyOnReview: new FormControl(true),
+    moderationAutoApproveAlbum: new FormControl(false),
+    moderationAutoApproveSongs: new FormControl(false),
+    moderationAutoApproveDedications: new FormControl(false),
+    moderationAutoApproveRolesText: new FormControl(''),
+    moderationAutoApproveGroupsText: new FormControl(''),
+    moderationAutoApproveEmailsText: new FormControl(''),
+    moderationAutoApprovePhonesText: new FormControl('')
   });
 
   private readonly imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -891,7 +900,18 @@ export class NewEventDetailComponent implements OnInit {
       songRequestSettings: {
         enabled: Boolean(formValue.songRequestsEnabled),
         maxRequestsPerGuest: Number(formValue.songRequestsMax || 3),
-        allowDedications: Boolean(formValue.songRequestsDedications)
+        allowDedications: Boolean(formValue.songRequestsDedications),
+        requireApproval: Boolean(formValue.songRequestsRequireApproval)
+      },
+      moderationSettings: {
+        notifyOnReview: Boolean(formValue.moderationNotifyOnReview),
+        autoApproveAlbum: Boolean(formValue.moderationAutoApproveAlbum),
+        autoApproveSongs: Boolean(formValue.moderationAutoApproveSongs),
+        autoApproveDedications: Boolean(formValue.moderationAutoApproveDedications),
+        autoApproveRoles: this.splitCsv(formValue.moderationAutoApproveRolesText || ''),
+        autoApproveGroups: this.splitLines(formValue.moderationAutoApproveGroupsText || ''),
+        autoApproveEmails: this.splitLines(formValue.moderationAutoApproveEmailsText || ''),
+        autoApprovePhones: this.splitLines(formValue.moderationAutoApprovePhonesText || '')
       },
       giftRegistry: this.cleanGiftRegistry(formValue.giftRegistry),
       digitalEnvelope: {
@@ -1157,6 +1177,15 @@ export class NewEventDetailComponent implements OnInit {
       songRequestsEnabled: content.songRequestSettings?.enabled !== false,
       songRequestsMax: content.songRequestSettings?.maxRequestsPerGuest || 3,
       songRequestsDedications: content.songRequestSettings?.allowDedications !== false,
+      songRequestsRequireApproval: content.songRequestSettings?.requireApproval !== false,
+      moderationNotifyOnReview: content.moderationSettings?.notifyOnReview !== false,
+      moderationAutoApproveAlbum: Boolean(content.moderationSettings?.autoApproveAlbum),
+      moderationAutoApproveSongs: Boolean(content.moderationSettings?.autoApproveSongs),
+      moderationAutoApproveDedications: Boolean(content.moderationSettings?.autoApproveDedications),
+      moderationAutoApproveRolesText: (content.moderationSettings?.autoApproveRoles || []).join(', '),
+      moderationAutoApproveGroupsText: (content.moderationSettings?.autoApproveGroups || []).join('\n'),
+      moderationAutoApproveEmailsText: (content.moderationSettings?.autoApproveEmails || []).join('\n'),
+      moderationAutoApprovePhonesText: (content.moderationSettings?.autoApprovePhones || []).join('\n'),
       giftEnabled: content.giftSettings?.enabled !== false,
       giftIntroText: content.giftSettings?.introText || '',
       giftShowRegistry: content.giftSettings?.showRegistry !== false,
@@ -1249,6 +1278,24 @@ export class NewEventDetailComponent implements OnInit {
 
   private splitCsv(value: string): string[] {
     return (value || '').split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
+  }
+
+  moveSongRequest(songRequest: SongRequestModel, direction: -1 | 1): void {
+    const songRequestId = songRequest._id || songRequest.id || '';
+    if (!this.eventId || !songRequestId) return;
+    const currentOrder = Number(songRequest.sortOrder || 0);
+    this.api.updateSongRequest(this.eventId, songRequestId, { sortOrder: currentOrder + direction }).subscribe({
+      next: ({ songRequest: updated }) => {
+        this.songRequests = this.songRequests
+          .map(item => (item._id || item.id) === songRequestId ? updated : item)
+          .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
+      },
+      error: (err) => this.guestError = err.error?.message || 'Error cambiando orden.'
+    });
+  }
+
+  private splitLines(value: string): string[] {
+    return (value || '').split('\n').map(item => item.trim()).filter(Boolean);
   }
 
   cleanStringList(values: string[] = []): string[] {
