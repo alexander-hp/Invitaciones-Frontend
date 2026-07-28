@@ -528,7 +528,7 @@
 }
 
 .nw-table th {
-  padding: 14px 20px;
+  padding: 10px 14px;
   text-align: left;
   font-size: 11px;
   font-weight: 700;
@@ -537,12 +537,15 @@
   color: var(--nw-text-2);
   background: var(--nw-surface-2);
   border-bottom: 1px solid var(--nw-border);
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .nw-table td {
-  padding: 14px 20px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--nw-border);
   color: var(--nw-text);
+  vertical-align: middle;
 }
 
 .nw-table tr:last-child td {

@@ -139,6 +139,7 @@
                 <span class="nw-pill" style="margin-left:8px;" [class.success]="inv.status === 'published'" [class.warning]="inv.status === 'draft'">{{ inv.status }}</span>
               </div>
               <div style="display:flex; gap:8px;">
+                <a [routerLink]="['/new/invitations', inv._id || inv.id, 'sections']" class="nw-btn nw-btn-ghost nw-btn-sm">Secciones ⚙️</a>
                 <a [routerLink]="['/new/invitations', inv._id || inv.id, 'editor']" class="nw-btn nw-btn-ghost nw-btn-sm">Editar ✏️</a>
                 <button (click)="deleteInvitation(inv)" class="nw-btn nw-btn-danger nw-btn-sm" [disabled]="saving">🗑️ Borrar</button>
               </div>
@@ -247,28 +248,35 @@
             </thead>
             <tbody>
               <tr *ngFor="let g of filteredGuests">
-                <td><strong>{{ g.name }}</strong></td>
-                <td style="color:var(--nw-text-2); font-size:13px;">{{ g.email || g.phone || '—' }}</td>
-                <td><span class="nw-pill" *ngIf="g.group">{{ g.group }}</span></td>
-                <td style="font-size:13px; color:var(--nw-text-2);">{{ g.relationshipLabel || g.roles?.join(', ') || g.visibilityGroup || '—' }}</td>
-                <td><span class="nw-pill accent" *ngIf="g.tableName">{{ g.tableName }}</span><span *ngIf="g.seatLabel" style="font-size:12px; color:var(--nw-text-3);"> / {{ g.seatLabel }}</span><span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span></td>
-                <td>{{ g.allowedCompanions || 0 }} <small *ngIf="g.companions?.length" style="color:var(--nw-text-3);">({{ g.companions?.length }} nom.)</small></td>
-                <td><img style="width:40px; height:40px; border-radius:4px;" [src]="getQrImageUrl(g)" alt="QR"><br><small style="font-size:10px; color:var(--nw-text-3);">{{ g.checkInCode || g.qrCode }}</small></td>
-                <td><span class="nw-pill" [ngClass]="statusPillClass(g.status)">{{ statusLabel(g.status) }}</span><span class="nw-pill success" *ngIf="g.checkedIn" style="margin-left:4px;">✓ in</span></td>
-                <td>
-                  <span class="nw-pill" [class.success]="getCommunicationStatus(g) === 'confirmed'">{{ communicationLabel(getCommunicationStatus(g)) }}</span>
-                  <small *ngIf="g.lastMessageType" style="display:block; font-size:11px; color:var(--nw-text-3);">{{ getMessageTypeLabel(g.lastMessageType) }}</small>
-                  <small *ngIf="g.invitationOpenedAt" style="display:block; font-size:11px; color:var(--nw-text-3);">Abierto {{ formatShortDate(g.invitationOpenedAt) }}</small>
+                <td style="white-space:nowrap;"><strong>{{ g.name }}</strong></td>
+                <td style="color:var(--nw-text-2); font-size:13px; white-space:nowrap;">{{ g.email || g.phone || '—' }}</td>
+                <td style="white-space:nowrap;"><span class="nw-pill" *ngIf="g.group">{{ g.group }}</span></td>
+                <td style="font-size:13px; color:var(--nw-text-2); white-space:nowrap;">{{ g.relationshipLabel || g.roles?.join(', ') || g.visibilityGroup || '—' }}</td>
+                <td style="white-space:nowrap;"><span class="nw-pill accent" *ngIf="g.tableName">{{ g.tableName }}</span><span *ngIf="g.seatLabel" style="font-size:12px; color:var(--nw-text-3);"> / {{ g.seatLabel }}</span><span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span></td>
+                <td style="white-space:nowrap;">{{ g.allowedCompanions || 0 }} <small *ngIf="g.companions?.length" style="color:var(--nw-text-3);">({{ g.companions?.length }} nom.)</small></td>
+                <td style="white-space:nowrap;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <img style="width:28px; height:28px; border-radius:4px;" [src]="getQrImageUrl(g)" alt="QR">
+                    <small style="font-size:10px; color:var(--nw-text-3); font-family:monospace;">{{ g.checkInCode || g.qrCode }}</small>
+                  </div>
                 </td>
-                <td>
-                  <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                    <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="downloadGuestPass(g)" title="Ver / Descargar Pase VIP">📄 Pase</button>
-                    <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email vía API">📧</button>
-                    <button *ngIf="canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g) || !hasPlanFeature('whatsappMessaging')" title="Enviar WhatsApp vía API">📱</button>
-                    <a *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')" title="Abrir mailto:">✉️</a>
-                    <a *ngIf="canWhatsappGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getWhatsappLink(g)" target="_blank" rel="noopener" (click)="markMessageSent(g, 'whatsapp')" title="Abrir wa.me">💬</a>
-                    <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openGuestForm(g)" title="Editar">✏️</button>
-                    <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteGuest(g)" title="Eliminar">🗑️</button>
+                <td style="white-space:nowrap;">
+                  <span class="nw-pill" [ngClass]="statusPillClass(g.status)">{{ statusLabel(g.status) }}</span>
+                  <span class="nw-pill success" *ngIf="g.checkedIn" style="margin-left:4px;">✓ in</span>
+                </td>
+                <td style="white-space:nowrap;">
+                  <span class="nw-pill" [class.success]="getCommunicationStatus(g) === 'confirmed'">{{ communicationLabel(getCommunicationStatus(g)) }}</span>
+                  <small *ngIf="g.lastMessageType" style="display:block; font-size:10px; color:var(--nw-text-3);">{{ getMessageTypeLabel(g.lastMessageType) }}</small>
+                </td>
+                <td style="white-space:nowrap;">
+                  <div style="display:flex; align-items:center; gap:3px;">
+                    <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="downloadGuestPass(g)" title="Ver / Descargar Pase VIP">📄 Pase</button>
+                    <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email vía API">📧</button>
+                    <button *ngIf="canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g) || !hasPlanFeature('whatsappMessaging')" title="Enviar WhatsApp vía API">📱</button>
+                    <a *ngIf="canEmailGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')" title="Abrir mailto:">✉️</a>
+                    <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getWhatsappLink(g)" target="_blank" rel="noopener" (click)="markMessageSent(g, 'whatsapp')" title="Abrir wa.me">💬</a>
+                    <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="openGuestForm(g)" title="Editar">✏️</button>
+                    <button class="nw-btn nw-btn-danger nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="deleteGuest(g)" title="Eliminar">🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -719,38 +727,38 @@
               </thead>
               <tbody>
                 <tr *ngFor="let g of filteredGuests" [style.opacity]="isExcluded(g) ? '0.5' : '1'" [style.background]="isExcluded(g) ? 'rgba(239, 68, 68, 0.04)' : 'transparent'">
-                  <td style="text-align:center;">
+                  <td style="text-align:center; white-space:nowrap;">
                     <input type="checkbox" [checked]="!isExcluded(g)" (change)="toggleException(g)" title="Desmarcar para excluir del envío masivo">
                   </td>
-                  <td>
+                  <td style="white-space:nowrap;">
                     <strong>{{ g.name }}</strong>
                     <span class="nw-pill danger" *ngIf="isExcluded(g)" style="margin-left:6px; font-size:10px;">Excepción</span>
                     <span class="nw-pill" *ngIf="g.group" style="margin-left:4px; font-size:11px;">{{ g.group }}</span>
                   </td>
-                  <td style="font-size:13px; color:var(--nw-text-2);">
-                    <div *ngIf="g.email">📧 {{ g.email }}</div>
-                    <div *ngIf="g.phone">📱 {{ g.phone }}</div>
-                    <div *ngIf="!g.email && !g.phone" style="color:var(--nw-text-3)">Sin contacto</div>
+                  <td style="font-size:12px; color:var(--nw-text-2); white-space:nowrap;">
+                    <span *ngIf="g.email">📧 {{ g.email }}</span>
+                    <span *ngIf="g.phone" style="margin-left:6px;">📱 {{ g.phone }}</span>
+                    <span *ngIf="!g.email && !g.phone" style="color:var(--nw-text-3)">Sin contacto</span>
                   </td>
-                  <td style="font-size:13px;">
+                  <td style="font-size:13px; white-space:nowrap;">
                     <span *ngIf="g.tableName" class="nw-pill accent">{{ g.tableName }} <small *ngIf="g.seatLabel">/ {{ g.seatLabel }}</small></span>
                     <span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span>
                   </td>
-                  <td>
-                    <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="downloadGuestPass(g)" title="Ver / Descargar Pase VIP">📄 Pase VIP</button>
+                  <td style="white-space:nowrap;">
+                    <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="downloadGuestPass(g)" title="Ver / Descargar Pase VIP">📄 Pase VIP</button>
                   </td>
-                  <td>
+                  <td style="white-space:nowrap;">
                     <span class="nw-pill" [class.success]="getCommunicationStatus(g) === 'confirmed'">{{ communicationLabel(getCommunicationStatus(g)) }}</span>
-                    <small *ngIf="g.lastMessageType" style="display:block; font-size:11px; color:var(--nw-text-3);">{{ getMessageTypeLabel(g.lastMessageType) }}</small>
+                    <small *ngIf="g.lastMessageType" style="display:block; font-size:10px; color:var(--nw-text-3);">{{ getMessageTypeLabel(g.lastMessageType) }}</small>
                   </td>
-                  <td style="text-align:right;">
-                    <div style="display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap;">
-                      <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openPreviewModal(g, 'email')" title="Previsualizar mensaje de este invitado">👁️ Preview</button>
-                      <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email">📧 Email</button>
-                      <button *ngIf="canSendRealWhatsapp(g) || simulationMode" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)" title="Enviar WhatsApp">📱 WA</button>
-                      <a *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')" title="Abrir cliente mailto:">✉️ mailto</a>
-                      <a *ngIf="canWhatsappGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getWhatsappLink(g)" target="_blank" rel="noopener" (click)="markMessageSent(g, 'whatsapp')" title="Abrir wa.me">💬 wa.me</a>
-                      <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="setCommunicationStatus(g, 'pending')" title="Marcar como pendiente">⏳ Pendiente</button>
+                  <td style="text-align:right; white-space:nowrap;">
+                    <div style="display:flex; align-items:center; justify-content:flex-end; gap:3px; white-space:nowrap;">
+                      <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="openPreviewModal(g, 'email')" title="Previsualizar mensaje de este invitado">👁️ Preview</button>
+                      <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email vía API">📧 Email</button>
+                      <button *ngIf="canSendRealWhatsapp(g) || simulationMode" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)" title="Enviar WhatsApp vía API">📱 WA</button>
+                      <a *ngIf="canEmailGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')" title="Abrir cliente mailto:">✉️</a>
+                      <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getWhatsappLink(g)" target="_blank" rel="noopener" (click)="markMessageSent(g, 'whatsapp')" title="Abrir wa.me">💬</a>
+                      <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="setCommunicationStatus(g, 'pending')" title="Marcar como pendiente">⏳</button>
                     </div>
                   </td>
                 </tr>

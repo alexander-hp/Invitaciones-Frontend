@@ -29,6 +29,7 @@ import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-chec
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
+import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -56,6 +57,7 @@ const routes: Routes = [
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
+  { path: 'new/invitations/:id/sections', component: NewInvitationSectionsComponent, canActivate: [AuthGuard] },
   { path: 'new/external-access/:token', component: NewEventAccessComponent },
   { path: 'new/dj/:token', component: NewEventAccessComponent },
   { path: 'new/dj', component: NewEventAccessComponent },

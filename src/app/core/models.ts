@@ -120,6 +120,27 @@ export interface ExternalPortalSettings {
   welcomeMessage?: string;
 }
 
+export interface SectionSettings {
+  story?: boolean;
+  locations?: boolean;
+  itinerary?: boolean;
+  dressCode?: boolean;
+  rsvp?: boolean;
+  giftRegistry?: boolean;
+  digitalEnvelope?: boolean;
+  lodging?: boolean;
+  gallery?: boolean;
+  guestAlbum?: boolean;
+  dedications?: boolean;
+}
+
+export interface SongRequestSettings {
+  enabled?: boolean;
+  maxRequestsPerGuest?: number;
+  allowDedications?: boolean;
+  requireApproval?: boolean;
+}
+
 export interface ExternalContent {
   coverImageUrl?: string;
   heroImageUrl?: string;
@@ -140,11 +161,7 @@ export interface ExternalContent {
     order?: number;
   }>;
   rsvpSettings?: RsvpSettings;
-  songRequestSettings?: {
-    enabled?: boolean;
-    maxRequestsPerGuest?: number;
-    allowDedications?: boolean;
-  };
+  songRequestSettings?: SongRequestSettings;
   giftRegistry?: GiftRegistryItem[];
   digitalEnvelope?: DigitalEnvelope;
   giftSettings?: GiftSettings;
@@ -170,6 +187,7 @@ export interface InvitationContent {
   digitalEnvelope?: DigitalEnvelope;
   giftSettings?: GiftSettings;
   dedicationSettings?: DedicationSettings;
+  sectionSettings?: SectionSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;

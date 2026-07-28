@@ -25,6 +25,7 @@
           </div>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
+          <a class="nw-btn nw-btn-ghost" [routerLink]="['/new/invitations', invitation._id || invitation.id, 'sections']">⚙️ Secciones</a>
           <button class="nw-btn nw-btn-ghost" (click)="save()" [disabled]="saving">{{ saving ? 'Guardando...' : '💾 Guardar' }}</button>
           <button class="nw-btn nw-btn-primary" (click)="publish()" [disabled]="publishing">{{ publishing ? 'Publicando...' : '🌐 Publicar' }}</button>
           <a class="nw-btn nw-btn-ghost" [routerLink]="['/i', invitation.slug]" target="_blank">👁️ Ver pública</a>

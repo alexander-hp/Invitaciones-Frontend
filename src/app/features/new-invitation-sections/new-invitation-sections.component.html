@@ -1,0 +1,339 @@
+<div class="nw-shell">
+  <aside class="nw-sidebar" app-new-sidebar></aside>
+
+  <main class="nw-main">
+    <!-- Header -->
+    <div class="nw-editor-sticky-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <button type="button" class="nw-back-btn" (click)="goBack()">
+          ← Volver
+        </button>
+        <div>
+          <h1 style="font-size:22px; margin:0;">⚙️ Secciones de la Invitación</h1>
+          <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-3);" *ngIf="invitation">
+            {{ invitation.content?.headline || invitation.slug }}
+          </p>
+        </div>
+      </div>
+      <button class="nw-btn nw-btn-primary" (click)="save()" [disabled]="saving || loading">
+        {{ saving ? 'Guardando...' : '💾 Guardar Cambios' }}
+      </button>
+    </div>
+
+    <!-- Alert status -->
+    <p *ngIf="loading" class="nw-alert info nw-loading" style="margin-top:16px;">Cargando configuración de secciones...</p>
+    <p *ngIf="error" class="nw-alert error" style="margin-top:16px;">{{ error }}</p>
+    <p *ngIf="message" class="nw-alert success" style="margin-top:16px;">{{ message }}</p>
+
+    <div *ngIf="!loading && invitation" class="page-stack" style="margin-top:20px; padding-bottom:80px;">
+
+      <!-- CARD 1: Secciones Principales -->
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <h2 style="margin:0 0 4px;">📌 1. Visibilidad de Secciones de la Invitación</h2>
+            <p class="muted" style="margin:0; font-size:13px;">
+              Cada interruptor permite activar o desactivar la presencia de una sección en la invitación web pública.
+            </p>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-top:16px;">
+          <!-- story -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>📖 Historia (Story)</strong>
+              <span>Historia de los festejados / novios.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.story">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- locations -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>📍 Mapas y Ubicaciones</strong>
+              <span>Ubicación de Ceremonia, Recepción, etc.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.locations">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- itinerary -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>📅 Itinerario / Cronograma</strong>
+              <span>Agenda y horarios de las actividades.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.itinerary">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- dressCode -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>👔 Código de Vestimenta</strong>
+              <span>Instrucciones de vestuario para los invitados.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.dressCode">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- rsvp -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>💌 Confirmación de Asistencia (RSVP)</strong>
+              <span>Formulario para confirmación de invitados.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.rsvp">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- giftRegistry -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>🎁 Mesa de Regalos</strong>
+              <span>Sección con catálogo de regalos y enlaces.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.giftRegistry">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- digitalEnvelope -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>✉️ Sobre Digital / Transferencias</strong>
+              <span>Datos bancarios o QR para regalo en efectivo.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.digitalEnvelope">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- lodging -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>🏨 Hospedaje y Hoteles</strong>
+              <span>Recomendaciones de alojamiento cercano.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.lodging">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- gallery -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>🖼️ Galería Fotografíca</strong>
+              <span>Galería oficial de fotos del evento.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.gallery">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- guestAlbum -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>📸 Álbum Interactivo de Invitados</strong>
+              <span>Permite a los invitados subir sus propias fotos.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.guestAlbum">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <!-- dedications -->
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>💬 Dedicatorias y Libro de Visitas</strong>
+              <span>Libro de firmas y felicitaciones para los novios.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sectionSettings.dedications">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: Mesa de Regalos Settings -->
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <h2 style="margin:0 0 4px;">🎁 2. Configuración de Mesa de Regalos</h2>
+            <p class="muted" style="margin:0; font-size:13px;">
+              Ajustes específicos para el comportamiento del módulo de regalos.
+            </p>
+          </div>
+        </div>
+
+        <div style="display:grid; gap:14px; margin-top:16px;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Habilitar Módulo de Regalos</strong>
+                <span>Activa o desactiva el módulo completo.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="giftSettings.enabled">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Mostrar Enlaces a Mesas de Regalos</strong>
+                <span>Muestra tiendas externas (Liverpool, Amazon, etc.).</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="giftSettings.showRegistry">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Mostrar Sobre Digital</strong>
+                <span>Muestra información de cuentas bancarias/QR.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="giftSettings.showEnvelope">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display:grid; gap:6px;">
+            <label>Texto Introductorio para Mesa de Regalos</label>
+            <textarea [(ngModel)]="giftSettings.introText" placeholder="Tu presencia es nuestro mejor regalo..." rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: Dedicatorias Settings -->
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <h2 style="margin:0 0 4px;">💬 3. Configuración de Dedicatorias y Libro de Visitas</h2>
+            <p class="muted" style="margin:0; font-size:13px;">
+              Modera y administra las felicitaciones recibidas por tus invitados.
+            </p>
+          </div>
+        </div>
+
+        <div style="display:grid; gap:14px; margin-top:16px;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Habilitar Envío de Mensajes</strong>
+                <span>Permite a los invitados escribir dedicatorias.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dedicationSettings.enabled">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Aprobación Previa (Moderación)</strong>
+                <span>Requerir aprobación antes de hacer públicos los mensajes.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dedicationSettings.requireApproval">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display:grid; gap:6px;">
+            <label>Texto Introductorio para Dedicatorias</label>
+            <textarea [(ngModel)]="dedicationSettings.introText" placeholder="Escríbenos un mensaje para recordar este día especial..." rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: DJ / Song Requests Settings -->
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <h2 style="margin:0 0 4px;">🎵 4. Configuración de DJ y Peticiones de Canciones</h2>
+            <p class="muted" style="margin:0; font-size:13px;">
+              Parámetros para que los invitados sugieran canciones a la lista del DJ.
+            </p>
+          </div>
+        </div>
+
+        <div style="display:grid; gap:14px; margin-top:16px;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Habilitar Sección de DJ</strong>
+                <span>Permite pedir canciones desde la invitación/portal.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="songRequestSettings.enabled">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Permitir Dedicatorias en Canción</strong>
+                <span>El invitado puede incluir un mensaje al pedir el tema.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="songRequestSettings.allowDedications">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Requerir Aprobación del DJ / Host</strong>
+                <span>La canción debe ser aprobada antes de mostrarse en la lista.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="songRequestSettings.requireApproval">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display:grid; gap:6px; max-width:320px;">
+            <label>Límite de Canciones por Invitado</label>
+            <input type="number" min="1" max="20" [(ngModel)]="songRequestSettings.maxRequestsPerGuest">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sticky Floating Save Bar -->
+    <div class="nw-floating-save-bar" *ngIf="!loading && invitation">
+      <div class="nw-floating-bar-content">
+        <span style="font-size:13px; color:var(--nw-text-2);">¿Terminaste de configurar tus secciones?</span>
+        <button class="nw-btn nw-floating-save-btn" (click)="save()" [disabled]="saving">
+          {{ saving ? 'Guardando...' : '✨ Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
