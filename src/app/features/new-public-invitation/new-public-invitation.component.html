@@ -1,0 +1,584 @@
+<!-- Feedback Toast Notification -->
+<div *ngIf="toastMessage" class="nw-pub-toast-notification">
+  <span>✨ {{ toastMessage }}</span>
+</div>
+
+<!-- Lightbox Modal -->
+<div *ngIf="activeLightboxImage" class="nw-pub-lightbox-overlay" (click)="closeLightbox()">
+  <div class="nw-pub-lightbox-modal" (click)="$event.stopPropagation()">
+    <button class="nw-pub-lightbox-close" (click)="closeLightbox()">&times;</button>
+    <img [src]="activeLightboxImage" alt="Vista previa de imagen" class="nw-pub-lightbox-img">
+  </div>
+</div>
+
+<!-- Floating Audio Player Button -->
+<div *ngIf="invitation?.content?.musicUrl" class="nw-pub-audio-floating">
+  <button type="button" class="nw-pub-audio-btn" [class.playing]="isPlayingMusic" (click)="toggleMusic()"
+    [attr.aria-label]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+    <span class="nw-pub-audio-icon">{{ isPlayingMusic ? '🎵' : '🎼' }}</span>
+    <span class="nw-pub-audio-text">{{ isPlayingMusic ? 'Pausar música' : 'Reproducir música' }}</span>
+    <div *ngIf="isPlayingMusic" class="nw-pub-audio-bars">
+      <span></span><span></span><span></span>
+    </div>
+  </button>
+</div>
+
+<!-- Loading & Error state -->
+<div *ngIf="loading" class="nw-pub-state-container">
+  <div class="nw-pub-spinner"></div>
+  <p>Cargando invitación especial...</p>
+</div>
+
+<div *ngIf="error && !invitation" class="nw-pub-state-container error">
+  <div class="nw-pub-state-icon">⚠️</div>
+  <h2>Invitación no encontrada</h2>
+  <p>{{ error }}</p>
+</div>
+
+<!-- MAIN PUBLIC INVITATION CONTAINER -->
+<main *ngIf="invitation" class="nw-pub-wrapper" [style.--primary]="invitation.content.palette?.primary || '#1c2434'"
+  [style.--secondary]="invitation.content.palette?.secondary || '#f8f5f0'"
+  [style.--accent]="invitation.content.palette?.accent || '#c59b6c'">
+
+  <!-- HERO SECTION -->
+  <header class="nw-pub-hero">
+    <div *ngIf="invitation.content.coverImageUrl" class="nw-pub-hero-bg"
+      [style.backgroundImage]="'url(' + invitation.content.coverImageUrl + ')'"></div>
+    <div class="nw-pub-hero-overlay"></div>
+
+    <div class="nw-pub-hero-card">
+      <img *ngIf="invitation.content.brandLogoUrl" class="nw-pub-brand-logo" [src]="invitation.content.brandLogoUrl"
+        alt="Logo del evento">
+
+      <p *ngIf="invitation.content.subheadline" class="nw-pub-subheadline">{{ invitation.content.subheadline }}</p>
+      <h1 class="nw-pub-headline">{{ invitation.content.headline }}</h1>
+
+      <div *ngIf="event?.date" class="nw-pub-date-badge">
+        <span class="nw-pub-date-icon">🗓️</span>
+        <span>{{ event?.date | date:'fullDate' }}</span>
+      </div>
+
+      <!-- COUNTDOWN TIMER -->
+      <div *ngIf="event?.date && !countdown.isOver" class="nw-pub-countdown">
+        <div class="nw-pub-countdown-item">
+          <span class="num">{{ countdown.days }}</span>
+          <span class="lbl">Días</span>
+        </div>
+        <div class="nw-pub-countdown-item">
+          <span class="num">{{ countdown.hours }}</span>
+          <span class="lbl">Horas</span>
+        </div>
+        <div class="nw-pub-countdown-item">
+          <span class="num">{{ countdown.minutes }}</span>
+          <span class="lbl">Minutos</span>
+        </div>
+        <div class="nw-pub-countdown-item">
+          <span class="num">{{ countdown.seconds }}</span>
+          <span class="lbl">Segundos</span>
+        </div>
+      </div>
+      <div *ngIf="countdown.isOver" class="nw-pub-countdown-over">
+        🎉 ¡El evento ya ha comenzado!
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="nw-pub-hero-actions">
+        <a *ngIf="calendarUrl" [href]="calendarUrl" target="_blank" rel="noreferrer" class="nw-pub-btn nw-pub-btn-gold">
+          <span>📅 Agregar a Google Calendar</span>
+        </a>
+        <button type="button" (click)="shareWhatsApp()" class="nw-pub-btn nw-pub-btn-outline">
+          <span>📲 Compartir por WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- BODY CONTENT CONTAINER -->
+  <div class="nw-pub-container">
+
+    <!-- 1. GUEST VALIDATION SECTION (FOR PRIVATE GUEST LISTS) -->
+    <section *ngIf="isGuestList" id="guest-access-section" class="nw-pub-section">
+      <!-- BEFORE VALIDATION: LOCK CARD WITH EMAIL CHECKER -->
+      <div *ngIf="!verifiedGuest" class="nw-pub-card nw-pub-guest-access-box">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">🔒</span>
+          <h2>Validación de Invitado VIP</h2>
+        </div>
+        <p>Esta invitación es exclusiva para invitados registrados. Por favor ingresa tu correo electrónico para validar
+          tu pase VIP y acceder al RSVP, Álbum de Fotos y Muro de Dedicatorias:</p>
+
+        <div class="nw-pub-form-row">
+          <input type="email" class="nw-pub-input" [(ngModel)]="guestAccessEmail" placeholder="tu-email@ejemplo.com"
+            [disabled]="checkingGuest" (keyup.enter)="checkGuestAccess()">
+          <button type="button" class="nw-pub-btn nw-pub-btn-gold" (click)="checkGuestAccess()"
+            [disabled]="checkingGuest || !guestAccessEmail">
+            {{ checkingGuest ? 'Validando...' : '🔓 Validar Invitado' }}
+          </button>
+        </div>
+        <p *ngIf="error" class="nw-pub-form-error" style="margin-top:12px;">{{ error }}</p>
+      </div>
+
+      <!-- AFTER VALIDATION: CONFIRMED VIP PASS BANNER -->
+      <div *ngIf="verifiedGuest" class="nw-pub-card nw-pub-guest-pass-banner">
+        <div class="nw-pub-pass-qr">
+          <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de check-in" (click)="openLightbox(guestQrUrl)">
+        </div>
+        <div class="nw-pub-pass-details">
+          <span class="badge">Pase Confirmado VIP</span>
+          <h3>¡Bienvenido/a, {{ verifiedGuest.name }}!</h3>
+          <p>📍 Mesa: <strong>{{ verifiedGuest.tableName || 'Pendiente' }}</strong> <span
+              *ngIf="verifiedGuest.seatLabel">| Asiento: {{ verifiedGuest.seatLabel }}</span></p>
+          <p>👥 Acompañantes permitidos: <strong>{{ verifiedGuest.allowedCompanions }}</strong></p>
+          <div class="nw-pub-pass-actions">
+            <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-gold" (click)="downloadGuestPass()">
+              📄 Descargar Pase
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. INVITATION MESSAGE / LETTER SECTION -->
+    <section *ngIf="invitation.content.message" class="nw-pub-section">
+      <div class="nw-pub-card nw-pub-message-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">💌</span>
+          <h2>Nuestra Historia & Mensaje</h2>
+        </div>
+        <p class="nw-pub-message-text">{{ invitation.content.message }}</p>
+      </div>
+    </section>
+
+    <!-- 3. LOCATIONS & MAPS -->
+    <section *ngIf="displayLocations.length" class="nw-pub-section">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">📍</span>
+          <h2>Ubicaciones & Cómo Llegar</h2>
+        </div>
+        <div class="nw-pub-locations-grid">
+          <article *ngFor="let location of displayLocations" class="nw-pub-card-inner nw-pub-location-card">
+            <div class="nw-pub-location-badge">{{ location.type || 'Lugar' }}</div>
+            <h3 class="nw-pub-location-title">{{ location.name || 'Ubicación del evento' }}</h3>
+            <p class="nw-pub-location-address">📍 {{ location.address }}</p>
+            <p *ngIf="location.notes" class="nw-pub-location-notes">ℹ️ {{ location.notes }}</p>
+            <div class="nw-pub-location-actions">
+              <a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noreferrer"
+                class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-primary">
+                🗺️ Ver en Google Maps
+              </a>
+              <a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noreferrer"
+                class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-secondary">
+                🚗 Ver en Waze
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. ITINERARY TIMELINE -->
+    <section *ngIf="invitation.content.itinerary?.length" class="nw-pub-section">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">⏳</span>
+          <h2>Itinerario del Evento</h2>
+        </div>
+        <div class="nw-pub-timeline">
+          <div *ngFor="let item of invitation.content.itinerary" class="nw-pub-timeline-item">
+            <div class="nw-pub-timeline-icon">{{ getItineraryIcon(item.title) }}</div>
+            <div class="nw-pub-timeline-content">
+              <span class="nw-pub-timeline-time">{{ item.time }}</span>
+              <h4 class="nw-pub-timeline-title">{{ item.title }}</h4>
+              <p *ngIf="item.description" class="nw-pub-timeline-desc">{{ item.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. DRESS CODE CARD -->
+    <section *ngIf="invitation.content.dressCode" class="nw-pub-section">
+      <div class="nw-pub-card nw-pub-dresscode-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">👔</span>
+          <h2>Código de Vestimenta (Dress Code)</h2>
+        </div>
+        <p class="nw-pub-dresscode-val">{{ invitation.content.dressCode }}</p>
+      </div>
+    </section>
+
+    <!-- 6. RSVP FORM SECTION -->
+    <section id="rsvp-section" class="nw-pub-section">
+      <div class="nw-pub-card nw-pub-rsvp-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">✉️</span>
+          <h2>Confirmación de Asistencia (RSVP)</h2>
+          <span *ngIf="deadlineLabel" class="nw-pub-deadline-pill">⏰ Fecha límite: {{ deadlineLabel }}</span>
+        </div>
+
+        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
+        <div *ngIf="isGuestList && !verifiedGuest" class="nw-pub-locked-notice">
+          <div class="nw-pub-locked-icon">🔒</div>
+          <h3>RSVP Bloqueado</h3>
+          <p>Ingresa tu correo en la sección de <strong>Validación de Invitado</strong> arriba para confirmar tu
+            asistencia.</p>
+        </div>
+
+        <!-- GUEST PASS BADGE & FORM -->
+        <ng-container *ngIf="!isGuestList || verifiedGuest">
+          <!-- PUBLIC INVITATION QR BADGE -->
+          <div *ngIf="!verifiedGuest && publicQrUrl" class="nw-pub-guest-pass-banner public"
+            style="margin-bottom:24px;">
+            <div class="nw-pub-pass-qr">
+              <img [src]="publicQrUrl" alt="QR de Invitación" (click)="openLightbox(publicQrUrl)">
+            </div>
+            <div class="nw-pub-pass-details">
+              <h3>QR de la Invitación</h3>
+              <p>Escanea este código QR con la cámara de tu celular para abrir esta invitación digital en cualquier
+                momento.</p>
+            </div>
+          </div>
+
+          <!-- RSVP FORM -->
+          <form class="nw-pub-rsvp-form" (ngSubmit)="submit()">
+            <div class="nw-pub-form-grid">
+              <div class="nw-pub-field">
+                <label>Nombre Completo *</label>
+                <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.name" name="rsvpName" [readonly]="isGuestList"
+                  required placeholder="Tu nombre">
+              </div>
+
+              <div class="nw-pub-field">
+                <label>Correo Electrónico</label>
+                <input type="email" class="nw-pub-input" [(ngModel)]="rsvp.email" name="rsvpEmail"
+                  [readonly]="isGuestList" placeholder="correo@ejemplo.com">
+              </div>
+
+              <div class="nw-pub-field">
+                <label>Código de País</label>
+                <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.phoneCountryCode" name="rsvpPhoneCountry"
+                  placeholder="+52">
+              </div>
+
+              <div class="nw-pub-field">
+                <label>Teléfono WhatsApp</label>
+                <input type="tel" class="nw-pub-input" [(ngModel)]="rsvp.phoneNationalNumber" name="rsvpPhoneNational"
+                  placeholder="3312345678">
+              </div>
+
+              <div class="nw-pub-field full-width">
+                <label>¿Confirmas tu asistencia? *</label>
+                <select class="nw-pub-select" [(ngModel)]="rsvp.response" name="rsvpResponse"
+                  (change)="onResponseChange()">
+                  <option value="confirmed">✅ Sí, asistiré con mucho gusto</option>
+                  <option value="declined">❌ Lo siento, no podré asistir</option>
+                  <option *ngIf="canUseMaybe" value="maybe">🤔 Aún no estoy seguro(a)</option>
+                </select>
+              </div>
+
+              <!-- IF CONFIRMED -->
+              <ng-container *ngIf="isFinalAttendance">
+                <div class="nw-pub-field">
+                  <label>Número de Acompañantes</label>
+                  <input type="number" min="0" [max]="maxCompanions === null ? 10 : maxCompanions" class="nw-pub-input"
+                    [(ngModel)]="rsvp.companions" name="rsvpCompanions">
+                </div>
+
+                <div class="nw-pub-field full-width">
+                  <label>Nombres de tus Acompañantes</label>
+                  <textarea class="nw-pub-textarea" [(ngModel)]="companionNamesText" name="companionNamesText"
+                    placeholder="Escribe un nombre completo por línea"></textarea>
+                </div>
+
+                <div class="nw-pub-field">
+                  <label>Preferencia de Menú / Platillo</label>
+                  <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.mealPreference" name="rsvpMeal"
+                    placeholder="Ej: Pollo, Carne, Vegetariano">
+                </div>
+
+                <div class="nw-pub-field full-width">
+                  <label>Alergias o Restricciones Alimenticias</label>
+                  <textarea class="nw-pub-textarea" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet"
+                    placeholder="Ej: Alergia a mariscos, intolerante a la lactosa, celíaco"></textarea>
+                </div>
+              </ng-container>
+
+              <!-- CUSTOM QUESTIONS -->
+              <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
+                <div *ngFor="let question of invitation.rsvpSettings?.customQuestions" class="nw-pub-field"
+                  [class.full-width]="question.type === 'textarea'">
+                  <label>{{ question.label }} {{ question.required ? '*' : '' }}</label>
+
+                  <input *ngIf="question.type === 'text' || !question.type" type="text" class="nw-pub-input"
+                    [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
+                    [name]="'cq_' + getQuestionKey(question)" [required]="!!question.required">
+
+                  <textarea *ngIf="question.type === 'textarea'" class="nw-pub-textarea"
+                    [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
+                    [name]="'cq_' + getQuestionKey(question)" [required]="!!question.required"></textarea>
+
+                  <select *ngIf="question.type === 'select'" class="nw-pub-select" [ngModel]="getCustomAnswer(question)"
+                    (ngModelChange)="setCustomAnswer(question, $event)" [name]="'cq_' + getQuestionKey(question)"
+                    [required]="!!question.required">
+                    <option value="">Selecciona una opción</option>
+                    <option *ngFor="let opt of question.options" [value]="opt">{{ opt }}</option>
+                  </select>
+
+                  <div *ngIf="question.type === 'boolean'" class="nw-pub-checkbox-field">
+                    <input type="checkbox" [id]="'cq_cb_' + getQuestionKey(question)"
+                      [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
+                      [name]="'cq_' + getQuestionKey(question)">
+                    <label [for]="'cq_cb_' + getQuestionKey(question)">{{ question.label }}</label>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- IF DECLINED -->
+              <div *ngIf="rsvp.response === 'declined'" class="nw-pub-field full-width nw-pub-warning-box">
+                <p>Lamentamos que no nos puedas acompañar.</p>
+                <div *ngIf="requiresDeclineConfirmation" class="nw-pub-checkbox-field">
+                  <input type="checkbox" id="declineCB" [(ngModel)]="declineConfirmed" name="declineCB">
+                  <label for="declineCB">Confirmo definitivamente que no podré asistir</label>
+                </div>
+              </div>
+
+              <!-- MESSAGE TO HOSTS -->
+              <div class="nw-pub-field full-width">
+                <label>Mensaje especial para los anfitriones</label>
+                <textarea class="nw-pub-textarea" [(ngModel)]="rsvp.message" name="rsvpMessage"
+                  placeholder="Escribe unas palabras cariñosas para los festejados..."></textarea>
+              </div>
+
+            </div>
+
+            <p *ngIf="error" class="nw-pub-form-error">{{ error }}</p>
+            <p *ngIf="success" class="nw-pub-form-success">{{ success }}</p>
+
+            <button type="submit" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-lg"
+              [disabled]="sending || (isGuestList && !verifiedGuest)">
+              {{ sending ? 'Enviando confirmación...' : '💌 Enviar RSVP' }}
+            </button>
+          </form>
+        </ng-container>
+
+      </div>
+    </section>
+
+    <!-- 7. GIFT REGISTRY & DIGITAL ENVELOPE -->
+    <section
+      *ngIf="(invitation.content.giftSettings?.enabled !== false && invitation.content.giftRegistry?.length) || (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe)"
+      class="nw-pub-section">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">🎁</span>
+          <h2>Mesa de Regalos & Sobre Digital</h2>
+        </div>
+
+        <!-- Gift Store Links -->
+        <div *ngIf="invitation.content.giftRegistry?.length" class="nw-pub-gifts-grid">
+          <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
+            <img *ngIf="registry.imageUrl" [src]="registry.imageUrl" (click)="openLightbox(registry.imageUrl)"
+              alt="Mesa de regalos" class="nw-pub-gift-img">
+            <h3>{{ registry.title || registry.label || registry.store || 'Mesa de Regalos' }}</h3>
+            <p *ngIf="registry.note">{{ registry.note }}</p>
+            <a *ngIf="registry.url" [href]="registry.url" target="_blank" rel="noreferrer"
+              class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-sm">
+              🔗 Abrir Mesa de Regalos
+            </a>
+          </article>
+        </div>
+
+        <!-- Digital Envelope Card with 1-Click Copy -->
+        <div
+          *ngIf="invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account"
+          class="nw-pub-card-inner nw-pub-envelope-card" style="margin-top: 20px;">
+          <div class="nw-pub-envelope-header">
+            <span class="icon">✉️</span>
+            <div>
+              <h3>Sobre Digital & Datos de Transferencia</h3>
+              <p *ngIf="invitation.content.giftSettings?.introText" class="muted">{{
+                invitation.content.giftSettings?.introText }}</p>
+            </div>
+          </div>
+
+          <div class="nw-pub-envelope-details">
+            <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl"
+              [src]="invitation.content.digitalEnvelope?.qrImageUrl"
+              (click)="openLightbox(invitation.content.digitalEnvelope?.qrImageUrl || '')" alt="QR sobre digital"
+              class="nw-pub-envelope-qr">
+
+            <div class="nw-pub-envelope-info">
+              <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{
+                invitation.content.digitalEnvelope?.bank }}</p>
+              <p *ngIf="invitation.content.digitalEnvelope?.holder"><strong>Titular:</strong> {{
+                invitation.content.digitalEnvelope?.holder }}</p>
+
+              <div *ngIf="invitation.content.digitalEnvelope?.account" class="nw-pub-copy-row">
+                <span><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</span>
+                <button type="button" class="nw-pub-copy-btn"
+                  (click)="copyText(invitation.content.digitalEnvelope?.account || '', 'Número de cuenta')">📋
+                  Copiar</button>
+              </div>
+
+              <div *ngIf="invitation.content.digitalEnvelope?.clabe" class="nw-pub-copy-row">
+                <span><strong>CLABE Interbancaria:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</span>
+                <button type="button" class="nw-pub-copy-btn"
+                  (click)="copyText(invitation.content.digitalEnvelope?.clabe || '', 'CLABE interbancaria')">📋 Copiar
+                  CLABE</button>
+              </div>
+
+              <p *ngIf="invitation.content.digitalEnvelope?.note" class="nw-pub-envelope-note">💡 {{
+                invitation.content.digitalEnvelope?.note }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. LODGING SECTION -->
+    <section *ngIf="invitation.content.lodging?.length" class="nw-pub-section">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">🏨</span>
+          <h2>Hospedaje Recomendado</h2>
+        </div>
+        <div class="nw-pub-lodging-grid">
+          <article *ngFor="let hotel of invitation.content.lodging" class="nw-pub-card-inner nw-pub-lodging-card">
+            <h4>{{ hotel.name || 'Hotel recomendado' }}</h4>
+            <p *ngIf="hotel.description">{{ hotel.description }}</p>
+            <a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noreferrer"
+              class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-outline">
+              🌐 Reservar Hotel
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. PHOTO GALLERY -->
+    <section *ngIf="invitation.content.gallery?.length" class="nw-pub-section">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">📸</span>
+          <h2>Galería de Fotos</h2>
+        </div>
+        <div class="nw-pub-gallery-grid">
+          <div *ngFor="let imageUrl of invitation.content.gallery" class="nw-pub-gallery-item"
+            (click)="openLightbox(imageUrl)">
+            <img [src]="imageUrl" alt="Foto del evento" loading="lazy" decoding="async">
+            <div class="nw-pub-gallery-hover">
+              <span>🔍 Ampliar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. PRIVATE GUEST ALBUM -->
+    <section *ngIf="invitation.content.privateAlbumEnabled" class="nw-pub-section">
+      <div class="nw-pub-card nw-pub-album-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">📷</span>
+          <h2>Álbum Colectivo de Invitados</h2>
+        </div>
+        <p class="muted" style="margin-bottom:20px;">¿Tienes fotos geniales del evento? Súbelas aquí para compartirlas
+          con los anfitriones. Se mostrarán una vez aprobadas.</p>
+
+        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
+        <div *ngIf="isGuestList && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
+          <div class="nw-pub-locked-icon">🔒</div>
+          <p>Ingresa tu correo en la sección de <strong>Validación de Invitado</strong> arriba para subir fotos al álbum
+            colaborativo del evento.</p>
+        </div>
+
+        <div *ngIf="!isGuestList || verifiedGuest" class="nw-pub-album-upload-box">
+          <input type="file" id="albumFileInput" accept="image/*" (change)="selectAlbumFile($event)"
+            style="display:none;">
+          <label for="albumFileInput" class="nw-pub-btn nw-pub-btn-secondary nw-pub-btn-sm">
+            📁 Seleccionar Foto
+          </label>
+          <span *ngIf="albumMessage" class="nw-pub-file-name">{{ albumMessage }}</span>
+
+          <button type="button" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-sm" (click)="uploadAlbumPhoto()"
+            [disabled]="!selectedAlbumFile || uploadingAlbum">
+            {{ uploadingAlbum ? 'Subiendo...' : '📤 Enviar Foto' }}
+          </button>
+        </div>
+
+        <div *ngIf="publicAlbumAssets.length" class="nw-pub-gallery-grid" style="margin-top:20px;">
+          <div *ngFor="let asset of publicAlbumAssets" class="nw-pub-gallery-item" (click)="openLightbox(asset.url)">
+            <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto de invitado'" loading="lazy" decoding="async">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. DEDICATIONS / GUESTBOOK WALL -->
+    <section *ngIf="invitation.content.dedicationSettings?.enabled !== false" class="nw-pub-section">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">✍️</span>
+          <h2>Muro de Dedicatorias & Libros de Deseos</h2>
+        </div>
+
+        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
+        <div *ngIf="isGuestList && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
+          <div class="nw-pub-locked-icon">🔒</div>
+          <h3>Muro de Dedicatorias Bloqueado</h3>
+          <p>Ingresa tu correo en la sección de <strong>Validación de Invitado</strong> arriba para dejar tus
+            dedicatorias y felicitaciones.</p>
+        </div>
+
+        <div *ngIf="!isGuestList || verifiedGuest" class="nw-pub-dedication-form-card" style="margin-bottom:24px;">
+          <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px;">Deja tu mensaje a los novios / anfitriones
+          </h3>
+          <form (ngSubmit)="submitDedication()">
+            <div class="nw-pub-form-grid">
+              <div class="nw-pub-field">
+                <label>Tu Nombre</label>
+                <input type="text" class="nw-pub-input" [(ngModel)]="dedication.publicName" name="dedPublicName"
+                  [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'">
+              </div>
+              <div class="nw-pub-field">
+                <label>Tipo de Mensaje</label>
+                <select class="nw-pub-select" [(ngModel)]="dedication.type" name="dedType">
+                  <option value="dedication">💌 Dedicatoria</option>
+                  <option value="wish">✨ Buenos Deseos</option>
+                  <option value="memory">📸 Recuerdo Especial</option>
+                  <option value="toast">🥂 Brindis Virtual</option>
+                </select>
+              </div>
+              <div class="nw-pub-field full-width">
+                <label>Mensaje *</label>
+                <textarea class="nw-pub-textarea" [(ngModel)]="dedication.message" name="dedMessage" required
+                  placeholder="Escribe tus buenos deseos..."></textarea>
+              </div>
+            </div>
+            <p *ngIf="dedicationMessage" class="nw-pub-form-success">{{ dedicationMessage }}</p>
+            <button type="submit" class="nw-pub-btn nw-pub-btn-gold" [disabled]="sending || !dedication.message">
+              ✍️ Enviar Mensaje
+            </button>
+          </form>
+        </div>
+
+        <!-- DEDICATIONS LIST WALL -->
+        <div *ngIf="dedications.length" class="nw-pub-dedications-wall">
+          <article *ngFor="let item of dedications" class="nw-pub-card-inner nw-pub-dedication-card">
+            <div class="nw-pub-dedication-header">
+              <span class="author">👤 {{ item.publicName || 'Invitado' }}</span>
+              <span class="badge">{{ item.type || 'dedicatoria' }}</span>
+            </div>
+            <p class="message">"{{ item.message }}"</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER BRANDING -->
+    <footer *ngIf="!invitation.content.hideBranding" class="nw-pub-footer">
+      <p>Invitación Digital Interactiva creada con <strong>KyndraSoft</strong></p>
+    </footer>
+
+  </div>
+</main>

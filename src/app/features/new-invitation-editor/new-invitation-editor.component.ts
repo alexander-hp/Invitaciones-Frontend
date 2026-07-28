@@ -28,6 +28,14 @@ export class NewInvitationEditorComponent implements OnInit {
   publicUrl = '';
   lodgingText = '';
   customQuestionsText = '';
+  customQuestionsList: Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'textarea' | 'select' | 'boolean';
+    required: boolean;
+    optionsText?: string;
+    options?: string[];
+  }> = [];
 
   activeSection = 'content';
 
@@ -66,7 +74,7 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
-        this.publicUrl = `${window.location.origin}/i/${this.invitation.slug}`;
+        this.publicUrl = `${window.location.origin}/new/i/${this.invitation.slug}`;
         this.loadTemplates();
         this.loadPlans();
         this.loading = false;
@@ -178,7 +186,7 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
-        this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
+        this.publicUrl = `${window.location.origin}/new/i/${invitation.slug}`;
         this.message = 'Invitación guardada exitosamente.';
         this.saving = false;
         this.clearMessageAfterDelay();
@@ -203,7 +211,7 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
-        this.publicUrl = publicUrl || `${window.location.origin}/i/${invitation.slug}`;
+        this.publicUrl = publicUrl ? publicUrl.replace('/i/', '/new/i/') : `${window.location.origin}/new/i/${invitation.slug}`;
         this.message = '¡Invitación publicada exitosamente!';
         this.publishing = false;
         this.clearMessageAfterDelay();
@@ -223,6 +231,18 @@ export class NewInvitationEditorComponent implements OnInit {
     const validationError = this.validateAsset(file, folder);
     if (validationError) {
       this.error = validationError;
+      input.value = '';
+      return;
+    }
+
+    if (folder === 'music' && !this.canUseMusic()) {
+      this.error = 'La música requiere Evento Individual o Pro. Actívalo en la sección "Plan del evento".';
+      input.value = '';
+      return;
+    }
+
+    if (folder === 'assets' && !this.canUseGuestAlbum()) {
+      this.error = 'El álbum colaborativo requiere Evento Individual o Pro. Actívalo en la sección "Plan del evento".';
       input.value = '';
       return;
     }
@@ -312,16 +332,26 @@ export class NewInvitationEditorComponent implements OnInit {
     return items.join(' · ');
   }
 
+  isProPlan(key?: string): boolean {
+    return ['pro', 'planner_pro_monthly', 'planner_pro_yearly', 'organizer'].includes(key || '');
+  }
+
+  isEventPlan(key?: string): boolean {
+    return ['event', 'event_12m', 'external_dashboard_12m'].includes(key || '');
+  }
+
   canCheckoutPlan(plan: PlanDefinition): boolean {
-    if (plan.key === 'free') return false;
-    if (this.currentPlan?.key === 'pro') return false;
-    if (plan.key === 'event' && this.currentPlan?.key === 'event') return false;
+    if (!plan || plan.key === 'free') return false;
+    const currentKey = this.currentPlan?.key;
+    if (this.isProPlan(currentKey)) return false;
+    if (this.isEventPlan(plan.key) && this.isEventPlan(currentKey)) return false;
+    if (plan.key === currentKey) return false;
     return true;
   }
 
   checkoutScopeText(plan: PlanDefinition): string {
-    if (plan.key === 'event') return 'Aplica a este evento completo y a todas sus invitaciones.';
-    if (plan.key === 'pro') return 'Aplica a toda la cuenta. Desbloquea funciones Pro para todos tus eventos.';
+    if (this.isEventPlan(plan.key)) return 'Aplica a este evento completo y a todas sus invitaciones.';
+    if (this.isProPlan(plan.key)) return 'Aplica a toda la cuenta. Desbloquea funciones Pro para todos tus eventos.';
     return 'Plan gratuito para pruebas iniciales.';
   }
 
@@ -408,15 +438,27 @@ export class NewInvitationEditorComponent implements OnInit {
 
   togglePrivateAlbum(): void {
     if (!this.invitation) return;
+    if (!this.canUseGuestAlbum()) {
+      this.error = 'El álbum de invitados requiere el plan Evento Individual o Pro. Actívalo en la sección "Plan del evento".';
+      return;
+    }
     this.invitation.content.privateAlbumEnabled = !this.invitation.content.privateAlbumEnabled;
   }
 
   canUsePremiumTemplates(): boolean {
-    return Boolean(this.currentPlan?.limits.premiumTemplates);
+    return Boolean(this.currentPlan?.limits?.premiumTemplates);
   }
 
   canUseWhiteLabel(): boolean {
-    return Boolean(this.currentPlan?.limits.whiteLabel);
+    return Boolean(this.currentPlan?.limits?.whiteLabel);
+  }
+
+  canUseGuestAlbum(): boolean {
+    return Boolean(this.currentPlan?.limits?.guestAlbum);
+  }
+
+  canUseMusic(): boolean {
+    return Boolean(this.currentPlan?.limits?.music);
   }
 
   onMusicPlaybackError(): void {
@@ -454,7 +496,7 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
-        this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
+        this.publicUrl = `${window.location.origin}/new/i/${invitation.slug}`;
         this.assetMessage = 'Asset subido y guardado.';
         this.assetUploading = false;
         this.clearMessageAfterDelay();
@@ -495,11 +537,12 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private getRsvpSettingsPayload() {
     if (!this.invitation?.rsvpSettings) return undefined;
+    this.syncCustomQuestionsToPayload();
     return {
       ...this.invitation.rsvpSettings,
       deadline: this.invitation.rsvpSettings.deadline || undefined,
       reminderDaysBeforeDeadline: Number(this.invitation.rsvpSettings.reminderDaysBeforeDeadline ?? 3),
-      customQuestions: this.parseCustomQuestions()
+      customQuestions: this.invitation.rsvpSettings.customQuestions || []
     };
   }
 
@@ -510,23 +553,101 @@ export class NewInvitationEditorComponent implements OnInit {
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),
       giftRegistry: this.cleanGiftRegistry(this.invitation.content.giftRegistry || []),
-      lodging: this.parseLodging()
+      lodging: (this.invitation.content.lodging || []).filter((item) => item.name || item.description || item.url)
     };
   }
 
   private syncEditorTextFields(): void {
     if (!this.invitation) return;
+    if (!this.invitation.content.lodging) this.invitation.content.lodging = [];
     this.lodgingText = (this.invitation.content.lodging || [])
       .map((item) => [item.name, item.description, item.url].filter(Boolean).join(' | '))
       .join('\n');
-    this.customQuestionsText = (this.invitation.rsvpSettings?.customQuestions || [])
-      .map((question) => [
-        question.label,
-        question.type || 'text',
-        question.required ? 'required' : '',
-        (question.options || []).join(';')
-      ].filter((value) => value !== '').join(' | '))
-      .join('\n');
+
+    this.syncCustomQuestionsFromInvitation();
+  }
+
+  addLodgingItem(): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content.lodging) this.invitation.content.lodging = [];
+    this.invitation.content.lodging.push({ name: '', description: '', url: '' });
+  }
+
+  removeLodgingItem(index: number): void {
+    if (!this.invitation?.content?.lodging) return;
+    this.invitation.content.lodging.splice(index, 1);
+  }
+
+  syncCustomQuestionsFromInvitation(): void {
+    const questions = this.invitation?.rsvpSettings?.customQuestions || [];
+    this.customQuestionsList = questions.map(q => ({
+      key: q.key || this.slugify(q.label || ''),
+      label: q.label || '',
+      type: q.type || 'text',
+      required: Boolean(q.required),
+      optionsText: (q.options || []).join('; '),
+      options: q.options || []
+    }));
+  }
+
+  syncCustomQuestionsToPayload(): void {
+    if (!this.invitation) return;
+    if (!this.invitation.rsvpSettings) this.ensureRsvpSettings();
+    if (!this.invitation.rsvpSettings) return;
+
+    this.invitation.rsvpSettings.customQuestions = this.customQuestionsList
+      .filter(q => q.label && q.label.trim().length > 0)
+      .map((q, index) => ({
+        key: q.key || this.slugify(q.label) || `pregunta_${index + 1}`,
+        label: q.label.trim(),
+        type: q.type,
+        required: Boolean(q.required),
+        options: q.type === 'select'
+          ? (q.optionsText || '').split(';').map(o => o.trim()).filter(Boolean)
+          : []
+      }));
+  }
+
+  addCustomQuestion(label = '', type: 'text' | 'textarea' | 'select' | 'boolean' = 'text', optionsText = '', required = false): void {
+    this.customQuestionsList.push({
+      key: this.slugify(label) || `pregunta_${this.customQuestionsList.length + 1}`,
+      label,
+      type,
+      required,
+      optionsText,
+      options: optionsText ? optionsText.split(';').map(o => o.trim()).filter(Boolean) : []
+    });
+    this.syncCustomQuestionsToPayload();
+  }
+
+  removeCustomQuestion(index: number): void {
+    this.customQuestionsList.splice(index, 1);
+    this.syncCustomQuestionsToPayload();
+  }
+
+  addQuestionPreset(presetKey: string): void {
+    if (presetKey === 'song') {
+      this.addCustomQuestion('🎵 Canción preferida para la fiesta', 'text', '', false);
+    } else if (presetKey === 'diet') {
+      this.addCustomQuestion('🥗 Restricciones o alergias alimenticias', 'textarea', '', false);
+    } else if (presetKey === 'menu') {
+      this.addCustomQuestion('🍽️ Opción de platillo preferido', 'select', 'Pollo supremo; Filete de res; Opción vegetariana; Menú infantil', true);
+    } else if (presetKey === 'transport') {
+      this.addCustomQuestion('🚌 ¿Requieres transporte del hotel a la recepción?', 'boolean', '', false);
+    }
+  }
+
+  parseOptionsText(optionsText: string = ''): string[] {
+    return optionsText.split(';').map(o => o.trim()).filter(Boolean);
+  }
+
+  private slugify(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '');
   }
 
   private cleanItinerary(items: Array<Partial<EventAgendaItem>>) {

@@ -8,21 +8,23 @@
     <p *ngIf="assetMessage" class="nw-alert success">{{ assetMessage }}</p>
 
     <ng-container *ngIf="invitation">
-      <!-- Header -->
-      <div class="nw-page-header">
-        <div>
-          <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-3)">
-            <a (click)="goBackToEvent()" style="color:var(--nw-accent-2); text-decoration:none; cursor:pointer">← Evento</a>
-          </p>
-          <h1>✏️ {{ invitation.content.headline || invitation.slug }}</h1>
-          <p>
-            <span class="nw-pill" [class.success]="invitation.status === 'published'" [class.warning]="invitation.status === 'draft'">
-              {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
-            </span>
-            <a [href]="publicUrl" target="_blank" style="margin-left:8px; color:var(--nw-accent-2); font-size:13px;">{{ publicUrl }}</a>
-          </p>
+      <!-- Header Sticky Bar -->
+      <div class="nw-page-header nw-editor-sticky-header">
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <button class="nw-back-btn" (click)="goBackToEvent()" type="button" title="Regresar al evento">
+            ← Regresar al evento
+          </button>
+          <div style="height:24px; width:1px; background:var(--nw-border);"></div>
+          <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <h1 style="font-size:22px; margin:0;">✏️ {{ invitation.content.headline || invitation.slug }}</h1>
+              <span class="nw-pill" [class.success]="invitation.status === 'published'" [class.warning]="invitation.status === 'draft'">
+                {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
+              </span>
+            </div>
+          </div>
         </div>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
           <button class="nw-btn nw-btn-ghost" (click)="save()" [disabled]="saving">{{ saving ? 'Guardando...' : '💾 Guardar' }}</button>
           <button class="nw-btn nw-btn-primary" (click)="publish()" [disabled]="publishing">{{ publishing ? 'Publicando...' : '🌐 Publicar' }}</button>
           <a class="nw-btn nw-btn-ghost" [routerLink]="['/i', invitation.slug]" target="_blank">👁️ Ver pública</a>
@@ -57,9 +59,16 @@
           <label class="nw-label">Logo anfitrión
             <input class="nw-input" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png">
           </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px; padding-top:24px;">
-            <input type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()"> Ocultar marca KyndraSoft
-          </label>
+          <div class="nw-toggle-row nw-form-wide">
+            <div class="nw-toggle-info">
+              <strong>Ocultar marca KyndraSoft</strong>
+              <span>Remueve la marca y créditos de KyndraSoft (Requiere plan Pro).</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
         </div>
         <p *ngIf="invitation.accessMode === 'guest_list'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En lista cerrada, la persona debe validar su email antes de confirmar asistencia.</p>
         <p *ngIf="invitation.accessMode === 'open'" style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo abierto, cualquiera con el link puede enviar RSVP.</p>
@@ -118,10 +127,10 @@
         <p *ngIf="!invitation.content.itinerary?.length" style="font-size:14px; color:var(--nw-text-3);">Sin horarios configurados. Agrega momentos del evento.</p>
         <div style="display:grid; gap:12px;">
           <div *ngFor="let item of invitation.content.itinerary; let i = index" style="display:flex; gap:10px; align-items:flex-start; padding:12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
-            <div style="flex:1; display:grid; grid-template-columns:100px 1fr; gap:8px;">
-              <input class="nw-input" [(ngModel)]="item.time" placeholder="18:00">
-              <input class="nw-input" [(ngModel)]="item.title" placeholder="Ceremonia">
-              <input class="nw-input" [(ngModel)]="item.description" placeholder="Jardín principal" style="grid-column:span 2;">
+            <div style="flex:1; display:grid; grid-template-columns:120px 1fr; gap:8px;">
+              <input type="time" class="nw-input" [(ngModel)]="item.time" title="Seleccionar hora">
+              <input class="nw-input" [(ngModel)]="item.title" placeholder="Ceremonia / Recepción">
+              <input class="nw-input" [(ngModel)]="item.description" placeholder="Jardín principal / Salón" style="grid-column:span 2;">
             </div>
             <div style="display:flex; flex-direction:column; gap:4px;">
               <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem(i, -1)" [disabled]="i === 0">↑</button>
@@ -164,19 +173,87 @@
           <label class="nw-label">Días antes para recordatorio
             <input class="nw-input" type="number" min="0" max="60" [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline">
           </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px; padding-top:24px;">
-            <input type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe"> Permitir "No estoy seguro"
-          </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px; padding-top:24px;">
-            <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline"> Permitir cambios hasta la fecha límite
-          </label>
-          <label class="nw-label nw-form-wide" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation"> Pedir confirmación extra cuando alguien diga que no asistirá
-          </label>
-          <label class="nw-label nw-form-wide">Preguntas personalizadas
-            <textarea class="nw-input" rows="3" [(ngModel)]="customQuestionsText" placeholder="Canción que quieres escuchar | text |&#10;Menú | select | required | Pollo;Vegetariano"></textarea>
-            <span style="font-size:11px; color:var(--nw-text-3); margin-top:4px; display:block;">Formato: Pregunta | tipo (text/textarea/select/boolean) | required | Opción1;Opción2</span>
-          </label>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Permitir "No estoy seguro"</strong>
+              <span>Opción de respuesta intermedia al confirmar asistencia.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Permitir cambios hasta la fecha límite</strong>
+              <span>Los invitados podrán modificar su RSVP libremente.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row nw-form-wide">
+            <div class="nw-toggle-info">
+              <strong>Confirmación al declinar</strong>
+              <span>Pedir confirmación extra cuando un invitado indique que no asistirá.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <!-- Preguntas Personalizadas Visual Editor -->
+          <div class="nw-form-wide" style="margin-top:16px; border-top:1px solid var(--nw-border); padding-top:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong style="font-size:15px; color:var(--nw-text);">Preguntas personalizadas para tus invitados</strong>
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addCustomQuestion()">+ Agregar pregunta</button>
+            </div>
+            
+            <!-- Quick Presets -->
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+              <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Sugeridas:</span>
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('song')">+ 🎵 Canción preferida</button>
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('diet')">+ 🥗 Restricciones alimenticias</button>
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('menu')">+ 🍽️ Selección de menú</button>
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('transport')">+ 🚌 Transporte</button>
+            </div>
+
+            <p *ngIf="!customQuestionsList.length" style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
+              Sin preguntas personalizadas aún. Puedes agregar preguntas sugeridas o crear una propia.
+            </p>
+
+            <div style="display:grid; gap:12px;">
+              <div *ngFor="let q of customQuestionsList; let i = index" style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+                <div class="nw-form-grid" style="gap:10px;">
+                  <label class="nw-label nw-form-wide">Pregunta / Texto
+                    <input class="nw-input" [(ngModel)]="q.label" (ngModelChange)="syncCustomQuestionsToPayload()" placeholder="Ej. ¿Tienes alguna alergia o dieta especial?">
+                  </label>
+                  <label class="nw-label">Tipo de respuesta
+                    <select class="nw-select" [(ngModel)]="q.type" (ngModelChange)="syncCustomQuestionsToPayload()">
+                      <option value="text">Texto corto</option>
+                      <option value="textarea">Texto largo / comentario</option>
+                      <option value="select">Opción múltiple (lista)</option>
+                      <option value="boolean">Casilla Sí / No</option>
+                    </select>
+                  </label>
+                  <div class="nw-toggle-row" style="padding:8px 12px;">
+                    <div class="nw-toggle-info">
+                      <strong style="font-size:13px;">¿Respuesta obligatoria?</strong>
+                    </div>
+                    <label class="nw-switch">
+                      <input type="checkbox" [(ngModel)]="q.required" (ngModelChange)="syncCustomQuestionsToPayload()">
+                      <span class="nw-slider"></span>
+                    </label>
+                  </div>
+                  <label class="nw-label nw-form-wide" *ngIf="q.type === 'select'">Opciones (separadas por punto y coma ;)
+                    <input class="nw-input" [(ngModel)]="q.optionsText" (ngModelChange)="q.options = parseOptionsText(q.optionsText); syncCustomQuestionsToPayload()" placeholder="Pollo; Carne; Vegetariano; Menú infantil">
+                  </label>
+                </div>
+                <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCustomQuestion(i)" style="margin-top:10px;">✕ Quitar pregunta</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -187,15 +264,36 @@
           <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addGiftRegistryItem()">+ Agregar mesa de regalos</button>
         </div>
         <div class="nw-form-grid" style="gap:12px; margin-bottom:16px;" *ngIf="invitation.content.giftSettings as giftSettings">
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="giftSettings.enabled"> Mostrar sección de regalos
-          </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="giftSettings.showRegistry"> Mostrar mesa de regalos
-          </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="giftSettings.showEnvelope"> Mostrar sobre digital
-          </label>
+          <div class="nw-toggle-row nw-form-wide">
+            <div class="nw-toggle-info">
+              <strong>Mostrar sección de regalos</strong>
+              <span>Habilita el módulo global de regalos en la invitación.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="giftSettings.enabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Mostrar mesa de regalos</strong>
+              <span>Despliega los enlaces a las tiendas registradas.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="giftSettings.showRegistry">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Mostrar sobre digital</strong>
+              <span>Muestra datos bancarios y código QR.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="giftSettings.showEnvelope">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
           <label class="nw-label nw-form-wide">Texto introductorio
             <textarea class="nw-input" rows="2" [(ngModel)]="giftSettings.introText" placeholder="Tu presencia es el mejor regalo..."></textarea>
           </label>
@@ -234,12 +332,26 @@
       <div class="nw-card" style="margin-bottom:16px;">
         <div class="nw-card-header"><h3>💬 Dedicatorias</h3></div>
         <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.dedicationSettings as dedicationSettings">
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="dedicationSettings.enabled"> Permitir dedicatorias
-          </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="dedicationSettings.requireApproval"> Requerir aprobación
-          </label>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Permitir dedicatorias</strong>
+              <span>Muestra el muro de comentarios y deseos.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="dedicationSettings.enabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Requerir aprobación</strong>
+              <span>Revisar y aprobar los mensajes antes de hacerlos públicos.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="dedicationSettings.requireApproval">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
           <label class="nw-label nw-form-wide">Texto introductorio
             <textarea class="nw-input" rows="2" [(ngModel)]="dedicationSettings.introText" placeholder="Deja un mensaje para los anfitriones."></textarea>
           </label>
@@ -254,36 +366,47 @@
             {{ invitation.content.privateAlbumEnabled ? 'Activo' : 'Inactivo' }}
           </span>
         </div>
-        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Permite que los invitados suban fotos desde su invitación. Las fotos aparecerán en el tab de Álbum del evento para revisión.</p>
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px; margin:0;">
-            <input type="checkbox" [checked]="invitation.content.privateAlbumEnabled" (change)="togglePrivateAlbum()"> Habilitar álbum de invitados
+        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:16px;">
+          Permite que tus invitados suban fotos del evento desde su invitación digital. Podrás revisarlas y aprobarlas en la pestaña <strong>Álbum</strong> del evento.
+        </p>
+        <div class="nw-toggle-row">
+          <div class="nw-toggle-info">
+            <strong>Habilitar álbum de invitados</strong>
+            <span>Los invitados verán la opción para subir fotos en su invitación.</span>
+          </div>
+          <label class="nw-switch">
+            <input type="checkbox" [checked]="invitation.content.privateAlbumEnabled" (change)="togglePrivateAlbum()">
+            <span class="nw-slider"></span>
           </label>
-        </div>
-        <div *ngIf="invitation.content.privateAlbumEnabled">
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-            <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-              📁 Subir imagen al álbum
-              <input type="file" accept="image/*" (change)="selectAsset($event, 'assets')" [disabled]="assetUploading" style="display:none;">
-            </label>
-            <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo...</span>
-          </div>
-          <div *ngIf="invitation.content.privateAlbum?.length" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
-            <div *ngFor="let url of invitation.content.privateAlbum; let i = index" style="position:relative;">
-              <img [src]="url" alt="Foto álbum" loading="lazy" decoding="async" style="width:100%; height:100px; object-fit:cover; border-radius:var(--nw-radius-sm);">
-              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removePrivateAlbumImage(i)" style="position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px;">✕</button>
-            </div>
-          </div>
         </div>
       </div>
 
       <!-- ═══════════ 9. HOSPEDAJE ═══════════ -->
+      <!-- ═══════════ 9. HOSPEDAJE ═══════════ -->
       <div class="nw-card" style="margin-bottom:16px;">
-        <div class="nw-card-header"><h3>🏨 Hospedaje</h3></div>
-        <label class="nw-label nw-form-wide">Opciones de hospedaje
-          <textarea class="nw-input" rows="3" [(ngModel)]="lodgingText" placeholder="Hotel Centro | Tarifa preferente | https://...&#10;Hotel Sur | Convenio especial | https://..."></textarea>
-          <span style="font-size:11px; color:var(--nw-text-3); margin-top:4px; display:block;">Formato: Nombre | Descripción | URL (un hotel por línea)</span>
-        </label>
+        <div class="nw-card-header">
+          <h3>🏨 Hospedaje Recomendado</h3>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingItem()">+ Agregar hotel</button>
+        </div>
+        <p *ngIf="!invitation.content.lodging?.length" style="font-size:14px; color:var(--nw-text-3);">
+          Sin hoteles configurados. Agrega sugerencias de alojamiento para tus invitados de fuera.
+        </p>
+        <div style="display:grid; gap:12px;">
+          <div *ngFor="let item of invitation.content.lodging; let i = index" style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+            <div class="nw-form-grid" style="gap:10px;">
+              <label class="nw-label">Nombre del hotel / hospedaje
+                <input class="nw-input" [(ngModel)]="item.name" placeholder="Hotel Gran Plaza">
+              </label>
+              <label class="nw-label">Descripción / Tarifa preferente
+                <input class="nw-input" [(ngModel)]="item.description" placeholder="15% desc. con código BODA2026">
+              </label>
+              <label class="nw-label nw-form-wide">Link / Mapa del hotel (URL)
+                <input class="nw-input" [(ngModel)]="item.url" placeholder="https://maps.google.com/...">
+              </label>
+            </div>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLodgingItem(i)" style="margin-top:10px;">✕ Quitar hotel</button>
+          </div>
+        </div>
       </div>
 
       <!-- ═══════════ 10. ASSETS ═══════════ -->
@@ -418,6 +541,28 @@
           <!-- Gallery preview -->
           <div *ngIf="invitation.content.gallery?.length" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
             <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy" decoding="async" style="width:100%; height:80px; object-fit:cover;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Save Bar at the bottom for quick access when scrolling -->
+      <div class="nw-floating-save-bar">
+        <div class="nw-floating-bar-content">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="nw-pill" [class.success]="invitation.status === 'published'" [class.warning]="invitation.status === 'draft'">
+              {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
+            </span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="nw-btn nw-floating-save-btn nw-btn-sm" (click)="save()" [disabled]="saving">
+              {{ saving ? 'Guardando...' : '💾 Guardar cambios' }}
+            </button>
+            <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="publish()" [disabled]="publishing">
+              🌐 Publicar
+            </button>
+            <a class="nw-btn nw-btn-ghost nw-btn-sm" [routerLink]="['/i', invitation.slug]" target="_blank">
+              👁️ Ver pública
+            </a>
           </div>
         </div>
       </div>
