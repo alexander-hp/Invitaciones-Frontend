@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
@@ -16,6 +16,14 @@ export class PublicInvitationComponent implements OnInit {
   albumMessage = '';
   dedicationMessage = '';
   publicAlbumAssets: Array<{ url: string; uploaderName?: string; createdAt?: string }> = [];
+
+  get allAlbumAssets(): Array<{ url: string; uploaderName?: string; createdAt?: string }> {
+    const hostPhotos = (this.invitation?.content?.privateAlbum || []).map(url => ({
+      url,
+      uploaderName: 'Anfitrión'
+    }));
+    return [...hostPhotos, ...this.publicAlbumAssets];
+  }
   dedications: DedicationModel[] = [];
   guestAccessEmail = '';
   selectedAlbumFile?: File;
