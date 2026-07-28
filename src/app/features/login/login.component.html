@@ -6,6 +6,17 @@
     <label>Password<input name="password" type="password" [(ngModel)]="form.password" required></label>
     <p *ngIf="error" class="error">{{ error }}</p>
     <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Entrando...' : 'Entrar' }}</button>
+    <div style="display:grid; gap:8px; margin: 12px 0;">
+      <button class="ghost" type="button" [disabled]="!!socialLoading" (click)="socialLogin('google')">
+        {{ socialLoading === 'google' ? 'Conectando...' : 'Continuar con Google' }}
+      </button>
+      <button class="ghost" type="button" [disabled]="!!socialLoading" (click)="socialLogin('facebook')">
+        {{ socialLoading === 'facebook' ? 'Conectando...' : 'Continuar con Facebook' }}
+      </button>
+      <button class="ghost" type="button" [disabled]="!!socialLoading" (click)="socialLogin('apple')">
+        {{ socialLoading === 'apple' ? 'Conectando...' : 'Continuar con Apple' }}
+      </button>
+    </div>
     <a routerLink="/password-reset">Olvide mi password</a>
     <a routerLink="/register">Crear cuenta nueva</a>
   </form>

@@ -4,13 +4,19 @@ export type EventStatus = 'draft' | 'published' | 'archived';
 export type InvitationStatus = 'draft' | 'published' | 'unpublished';
 export type RsvpResponse = 'confirmed' | 'declined' | 'maybe';
 export type InvitationAccessMode = 'open' | 'public' | 'guest_list' | 'specific_users';
+export type UserRole = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'admin';
+export type AccountType = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'planner' | 'staff';
+export type AuthProvider = 'password' | 'google' | 'facebook' | 'apple';
 
 export interface User {
   _id?: string;
   id?: string;
   name: string;
   email: string;
-  role: 'client' | 'organizer' | 'admin';
+  role: UserRole;
+  accountType?: AccountType;
+  avatarUrl?: string;
+  authProviders?: AuthProvider[];
   plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
   subscriptionPlan?: PaymentPackage;
   subscriptionStatus?: SubscriptionStatus;
@@ -20,6 +26,20 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface SocialLoginPayload {
+  provider: Exclude<AuthProvider, 'password'>;
+  idToken?: string;
+  accessToken?: string;
+  profile?: {
+    email: string;
+    name?: string;
+    providerUserId?: string;
+    avatarUrl?: string;
+  };
+  role?: Exclude<UserRole, 'admin'>;
+  accountType?: AccountType;
 }
 
 export interface MessageResponse {

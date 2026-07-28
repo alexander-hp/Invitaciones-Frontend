@@ -39,6 +39,7 @@ import {
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
+  SocialLoginPayload,
   SongRequestPayload,
   SongRequestModel,
   SongRequestStatus,
@@ -62,12 +63,16 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  register(payload: { name: string; email: string; password: string; role?: 'client' | 'organizer' }): Observable<AuthResponse> {
+  register(payload: { name: string; email: string; password: string; role?: User['role']; accountType?: User['accountType'] }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, payload);
   }
 
   login(payload: { email: string; password: string }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, payload);
+  }
+
+  socialLogin(payload: SocialLoginPayload): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/social`, payload);
   }
 
   me(): Observable<{ user: User }> {
