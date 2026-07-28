@@ -16,11 +16,11 @@
   </div>
 
   <div class="public-content">
-    <section>
+    <section *ngIf="invitation.content.message && invitation.content.sectionSettings?.story !== false">
       <h2>Mensaje</h2>
       <p>{{ invitation.content.message }}</p>
     </section>
-    <section *ngIf="displayLocations.length">
+    <section *ngIf="displayLocations.length && invitation.content.sectionSettings?.locations !== false">
       <h2>Ubicaciones</h2>
       <article *ngFor="let location of displayLocations" class="location-card">
         <span class="status-pill">{{ location.type || 'evento' }}</span>
@@ -33,10 +33,10 @@
         </div>
       </article>
     </section>
-    <section *ngIf="invitation.content.dressCode || invitation.content.itinerary?.length || invitation.content.giftRegistry?.length || invitation.content.lodging?.length">
+    <section *ngIf="(invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false) || (invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false) || (invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length) || (invitation.content.sectionSettings?.lodging !== false && invitation.content.lodging?.length)">
       <h2>Detalles</h2>
-      <p *ngIf="invitation.content.dressCode"><strong>Dress code:</strong> {{ invitation.content.dressCode }}</p>
-      <div *ngIf="invitation.content.itinerary?.length">
+      <p *ngIf="invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false"><strong>Dress code:</strong> {{ invitation.content.dressCode }}</p>
+      <div *ngIf="invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false">
         <h3>Itinerario</h3>
         <div class="timeline-list">
           <article *ngFor="let item of invitation.content.itinerary">
@@ -48,7 +48,7 @@
           </article>
         </div>
       </div>
-      <div *ngIf="invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length">
+      <div *ngIf="invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length">
         <h3>Mesa de regalos</h3>
         <p class="muted">{{ invitation.content.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
         <div class="gift-grid">
@@ -60,7 +60,7 @@
           </article>
         </div>
       </div>
-      <div *ngIf="invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)">
+      <div *ngIf="invitation.content.sectionSettings?.digitalEnvelope !== false && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)">
         <h3>Sobre digital</h3>
         <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl" class="qr-thumb" [src]="invitation.content.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
         <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{ invitation.content.digitalEnvelope?.bank }}</p>
@@ -69,7 +69,7 @@
         <p *ngIf="invitation.content.digitalEnvelope?.clabe"><strong>CLABE:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</p>
         <p *ngIf="invitation.content.digitalEnvelope?.note">{{ invitation.content.digitalEnvelope?.note }}</p>
       </div>
-      <div *ngIf="invitation.content.lodging?.length">
+      <div *ngIf="invitation.content.lodging?.length && invitation.content.sectionSettings?.lodging !== false">
         <h3>Hospedaje</h3>
         <p *ngFor="let hotel of invitation.content.lodging">
           <a *ngIf="hotel.url; else hotelName" [href]="hotel.url" target="_blank" rel="noreferrer">{{ hotel.name || hotel.url }}</a>
@@ -78,7 +78,7 @@
         </p>
       </div>
     </section>
-    <form class="rsvp-panel" (ngSubmit)="submit()">
+    <form *ngIf="invitation.content.sectionSettings?.rsvp !== false" class="rsvp-panel" (ngSubmit)="submit()">
       <h2>RSVP</h2>
       <p *ngIf="deadlineLabel" class="notice">Fecha limite para responder: {{ deadlineLabel }}</p>
 

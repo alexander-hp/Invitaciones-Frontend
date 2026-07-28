@@ -139,7 +139,7 @@
     </section>
 
     <!-- 2. INVITATION MESSAGE / LETTER SECTION -->
-    <section *ngIf="invitation.content.message" class="nw-pub-section">
+    <section *ngIf="invitation.content.message && invitation.content.sectionSettings?.story !== false" class="nw-pub-section">
       <div class="nw-pub-card nw-pub-message-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">💌</span>
@@ -150,7 +150,7 @@
     </section>
 
     <!-- 3. LOCATIONS & MAPS -->
-    <section *ngIf="displayLocations.length" class="nw-pub-section">
+    <section *ngIf="displayLocations.length && invitation.content.sectionSettings?.locations !== false" class="nw-pub-section">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">📍</span>
@@ -178,7 +178,7 @@
     </section>
 
     <!-- 4. ITINERARY TIMELINE -->
-    <section *ngIf="invitation.content.itinerary?.length" class="nw-pub-section">
+    <section *ngIf="invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false" class="nw-pub-section">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">⏳</span>
@@ -198,7 +198,7 @@
     </section>
 
     <!-- 5. DRESS CODE CARD -->
-    <section *ngIf="invitation.content.dressCode" class="nw-pub-section">
+    <section *ngIf="invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false" class="nw-pub-section">
       <div class="nw-pub-card nw-pub-dresscode-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">👔</span>
@@ -209,7 +209,7 @@
     </section>
 
     <!-- 6. RSVP FORM SECTION -->
-    <section id="rsvp-section" class="nw-pub-section">
+    <section *ngIf="invitation.content.sectionSettings?.rsvp !== false" id="rsvp-section" class="nw-pub-section">
       <div class="nw-pub-card nw-pub-rsvp-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">✉️</span>
@@ -367,7 +367,7 @@
 
     <!-- 7. GIFT REGISTRY & DIGITAL ENVELOPE -->
     <section
-      *ngIf="(invitation.content.giftSettings?.enabled !== false && invitation.content.giftRegistry?.length) || (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe)"
+      *ngIf="(invitation.content.giftSettings?.enabled !== false) && ((invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length) || (invitation.content.sectionSettings?.digitalEnvelope !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)))"
       class="nw-pub-section">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
@@ -376,7 +376,7 @@
         </div>
 
         <!-- Gift Store Links -->
-        <div *ngIf="invitation.content.giftRegistry?.length" class="nw-pub-gifts-grid">
+        <div *ngIf="invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length" class="nw-pub-gifts-grid">
           <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
             <img *ngIf="registry.imageUrl" [src]="registry.imageUrl" (click)="openLightbox(registry.imageUrl)"
               alt="Mesa de regalos" class="nw-pub-gift-img">
@@ -391,7 +391,7 @@
 
         <!-- Digital Envelope Card with 1-Click Copy -->
         <div
-          *ngIf="invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account"
+          *ngIf="invitation.content.sectionSettings?.digitalEnvelope !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)"
           class="nw-pub-card-inner nw-pub-envelope-card" style="margin-top: 20px;">
           <div class="nw-pub-envelope-header">
             <span class="icon">✉️</span>
@@ -437,7 +437,7 @@
     </section>
 
     <!-- 8. LODGING SECTION -->
-    <section *ngIf="invitation.content.lodging?.length" class="nw-pub-section">
+    <section *ngIf="invitation.content.lodging?.length && invitation.content.sectionSettings?.lodging !== false" class="nw-pub-section">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">🏨</span>
@@ -457,7 +457,7 @@
     </section>
 
     <!-- 9. PHOTO GALLERY -->
-    <section *ngIf="invitation.content.gallery?.length" class="nw-pub-section">
+    <section *ngIf="invitation.content.gallery?.length && invitation.content.sectionSettings?.gallery !== false" class="nw-pub-section">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">📸</span>
@@ -476,7 +476,7 @@
     </section>
 
     <!-- 10. PRIVATE GUEST ALBUM -->
-    <section *ngIf="invitation.content.privateAlbumEnabled" class="nw-pub-section">
+    <section *ngIf="invitation.content.privateAlbumEnabled && invitation.content.sectionSettings?.guestAlbum !== false" class="nw-pub-section">
       <div class="nw-pub-card nw-pub-album-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">📷</span>
@@ -515,7 +515,7 @@
     </section>
 
     <!-- 11. DEDICATIONS / GUESTBOOK WALL -->
-    <section *ngIf="invitation.content.dedicationSettings?.enabled !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.dedicationSettings?.enabled !== false && invitation.content.sectionSettings?.dedications !== false" class="nw-pub-section">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">✍️</span>
