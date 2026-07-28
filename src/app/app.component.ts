@@ -22,6 +22,12 @@ export class AppComponent implements OnInit {
   }
 
   get isNewLayout(): boolean {
-    return this.router.url.startsWith('/new');
+    const url = this.router.url;
+    return url.startsWith('/new') ||
+           url.startsWith('/i/') ||
+           url.startsWith('/e/') ||
+           url.startsWith('/embed/') ||
+           url.startsWith('/check-in/') ||
+           url.startsWith('/external-access/');
   }
 }

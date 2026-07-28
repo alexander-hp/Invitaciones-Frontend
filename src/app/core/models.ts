@@ -567,7 +567,18 @@ export interface CheckoutResponse {
   message?: string;
 }
 
-export type TableShape = 'round' | 'rect' | 'oval' | 'square';
+export type TableShape =
+  | 'round'
+  | 'rect'
+  | 'oval'
+  | 'square'
+  | 'dance_floor'
+  | 'stage_dj'
+  | 'bar'
+  | 'gift_table'
+  | 'cake_table'
+  | 'photobooth'
+  | 'entrance';
 
 export interface EventTableModel {
   _id?: string;
@@ -581,6 +592,8 @@ export interface EventTableModel {
   shape?: TableShape;
   width?: number;
   height?: number;
+  floor?: number;
+  floorName?: string;
   occupied?: number;
   available?: number;
   overCapacity?: boolean;
@@ -594,13 +607,34 @@ export interface EventTableModel {
   }>;
 }
 
+export type AutoAssignStrategy = 'fill_order' | 'by_group';
+
+export interface AutoAssignTablesPayload {
+  strategy?: AutoAssignStrategy;
+  includeStatuses?: string[];
+  overwrite?: boolean;
+}
+
+export interface AutoAssignTablesResponse {
+  assigned: Array<{
+    guest: { id: string; name: string; group?: string; seats: number };
+    table: string;
+    seatLabel?: string;
+  }>;
+  skipped: Array<{
+    guest: { id: string; name: string; group?: string; seats: number };
+    reason: string;
+  }>;
+  tables: EventTableModel[];
+}
+
 export interface StaffCheckInSession {
   event: Pick<EventModel, 'title' | 'date' | 'venue'>;
   guests: GuestModel[];
   expiresAt: string;
 }
 
-export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops';
+export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops' | 'dj';
 
 export interface EventAccessLinkModel {
   id?: string;
@@ -622,6 +656,7 @@ export interface EventAccessSession {
   rsvps: RsvpModel[];
   tables: EventTableModel[];
   albumAssets: AlbumAssetModel[];
+  songRequests?: SongRequestModel[];
   expiresAt: string;
 }
 

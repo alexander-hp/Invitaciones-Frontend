@@ -272,3 +272,8 @@ Notas QA:
 - El formulario valida localmente email/telefono duplicados dentro del mismo evento antes de enviar.
 - Si backend responde `409`, la UI muestra que el contacto ya pertenece a otro invitado y sugiere editarlo.
 - Importacion CSV/XLSX muestra importados, filas invalidas, duplicados omitidos y hasta 5 detalles de conflicto.
+
+## Actualizacion 2026-07-23 - Soporte de Almacenamiento Local de Imagenes
+
+- Backend configurado para servir uploads locales (`/uploads/...`) con cabeceras `Cross-Origin-Resource-Policy: cross-origin` y `Access-Control-Allow-Origin: *`.
+- Cuando AWS S3 no esta configurado (o `STORAGE_PROVIDER=local`), la app puede subir y mostrar imagenes locales en la portada, galeria y audios directamente desde `http://localhost:4000/uploads/...` sin requerir bucket AWS.

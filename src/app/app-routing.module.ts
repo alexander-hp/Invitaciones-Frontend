@@ -28,6 +28,7 @@ import { NewEventAccessComponent } from './features/new-event-access/new-event-a
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
+import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -42,7 +43,7 @@ const routes: Routes = [
   { path: 'invitations/:id/editor', component: InvitationEditorComponent, canActivate: [AuthGuard] },
   { path: 'check-in/:token', component: CheckInStaffComponent },
   { path: 'external-access/:token', component: EventAccessComponent },
-  { path: 'i/:slug', component: PublicInvitationComponent },
+  { path: 'i/:slug', component: NewPublicInvitationComponent },
   { path: 'e/:portalSlug', component: ExternalPortalComponent },
   { path: 'embed/:portalSlug/:widget', component: ExternalEmbedComponent },
   // ── New pages ──
@@ -56,9 +57,12 @@ const routes: Routes = [
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
   { path: 'new/external-access/:token', component: NewEventAccessComponent },
+  { path: 'new/dj/:token', component: NewEventAccessComponent },
+  { path: 'new/dj', component: NewEventAccessComponent },
   { path: 'new/check-in/:token', component: NewCheckInStaffComponent },
   { path: 'new/embed/:portalSlug/:widget', component: NewExternalEmbedComponent },
   { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
+  { path: 'new/i/:slug', component: NewPublicInvitationComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 

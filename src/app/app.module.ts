@@ -34,10 +34,14 @@ import { NewEventAccessComponent } from './features/new-event-access/new-event-a
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
+import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
+
+import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
+    ConfirmDialogComponent,
     CheckInStaffComponent,
     ContactComponent,
     DashboardComponent,
@@ -58,6 +62,7 @@ import { NewExternalPortalComponent } from './features/new-external-portal/new-e
     PasswordResetConfirmComponent,
     PasswordResetComponent,
     PublicInvitationComponent,
+    NewPublicInvitationComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

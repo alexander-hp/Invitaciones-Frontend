@@ -6,6 +6,8 @@ import {
   AlbumAssetModel,
   AssetFolder,
   AuthResponse,
+  AutoAssignTablesPayload,
+  AutoAssignTablesResponse,
   CheckoutResponse,
   ContactPayload,
   DashboardMetrics,
@@ -223,6 +225,10 @@ export class ApiService {
     return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album/${assetId}`, { status });
   }
 
+  updateEventAccessSongRequest(token: string, songRequestId: string, status: SongRequestStatus): Observable<{ songRequest: SongRequestModel }> {
+    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests/${songRequestId}`, { status });
+  }
+
   createCheckInLink(eventId: string, payload: { label?: string; days?: number }): Observable<{ token: string; url: string; expiresAt: string }> {
     return this.http.post<{ token: string; url: string; expiresAt: string }>(`${this.apiUrl}/events/${eventId}/check-in-link`, payload);
   }
@@ -231,7 +237,7 @@ export class ApiService {
     return this.http.get<{ tables: EventTableModel[] }>(`${this.apiUrl}/events/${eventId}/tables`);
   }
 
-  createTable(eventId: string, payload: { name: string; capacity: number; notes?: string; order?: number; x?: number; y?: number; shape?: string; width?: number; height?: number }): Observable<{ table: EventTableModel }> {
+  createTable(eventId: string, payload: { name: string; capacity: number; notes?: string; order?: number; x?: number; y?: number; shape?: string; width?: number; height?: number; floor?: number; floorName?: string }): Observable<{ table: EventTableModel }> {
     return this.http.post<{ table: EventTableModel }>(`${this.apiUrl}/events/${eventId}/tables`, payload);
   }
 
@@ -241,6 +247,10 @@ export class ApiService {
 
   deleteTable(eventId: string, tableId: string): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/tables/${tableId}`);
+  }
+
+  autoAssignTables(eventId: string, payload: AutoAssignTablesPayload): Observable<AutoAssignTablesResponse> {
+    return this.http.post<AutoAssignTablesResponse>(`${this.apiUrl}/events/${eventId}/tables/auto-assign`, payload);
   }
 
   listAlbum(eventId: string): Observable<{ assets: AlbumAssetModel[] }> {
