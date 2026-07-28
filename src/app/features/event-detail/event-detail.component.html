@@ -326,6 +326,7 @@
               <option value="album_review">Revision album</option>
               <option value="client_view">Vista cliente</option>
               <option value="guest_ops">Operacion invitados</option>
+              <option value="dj">🎧 Sección DJ (Canciones)</option>
             </select>
           </label>
           <label>Etiqueta<input name="accessLabel" [(ngModel)]="accessLinkForm.label" placeholder="Entrada principal"></label>
@@ -619,6 +620,7 @@
               </td>
               <td>
                 <div class="inline-actions">
+                  <button class="ghost small" type="button" (click)="downloadGuestPass(guest)">Pase VIP</button>
                   <button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button>
                   <button *ngIf="canEmailGuest(guest)" class="ghost small" type="button" (click)="sendRealEmail(guest)" [disabled]="emailSending === getGuestId(guest)">{{ emailSending === getGuestId(guest) ? 'Enviando...' : 'Enviar email' }}</button>
                   <button *ngIf="canSendRealWhatsapp(guest)" class="ghost small" type="button" (click)="sendRealWhatsapp(guest)" [disabled]="whatsappSending === getGuestId(guest) || !hasPlanFeature('whatsappMessaging')">{{ whatsappSending === getGuestId(guest) ? 'Enviando...' : 'Enviar WA' }}</button>

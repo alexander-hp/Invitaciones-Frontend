@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import {
-  AlbumAssetModel, AssetFolder, DashboardMetrics, DedicationModel, DedicationStatus,
+  AlbumAssetModel, AssetFolder, AutoAssignStrategy, AutoAssignTablesResponse, DashboardMetrics, DedicationModel, DedicationStatus,
   EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel,
   ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel,
   GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel,
@@ -11,6 +13,8 @@ import {
   WhatsAppMediaType, WhatsAppProvider, EventStatus
 } from '../../core/models';
 import { environment } from '../../../environments/environment';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { generateGuestPassHtml } from '../new-public-invitation/guest-pass-template';
 
 interface MessageTemplateOption { value: GuestMessageType; label: string; }
 
@@ -55,9 +59,28 @@ export class NewEventDetailComponent implements OnInit {
   guestMessage = '';
   tableMessage = '';
   importMessage = '';
+
+  // Auto-assign modal state
+  showAutoAssignModal = false;
+  autoAssigning = false;
+  autoAssignError = '';
+  autoAssignResult?: AutoAssignTablesResponse;
+  autoAssignForm = {
+    strategy: 'by_group' as AutoAssignStrategy,
+    includeConfirmed: true,
+    includePending: false,
+    includeDeclined: false,
+    overwrite: false
+  };
   importDuplicateDetails: string[] = [];
   checkInCode = '';
   checkInLink = '';
+  excludedGuestIds = new Set<string>();
+  includePassInMessage = true;
+  simulationMode = true;
+  showPreviewModal = false;
+  previewModalKind: 'email' | 'whatsapp' = 'email';
+  previewGuest?: GuestModel;
 
   // WhatsApp
   whatsappProvider: WhatsAppProvider = 'disabled';
@@ -162,7 +185,13 @@ export class NewEventDetailComponent implements OnInit {
   private readonly maxImageSize = 5 * 1024 * 1024;
   private readonly maxAudioSize = 10 * 1024 * 1024;
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private api: ApiService,
+    private confirmDialog: ConfirmDialogService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -239,7 +268,7 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   get albumPublicUrl(): string {
-    return this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : '';
+    return this.primaryInvitation ? `${window.location.origin}/new/i/${this.primaryInvitation.slug}` : '';
   }
 
   get albumQrUrl(): string {
@@ -266,14 +295,22 @@ export class NewEventDetailComponent implements OnInit {
     return this.eventPlanExpiresAt ? new Date(this.eventPlanExpiresAt).toLocaleDateString() : '';
   }
 
+  get activeRecipients(): GuestModel[] {
+    return this.filteredGuests.filter(g => !this.isExcluded(g));
+  }
+
+  get exceptionCount(): number {
+    return this.filteredGuests.filter(g => this.isExcluded(g)).length;
+  }
+
   get bulkWhatsappPreview(): string {
-    const guest = this.filteredGuests.find(g => this.canWhatsappGuest(g));
-    if (!guest) return 'Selecciona invitados con teléfono para previsualizar.';
+    const guest = this.activeRecipients.find(g => this.canWhatsappGuest(g));
+    if (!guest) return 'Selecciona invitados activos con teléfono para previsualizar.';
     return this.buildMessage(guest, this.selectedMessageType);
   }
 
-  get whatsappRecipientCount(): number { return this.filteredGuests.filter(g => this.canWhatsappGuest(g)).length; }
-  get whatsappMissingPhoneCount(): number { return this.filteredGuests.filter(g => !this.toWhatsappPhone(g.phone)).length; }
+  get whatsappRecipientCount(): number { return this.activeRecipients.filter(g => this.canWhatsappGuest(g)).length; }
+  get whatsappMissingPhoneCount(): number { return this.activeRecipients.filter(g => !this.toWhatsappPhone(g.phone)).length; }
 
   // External form getters
   get carouselItems(): FormArray { return this.externalForm.get('carousel') as FormArray; }
@@ -377,20 +414,27 @@ export class NewEventDetailComponent implements OnInit {
   deleteInvitation(inv: InvitationModel): void {
     const id = this.getInvitationId(inv);
     if (!id) return;
-    if (!confirm(`¿Estás seguro de que deseas eliminar la invitación "${inv.content?.headline || inv.slug}"? Esta acción no se puede deshacer.`)) {
-      return;
-    }
-    this.saving = true;
-    this.error = '';
-    this.api.deleteInvitation(id).subscribe({
-      next: () => {
-        this.saving = false;
-        this.loadInvitations(this.eventId);
-      },
-      error: (err) => {
-        this.error = err.error?.message || 'No se pudo eliminar la invitación.';
-        this.saving = false;
-      }
+    this.confirmDialog.confirm({
+      title: '¿Eliminar invitación?',
+      message: `¿Estás seguro de que deseas eliminar la invitación "${inv.content?.headline || inv.slug}"? Esta acción no se puede deshacer.`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🗑️'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.saving = true;
+      this.error = '';
+      this.api.deleteInvitation(id).subscribe({
+        next: () => {
+          this.saving = false;
+          this.loadInvitations(this.eventId);
+        },
+        error: (err) => {
+          this.error = err.error?.message || 'No se pudo eliminar la invitación.';
+          this.saving = false;
+        }
+      });
     });
   }
 
@@ -464,16 +508,26 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   deleteGuest(guest: GuestModel): void {
-    if (!confirm(`¿Eliminar a ${guest.name}?`)) return;
-    this.guestSaving = true;
     const guestId = this.getGuestId(guest);
-    this.api.deleteGuest(guestId).subscribe({
-      next: () => {
-        this.guests = this.guests.filter(g => this.getGuestId(g) !== guestId);
-        this.guestMessage = 'Invitado eliminado';
-        this.guestSaving = false;
-      },
-      error: (err) => { this.guestError = err.error?.message || 'Error eliminando'; this.guestSaving = false; }
+    if (!guestId) return;
+    this.confirmDialog.confirm({
+      title: '¿Eliminar invitado?',
+      message: `¿Estás seguro de que deseas eliminar a "${guest.name}"?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '👤'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.guestSaving = true;
+      this.api.deleteGuest(guestId).subscribe({
+        next: () => {
+          this.guests = this.guests.filter(g => this.getGuestId(g) !== guestId);
+          this.guestMessage = 'Invitado eliminado';
+          this.guestSaving = false;
+        },
+        error: (err) => { this.guestError = err.error?.message || 'Error eliminando'; this.guestSaving = false; }
+      });
     });
   }
 
@@ -555,10 +609,106 @@ export class NewEventDetailComponent implements OnInit {
 
   deleteTable(table: EventTableModel): void {
     const tableId = this.getTableId(table);
-    if (!this.eventId || !tableId || !confirm(`¿Eliminar mesa ${table.name}?`)) return;
-    this.api.deleteTable(this.eventId, tableId).subscribe({
-      next: () => { this.tableMessage = 'Mesa eliminada.'; this.loadTables(this.eventId); },
-      error: (err) => this.guestError = err.error?.message || 'No se pudo eliminar la mesa.'
+    if (!this.eventId || !tableId) return;
+    this.confirmDialog.confirm({
+      title: '¿Eliminar mesa?',
+      message: `¿Estás seguro de que deseas eliminar la mesa "${table.name}"?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🪑'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.api.deleteTable(this.eventId, tableId).subscribe({
+        next: () => { this.tableMessage = 'Mesa eliminada.'; this.loadTables(this.eventId); },
+        error: (err) => this.guestError = err.error?.message || 'No se pudo eliminar la mesa.'
+      });
+    });
+  }
+
+  openAutoAssignModal(): void {
+    if (!this.hasPlanFeature('seating')) { this.guestError = this.featureLockedMessage('seating'); return; }
+    this.showAutoAssignModal = true;
+    this.autoAssignError = '';
+    this.autoAssignResult = undefined;
+  }
+
+  runAutoAssign(): void {
+    if (!this.eventId) return;
+
+    const includeStatuses: string[] = [];
+    if (this.autoAssignForm.includeConfirmed) includeStatuses.push('confirmed');
+    if (this.autoAssignForm.includePending) includeStatuses.push('pending');
+    if (this.autoAssignForm.includeDeclined) includeStatuses.push('declined');
+
+    if (includeStatuses.length === 0) {
+      this.autoAssignError = 'Debes seleccionar al menos un estado de invitado a incluir.';
+      return;
+    }
+
+    this.autoAssigning = true;
+    this.autoAssignError = '';
+    this.autoAssignResult = undefined;
+
+    this.api.autoAssignTables(this.eventId, {
+      strategy: this.autoAssignForm.strategy,
+      includeStatuses,
+      overwrite: this.autoAssignForm.overwrite
+    }).subscribe({
+      next: (res) => {
+        this.autoAssigning = false;
+        this.autoAssignResult = res;
+        this.tableMessage = `Asignación automática completada: ${res.assigned.length} invitados ubicados.`;
+        this.loadTables(this.eventId);
+        this.loadGuests(this.eventId);
+        setTimeout(() => this.tableMessage = '', 4000);
+      },
+      error: (err) => {
+        this.autoAssigning = false;
+        this.autoAssignError = err.error?.message || 'Error al ejecutar la asignación automática de mesas.';
+      }
+    });
+  }
+
+  clearingTables = false;
+
+  get hasAssignedGuests(): boolean {
+    return this.guests.some(g => !!g.tableName);
+  }
+
+  clearAssignments(): void {
+    const assigned = this.guests.filter(g => !!g.tableName && !!(g._id || g.id));
+    if (assigned.length === 0) {
+      this.tableMessage = 'No hay invitados con mesa asignada.';
+      setTimeout(() => this.tableMessage = '', 3000);
+      return;
+    }
+
+    this.confirmDialog.confirm({
+      title: '¿Limpiar asignación de mesas?',
+      message: `¿Estás seguro de que deseas quitar la mesa asignada a los ${assigned.length} invitados?`,
+      confirmText: 'Limpiar mesas',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🧹'
+    }).then((confirmed) => {
+      if (!confirmed || !this.eventId) return;
+      this.clearingTables = true;
+      const requests = assigned.map(g => this.api.updateGuest((g._id || g.id)!, { tableName: '', seatLabel: '' } as any));
+
+      forkJoin(requests).subscribe({
+        next: () => {
+          this.clearingTables = false;
+          this.tableMessage = `Se desasignaron ${assigned.length} invitados de sus mesas.`;
+          this.loadTables(this.eventId!);
+          this.loadGuests(this.eventId!);
+          setTimeout(() => this.tableMessage = '', 4000);
+        },
+        error: (err) => {
+          this.clearingTables = false;
+          this.guestError = err.error?.message || 'Error al limpiar asignaciones de mesas.';
+        }
+      });
     });
   }
 
@@ -578,40 +728,170 @@ export class NewEventDetailComponent implements OnInit {
 
   // ── Communication ──
 
+  // ── Simulation & Previews ──
+
+  getQrCodeUrl(guest?: GuestModel): string {
+    if (!guest) return '';
+    const url = this.getPersonalizedPassUrl(guest);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+  }
+
+  openPreviewModal(guest?: GuestModel, kind: 'email' | 'whatsapp' = 'email'): void {
+    this.previewGuest = guest || this.activeRecipients[0] || this.guests[0];
+    this.previewModalKind = kind;
+    this.showPreviewModal = true;
+  }
+
+  closePreviewModal(): void {
+    this.showPreviewModal = false;
+  }
+
+  simulateSendGuest(guest: GuestModel, channel: 'email' | 'whatsapp'): void {
+    const guestId = this.getGuestId(guest);
+    if (!guestId) return;
+    this.api.markGuestCommunication(guestId, { communicationStatus: 'sent', messageType: this.selectedMessageType, channel }).subscribe({
+      next: ({ guest: updated }) => {
+        this.guests = this.guests.map(item => this.getGuestId(item) === guestId ? updated : item);
+        this.guestMessage = `🧪 [Simulación] ${channel === 'email' ? 'Email' : 'WhatsApp'} marcado como enviado a ${guest.name}.`;
+      },
+      error: () => {
+        guest.communicationStatus = 'sent';
+        guest.lastMessageType = this.selectedMessageType;
+        guest.lastMessageChannel = channel;
+        this.guestMessage = `🧪 [Simulación] ${channel === 'email' ? 'Email' : 'WhatsApp'} marcado como enviado a ${guest.name}.`;
+      }
+    });
+  }
+
+  simulateBulkSend(channel: 'email' | 'whatsapp'): void {
+    const recipients = channel === 'email'
+      ? this.activeRecipients.filter(g => this.canEmailGuest(g))
+      : this.activeRecipients.filter(g => this.canWhatsappGuest(g));
+
+    if (!recipients.length) return;
+
+    let count = 0;
+    recipients.forEach(g => {
+      const guestId = this.getGuestId(g);
+      if (guestId) {
+        this.api.markGuestCommunication(guestId, { communicationStatus: 'sent', messageType: this.selectedMessageType, channel }).subscribe({
+          next: ({ guest: updated }) => {
+            this.guests = this.guests.map(item => this.getGuestId(item) === guestId ? updated : item);
+          }
+        });
+        count++;
+      }
+    });
+
+    this.guestMessage = `🧪 [Simulación] ${count} ${channel === 'email' ? 'correo(s)' : 'mensaje(s) de WhatsApp'} marcados como enviados con éxito.`;
+    this.openPreviewModal(recipients[0], channel);
+  }
+
   sendRealEmail(guest: GuestModel): void {
     const guestId = this.getGuestId(guest);
     if (!guestId) return;
+
+    if (this.simulationMode) {
+      this.simulateSendGuest(guest, 'email');
+      this.openPreviewModal(guest, 'email');
+      return;
+    }
+
     this.emailSending = guestId;
     this.guestError = '';
     this.api.sendGuestEmail(guestId, { messageType: this.selectedMessageType }).subscribe({
       next: ({ guest: updated }) => {
         this.guests = this.guests.map(item => this.getGuestId(item) === guestId ? updated : item);
-        this.guestMessage = 'Email enviado.';
+        this.guestMessage = 'Email enviado con éxito.';
         this.emailSending = '';
       },
-      error: (err) => { this.guestError = err.error?.message || 'No se pudo enviar email.'; this.emailSending = ''; }
+      error: (err) => {
+        this.emailSending = '';
+        const msg = err.error?.message || 'Servidor SMTP no configurado.';
+        this.confirmDialog.confirm({
+          title: 'Servidor SMTP no configurado',
+          message: `${msg}\n\n¿Deseas simular el envío para probar la plantilla y el flujo del sistema?`,
+          confirmText: '🧪 Simular envío',
+          cancelText: 'Cerrar',
+          type: 'warning',
+          icon: '📧'
+        }).then((confirmed) => {
+          if (confirmed) {
+            this.simulateSendGuest(guest, 'email');
+            this.openPreviewModal(guest, 'email');
+          } else {
+            this.guestError = msg;
+          }
+        });
+      }
     });
   }
 
   sendBulkEmail(): void {
-    if (!this.eventId || !this.filteredGuests.length) return;
-    const guestIds = this.filteredGuests.filter(g => this.canEmailGuest(g)).map(g => this.getGuestId(g));
-    if (!guestIds.length || !confirm(`Enviar email "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${guestIds.length} invitado(s)?`)) return;
-    this.emailBulkSending = true;
-    this.guestError = '';
-    this.api.sendBulkEmail(this.eventId, { confirm: true, messageType: this.selectedMessageType, guestIds }).subscribe({
-      next: (result) => {
-        this.guestMessage = `Email masivo: enviados ${result.sent}, fallidos ${result.failed}.`;
-        this.loadGuests(this.eventId);
-        this.emailBulkSending = false;
-      },
-      error: (err) => { this.guestError = err.error?.message || 'Error en email masivo.'; this.emailBulkSending = false; }
+    if (!this.eventId || !this.activeRecipients.length) return;
+    const guestIds = this.activeRecipients.filter(g => this.canEmailGuest(g)).map(g => this.getGuestId(g));
+    if (!guestIds.length) return;
+
+    if (this.simulationMode) {
+      this.confirmDialog.confirm({
+        title: '🧪 Simulación de Email Masivo',
+        message: `Se simulará el envío del correo "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${guestIds.length} invitado(s).`,
+        confirmText: '🧪 Simular Envíos',
+        cancelText: 'Cancelar',
+        type: 'info',
+        icon: '📧'
+      }).then((confirmed) => {
+        if (confirmed) this.simulateBulkSend('email');
+      });
+      return;
+    }
+
+    this.confirmDialog.confirm({
+      title: '¿Enviar email masivo?',
+      message: `¿Estás seguro de enviar el correo "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${guestIds.length} invitado(s) (excluyendo excepciones)?`,
+      confirmText: 'Enviar masivo',
+      cancelText: 'Cancelar',
+      type: 'info',
+      icon: '📧'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.emailBulkSending = true;
+      this.guestError = '';
+      this.api.sendBulkEmail(this.eventId!, { confirm: true, messageType: this.selectedMessageType, guestIds }).subscribe({
+        next: (result) => {
+          this.guestMessage = `Email masivo: enviados ${result.sent}, fallidos ${result.failed}.`;
+          this.loadGuests(this.eventId!);
+          this.emailBulkSending = false;
+        },
+        error: (err) => {
+          this.emailBulkSending = false;
+          const msg = err.error?.message || 'Servidor SMTP no configurado.';
+          this.confirmDialog.confirm({
+            title: 'Servidor SMTP no configurado',
+            message: `${msg}\n\n¿Deseas simular el envío masivo para probar el diseño y flujo?`,
+            confirmText: '🧪 Simular envío masivo',
+            cancelText: 'Cerrar',
+            type: 'warning',
+            icon: '📧'
+          }).then((confirmed) => {
+            if (confirmed) this.simulateBulkSend('email');
+            else this.guestError = msg;
+          });
+        }
+      });
     });
   }
 
   sendRealWhatsapp(guest: GuestModel): void {
     const guestId = this.getGuestId(guest);
     if (!guestId) return;
+
+    if (this.simulationMode) {
+      this.simulateSendGuest(guest, 'whatsapp');
+      this.openPreviewModal(guest, 'whatsapp');
+      return;
+    }
+
     if (!this.hasPlanFeature('whatsappMessaging')) { this.guestError = this.featureLockedMessage('whatsappMessaging'); return; }
     if (this.whatsappProvider === 'openwa' && !this.openWaReady) {
       this.guestError = `WhatsApp no listo (${this.openWaStatus || 'desconocido'}).`;
@@ -627,33 +907,92 @@ export class NewEventDetailComponent implements OnInit {
         this.guestMessage = `WhatsApp ${status} via ${provider}.`;
         this.whatsappSending = '';
       },
-      error: (err) => { this.guestError = err.error?.message || 'No se pudo enviar WhatsApp.'; this.whatsappSending = ''; }
+      error: (err) => {
+        this.whatsappSending = '';
+        const msg = err.error?.message || 'WhatsApp no configurado.';
+        this.confirmDialog.confirm({
+          title: 'Proveedor WhatsApp no listo',
+          message: `${msg}\n\n¿Deseas simular el envío para probar la previsualización del mensaje?`,
+          confirmText: '🧪 Simular envío',
+          cancelText: 'Cerrar',
+          type: 'warning',
+          icon: '📱'
+        }).then((confirmed) => {
+          if (confirmed) {
+            this.simulateSendGuest(guest, 'whatsapp');
+            this.openPreviewModal(guest, 'whatsapp');
+          } else {
+            this.guestError = msg;
+          }
+        });
+      }
     });
   }
 
   sendBulkWhatsapp(): void {
-    if (!this.eventId || !this.filteredGuests.length) return;
+    if (!this.eventId || !this.activeRecipients.length) return;
+    const targetGuests = this.activeRecipients.filter(g => this.canWhatsappGuest(g));
+    const total = targetGuests.length;
+    if (!total) return;
+
+    if (this.simulationMode) {
+      this.confirmDialog.confirm({
+        title: '🧪 Simular WhatsApp Masivo',
+        message: `Se simulará el envío de WhatsApp "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${total} invitado(s).`,
+        confirmText: '🧪 Simular Envíos',
+        cancelText: 'Cancelar',
+        type: 'info',
+        icon: '📱'
+      }).then((confirmed) => {
+        if (confirmed) this.simulateBulkSend('whatsapp');
+      });
+      return;
+    }
+
     if (!this.hasPlanFeature('whatsappBulk')) { this.guestError = this.featureLockedMessage('whatsappBulk'); return; }
     if (this.whatsappProvider === 'openwa' && !this.openWaReady) {
       this.guestError = `WhatsApp no listo (${this.openWaStatus}).`;
       return;
     }
-    const total = this.filteredGuests.filter(g => this.canWhatsappGuest(g)).length;
-    if (!total || !confirm(`Enviar WhatsApp "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${total} invitado(s)?`)) return;
-    const media = this.buildWhatsappMediaPayload();
-    if (this.whatsappMedia.enabled && !media) { this.guestError = 'Selecciona media válida.'; return; }
-    this.whatsappBulkSending = true;
-    this.guestError = '';
-    this.api.sendBulkWhatsApp(this.eventId, {
-      confirm: true, messageType: this.selectedMessageType, media,
-      guestIds: this.filteredGuests.filter(g => this.canWhatsappGuest(g)).map(g => this.getGuestId(g))
-    }).subscribe({
-      next: (result) => {
-        this.guestMessage = `WhatsApp masivo: enviados ${result.sent}, omitidos ${result.skipped}, fallidos ${result.failed}.`;
-        this.loadGuests(this.eventId);
-        this.whatsappBulkSending = false;
-      },
-      error: (err) => { this.guestError = err.error?.message || 'Error en WhatsApp masivo.'; this.whatsappBulkSending = false; }
+
+    this.confirmDialog.confirm({
+      title: '¿Enviar WhatsApp masivo?',
+      message: `¿Estás seguro de enviar WhatsApp "${this.getMessageTypeLabel(this.selectedMessageType)}" a ${total} invitado(s) (excluyendo excepciones)?`,
+      confirmText: 'Enviar masivo',
+      cancelText: 'Cancelar',
+      type: 'info',
+      icon: '📱'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      const media = this.buildWhatsappMediaPayload();
+      if (this.whatsappMedia.enabled && !media) { this.guestError = 'Selecciona media válida.'; return; }
+      this.whatsappBulkSending = true;
+      this.guestError = '';
+      this.api.sendBulkWhatsApp(this.eventId!, {
+        confirm: true, messageType: this.selectedMessageType, media,
+        guestIds: targetGuests.map(g => this.getGuestId(g))
+      }).subscribe({
+        next: (result) => {
+          this.guestMessage = `WhatsApp masivo: enviados ${result.sent}, omitidos ${result.skipped}, fallidos ${result.failed}.`;
+          this.loadGuests(this.eventId!);
+          this.whatsappBulkSending = false;
+        },
+        error: (err) => {
+          this.whatsappBulkSending = false;
+          const msg = err.error?.message || 'Proveedor WhatsApp no configurado.';
+          this.confirmDialog.confirm({
+            title: 'Proveedor WhatsApp no listo',
+            message: `${msg}\n\n¿Deseas simular el envío masivo para validar las listas de seguimiento?`,
+            confirmText: '🧪 Simular envío masivo',
+            cancelText: 'Cerrar',
+            type: 'warning',
+            icon: '📱'
+          }).then((confirmed) => {
+            if (confirmed) this.simulateBulkSend('whatsapp');
+            else this.guestError = msg;
+          });
+        }
+      });
     });
   }
 
@@ -699,7 +1038,7 @@ export class NewEventDetailComponent implements OnInit {
       next: ({ key, uploadUrl, publicUrl }) => {
         this.api.uploadAsset(uploadUrl, file).subscribe({
           next: () => {
-            this.api.createWhatsAppMedia(this.eventId, { key, url: publicUrl, type, fileName: file.name, mimetype: file.type, size: file.size, caption: this.whatsappMedia.caption.trim() || undefined }).subscribe({
+            this.api.createWhatsAppMedia(this.eventId!, { key, url: publicUrl, type, fileName: file.name, mimetype: file.type, size: file.size, caption: this.whatsappMedia.caption.trim() || undefined }).subscribe({
               next: ({ asset }) => {
                 this.whatsappMediaAssets = [asset, ...this.whatsappMediaAssets];
                 this.whatsappMedia.enabled = true;
@@ -720,13 +1059,24 @@ export class NewEventDetailComponent implements OnInit {
 
   deleteWhatsappMedia(asset: WhatsAppMediaAssetModel): void {
     const assetId = this.getWhatsAppMediaAssetId(asset);
-    if (!this.eventId || !assetId || !confirm(`¿Quitar "${asset.fileName}"?`)) return;
-    this.api.deleteWhatsAppMedia(this.eventId, assetId).subscribe({
-      next: () => {
-        this.whatsappMediaAssets = this.whatsappMediaAssets.filter(item => this.getWhatsAppMediaAssetId(item) !== assetId);
-        if (this.whatsappMedia.assetId === assetId) this.whatsappMedia.assetId = '';
-      },
-      error: (err) => this.guestError = err.error?.message || 'Error quitando media.'
+    if (!this.eventId || !assetId) return;
+
+    this.confirmDialog.confirm({
+      title: '¿Quitar media de WhatsApp?',
+      message: `¿Estás seguro de que deseas quitar el archivo "${asset.fileName}"?`,
+      confirmText: 'Quitar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🗑️'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.api.deleteWhatsAppMedia(this.eventId!, assetId).subscribe({
+        next: () => {
+          this.whatsappMediaAssets = this.whatsappMediaAssets.filter(item => this.getWhatsAppMediaAssetId(item) !== assetId);
+          if (this.whatsappMedia.assetId === assetId) this.whatsappMedia.assetId = '';
+        },
+        error: (err) => this.guestError = err.error?.message || 'Error quitando media.'
+      });
     });
   }
 
@@ -811,15 +1161,29 @@ export class NewEventDetailComponent implements OnInit {
 
   revokeAccessLink(link: EventAccessLinkModel): void {
     const linkId = link.id || link._id || '';
-    if (!this.eventId || !linkId || !confirm('¿Revocar este link?')) return;
-    this.api.revokeEventAccessLink(this.eventId, linkId).subscribe({
-      next: () => { this.guestMessage = 'Link revocado.'; this.loadAccessLinks(this.eventId); },
-      error: (err) => this.guestError = err.error?.message || 'Error revocando.'
+    if (!this.eventId || !linkId) return;
+
+    this.confirmDialog.confirm({
+      title: '¿Revocar este link?',
+      message: `¿Estás seguro de que deseas revocar el acceso "${link.label || link.role}"? Esta acción desactivará el enlace de forma permanente.`,
+      confirmText: 'Sí, Revocar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🔐'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.api.revokeEventAccessLink(this.eventId, linkId).subscribe({
+        next: () => { this.guestMessage = 'Link revocado.'; this.loadAccessLinks(this.eventId); },
+        error: (err) => this.guestError = err.error?.message || 'Error revocando.'
+      });
     });
   }
 
   getNewAccessUrl(link: EventAccessLinkModel): string {
     if (link && link.url) {
+      if (link.role === 'dj') {
+        return link.url.replace('/external-access/', '/new/dj/');
+      }
       return link.url.replace('/external-access/', '/new/external-access/');
     }
     return '';
@@ -1065,9 +1429,89 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   getPersonalizedPublicUrl(guest: GuestModel): string {
-    const publicUrl = this.primaryInvitation ? `${window.location.origin}/i/${this.primaryInvitation.slug}` : this.externalPortalUrl;
+    const publicUrl = this.primaryInvitation ? `${window.location.origin}/new/i/${this.primaryInvitation.slug}` : this.externalPortalUrl;
     if (!publicUrl || !guest.invitationToken) return publicUrl;
     return `${publicUrl}?t=${encodeURIComponent(guest.invitationToken)}`;
+  }
+
+  getPersonalizedPassUrl(guest: GuestModel): string {
+    const base = this.primaryInvitation ? `${window.location.origin}/new/i/${this.primaryInvitation.slug}` : this.newExternalPortalUrl;
+    if (!base) return '';
+    return guest.invitationToken ? `${base}?t=${encodeURIComponent(guest.invitationToken)}` : base;
+  }
+
+  toggleException(guest: GuestModel): void {
+    const id = this.getGuestId(guest);
+    if (!id) return;
+    if (this.excludedGuestIds.has(id)) {
+      this.excludedGuestIds.delete(id);
+    } else {
+      this.excludedGuestIds.add(id);
+    }
+  }
+
+  isExcluded(guest: GuestModel): boolean {
+    const id = this.getGuestId(guest);
+    return Boolean(id && this.excludedGuestIds.has(id));
+  }
+
+  clearExceptions(): void {
+    this.excludedGuestIds.clear();
+  }
+
+  selectAllRecipients(): void {
+    this.excludedGuestIds.clear();
+  }
+
+  getGuestPassCleanHtml(guest?: GuestModel): string {
+    if (!guest) return '';
+    const rawHtml = generateGuestPassHtml({
+      guestName: guest.name,
+      tableName: guest.tableName,
+      seatLabel: guest.seatLabel,
+      allowedCompanions: guest.allowedCompanions || 1,
+      qrCodeUrl: this.getQrCodeUrl(guest),
+      headline: this.primaryInvitation?.content?.headline || this.event?.title || 'Invitación Digital',
+      subheadline: this.primaryInvitation?.content?.subheadline || 'Pase de Entrada VIP',
+      eventDateFormatted: this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
+      locationAddress: this.primaryInvitation?.content?.locations?.[0]?.address || this.event?.venue?.address || this.event?.venue?.name,
+      dressCode: this.primaryInvitation?.content?.dressCode,
+      brandLogoUrl: this.primaryInvitation?.content?.brandLogoUrl,
+      coverImageUrl: this.primaryInvitation?.content?.coverImageUrl,
+      primaryColor: this.primaryInvitation?.content?.palette?.primary,
+      accentColor: this.primaryInvitation?.content?.palette?.accent
+    });
+    return rawHtml.replace(/<script>[\s\S]*?<\/script>/gi, '');
+  }
+
+  getGuestPassSafeSrcdoc(guest?: GuestModel): SafeHtml {
+    const html = this.getGuestPassCleanHtml(guest);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  downloadGuestPass(guest: GuestModel): void {
+    const passHtml = generateGuestPassHtml({
+      guestName: guest.name,
+      tableName: guest.tableName,
+      seatLabel: guest.seatLabel,
+      allowedCompanions: guest.allowedCompanions || 1,
+      qrCodeUrl: this.getQrCodeUrl(guest),
+      headline: this.primaryInvitation?.content?.headline || this.event?.title || 'Invitación Digital',
+      subheadline: this.primaryInvitation?.content?.subheadline || 'Pase de Entrada VIP',
+      eventDateFormatted: this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
+      locationAddress: this.primaryInvitation?.content?.locations?.[0]?.address || this.event?.venue?.address || this.event?.venue?.name,
+      dressCode: this.primaryInvitation?.content?.dressCode,
+      brandLogoUrl: this.primaryInvitation?.content?.brandLogoUrl,
+      coverImageUrl: this.primaryInvitation?.content?.coverImageUrl,
+      primaryColor: this.primaryInvitation?.content?.palette?.primary,
+      accentColor: this.primaryInvitation?.content?.palette?.accent
+    });
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.write(passHtml);
+      printWin.document.close();
+    }
   }
 
   // ── Private Load Methods ──
@@ -1222,7 +1666,7 @@ export class NewEventDetailComponent implements OnInit {
     return normalized.length === 10 ? `52${normalized}` : normalized;
   }
 
-  private getMessageSubject(messageType: GuestMessageType): string {
+  getMessageSubject(messageType: GuestMessageType): string {
     const title = this.event?.title || 'Invitación';
     if (messageType === 'reminder') return `Recordatorio RSVP - ${title}`;
     if (messageType === 'event_reminder') return `Recordatorio - ${title}`;
@@ -1231,7 +1675,7 @@ export class NewEventDetailComponent implements OnInit {
     return `Invitación - ${title}`;
   }
 
-  private buildMessage(guest: GuestModel, messageType: GuestMessageType): string {
+  buildMessage(guest: GuestModel, messageType: GuestMessageType): string {
     const eventTitle = this.event?.title || 'nuestro evento';
     const date = this.event?.date ? new Date(this.event.date).toLocaleDateString() : '';
     const venue = this.event?.venue?.name || '';
@@ -1243,9 +1687,13 @@ export class NewEventDetailComponent implements OnInit {
       ? [externalUrl ? `Página: ${externalUrl}` : '', publicUrl ? `RSVP: ${publicUrl}` : ''].filter(Boolean)
       : [publicUrl];
 
+    if (this.includePassInMessage) {
+      links.push('🎫 Pase VIP adjunto en este mensaje');
+    }
+
     if (messageType === 'reminder') return [`Hola ${guest.name}, confirma tu asistencia a ${eventTitle}.`, date ? `Fecha: ${date}` : '', ...links, 'Tu confirmación nos ayuda a organizar.'].filter(Boolean).join('\n\n');
     if (messageType === 'event_reminder' || messageType === 'location_change') return [`Hola ${guest.name}, recordatorio para ${eventTitle}.`, date ? `Fecha: ${date}` : '', locationLine ? `Lugar: ${locationLine}` : '', ...links].filter(Boolean).join('\n\n');
-    if (messageType === 'thanks') return [`Hola ${guest.name}, gracias por confirmar a ${eventTitle}.`, date ? `Nos vemos el ${date}.` : '', locationLine ? `Lugar: ${locationLine}` : ''].filter(Boolean).join('\n\n');
+    if (messageType === 'thanks') return [`Hola ${guest.name}, gracias por confirmar a ${eventTitle}.`, date ? `Nos vemos el ${date}.` : '', locationLine ? `Lugar: ${locationLine}` : '', ...links].filter(Boolean).join('\n\n');
     return [`Hola ${guest.name}, tu invitación digital para ${eventTitle}.`, date ? `Fecha: ${date}` : '', locationLine ? `Lugar: ${locationLine}` : '', ...links, 'Confirma tu asistencia.'].filter(Boolean).join('\n\n');
   }
 

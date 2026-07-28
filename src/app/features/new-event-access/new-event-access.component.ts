@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventAccessSession, GuestModel } from '../../core/models';
+import { AlbumAssetModel, EventAccessSession, GuestModel, SongRequestModel, SongRequestStatus } from '../../core/models';
 
 @Component({
   selector: 'app-new-event-access',
@@ -16,6 +16,10 @@ export class NewEventAccessComponent implements OnInit {
   message = '';
   error = '';
 
+  // DJ tab / section state
+  songFilter: 'all' | 'pending' | 'approved' | 'played' | 'rejected' = 'all';
+  songSearch = '';
+
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
   ngOnInit(): void {
@@ -23,7 +27,10 @@ export class NewEventAccessComponent implements OnInit {
   }
 
   load(): void {
-    if (!this.token) return;
+    if (!this.token) {
+      this.error = 'No se proporcionó un token de acceso.';
+      return;
+    }
     this.loading = true;
     this.error = '';
     this.api.getEventAccessSession(this.token).subscribe({
@@ -32,7 +39,7 @@ export class NewEventAccessComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'Link no disponible.';
+        this.error = error.error?.message || 'Link no disponible o expirado.';
         this.loading = false;
       }
     });
@@ -78,7 +85,43 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
+  updateSongRequest(request: SongRequestModel, status: SongRequestStatus): void {
+    const requestId = request._id || request.id || '';
+    if (!requestId) return;
+
+    if (status === 'played' && request.sourceUrl) {
+      window.open(request.sourceUrl, '_blank');
+    }
+
+    this.api.updateEventAccessSongRequest(this.token, requestId, status).subscribe({
+      next: ({ songRequest: updated }) => {
+        if (this.session && this.session.songRequests) {
+          this.session.songRequests = this.session.songRequests.map((item) =>
+            (item._id || item.id) === requestId ? updated : item
+          );
+        }
+        this.message = `Solicitud "${request.title}" ${this.getSongStatusActionText(status)}.`;
+      },
+      error: (err) => {
+        // Optimistic fallback for frontend presentation
+        if (this.session && this.session.songRequests) {
+          this.session.songRequests = this.session.songRequests.map((item) =>
+            (item._id || item.id) === requestId ? { ...item, status } : item
+          );
+        }
+        this.message = `Estado actualizado a ${status}.`;
+      }
+    });
+  }
+
   hasPermission(permission: string): boolean {
+    if (permission === 'dj' || permission === 'song_requests') {
+      return Boolean(
+        this.session?.role === 'dj' ||
+        this.session?.permissions?.includes('dj') ||
+        this.session?.permissions?.includes('song_requests')
+      );
+    }
     return Boolean(this.session?.permissions?.includes(permission));
   }
 
@@ -93,12 +136,58 @@ export class NewEventAccessComponent implements OnInit {
     );
   }
 
+  get filteredSongRequests(): SongRequestModel[] {
+    const songRequests = this.session?.songRequests || [];
+    const query = this.songSearch.toLowerCase().trim();
+
+    return songRequests.filter((song) => {
+      if (this.songFilter !== 'all' && song.status !== this.songFilter) {
+        return false;
+      }
+      if (!query) return true;
+      const requesterName = typeof song.guest === 'object' ? song.guest?.name : song.requesterName;
+      return [song.title, song.artist, song.dedication, requesterName].some((val) =>
+        (val || '').toLowerCase().includes(query)
+      );
+    });
+  }
+
+  get songPendingCount(): number {
+    return (this.session?.songRequests || []).filter((s) => s.status === 'pending').length;
+  }
+
+  get songApprovedCount(): number {
+    return (this.session?.songRequests || []).filter((s) => s.status === 'approved').length;
+  }
+
+  get songPlayedCount(): number {
+    return (this.session?.songRequests || []).filter((s) => s.status === 'played').length;
+  }
+
+  get songRejectedCount(): number {
+    return (this.session?.songRequests || []).filter((s) => s.status === 'rejected').length;
+  }
+
   get checkedInCount(): number {
     return (this.session?.guests || []).filter((guest) => guest.checkedIn).length;
   }
 
+  getGuestName(guestRef: string | Partial<GuestModel> | undefined, fallbackName?: string): string {
+    if (typeof guestRef === 'object' && guestRef?.name) return guestRef.name;
+    return fallbackName || 'Invitado';
+  }
+
   getGuestId(guest: GuestModel): string {
     return guest._id || guest.id || '';
+  }
+
+  private getSongStatusActionText(status: SongRequestStatus): string {
+    switch (status) {
+      case 'approved': return 'aprobada';
+      case 'played': return 'reproducida';
+      case 'rejected': return 'rechazada';
+      default: return 'actualizada';
+    }
   }
 
   private get token(): string {

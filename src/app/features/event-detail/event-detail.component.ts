@@ -4,6 +4,8 @@ import { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AlbumAssetModel, AssetFolder, DashboardMetrics, DedicationModel, DedicationStatus, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel, ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel, SongRequestStatus, WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
 import { environment } from '../../../environments/environment';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { generateGuestPassHtml } from '../new-public-invitation/guest-pass-template';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -125,7 +127,7 @@ export class EventDetailComponent implements OnInit {
   private readonly maxImageSize = 5 * 1024 * 1024;
   private readonly maxAudioSize = 10 * 1024 * 1024;
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService, private confirmDialog: ConfirmDialogService) {}
 
   ngOnInit(): void {
     this.load();
@@ -702,13 +704,24 @@ export class EventDetailComponent implements OnInit {
   revokeAccessLink(link: EventAccessLinkModel): void {
     const eventId = this.getEventId();
     const linkId = link.id || link._id || '';
-    if (!eventId || !linkId || !window.confirm('Revocar este link externo?')) return;
-    this.api.revokeEventAccessLink(eventId, linkId).subscribe({
-      next: () => {
-        this.guestMessage = 'Link revocado.';
-        this.loadAccessLinks(eventId);
-      },
-      error: (error) => this.guestError = error.error?.message || 'No se pudo revocar el link.'
+    if (!eventId || !linkId) return;
+
+    this.confirmDialog.confirm({
+      title: '¿Revocar este link?',
+      message: `¿Estás seguro de que deseas revocar el enlace de acceso "${link.label || link.role}"?`,
+      confirmText: 'Sí, Revocar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🔐'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.api.revokeEventAccessLink(eventId, linkId).subscribe({
+        next: () => {
+          this.guestMessage = 'Link revocado.';
+          this.loadAccessLinks(eventId);
+        },
+        error: (error) => this.guestError = error.error?.message || 'No se pudo revocar el link.'
+      });
     });
   }
 
@@ -1221,6 +1234,32 @@ export class EventDetailComponent implements OnInit {
 
   getGuestId(guest: GuestModel): string {
     return guest._id || guest.id || '';
+  }
+
+  downloadGuestPass(guest: GuestModel): void {
+    const primaryInvitation = this.invitations[0];
+    const passHtml = generateGuestPassHtml({
+      guestName: guest.name,
+      tableName: guest.tableName,
+      seatLabel: guest.seatLabel,
+      allowedCompanions: guest.allowedCompanions || 1,
+      qrCodeUrl: this.getQrImageUrl(guest),
+      headline: primaryInvitation?.content?.headline || this.event?.title || 'Invitación Digital',
+      subheadline: primaryInvitation?.content?.subheadline || 'Pase de Entrada VIP',
+      eventDateFormatted: this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
+      locationAddress: primaryInvitation?.content?.locations?.[0]?.address || this.event?.venue?.address || this.event?.venue?.name,
+      dressCode: primaryInvitation?.content?.dressCode,
+      brandLogoUrl: primaryInvitation?.content?.brandLogoUrl,
+      coverImageUrl: primaryInvitation?.content?.coverImageUrl,
+      primaryColor: primaryInvitation?.content?.palette?.primary,
+      accentColor: primaryInvitation?.content?.palette?.accent
+    });
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.write(passHtml);
+      printWin.document.close();
+    }
   }
 
   getTableId(table: EventTableModel): string {

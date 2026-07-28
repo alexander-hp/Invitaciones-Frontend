@@ -286,16 +286,26 @@ export class InvitationEditorComponent implements OnInit {
     return items.join(' - ');
   }
 
+  isProPlan(key?: string): boolean {
+    return ['pro', 'planner_pro_monthly', 'planner_pro_yearly', 'organizer'].includes(key || '');
+  }
+
+  isEventPlan(key?: string): boolean {
+    return ['event', 'event_12m', 'external_dashboard_12m'].includes(key || '');
+  }
+
   canCheckoutPlan(plan: PlanDefinition): boolean {
-    if (plan.key === 'free') return false;
-    if (this.currentPlan?.key === 'pro') return false;
-    if (plan.key === 'event' && this.currentPlan?.key === 'event') return false;
+    if (!plan || plan.key === 'free') return false;
+    const currentKey = this.currentPlan?.key;
+    if (this.isProPlan(currentKey)) return false;
+    if (this.isEventPlan(plan.key) && this.isEventPlan(currentKey)) return false;
+    if (plan.key === currentKey) return false;
     return true;
   }
 
   checkoutScopeText(plan: PlanDefinition): string {
-    if (plan.key === 'event') return 'Aplica a este evento completo y a todas sus invitaciones: general, damas, padrinos, familia o cualquier segmento.';
-    if (plan.key === 'pro') return 'Aplica a toda la cuenta y desbloquea funciones Pro para todos tus eventos.';
+    if (this.isEventPlan(plan.key)) return 'Aplica a este evento completo y a todas sus invitaciones: general, damas, padrinos, familia o cualquier segmento.';
+    if (this.isProPlan(plan.key)) return 'Aplica a toda la cuenta y desbloquea funciones Pro para todos tus eventos.';
     return 'Plan gratuito para pruebas iniciales.';
   }
 
