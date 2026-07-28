@@ -1,0 +1,26 @@
+<div *ngIf="state.isOpen" class="confirm-dialog-backdrop" (click)="onCancel()">
+  <div class="confirm-dialog-card" (click)="$event.stopPropagation()">
+    <div class="confirm-dialog-header">
+      <div class="confirm-dialog-icon" [ngClass]="state.options.type || 'danger'">
+        <span>{{ state.options.icon || (state.options.type === 'danger' ? '⚠️' : (state.options.type === 'warning' ? '⚡' : 'ℹ️')) }}</span>
+      </div>
+      <div class="confirm-dialog-title-area">
+        <h3>{{ state.options.title || '¿Confirmar acción?' }}</h3>
+      </div>
+      <button type="button" class="confirm-dialog-close" (click)="onCancel()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="confirm-dialog-body">
+      <p>{{ state.options.message }}</p>
+    </div>
+
+    <div class="confirm-dialog-footer">
+      <button type="button" class="btn-cancel" (click)="onCancel()">
+        {{ state.options.cancelText || 'Cancelar' }}
+      </button>
+      <button type="button" class="btn-confirm" [ngClass]="state.options.type || 'danger'" (click)="onConfirm()">
+        {{ state.options.confirmText || 'Aceptar' }}
+      </button>
+    </div>
+  </div>
+</div>
