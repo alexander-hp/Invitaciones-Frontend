@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { EventModel, EventTableModel, GuestModel, TableShape } from '../../core/models';
+import { EventModel, EventTableModel, GuestModel, GuestStatus, TableAutoAssignStrategy, TableShape } from '../../core/models';
 
 interface DragState {
   active: boolean;
@@ -44,7 +44,15 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
 
   // Guest panel
   guestSearch = '';
+  guestStatusFilter: 'all' | GuestStatus = 'all';
+  guestGroupFilter = '';
   draggedGuest?: GuestModel;
+
+  autoAssignStrategy: TableAutoAssignStrategy = 'by_group';
+  autoAssignStatuses: Record<GuestStatus, boolean> = { confirmed: true, pending: false, declined: false };
+  autoAssignOverwrite = false;
+  autoAssigning = false;
+  autoAssignSummary?: { assigned: number; skipped: number };
 
   // Venue dimensions (in meters)
   venueWidth = 12;
@@ -107,8 +115,18 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     return this.guests.filter(g => {
       if (g.tableName) return false;
       if (search && !g.name.toLowerCase().includes(search)) return false;
+      if (this.guestStatusFilter !== 'all' && g.status !== this.guestStatusFilter) return false;
+      if (this.guestGroupFilter && (g.group || '') !== this.guestGroupFilter) return false;
       return true;
     });
+  }
+
+  get groups(): string[] {
+    return Array.from(new Set(this.guests.map(g => g.group).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
+  }
+
+  get selectedAutoAssignStatuses(): GuestStatus[] {
+    return (Object.keys(this.autoAssignStatuses) as GuestStatus[]).filter(status => this.autoAssignStatuses[status]);
   }
 
   get missingTables(): Array<{ name: string; guests: number; seats: number }> {
@@ -231,6 +249,38 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       error: (err) => {
         this.error = err.error?.message || 'Error al colocar mesa faltante';
         this.creating = false;
+      }
+    });
+  }
+
+  autoAssignTables(): void {
+    if (!this.eventId) return;
+    const includeStatuses = this.selectedAutoAssignStatuses;
+    if (!includeStatuses.length) {
+      this.error = 'Selecciona al menos un estado para autoasignar.';
+      return;
+    }
+    if (this.autoAssignOverwrite && !confirm('Esto puede reemplazar mesas ya asignadas para los estados seleccionados. ¿Continuar?')) return;
+
+    this.autoAssigning = true;
+    this.error = '';
+    this.autoAssignSummary = undefined;
+    this.api.autoAssignTables(this.eventId, {
+      strategy: this.autoAssignStrategy,
+      includeStatuses,
+      overwrite: this.autoAssignOverwrite
+    }).subscribe({
+      next: ({ assigned, skipped, tables }) => {
+        this.tables = tables;
+        this.autoAssignSummary = { assigned: assigned.length, skipped: skipped.length };
+        this.message = `Autoasignación lista: ${assigned.length} asignados, ${skipped.length} sin espacio.`;
+        this.autoAssigning = false;
+        this.loadGuests(this.eventId);
+        setTimeout(() => this.message = '', 4000);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'No se pudo autoasignar mesas.';
+        this.autoAssigning = false;
       }
     });
   }

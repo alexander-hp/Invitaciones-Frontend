@@ -631,6 +631,27 @@ export interface EventTableModel {
   }>;
 }
 
+export type TableAutoAssignStrategy = 'fill_order' | 'by_group';
+
+export interface TableAutoAssignPayload {
+  strategy?: TableAutoAssignStrategy;
+  includeStatuses?: GuestStatus[];
+  overwrite?: boolean;
+}
+
+export interface TableAutoAssignResult {
+  assigned: Array<{
+    guest: { id: string; name: string; group?: string; seats: number };
+    table: string;
+    seatLabel?: string;
+  }>;
+  skipped: Array<{
+    guest: { id: string; name: string; group?: string; seats: number };
+    reason: string;
+  }>;
+  tables: EventTableModel[];
+}
+
 export interface StaffCheckInSession {
   event: Pick<EventModel, 'title' | 'date' | 'venue'>;
   guests: GuestModel[];

@@ -14,6 +14,32 @@
       <label class="nw-label">Alto (m) <input class="nw-input" type="number" [(ngModel)]="venueHeight" min="4" max="40" (change)="resetView()"></label>
     </div>
 
+    <span class="nw-sidebar-label">Autoasignar lugares</span>
+    <div style="padding: 0 20px 18px; display: grid; gap: 10px;">
+      <label class="nw-label">
+        Estrategia
+        <select class="nw-select" [(ngModel)]="autoAssignStrategy">
+          <option value="by_group">Mantener grupos juntos</option>
+          <option value="fill_order">Llenar mesas en orden</option>
+        </select>
+      </label>
+      <div style="display:grid; gap:6px; font-size:12px; color:var(--nw-text-2);">
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="autoAssignStatuses.confirmed"> Confirmados</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="autoAssignStatuses.pending"> Pendientes</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="autoAssignStatuses.declined"> Rechazados</label>
+      </div>
+      <label style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--nw-text-2); line-height:1.35;">
+        <input type="checkbox" [(ngModel)]="autoAssignOverwrite" style="margin-top:2px;">
+        Reasignar también invitados que ya tienen mesa
+      </label>
+      <button class="nw-btn nw-btn-primary nw-btn-sm" style="width:100%;" [disabled]="autoAssigning || !tables.length" (click)="autoAssignTables()">
+        {{ autoAssigning ? 'Asignando...' : 'Autoasignar' }}
+      </button>
+      <p *ngIf="autoAssignSummary" style="margin:0; font-size:12px; color:var(--nw-text-3);">
+        {{ autoAssignSummary.assigned }} asignados · {{ autoAssignSummary.skipped }} sin espacio
+      </p>
+    </div>
+
     <!-- Table Editor -->
     <span class="nw-sidebar-label" *ngIf="selectedTable">Mesa seleccionada</span>
     <div *ngIf="selectedTable" style="padding: 10px 20px; display: grid; gap: 12px;">
@@ -231,6 +257,18 @@
         </div>
         <div class="nw-guest-panel-search">
           <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar invitado...">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <select class="nw-select" [(ngModel)]="guestStatusFilter">
+              <option value="all">Todos los estados</option>
+              <option value="confirmed">Confirmados</option>
+              <option value="pending">Pendientes</option>
+              <option value="declined">Rechazados</option>
+            </select>
+            <select class="nw-select" [(ngModel)]="guestGroupFilter">
+              <option value="">Todos los grupos</option>
+              <option *ngFor="let group of groups" [value]="group">{{ group }}</option>
+            </select>
+          </div>
         </div>
         <div class="nw-guest-panel-list">
           <div *ngIf="unassignedGuests.length === 0" style="padding:20px; text-align:center; color:var(--nw-text-3); font-size:13px;">

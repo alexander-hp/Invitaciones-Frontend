@@ -249,6 +249,10 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/tables/${tableId}`);
   }
 
+  autoAssignTables(eventId: string, payload: import('./models').TableAutoAssignPayload): Observable<import('./models').TableAutoAssignResult> {
+    return this.http.post<import('./models').TableAutoAssignResult>(`${this.apiUrl}/events/${eventId}/tables/auto-assign`, payload);
+  }
+
   listAlbum(eventId: string): Observable<{ assets: AlbumAssetModel[] }> {
     return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/events/${eventId}/album`);
   }

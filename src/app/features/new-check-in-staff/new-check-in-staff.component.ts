@@ -47,6 +47,8 @@ export class NewCheckInStaffComponent implements OnInit {
     const token = this.token;
     const code = this.code.trim();
     if (!token || !code) return;
+    const candidate = this.findGuestByCode(code);
+    if (candidate && !this.confirmCheckIn(candidate)) return;
     this.checking = true;
     this.message = '';
     this.error = '';
@@ -85,6 +87,30 @@ export class NewCheckInStaffComponent implements OnInit {
 
   getGuestId(guest: GuestModel): string {
     return guest._id || guest.id || '';
+  }
+
+  statusLabel(guest: GuestModel): string {
+    if (guest.checkedIn) return 'Ya registrado';
+    if (guest.status === 'confirmed') return 'Confirmado';
+    if (guest.status === 'declined') return 'Rechazado';
+    return 'Pendiente';
+  }
+
+  private findGuestByCode(code: string): GuestModel | undefined {
+    const normalized = code.trim().toLowerCase();
+    return this.guests.find((guest) =>
+      [guest.checkInCode, guest.qrCode].some((value) => (value || '').toLowerCase() === normalized)
+    );
+  }
+
+  private confirmCheckIn(guest: GuestModel): boolean {
+    if (guest.checkedIn) {
+      return confirm(`${guest.name} ya aparece registrado. ¿Registrar de nuevo de todos modos?`);
+    }
+    if (guest.status !== 'confirmed') {
+      return confirm(`${guest.name} tiene RSVP "${this.statusLabel(guest)}". ¿Confirmas registrar su entrada?`);
+    }
+    return confirm(`Confirmar entrada de ${guest.name}${guest.tableName ? ` en ${guest.tableName}` : ''}.`);
   }
 
   private get token(): string {
