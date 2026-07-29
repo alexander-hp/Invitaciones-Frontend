@@ -48,6 +48,8 @@ export class NewEventAccessComponent implements OnInit {
   checkIn(): void {
     const code = this.code.trim();
     if (!code) return;
+    const candidate = this.findGuestByCode(code);
+    if (candidate && !this.confirmCheckIn(candidate)) return;
     this.checking = true;
     this.message = '';
     this.error = '';
@@ -112,6 +114,10 @@ export class NewEventAccessComponent implements OnInit {
         this.message = `Estado actualizado a ${status}.`;
       }
     });
+  }
+
+  updateSong(songRequest: SongRequestModel, status: SongRequestStatus): void {
+    this.updateSongRequest(songRequest, status);
   }
 
   hasPermission(permission: string): boolean {
@@ -181,13 +187,37 @@ export class NewEventAccessComponent implements OnInit {
     return guest._id || guest.id || '';
   }
 
-  private getSongStatusActionText(status: SongRequestStatus): string {
+  getSongStatusActionText(status: SongRequestStatus): string {
     switch (status) {
       case 'approved': return 'aprobada';
       case 'played': return 'reproducida';
       case 'rejected': return 'rechazada';
       default: return 'actualizada';
     }
+  }
+
+  statusLabel(guest: GuestModel): string {
+    if (guest.checkedIn) return 'Ya registrado';
+    if (guest.status === 'confirmed') return 'Confirmado';
+    if (guest.status === 'declined') return 'Rechazado';
+    return 'Pendiente';
+  }
+
+  private findGuestByCode(code: string): GuestModel | undefined {
+    const normalized = code.trim().toLowerCase();
+    return (this.session?.guests || []).find((guest) =>
+      [guest.checkInCode, guest.qrCode].some((value) => (value || '').toLowerCase() === normalized)
+    );
+  }
+
+  private confirmCheckIn(guest: GuestModel): boolean {
+    if (guest.checkedIn) {
+      return confirm(`${guest.name} ya aparece registrado. ¿Registrar de nuevo de todos modos?`);
+    }
+    if (guest.status !== 'confirmed') {
+      return confirm(`${guest.name} tiene RSVP "${this.statusLabel(guest)}". ¿Confirmas registrar su entrada?`);
+    }
+    return confirm(`Confirmar entrada de ${guest.name}${guest.tableName ? ` en ${guest.tableName}` : ''}.`);
   }
 
   private get token(): string {

@@ -16,11 +16,11 @@
   </div>
 
   <div class="public-content">
-    <section *ngIf="invitation.content.message && invitation.content.sectionSettings?.story !== false">
+    <section *ngIf="sectionEnabled('story')">
       <h2>Mensaje</h2>
       <p>{{ invitation.content.message }}</p>
     </section>
-    <section *ngIf="displayLocations.length && invitation.content.sectionSettings?.locations !== false">
+    <section *ngIf="sectionEnabled('locations') && displayLocations.length">
       <h2>Ubicaciones</h2>
       <article *ngFor="let location of displayLocations" class="location-card">
         <span class="status-pill">{{ location.type || 'evento' }}</span>
@@ -33,10 +33,10 @@
         </div>
       </article>
     </section>
-    <section *ngIf="(invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false) || (invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false) || (invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length) || (invitation.content.sectionSettings?.lodging !== false && invitation.content.lodging?.length)">
+    <section *ngIf="(sectionEnabled('dressCode') && invitation.content.dressCode) || (sectionEnabled('itinerary') && invitation.content.itinerary?.length) || (sectionEnabled('giftRegistry') && invitation.content.giftRegistry?.length) || (sectionEnabled('lodging') && invitation.content.lodging?.length) || sectionEnabled('digitalEnvelope')">
       <h2>Detalles</h2>
-      <p *ngIf="invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false"><strong>Dress code:</strong> {{ invitation.content.dressCode }}</p>
-      <div *ngIf="invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false">
+      <p *ngIf="sectionEnabled('dressCode') && invitation.content.dressCode"><strong>Dress code:</strong> {{ invitation.content.dressCode }}</p>
+      <div *ngIf="sectionEnabled('itinerary') && invitation.content.itinerary?.length">
         <h3>Itinerario</h3>
         <div class="timeline-list">
           <article *ngFor="let item of invitation.content.itinerary">
@@ -48,7 +48,7 @@
           </article>
         </div>
       </div>
-      <div *ngIf="invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length">
+      <div *ngIf="sectionEnabled('giftRegistry') && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length">
         <h3>Mesa de regalos</h3>
         <p class="muted">{{ invitation.content.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
         <div class="gift-grid">
@@ -60,7 +60,7 @@
           </article>
         </div>
       </div>
-      <div *ngIf="invitation.content.sectionSettings?.digitalEnvelope !== false && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)">
+      <div *ngIf="sectionEnabled('digitalEnvelope') && invitation.content.giftSettings?.enabled !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)">
         <h3>Sobre digital</h3>
         <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl" class="qr-thumb" [src]="invitation.content.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
         <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{ invitation.content.digitalEnvelope?.bank }}</p>
@@ -69,7 +69,7 @@
         <p *ngIf="invitation.content.digitalEnvelope?.clabe"><strong>CLABE:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</p>
         <p *ngIf="invitation.content.digitalEnvelope?.note">{{ invitation.content.digitalEnvelope?.note }}</p>
       </div>
-      <div *ngIf="invitation.content.lodging?.length && invitation.content.sectionSettings?.lodging !== false">
+      <div *ngIf="sectionEnabled('lodging') && invitation.content.lodging?.length">
         <h3>Hospedaje</h3>
         <p *ngFor="let hotel of invitation.content.lodging">
           <a *ngIf="hotel.url; else hotelName" [href]="hotel.url" target="_blank" rel="noreferrer">{{ hotel.name || hotel.url }}</a>
@@ -78,17 +78,18 @@
         </p>
       </div>
     </section>
-    <form *ngIf="invitation.content.sectionSettings?.rsvp !== false" class="rsvp-panel" (ngSubmit)="submit()">
+    <form *ngIf="sectionEnabled('rsvp')" class="rsvp-panel" (ngSubmit)="submit()">
       <h2>RSVP</h2>
       <p *ngIf="deadlineLabel" class="notice">Fecha limite para responder: {{ deadlineLabel }}</p>
 
-      <div *ngIf="isGuestList && !verifiedGuest" class="guest-access-box">
-        <p class="muted">Esta invitacion es privada. Ingresa el email registrado en la lista de invitados.</p>
-        <label>Email invitado<input name="guestAccessEmail" type="email" [(ngModel)]="guestAccessEmail" required></label>
+      <div *ngIf="requiresGuestValidation && !verifiedGuest" class="guest-access-box">
+        <p class="muted">Esta invitacion es privada o segmentada. Ingresa el correo o telefono registrado en la lista de invitados.</p>
+        <label *ngIf="canIdentifyByEmail">Email invitado<input name="guestAccessEmail" type="email" [(ngModel)]="guestAccessEmail"></label>
+        <label *ngIf="canIdentifyByPhone">Telefono invitado<input name="guestAccessPhone" inputmode="numeric" [(ngModel)]="guestAccessPhone" placeholder="2727088143"></label>
         <button class="ghost" type="button" (click)="checkGuestAccess()" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : 'Validar invitado' }}</button>
       </div>
 
-      <ng-container *ngIf="!isGuestList || verifiedGuest">
+      <ng-container *ngIf="!requiresGuestValidation || verifiedGuest">
         <p *ngIf="verifiedGuest" class="notice">Invitado validado: {{ verifiedGuest.name }}. Acompanantes permitidos: {{ verifiedGuest.allowedCompanions }}.</p>
         <div *ngIf="verifiedGuest" class="guest-pass">
           <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de entrada">
@@ -106,8 +107,8 @@
             <p>Escanea para abrir este enlace en otro dispositivo.</p>
           </div>
         </div>
-        <label>Nombre<input name="name" [(ngModel)]="rsvp.name" [readonly]="isGuestList" required></label>
-        <label>Email<input name="email" type="email" [(ngModel)]="rsvp.email" [readonly]="isGuestList"></label>
+        <label>Nombre<input name="name" [(ngModel)]="rsvp.name" [readonly]="requiresGuestValidation" required></label>
+        <label *ngIf="canIdentifyByEmail">Email<input name="email" type="email" [(ngModel)]="rsvp.email" [readonly]="requiresGuestValidation"></label>
         <div class="phone-grid">
           <label>Codigo pais<input name="phoneCountryCode" [(ngModel)]="rsvp.phoneCountryCode" placeholder="+52"></label>
           <label>Telefono WhatsApp<input name="phoneNationalNumber" inputmode="numeric" [(ngModel)]="rsvp.phoneNationalNumber" placeholder="3312345678"></label>
@@ -145,22 +146,22 @@
           <label *ngIf="requiresDeclineConfirmation" class="check-row"><input name="declineConfirmed" type="checkbox" [(ngModel)]="declineConfirmed"> Confirmo que no asistire</label>
         </div>
         <label>Mensaje<textarea name="message" [(ngModel)]="rsvp.message"></textarea></label>
-        <button *ngIf="isGuestList" class="ghost" type="button" (click)="resetGuestAccess()">Usar otro email</button>
+        <button *ngIf="requiresGuestValidation" class="ghost" type="button" (click)="resetGuestAccess()">Usar otro correo o telefono</button>
       </ng-container>
 
       <p *ngIf="success" class="success">{{ success }}</p>
-      <button class="primary" type="submit" [disabled]="sending || (isGuestList && !verifiedGuest)">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
+      <button class="primary" type="submit" [disabled]="sending || (requiresGuestValidation && !verifiedGuest)">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
     </form>
   </div>
 
-  <section class="public-media" *ngIf="invitation.content.musicUrl || invitation.content.gallery?.length">
+  <section class="public-media" *ngIf="invitation.content.musicUrl || (sectionEnabled('gallery') && invitation.content.gallery?.length)">
     <audio *ngIf="invitation.content.musicUrl" controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()"></audio>
-    <div class="gallery-grid" *ngIf="invitation.content.gallery?.length">
+    <div class="gallery-grid" *ngIf="sectionEnabled('gallery') && invitation.content.gallery?.length">
       <img *ngFor="let imageUrl of invitation.content.gallery" [src]="imageUrl" alt="Imagen de galeria" loading="lazy" decoding="async">
     </div>
   </section>
 
-  <section class="public-media" *ngIf="invitation.content.privateAlbumEnabled">
+  <section class="public-media" *ngIf="sectionEnabled('guestAlbum') && invitation.content.privateAlbumEnabled">
     <h2>Album privado</h2>
     <p class="muted">Comparte tus fotos con los anfitriones. Se publicaran cuando sean aprobadas.</p>
     <div class="import-row">
@@ -172,7 +173,7 @@
       <img *ngFor="let asset of publicAlbumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'" loading="lazy" decoding="async">
     </div>
   </section>
-  <section class="public-media" *ngIf="invitation.content.dedicationSettings?.enabled !== false">
+  <section class="public-media" *ngIf="sectionEnabled('dedications') && invitation.content.dedicationSettings?.enabled !== false">
     <h2>Dedicatorias</h2>
     <p class="muted">{{ invitation.content.dedicationSettings?.introText || 'Deja un mensaje para los anfitriones.' }}</p>
     <form class="rsvp-panel" (ngSubmit)="submitDedication()">

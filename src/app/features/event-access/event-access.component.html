@@ -65,5 +65,23 @@
         </article>
       </div>
     </section>
+
+    <section class="panel" *ngIf="hasPermission('song_review')">
+      <h2>Solicitudes DJ</h2>
+      <p *ngIf="!session.songRequests?.length" class="muted">No hay canciones solicitadas.</p>
+      <div class="item-list" *ngIf="session.songRequests?.length">
+        <article *ngFor="let song of session.songRequests">
+          <strong>{{ song.title }} <span *ngIf="song.artist">- {{ song.artist }}</span></strong>
+          <span class="status-pill">{{ song.status }}</span>
+          <p *ngIf="song.dedication">{{ song.dedication }}</p>
+          <a *ngIf="song.sourceUrl" [href]="song.sourceUrl" target="_blank" rel="noreferrer">Abrir enlace</a>
+          <div class="inline-actions">
+            <button class="ghost small" type="button" (click)="updateSong(song, 'approved')">Aprobar</button>
+            <button class="ghost small" type="button" (click)="updateSong(song, 'played')">Tocada</button>
+            <button class="ghost small" type="button" (click)="updateSong(song, 'rejected')">Rechazar</button>
+          </div>
+        </article>
+      </div>
+    </section>
   </ng-container>
 </section>

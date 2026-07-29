@@ -319,6 +319,18 @@
         </div>
         <div class="nw-guest-panel-search">
           <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar invitado...">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <select class="nw-select" [(ngModel)]="guestStatusFilter">
+              <option value="all">Todos los estados</option>
+              <option value="confirmed">Confirmados</option>
+              <option value="pending">Pendientes</option>
+              <option value="declined">Rechazados</option>
+            </select>
+            <select class="nw-select" [(ngModel)]="guestGroupFilter">
+              <option value="">Todos los grupos</option>
+              <option *ngFor="let group of groups" [value]="group">{{ group }}</option>
+            </select>
+          </div>
         </div>
         <div class="nw-guest-panel-list">
           <div *ngIf="unassignedGuests.length === 0" style="padding:20px; text-align:center; color:var(--nw-text-3); font-size:13px;">

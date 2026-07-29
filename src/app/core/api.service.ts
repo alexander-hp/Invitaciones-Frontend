@@ -16,6 +16,9 @@ import {
   EmailBulkResponse,
   EmailSendResponse,
   EventModel,
+  EventMemberModel,
+  EventMemberPayload,
+  EventPermission,
   EventAccessLinkModel,
   EventAccessRole,
   EventAccessSession,
@@ -41,6 +44,7 @@ import {
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
+  SocialLoginPayload,
   SongRequestPayload,
   SongRequestModel,
   SongRequestStatus,
@@ -64,12 +68,16 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  register(payload: { name: string; email: string; password: string; role?: 'client' | 'organizer' }): Observable<AuthResponse> {
+  register(payload: { name: string; email: string; password: string; role?: User['role']; accountType?: User['accountType'] }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, payload);
   }
 
   login(payload: { email: string; password: string }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, payload);
+  }
+
+  socialLogin(payload: SocialLoginPayload): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/social`, payload);
   }
 
   me(): Observable<{ user: User }> {
@@ -167,8 +175,9 @@ export class ApiService {
     return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/events/${eventId}/song-requests`);
   }
 
-  updateSongRequest(eventId: string, songRequestId: string, status: SongRequestStatus): Observable<{ songRequest: SongRequestModel }> {
-    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, { status });
+  updateSongRequest(eventId: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
+    const body = typeof payload === 'string' ? { status: payload } : payload;
+    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, body);
   }
 
   listDedications(eventId: string): Observable<{ dedications: DedicationModel[] }> {
@@ -179,7 +188,7 @@ export class ApiService {
     return this.http.patch<{ dedication: DedicationModel }>(`${this.apiUrl}/events/${eventId}/dedications/${dedicationId}`, { status });
   }
 
-  checkExternalGuestAccess(portalSlug: string, payload: { email: string }): Observable<GuestAccessResponse> {
+  checkExternalGuestAccess(portalSlug: string, payload: { email?: string; phone?: string }): Observable<GuestAccessResponse> {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/events/public/${portalSlug}/guest-access`, payload);
   }
 
@@ -213,6 +222,22 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/access-links/${linkId}`);
   }
 
+  listEventMembers(eventId: string): Observable<{ members: EventMemberModel[]; permissions: EventPermission[]; rolePermissions: Record<string, EventPermission[]> }> {
+    return this.http.get<{ members: EventMemberModel[]; permissions: EventPermission[]; rolePermissions: Record<string, EventPermission[]> }>(`${this.apiUrl}/events/${eventId}/members`);
+  }
+
+  createEventMember(eventId: string, payload: EventMemberPayload): Observable<{ member: EventMemberModel }> {
+    return this.http.post<{ member: EventMemberModel }>(`${this.apiUrl}/events/${eventId}/members`, payload);
+  }
+
+  updateEventMember(eventId: string, memberId: string, payload: Partial<EventMemberPayload> & { status?: EventMemberModel['status'] }): Observable<{ member: EventMemberModel }> {
+    return this.http.patch<{ member: EventMemberModel }>(`${this.apiUrl}/events/${eventId}/members/${memberId}`, payload);
+  }
+
+  removeEventMember(eventId: string, memberId: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/members/${memberId}`);
+  }
+
   getEventAccessSession(token: string): Observable<EventAccessSession> {
     return this.http.get<EventAccessSession>(`${this.apiUrl}/event-access/${token}`);
   }
@@ -225,8 +250,13 @@ export class ApiService {
     return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album/${assetId}`, { status });
   }
 
+  updateEventAccessSong(token: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
+    const body = typeof payload === 'string' ? { status: payload } : payload;
+    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests/${songRequestId}`, body);
+  }
+
   updateEventAccessSongRequest(token: string, songRequestId: string, status: SongRequestStatus): Observable<{ songRequest: SongRequestModel }> {
-    return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests/${songRequestId}`, { status });
+    return this.updateEventAccessSong(token, songRequestId, status);
   }
 
   createCheckInLink(eventId: string, payload: { label?: string; days?: number }): Observable<{ token: string; url: string; expiresAt: string }> {
@@ -297,7 +327,7 @@ export class ApiService {
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`);
   }
 
-  checkGuestAccess(slug: string, payload: { email: string }): Observable<GuestAccessResponse> {
+  checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<GuestAccessResponse> {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 

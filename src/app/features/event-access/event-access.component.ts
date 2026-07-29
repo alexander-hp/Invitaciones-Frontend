@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventAccessSession, GuestModel } from '../../core/models';
+import { AlbumAssetModel, EventAccessSession, GuestModel, SongRequestModel, SongRequestStatus } from '../../core/models';
 
 @Component({ selector: 'app-event-access', templateUrl: './event-access.component.html' })
 export class EventAccessComponent implements OnInit {
@@ -66,6 +66,20 @@ export class EventAccessComponent implements OnInit {
         this.message = 'Album actualizado.';
       },
       error: (error) => this.error = error.error?.message || 'No se pudo actualizar album.'
+    });
+  }
+
+  updateSong(songRequest: SongRequestModel, status: SongRequestStatus): void {
+    const songRequestId = songRequest._id || songRequest.id || '';
+    if (!songRequestId) return;
+    this.api.updateEventAccessSong(this.token, songRequestId, status).subscribe({
+      next: ({ songRequest: updated }) => {
+        if (this.session && this.session.songRequests) {
+          this.session.songRequests = this.session.songRequests.map((item) => (item._id || item.id) === songRequestId ? updated : item);
+        }
+        this.message = 'Solicitud DJ actualizada.';
+      },
+      error: (error) => this.error = error.error?.message || 'No se pudo actualizar DJ.'
     });
   }
 
