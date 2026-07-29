@@ -5,6 +5,7 @@ import { ApiService } from '../../core/api.service';
 import {
   AlbumAssetModel, AssetFolder, DashboardMetrics, DedicationModel, DedicationStatus,
   EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel,
+  EventMemberModel, EventMemberRole, EventPermission,
   ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel,
   GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel,
   SongRequestStatus, WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaPayload,
@@ -28,6 +29,9 @@ export class NewEventDetailComponent implements OnInit {
   albumAssets: AlbumAssetModel[] = [];
   whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
   eventAccessLinks: EventAccessLinkModel[] = [];
+  eventMembers: EventMemberModel[] = [];
+  eventPermissions: EventPermission[] = [];
+  rolePermissions: Record<string, EventPermission[]> = {};
   songRequests: SongRequestModel[] = [];
   dedications: DedicationModel[] = [];
   embedManifest?: EmbedManifestResponse;
@@ -116,6 +120,16 @@ export class NewEventDetailComponent implements OnInit {
 
   // Access links
   accessLinkForm = { role: 'check_in' as EventAccessRole, label: '', days: 7 };
+  memberForm = { email: '', name: '', role: 'client' as EventMemberRole, permissions: [] as EventPermission[] };
+  memberRoles: Array<{ value: EventMemberRole; label: string }> = [
+    { value: 'organizer', label: 'Organizador' },
+    { value: 'client', label: 'Cliente' },
+    { value: 'venue_owner', label: 'Dueño de salón' },
+    { value: 'vendor', label: 'Proveedor' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'dj', label: 'DJ' },
+    { value: 'photographer', label: 'Fotógrafo' }
+  ];
 
   // External config
   externalSaving = false;
@@ -178,7 +192,8 @@ export class NewEventDetailComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.api.getEvent(id).subscribe({
-      next: ({ event }) => {
+      next: ({ event, access }: any) => {
+        if (access) event.access = access;
         this.event = event;
         this.loading = false;
         this.loadRelated(id);
@@ -199,6 +214,7 @@ export class NewEventDetailComponent implements OnInit {
     this.loadWhatsAppStatus();
     this.loadPaymentStatus(eventId);
     this.loadAccessLinks(eventId);
+    this.loadMembers(eventId);
     this.loadSongRequests(eventId);
     this.loadDedications(eventId);
     if (this.event?.mode === 'external_dashboard') this.loadEmbedManifest(this.event);
@@ -821,6 +837,83 @@ export class NewEventDetailComponent implements OnInit {
     });
   }
 
+  onMemberRoleChange(): void {
+    this.memberForm.permissions = [...(this.rolePermissions[this.memberForm.role] || ['view_event'] as EventPermission[])];
+  }
+
+  toggleMemberPermission(permission: EventPermission, checked: boolean): void {
+    const current = new Set(this.memberForm.permissions);
+    if (checked) current.add(permission);
+    else current.delete(permission);
+    this.memberForm.permissions = Array.from(current);
+  }
+
+  createMember(): void {
+    if (!this.eventId || !this.memberForm.email.trim()) return;
+    this.api.createEventMember(this.eventId, {
+      email: this.memberForm.email.trim(),
+      name: this.memberForm.name.trim(),
+      role: this.memberForm.role,
+      permissions: this.memberForm.permissions.length ? this.memberForm.permissions : undefined
+    }).subscribe({
+      next: ({ member }) => {
+        this.eventMembers = [member, ...this.eventMembers.filter(item => (item.id || item._id) !== (member.id || member._id))];
+        this.memberForm = { email: '', name: '', role: 'client', permissions: [...(this.rolePermissions['client'] || ['view_event'] as EventPermission[])] };
+        this.guestMessage = member.status === 'active' ? 'Miembro agregado al evento.' : 'Invitación de miembro registrada.';
+      },
+      error: (err) => this.guestError = err.error?.message || 'No se pudo agregar el miembro.'
+    });
+  }
+
+  updateMemberRole(member: EventMemberModel, role: EventMemberRole): void {
+    const memberId = member.id || member._id || '';
+    if (!this.eventId || !memberId) return;
+    const permissions = this.rolePermissions[role] || member.permissions;
+    this.api.updateEventMember(this.eventId, memberId, { role, permissions }).subscribe({
+      next: ({ member: updated }) => {
+        this.eventMembers = this.eventMembers.map(item => (item.id || item._id) === memberId ? updated : item);
+        this.guestMessage = 'Permisos de miembro actualizados.';
+      },
+      error: (err) => this.guestError = err.error?.message || 'No se pudo actualizar el miembro.'
+    });
+  }
+
+  disableMember(member: EventMemberModel): void {
+    const memberId = member.id || member._id || '';
+    if (!this.eventId || !memberId || !confirm('¿Desactivar este miembro del evento?')) return;
+    this.api.removeEventMember(this.eventId, memberId).subscribe({
+      next: () => {
+        this.eventMembers = this.eventMembers.map(item => (item.id || item._id) === memberId ? { ...item, status: 'disabled' } : item);
+        this.guestMessage = 'Miembro desactivado.';
+      },
+      error: (err) => this.guestError = err.error?.message || 'No se pudo desactivar el miembro.'
+    });
+  }
+
+  memberRoleLabel(role: string): string {
+    return this.memberRoles.find(item => item.value === role)?.label || role;
+  }
+
+  permissionLabel(permission: EventPermission): string {
+    const labels: Record<EventPermission, string> = {
+      view_event: 'Ver evento',
+      edit_event: 'Editar evento',
+      view_metrics: 'Ver métricas',
+      manage_guests: 'Invitados',
+      manage_tables: 'Mesas',
+      check_in: 'Check-in',
+      review_album: 'Álbum',
+      review_dedications: 'Dedicatorias',
+      manage_songs: 'DJ',
+      view_payments: 'Pagos'
+    };
+    return labels[permission] || permission;
+  }
+
+  permissionsLabel(permissions: EventPermission[] = []): string {
+    return permissions.map(permission => this.permissionLabel(permission)).join(' · ');
+  }
+
   getNewAccessUrl(link: EventAccessLinkModel): string {
     if (link && link.url) {
       return link.url.replace('/external-access/', '/new/external-access/');
@@ -1151,6 +1244,22 @@ export class NewEventDetailComponent implements OnInit {
 
   private loadAccessLinks(eventId: string): void {
     this.api.listEventAccessLinks(eventId).subscribe({ next: ({ links }) => this.eventAccessLinks = links, error: () => this.eventAccessLinks = [] });
+  }
+
+  private loadMembers(eventId: string): void {
+    this.api.listEventMembers(eventId).subscribe({
+      next: ({ members, permissions, rolePermissions }) => {
+        this.eventMembers = members;
+        this.eventPermissions = permissions;
+        this.rolePermissions = rolePermissions;
+        if (!this.memberForm.permissions.length) this.memberForm.permissions = [...(rolePermissions['client'] || ['view_event'] as EventPermission[])];
+      },
+      error: () => {
+        this.eventMembers = [];
+        this.eventPermissions = [];
+        this.rolePermissions = {};
+      }
+    });
   }
 
   private loadSongRequests(eventId: string): void {

@@ -14,6 +14,9 @@ import {
   EmailBulkResponse,
   EmailSendResponse,
   EventModel,
+  EventMemberModel,
+  EventMemberPayload,
+  EventPermission,
   EventAccessLinkModel,
   EventAccessRole,
   EventAccessSession,
@@ -215,6 +218,22 @@ export class ApiService {
 
   revokeEventAccessLink(eventId: string, linkId: string): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/access-links/${linkId}`);
+  }
+
+  listEventMembers(eventId: string): Observable<{ members: EventMemberModel[]; permissions: EventPermission[]; rolePermissions: Record<string, EventPermission[]> }> {
+    return this.http.get<{ members: EventMemberModel[]; permissions: EventPermission[]; rolePermissions: Record<string, EventPermission[]> }>(`${this.apiUrl}/events/${eventId}/members`);
+  }
+
+  createEventMember(eventId: string, payload: EventMemberPayload): Observable<{ member: EventMemberModel }> {
+    return this.http.post<{ member: EventMemberModel }>(`${this.apiUrl}/events/${eventId}/members`, payload);
+  }
+
+  updateEventMember(eventId: string, memberId: string, payload: Partial<EventMemberPayload> & { status?: EventMemberModel['status'] }): Observable<{ member: EventMemberModel }> {
+    return this.http.patch<{ member: EventMemberModel }>(`${this.apiUrl}/events/${eventId}/members/${memberId}`, payload);
+  }
+
+  removeEventMember(eventId: string, memberId: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/events/${eventId}/members/${memberId}`);
   }
 
   getEventAccessSession(token: string): Observable<EventAccessSession> {

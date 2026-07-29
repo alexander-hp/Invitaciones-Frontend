@@ -145,6 +145,52 @@
           </div>
         </div>
 
+        <!-- Equipo Interno -->
+        <div class="nw-card" style="margin-top:16px;">
+          <div class="nw-card-header">
+            <h3>Equipo interno</h3>
+            <span class="nw-pill">{{ eventMembers.length }} miembros</span>
+          </div>
+          <p style="color:var(--nw-text-3); font-size:14px;">
+            Usuarios con cuenta propia para operar este evento sin compartir contraseñas. Los permisos definen qué podrá hacer cada perfil.
+          </p>
+          <div style="display:grid; gap:10px; margin:12px 0;">
+            <div style="display:grid; grid-template-columns:1.2fr 1fr 180px auto; gap:8px; align-items:end;">
+              <label class="nw-label">Email <input class="nw-input" type="email" [(ngModel)]="memberForm.email" placeholder="persona@dominio.com"></label>
+              <label class="nw-label">Nombre <input class="nw-input" [(ngModel)]="memberForm.name" placeholder="Opcional"></label>
+              <label class="nw-label">Rol
+                <select class="nw-select" [(ngModel)]="memberForm.role" (change)="onMemberRoleChange()">
+                  <option *ngFor="let role of memberRoles" [value]="role.value">{{ role.label }}</option>
+                </select>
+              </label>
+              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="createMember()">Agregar</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <label *ngFor="let permission of eventPermissions" class="nw-pill" style="cursor:pointer;">
+                <input type="checkbox" style="margin-right:6px;" [checked]="memberForm.permissions.includes(permission)" (change)="toggleMemberPermission(permission, $any($event.target).checked)">
+                {{ permissionLabel(permission) }}
+              </label>
+            </div>
+          </div>
+          <div style="display:grid; gap:6px;">
+            <div *ngFor="let member of eventMembers" style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); gap:12px; font-size:13px;">
+              <div style="min-width:0;">
+                <strong>{{ member.name || member.email }}</strong>
+                <span style="color:var(--nw-text-3); margin-left:8px;">{{ member.email }}</span>
+                <span class="nw-pill" style="margin-left:6px;">{{ memberRoleLabel(member.role) }}</span>
+                <span class="nw-pill" [class.success]="member.status === 'active'" [class.warning]="member.status === 'invited'" [class.danger]="member.status === 'disabled'" style="margin-left:4px;">{{ member.status }}</span>
+                <div style="color:var(--nw-text-3); margin-top:4px;">{{ permissionsLabel(member.permissions) }}</div>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <select class="nw-select" [ngModel]="member.role" (ngModelChange)="updateMemberRole(member, $event)" [disabled]="member.status === 'disabled'" style="width:auto;">
+                  <option *ngFor="let role of memberRoles" [value]="role.value">{{ role.label }}</option>
+                </select>
+                <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="disableMember(member)" [disabled]="member.status === 'disabled'">Desactivar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Accesos Externos -->
         <div class="nw-card" style="margin-top:16px;">
           <div class="nw-card-header">

@@ -7,6 +7,11 @@ export type InvitationAccessMode = 'open' | 'public' | 'guest_list' | 'specific_
 export type UserRole = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'admin';
 export type AccountType = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'planner' | 'staff';
 export type AuthProvider = 'password' | 'google' | 'facebook' | 'apple';
+export type EventMemberRole = 'organizer' | 'client' | 'venue_owner' | 'vendor' | 'staff' | 'dj' | 'photographer';
+export type EventMemberStatus = 'invited' | 'active' | 'disabled';
+export type EventPermission =
+  'view_event' | 'edit_event' | 'view_metrics' | 'manage_guests' | 'manage_tables' |
+  'check_in' | 'review_album' | 'review_dedications' | 'manage_songs' | 'view_payments';
 
 export interface User {
   _id?: string;
@@ -105,8 +110,32 @@ export interface EventModel {
   plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
   planActivatedAt?: string;
   status: EventStatus;
+  access?: { owner: boolean; role?: EventMemberRole; permissions: EventPermission[] };
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface EventMemberModel {
+  _id?: string;
+  id?: string;
+  user?: Partial<User> | string;
+  email: string;
+  name?: string;
+  role: EventMemberRole;
+  permissions: EventPermission[];
+  status: EventMemberStatus;
+  invitedAt?: string;
+  acceptedAt?: string;
+  lastUsedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventMemberPayload {
+  email: string;
+  name?: string;
+  role: EventMemberRole;
+  permissions?: EventPermission[];
 }
 
 export interface EventPayload {
