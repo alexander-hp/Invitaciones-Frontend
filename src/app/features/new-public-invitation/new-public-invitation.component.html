@@ -97,21 +97,23 @@
   <div class="nw-pub-container">
 
     <!-- 1. GUEST VALIDATION SECTION (FOR PRIVATE GUEST LISTS) -->
-    <section *ngIf="isGuestList" id="guest-access-section" class="nw-pub-section">
-      <!-- BEFORE VALIDATION: LOCK CARD WITH EMAIL CHECKER -->
+    <section *ngIf="requiresGuestValidation" id="guest-access-section" class="nw-pub-section">
+      <!-- BEFORE VALIDATION: LOCK CARD WITH EMAIL/PHONE CHECKER -->
       <div *ngIf="!verifiedGuest" class="nw-pub-card nw-pub-guest-access-box">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">🔒</span>
           <h2>Validación de Invitado VIP</h2>
         </div>
-        <p>Esta invitación es exclusiva para invitados registrados. Por favor ingresa tu correo electrónico para validar
+        <p>Esta invitación es exclusiva para invitados registrados. Por favor ingresa tu correo electrónico o teléfono para validar
           tu pase VIP y acceder al RSVP, Álbum de Fotos y Muro de Dedicatorias:</p>
 
-        <div class="nw-pub-form-row">
-          <input type="email" class="nw-pub-input" [(ngModel)]="guestAccessEmail" placeholder="tu-email@ejemplo.com"
-            [disabled]="checkingGuest" (keyup.enter)="checkGuestAccess()">
+        <div class="nw-pub-form-row" style="flex-wrap:wrap; gap:10px;">
+          <input *ngIf="canIdentifyByEmail" type="email" class="nw-pub-input" [(ngModel)]="guestAccessEmail" placeholder="tu-email@ejemplo.com"
+            [disabled]="checkingGuest" (keyup.enter)="checkGuestAccess()" style="flex:1; min-width:200px;">
+          <input *ngIf="canIdentifyByPhone" type="tel" class="nw-pub-input" [(ngModel)]="guestAccessPhone" placeholder="3312345678"
+            [disabled]="checkingGuest" (keyup.enter)="checkGuestAccess()" style="flex:1; min-width:180px;">
           <button type="button" class="nw-pub-btn nw-pub-btn-gold" (click)="checkGuestAccess()"
-            [disabled]="checkingGuest || !guestAccessEmail">
+            [disabled]="checkingGuest || (!guestAccessEmail && !guestAccessPhone)">
             {{ checkingGuest ? 'Validando...' : '🔓 Validar Invitado' }}
           </button>
         </div>
@@ -132,6 +134,9 @@
           <div class="nw-pub-pass-actions">
             <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-gold" (click)="downloadGuestPass()">
               📄 Descargar Pase
+            </button>
+            <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-outline" (click)="resetGuestAccess()">
+              🔄 Usar otro correo o teléfono
             </button>
           </div>
         </div>
@@ -218,15 +223,15 @@
         </div>
 
         <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="isGuestList && !verifiedGuest" class="nw-pub-locked-notice">
+        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice">
           <div class="nw-pub-locked-icon">🔒</div>
           <h3>RSVP Bloqueado</h3>
-          <p>Ingresa tu correo en la sección de <strong>Validación de Invitado</strong> arriba para confirmar tu
+          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para confirmar tu
             asistencia.</p>
         </div>
 
         <!-- GUEST PASS BADGE & FORM -->
-        <ng-container *ngIf="!isGuestList || verifiedGuest">
+        <ng-container *ngIf="!requiresGuestValidation || verifiedGuest">
           <!-- PUBLIC INVITATION QR BADGE -->
           <div *ngIf="!verifiedGuest && publicQrUrl" class="nw-pub-guest-pass-banner public"
             style="margin-bottom:24px;">
@@ -245,14 +250,14 @@
             <div class="nw-pub-form-grid">
               <div class="nw-pub-field">
                 <label>Nombre Completo *</label>
-                <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.name" name="rsvpName" [readonly]="isGuestList"
+                <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.name" name="rsvpName" [readonly]="requiresGuestValidation"
                   required placeholder="Tu nombre">
               </div>
 
-              <div class="nw-pub-field">
+              <div class="nw-pub-field" *ngIf="canIdentifyByEmail">
                 <label>Correo Electrónico</label>
                 <input type="email" class="nw-pub-input" [(ngModel)]="rsvp.email" name="rsvpEmail"
-                  [readonly]="isGuestList" placeholder="correo@ejemplo.com">
+                  [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
               </div>
 
               <div class="nw-pub-field">
@@ -356,8 +361,12 @@
             <p *ngIf="success" class="nw-pub-form-success">{{ success }}</p>
 
             <button type="submit" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-lg"
-              [disabled]="sending || (isGuestList && !verifiedGuest)">
+              [disabled]="sending || (requiresGuestValidation && !verifiedGuest)">
               {{ sending ? 'Enviando confirmación...' : '💌 Enviar RSVP' }}
+            </button>
+
+            <button *ngIf="requiresGuestValidation && verifiedGuest" type="button" class="nw-pub-btn nw-pub-btn-outline" style="margin-top:12px;" (click)="resetGuestAccess()">
+              🔄 Usar otro correo o teléfono
             </button>
           </form>
         </ng-container>
@@ -486,13 +495,13 @@
           con los anfitriones. Se mostrarán una vez aprobadas.</p>
 
         <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="isGuestList && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
+        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
           <div class="nw-pub-locked-icon">🔒</div>
-          <p>Ingresa tu correo en la sección de <strong>Validación de Invitado</strong> arriba para subir fotos al álbum
+          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para subir fotos al álbum
             colaborativo del evento.</p>
         </div>
 
-        <div *ngIf="!isGuestList || verifiedGuest" class="nw-pub-album-upload-box">
+        <div *ngIf="!requiresGuestValidation || verifiedGuest" class="nw-pub-album-upload-box">
           <input type="file" id="albumFileInput" accept="image/*" (change)="selectAlbumFile($event)"
             style="display:none;">
           <label for="albumFileInput" class="nw-pub-btn nw-pub-btn-secondary nw-pub-btn-sm">
@@ -523,14 +532,14 @@
         </div>
 
         <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="isGuestList && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
+        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
           <div class="nw-pub-locked-icon">🔒</div>
           <h3>Muro de Dedicatorias Bloqueado</h3>
-          <p>Ingresa tu correo en la sección de <strong>Validación de Invitado</strong> arriba para dejar tus
+          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para dejar tus
             dedicatorias y felicitaciones.</p>
         </div>
 
-        <div *ngIf="!isGuestList || verifiedGuest" class="nw-pub-dedication-form-card" style="margin-bottom:24px;">
+        <div *ngIf="!requiresGuestValidation || verifiedGuest" class="nw-pub-dedication-form-card" style="margin-bottom:24px;">
           <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px;">Deja tu mensaje a los novios / anfitriones
           </h3>
           <form (ngSubmit)="submitDedication()">

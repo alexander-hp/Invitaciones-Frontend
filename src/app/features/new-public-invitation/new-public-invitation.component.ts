@@ -45,6 +45,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   }
   dedications: DedicationModel[] = [];
   guestAccessEmail = '';
+  guestAccessPhone = '';
   selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
@@ -161,8 +162,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
 
   submit(): void {
     if (!this.invitation) return;
-    if (this.isGuestList && !this.verifiedGuest) {
-      this.error = 'Valida tu email antes de enviar tu RSVP.';
+    if (this.requiresGuestValidation && !this.verifiedGuest) {
+      this.error = 'Valida tu correo o teléfono antes de enviar tu RSVP.';
       return;
     }
     if (this.rsvp.response === 'declined' && this.requiresDeclineConfirmation && !this.declineConfirmed) {
@@ -204,22 +205,23 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   }
 
   checkGuestAccess(): void {
-    if (!this.invitation || !this.guestAccessEmail) return;
+    if (!this.invitation || (!this.guestAccessEmail && !this.guestAccessPhone)) return;
     this.checkingGuest = true;
     this.error = '';
     this.success = '';
-    this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail }).subscribe({
+    this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
       next: ({ guest }) => {
         this.verifiedGuest = guest;
         this.rsvp.name = guest.name;
         this.rsvp.email = guest.email || this.guestAccessEmail;
+        if (!guest.email && this.guestAccessPhone) this.rsvp.phoneNationalNumber = this.guestAccessPhone.replace(/\D/g, '');
         this.rsvp.companions = 0;
         this.success = `¡Hola ${guest.name}! Ya puedes confirmar tu asistencia.`;
         this.checkingGuest = false;
       },
       error: (error) => {
         this.verifiedGuest = undefined;
-        this.error = error.error?.message || 'Este correo no está en la lista de invitados.';
+        this.error = error.error?.message || 'Este invitado no está en la lista registrada.';
         this.checkingGuest = false;
       }
     });
@@ -299,6 +301,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
 
   resetGuestAccess(): void {
     this.verifiedGuest = undefined;
+    this.guestAccessPhone = '';
     this.success = '';
     this.error = '';
     this.declineConfirmed = false;
@@ -378,12 +381,32 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     }, 3500);
   }
 
+  get requiresGuestValidation(): boolean {
+    return this.invitation?.accessMode === 'guest_list' || this.invitation?.accessMode === 'specific_users';
+  }
+
   get isGuestList(): boolean {
-    return this.invitation?.accessMode === 'guest_list';
+    return this.requiresGuestValidation;
   }
 
   get maxCompanions(): number | null {
-    return this.verifiedGuest ? this.verifiedGuest.allowedCompanions : null;
+    if (this.verifiedGuest) return this.verifiedGuest.allowedCompanions;
+    const settings = this.invitation?.rsvpSettings;
+    return settings?.allowCompanionsDefault ? Number(settings.defaultAllowedCompanions || 0) : 0;
+  }
+
+  get canIdentifyByEmail(): boolean {
+    const methods = this.invitation?.rsvpSettings?.identityMethods || ['email', 'phone'];
+    return methods.includes('email');
+  }
+
+  get canIdentifyByPhone(): boolean {
+    const methods = this.invitation?.rsvpSettings?.identityMethods || ['email', 'phone'];
+    return methods.includes('phone');
+  }
+
+  sectionEnabled(section: keyof NonNullable<InvitationModel['content']['sectionSettings']>): boolean {
+    return this.invitation?.content.sectionSettings?.[section] !== false;
   }
 
   get isFinalAttendance(): boolean {

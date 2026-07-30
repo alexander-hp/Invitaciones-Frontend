@@ -77,9 +77,27 @@ export class NewLoginComponent implements OnInit, OnDestroy {
     this.currentTestimonialIndex = index;
   }
 
-  // Métodos mock para los botones de inicio de sesión social
   socialLogin(provider: string): void {
-    console.log(`Social login initiated with ${provider}`);
-    this.error = `El inicio de sesión con ${provider} está en modo de demostración.`;
+    const email = prompt(`Email de ${provider} para prueba/dev`);
+    if (!email) return;
+    const name = prompt('Nombre público de la cuenta') || email;
+    this.loading = true;
+    this.error = '';
+    this.auth.socialLogin({
+      provider: provider.toLowerCase() as any,
+      profile: {
+        email,
+        name,
+        providerUserId: `${provider.toLowerCase()}:${email}`
+      },
+      accountType: 'client',
+      role: 'client'
+    }).subscribe({
+      next: () => this.router.navigate(['/new/dashboard']),
+      error: (error) => {
+        this.error = error.error?.message || `No se pudo iniciar con ${provider}.`;
+        this.loading = false;
+      }
+    });
   }
 }
