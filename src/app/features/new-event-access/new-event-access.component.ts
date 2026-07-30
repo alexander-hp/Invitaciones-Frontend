@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { AlbumAssetModel, EventAccessSession, GuestModel, SongRequestModel, SongRequestStatus } from '../../core/models';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 
 @Component({
   selector: 'app-new-event-access',
@@ -20,7 +21,11 @@ export class NewEventAccessComponent implements OnInit {
   songFilter: 'all' | 'pending' | 'approved' | 'played' | 'rejected' = 'all';
   songSearch = '';
 
-  constructor(private route: ActivatedRoute, private api: ApiService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private api: ApiService,
+    private confirmDialog: ConfirmDialogService
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -35,6 +40,9 @@ export class NewEventAccessComponent implements OnInit {
     this.error = '';
     this.api.getEventAccessSession(this.token).subscribe({
       next: (session) => {
+        if (session && session.songRequests) {
+          session.songRequests.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
+        }
         this.session = session;
         this.loading = false;
       },
@@ -45,11 +53,14 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
-  checkIn(): void {
+  async checkIn(): Promise<void> {
     const code = this.code.trim();
     if (!code) return;
     const candidate = this.findGuestByCode(code);
-    if (candidate && !this.confirmCheckIn(candidate)) return;
+    if (candidate) {
+      const ok = await this.confirmCheckIn(candidate);
+      if (!ok) return;
+    }
     this.checking = true;
     this.message = '';
     this.error = '';
@@ -121,11 +132,12 @@ export class NewEventAccessComponent implements OnInit {
   }
 
   hasPermission(permission: string): boolean {
-    if (permission === 'dj' || permission === 'song_requests') {
+    if (permission === 'dj' || permission === 'song_requests' || permission === 'song_review') {
       return Boolean(
         this.session?.role === 'dj' ||
         this.session?.permissions?.includes('dj') ||
-        this.session?.permissions?.includes('song_requests')
+        this.session?.permissions?.includes('song_requests') ||
+        this.session?.permissions?.includes('song_review')
       );
     }
     return Boolean(this.session?.permissions?.includes(permission));
@@ -210,14 +222,49 @@ export class NewEventAccessComponent implements OnInit {
     );
   }
 
-  private confirmCheckIn(guest: GuestModel): boolean {
+  private async confirmCheckIn(guest: GuestModel): Promise<boolean> {
     if (guest.checkedIn) {
-      return confirm(`${guest.name} ya aparece registrado. ¿Registrar de nuevo de todos modos?`);
+      return this.confirmDialog.confirm({
+        title: '⚠️ Ya registrado',
+        message: `${guest.name} ya aparece registrado. ¿Registrar de nuevo de todos modos?`,
+        confirmText: 'Registrar de nuevo',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
     }
     if (guest.status !== 'confirmed') {
-      return confirm(`${guest.name} tiene RSVP "${this.statusLabel(guest)}". ¿Confirmas registrar su entrada?`);
+      return this.confirmDialog.confirm({
+        title: '⚠️ RSVP no confirmado',
+        message: `${guest.name} tiene RSVP "${this.statusLabel(guest)}". ¿Confirmas registrar su entrada?`,
+        confirmText: 'Confirmar entrada',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
     }
-    return confirm(`Confirmar entrada de ${guest.name}${guest.tableName ? ` en ${guest.tableName}` : ''}.`);
+    return this.confirmDialog.confirm({
+      title: 'Confirmar entrada',
+      message: `¿Confirmas registrar la entrada de ${guest.name}${guest.tableName ? ` en la mesa ${guest.tableName}` : ''}?`,
+      confirmText: 'Confirmar',
+      cancelText: 'Cancelar',
+      type: 'info'
+    });
+  }
+
+  moveSong(songRequest: SongRequestModel, direction: -1 | 1): void {
+    const songRequestId = songRequest._id || songRequest.id || '';
+    if (!songRequestId) return;
+    const currentOrder = Number(songRequest.sortOrder || 0);
+    this.api.updateEventAccessSong(this.token, songRequestId, { sortOrder: currentOrder + direction }).subscribe({
+      next: ({ songRequest: updated }) => {
+        if (this.session && this.session.songRequests) {
+          this.session.songRequests = this.session.songRequests
+            .map(item => (item._id || item.id) === songRequestId ? updated : item)
+            .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
+        }
+        this.message = 'Orden de canción actualizado.';
+      },
+      error: (err) => this.error = err.error?.message || 'Error al cambiar orden.'
+    });
   }
 
   private get token(): string {

@@ -1247,13 +1247,24 @@ export class NewEventDetailComponent implements OnInit {
 
   disableMember(member: EventMemberModel): void {
     const memberId = member.id || member._id || '';
-    if (!this.eventId || !memberId || !confirm('¿Desactivar este miembro del evento?')) return;
-    this.api.removeEventMember(this.eventId, memberId).subscribe({
-      next: () => {
-        this.eventMembers = this.eventMembers.map(item => (item.id || item._id) === memberId ? { ...item, status: 'disabled' } : item);
-        this.guestMessage = 'Miembro desactivado.';
-      },
-      error: (err) => this.guestError = err.error?.message || 'No se pudo desactivar el miembro.'
+    if (!this.eventId || !memberId) return;
+
+    this.confirmDialog.confirm({
+      title: '¿Desactivar miembro?',
+      message: `¿Estás seguro de que deseas desactivar a "${member.name || member.email}" de este evento? Esta acción revocará todos sus permisos permanentemente.`,
+      confirmText: 'Sí, Desactivar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '👥'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.api.removeEventMember(this.eventId, memberId).subscribe({
+        next: () => {
+          this.eventMembers = this.eventMembers.map(item => (item.id || item._id) === memberId ? { ...item, status: 'disabled' } : item);
+          this.guestMessage = 'Miembro desactivado.';
+        },
+        error: (err) => this.guestError = err.error?.message || 'No se pudo desactivar el miembro.'
+      });
     });
   }
 
@@ -1737,7 +1748,10 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   private loadSongRequests(eventId: string): void {
-    this.api.listSongRequests(eventId).subscribe({ next: ({ songRequests }) => this.songRequests = songRequests, error: () => this.songRequests = [] });
+    this.api.listSongRequests(eventId).subscribe({
+      next: ({ songRequests }) => this.songRequests = (songRequests || []).sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)),
+      error: () => this.songRequests = []
+    });
   }
 
   private loadDedications(eventId: string): void {
