@@ -101,30 +101,23 @@
         </div>
 
         <div class="nw-form-group">
-          <label class="nw-label">Tipo de Cuenta</label>
-          <div class="nw-role-selector">
-            <button 
-              type="button" 
-              [class.active]="form.role === 'client'"
-              (click)="setRole('client')"
-              class="nw-role-btn">
-              <span class="role-icon">💍</span>
-              <div class="role-details">
-                <span class="role-title">Cliente</span>
-                <span class="role-desc">Para bodas, XV años, cumpleaños y más</span>
-              </div>
-            </button>
-            <button 
-              type="button" 
-              [class.active]="form.role === 'organizer'"
-              (click)="setRole('organizer')"
-              class="nw-role-btn">
-              <span class="role-icon">💼</span>
-              <div class="role-details">
-                <span class="role-title">Organizador</span>
-                <span class="role-desc">Coordinadores y planners profesionales</span>
-              </div>
-            </button>
+          <label for="accountType" class="nw-label">Perfil de cuenta</label>
+          <div class="nw-input-wrapper">
+            <span class="nw-input-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <select 
+              id="accountType"
+              name="accountType" 
+              [(ngModel)]="form.accountType" 
+              class="nw-input with-icon" 
+              style="appearance: auto; cursor: pointer;"
+              required>
+              <option *ngFor="let type of accountTypes" [value]="type.value">{{ type.label }}</option>
+            </select>
           </div>
         </div>
 

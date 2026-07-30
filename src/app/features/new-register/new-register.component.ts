@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { AccountType, UserRole } from '../../core/models';
 
 @Component({
   selector: 'app-new-register',
@@ -12,11 +13,21 @@ export class NewRegisterComponent implements OnInit, OnDestroy {
     name: 'Demo Organizador',
     email: 'demo@invitaciones.mx',
     password: 'Password123',
-    role: 'client' as 'client' | 'organizer'
+    accountType: 'organizer' as AccountType,
+    role: 'organizer' as UserRole
   };
   loading = false;
   error = '';
   showPassword = false;
+
+  accountTypes: Array<{ value: AccountType; label: string; role: UserRole }> = [
+    { value: 'client', label: 'Cliente / anfitrión', role: 'client' },
+    { value: 'organizer', label: 'Organizador de eventos', role: 'organizer' },
+    { value: 'planner', label: 'Planner profesional', role: 'organizer' },
+    { value: 'venue_owner', label: 'Dueño de salón / venue', role: 'venue_owner' },
+    { value: 'vendor', label: 'Proveedor', role: 'vendor' },
+    { value: 'staff', label: 'Staff operativo', role: 'vendor' }
+  ];
 
   testimonials = [
     {
@@ -56,6 +67,8 @@ export class NewRegisterComponent implements OnInit, OnDestroy {
   submit(): void {
     this.loading = true;
     this.error = '';
+    const selected = this.accountTypes.find((item) => item.value === this.form.accountType);
+    this.form.role = selected?.role || 'client';
     this.auth.register(this.form).subscribe({
       next: () => this.router.navigate(['/new/dashboard']),
       error: (error) => {
@@ -82,13 +95,35 @@ export class NewRegisterComponent implements OnInit, OnDestroy {
     this.currentTestimonialIndex = index;
   }
 
-  setRole(role: 'client' | 'organizer'): void {
+  setRole(role: any): void {
     this.form.role = role;
   }
 
-  // Métodos mock para los botones de inicio de sesión social
   socialLogin(provider: string): void {
-    console.log(`Social signup initiated with ${provider}`);
-    this.error = `El registro con ${provider} está en modo de demostración.`;
+    const email = prompt(`Email de ${provider} para prueba/dev`);
+    if (!email) return;
+    const name = prompt('Nombre público de la cuenta') || email;
+    const selected = this.accountTypes.find((item) => item.value === this.form.accountType);
+    const role = selected?.role || 'client';
+    const accountType = this.form.accountType || 'client';
+    
+    this.loading = true;
+    this.error = '';
+    this.auth.socialLogin({
+      provider: provider.toLowerCase() as any,
+      profile: {
+        email,
+        name,
+        providerUserId: `${provider.toLowerCase()}:${email}`
+      },
+      accountType,
+      role: role as Exclude<UserRole, 'admin'>
+    }).subscribe({
+      next: () => this.router.navigate(['/new/dashboard']),
+      error: (error) => {
+        this.error = error.error?.message || `No se pudo registrar con ${provider}.`;
+        this.loading = false;
+      }
+    });
   }
 }
