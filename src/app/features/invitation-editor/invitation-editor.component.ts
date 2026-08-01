@@ -150,9 +150,9 @@ export class InvitationEditorComponent implements OnInit {
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
-      rsvpSettings: this.getRsvpSettingsPayload(),
+      rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
       template: this.invitation.template,
-      content: this.getContentPayload()
+      content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
@@ -166,7 +166,11 @@ export class InvitationEditorComponent implements OnInit {
         this.saving = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo guardar.';
+        if (error.error?.details?.fieldErrors?.body) {
+          this.error = `Error de validacion: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
+        } else {
+          this.error = error.error?.message || 'No se pudo guardar.';
+        }
         this.saving = false;
       }
     });
@@ -313,8 +317,8 @@ export class InvitationEditorComponent implements OnInit {
     return 'Plan gratuito para pruebas iniciales.';
   }
 
-  getInvitationId(invitation: InvitationModel): string {
-    return invitation._id || invitation.id || '';
+  getInvitationId(invitation?: InvitationModel): string {
+    return invitation?._id || invitation?.id || '';
   }
 
   getEventId(): string {
@@ -389,14 +393,30 @@ export class InvitationEditorComponent implements OnInit {
     this.error = 'La musica esta guardada, pero no se puede reproducir. Revisa permisos de lectura S3/CloudFront, MEDIA_PUBLIC_BASE_URL y CORS.';
   }
 
+  private sanitizePayload<T>(obj: T): T {
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.sanitizePayload(item)) as unknown as T;
+    }
+    if (obj !== null && typeof obj === 'object') {
+      const cleaned: Record<string, unknown> = {};
+      for (const key of Object.keys(obj as Record<string, unknown>)) {
+        if (key !== '_id' && key !== 'id') {
+          cleaned[key] = this.sanitizePayload((obj as Record<string, unknown>)[key]);
+        }
+      }
+      return cleaned as T;
+    }
+    return obj;
+  }
+
   private persistUploadedAsset(): void {
     if (!this.invitation) return;
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
-      rsvpSettings: this.getRsvpSettingsPayload(),
+      rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
       template: this.invitation.template,
-      content: this.getContentPayload()
+      content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
@@ -411,7 +431,11 @@ export class InvitationEditorComponent implements OnInit {
         this.assetUploading = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'El asset subio a S3, pero no se pudo guardar en la invitacion.';
+        if (error.error?.details?.fieldErrors?.body) {
+          this.error = `Error de validacion: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
+        } else {
+          this.error = error.error?.message || 'El asset subio a S3, pero no se pudo guardar en la invitacion.';
+        }
         this.assetUploading = false;
       }
     });
@@ -420,6 +444,7 @@ export class InvitationEditorComponent implements OnInit {
   private ensureRsvpSettings(): void {
     if (!this.invitation) return;
     this.invitation.rsvpSettings = {
+      ...this.invitation.rsvpSettings,
       deadline: this.invitation.rsvpSettings?.deadline,
       allowMaybe: this.invitation.rsvpSettings?.allowMaybe !== false,
       allowChangesUntilDeadline: this.invitation.rsvpSettings?.allowChangesUntilDeadline !== false,
@@ -428,7 +453,12 @@ export class InvitationEditorComponent implements OnInit {
       identityMethods: this.invitation.rsvpSettings?.identityMethods?.length ? this.invitation.rsvpSettings.identityMethods : ['email', 'phone'],
       allowCompanionsDefault: this.invitation.rsvpSettings?.allowCompanionsDefault === true,
       defaultAllowedCompanions: this.invitation.rsvpSettings?.defaultAllowedCompanions ?? 0,
-      maxAttendees: this.invitation.rsvpSettings?.maxAttendees
+      maxAttendees: this.invitation.rsvpSettings?.maxAttendees,
+      allowedRoles: this.invitation.rsvpSettings?.allowedRoles || [],
+      allowedGroups: this.invitation.rsvpSettings?.allowedGroups || [],
+      allowedEmails: this.invitation.rsvpSettings?.allowedEmails || [],
+      allowedPhones: this.invitation.rsvpSettings?.allowedPhones || [],
+      customQuestions: this.invitation.rsvpSettings?.customQuestions || []
     };
   }
 

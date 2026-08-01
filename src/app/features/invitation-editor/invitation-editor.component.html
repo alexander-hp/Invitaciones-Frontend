@@ -41,7 +41,13 @@
           <label>Musica URL<input name="musicUrl" [(ngModel)]="invitation.content.musicUrl" placeholder="https://.../cancion.mp3"></label>
           <label>Logo anfitrion<input name="brandLogoUrl" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png"></label>
           <label>Dress code<input name="dressCode" [(ngModel)]="invitation.content.dressCode"></label>
-          <label class="check-row"><input name="hideBranding" type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()"> Ocultar marca KyndraSoft</label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="hideBranding" type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()">
+              <span class="nw-slider"></span>
+            </span>
+            Ocultar marca KyndraSoft
+          </label>
           <label class="wide">Mensaje<textarea name="message" [(ngModel)]="invitation.content.message"></textarea></label>
           <label class="wide">Hospedaje<textarea name="lodgingText" [(ngModel)]="lodgingText" placeholder="Hotel Centro | Tarifa preferente | https://..."></textarea></label>
           <ng-container *ngIf="invitation.content.palette as palette">
@@ -65,24 +71,108 @@
 
         <h2>Secciones visibles</h2>
         <div class="form-grid" *ngIf="invitation.content.sectionSettings as sections">
-          <label class="check-row"><input name="sectionStory" type="checkbox" [(ngModel)]="sections.story"> Nuestra historia y mensaje</label>
-          <label class="check-row"><input name="sectionLocations" type="checkbox" [(ngModel)]="sections.locations"> Ubicaciones y como llegar</label>
-          <label class="check-row"><input name="sectionItinerary" type="checkbox" [(ngModel)]="sections.itinerary"> Itinerario</label>
-          <label class="check-row"><input name="sectionDressCode" type="checkbox" [(ngModel)]="sections.dressCode"> Codigo de vestimenta</label>
-          <label class="check-row"><input name="sectionRsvp" type="checkbox" [(ngModel)]="sections.rsvp"> RSVP</label>
-          <label class="check-row"><input name="sectionGiftRegistry" type="checkbox" [(ngModel)]="sections.giftRegistry"> Mesa de regalos</label>
-          <label class="check-row"><input name="sectionDigitalEnvelope" type="checkbox" [(ngModel)]="sections.digitalEnvelope"> Sobre digital</label>
-          <label class="check-row"><input name="sectionLodging" type="checkbox" [(ngModel)]="sections.lodging"> Hospedaje recomendado</label>
-          <label class="check-row"><input name="sectionGallery" type="checkbox" [(ngModel)]="sections.gallery"> Galeria de fotos</label>
-          <label class="check-row"><input name="sectionGuestAlbum" type="checkbox" [(ngModel)]="sections.guestAlbum"> Album colectivo</label>
-          <label class="check-row"><input name="sectionDedications" type="checkbox" [(ngModel)]="sections.dedications"> Muro de dedicatorias</label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionStory" type="checkbox" [(ngModel)]="sections.story">
+              <span class="nw-slider"></span>
+            </span>
+            Nuestra historia y mensaje
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionLocations" type="checkbox" [(ngModel)]="sections.locations">
+              <span class="nw-slider"></span>
+            </span>
+            Ubicaciones y como llegar
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionItinerary" type="checkbox" [(ngModel)]="sections.itinerary">
+              <span class="nw-slider"></span>
+            </span>
+            Itinerario
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionDressCode" type="checkbox" [(ngModel)]="sections.dressCode">
+              <span class="nw-slider"></span>
+            </span>
+            Codigo de vestimenta
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionRsvp" type="checkbox" [(ngModel)]="sections.rsvp">
+              <span class="nw-slider"></span>
+            </span>
+            RSVP
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionGiftRegistry" type="checkbox" [(ngModel)]="sections.giftRegistry">
+              <span class="nw-slider"></span>
+            </span>
+            Mesa de regalos
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionDigitalEnvelope" type="checkbox" [(ngModel)]="sections.digitalEnvelope">
+              <span class="nw-slider"></span>
+            </span>
+            Sobre digital
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionLodging" type="checkbox" [(ngModel)]="sections.lodging">
+              <span class="nw-slider"></span>
+            </span>
+            Hospedaje recomendado
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionGallery" type="checkbox" [(ngModel)]="sections.gallery">
+              <span class="nw-slider"></span>
+            </span>
+            Galeria de fotos
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionGuestAlbum" type="checkbox" [(ngModel)]="sections.guestAlbum">
+              <span class="nw-slider"></span>
+            </span>
+            Album colectivo
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="sectionDedications" type="checkbox" [(ngModel)]="sections.dedications">
+              <span class="nw-slider"></span>
+            </span>
+            Muro de dedicatorias
+          </label>
         </div>
 
         <h2>Sobre digital</h2>
         <div class="form-grid" *ngIf="invitation.content.giftSettings as giftSettings">
-          <label class="check-row"><input name="giftEnabled" type="checkbox" [(ngModel)]="giftSettings.enabled"> Mostrar regalos</label>
-          <label class="check-row"><input name="giftShowRegistry" type="checkbox" [(ngModel)]="giftSettings.showRegistry"> Mostrar mesa de regalos</label>
-          <label class="check-row"><input name="giftShowEnvelope" type="checkbox" [(ngModel)]="giftSettings.showEnvelope"> Mostrar sobre digital</label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="giftEnabled" type="checkbox" [(ngModel)]="giftSettings.enabled">
+              <span class="nw-slider"></span>
+            </span>
+            Mostrar regalos
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="giftShowRegistry" type="checkbox" [(ngModel)]="giftSettings.showRegistry">
+              <span class="nw-slider"></span>
+            </span>
+            Mostrar mesa de regalos
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="giftShowEnvelope" type="checkbox" [(ngModel)]="giftSettings.showEnvelope">
+              <span class="nw-slider"></span>
+            </span>
+            Mostrar sobre digital
+          </label>
           <label class="wide">Texto regalos<textarea name="giftIntroText" [(ngModel)]="giftSettings.introText"></textarea></label>
         </div>
         <div class="repeat-list">
@@ -110,8 +200,20 @@
 
         <h2>Dedicatorias</h2>
         <div class="form-grid" *ngIf="invitation.content.dedicationSettings as dedicationSettings">
-          <label class="check-row"><input name="dedicationEnabled" type="checkbox" [(ngModel)]="dedicationSettings.enabled"> Permitir dedicatorias</label>
-          <label class="check-row"><input name="dedicationApproval" type="checkbox" [(ngModel)]="dedicationSettings.requireApproval"> Requerir aprobacion</label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="dedicationEnabled" type="checkbox" [(ngModel)]="dedicationSettings.enabled">
+              <span class="nw-slider"></span>
+            </span>
+            Permitir dedicatorias
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="dedicationApproval" type="checkbox" [(ngModel)]="dedicationSettings.requireApproval">
+              <span class="nw-slider"></span>
+            </span>
+            Requerir aprobacion
+          </label>
           <label class="wide">Texto dedicatorias<textarea name="dedicationIntro" [(ngModel)]="dedicationSettings.introText"></textarea></label>
         </div>
 
@@ -152,12 +254,48 @@
         <div class="form-grid" *ngIf="invitation.rsvpSettings as rsvpSettings">
           <label>Fecha limite RSVP<input name="rsvpDeadline" type="datetime-local" [(ngModel)]="rsvpSettings.deadline"></label>
           <label>Dias antes para recordatorio<input name="reminderDaysBeforeDeadline" type="number" min="0" max="60" [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline"></label>
-          <label class="check-row"><input name="allowMaybe" type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe"> Permitir "No estoy seguro"</label>
-          <label class="check-row"><input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline"> Permitir cambios hasta la fecha limite</label>
-          <label class="check-row wide"><input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation"> Pedir confirmacion extra cuando alguien diga que no asistira</label>
-          <label class="check-row"><input name="identityEmail" type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')" (change)="toggleIdentityMethod('email', $any($event.target).checked)"> Confirmar por correo</label>
-          <label class="check-row"><input name="identityPhone" type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')" (change)="toggleIdentityMethod('phone', $any($event.target).checked)"> Confirmar por telefono</label>
-          <label class="check-row"><input name="allowCompanionsDefault" type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault"> Permitir acompanantes por default</label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="allowMaybe" type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe">
+              <span class="nw-slider"></span>
+            </span>
+            Permitir "No estoy seguro"
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="allowChangesUntilDeadline" type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline">
+              <span class="nw-slider"></span>
+            </span>
+            Permitir cambios hasta la fecha limite
+          </label>
+          <label class="check-row wide">
+            <span class="nw-switch">
+              <input name="declineRequiresConfirmation" type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation">
+              <span class="nw-slider"></span>
+            </span>
+            Pedir confirmacion extra cuando alguien diga que no asistira
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="identityEmail" type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')" (change)="toggleIdentityMethod('email', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </span>
+            Confirmar por correo
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="identityPhone" type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')" (change)="toggleIdentityMethod('phone', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </span>
+            Confirmar por telefono
+          </label>
+          <label class="check-row">
+            <span class="nw-switch">
+              <input name="allowCompanionsDefault" type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault">
+              <span class="nw-slider"></span>
+            </span>
+            Permitir acompanantes por default
+          </label>
           <label>Maximo acompanantes default<input name="defaultAllowedCompanions" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions"></label>
           <label>Maximo asistentes total<input name="maxAttendees" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150"></label>
           <ng-container *ngIf="invitation.accessMode === 'specific_users'">
