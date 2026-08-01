@@ -12,7 +12,7 @@
 </div>
 
 <!-- Floating Audio Player Button -->
-<div *ngIf="invitation?.content?.musicUrl" class="nw-pub-audio-floating">
+<div *ngIf="hasMusicTrack()" class="nw-pub-audio-floating">
   <button type="button" class="nw-pub-audio-btn" [class.playing]="isPlayingMusic" (click)="toggleMusic()"
     [attr.aria-label]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
     <span class="nw-pub-audio-icon">{{ isPlayingMusic ? '🎵' : '🎼' }}</span>
@@ -41,7 +41,7 @@
   [style.--accent]="invitation.content.palette?.accent || '#c59b6c'">
 
   <!-- HERO SECTION -->
-  <header class="nw-pub-hero">
+  <header class="nw-pub-hero" data-section-key="hero">
     <div *ngIf="invitation.content.coverImageUrl" class="nw-pub-hero-bg"
       [style.backgroundImage]="'url(' + invitation.content.coverImageUrl + ')'"></div>
     <div class="nw-pub-hero-overlay"></div>
@@ -144,22 +144,40 @@
     </section>
 
     <!-- 2. INVITATION MESSAGE / LETTER SECTION -->
-    <section *ngIf="invitation.content.message && invitation.content.sectionSettings?.story !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.message && invitation.content.sectionSettings?.story !== false" class="nw-pub-section" data-section-key="story">
       <div class="nw-pub-card nw-pub-message-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">💌</span>
           <h2>Nuestra Historia & Mensaje</h2>
+          <button *ngIf="hasSectionMusic('story')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('story')" (click)="toggleSectionMusic('story')"
+            [title]="isSectionMusicPlaying('story') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('story') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('story') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('story')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <p class="nw-pub-message-text">{{ invitation.content.message }}</p>
       </div>
     </section>
 
     <!-- 3. LOCATIONS & MAPS -->
-    <section *ngIf="displayLocations.length && invitation.content.sectionSettings?.locations !== false" class="nw-pub-section">
+    <section *ngIf="displayLocations.length && invitation.content.sectionSettings?.locations !== false" class="nw-pub-section" data-section-key="locations">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">📍</span>
           <h2>Ubicaciones & Cómo Llegar</h2>
+          <button *ngIf="hasSectionMusic('locations')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('locations')" (click)="toggleSectionMusic('locations')"
+            [title]="isSectionMusicPlaying('locations') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('locations') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('locations') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('locations')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <div class="nw-pub-locations-grid">
           <article *ngFor="let location of displayLocations" class="nw-pub-card-inner nw-pub-location-card">
@@ -183,11 +201,20 @@
     </section>
 
     <!-- 4. ITINERARY TIMELINE -->
-    <section *ngIf="invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.itinerary?.length && invitation.content.sectionSettings?.itinerary !== false" class="nw-pub-section" data-section-key="itinerary">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">⏳</span>
           <h2>Itinerario del Evento</h2>
+          <button *ngIf="hasSectionMusic('itinerary')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('itinerary')" (click)="toggleSectionMusic('itinerary')"
+            [title]="isSectionMusicPlaying('itinerary') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('itinerary') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('itinerary') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('itinerary')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <div class="nw-pub-timeline">
           <div *ngFor="let item of invitation.content.itinerary" class="nw-pub-timeline-item">
@@ -203,23 +230,41 @@
     </section>
 
     <!-- 5. DRESS CODE CARD -->
-    <section *ngIf="invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.dressCode && invitation.content.sectionSettings?.dressCode !== false" class="nw-pub-section" data-section-key="dressCode">
       <div class="nw-pub-card nw-pub-dresscode-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">👔</span>
           <h2>Código de Vestimenta (Dress Code)</h2>
+          <button *ngIf="hasSectionMusic('dressCode')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('dressCode')" (click)="toggleSectionMusic('dressCode')"
+            [title]="isSectionMusicPlaying('dressCode') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('dressCode') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('dressCode') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('dressCode')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <p class="nw-pub-dresscode-val">{{ invitation.content.dressCode }}</p>
       </div>
     </section>
 
     <!-- 6. RSVP FORM SECTION -->
-    <section *ngIf="invitation.content.sectionSettings?.rsvp !== false" id="rsvp-section" class="nw-pub-section">
+    <section *ngIf="invitation.content.sectionSettings?.rsvp !== false" id="rsvp-section" class="nw-pub-section" data-section-key="rsvp">
       <div class="nw-pub-card nw-pub-rsvp-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">✉️</span>
           <h2>Confirmación de Asistencia (RSVP)</h2>
           <span *ngIf="deadlineLabel" class="nw-pub-deadline-pill">⏰ Fecha límite: {{ deadlineLabel }}</span>
+          <button *ngIf="hasSectionMusic('rsvp')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('rsvp')" (click)="toggleSectionMusic('rsvp')"
+            [title]="isSectionMusicPlaying('rsvp') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('rsvp') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('rsvp') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('rsvp')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
 
         <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
@@ -377,11 +422,20 @@
     <!-- 7. GIFT REGISTRY & DIGITAL ENVELOPE -->
     <section
       *ngIf="(invitation.content.giftSettings?.enabled !== false) && ((invitation.content.sectionSettings?.giftRegistry !== false && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length) || (invitation.content.sectionSettings?.digitalEnvelope !== false && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)))"
-      class="nw-pub-section">
+      class="nw-pub-section" data-section-key="giftRegistry">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">🎁</span>
           <h2>Mesa de Regalos & Sobre Digital</h2>
+          <button *ngIf="hasSectionMusic('giftRegistry')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('giftRegistry')" (click)="toggleSectionMusic('giftRegistry')"
+            [title]="isSectionMusicPlaying('giftRegistry') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('giftRegistry') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('giftRegistry') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('giftRegistry')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
 
         <!-- Gift Store Links -->
@@ -446,11 +500,20 @@
     </section>
 
     <!-- 8. LODGING SECTION -->
-    <section *ngIf="invitation.content.lodging?.length && invitation.content.sectionSettings?.lodging !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.lodging?.length && invitation.content.sectionSettings?.lodging !== false" class="nw-pub-section" data-section-key="lodging">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">🏨</span>
           <h2>Hospedaje Recomendado</h2>
+          <button *ngIf="hasSectionMusic('lodging')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('lodging')" (click)="toggleSectionMusic('lodging')"
+            [title]="isSectionMusicPlaying('lodging') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('lodging') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('lodging') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('lodging')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <div class="nw-pub-lodging-grid">
           <article *ngFor="let hotel of invitation.content.lodging" class="nw-pub-card-inner nw-pub-lodging-card">
@@ -466,11 +529,20 @@
     </section>
 
     <!-- 9. PHOTO GALLERY -->
-    <section *ngIf="invitation.content.gallery?.length && invitation.content.sectionSettings?.gallery !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.gallery?.length && invitation.content.sectionSettings?.gallery !== false" class="nw-pub-section" data-section-key="gallery">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">📸</span>
           <h2>Galería de Fotos</h2>
+          <button *ngIf="hasSectionMusic('gallery')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('gallery')" (click)="toggleSectionMusic('gallery')"
+            [title]="isSectionMusicPlaying('gallery') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('gallery') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('gallery') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('gallery')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <div class="nw-pub-gallery-grid">
           <div *ngFor="let imageUrl of invitation.content.gallery" class="nw-pub-gallery-item"
@@ -485,11 +557,20 @@
     </section>
 
     <!-- 10. PRIVATE GUEST ALBUM -->
-    <section *ngIf="invitation.content.privateAlbumEnabled && invitation.content.sectionSettings?.guestAlbum !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.privateAlbumEnabled && invitation.content.sectionSettings?.guestAlbum !== false" class="nw-pub-section" data-section-key="guestAlbum">
       <div class="nw-pub-card nw-pub-album-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">📷</span>
           <h2>Álbum Colectivo de Invitados</h2>
+          <button *ngIf="hasSectionMusic('guestAlbum')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('guestAlbum')" (click)="toggleSectionMusic('guestAlbum')"
+            [title]="isSectionMusicPlaying('guestAlbum') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('guestAlbum') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('guestAlbum') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('guestAlbum')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <p class="muted" style="margin-bottom:20px;">¿Tienes fotos geniales del evento? Súbelas aquí para compartirlas
           con los anfitriones. Se mostrarán una vez aprobadas.</p>
@@ -524,11 +605,20 @@
     </section>
 
     <!-- 11. DEDICATIONS / GUESTBOOK WALL -->
-    <section *ngIf="invitation.content.dedicationSettings?.enabled !== false && invitation.content.sectionSettings?.dedications !== false" class="nw-pub-section">
+    <section *ngIf="invitation.content.dedicationSettings?.enabled !== false && invitation.content.sectionSettings?.dedications !== false" class="nw-pub-section" data-section-key="dedications">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">✍️</span>
           <h2>Muro de Dedicatorias & Libros de Deseos</h2>
+          <button *ngIf="hasSectionMusic('dedications')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('dedications')" (click)="toggleSectionMusic('dedications')"
+            [title]="isSectionMusicPlaying('dedications') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">{{ isSectionMusicPlaying('dedications') ? '⏸️' : '🎵' }}</span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('dedications') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('dedications')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
 
         <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->

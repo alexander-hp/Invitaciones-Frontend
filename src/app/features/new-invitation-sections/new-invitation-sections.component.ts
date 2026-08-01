@@ -125,8 +125,8 @@ export class NewInvitationSectionsComponent implements OnInit {
     });
   }
 
-  getInvitationId(invitation: InvitationModel): string {
-    return invitation._id || invitation.id || '';
+  getInvitationId(invitation?: InvitationModel): string {
+    return invitation?._id || invitation?.id || '';
   }
 
   getEventId(): string {

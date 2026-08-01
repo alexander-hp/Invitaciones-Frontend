@@ -124,18 +124,84 @@
 
       <div class="nw-card" style="margin-bottom:16px;">
         <div class="nw-card-header"><h3>Secciones visibles</h3></div>
-        <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.sectionSettings as sections">
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.story"> Nuestra historia y mensaje</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.locations"> Ubicaciones y como llegar</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.itinerary"> Itinerario</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.dressCode"> Codigo de vestimenta</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.rsvp"> RSVP</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.giftRegistry"> Mesa de regalos</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.digitalEnvelope"> Sobre digital</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.lodging"> Hospedaje recomendado</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.gallery"> Galeria de fotos</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.guestAlbum"> Album colectivo</label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" [(ngModel)]="sections.dedications"> Muro de dedicatorias</label>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;" *ngIf="invitation.content.sectionSettings as sections">
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Nuestra historia</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.story">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Ubicaciones</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.locations">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Itinerario</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.itinerary">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Código de vestimenta</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.dressCode">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">RSVP</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.rsvp">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Mesa de regalos</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.giftRegistry">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Sobre digital</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.digitalEnvelope">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Hospedaje</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.lodging">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Galería de fotos</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.gallery">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Álbum colectivo</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.guestAlbum">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+          <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+            <div class="nw-toggle-info"><strong style="font-size:13px;">Muro de dedicatorias</strong></div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="sections.dedications">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -225,15 +291,38 @@
             </label>
           </div>
 
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')" (change)="toggleIdentityMethod('email', $any($event.target).checked)"> Confirmar por correo
-          </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')" (change)="toggleIdentityMethod('phone', $any($event.target).checked)"> Confirmar por telefono
-          </label>
-          <label class="nw-label" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault"> Permitir acompañantes por default
-          </label>
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Confirmar por correo</strong>
+              <span>Requerir validación por email al enviar RSVP.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')" (change)="toggleIdentityMethod('email', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Confirmar por teléfono</strong>
+              <span>Requerir validación de teléfono/SMS al enviar RSVP.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')" (change)="toggleIdentityMethod('phone', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div class="nw-toggle-row">
+            <div class="nw-toggle-info">
+              <strong>Permitir acompañantes por default</strong>
+              <span>Los invitados podrán especificar cuántas personas asisten.</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
           <label class="nw-label">Máximo acompañantes default
             <input class="nw-input" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions">
           </label>
@@ -473,19 +562,51 @@
           </div>
         </div>
 
-        <!-- Música -->
-        <div style="margin-bottom:16px;">
-          <strong style="font-size:14px; display:block; margin-bottom:8px;">Música</strong>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-              🎵 Subir música
-              <input type="file" accept="audio/*" (change)="selectAsset($event, 'music')" [disabled]="assetUploading" style="display:none;">
-            </label>
-            <input class="nw-input" [(ngModel)]="invitation.content.musicUrl" placeholder="O pega URL directa: https://.../cancion.mp3" style="flex:1; max-width:400px;">
+        <!-- Configuración de Música y Audio por Sección -->
+        <div style="margin-bottom:20px; background:var(--nw-surface-2); padding:16px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+              <strong style="font-size:15px; display:block;">🎵 Configuración de Música y Audio</strong>
+              <span style="font-size:12.5px; color:var(--nw-text-3);">Asigna una canción global o reproduce canciones específicas automáticamente cuando el invitado llega a cada sección (Focus).</span>
+            </div>
           </div>
-          <div *ngIf="invitation.content.musicUrl" style="margin-top:10px; display:flex; align-items:center; gap:10px; padding:10px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
-            <audio controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()" style="flex:1;"></audio>
-            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeMusic()">✕ Quitar</button>
+
+          <!-- Música Global -->
+          <div style="margin-bottom:16px; padding:12px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+            <strong style="font-size:13.5px; display:block; margin-bottom:6px; color:var(--nw-accent);">🎼 Música Global (Fondo principal)</strong>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+                📁 Subir audio global
+                <input type="file" accept="audio/*" (change)="selectAsset($event, 'music')" [disabled]="assetUploading" style="display:none;">
+              </label>
+              <input class="nw-input" [(ngModel)]="invitation.content.musicUrl" placeholder="URL canción global: https://.../cancion.mp3" style="flex:1; min-width:260px;">
+            </div>
+            <div *ngIf="invitation.content.musicUrl" style="margin-top:10px; display:flex; align-items:center; gap:10px; padding:8px; background:var(--nw-surface-2); border-radius:6px;">
+              <audio controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()" style="flex:1; height:36px;"></audio>
+              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeMusic()">✕ Quitar</button>
+            </div>
+          </div>
+
+          <!-- Música Específica por Sección (Focus) -->
+          <div style="padding:12px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+            <strong style="font-size:13.5px; display:block; margin-bottom:4px; color:var(--nw-accent);">🎯 Música por Sección (Al hacer Focus / Scroll)</strong>
+            <p style="font-size:12px; color:var(--nw-text-3); margin:0 0 12px 0;">Cuando el invitado se desplace a una sección con canción asignada, la música cambiará automáticamente a este audio.</p>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+              <div *ngFor="let sec of sectionMusicOptions" style="background:var(--nw-surface-2); padding:10px 12px; border-radius:6px; border:1px solid var(--nw-border); display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong style="font-size:12.5px;">{{ sec.label }}</strong>
+                  <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:11px; padding:2px 8px;">
+                    📂 Subir
+                    <input type="file" accept="audio/*" (change)="uploadSectionMusic($event, sec.key)" [disabled]="assetUploading" style="display:none;">
+                  </label>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <input class="nw-input" [ngModel]="invitation.content.sectionMusic?.[sec.key]" (ngModelChange)="setSectionMusicUrl(sec.key, $event)" placeholder="URL audio de esta sección" style="font-size:12px; height:34px; flex:1;">
+                  <button *ngIf="invitation.content.sectionMusic?.[sec.key]" class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeSectionMusic(sec.key)" style="padding:4px 8px;" title="Quitar audio">✕</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
