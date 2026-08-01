@@ -1,0 +1,66 @@
+<div class="qr-scanner-overlay" *ngIf="isOpen" (click)="closeModal()">
+  <div class="qr-scanner-modal" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="qr-scanner-header">
+      <div class="qr-scanner-title">
+        <span class="qr-icon">📷</span>
+        <h3>Escanear Código QR</h3>
+      </div>
+      <button type="button" class="qr-close-btn" (click)="closeModal()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div class="qr-scanner-body">
+      <!-- Camera Selection Dropdown if multiple cameras exist -->
+      <div class="qr-controls" *ngIf="cameras.length > 1">
+        <label class="qr-label">Cámara:</label>
+        <select class="qr-select" [ngModel]="selectedCameraId" (ngModelChange)="onCameraChange($event)">
+          <option *ngFor="let cam of cameras" [value]="cam.id">
+            {{ cam.label || 'Cámara ' + cam.id }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Scanner Viewport Container -->
+      <div class="qr-viewport-wrapper">
+        <div id="qr-reader-viewport"></div>
+        <div class="qr-scan-frame" *ngIf="isScanning">
+          <div class="qr-laser-line"></div>
+        </div>
+      </div>
+
+      <!-- Success Notification Badge in Continuous Mode -->
+      <div class="qr-scanned-badge" *ngIf="lastScannedCode">
+        <span class="badge-icon">✅</span>
+        <span>Código detectado: <strong>{{ lastScannedCode }}</strong></span>
+      </div>
+
+      <!-- Error Message -->
+      <div class="qr-error-alert" *ngIf="errorMessage">
+        <span>⚠️ {{ errorMessage }}</span>
+        <button type="button" class="qr-retry-btn" (click)="startCamera()">Reintentar Cámara</button>
+      </div>
+
+      <!-- Scanner Options & Fallback -->
+      <div class="qr-options">
+        <label class="qr-toggle-label">
+          <input type="checkbox" [(ngModel)]="isContinuous">
+          Modo escaneo continuo (para procesar varios invitados)
+        </label>
+
+        <div class="qr-file-upload">
+          <span class="qr-upload-hint">¿No funciona la cámara?</span>
+          <label class="qr-file-btn">
+            📁 Cargar foto con QR
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="qr-scanner-footer">
+      <button type="button" class="qr-cancel-btn" (click)="closeModal()">Cerrar Escáner</button>
+    </div>
+  </div>
+</div>
