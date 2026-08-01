@@ -598,12 +598,22 @@ export class NewInvitationEditorComponent implements OnInit {
 
   setSectionMusicUrl(sectionKey: string, url: string): void {
     if (!this.invitation) return;
-    if (!this.invitation.content.sectionMusic) this.invitation.content.sectionMusic = {};
-    this.invitation.content.sectionMusic[sectionKey] = url;
+    if (!this.invitation.content.sectionMusic || typeof (this.invitation.content.sectionMusic as any).entries === 'function') {
+      this.invitation.content.sectionMusic = this.cleanSectionMusic(this.invitation.content.sectionMusic);
+    }
+    const trimmed = (url || '').trim();
+    if (trimmed) {
+      this.invitation.content.sectionMusic[sectionKey] = trimmed;
+    } else {
+      delete this.invitation.content.sectionMusic[sectionKey];
+    }
   }
 
   removeSectionMusic(sectionKey: string): void {
     if (!this.invitation?.content?.sectionMusic) return;
+    if (typeof (this.invitation.content.sectionMusic as any).delete === 'function') {
+      (this.invitation.content.sectionMusic as any).delete(sectionKey);
+    }
     delete this.invitation.content.sectionMusic[sectionKey];
   }
 
@@ -665,7 +675,9 @@ export class NewInvitationEditorComponent implements OnInit {
     if (!this.invitation) return;
     if (!this.invitation.content.gallery) this.invitation.content.gallery = [];
     if (!this.invitation.content.giftRegistry) this.invitation.content.giftRegistry = [];
-    if (!this.invitation.content.sectionMusic) this.invitation.content.sectionMusic = {};
+    if (!this.invitation.content.sectionMusic || typeof (this.invitation.content.sectionMusic as any).entries === 'function') {
+      this.invitation.content.sectionMusic = this.cleanSectionMusic(this.invitation.content.sectionMusic);
+    }
     if (!this.invitation.content.giftSettings) this.invitation.content.giftSettings = { enabled: true, introText: '', showRegistry: true, showEnvelope: true };
     if (!this.invitation.content.dedicationSettings) this.invitation.content.dedicationSettings = { enabled: true, requireApproval: true, introText: '' };
     this.invitation.content.sectionSettings = {
@@ -709,12 +721,22 @@ export class NewInvitationEditorComponent implements OnInit {
     };
   }
 
-  private cleanSectionMusic(mapObj?: Record<string, string | undefined>): Record<string, string> {
+  private cleanSectionMusic(mapObj?: any): Record<string, string> {
     if (!mapObj) return {};
     const cleaned: Record<string, string> = {};
-    for (const [key, val] of Object.entries(mapObj)) {
-      if (val && typeof val === 'string' && val.trim().length > 0) {
-        cleaned[key] = val.trim();
+    if (typeof mapObj === 'object') {
+      if (typeof mapObj.entries === 'function') {
+        for (const [key, val] of mapObj.entries()) {
+          if (key && val && typeof val === 'string' && val.trim().length > 0) {
+            cleaned[key] = val.trim();
+          }
+        }
+      } else {
+        for (const [key, val] of Object.entries(mapObj)) {
+          if (key && val && typeof val === 'string' && (val as string).trim().length > 0) {
+            cleaned[key] = (val as string).trim();
+          }
+        }
       }
     }
     return cleaned;

@@ -153,18 +153,32 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     return Boolean(typeof secMusic === 'object' && Object.values(secMusic).some(Boolean));
   }
 
+  getSectionSpecificMusicUrl(sectionKey: string): string {
+    const secMusic = this.invitation?.content?.sectionMusic;
+    if (secMusic) {
+      if (typeof (secMusic as any).get === 'function') {
+        const val = (secMusic as any).get(sectionKey);
+        if (val && typeof val === 'string') return val.trim();
+      } else if (typeof secMusic === 'object' && (secMusic as Record<string, string>)[sectionKey]) {
+        const val = (secMusic as Record<string, string>)[sectionKey];
+        if (val && typeof val === 'string') return val.trim();
+      }
+    }
+    return '';
+  }
+
   hasSectionMusic(sectionKey: string): boolean {
-    return Boolean(this.getAudioUrlForSection(sectionKey));
+    return Boolean(this.getSectionSpecificMusicUrl(sectionKey));
   }
 
   isSectionMusicPlaying(sectionKey: string): boolean {
     if (!this.isPlayingMusic || !this.audioRef) return false;
-    const targetUrl = this.getAudioUrlForSection(sectionKey);
+    const targetUrl = this.getSectionSpecificMusicUrl(sectionKey) || this.getAudioUrlForSection(sectionKey);
     return Boolean(targetUrl && this.currentPlayingTrackUrl === targetUrl && !this.audioRef.paused);
   }
 
   toggleSectionMusic(sectionKey: string): void {
-    const targetUrl = this.getAudioUrlForSection(sectionKey);
+    const targetUrl = this.getSectionSpecificMusicUrl(sectionKey) || this.getAudioUrlForSection(sectionKey);
     if (!targetUrl) return;
 
     this.currentActiveSection = sectionKey;
@@ -179,15 +193,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   }
 
   getAudioUrlForSection(sectionKey: string): string {
-    const secMusic = this.invitation?.content?.sectionMusic;
-    if (secMusic) {
-      if (typeof (secMusic as any).get === 'function') {
-        const val = (secMusic as any).get(sectionKey);
-        if (val) return val;
-      } else if (typeof secMusic === 'object' && (secMusic as Record<string, string>)[sectionKey]) {
-        return (secMusic as Record<string, string>)[sectionKey]!;
-      }
-    }
+    const specific = this.getSectionSpecificMusicUrl(sectionKey);
+    if (specific) return specific;
     return this.invitation?.content?.musicUrl || '';
   }
 
