@@ -14,6 +14,20 @@ export class CheckInStaffComponent implements OnInit {
   checking = false;
   message = '';
   error = '';
+  showScanner = false;
+
+  openScanner(): void {
+    this.showScanner = true;
+  }
+
+  closeScanner(): void {
+    this.showScanner = false;
+  }
+
+  onQrScanned(scannedCode: string): void {
+    this.code = scannedCode;
+    this.checkIn();
+  }
 
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
@@ -44,14 +58,21 @@ export class CheckInStaffComponent implements OnInit {
     const token = this.token;
     const code = this.code.trim();
     if (!token || !code) return;
+
+    let codeToSend = code;
+    const candidate = this.findGuestByCode(code);
+    if (candidate) {
+      codeToSend = candidate.checkInCode || candidate.qrCode || candidate.invitationToken || this.getGuestId(candidate);
+    }
+
     this.checking = true;
     this.message = '';
     this.error = '';
-    this.api.staffCheckIn(token, code).subscribe({
+    this.api.staffCheckIn(token, codeToSend).subscribe({
       next: ({ guest }) => {
         this.guests = this.guests.map((item) => this.getGuestId(item) === this.getGuestId(guest) ? guest : item);
         if (!this.guests.some((item) => this.getGuestId(item) === this.getGuestId(guest))) this.guests = [guest, ...this.guests];
-        this.message = `${guest.name} registrado.`;
+        this.message = `${guest.name} registrado ✅`;
         this.code = '';
         this.checking = false;
       },
@@ -65,7 +86,16 @@ export class CheckInStaffComponent implements OnInit {
   get filteredGuests(): GuestModel[] {
     const query = this.search.toLowerCase().trim();
     if (!query) return this.guests;
-    return this.guests.filter((guest) => [guest.name, guest.group, guest.tableName, guest.checkInCode].some((value) => (value || '').toLowerCase().includes(query)));
+    return this.guests.filter((guest) => [guest.name, guest.group, guest.tableName, guest.checkInCode, guest.qrCode, guest.invitationToken].some((value) => (value || '').toLowerCase().includes(query)));
+  }
+
+  private findGuestByCode(code: string): GuestModel | undefined {
+    const normalized = code.trim().toLowerCase();
+    return this.guests.find((guest) =>
+      [guest.checkInCode, guest.qrCode, guest.invitationToken, guest._id, guest.id].some(
+        (value) => (value || '').toLowerCase() === normalized
+      )
+    );
   }
 
   get checkedInCount(): number {

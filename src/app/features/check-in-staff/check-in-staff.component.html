@@ -16,6 +16,9 @@
     <section class="panel">
       <form class="checkin-row" (ngSubmit)="checkIn()">
         <label>Codigo QR<input name="code" [(ngModel)]="code" autofocus placeholder="Escanea o escribe el codigo"></label>
+        <button type="button" (click)="openScanner()" style="margin-top: 24px; height: 38px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">
+          📷 Cámara QR
+        </button>
         <button class="primary" type="submit" [disabled]="checking || !code">{{ checking ? 'Registrando...' : 'Registrar' }}</button>
       </form>
       <label>Buscar invitado<input name="search" [(ngModel)]="search" placeholder="Nombre, grupo, mesa o codigo"></label>
@@ -34,4 +37,5 @@
       </div>
     </section>
   </ng-container>
+  <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
 </section>
