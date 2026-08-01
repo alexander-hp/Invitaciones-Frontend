@@ -38,11 +38,13 @@ import { NewPublicInvitationComponent } from './features/new-public-invitation/n
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 
 import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
+import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ConfirmDialogComponent,
+    QrScannerModalComponent,
     CheckInStaffComponent,
     ContactComponent,
     DashboardComponent,

@@ -227,6 +227,19 @@ export interface ExternalContent {
   dedicationSettings?: DedicationSettings;
 }
 
+export interface SectionMusicSettings {
+  global?: string;
+  rsvp?: string;
+  dressCode?: string;
+  locations?: string;
+  gallery?: string;
+  gifts?: string;
+  dedications?: string;
+  lodging?: string;
+  itinerary?: string;
+  [key: string]: string | undefined;
+}
+
 export interface InvitationContent {
   headline?: string;
   subheadline?: string;
@@ -237,6 +250,7 @@ export interface InvitationContent {
     accent?: string;
   };
   musicUrl?: string;
+  sectionMusic?: SectionMusicSettings;
   coverImageUrl?: string;
   gallery?: string[];
   itinerary?: Array<{ time?: string; title?: string; description?: string }>;
