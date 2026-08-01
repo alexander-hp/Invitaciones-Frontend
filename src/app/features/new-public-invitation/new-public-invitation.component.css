@@ -390,6 +390,65 @@
   letter-spacing: -0.3px;
 }
 
+/* SECTION MUSIC BUTTON */
+.nw-pub-section-music-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(197, 155, 108, 0.08);
+  color: var(--primary, #1c2434);
+  border: 1px solid rgba(197, 155, 108, 0.35);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.nw-pub-section-music-btn:hover {
+  background: rgba(197, 155, 108, 0.22);
+  border-color: var(--accent, #c59b6c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(197, 155, 108, 0.2);
+}
+
+.nw-pub-section-music-btn.playing {
+  background: var(--primary, #1c2434);
+  color: var(--accent, #c59b6c);
+  border-color: var(--accent, #c59b6c);
+  box-shadow: 0 4px 14px rgba(28, 36, 52, 0.25);
+}
+
+.nw-pub-sec-music-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.nw-pub-sec-music-label {
+  letter-spacing: 0.2px;
+}
+
+.nw-pub-sec-music-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.nw-pub-sec-music-bars span {
+  width: 2px;
+  background-color: var(--accent, #c59b6c);
+  border-radius: 1px;
+  animation: audioBounce 1s infinite ease-in-out alternate;
+}
+
+.nw-pub-sec-music-bars span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+.nw-pub-sec-music-bars span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+.nw-pub-sec-music-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+
 /* CARDS ARCHITECTURE */
 .nw-pub-card {
   background: #ffffff;

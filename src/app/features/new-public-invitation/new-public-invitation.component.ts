@@ -23,7 +23,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   toastMessage = '';
   activeLightboxImage: string | null = null;
   isPlayingMusic = false;
+  currentActiveSection = 'hero';
+  currentPlayingTrackUrl = '';
   private audioRef?: HTMLAudioElement;
+  private observer?: IntersectionObserver;
   private timerInterval?: any;
 
   countdown = {
@@ -79,6 +82,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     if (this.audioRef) {
       this.audioRef.pause();
     }
+    if (this.observer) {
+      this.observer.disconnect();
+    }
   }
 
   load(): void {
@@ -90,11 +96,18 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
         this.invitation = invitation;
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.event = typeof invitation.event === 'string' ? undefined : invitation.event;
+
+        console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
+        console.log('🎵 [PublicInvitation] content:', invitation?.content);
+        console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
+        console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
+
         this.loadGuestToken();
         this.loadPublicAlbum();
         this.loadDedications();
         this.startCountdown();
         this.initAudio();
+        this.setupSectionObserver();
         this.loading = false;
       },
       error: (error) => {
@@ -130,20 +143,123 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     };
   }
 
+  hasMusicTrack(): boolean {
+    if (this.invitation?.content?.musicUrl) return true;
+    const secMusic = this.invitation?.content?.sectionMusic;
+    if (!secMusic) return false;
+    if (typeof (secMusic as any).values === 'function') {
+      return Array.from((secMusic as any).values()).some(Boolean);
+    }
+    return Boolean(typeof secMusic === 'object' && Object.values(secMusic).some(Boolean));
+  }
+
+  hasSectionMusic(sectionKey: string): boolean {
+    return Boolean(this.getAudioUrlForSection(sectionKey));
+  }
+
+  isSectionMusicPlaying(sectionKey: string): boolean {
+    if (!this.isPlayingMusic || !this.audioRef) return false;
+    const targetUrl = this.getAudioUrlForSection(sectionKey);
+    return Boolean(targetUrl && this.currentPlayingTrackUrl === targetUrl && !this.audioRef.paused);
+  }
+
+  toggleSectionMusic(sectionKey: string): void {
+    const targetUrl = this.getAudioUrlForSection(sectionKey);
+    if (!targetUrl) return;
+
+    this.currentActiveSection = sectionKey;
+
+    if (this.isPlayingMusic && this.currentPlayingTrackUrl === targetUrl && this.audioRef && !this.audioRef.paused) {
+      this.audioRef.pause();
+      this.isPlayingMusic = false;
+      return;
+    }
+
+    this.playTrackUrl(targetUrl, true);
+  }
+
+  getAudioUrlForSection(sectionKey: string): string {
+    const secMusic = this.invitation?.content?.sectionMusic;
+    if (secMusic) {
+      if (typeof (secMusic as any).get === 'function') {
+        const val = (secMusic as any).get(sectionKey);
+        if (val) return val;
+      } else if (typeof secMusic === 'object' && (secMusic as Record<string, string>)[sectionKey]) {
+        return (secMusic as Record<string, string>)[sectionKey]!;
+      }
+    }
+    return this.invitation?.content?.musicUrl || '';
+  }
+
   private initAudio(): void {
-    const musicUrl = this.invitation?.content.musicUrl;
-    if (!musicUrl) return;
-    this.audioRef = new Audio(musicUrl);
+    const initialUrl = this.getAudioUrlForSection('hero') || this.invitation?.content.musicUrl;
+    if (!initialUrl) return;
+    this.currentPlayingTrackUrl = initialUrl;
+    this.audioRef = new Audio(initialUrl);
     this.audioRef.loop = true;
     this.audioRef.onerror = () => {
       this.isPlayingMusic = false;
     };
   }
 
-  toggleMusic(): void {
+  private setupSectionObserver(): void {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {
+          const sectionKey = entry.target.getAttribute('data-section-key');
+          if (sectionKey && sectionKey !== this.currentActiveSection) {
+            this.currentActiveSection = sectionKey;
+            this.onSectionFocusChange(sectionKey);
+          }
+        }
+      });
+    }, { threshold: [0.2] });
+
+    setTimeout(() => {
+      const sectionElements = document.querySelectorAll('[data-section-key]');
+      sectionElements.forEach(el => this.observer?.observe(el));
+    }, 600);
+  }
+
+  onSectionFocusChange(sectionKey: string): void {
+    if (!this.invitation || !this.isPlayingMusic) return;
+    const targetUrl = this.getAudioUrlForSection(sectionKey);
+    if (targetUrl && targetUrl !== this.currentPlayingTrackUrl) {
+      this.playTrackUrl(targetUrl);
+    }
+  }
+
+  playTrackUrl(url: string, forcePlay: boolean = false): void {
+    if (!url) return;
+    this.currentPlayingTrackUrl = url;
     if (!this.audioRef) {
-      const musicUrl = this.invitation?.content.musicUrl;
-      if (musicUrl) this.initAudio();
+      this.audioRef = new Audio(url);
+      this.audioRef.loop = true;
+      this.audioRef.onerror = () => { this.isPlayingMusic = false; };
+    } else {
+      this.audioRef.pause();
+      this.audioRef.src = url;
+      this.audioRef.currentTime = 0;
+      this.audioRef.load();
+    }
+
+    const shouldPlay = forcePlay || this.isPlayingMusic;
+    if (shouldPlay) {
+      this.audioRef.play().then(() => {
+        this.isPlayingMusic = true;
+      }).catch(() => {
+        this.isPlayingMusic = false;
+      });
+    }
+  }
+
+  toggleMusic(): void {
+    const targetUrl = this.getAudioUrlForSection(this.currentActiveSection) || this.invitation?.content.musicUrl || '';
+    if (!this.audioRef && targetUrl) {
+      this.playTrackUrl(targetUrl, true);
+      return;
     }
     if (!this.audioRef) return;
 
