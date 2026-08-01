@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invitación Digital | Kyndra</title>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #faf8f5;
+      color: #2d2a24;
+      line-height: 1.6;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ===== TYPOGRAPHY ===== */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem; font-weight: 700; text-align: center;
+      margin-bottom: 1rem; letter-spacing: 0.5px; color: #3a2e28;
+    }
+    .section-title i { color: #b8946b; margin: 0 0.5rem; font-size: 1.8rem; }
+    .section-subtitle {
+      text-align: center; font-size: 1.1rem; color: #6b5f55;
+      max-width: 700px; margin: 0 auto 2.5rem auto;
+    }
+    .section-padding { padding: 80px 0; }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; width: 100%;
+      background: rgba(255, 252, 248, 0.92); backdrop-filter: blur(8px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06); z-index: 1000;
+      padding: 12px 0; transition: all 0.3s ease;
+      border-bottom: 1px solid rgba(184, 148, 107, 0.15);
+    }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .navbar .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: #3a2e28; letter-spacing: 1px; }
+    .navbar .logo span { color: #b8946b; }
+    .nav-links { display: flex; gap: 1.8rem; list-style: none; font-size: 0.9rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; flex-wrap: wrap; }
+    .nav-links a { color: #4a3f38; transition: color 0.3s; position: relative; }
+    .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #b8946b; transition: width 0.3s; }
+    .nav-links a:hover { color: #b8946b; }
+    .nav-links a:hover::after { width: 100%; }
+    .menu-toggle { display: none; font-size: 1.6rem; color: #3a2e28; cursor: pointer; background: none; border: none; }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; background: linear-gradient(145deg, #f9f3ed 0%, #efe6dc 100%);
+      padding: 120px 24px 80px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -30%; right: -10%; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(184, 148, 107, 0.08) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -20%; left: -10%; width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(184, 148, 107, 0.06) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 800px; }
+    .hero-badge {
+      display: inline-block; background: rgba(184, 148, 107, 0.15); color: #b8946b;
+      font-weight: 600; padding: 6px 24px; border-radius: 50px; font-size: 0.85rem;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem; backdrop-filter: blur(4px);
+    }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: 4.5rem; font-weight: 700; color: #2d241e; line-height: 1.1; margin-bottom: 0.5rem; }
+    .hero h1 span { color: #b8946b; font-style: italic; }
+    .hero .date-place { font-size: 1.3rem; color: #5a4c42; margin: 1.2rem 0 2rem; font-weight: 300; }
+    .hero .date-place i { color: #b8946b; margin: 0 0.5rem; }
+    .hero .btn-primary {
+      display: inline-block; background: #b8946b; color: #fff; padding: 14px 48px;
+      border-radius: 50px; font-weight: 600; font-size: 1rem; letter-spacing: 0.5px;
+      transition: all 0.3s; box-shadow: 0 8px 30px rgba(184, 148, 107, 0.3); border: none; cursor: pointer;
+    }
+    .hero .btn-primary:hover { background: #a07d56; transform: translateY(-3px); box-shadow: 0 12px 35px rgba(184, 148, 107, 0.4); }
+
+    /* ===== COUNTDOWN ===== */
+    .countdown { display: flex; justify-content: center; gap: 2rem; margin: 2.5rem 0 2rem; flex-wrap: wrap; }
+    .countdown-item {
+      background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(4px);
+      padding: 12px 20px; border-radius: 16px; min-width: 80px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); border: 1px solid rgba(184, 148, 107, 0.15);
+    }
+    .countdown-item .number { font-size: 2.2rem; font-weight: 700; color: #3a2e28; display: block; line-height: 1.2; }
+    .countdown-item .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #7a6b60; }
+
+    /* ===== SECTIONS ===== */
+    .section-alt { background: #ffffff; }
+    .section-light { background: #faf8f5; }
+
+    /* ===== WIDGET FRAME ===== */
+    .widget-frame { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); border: 1px solid rgba(184,148,107,0.1); overflow: hidden; }
+    .widget-frame-header { padding: 14px 20px; background: #faf8f5; border-bottom: 1px solid rgba(184,148,107,0.1); display: flex; align-items: center; gap: 10px; }
+    .widget-frame-header .dot { width: 10px; height: 10px; border-radius: 50%; background: #b8946b; }
+    .widget-frame-header h4 { font-family: 'Playfair Display', serif; font-size: 1rem; color: #3a2e28; }
+    .widget-frame iframe { width: 100%; border: none; display: block; }
+
+    /* ===== UBICACIONES ===== */
+    .ubicaciones-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+    .ubicacion-card {
+      background: #fff; border-radius: 20px; padding: 28px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04); border: 1px solid rgba(184, 148, 107, 0.12);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .ubicacion-card:hover { transform: translateY(-6px); box-shadow: 0 16px 45px rgba(0, 0, 0, 0.07); }
+    .ubicacion-card .icon { font-size: 2.2rem; color: #b8946b; margin-bottom: 0.8rem; }
+    .ubicacion-card h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .ubicacion-card p { color: #5a4c42; margin-bottom: 0.3rem; }
+    .ubicacion-card .map-link { display: inline-block; margin-top: 1rem; color: #b8946b; font-weight: 600; font-size: 0.9rem; }
+    .ubicacion-card .map-link i { margin-left: 6px; transition: transform 0.3s; }
+    .ubicacion-card .map-link:hover i { transform: translateX(4px); }
+
+    /* ===== DRESS CODE ===== */
+    .dress-code-card {
+      max-width: 600px; margin: 0 auto; background: #fff; border-radius: 20px; padding: 40px;
+      text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.04); border: 1px solid rgba(184,148,107,0.1);
+    }
+    .dress-code-card .icons { font-size: 2.8rem; color: #b8946b; margin-bottom: 1rem; }
+    .dress-code-card h3 { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 0.8rem; color: #3a2e28; }
+    .dress-code-card p { color: #5a4c42; line-height: 1.7; }
+
+    /* ===== GIFTS ===== */
+    .gifts-layout { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+    .gift-store-item {
+      background: #fff; border-radius: 16px; padding: 20px 24px;
+      display: flex; align-items: center; gap: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid rgba(184,148,107,0.08);
+    }
+    .gift-store-item .icon { font-size: 2rem; color: #b8946b; }
+    .gift-store-item .info { flex: 1; }
+    .gift-store-item .name { font-weight: 600; color: #3a2e28; }
+    .gift-store-item .note { font-size: 0.85rem; color: #6b5f55; }
+    .gift-store-item .link { color: #b8946b; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+    .bank-envelope-box {
+      background: #fff; border-radius: 20px; padding: 32px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.05); border: 1px solid rgba(184,148,107,0.1);
+      text-align: center;
+    }
+    .bank-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f0eb; font-size: 0.9rem; }
+    .bank-row:last-child { border: none; }
+    .bank-copy-btn {
+      padding: 2px 10px; border: 1px solid #b8946b; background: transparent;
+      color: #b8946b; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+      margin-left: 8px; transition: all 0.3s;
+    }
+    .bank-copy-btn:hover { background: #b8946b; color: #fff; }
+
+    /* ===== GALERÍA ===== */
+    .galeria-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+    }
+    .galeria-grid img {
+      width: 100%; height: 200px; object-fit: cover; border-radius: 16px;
+      transition: transform 0.4s, box-shadow 0.4s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    }
+    .galeria-grid img:hover { transform: scale(1.04); box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1); }
+
+    /* ===== HOSPEDAJE ===== */
+    .hospedaje-card {
+      background: #fff; border-radius: 20px; padding: 28px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); border: 1px solid rgba(184, 148, 107, 0.08);
+    }
+
+    /* ===== FAQ ===== */
+    .faq-item {
+      background: #fff; padding: 18px 24px; border-radius: 14px;
+      margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .faq-item h4 { font-weight: 600; color: #3a2e28; margin-bottom: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .faq-item .faq-body { color: #6b5f55; font-size: 0.95rem; line-height: 1.5; display: none; margin-top: 8px; }
+    .faq-item .faq-body.open { display: block; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: #2d241e; color: #d4cbc3; padding: 48px 0 24px; text-align: center;
+    }
+    footer .footer-logo { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #fff; margin-bottom: 0.5rem; }
+    footer .footer-logo span { color: #b8946b; }
+    footer p { font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem; }
+    footer .copy { font-size: 0.8rem; color: #8a7b70; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1.5rem; }
+
+    /* ===== ENVELOPE OVERLAY ===== */
+    .envelope-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #faf8f5; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1), opacity 0.6s ease;
+    }
+    .envelope-overlay.opened { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+    .envelope-cover {
+      background: #ffffff; width: 90%; max-width: 440px; padding: 3.5rem 2rem;
+      border-radius: 24px; box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+      border: 1px solid rgba(0,0,0,0.08); text-align: center; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+      transition: transform 0.3s ease;
+    }
+    .envelope-cover:hover { transform: translateY(-6px); }
+    .wax-seal {
+      font-size: 3rem; background: rgba(0,0,0,0.03);
+      width: 90px; height: 90px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px double #b8946b; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      animation: sealFloat 3s ease-in-out infinite;
+    }
+    @keyframes sealFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    .envelope-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: #2c2c2c; }
+    .envelope-text { font-size: 0.9rem; font-weight: 600; color: #b8946b; letter-spacing: 2px; text-transform: uppercase; }
+    .envelope-btn {
+      padding: 0.8rem 2.2rem; border-radius: 30px; border: 2px solid #b8946b;
+      background: transparent; color: #b8946b; font-weight: 600;
+      font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .envelope-cover:hover .envelope-btn { background: #b8946b; color: #ffffff; }
+
+    /* ===== MUSIC PLAYER ===== */
+    .music-player-btn {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 2px solid #b8946b; border-radius: 50%;
+      width: 56px; height: 56px; display: none; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.3s ease;
+    }
+    .music-player-btn:hover { transform: scale(1.1); }
+    .music-playing { animation: pulseMusic 2s infinite; }
+    @keyframes pulseMusic {
+      0% { box-shadow: 0 0 0 0 rgba(184,148,107,0.4); }
+      70% { box-shadow: 0 0 0 14px rgba(184,148,107,0); }
+      100% { box-shadow: 0 0 0 0 rgba(184,148,107,0); }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .navbar .container { flex-wrap: wrap; }
+      .nav-links { display: none; flex-direction: column; width: 100%; gap: 0.8rem; padding: 1rem 0 0.5rem; text-align: center; }
+      .nav-links.open { display: flex; }
+      .menu-toggle { display: block; }
+      .hero h1 { font-size: 2.8rem; }
+      .hero .date-place { font-size: 1rem; }
+      .countdown { gap: 1rem; }
+      .countdown-item { min-width: 60px; padding: 8px 12px; }
+      .countdown-item .number { font-size: 1.6rem; }
+      .section-title { font-size: 2rem; }
+      .galeria-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 2.2rem; }
+      .hero .btn-primary { padding: 12px 32px; font-size: 0.9rem; }
+      .section-padding { padding: 60px 0; }
+      .ubicaciones-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== ENVELOPE OVERLAY ===== -->
+  <div class="envelope-overlay" id="envelopeOverlay">
+    <div class="envelope-cover" onclick="openEnvelope()">
+      <div class="wax-seal">⛪</div>
+      <div class="envelope-text">Te invitamos a celebrar</div>
+      <h2 class="envelope-title" id="envelopeHostsTitle">Bautizo</h2>
+      <button class="envelope-btn">Abrir Invitación</button>
+    </div>
+  </div>
+
+  <!-- ===== FLOATING MUSIC PLAYER ===== -->
+  <button class="music-player-btn" id="musicBtn" onclick="toggleMusic()">
+    <i class="fas fa-music" id="musicIcon" style="color: #b8946b; font-size: 1.2rem;"></i>
+  </button>
+  <audio id="bgAudio" loop></audio>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <div class="logo" id="navLogoText">Bautizo <span>Kyndra</span></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menú">
+        <i class="fas fa-bars"></i>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#sec-ubicaciones">Ubicaciones</a></li>
+        <li><a href="#sec-rsvp">RSVP</a></li>
+        <li><a href="#sec-regalos">Regalos</a></li>
+        <li><a href="#sec-galeria">Galería</a></li>
+        <li><a href="#sec-dj">DJ</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="inicio">
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fas fa-cross" style="margin-right:8px;"></i> Bautizo</div>
+      <h1 id="heroTitle">Bautizo</h1>
+      <div class="date-place">
+        <i class="fas fa-calendar-alt"></i> <span id="heroDate">Fecha por confirmar</span>
+        &nbsp;·&nbsp;
+        <i class="fas fa-map-marker-alt"></i> <span id="heroVenue">Lugar por confirmar</span>
+      </div>
+
+      <!-- Countdown -->
+      <div class="countdown" id="countdown">
+        <div class="countdown-item">
+          <span class="number" id="days">00</span>
+          <span class="label">Días</span>
+        </div>
+        <div class="countdown-item">
+          <span class="number" id="hours">00</span>
+          <span class="label">Horas</span>
+        </div>
+        <div class="countdown-item">
+          <span class="number" id="minutes">00</span>
+          <span class="label">Minutos</span>
+        </div>
+        <div class="countdown-item">
+          <span class="number" id="seconds">00</span>
+          <span class="label">Segundos</span>
+        </div>
+      </div>
+
+      <a href="#sec-rsvp" class="btn-primary">Confirmar asistencia</a>
+    </div>
+  </section>
+
+  <!-- ===== UBICACIONES / ITINERARIO ===== -->
+  <section class="section-padding section-alt" id="sec-ubicaciones" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-map-pin"></i> Ubicaciones <i class="fas fa-map-pin"></i></h2>
+      <p class="section-subtitle">Ceremonia y recepción, los lugares especiales para celebrar.</p>
+      <div class="ubicaciones-grid" id="ubicacionesGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== RSVP (Widget) ===== -->
+  <section class="section-padding section-light" id="sec-rsvp">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-check-circle"></i> Confirmar Asistencia <i class="fas fa-check-circle"></i></h2>
+      <p class="section-subtitle">Confirma tu asistencia para ayudarnos con la organización.</p>
+      <div class="widget-frame">
+        <div class="widget-frame-header">
+          <span class="dot"></span>
+          <h4>Pase RSVP Digital</h4>
+        </div>
+        <iframe id="iframeRsvp" height="600" src="" title="RSVP Form"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PASE DE ACCESO (Widget) ===== -->
+  <section class="section-padding section-alt" id="sec-pass">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-ticket-alt"></i> Pase de Entrada <i class="fas fa-ticket-alt"></i></h2>
+      <p class="section-subtitle">Tu boleto de acceso al evento con código QR.</p>
+      <div class="widget-frame">
+        <div class="widget-frame-header">
+          <span class="dot"></span>
+          <h4>Boleto de Acceso QR</h4>
+        </div>
+        <iframe id="iframePass" height="420" src="" title="QR Ticket"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DRESS CODE ===== -->
+  <section class="section-padding section-light" id="sec-dress-code" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-tshirt"></i> Código de Vestimenta <i class="fas fa-tshirt"></i></h2>
+      <div class="dress-code-card">
+        <div class="icons">👗👔</div>
+        <h3 id="dressCodeTitle">Código de Vestimenta</h3>
+        <p id="dressCodeDesc"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MESA DE REGALOS ===== -->
+  <section class="section-padding section-alt" id="sec-regalos" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-gift"></i> Mesa de Regalos <i class="fas fa-gift"></i></h2>
+      <p class="section-subtitle" id="giftIntroText">Si deseas hacernos un obsequio, estas son algunas opciones.</p>
+      <div class="gifts-layout">
+        <div id="storesContainer"></div>
+        <div id="bankContainer" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DJ / SONG REQUESTS (Widget) ===== -->
+  <section class="section-padding section-light" id="sec-dj">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-music"></i> Sugerencias Musicales <i class="fas fa-music"></i></h2>
+      <p class="section-subtitle">Pide la canción que quieres escuchar en el evento.</p>
+      <div class="widget-frame">
+        <div class="widget-frame-header">
+          <span class="dot"></span>
+          <h4>Pedir Canción al DJ</h4>
+        </div>
+        <iframe id="iframeDj" height="440" src="" title="DJ Request Widget"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOSPEDAJE ===== -->
+  <section class="section-padding section-alt" id="sec-hospedaje" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-hotel"></i> Hospedaje <i class="fas fa-hotel"></i></h2>
+      <p class="section-subtitle">Opciones de hospedaje cerca del evento.</p>
+      <div id="hospedajeGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== GALERÍA ===== -->
+  <section class="section-padding section-light" id="sec-galeria">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-images"></i> Galería <i class="fas fa-images"></i></h2>
+      <p class="section-subtitle">Fotos del evento y momentos especiales.</p>
+      <div class="galeria-grid" id="galeriaGrid">
+        <!-- Filled dynamically from API -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ÁLBUM COLECTIVO (Widget) ===== -->
+  <section class="section-padding section-alt" id="sec-album">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-camera-retro"></i> Álbum Colectivo <i class="fas fa-camera-retro"></i></h2>
+      <p class="section-subtitle">Comparte tus fotos del evento para que todos podamos recordar este día.</p>
+      <div class="widget-frame">
+        <div class="widget-frame-header">
+          <span class="dot"></span>
+          <h4>Subir fotos del evento</h4>
+        </div>
+        <iframe id="iframeAlbum" height="450" src="" title="Album Upload Widget"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQs ===== -->
+  <section class="section-padding section-light" id="sec-faqs" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-question-circle"></i> Preguntas Frecuentes <i class="fas fa-question-circle"></i></h2>
+      <div id="faqsContainer" style="max-width:700px; margin:0 auto;"></div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container">
+      <div class="footer-logo" id="footerTitle">Bautizo <span>Kyndra</span></div>
+      <p>Gracias por ser parte de este momento tan especial.</p>
+      <div class="copy">Kyndra · Invitación Digital Premium · © 2026</div>
+    </div>
+  </footer>
+
+  <!-- ===== KYNDRA DYNAMIC ENGINE ===== -->
+  <script>
+    (function() {
+      'use strict';
+
+      // ── Utilities ──
+      function formatSpanishDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            return parts[2] + ' · ' + months[parseInt(parts[1],10)-1] + ' · ' + parts[0];
+          }
+        } catch(e) {}
+        return dateStr;
+      }
+
+      function startCountdown(dateStr) {
+        if (!dateStr) return;
+        const target = new Date(dateStr + 'T00:00:00').getTime();
+        function update() {
+          const diff = target - Date.now();
+          if (diff <= 0) { ['days','hours','minutes','seconds'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '00'; }); return; }
+          const d = Math.floor(diff / 86400000);
+          const h = Math.floor((diff % 86400000) / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          if(document.getElementById('days')) document.getElementById('days').textContent = String(d).padStart(2,'0');
+          if(document.getElementById('hours')) document.getElementById('hours').textContent = String(h).padStart(2,'0');
+          if(document.getElementById('minutes')) document.getElementById('minutes').textContent = String(m).padStart(2,'0');
+          if(document.getElementById('seconds')) document.getElementById('seconds').textContent = String(s).padStart(2,'0');
+        }
+        update();
+        setInterval(update, 1000);
+      }
+
+      window.copyText = function(text, btnEl) {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(() => {
+            const orig = btnEl.textContent;
+            btnEl.textContent = '¡Copiado!';
+            setTimeout(() => { btnEl.textContent = orig; }, 2000);
+          });
+        }
+      };
+
+      window.openEnvelope = function() {
+        const overlay = document.getElementById('envelopeOverlay');
+        if (overlay) overlay.classList.add('opened');
+        const audio = document.getElementById('bgAudio');
+        if (audio && audio.src) {
+          audio.play().then(() => {
+            const btn = document.getElementById('musicBtn');
+            if (btn) btn.classList.add('music-playing');
+          }).catch(() => {});
+        }
+      };
+
+      window.toggleMusic = function() {
+        const audio = document.getElementById('bgAudio');
+        const btn = document.getElementById('musicBtn');
+        const icon = document.getElementById('musicIcon');
+        if (!audio) return;
+        if (audio.paused) {
+          audio.play();
+          if (btn) btn.classList.add('music-playing');
+          if (icon) icon.className = 'fas fa-pause';
+        } else {
+          audio.pause();
+          if (btn) btn.classList.remove('music-playing');
+          if (icon) icon.className = 'fas fa-music';
+        }
+      };
+
+      window.toggleFaq = function(el) {
+        const body = el.nextElementSibling;
+        const arrow = el.querySelector('.faq-arrow');
+        if (body.classList.contains('open')) {
+          body.classList.remove('open');
+          if (arrow) arrow.textContent = '▼';
+        } else {
+          body.classList.add('open');
+          if (arrow) arrow.textContent = '▲';
+        }
+      };
+
+      // ── Menu Toggle ──
+      const menuToggle = document.getElementById('menuToggle');
+      const navLinks = document.getElementById('navLinks');
+      if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+        document.querySelectorAll('.nav-links a').forEach(link => {
+          link.addEventListener('click', () => navLinks.classList.remove('open'));
+        });
+      }
+
+      // ── Load Event Data ──
+      function loadEventInvitation(event, portalSlug, apiBaseUrl) {
+        const content = event.externalContent || {};
+        const formattedDate = formatSpanishDate(event.date);
+        const titleText = event.title || 'Bautizo';
+        const hostsText = (event.hosts && event.hosts.length > 0) ? event.hosts.join(' & ') : titleText;
+
+        document.title = titleText + ' | Invitación Digital';
+
+        // Envelope & Hero text
+        const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+        setText('envelopeHostsTitle', titleText);
+        setText('heroTitle', titleText);
+        setText('heroDate', formattedDate);
+        setText('heroVenue', event.venue?.name || '');
+        setText('navLogoText', titleText);
+        setText('footerTitle', titleText);
+
+        // Cover image
+        const coverUrl = content.heroImageUrl || content.coverImageUrl;
+        if (coverUrl) {
+          const hero = document.querySelector('.hero');
+          if (hero) {
+            hero.style.background = `linear-gradient(rgba(249,243,237,0.85), rgba(239,230,220,0.9)), url('${coverUrl}') center/cover no-repeat`;
+          }
+        }
+
+        // Countdown
+        if (event.date) startCountdown(event.date);
+
+        // Music
+        if (content.musicUrl) {
+          const audio = document.getElementById('bgAudio');
+          if (audio) audio.src = content.musicUrl;
+          const musicBtn = document.getElementById('musicBtn');
+          if (musicBtn) musicBtn.style.display = 'flex';
+        }
+
+        // Locations / Itinerary
+        const locations = content.locations || [];
+        const hasVenue = event.venue && event.venue.name;
+        if (hasVenue || locations.length > 0) {
+          document.getElementById('sec-ubicaciones').style.display = 'block';
+          const grid = document.getElementById('ubicacionesGrid');
+          let html = '';
+          if (hasVenue) {
+            html += `<div class="ubicacion-card">
+              <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
+              <h3>${event.venue.name}</h3>
+              <p>${event.venue.address || ''}</p>
+              ${event.venue.mapUrl ? `<a class="map-link" href="${event.venue.mapUrl}" target="_blank">Ver en mapa <i class="fas fa-arrow-right"></i></a>` : ''}
+            </div>`;
+          }
+          locations.forEach(loc => {
+            html += `<div class="ubicacion-card">
+              <div class="icon"><i class="fas fa-clock"></i></div>
+              <h3>${loc.name || loc.title || 'Ubicación'}</h3>
+              <p>${loc.address || ''}</p>
+              ${loc.time ? `<p><i class="fas fa-clock" style="color:#b8946b;"></i> ${loc.time}</p>` : ''}
+              ${loc.notes ? `<p><em>${loc.notes}</em></p>` : ''}
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                ${loc.mapUrl ? `<a class="map-link" href="${loc.mapUrl}" target="_blank"><i class="fas fa-map"></i> Maps</a>` : ''}
+                ${loc.wazeUrl ? `<a class="map-link" href="${loc.wazeUrl}" target="_blank" style="color:#33ccff;"><i class="fas fa-car"></i> Waze</a>` : ''}
+              </div>
+            </div>`;
+          });
+          grid.innerHTML = html;
+        }
+
+        // Dress Code
+        const dressSec = (content.sections || []).find(s => s.type === 'dress_code');
+        if (dressSec) {
+          document.getElementById('sec-dress-code').style.display = 'block';
+          setText('dressCodeTitle', dressSec.title || 'Código de Vestimenta');
+          setText('dressCodeDesc', dressSec.body || '');
+        }
+
+        // Gifts
+        const giftSettings = content.giftSettings || {};
+        if (giftSettings.enabled !== false) {
+          const registry = content.giftRegistry || [];
+          const envelope = content.digitalEnvelope || {};
+          const hasRegistry = giftSettings.showRegistry !== false && registry.length > 0;
+          const hasEnvelope = giftSettings.showEnvelope !== false && (envelope.bank || envelope.clabe || envelope.account);
+
+          if (hasRegistry || hasEnvelope) {
+            document.getElementById('sec-regalos').style.display = 'block';
+            if (giftSettings.introText) setText('giftIntroText', giftSettings.introText);
+
+            if (hasRegistry) {
+              const storesBox = document.getElementById('storesContainer');
+              let stHtml = '';
+              registry.forEach(store => {
+                stHtml += `<div class="gift-store-item">
+                  <div class="icon"><i class="fas fa-gift"></i></div>
+                  <div class="info">
+                    <div class="name">${store.store || store.title || 'Mesa de Regalos'}</div>
+                    ${store.note ? `<div class="note">${store.note}</div>` : ''}
+                  </div>
+                  ${store.url ? `<a class="link" href="${store.url}" target="_blank">Ver Mesa →</a>` : ''}
+                </div>`;
+              });
+              storesBox.innerHTML = stHtml;
+            }
+
+            if (hasEnvelope) {
+              const bankBox = document.getElementById('bankContainer');
+              let bankHtml = `<div class="bank-envelope-box">
+                <i class="fas fa-envelope-open-text" style="font-size:2.5rem; color:#b8946b; margin-bottom:10px;"></i>
+                <h3 style="font-size:1.5rem; margin-bottom:6px; font-family:'Playfair Display',serif;">Sobre Digital</h3>
+                <p style="color:#6b5f55; font-size:0.95rem; margin-bottom:16px;">${envelope.note || 'Si deseas realizarnos un obsequio en efectivo:'}</p>
+                <div style="text-align:left; background:#faf8f5; padding:16px; border-radius:12px;">`;
+              if (envelope.bank) bankHtml += `<div class="bank-row"><span>Banco</span><span>${envelope.bank}</span></div>`;
+              if (envelope.holder) bankHtml += `<div class="bank-row"><span>Titular</span><span>${envelope.holder}</span></div>`;
+              if (envelope.account) bankHtml += `<div class="bank-row"><span>Cuenta</span><span><code>${envelope.account}</code> <button class="bank-copy-btn" onclick="copyText('${envelope.account}', this)">Copiar</button></span></div>`;
+              if (envelope.clabe) bankHtml += `<div class="bank-row"><span>CLABE</span><span><code>${envelope.clabe}</code> <button class="bank-copy-btn" onclick="copyText('${envelope.clabe}', this)">Copiar</button></span></div>`;
+              bankHtml += `</div>`;
+              if (envelope.qrImageUrl) bankHtml += `<div style="margin-top:16px;"><img src="${envelope.qrImageUrl}" alt="QR" style="max-width:160px; border-radius:12px; margin:0 auto;"></div>`;
+              bankHtml += `</div>`;
+              bankBox.innerHTML = bankHtml;
+              bankBox.style.display = 'block';
+            }
+          }
+        }
+
+        // Hospedaje
+        const lodging = (content.sections || []).find(s => s.type === 'lodging');
+        if (lodging) {
+          document.getElementById('sec-hospedaje').style.display = 'block';
+          const grid = document.getElementById('hospedajeGrid');
+          grid.innerHTML = `<div class="hospedaje-card">
+            <h4 style="font-size:1.2rem; margin-bottom:8px; color:#3a2e28;">${lodging.title || 'Hospedaje Recomendado'}</h4>
+            <p style="color:#5a4c42; font-size:0.95rem; margin-bottom:12px;">${lodging.body || ''}</p>
+            ${lodging.url ? `<a href="${lodging.url}" target="_blank" style="display:inline-block; padding:8px 20px; background:#b8946b; color:#fff; border-radius:20px; text-decoration:none; font-size:0.9rem;">Ver Información</a>` : ''}
+          </div>`;
+        }
+
+        // FAQs
+        const faqs = (content.sections || []).filter(s => s.type === 'faq');
+        if (faqs.length > 0) {
+          document.getElementById('sec-faqs').style.display = 'block';
+          const container = document.getElementById('faqsContainer');
+          let fHtml = '';
+          faqs.forEach(f => {
+            fHtml += `<div class="faq-item">
+              <h4 onclick="toggleFaq(this)"><span>❓ ${f.title || f.key}</span> <span class="faq-arrow">▼</span></h4>
+              <div class="faq-body">${f.body || ''}</div>
+            </div>`;
+          });
+          container.innerHTML = fHtml;
+        }
+
+        // Iframes
+        if (portalSlug) {
+          const origin = window.location.origin;
+          const setIframe = (id, widget) => { const el = document.getElementById(id); if (el) el.src = origin + '/new/embed/' + portalSlug + '/' + widget; };
+          setIframe('iframeRsvp', 'rsvp');
+          setIframe('iframePass', 'guest-pass');
+          setIframe('iframeDj', 'song-requests');
+          setIframe('iframeAlbum', 'album');
+        }
+      }
+
+      // ── Load Gallery from API ──
+      function loadPublicGallery(portalSlug, apiBaseUrl) {
+        fetch(apiBaseUrl + '/external/' + portalSlug + '/assets?type=all')
+          .then(r => r.ok ? r.json() : fetch(apiBaseUrl + '/external/' + portalSlug + '/album').then(r2 => r2.json()))
+          .then(data => {
+            const assets = data.assets || [];
+            if (assets.length > 0) {
+              const grid = document.getElementById('galeriaGrid');
+              if (grid) {
+                let html = '';
+                assets.forEach(ast => {
+                  const url = ast.url || ast.imageUrl;
+                  if (url) {
+                    html += `<img src="${url}" alt="${ast.title || 'Foto del evento'}" loading="lazy">`;
+                  }
+                });
+                if (html) grid.innerHTML = html;
+              }
+            }
+          })
+          .catch(err => console.log('Gallery load:', err));
+      }
+
+      // ── Init ──
+      document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const portal = params.get('portal');
+        if (!portal) return;
+
+        const apiBaseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? 'http://localhost:4000/api'
+          : '/api';
+
+        fetch(apiBaseUrl + '/external/' + portal + '/config')
+          .then(res => { if (!res.ok) throw new Error('Portal config not found'); return res.json(); })
+          .then(data => {
+            if (data && data.event) {
+              loadEventInvitation(data.event, portal, apiBaseUrl);
+              loadPublicGallery(portal, apiBaseUrl);
+            }
+          })
+          .catch(err => console.log('Template loaded with preview data:', err));
+      });
+    })();
+  </script>
+
+</body>
+</html>
