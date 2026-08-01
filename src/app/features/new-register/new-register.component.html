@@ -219,3 +219,53 @@
 
   </div>
 </section>
+
+<!-- Modal de Registro Social con Diseño Kyndra -->
+<div class="nw-modal-backdrop" *ngIf="showSocialModal" (click)="closeSocialModal()">
+  <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 440px;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+      <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(184, 148, 107, 0.12); display: grid; place-items: center; font-size: 20px;">
+        🌐
+      </div>
+      <div>
+        <h2 style="margin: 0; font-size: 20px;">Registrarse con {{ socialProvider }}</h2>
+        <span style="font-size: 13px; color: var(--nw-text-3);">Simulación de autenticación OAuth</span>
+      </div>
+    </div>
+
+    <p style="color: var(--nw-text-2); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+      Ingresa el correo electrónico y nombre para crear tu cuenta con <strong>{{ socialProvider }}</strong>.
+    </p>
+
+    <div class="nw-form-group" style="margin-bottom: 14px;">
+      <label class="nw-label">Correo Electrónico</label>
+      <div class="nw-input-wrapper">
+        <input 
+          type="email" 
+          [(ngModel)]="socialForm.email" 
+          class="nw-input" 
+          placeholder="correo@ejemplo.com"
+          required>
+      </div>
+    </div>
+
+    <div class="nw-form-group" style="margin-bottom: 20px;">
+      <label class="nw-label">Nombre Completo</label>
+      <div class="nw-input-wrapper">
+        <input 
+          type="text" 
+          [(ngModel)]="socialForm.name" 
+          class="nw-input" 
+          placeholder="Tu Nombre">
+      </div>
+    </div>
+
+    <div class="nw-modal-actions">
+      <button type="button" class="nw-btn nw-btn-ghost" (click)="closeSocialModal()">Cancelar</button>
+      <button type="button" class="nw-btn nw-btn-primary" (click)="confirmSocialLogin()" [disabled]="!socialForm.email">
+        Crear cuenta
+      </button>
+    </div>
+  </div>
+</div>
+

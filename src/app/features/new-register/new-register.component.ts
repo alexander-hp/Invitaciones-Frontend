@@ -99,14 +99,33 @@ export class NewRegisterComponent implements OnInit, OnDestroy {
     this.form.role = role;
   }
 
+  showSocialModal = false;
+  socialProvider = '';
+  socialForm = { email: '', name: '' };
+
   socialLogin(provider: string): void {
-    const email = prompt(`Email de ${provider} para prueba/dev`);
-    if (!email) return;
-    const name = prompt('Nombre público de la cuenta') || email;
+    this.socialProvider = provider;
+    this.socialForm = {
+      email: `demo.${provider.toLowerCase()}@invitaciones.mx`,
+      name: `Usuario ${provider}`
+    };
+    this.showSocialModal = true;
+  }
+
+  closeSocialModal(): void {
+    this.showSocialModal = false;
+  }
+
+  confirmSocialLogin(): void {
+    if (!this.socialForm.email) return;
+    const email = this.socialForm.email.trim();
+    const name = this.socialForm.name.trim() || email;
+    const provider = this.socialProvider;
     const selected = this.accountTypes.find((item) => item.value === this.form.accountType);
     const role = selected?.role || 'client';
     const accountType = this.form.accountType || 'client';
-    
+
+    this.showSocialModal = false;
     this.loading = true;
     this.error = '';
     this.auth.socialLogin({
