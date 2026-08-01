@@ -29,11 +29,16 @@
 
       <!-- Check-in Action Card -->
       <section class="nw-card">
-        <form style="display: grid; gap: 16px; margin-bottom: 24px; grid-template-columns: 1fr auto; align-items: flex-end;" (ngSubmit)="checkIn()">
-          <label class="nw-label">
+        <form style="display: grid; gap: 12px; margin-bottom: 24px; grid-template-columns: 1fr auto auto; align-items: flex-end;" (ngSubmit)="checkIn()">
+          <label class="nw-label" style="grid-column: 1 / -1; margin-bottom: 0;">
             Escanear o Escribir Código QR / Entrada
-            <input class="nw-input" name="code" [(ngModel)]="code" autofocus placeholder="Escanea o escribe el código de la entrada...">
           </label>
+          <input class="nw-input" name="code" [(ngModel)]="code" autofocus placeholder="Escanea o escribe el código de la entrada...">
+          
+          <button class="nw-btn" type="button" (click)="openScanner()" style="background: var(--nw-surface-2, #f1f5f9); border: 1px solid var(--nw-border, #cbd5e1); color: var(--nw-text, #0f172a); display: inline-flex; align-items: center; gap: 6px;">
+            <span>📷</span> Abrir Cámara QR
+          </button>
+
           <button class="nw-btn nw-btn-primary" type="submit" [disabled]="checking || !code">
             {{ checking ? 'Registrando...' : 'Registrar entrada' }}
           </button>
@@ -77,4 +82,5 @@
       </section>
     </ng-container>
   </div>
+  <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
 </div>

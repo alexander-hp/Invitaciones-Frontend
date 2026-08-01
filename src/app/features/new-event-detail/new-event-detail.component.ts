@@ -79,6 +79,20 @@ export class NewEventDetailComponent implements OnInit {
   importDuplicateDetails: string[] = [];
   checkInCode = '';
   checkInLink = '';
+  showScanner = false;
+
+  openScanner(): void {
+    this.showScanner = true;
+  }
+
+  closeScanner(): void {
+    this.showScanner = false;
+  }
+
+  onQrScanned(scannedCode: string): void {
+    this.checkInCode = scannedCode;
+    this.checkInGuest();
+  }
   excludedGuestIds = new Set<string>();
   includePassInMessage = true;
   simulationMode = true;
@@ -124,11 +138,71 @@ export class NewEventDetailComponent implements OnInit {
   showGuestForm = false;
   editingGuest?: GuestModel;
   guestForm = {
-    name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '',
-    relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '',
+    name: '', email: '', phone: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
+    relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '',
     allowedCompanions: 0
   };
   companionNames = '';
+
+  // Guest form options
+  defaultGroupOptions: string[] = [
+    'Familia',
+    'Familia de la Novia',
+    'Familia del Novio',
+    'Amigos',
+    'Amigos de la Novia',
+    'Amigos del Novio',
+    'Trabajo / Colegas',
+    'VIP',
+    'Staff'
+  ];
+
+  get availableGroupOptions(): string[] {
+    const set = new Set([...this.defaultGroupOptions, ...this.guestGroups]);
+    return Array.from(set).filter(g => g && g !== 'General').sort();
+  }
+
+  relationshipOptions: string[] = [
+    'Invitado',
+    'Novio',
+    'Novia',
+    'Festejado(a)',
+    'Anfitrión / Anfitriona',
+    'Padrino',
+    'Madrina',
+    'Dama de Honor',
+    'Best Man',
+    'Papá de la Novia',
+    'Mamá de la Novia',
+    'Papá del Novio',
+    'Mamá del Novio',
+    'Padres',
+    'Hermano / Hermana',
+    'Testigo',
+    'Graduado(a)',
+    'VIP',
+    'Staff'
+  ];
+
+  visibilityOptions: Array<{ value: string; label: string }> = [
+    { value: 'general', label: 'General' },
+    { value: 'familia', label: 'Familia' },
+    { value: 'vip', label: 'VIP' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'anfitriones', label: 'Anfitriones' },
+    { value: 'mesa_principal', label: 'Mesa Principal' }
+  ];
+
+  roleOptions: Array<{ value: string; label: string }> = [
+    { value: 'invitado', label: 'Invitado' },
+    { value: 'anfitrion', label: 'Anfitrión' },
+    { value: 'padrino', label: 'Padrino' },
+    { value: 'dama_honor', label: 'Dama de honor' },
+    { value: 'familia', label: 'Familia' },
+    { value: 'graduado', label: 'Graduado' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'vip', label: 'VIP' }
+  ];
 
   // Guest filters
   guestSearch = '';
@@ -202,6 +276,75 @@ export class NewEventDetailComponent implements OnInit {
     moderationAutoApproveEmailsText: new FormControl(''),
     moderationAutoApprovePhonesText: new FormControl('')
   });
+
+  // Custom HTML/CSS Upload Demo
+  customHtmlCode = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitación Especial</title>
+</head>
+<body>
+  <div class="card">
+    <h1>✨ Nuestra Boda Especial</h1>
+    <p>¡Acompáñanos a celebrar este gran día!</p>
+    <button class="btn">Confirmar Asistencia</button>
+  </div>
+</body>
+</html>`;
+
+  customCssCode = `body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1f2a44 0%, #0f172a 100%);
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  max-width: 420px;
+}
+h1 {
+  color: #c9a85d;
+  margin-top: 0;
+}
+.btn {
+  background: #c9a85d;
+  color: #0f172a;
+  border: none;
+  padding: 12px 24px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+}`;
+
+  customValidationResult?: {
+    valid: boolean;
+    score: number;
+    warnings: string[];
+    details: {
+      htmlSize: string;
+      cssRulesCount: number;
+      metaTagsFound: string[];
+      hasDoctype: boolean;
+      hasBody: boolean;
+    };
+    message: string;
+  };
+  validatingCustomCode = false;
+  showCustomPagePreviewModal = false;
+  customPreviewViewport: 'desktop' | 'mobile' | 'tablet' = 'desktop';
+  customPublishSubmitted = false;
 
   private readonly imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
   private readonly audioTypes = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav']);
@@ -409,7 +552,35 @@ export class NewEventDetailComponent implements OnInit {
     return this.newEmbedWidgets;
   }
 
+  get demoInvitationUrl(): string {
+    if (!this.event?.externalPortalSlug) return '';
+    const slug = this.event.externalPortalSlug;
+    const type = (this.event.type || 'boda').toLowerCase().trim();
+    switch (type) {
+      case 'boda':
+        return `/assets/demo-integraciones-2.html?portal=${slug}`;
+      case 'xv':
+      case 'xv_anos':
+      case '15_anos':
+        return `/assets/demos/demo_XV.html?portal=${slug}`;
+      case 'cumpleanos':
+      case 'cumpleaños':
+      case 'cumple':
+        return `/assets/demos/demo_cumpleaños.html?portal=${slug}`;
+      case 'graduacion':
+      case 'graduación':
+        return `/assets/demos/demo_graducion.html?portal=${slug}`;
+      case 'bautizo':
+        return `/assets/demos/demo_bautizo.html?portal=${slug}`;
+      case 'otro':
+      case 'otros':
+      default:
+        return `/assets/demos/demo_otros.html?portal=${slug}`;
+    }
+  }
+
   // ── Invitation ──
+
 
   createInvitation(): void {
     if (!this.event) return;
@@ -470,19 +641,84 @@ export class NewEventDetailComponent implements OnInit {
     this.guestError = '';
     this.guestMessage = '';
     if (guest) {
+      const groupVal = guest.group || '';
+      const groupSel = !groupVal ? '' : (this.availableGroupOptions.includes(groupVal) ? groupVal : 'otro');
+
+      const relVal = guest.relationshipLabel || '';
+      const relSel = !relVal ? '' : (this.relationshipOptions.includes(relVal) ? relVal : 'otro');
+
+      const visVal = guest.visibilityGroup || '';
+      const visSel = !visVal ? '' : (this.visibilityOptions.some(o => o.value === visVal) ? visVal : 'otro');
+
+      const rolesVal = (guest.roles || []).join(', ');
+      const roleSel = !rolesVal ? '' : (this.roleOptions.some(o => o.value === rolesVal) ? rolesVal : 'otro');
+
       this.guestForm = {
-        name: guest.name, email: guest.email || '', phone: guest.phone || '',
-        group: guest.group || '', rolesText: (guest.roles || []).join(', '),
-        tagsText: (guest.tags || []).join(', '), relationshipLabel: guest.relationshipLabel || '',
-        visibilityGroup: guest.visibilityGroup || '', tableName: guest.tableName || '',
-        seatLabel: guest.seatLabel || '', allowedCompanions: guest.allowedCompanions || 0
+        name: guest.name,
+        email: guest.email || '',
+        phone: guest.phone || '',
+        group: groupVal,
+        groupSelect: groupSel,
+        rolesText: rolesVal,
+        roleSelect: roleSel,
+        tagsText: (guest.tags || []).join(', '),
+        relationshipLabel: relVal,
+        relationshipSelect: relSel,
+        visibilityGroup: visVal,
+        visibilitySelect: visSel,
+        tableName: guest.tableName || '',
+        seatLabel: guest.seatLabel || '',
+        allowedCompanions: guest.allowedCompanions || 0
       };
       this.companionNames = (guest.companions || []).map(c => c.name || '').filter(Boolean).join('\n');
     } else {
-      this.guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+      this.guestForm = {
+        name: '', email: '', phone: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
+        relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '', allowedCompanions: 0
+      };
       this.companionNames = '';
     }
     this.showGuestForm = true;
+  }
+
+  onGroupSelectChange(): void {
+    if (this.guestForm.groupSelect !== 'otro') {
+      this.guestForm.group = this.guestForm.groupSelect;
+    } else {
+      if (this.availableGroupOptions.includes(this.guestForm.group)) {
+        this.guestForm.group = '';
+      }
+    }
+  }
+
+  onRelationshipSelectChange(): void {
+    if (this.guestForm.relationshipSelect !== 'otro') {
+      this.guestForm.relationshipLabel = this.guestForm.relationshipSelect;
+    } else {
+      if (this.relationshipOptions.includes(this.guestForm.relationshipLabel)) {
+        this.guestForm.relationshipLabel = '';
+      }
+    }
+  }
+
+  onVisibilitySelectChange(): void {
+    if (this.guestForm.visibilitySelect !== 'otro') {
+      this.guestForm.visibilityGroup = this.guestForm.visibilitySelect;
+    } else {
+      if (this.visibilityOptions.some(o => o.value === this.guestForm.visibilityGroup)) {
+        this.guestForm.visibilityGroup = '';
+      }
+    }
+  }
+
+  onRoleSelectChange(): void {
+    if (this.guestForm.roleSelect !== 'otro') {
+      this.guestForm.rolesText = this.guestForm.roleSelect;
+    } else {
+      if (this.roleOptions.some(o => o.value === this.guestForm.rolesText)) {
+        this.guestForm.rolesText = '';
+      }
+    }
   }
 
   saveGuest(): void {
@@ -587,16 +823,21 @@ export class NewEventDetailComponent implements OnInit {
     });
   }
 
-  // ── Check-in ──
-
   checkInGuest(): void {
-    const code = this.checkInCode.trim();
-    if (!code) return;
+    const rawCode = this.checkInCode.trim();
+    if (!rawCode) return;
     this.guestError = '';
+
+    const normalized = rawCode.toLowerCase();
+    const candidate = this.guests.find(g =>
+      [g.checkInCode, g.qrCode, g.invitationToken, g._id, g.id].some(val => (val || '').toLowerCase() === normalized)
+    );
+    const code = candidate ? (candidate.checkInCode || candidate.qrCode || candidate.invitationToken || this.getGuestId(candidate)) : rawCode;
+
     this.api.checkInGuest(code).subscribe({
       next: ({ guest }) => {
         this.guests = this.guests.map(item => this.getGuestId(item) === this.getGuestId(guest) ? guest : item);
-        this.guestMessage = `${guest.name} marcado como registrado.`;
+        this.guestMessage = `${guest.name} marcado como registrado ✅`;
         this.checkInCode = '';
       },
       error: (err) => this.guestError = err.error?.message || 'No se pudo registrar el check-in.'
@@ -757,8 +998,8 @@ export class NewEventDetailComponent implements OnInit {
 
   getQrCodeUrl(guest?: GuestModel): string {
     if (!guest) return '';
-    const url = this.getPersonalizedPassUrl(guest);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    const value = guest.checkInCode || guest.qrCode || guest.invitationToken || this.getGuestId(guest);
+    return value ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(value)}` : '';
   }
 
   openPreviewModal(guest?: GuestModel, kind: 'email' | 'whatsapp' = 'email'): void {
@@ -1548,8 +1789,8 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   getQrImageUrl(guest: GuestModel): string {
-    const value = guest.checkInCode || guest.qrCode || this.getGuestId(guest);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(value)}`;
+    const value = guest.checkInCode || guest.qrCode || guest.invitationToken || this.getGuestId(guest);
+    return value ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(value)}` : '';
   }
 
   getPersonalizedPublicUrl(guest: GuestModel): string {
@@ -1880,6 +2121,128 @@ export class NewEventDetailComponent implements OnInit {
   private splitCsv(value: string): string[] {
     return (value || '').split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
   }
+
+  onCustomHtmlFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.customHtmlCode = String(e.target?.result || '');
+      this.validateCustomHtmlCss();
+    };
+    reader.readAsText(file);
+  }
+
+  onCustomCssFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.customCssCode = String(e.target?.result || '');
+      this.validateCustomHtmlCss();
+    };
+    reader.readAsText(file);
+  }
+
+  validateCustomHtmlCss(): void {
+    this.validatingCustomCode = true;
+    this.customValidationResult = undefined;
+
+    setTimeout(() => {
+      const html = this.customHtmlCode || '';
+      const css = this.customCssCode || '';
+
+      const hasDoctype = /<!DOCTYPE\s+html/i.test(html);
+      const hasBody = /<body[^>]*>/i.test(html) && /<\/body>/i.test(html);
+      const hasHead = /<head[^>]*>/i.test(html) && /<\/head>/i.test(html);
+      const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+      const metaTags: string[] = [];
+      if (titleMatch) metaTags.push(`Título: "${titleMatch[1]}"`);
+      if (/viewport/i.test(html)) metaTags.push('Viewport Móvil');
+      if (/charset/i.test(html)) metaTags.push('Charset UTF-8');
+
+      const cssRulesMatches = css.match(/([^{]+)\{([^}]+)\}/g) || [];
+      const cssRulesCount = cssRulesMatches.length;
+
+      const warnings: string[] = [];
+      if (!hasDoctype) warnings.push('Se recomienda incluir <!DOCTYPE html> al inicio del archivo.');
+      if (!hasBody) warnings.push('No se detectaron las etiquetas <body>...</body> completas.');
+      if (!hasHead) warnings.push('No se detectó el encabezado <head>...</head>.');
+      if (!titleMatch) warnings.push('Falta la etiqueta <title> en la cabecera HTML.');
+      if (css.trim().length === 0) warnings.push('No se ha proporcionado código de hojas de estilo CSS.');
+
+      const score = Math.max(20, 100 - (warnings.length * 15));
+      const valid = warnings.length <= 2 && html.trim().length > 20;
+
+      const htmlSizeKb = (new Blob([html]).size / 1024).toFixed(1) + ' KB';
+
+      this.customValidationResult = {
+        valid,
+        score,
+        warnings,
+        details: {
+          htmlSize: htmlSizeKb,
+          cssRulesCount,
+          metaTagsFound: metaTags,
+          hasDoctype,
+          hasBody
+        },
+        message: valid
+          ? '✅ HTML y CSS validados correctamente. ¡Código limpio y listo para ser publicado por KyndraSoft!'
+          : '⚠️ Se encontraron observaciones en la estructura HTML/CSS.'
+      };
+      this.validatingCustomCode = false;
+    }, 400);
+  }
+
+  getCustomPageFullHtml(): string {
+    const html = this.customHtmlCode || '';
+    const css = this.customCssCode || '';
+    if (html.includes('</head>')) {
+      return html.replace('</head>', `<style>\n${css}\n</style></head>`);
+    }
+    return `<!DOCTYPE html><html><head><style>\n${css}\n</style></head><body>${html}</body></html>`;
+  }
+
+  getCustomPageSafeSrcdoc(): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(this.getCustomPageFullHtml());
+  }
+
+  requestCustomPagePublish(): void {
+    if (!this.customValidationResult?.valid) {
+      this.validateCustomHtmlCss();
+    }
+    this.customPublishSubmitted = true;
+  }
+
+  getCustomAnswersList(r: RsvpModel): Array<{ label: string; value: string }> {
+    const list: Array<{ label: string; value: string }> = [];
+
+    if (r.customAnswers && r.customAnswers.length) {
+      r.customAnswers.forEach(ans => {
+        if (ans.value !== undefined && ans.value !== null && ans.value !== '') {
+          const valStr = typeof ans.value === 'boolean' ? (ans.value ? 'Sí' : 'No') : String(ans.value);
+          list.push({ label: ans.label || ans.key, value: valStr });
+        }
+      });
+    }
+
+    if (r.menuSelection && !list.some(i => i.label.toLowerCase().includes('menu') || i.label.toLowerCase().includes('menú'))) {
+      list.push({ label: 'Menú', value: r.menuSelection });
+    }
+    if (r.mealPreference && !list.some(i => i.label.toLowerCase().includes('comida') || i.label.toLowerCase().includes('preferencia'))) {
+      list.push({ label: 'Comida', value: r.mealPreference });
+    }
+    if (r.dietaryRestrictions && !list.some(i => i.label.toLowerCase().includes('alergia') || i.label.toLowerCase().includes('dieta'))) {
+      list.push({ label: 'Alergias / Dieta', value: r.dietaryRestrictions });
+    }
+
+    return list;
+  }
+
+
 
   moveSongRequest(songRequest: SongRequestModel, direction: -1 | 1): void {
     const songRequestId = songRequest._id || songRequest.id || '';

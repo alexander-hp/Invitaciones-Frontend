@@ -135,15 +135,19 @@
         </div>
 
         <!-- Registration input form -->
-        <div style="display: grid; gap: 16px; margin-bottom: 24px; grid-template-columns: 1fr auto; align-items: flex-end;">
-          <label class="nw-label">
+        <div style="display: grid; gap: 16px; margin-bottom: 24px; grid-template-columns: 1fr auto auto; align-items: flex-end;">
+          <label class="nw-label" style="grid-column: 1 / -1; margin-bottom: 0;">
             Código de Invitado
-            <input class="nw-input" name="checkInCode" [(ngModel)]="code" placeholder="Escribe o escanea el código (ej. QR)" (keyup.enter)="checkIn()">
           </label>
+          <input class="nw-input" name="checkInCode" [(ngModel)]="code" placeholder="Escribe o escanea el código (ej. QR)" (keyup.enter)="checkIn()">
+          <button class="nw-btn" type="button" (click)="openScanner()" style="background: var(--nw-surface-2, #f1f5f9); border: 1px solid var(--nw-border, #cbd5e1); color: var(--nw-text, #0f172a); display: inline-flex; align-items: center; gap: 6px;">
+            <span>📷</span> Abrir Cámara QR
+          </button>
           <button class="nw-btn nw-btn-primary" type="button" (click)="checkIn()" [disabled]="!code || checking">
             {{ checking ? 'Registrando...' : 'Registrar entrada' }}
           </button>
         </div>
+        <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
 
         <div style="border-top: 1px solid var(--nw-border); margin: 24px 0;"></div>
 

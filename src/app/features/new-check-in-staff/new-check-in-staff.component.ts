@@ -18,6 +18,20 @@ export class NewCheckInStaffComponent implements OnInit {
   checking = false;
   message = '';
   error = '';
+  showScanner = false;
+
+  openScanner(): void {
+    this.showScanner = true;
+  }
+
+  closeScanner(): void {
+    this.showScanner = false;
+  }
+
+  onQrScanned(scannedCode: string): void {
+    this.code = scannedCode;
+    this.checkIn(true);
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -48,19 +62,23 @@ export class NewCheckInStaffComponent implements OnInit {
     });
   }
 
-  async checkIn(): Promise<void> {
+  async checkIn(autoConfirm = false): Promise<void> {
     const token = this.token;
     const code = this.code.trim();
     if (!token || !code) return;
+
+    let codeToSend = code;
     const candidate = this.findGuestByCode(code);
     if (candidate) {
-      const ok = await this.confirmCheckIn(candidate);
+      codeToSend = this.getGuestCheckInCode(candidate);
+      const ok = await this.confirmCheckIn(candidate, autoConfirm);
       if (!ok) return;
     }
+
     this.checking = true;
     this.message = '';
     this.error = '';
-    this.api.staffCheckIn(token, code).subscribe({
+    this.api.staffCheckIn(token, codeToSend).subscribe({
       next: ({ guest }) => {
         this.guests = this.guests.map((item) =>
           this.getGuestId(item) === this.getGuestId(guest) ? guest : item
@@ -68,7 +86,7 @@ export class NewCheckInStaffComponent implements OnInit {
         if (!this.guests.some((item) => this.getGuestId(item) === this.getGuestId(guest))) {
           this.guests = [guest, ...this.guests];
         }
-        this.message = `${guest.name} registrado.`;
+        this.message = `${guest.name} registrado ✅`;
         this.code = '';
         this.checking = false;
       },
@@ -83,7 +101,7 @@ export class NewCheckInStaffComponent implements OnInit {
     const query = this.search.toLowerCase().trim();
     if (!query) return this.guests;
     return this.guests.filter((guest) =>
-      [guest.name, guest.group, guest.tableName, guest.checkInCode].some((value) =>
+      [guest.name, guest.group, guest.tableName, guest.checkInCode, guest.qrCode, guest.invitationToken].some((value) =>
         (value || '').toLowerCase().includes(query)
       )
     );
@@ -97,6 +115,10 @@ export class NewCheckInStaffComponent implements OnInit {
     return guest._id || guest.id || '';
   }
 
+  getGuestCheckInCode(guest: GuestModel): string {
+    return guest.checkInCode || guest.qrCode || guest.invitationToken || this.getGuestId(guest);
+  }
+
   statusLabel(guest: GuestModel): string {
     if (guest.checkedIn) return 'Ya registrado';
     if (guest.status === 'confirmed') return 'Confirmado';
@@ -107,11 +129,13 @@ export class NewCheckInStaffComponent implements OnInit {
   private findGuestByCode(code: string): GuestModel | undefined {
     const normalized = code.trim().toLowerCase();
     return this.guests.find((guest) =>
-      [guest.checkInCode, guest.qrCode].some((value) => (value || '').toLowerCase() === normalized)
+      [guest.checkInCode, guest.qrCode, guest.invitationToken, guest._id, guest.id].some(
+        (value) => (value || '').toLowerCase() === normalized
+      )
     );
   }
 
-  private async confirmCheckIn(guest: GuestModel): Promise<boolean> {
+  private async confirmCheckIn(guest: GuestModel, autoConfirm = false): Promise<boolean> {
     if (guest.checkedIn) {
       return this.confirmDialog.confirm({
         title: '⚠️ Ya registrado',
@@ -129,6 +153,9 @@ export class NewCheckInStaffComponent implements OnInit {
         cancelText: 'Cancelar',
         type: 'warning'
       });
+    }
+    if (autoConfirm) {
+      return true;
     }
     return this.confirmDialog.confirm({
       title: 'Confirmar entrada',

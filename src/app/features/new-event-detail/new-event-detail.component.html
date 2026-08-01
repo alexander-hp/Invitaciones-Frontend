@@ -86,40 +86,62 @@
           <div class="nw-card-header">
             <h3>Planes y Pagos</h3>
             <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
-            <span class="nw-pill warning" *ngIf="!currentPlan">Plan Gratuito</span>
+            <span class="nw-pill warning" *ngIf="!currentPlan && !eventPlanActive && !subscriptionActive">Plan Gratuito</span>
+            <span class="nw-pill success" *ngIf="eventPlanActive || subscriptionActive">Suscripción Activa ✅</span>
           </div>
-          <div style="margin-bottom:16px;">
-            <p *ngIf="eventPlanActive" class="nw-alert success" style="margin-bottom:12px;">¡Plan activo! Expiración: {{ formatShortDate(eventPlanExpiresAt) }}</p>
-            <p *ngIf="subscriptionActive" class="nw-alert info" style="margin-bottom:12px;">Suscripción Planner Pro activa.</p>
-            <p *ngIf="!eventPlanActive && !subscriptionActive" class="nw-alert warning" style="margin-bottom:12px; background:rgba(251,191,36,0.06); border:1px dashed rgba(251,191,36,0.3); color:var(--nw-warning);">Plan Gratuito. Activa un plan premium para funciones avanzadas.</p>
+
+          <!-- Si YA PAGÓ / Tiene Suscripción Activa -->
+          <div *ngIf="eventPlanActive || subscriptionActive" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--nw-radius-sm); padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">
+                ✓
+              </div>
+              <div>
+                <strong style="font-size: 16px; color: var(--nw-text); display: block;">Suscripción / Plan Activo</strong>
+                <p style="margin: 4px 0 0; font-size: 13.5px; color: var(--nw-text-2);">
+                  {{ subscriptionActive ? 'Suscripción Planner Pro activa con acceso ilimitado.' : 'Plan del evento activo' }}
+                  <span *ngIf="eventPlanExpiresAt"> · Vence: <strong>{{ formatShortDate(eventPlanExpiresAt) }}</strong></span>
+                </p>
+              </div>
+            </div>
+            <span class="nw-pill success" style="font-size: 13px; font-weight: 700; padding: 6px 14px;">
+              Premium Habilitado
+            </span>
           </div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>Evento Individual</strong>
-              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice(event.mode === 'external_dashboard' ? 'external_dashboard_12m' : 'event_12m') }}</span>
-              <span style="font-size:13px; color:var(--nw-text-3);">Pago único 12 meses</span>
-              <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('event_12m')">
-                {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (hasPendingPayment('event_12m') ? 'Pendiente' : (eventPlanActive ? 'Renovar' : 'Activar')) }}
-              </button>
-              <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('external_dashboard_12m')">
-                {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (hasPendingPayment('external_dashboard_12m') ? 'Pendiente' : (eventPlanActive ? 'Renovar Dashboard' : 'Activar Dashboard')) }}
-              </button>
+
+          <!-- Si AÚN NO HA PAGADO -->
+          <div *ngIf="!eventPlanActive && !subscriptionActive">
+            <div style="margin-bottom:16px;">
+              <p class="nw-alert warning" style="margin-bottom:12px; background:rgba(251,191,36,0.06); border:1px dashed rgba(251,191,36,0.3); color:var(--nw-warning);">Plan Gratuito. Activa un plan premium para funciones avanzadas.</p>
             </div>
-            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>Planner Pro (Mensual)</strong>
-              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_monthly') }}</span>
-              <span style="font-size:13px; color:var(--nw-text-3);">Acceso ilimitado</span>
-              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_monthly')" [disabled]="checkoutLoading !== '' || subscriptionActive || hasPendingPayment('planner_pro_monthly')">
-                {{ subscriptionActive ? 'Activa' : (hasPendingPayment('planner_pro_monthly') ? 'Pendiente' : 'Activar Pro') }}
-              </button>
-            </div>
-            <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>Planner Pro (Anual)</strong>
-              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_yearly') }}</span>
-              <span style="font-size:13px; color:var(--nw-text-3);">Ahorra hasta 20%</span>
-              <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_yearly')" [disabled]="checkoutLoading !== '' || subscriptionActive || hasPendingPayment('planner_pro_yearly')">
-                {{ subscriptionActive ? 'Activa' : (hasPendingPayment('planner_pro_yearly') ? 'Pendiente' : 'Activar Anual') }}
-              </button>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+              <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+                <strong>Evento Individual</strong>
+                <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice(event.mode === 'external_dashboard' ? 'external_dashboard_12m' : 'event_12m') }}</span>
+                <span style="font-size:13px; color:var(--nw-text-3);">Pago único 12 meses</span>
+                <button *ngIf="event.mode !== 'external_dashboard'" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('event_12m')">
+                  {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (hasPendingPayment('event_12m') ? 'Pendiente' : 'Activar') }}
+                </button>
+                <button *ngIf="event.mode === 'external_dashboard'" class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('external_dashboard_12m')">
+                  {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (hasPendingPayment('external_dashboard_12m') ? 'Pendiente' : 'Activar Dashboard') }}
+                </button>
+              </div>
+              <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+                <strong>Planner Pro (Mensual)</strong>
+                <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_monthly') }}</span>
+                <span style="font-size:13px; color:var(--nw-text-3);">Acceso ilimitado</span>
+                <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_monthly')" [disabled]="checkoutLoading !== '' || hasPendingPayment('planner_pro_monthly')">
+                  {{ hasPendingPayment('planner_pro_monthly') ? 'Pendiente' : 'Activar Pro' }}
+                </button>
+              </div>
+              <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+                <strong>Planner Pro (Anual)</strong>
+                <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_yearly') }}</span>
+                <span style="font-size:13px; color:var(--nw-text-3);">Ahorra hasta 20%</span>
+                <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_yearly')" [disabled]="checkoutLoading !== '' || hasPendingPayment('planner_pro_yearly')">
+                  {{ hasPendingPayment('planner_pro_yearly') ? 'Pendiente' : 'Activar Anual' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -234,20 +256,22 @@
               </div>
             </div>
 
-            <!-- Checkboxes de Permisos Granulares -->
+            <!-- Checkboxes de Permisos Granulares (Estilo Switch) -->
             <div style="margin-bottom:16px;">
               <span class="nw-label" style="font-weight:600; margin-bottom:8px; display:block;">Permisos asignados:</span>
-              <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(135px, 1fr)); gap:8px;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
                 <label *ngFor="let permission of eventPermissions" 
                        [style.borderColor]="memberForm.permissions.includes(permission) ? 'var(--nw-accent)' : 'var(--nw-border)'"
                        [style.background]="memberForm.permissions.includes(permission) ? 'var(--nw-accent-glow)' : 'var(--nw-surface)'"
                        [style.color]="memberForm.permissions.includes(permission) ? 'var(--nw-text)' : 'var(--nw-text-2)'"
-                       style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; padding:8px 10px; border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); user-select:none; transition: all var(--nw-duration) var(--nw-ease);">
-                  <input type="checkbox" 
-                         [checked]="memberForm.permissions.includes(permission)" 
-                         (change)="toggleMemberPermission(permission, $any($event.target).checked)"
-                         style="cursor:pointer; margin:0; accent-color: var(--nw-accent);">
+                       style="display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; cursor:pointer; padding:8px 12px; border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); user-select:none; transition: all var(--nw-duration) var(--nw-ease);">
                   <span style="font-weight:600;">{{ permissionLabel(permission) }}</span>
+                  <span class="nw-switch" style="width:36px; height:20px; flex-shrink:0;">
+                    <input type="checkbox" 
+                           [checked]="memberForm.permissions.includes(permission)" 
+                           (change)="toggleMemberPermission(permission, $any($event.target).checked)">
+                    <span class="nw-slider" style="border-radius:20px;"></span>
+                  </span>
                 </label>
               </div>
             </div>
@@ -415,10 +439,14 @@
         </ul>
 
         <!-- Check-in manual -->
-        <div style="display:flex; gap:8px; margin-bottom:14px; align-items:center;">
+        <div style="display:flex; gap:8px; margin-bottom:14px; align-items:center; flex-wrap:wrap;">
           <input class="nw-input" [(ngModel)]="checkInCode" placeholder="🔍 QR/código check-in" style="max-width:260px;">
+          <button class="nw-btn nw-btn-sm" type="button" (click)="openScanner()" style="background:var(--nw-surface-2, #f1f5f9); border:1px solid var(--nw-border, #cbd5e1); color:var(--nw-text, #0f172a); display:inline-flex; align-items:center; gap:4px;">
+            📷 Abrir Cámara QR
+          </button>
           <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkInGuest()" [disabled]="!checkInCode">Registrar entrada</button>
         </div>
+        <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
 
         <!-- Stats -->
         <div style="display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap;">
@@ -488,10 +516,49 @@
               <label class="nw-label nw-form-wide">Nombre <input class="nw-input" [(ngModel)]="guestForm.name" placeholder="Nombre completo"></label>
               <label class="nw-label">Email <input class="nw-input" [(ngModel)]="guestForm.email" placeholder="correo@ejemplo.com"></label>
               <label class="nw-label">Teléfono <input class="nw-input" [(ngModel)]="guestForm.phone" placeholder="+52 1234567890"></label>
-              <label class="nw-label">Grupo <input class="nw-input" [(ngModel)]="guestForm.group" placeholder="Familia, Amigos..."></label>
-              <label class="nw-label">Rol visible <input class="nw-input" [(ngModel)]="guestForm.relationshipLabel" placeholder="Dama de honor, padrino..."></label>
-              <label class="nw-label">Visibilidad <input class="nw-input" [(ngModel)]="guestForm.visibilityGroup" placeholder="familia, vip, staff"></label>
-              <label class="nw-label nw-form-wide">Roles <textarea class="nw-input" rows="2" [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor, familia, graduado, staff, vip"></textarea></label>
+              <!-- Grupo -->
+              <label class="nw-label">
+                Grupo
+                <select class="nw-select" [(ngModel)]="guestForm.groupSelect" (change)="onGroupSelectChange()">
+                  <option value="">-- Seleccionar grupo --</option>
+                  <option *ngFor="let opt of availableGroupOptions" [value]="opt">{{ opt }}</option>
+                  <option value="otro">✨ Otro (Escribir personalizado)...</option>
+                </select>
+                <input *ngIf="guestForm.groupSelect === 'otro'" class="nw-input" style="margin-top:6px;" [(ngModel)]="guestForm.group" placeholder="Escribe el nombre del grupo...">
+              </label>
+
+              <!-- Rol Visible -->
+              <label class="nw-label">
+                Rol visible
+                <select class="nw-select" [(ngModel)]="guestForm.relationshipSelect" (change)="onRelationshipSelectChange()">
+                  <option value="">-- Seleccionar rol visible --</option>
+                  <option *ngFor="let opt of relationshipOptions" [value]="opt">{{ opt }}</option>
+                  <option value="otro">✨ Otro (Escribir personalizado)...</option>
+                </select>
+                <input *ngIf="guestForm.relationshipSelect === 'otro'" class="nw-input" style="margin-top:6px;" [(ngModel)]="guestForm.relationshipLabel" placeholder="Dama de honor, padrino...">
+              </label>
+
+              <!-- Visibilidad -->
+              <label class="nw-label">
+                Visibilidad
+                <select class="nw-select" [(ngModel)]="guestForm.visibilitySelect" (change)="onVisibilitySelectChange()">
+                  <option value="">-- Seleccionar visibilidad --</option>
+                  <option *ngFor="let opt of visibilityOptions" [value]="opt.value">{{ opt.label }}</option>
+                  <option value="otro">✨ Otro (Escribir personalizado)...</option>
+                </select>
+                <input *ngIf="guestForm.visibilitySelect === 'otro'" class="nw-input" style="margin-top:6px;" [(ngModel)]="guestForm.visibilityGroup" placeholder="familia, vip, staff...">
+              </label>
+
+              <!-- Roles -->
+              <label class="nw-label nw-form-wide">
+                Roles
+                <select class="nw-select" [(ngModel)]="guestForm.roleSelect" (change)="onRoleSelectChange()">
+                  <option value="">-- Seleccionar rol principal --</option>
+                  <option *ngFor="let opt of roleOptions" [value]="opt.value">{{ opt.label }}</option>
+                  <option value="otro">✨ Otro (Personalizado / Múltiples roles)...</option>
+                </select>
+                <input *ngIf="guestForm.roleSelect === 'otro'" class="nw-input" style="margin-top:6px;" [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor, familia, graduado, staff, vip">
+              </label>
               <label class="nw-label nw-form-wide">Tags <textarea class="nw-input" rows="2" [(ngModel)]="guestForm.tagsText" placeholder="mesa_vip, lado_novia, hotel, after"></textarea></label>
               <label class="nw-label">Mesa <input class="nw-input" [(ngModel)]="guestForm.tableName" placeholder="Mesa 1"></label>
               <label class="nw-label">Asiento <input class="nw-input" [(ngModel)]="guestForm.seatLabel" placeholder="A1"></label>
@@ -689,18 +756,38 @@
         <div class="nw-table-wrap" *ngIf="rsvps.length > 0">
           <table class="nw-table">
             <thead>
-              <tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Respuesta</th><th>Acomp.</th><th>Comida</th><th>Mensaje</th><th>Fecha</th></tr>
+              <tr>
+                <th>Nombre</th>
+                <th>Contacto</th>
+                <th>Respuesta</th>
+                <th>Acompañantes</th>
+                <th>Preguntas y respuestas personalizadas</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+              </tr>
             </thead>
             <tbody>
               <tr *ngFor="let r of rsvps">
-                <td><strong>{{ r.name }}</strong></td>
-                <td style="color:var(--nw-text-2)">{{ r.email || '—' }}</td>
-                <td style="color:var(--nw-text-2)">{{ r.phoneE164 || '—' }}</td>
-                <td><span class="nw-pill" [ngClass]="statusPillClass(r.response)">{{ statusLabel(r.response) }}</span></td>
-                <td>{{ r.companions || 0 }}</td>
-                <td style="color:var(--nw-text-2)">{{ r.mealPreference || '—' }}</td>
-                <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--nw-text-2)">{{ r.message || '—' }}</td>
-                <td style="color:var(--nw-text-3)">{{ formatShortDate(r.createdAt || '') }}</td>
+                <td style="white-space:nowrap;"><strong>{{ r.name }}</strong></td>
+                <td style="color:var(--nw-text-2); font-size:13px; white-space:nowrap;">
+                  {{ r.email || r.phoneE164 || r.phone || '—' }}
+                  <small *ngIf="r.email && (r.phoneE164 || r.phone)" style="display:block; color:var(--nw-text-3); font-size:11px;">{{ r.phoneE164 || r.phone }}</small>
+                </td>
+                <td style="white-space:nowrap;"><span class="nw-pill" [ngClass]="statusPillClass(r.response)">{{ statusLabel(r.response) }}</span></td>
+                <td style="white-space:nowrap;">
+                  {{ r.companions || 0 }}
+                  <small *ngIf="r.companionNames?.length" style="display:block; color:var(--nw-text-3); font-size:11px;">({{ r.companionNames?.join(', ') }})</small>
+                </td>
+                <td>
+                  <div *ngIf="getCustomAnswersList(r).length > 0" style="display:flex; flex-direction:column; gap:4px; max-width:320px;">
+                    <span *ngFor="let qa of getCustomAnswersList(r)" class="nw-pill" style="font-size:11.5px; padding:3px 8px; line-height:1.3; text-align:left; background:var(--nw-surface-2); border:1px solid var(--nw-border); display:inline-block; word-break:break-word;">
+                      <strong style="color:var(--nw-accent);">{{ qa.label }}:</strong> {{ qa.value }}
+                    </span>
+                  </div>
+                  <span *ngIf="getCustomAnswersList(r).length === 0" style="color:var(--nw-text-3)">—</span>
+                </td>
+                <td style="max-width:220px; color:var(--nw-text-2); font-size:13px;">{{ r.message || '—' }}</td>
+                <td style="color:var(--nw-text-3); font-size:12px; white-space:nowrap;">{{ formatShortDate(r.createdAt || '') }}</td>
               </tr>
             </tbody>
           </table>
@@ -1046,7 +1133,7 @@
           <h3 style="margin:0;">🔌 Integración externa</h3>
           <div style="display:flex; gap:8px;">
             <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-gold nw-btn-sm" [href]="'/assets/demo-integraciones.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">🌐 Ver Demo de Integraciones</a>
-            <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary nw-btn-sm" [href]="'/assets/demo-integraciones-2.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">💌 Ver Demo de Invitación Completa</a>
+            <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary nw-btn-sm" [href]="demoInvitationUrl" target="_blank" style="text-decoration:none;">💌 Ver Demo de Invitación Completa</a>
           </div>
         </div>
         <p *ngIf="externalSuccess" class="nw-alert success" style="margin-bottom:14px;">{{ externalSuccess }}</p>
@@ -1071,25 +1158,122 @@
             </div>
             <p *ngIf="externalAssetUploading" style="color:var(--nw-text-3); font-size:13px;">Subiendo {{ externalAssetUploading }}...</p>
 
-            <div style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 12px; align-items:center;">
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="externalPortalEnabled"> Portal activo</label>
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="songRequestsEnabled"> Solicitudes DJ</label>
-              <label class="nw-label" style="width:80px;">Max canciones <input class="nw-input" formControlName="songRequestsMax" type="number" min="1" max="20"></label>
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="songRequestsDedications"> Dedicatoria en DJ</label>
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="songRequestsRequireApproval"> Revisar canciones</label>
-            </div>
+            <!-- Configuración de Módulos e Integraciones con switches -->
+            <div class="nw-card" style="background:var(--nw-surface-2); padding:16px; margin:16px 0;">
+              <h4 style="margin:0 0 12px 0; font-size:15px; font-weight:700;">⚙️ Módulos e Integraciones</h4>
 
-            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="dedicationsEnabled"> Dedicatorias</label>
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="dedicationsRequireApproval"> Requieren aprobación</label>
-              <label class="nw-label nw-form-wide">Texto intro dedicatorias <textarea class="nw-input" formControlName="dedicationsIntroText" rows="2"></textarea></label>
-            </div>
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:16px;">
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Portal activo</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Habilitar portal KyndraSoft</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="externalPortalEnabled">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
 
-            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="giftEnabled"> Regalos</label>
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="giftShowRegistry"> Mostrar mesas</label>
-              <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" formControlName="giftShowEnvelope"> Sobre digital</label>
-              <label class="nw-label nw-form-wide">Texto intro regalos <textarea class="nw-input" formControlName="giftIntroText" rows="2"></textarea></label>
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Solicitudes DJ</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Pedir canciones</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="songRequestsEnabled">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Dedicatoria en DJ</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Mensajes en canciones</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="songRequestsDedications">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Revisar canciones</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Aprobación previa</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="songRequestsRequireApproval">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Dedicatorias</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Sección de dedicatorias</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="dedicationsEnabled">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Aprobar dedicatorias</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Revisión previa</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="dedicationsRequireApproval">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Mesa de regalos</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Sección de obsequios</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="giftEnabled">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Mostrar mesas</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Ver tiendas de regalo</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="giftShowRegistry">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+
+                <div class="nw-toggle-row" style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
+                  <div class="nw-toggle-info">
+                    <strong style="font-size:13px;">Sobre digital</strong>
+                    <span style="font-size:11px; color:var(--nw-text-3);">Datos bancarios/CLABE</span>
+                  </div>
+                  <label class="nw-switch">
+                    <input type="checkbox" formControlName="giftShowEnvelope">
+                    <span class="nw-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="nw-form-grid">
+                <label class="nw-label">Max canciones DJ
+                  <input class="nw-input" formControlName="songRequestsMax" type="number" min="1" max="20">
+                </label>
+                <label class="nw-label nw-form-wide">Texto intro dedicatorias
+                  <textarea class="nw-input" formControlName="dedicationsIntroText" rows="2"></textarea>
+                </label>
+                <label class="nw-label nw-form-wide">Texto intro regalos
+                  <textarea class="nw-input" formControlName="giftIntroText" rows="2"></textarea>
+                </label>
+              </div>
             </div>
 
             <!-- Sobre digital -->
@@ -1374,7 +1558,7 @@
             <h3>API + Widgets</h3>
             <div style="display:flex; gap:8px;">
               <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-gold nw-btn-sm" [href]="'/assets/demo-integraciones.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">🌐 Ver Demo de Integraciones</a>
-              <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary nw-btn-sm" [href]="'/assets/demo-integraciones-2.html?portal=' + event.externalPortalSlug" target="_blank" style="text-decoration:none;">💌 Ver Demo de Invitación Completa</a>
+              <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary nw-btn-sm" [href]="demoInvitationUrl" target="_blank" style="text-decoration:none;">💌 Ver Demo de Invitación Completa</a>
             </div>
           </div>
           <p style="color:var(--nw-text-3); font-size:14px; margin-bottom:12px;">Usa iframe para Webflow/WordPress o JSON para React, Angular.</p>
@@ -1402,6 +1586,128 @@
                 <p style="color:var(--nw-text-3); margin:4px 0 0; word-break:break-all;">{{ newExternalPortalUrl }}</p>
                 <textarea readonly rows="2" style="width:100%; font-size:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:6px; color:var(--nw-text-2); margin-top:8px;">{{ newRsvpIframeSnippet }}</textarea>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════ NUEVA SECCIÓN: NOSOTROS SUBIMOS TU PÁGINA ═══════════════ -->
+        <div class="nw-card" style="margin-bottom:16px; border-top: 4px solid var(--nw-accent); padding:24px;">
+          <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:28px;">☁️</span>
+              <div>
+                <h3 style="margin:0; font-size:18px; font-weight:700;">Nosotros subimos tu página (HTML / CSS)</h3>
+                <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-2);">Sube o pega tus archivos HTML y CSS personalizados. Nuestro validador verificará la estructura y podrás previsualizar tu sitio web en tiempo real.</p>
+              </div>
+            </div>
+            <span class="nw-pill accent" style="font-weight:700;">🚀 Servicio de Alojamiento</span>
+          </div>
+
+          <!-- Archivos e Ingreso de Código -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:16px; margin-top:16px;">
+            <!-- HTML Editor & File Upload -->
+            <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="nw-label" style="font-weight:700; margin:0;">📄 Código HTML (.html)</label>
+                <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:12px;">
+                  📂 Cargar archivo HTML
+                  <input type="file" accept=".html,.htm" (change)="onCustomHtmlFileSelected($event)" style="display:none;">
+                </label>
+              </div>
+              <textarea class="nw-input" rows="8" [(ngModel)]="customHtmlCode" placeholder="<!DOCTYPE html>&#10;<html>&#10;  <body>...</body>&#10;</html>" style="font-family:monospace; font-size:12.5px; line-height:1.45; white-space:pre; resize:vertical; background:var(--nw-surface);"></textarea>
+            </div>
+
+            <!-- CSS Editor & File Upload -->
+            <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="nw-label" style="font-weight:700; margin:0;">🎨 Estilos CSS (.css)</label>
+                <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:12px;">
+                  📂 Cargar archivo CSS
+                  <input type="file" accept=".css" (change)="onCustomCssFileSelected($event)" style="display:none;">
+                </label>
+              </div>
+              <textarea class="nw-input" rows="8" [(ngModel)]="customCssCode" placeholder="body {&#10;  background: #1f2a44;&#10;  color: #ffffff;&#10;}" style="font-family:monospace; font-size:12.5px; line-height:1.45; white-space:pre; resize:vertical; background:var(--nw-surface);"></textarea>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; align-items:center;">
+            <button class="nw-btn nw-btn-primary" type="button" (click)="validateCustomHtmlCss()" [disabled]="validatingCustomCode">
+              {{ validatingCustomCode ? '🔍 Validando...' : '🔍 Validar Código HTML & CSS' }}
+            </button>
+            <button class="nw-btn nw-btn-ghost" type="button" (click)="showCustomPagePreviewModal = true" [disabled]="!customHtmlCode.trim()">
+              👁️ Previsualizar Página Web
+            </button>
+            <button class="nw-btn nw-btn-gold" type="button" (click)="requestCustomPagePublish()" style="margin-left:auto;">
+              🚀 Solicitar Publicación por KyndraSoft
+            </button>
+          </div>
+
+          <!-- Resultado de la Validación -->
+          <div *ngIf="customValidationResult" style="margin-top:16px; padding:16px; border-radius:var(--nw-radius-sm); border:1px solid;"
+               [style.borderColor]="customValidationResult.valid ? 'rgba(74, 127, 98, 0.4)' : 'rgba(239, 68, 68, 0.4)'"
+               [style.background]="customValidationResult.valid ? 'rgba(74, 127, 98, 0.06)' : 'rgba(239, 68, 68, 0.06)'">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+              <strong style="font-size:14.5px;" [style.color]="customValidationResult.valid ? 'var(--nw-success)' : 'var(--nw-danger)'">
+                {{ customValidationResult.message }}
+              </strong>
+              <span class="nw-pill" [class.success]="customValidationResult.valid" [class.danger]="!customValidationResult.valid" style="font-weight:700;">
+                Puntuación de Código: {{ customValidationResult.score }} / 100
+              </span>
+            </div>
+
+            <!-- Detalles de Validación -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:10px; font-size:12.5px;">
+              <div><strong>Tamaño HTML:</strong> {{ customValidationResult.details.htmlSize }}</div>
+              <div><strong>Reglas CSS:</strong> {{ customValidationResult.details.cssRulesCount }} reglas</div>
+              <div><strong>Estructura DOCTYPE:</strong> {{ customValidationResult.details.hasDoctype ? '✅ Presente' : '⚠️ Opcional' }}</div>
+              <div><strong>Estructura BODY:</strong> {{ customValidationResult.details.hasBody ? '✅ Completo' : '⚠️ Sin etiqueta body' }}</div>
+            </div>
+
+            <div *ngIf="customValidationResult.details.metaTagsFound.length" style="font-size:12px; color:var(--nw-text-2); margin-top:6px;">
+              <strong>Etiquetas detectadas:</strong> {{ customValidationResult.details.metaTagsFound.join(' · ') }}
+            </div>
+
+            <ul *ngIf="customValidationResult.warnings.length" style="margin:8px 0 0; padding-left:20px; font-size:12.5px; color:var(--nw-warning);">
+              <li *ngFor="let w of customValidationResult.warnings">{{ w }}</li>
+            </ul>
+          </div>
+
+          <!-- Mensaje de Confirmación de Solicitud de Publicación -->
+          <div *ngIf="customPublishSubmitted" class="nw-alert success" style="margin-top:16px; padding:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:24px;">🎉</span>
+              <div>
+                <strong>¡Solicitud de publicación registrada exitosamente!</strong>
+                <p style="margin:4px 0 0; font-size:13px;">Tus archivos HTML y CSS han sido enviados al equipo de KyndraSoft. Verificaremos los enlaces e integraciones y los publicaremos en tu dominio en menos de 24 horas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Previsualización en Vivo de la Página Web Personalizada -->
+        <div class="nw-modal-backdrop" *ngIf="showCustomPagePreviewModal" (click)="showCustomPagePreviewModal = false">
+          <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width:980px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div>
+                <h2 style="margin:0; font-size:18px;">👁️ Previsualizador de Página Web HTML/CSS</h2>
+                <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-3);">Así es como tus invitados visualizarán tu sitio web personalizado.</p>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="customPreviewViewport === 'desktop'" [class.nw-btn-ghost]="customPreviewViewport !== 'desktop'" (click)="customPreviewViewport = 'desktop'">💻 Escritorio</button>
+                <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="customPreviewViewport === 'tablet'" [class.nw-btn-ghost]="customPreviewViewport !== 'tablet'" (click)="customPreviewViewport = 'tablet'">📱 Tablet</button>
+                <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="customPreviewViewport === 'mobile'" [class.nw-btn-ghost]="customPreviewViewport !== 'mobile'" (click)="customPreviewViewport = 'mobile'">📱 Móvil</button>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showCustomPagePreviewModal = false">✕ Cerrar</button>
+              </div>
+            </div>
+
+            <!-- Content iFrame Wrapper -->
+            <div style="flex:1; background:#000000; border-radius:var(--nw-radius-sm); overflow:hidden; display:flex; justify-content:center; align-items:center; padding:10px;">
+              <iframe [srcdoc]="getCustomPageSafeSrcdoc()"
+                      style="background:#ffffff; border:none; transition: width 0.3s ease, height 0.3s ease; border-radius:6px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);"
+                      [style.width]="customPreviewViewport === 'mobile' ? '375px' : (customPreviewViewport === 'tablet' ? '768px' : '100%')"
+                      [style.height]="customPreviewViewport === 'mobile' ? '667px' : '100%'">
+              </iframe>
             </div>
           </div>
         </div>

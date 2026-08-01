@@ -16,6 +16,20 @@ export class NewEventAccessComponent implements OnInit {
   search = '';
   message = '';
   error = '';
+  showScanner = false;
+
+  openScanner(): void {
+    this.showScanner = true;
+  }
+
+  closeScanner(): void {
+    this.showScanner = false;
+  }
+
+  onQrScanned(scannedCode: string): void {
+    this.code = scannedCode;
+    this.checkIn();
+  }
 
   // DJ tab / section state
   songFilter: 'all' | 'pending' | 'approved' | 'played' | 'rejected' = 'all';
@@ -53,30 +67,34 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
-  async checkIn(): Promise<void> {
+  async checkIn(autoConfirm = false): Promise<void> {
     const code = this.code.trim();
     if (!code) return;
+
+    let codeToSend = code;
     const candidate = this.findGuestByCode(code);
     if (candidate) {
-      const ok = await this.confirmCheckIn(candidate);
+      codeToSend = candidate.checkInCode || candidate.qrCode || candidate.invitationToken || this.getGuestId(candidate);
+      const ok = await this.confirmCheckIn(candidate, autoConfirm);
       if (!ok) return;
     }
+
     this.checking = true;
     this.message = '';
     this.error = '';
-    this.api.eventAccessCheckIn(this.token, code).subscribe({
+    this.api.eventAccessCheckIn(this.token, codeToSend).subscribe({
       next: ({ guest }) => {
         if (this.session) {
           this.session.guests = this.session.guests.map((item) =>
             this.getGuestId(item) === this.getGuestId(guest) ? guest : item
           );
         }
-        this.message = `${guest.name} registrado.`;
+        this.message = `${guest.name} registrado ✅`;
         this.code = '';
         this.checking = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo registrar.';
+        this.error = error.error?.message || 'No se pudo registrar la entrada.';
         this.checking = false;
       }
     });
@@ -218,11 +236,13 @@ export class NewEventAccessComponent implements OnInit {
   private findGuestByCode(code: string): GuestModel | undefined {
     const normalized = code.trim().toLowerCase();
     return (this.session?.guests || []).find((guest) =>
-      [guest.checkInCode, guest.qrCode].some((value) => (value || '').toLowerCase() === normalized)
+      [guest.checkInCode, guest.qrCode, guest.invitationToken, guest._id, guest.id].some(
+        (value) => (value || '').toLowerCase() === normalized
+      )
     );
   }
 
-  private async confirmCheckIn(guest: GuestModel): Promise<boolean> {
+  private async confirmCheckIn(guest: GuestModel, autoConfirm = false): Promise<boolean> {
     if (guest.checkedIn) {
       return this.confirmDialog.confirm({
         title: '⚠️ Ya registrado',
@@ -240,6 +260,9 @@ export class NewEventAccessComponent implements OnInit {
         cancelText: 'Cancelar',
         type: 'warning'
       });
+    }
+    if (autoConfirm) {
+      return true;
     }
     return this.confirmDialog.confirm({
       title: 'Confirmar entrada',
