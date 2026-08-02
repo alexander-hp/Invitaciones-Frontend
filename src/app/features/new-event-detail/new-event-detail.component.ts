@@ -95,7 +95,7 @@ export class NewEventDetailComponent implements OnInit {
   }
   excludedGuestIds = new Set<string>();
   includePassInMessage = true;
-  simulationMode = true;
+  simulationMode = false;
   showPreviewModal = false;
   previewModalKind: 'email' | 'whatsapp' = 'email';
   previewGuest?: GuestModel;
