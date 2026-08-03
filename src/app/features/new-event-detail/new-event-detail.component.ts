@@ -18,6 +18,7 @@ import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { generateGuestPassHtml } from '../new-public-invitation/guest-pass-template';
 
 interface MessageTemplateOption { value: GuestMessageType; label: string; }
+interface WhatsAppPremiumSegmentOption { key: string; label: string; count: number; }
 
 type Tab = 'info' | 'guests' | 'tables' | 'rsvps' | 'album' | 'communication' | 'dedications' | 'dj' | 'integration';
 
@@ -114,6 +115,9 @@ export class NewEventDetailComponent implements OnInit {
     enabled: false, assetId: '', type: 'image' as WhatsAppMediaType,
     url: '', mimetype: '', filename: '', caption: ''
   };
+  readonly whatsappPremiumMediaLimit = 30;
+  whatsappBulkDeliveryMode: 'safe' | 'premium' = 'safe';
+  whatsappPremiumSegmentKeys: string[] = ['role:vip', 'role:familia', 'role:padrino', 'role:dama_honor', 'role:anfitrion'];
   selectedMessageType: GuestMessageType = 'invitation';
   messageTemplates: MessageTemplateOption[] = [
     { value: 'invitation', label: 'Invitación' },
@@ -479,6 +483,48 @@ h1 {
 
   get whatsappRecipientCount(): number { return this.activeRecipients.filter(g => this.canWhatsappGuest(g)).length; }
   get whatsappMissingPhoneCount(): number { return this.activeRecipients.filter(g => !this.toWhatsappPhone(g.phone)).length; }
+
+  get whatsappTargetGuests(): GuestModel[] {
+    return this.activeRecipients.filter(g => this.canWhatsappGuest(g));
+  }
+
+  get whatsappPremiumSegmentOptions(): WhatsAppPremiumSegmentOption[] {
+    const targetGuests = this.whatsappTargetGuests;
+    const roleOptions = this.roleOptions
+      .filter(option => option.value !== 'invitado')
+      .map(option => ({
+        key: `role:${option.value}`,
+        label: `Rol: ${option.label}`,
+        count: targetGuests.filter(guest => (guest.roles || []).includes(option.value)).length
+      }));
+    const groupOptions = this.guestGroups
+      .filter(group => group && group !== 'General')
+      .map(group => ({
+        key: `group:${group}`,
+        label: `Grupo: ${group}`,
+        count: targetGuests.filter(guest => (guest.group || 'General') === group).length
+      }));
+    return [...roleOptions, ...groupOptions].filter(option => option.count > 0);
+  }
+
+  get whatsappPremiumMediaGuests(): GuestModel[] {
+    if (this.whatsappBulkDeliveryMode !== 'premium') return [];
+    return this.whatsappTargetGuests.filter(guest => this.guestMatchesPremiumSegments(guest));
+  }
+
+  get whatsappSafeMessageGuests(): GuestModel[] {
+    if (this.whatsappBulkDeliveryMode !== 'premium') return this.whatsappTargetGuests;
+    const premiumIds = new Set(this.whatsappPremiumMediaGuests.map(guest => this.getGuestId(guest)));
+    return this.whatsappTargetGuests.filter(guest => !premiumIds.has(this.getGuestId(guest)));
+  }
+
+  get whatsappPremiumMediaOverLimit(): number {
+    return Math.max(0, this.whatsappPremiumMediaGuests.length - this.whatsappPremiumMediaLimit);
+  }
+
+  get whatsappPremiumMediaReady(): boolean {
+    return Boolean(this.buildWhatsappMediaPayload());
+  }
 
   // External form getters
   get carouselItems(): FormArray { return this.externalForm.get('carousel') as FormArray; }
@@ -1220,6 +1266,33 @@ h1 {
       this.guestError = `WhatsApp no listo (${this.openWaStatus}).`;
       return;
     }
+    const media = this.buildWhatsappMediaPayload();
+    const usePremiumMedia = this.whatsappBulkDeliveryMode === 'premium';
+    const premiumGuests = usePremiumMedia ? this.whatsappPremiumMediaGuests : [];
+    const safeGuests = usePremiumMedia ? this.whatsappSafeMessageGuests : targetGuests;
+    if (usePremiumMedia) {
+      if (!this.whatsappMedia.enabled || !media) { this.guestError = 'Para enviar imagen premium selecciona o sube una media valida.'; return; }
+      if (!premiumGuests.length) { this.guestError = 'Selecciona al menos un rol o grupo para recibir imagen.'; return; }
+      if (premiumGuests.length > this.whatsappPremiumMediaLimit) {
+        this.guestError = `La imagen aplica maximo para ${this.whatsappPremiumMediaLimit} invitados. Quita segmentos o deja invitados fuera.`;
+        return;
+      }
+      this.confirmDialog.confirm({
+        title: 'Enviar WhatsApp premium',
+        message: `Se enviara imagen a ${premiumGuests.length} invitado(s) especiales y mensaje seguro con link a ${safeGuests.length}. La pagina digital sigue siendo la experiencia principal.`,
+        confirmText: 'Enviar masivo',
+        cancelText: 'Cancelar',
+        type: 'info',
+        icon: 'ðŸ“±'
+      }).then((confirmed) => {
+        if (!confirmed) return;
+        this.whatsappBulkSending = true;
+        this.guestError = '';
+        this.sendPremiumWhatsAppBulk(premiumGuests, safeGuests, media);
+      });
+      return;
+    }
+    if (this.whatsappMedia.enabled) this.whatsappMedia.enabled = false;
 
     this.confirmDialog.confirm({
       title: '¿Enviar WhatsApp masivo?',
@@ -1259,6 +1332,53 @@ h1 {
           });
         }
       });
+    });
+  }
+
+  sendPremiumWhatsAppBulk(premiumGuests: GuestModel[], safeGuests: GuestModel[], media: WhatsAppMediaPayload): void {
+    this.api.sendBulkWhatsApp(this.eventId!, {
+      confirm: true,
+      messageType: this.selectedMessageType,
+      media,
+      guestIds: premiumGuests.map(g => this.getGuestId(g))
+    }).subscribe({
+      next: (premiumResult) => {
+        if (!safeGuests.length) {
+          this.guestMessage = `WhatsApp premium: enviados con imagen ${premiumResult.sent}, fallidos ${premiumResult.failed}.`;
+          this.loadGuests(this.eventId!);
+          this.whatsappBulkSending = false;
+          return;
+        }
+        this.api.sendBulkWhatsApp(this.eventId!, {
+          confirm: true,
+          messageType: this.selectedMessageType,
+          guestIds: safeGuests.map(g => this.getGuestId(g))
+        }).subscribe({
+          next: (safeResult) => {
+            this.guestMessage = `WhatsApp enviado: imagen ${premiumResult.sent}/${premiumGuests.length}; link seguro ${safeResult.sent}/${safeGuests.length}; fallidos ${premiumResult.failed + safeResult.failed}.`;
+            this.loadGuests(this.eventId!);
+            this.whatsappBulkSending = false;
+          },
+          error: (err) => this.handleWhatsappBulkError(err)
+        });
+      },
+      error: (err) => this.handleWhatsappBulkError(err)
+    });
+  }
+
+  handleWhatsappBulkError(err: any): void {
+    this.whatsappBulkSending = false;
+    const msg = err.error?.message || 'Proveedor WhatsApp no configurado.';
+    this.confirmDialog.confirm({
+      title: 'Proveedor WhatsApp no listo',
+      message: `${msg}\n\nDeseas simular el envio masivo para validar las listas de seguimiento?`,
+      confirmText: 'Simular envio masivo',
+      cancelText: 'Cerrar',
+      type: 'warning',
+      icon: 'ðŸ“±'
+    }).then((confirmed) => {
+      if (confirmed) this.simulateBulkSend('whatsapp');
+      else this.guestError = msg;
     });
   }
 
@@ -1776,6 +1896,25 @@ h1 {
 
   canSendRealWhatsapp(guest: GuestModel): boolean { return this.whatsappEnabled && this.canWhatsappGuest(guest); }
   canEmailGuest(guest: GuestModel): boolean { return Boolean(guest.email && this.primaryInvitation); }
+
+  isWhatsappPremiumSegmentSelected(key: string): boolean {
+    return this.whatsappPremiumSegmentKeys.includes(key);
+  }
+
+  toggleWhatsappPremiumSegment(key: string, checked: boolean): void {
+    this.whatsappPremiumSegmentKeys = checked
+      ? Array.from(new Set([...this.whatsappPremiumSegmentKeys, key]))
+      : this.whatsappPremiumSegmentKeys.filter(item => item !== key);
+  }
+
+  guestMatchesPremiumSegments(guest: GuestModel): boolean {
+    return this.whatsappPremiumSegmentKeys.some(key => {
+      const [type, value] = key.split(':');
+      if (type === 'role') return (guest.roles || []).includes(value);
+      if (type === 'group') return (guest.group || 'General') === value;
+      return false;
+    });
+  }
 
   getWhatsappLink(guest: GuestModel): string {
     const phone = this.toWhatsappPhone(guest.phone);

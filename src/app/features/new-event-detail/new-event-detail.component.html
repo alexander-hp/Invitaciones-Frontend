@@ -901,6 +901,54 @@
           <p *ngIf="!hasPlanFeature('whatsappBulk')" style="color:var(--nw-warning); font-size:13px; margin:8px 0 0;">{{ featureLockedMessage('whatsappBulk') }}</p>
         </div>
 
+        <div class="nw-card" style="margin-bottom:16px;">
+          <div class="nw-card-header"><h3>Modo de entrega WhatsApp</h3></div>
+          <div style="display:grid; gap:12px;">
+            <p style="margin:0; color:var(--nw-text-2); font-size:13px;">
+              La invitacion completa se vera en la pagina digital. Para proteger el numero de WhatsApp, la imagen solo aplica para grupos especiales y maximo {{ whatsappPremiumMediaLimit }} invitados.
+            </p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:flex-start; gap:8px; border:1px solid var(--nw-border); border-radius:10px; padding:10px; flex:1; min-width:220px; cursor:pointer;">
+                <input type="radio" name="whatsappBulkDeliveryMode" value="safe" [(ngModel)]="whatsappBulkDeliveryMode">
+                <span>
+                  <strong style="display:block;">Mensaje seguro con link</strong>
+                  <small style="color:var(--nw-text-3);">Para todos los destinatarios activos. Recomendado para listas grandes.</small>
+                </span>
+              </label>
+              <label style="display:flex; align-items:flex-start; gap:8px; border:1px solid var(--nw-border); border-radius:10px; padding:10px; flex:1; min-width:220px; cursor:pointer;">
+                <input type="radio" name="whatsappBulkDeliveryMode" value="premium" [(ngModel)]="whatsappBulkDeliveryMode" [disabled]="!hasPlanFeature('whatsappMedia')">
+                <span>
+                  <strong style="display:block;">Imagen para invitados especiales</strong>
+                  <small style="color:var(--nw-text-3);">VIP, familia, padrinos, damas, anfitriones u otros grupos seleccionados.</small>
+                </span>
+              </label>
+            </div>
+
+            <div *ngIf="whatsappBulkDeliveryMode === 'premium'" style="display:grid; gap:10px; background:var(--nw-surface-2); border-radius:10px; padding:12px;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <span class="nw-pill">Con imagen: {{ whatsappPremiumMediaGuests.length }}/{{ whatsappPremiumMediaLimit }}</span>
+                <span class="nw-pill">Con link seguro: {{ whatsappSafeMessageGuests.length }}</span>
+                <span class="nw-pill" [class.danger]="whatsappPremiumMediaOverLimit > 0">Exceso: {{ whatsappPremiumMediaOverLimit }}</span>
+              </div>
+              <p style="margin:0; color:var(--nw-text-2); font-size:13px;">
+                Si no necesitas imagen, usa el modo seguro. Si pasa del limite, quita segmentos o deja invitados fuera en la lista de excepciones.
+              </p>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <label *ngFor="let segment of whatsappPremiumSegmentOptions" style="display:flex; align-items:center; gap:6px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:999px; padding:6px 10px; cursor:pointer;">
+                  <input type="checkbox" [checked]="isWhatsappPremiumSegmentSelected(segment.key)" (change)="toggleWhatsappPremiumSegment(segment.key, $any($event.target).checked)">
+                  <span>{{ segment.label }} <small style="color:var(--nw-text-3);">({{ segment.count }})</small></span>
+                </label>
+              </div>
+              <p *ngIf="whatsappPremiumMediaOverLimit > 0" class="nw-alert warning" style="margin:0;">
+                La imagen supera el maximo permitido. Deja fuera {{ whatsappPremiumMediaOverLimit }} invitado(s) o reduce los segmentos seleccionados.
+              </p>
+              <p *ngIf="!whatsappPremiumMediaReady" class="nw-alert warning" style="margin:0;">
+                Para este modo primero sube o selecciona una media en la seccion de abajo.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- WhatsApp Media -->
         <div class="nw-card" style="margin-bottom:16px;">
           <div class="nw-card-header"><h3>Media para WhatsApp</h3></div>
