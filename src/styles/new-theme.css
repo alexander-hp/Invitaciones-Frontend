@@ -965,3 +965,463 @@
     gap: var(--nw-gap-sm);
   }
 }
+
+/* ===============================================================
+   IN-PAGE DJ MEDIA PLAYER (Floating Modal & Bottom Player)
+   =============================================================== */
+.nw-dj-player-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: nwPlayerFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nwPlayerFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.nw-dj-player-card {
+  background: #141824;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.nw-dj-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nw-dj-player-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.nw-dj-player-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nw-dj-player-cover-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.nw-dj-player-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nw-dj-player-artist {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nw-dj-player-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.nw-dj-player-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.nw-dj-player-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #0d111a;
+}
+
+.nw-dj-iframe-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nw-dj-iframe-wrapper.spotify-wrapper {
+  padding-top: 0;
+  height: 180px;
+}
+
+.nw-dj-iframe-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.nw-dj-audio-element {
+  width: 100%;
+  outline: none;
+  border-radius: 8px;
+}
+
+.nw-dj-player-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+/* ===============================================================
+   PREMIUM DJ BOOTH & TRACK CARD DESIGN SYSTEM
+   =============================================================== */
+.nw-dj-track-card {
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.nw-dj-track-card:hover {
+  border-color: var(--nw-accent);
+  box-shadow: 0 8px 24px var(--nw-accent-glow);
+  transform: translateY(-1px);
+}
+
+.nw-dj-track-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.nw-dj-track-main {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.nw-dj-cover-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--nw-surface-2);
+  border: 1px solid var(--nw-border);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.nw-dj-cover-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.nw-dj-cover-box:hover img {
+  transform: scale(1.08);
+}
+
+.nw-dj-cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.nw-dj-cover-box:hover .nw-dj-cover-overlay {
+  opacity: 1;
+}
+
+.nw-dj-track-details {
+  min-width: 0;
+  flex: 1;
+}
+
+.nw-dj-track-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--nw-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nw-dj-track-title:hover {
+  color: var(--nw-accent);
+}
+
+.nw-dj-track-artist {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--nw-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nw-dj-track-requester {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--nw-text-3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nw-dj-track-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Reorder Buttons Column (Left Side Stacked) */
+.nw-dj-reorder-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nw-dj-reorder-btn {
+  width: 26px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--nw-surface-2);
+  border: 1px solid var(--nw-border);
+  color: var(--nw-text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.nw-dj-reorder-btn:hover {
+  background: var(--nw-accent-glow-strong);
+  border-color: var(--nw-accent);
+  color: var(--nw-accent);
+  transform: scale(1.1);
+}
+
+/* Dedication Bubble */
+.nw-dj-dedication-box {
+  padding: 10px 14px;
+  background: var(--nw-surface-2);
+  border-left: 3px solid var(--nw-accent);
+  border-radius: 8px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--nw-text-2);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* DJ Track Action Bar */
+.nw-dj-action-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px dashed var(--nw-border);
+}
+
+.nw-dj-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.nw-dj-btn-listen {
+  background: var(--nw-surface-2);
+  color: var(--nw-text);
+  border-color: var(--nw-border);
+}
+
+.nw-dj-btn-listen:hover {
+  background: var(--nw-accent-glow-strong);
+  border-color: var(--nw-accent);
+  color: var(--nw-accent);
+}
+
+.nw-dj-btn-approve {
+  background: rgba(74, 127, 98, 0.1);
+  color: var(--nw-success);
+  border-color: rgba(74, 127, 98, 0.3);
+}
+
+.nw-dj-btn-approve:hover {
+  background: rgba(74, 127, 98, 0.2);
+  border-color: var(--nw-success);
+  box-shadow: 0 4px 12px rgba(74, 127, 98, 0.15);
+}
+
+.nw-dj-btn-played {
+  background: var(--nw-accent);
+  color: #ffffff;
+  border-color: var(--nw-accent);
+}
+
+.nw-dj-btn-played:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 14px var(--nw-accent-glow-strong);
+}
+
+.nw-dj-btn-reject {
+  background: rgba(183, 89, 89, 0.08);
+  color: var(--nw-danger);
+  border-color: rgba(183, 89, 89, 0.25);
+}
+
+.nw-dj-btn-reject:hover {
+  background: rgba(183, 89, 89, 0.18);
+  border-color: var(--nw-danger);
+}
+
+/* ===============================================================
+   COLLAPSIBLE CARDS SYSTEM (Accordion / Lightweight UI)
+   =============================================================== */
+.nw-collapsible-card {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nw-collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: 14px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nw-collapsible-header:hover {
+  background: var(--nw-surface-2);
+}
+
+.nw-collapse-btn {
+  background: var(--nw-surface-2);
+  border: 1px solid var(--nw-border);
+  color: var(--nw-text-2);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.nw-collapsible-header:hover .nw-collapse-btn {
+  border-color: var(--nw-accent);
+  color: var(--nw-accent);
+  background: var(--nw-surface);
+  box-shadow: 0 2px 8px var(--nw-accent-glow);
+}
+
+.nw-collapsible-card.is-collapsed {
+  border-color: var(--nw-border);
+  box-shadow: none;
+}
+
+.nw-collapsible-card.is-collapsed .nw-card-header {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+
+
