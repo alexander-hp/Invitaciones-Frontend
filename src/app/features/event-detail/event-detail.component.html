@@ -278,10 +278,11 @@
         <p *ngIf="!songRequests.length" class="muted">Aun no hay canciones solicitadas.</p>
         <div class="item-list" *ngIf="songRequests.length">
           <article *ngFor="let songRequest of songRequests">
-            <strong>{{ songRequest.title }} <span *ngIf="songRequest.artist">- {{ songRequest.artist }}</span></strong>
+            <strong (click)="playSong(songRequest)" style="cursor:pointer;" title="Escuchar en la página">🎵 {{ songRequest.title }} <span *ngIf="songRequest.artist">- {{ songRequest.artist }}</span></strong>
             <span>{{ songRequest.requesterName || 'Invitado' }} <small *ngIf="songRequest.dedication">/ {{ songRequest.dedication }}</small></span>
             <small>{{ songRequest.status }}</small>
             <div class="inline-actions">
+              <button class="ghost small" type="button" (click)="playSong(songRequest)" title="Escuchar">▶ Escuchar</button>
               <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'approved')">Aprobar</button>
               <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'played')">Tocada</button>
               <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'rejected')">Rechazar</button>
@@ -515,21 +516,57 @@
         </div>
       </div>
 
-      <form class="guest-form" (ngSubmit)="saveGuest()">
-        <label>Nombre<input name="guestName" [(ngModel)]="guestForm.name" required></label>
-        <label>Email<input name="guestEmail" type="email" [(ngModel)]="guestForm.email"></label>
-        <label>Telefono<input name="guestPhone" [(ngModel)]="guestForm.phone"></label>
-        <label>Grupo<input name="guestGroup" [(ngModel)]="guestForm.group"></label>
-        <label>Rol visible<input name="guestRelationship" [(ngModel)]="guestForm.relationshipLabel" placeholder="Dama de honor, padrino..."></label>
-        <label>Visibilidad<input name="guestVisibilityGroup" [(ngModel)]="guestForm.visibilityGroup" placeholder="familia, vip, staff"></label>
-        <label class="wide">Roles<textarea name="guestRoles" rows="2" [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor, familia, graduado, staff, proveedor, vip"></textarea></label>
-        <label class="wide">Tags<textarea name="guestTags" rows="2" [(ngModel)]="guestForm.tagsText" placeholder="mesa_vip, lado_novia, hotel, after"></textarea></label>
-        <label>Mesa<input name="guestTable" [(ngModel)]="guestForm.tableName"></label>
-        <label>Asiento<input name="guestSeat" [(ngModel)]="guestForm.seatLabel"></label>
-        <label>Acompanantes<input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions"></label>
-        <label class="wide">Acompanantes nombrados<textarea name="guestCompanionNames" [(ngModel)]="companionNames" placeholder="Un nombre por linea"></textarea></label>
-        <button class="primary" type="submit" [disabled]="guestSaving">{{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : 'Agregar invitado') }}</button>
-        <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()" [disabled]="guestSaving">Cancelar</button>
+      <form class="guest-form" (ngSubmit)="saveGuest(false)">
+        <label>Nombre del invitado <span style="color:#ef4444; font-weight:bold;">* (Obligatorio)</span>
+          <input name="guestName" [(ngModel)]="guestForm.name" placeholder="Nombre completo" required>
+        </label>
+        <label>Código de País (Lada)
+          <select name="guestPhoneCountryCode" [(ngModel)]="guestForm.phoneCountryCode">
+            <option *ngFor="let item of countryCodes" [value]="item.code">{{ item.country }}</option>
+          </select>
+        </label>
+        <label>Teléfono local <small style="color:#64748b;">(Opcional - 10 dígitos)</small>
+          <input name="guestPhoneLocal" type="tel" [(ngModel)]="guestForm.phoneLocal" placeholder="1234567890">
+        </label>
+        <label>Email <small style="color:#64748b;">(Opcional)</small>
+          <input name="guestEmail" type="email" [(ngModel)]="guestForm.email" placeholder="correo@ejemplo.com">
+        </label>
+        <label>Grupo / Categoría <small style="color:#64748b;">(Opcional)</small>
+          <input name="guestGroup" [(ngModel)]="guestForm.group" placeholder="Familia, Amigos, Trabajo">
+        </label>
+        <label>Rol visible <small style="color:#64748b;">(Opcional)</small>
+          <input name="guestRelationship" [(ngModel)]="guestForm.relationshipLabel" placeholder="Dama de honor, padrino...">
+        </label>
+        <label>Visibilidad <small style="color:#64748b;">(Opcional)</small>
+          <input name="guestVisibilityGroup" [(ngModel)]="guestForm.visibilityGroup" placeholder="familia, vip, staff">
+        </label>
+        <label>Mesa asignada <small style="color:#64748b;">(Opcional)</small>
+          <input name="guestTable" [(ngModel)]="guestForm.tableName" placeholder="Mesa 1">
+        </label>
+        <label>Asiento <small style="color:#64748b;">(Opcional)</small>
+          <input name="guestSeat" [(ngModel)]="guestForm.seatLabel" placeholder="A1">
+        </label>
+        <label>Acompañantes extra <small style="color:#64748b;">(Pases adicionales)</small>
+          <input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions">
+        </label>
+        <label class="wide">Roles <small style="color:#64748b;">(Opcional)</small>
+          <textarea name="guestRoles" rows="2" [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor, familia, graduado, staff, proveedor, vip"></textarea>
+        </label>
+        <label class="wide">Tags <small style="color:#64748b;">(Opcional)</small>
+          <textarea name="guestTags" rows="2" [(ngModel)]="guestForm.tagsText" placeholder="mesa_vip, lado_novia, hotel, after"></textarea>
+        </label>
+        <label class="wide">Acompañantes nombrados <small style="color:#64748b;">(Opcional - un nombre por línea)</small>
+          <textarea name="guestCompanionNames" [(ngModel)]="companionNames" placeholder="Un nombre por línea"></textarea>
+        </label>
+        <div style="display:flex; gap:10px; width:100%; grid-column: span 2; margin-top:6px;">
+          <button *ngIf="!editingGuest" class="ghost" type="button" (click)="saveGuest(true)" [disabled]="guestSaving" style="border-color:#10b981; color:#065f46;">
+            ➕ Guardar y agregar otro
+          </button>
+          <button class="primary" type="submit" [disabled]="guestSaving">
+            {{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : '💾 Guardar invitado') }}
+          </button>
+          <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()" [disabled]="guestSaving">Cancelar</button>
+        </div>
       </form>
 
       <div class="import-row">
@@ -716,3 +753,36 @@
     </section>
   </ng-container>
 </section>
+
+<!-- Floating / In-Page DJ Audio & Video Player -->
+<div *ngIf="activePlayingSong" class="nw-dj-player-backdrop" (click)="closePlayer()">
+  <div class="nw-dj-player-card" (click)="$event.stopPropagation()">
+    <div class="nw-dj-player-header">
+      <div class="nw-dj-player-info">
+        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover" class="nw-dj-player-cover">
+        <div *ngIf="!activePlayingSong.thumbnailUrl" class="nw-dj-player-cover-fallback">🎵</div>
+        <div>
+          <h4 class="nw-dj-player-title">{{ activePlayingSong.title }}</h4>
+          <p class="nw-dj-player-artist">{{ activePlayingSong.artist || 'Canción solicitada' }}</p>
+        </div>
+      </div>
+      <button class="nw-dj-player-close" (click)="closePlayer()" title="Cerrar reproductor">✕</button>
+    </div>
+
+    <div class="nw-dj-player-body">
+      <!-- Direct Audio Player -->
+      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl" controls autoplay class="nw-dj-audio-element"></audio>
+
+      <!-- Iframe Player (YouTube / Spotify / External) -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper" [class.spotify-wrapper]="activePlayingSong.isSpotify">
+        <iframe [src]="activePlayingSong.embedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Fallback when url is not embeddable directly -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && !activePlayingSong.embedUrl" class="nw-dj-player-empty">
+        <p>No se pudo generar vista previa directa para esta canción.</p>
+        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank" class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
+      </div>
+    </div>
+  </div>
+</div>

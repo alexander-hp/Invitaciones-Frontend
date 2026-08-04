@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
@@ -14,6 +15,16 @@ interface MessageTemplateOption {
 
 @Component({ selector: 'app-event-detail', templateUrl: './event-detail.component.html' })
 export class EventDetailComponent implements OnInit {
+  activePlayingSong?: {
+    title: string;
+    artist?: string;
+    thumbnailUrl?: string;
+    sourceUrl?: string;
+    embedUrl?: SafeResourceUrl | null;
+    previewUrl?: string;
+    isDirectAudio?: boolean;
+    isSpotify?: boolean;
+  };
   event?: EventModel;
   invitations: InvitationModel[] = [];
   guests: GuestModel[] = [];
@@ -67,7 +78,24 @@ export class EventDetailComponent implements OnInit {
   eventPlanExpiresAt = '';
   subscriptionActive = false;
   editingGuest?: GuestModel;
-  guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+  countryCodes = [
+    { code: '+52', country: '🇲🇽 México (+52)' },
+    { code: '+1', country: '🇺🇸 EE.UU. / 🇨🇦 Canadá (+1)' },
+    { code: '+54', country: '🇦🇷 Argentina (+54)' },
+    { code: '+56', country: '🇨🇱 Chile (+56)' },
+    { code: '+57', country: '🇨🇴 Colombia (+57)' },
+    { code: '+593', country: '🇪🇨 Ecuador (+593)' },
+    { code: '+34', country: '🇪🇸 España (+34)' },
+    { code: '+502', country: '🇬🇹 Guatemala (+502)' },
+    { code: '+51', country: '🇵🇪 Perú (+51)' },
+    { code: '+506', country: '🇨🇷 Costa Rica (+506)' },
+    { code: '+503', country: '🇸🇻 El Salvador (+503)' },
+    { code: '+504', country: '🇭🇳 Honduras (+504)' },
+    { code: '+595', country: '🇵🇾 Paraguay (+595)' },
+    { code: '+598', country: '🇺🇾 Uruguay (+598)' },
+    { code: '+58', country: '🇻🇪 Venezuela (+58)' }
+  ];
+  guestForm = { name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   companionNames = '';
   tableForm = { name: '', capacity: 10, notes: '', order: 0 };
   guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
@@ -127,7 +155,55 @@ export class EventDetailComponent implements OnInit {
   private readonly maxImageSize = 5 * 1024 * 1024;
   private readonly maxAudioSize = 10 * 1024 * 1024;
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService, private confirmDialog: ConfirmDialogService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService, private confirmDialog: ConfirmDialogService, private sanitizer: DomSanitizer) {}
+
+  playSong(sr: Partial<SongRequestModel> | SongRequestModel): void {
+    if (!sr) return;
+    const sourceUrl = sr.sourceUrl || '';
+    const previewUrl = sr.previewUrl || '';
+    const { embedUrl, isDirectAudio, isSpotify } = this.parseSongEmbedUrl(sourceUrl, previewUrl);
+    this.activePlayingSong = {
+      title: sr.title || 'Canción',
+      artist: sr.artist || '',
+      thumbnailUrl: sr.thumbnailUrl || '',
+      sourceUrl,
+      previewUrl,
+      embedUrl,
+      isDirectAudio,
+      isSpotify
+    };
+  }
+
+  closePlayer(): void {
+    this.activePlayingSong = undefined;
+  }
+
+  private parseSongEmbedUrl(sourceUrl?: string, previewUrl?: string): { embedUrl: SafeResourceUrl | null; isDirectAudio: boolean; isSpotify: boolean } {
+    const url = sourceUrl || previewUrl || '';
+    if (!url) return { embedUrl: null, isDirectAudio: false, isSpotify: false };
+
+    if (/\.(mp3|wav|ogg|m4a)(\?.*)?$/i.test(url) || (previewUrl && !sourceUrl)) {
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url), isDirectAudio: true, isSpotify: false };
+    }
+
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      const embedStr = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&enablejsapi=1`;
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedStr), isDirectAudio: false, isSpotify: false };
+    }
+
+    const spMatch = url.match(/spotify\.com\/(?:intl-[a-z]+\/)?track\/([a-zA-Z0-9]+)/i);
+    if (spMatch && spMatch[1]) {
+      const embedStr = `https://open.spotify.com/embed/track/${spMatch[1]}?utm_source=generator&theme=0`;
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedStr), isDirectAudio: false, isSpotify: true };
+    }
+
+    if (/^https?:\/\//i.test(url)) {
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url), isDirectAudio: false, isSpotify: false };
+    }
+
+    return { embedUrl: null, isDirectAudio: false, isSpotify: false };
+  }
 
   ngOnInit(): void {
     this.load();
@@ -191,9 +267,27 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  saveGuest(): void {
+  parsePhoneParts(phone?: string): { countryCode: string; localNumber: string } {
+    if (!phone) return { countryCode: '+52', localNumber: '' };
+    const clean = phone.trim();
+    const codes = ['+52', '+1', '+54', '+56', '+57', '+593', '+34', '+502', '+51', '+506', '+503', '+504', '+595', '+598', '+58'];
+    for (const code of codes) {
+      if (clean.startsWith(code)) {
+        return { countryCode: code, localNumber: clean.substring(code.length).replace(/\D/g, '') };
+      }
+    }
+    return { countryCode: '+52', localNumber: clean.replace(/\D/g, '') };
+  }
+
+  saveGuest(keepOpen = false): void {
     const eventId = this.getEventId();
     if (!eventId) return;
+    if (!this.guestForm.name.trim()) { this.guestError = 'El nombre del invitado es obligatorio'; return; }
+
+    const cleanLocal = (this.guestForm.phoneLocal || '').trim().replace(/\D/g, '');
+    const fullPhone = cleanLocal ? `${this.guestForm.phoneCountryCode || '+52'}${cleanLocal}` : '';
+    this.guestForm.phone = fullPhone;
+
     const duplicate = this.findDuplicateGuest(this.editingGuest ? this.getGuestId(this.editingGuest) : undefined);
     if (duplicate) {
       this.guestError = `Ese ${duplicate.field === 'email' ? 'correo' : 'telefono'} ya pertenece a ${duplicate.guest.name}. Puedes editar ese invitado en la lista.`;
@@ -207,7 +301,7 @@ export class EventDetailComponent implements OnInit {
     const guestData: Omit<GuestPayload, 'event'> = {
       name: this.guestForm.name,
       email: this.guestForm.email || undefined,
-      phone: this.guestForm.phone || undefined,
+      phone: fullPhone || undefined,
       group: this.guestForm.group || undefined,
       roles: this.splitCsv(this.guestForm.rolesText),
       tags: this.splitCsv(this.guestForm.tagsText),
@@ -228,9 +322,21 @@ export class EventDetailComponent implements OnInit {
         this.guests = this.editingGuest
           ? this.guests.map((item) => this.getGuestId(item) === this.getGuestId(guest) ? guest : item).sort((a, b) => a.name.localeCompare(b.name))
           : [guest, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
-        this.resetGuestForm();
-        this.guestMessage = wasEditing ? 'Invitado actualizado.' : 'Invitado agregado.';
+        this.guestMessage = wasEditing ? `✅ Invitado "${guest.name}" actualizado.` : `🎉 ¡Invitado "${guest.name}" guardado!`;
         this.guestSaving = false;
+
+        if (keepOpen && !wasEditing) {
+          const lastGroup = this.guestForm.group;
+          const lastCode = this.guestForm.phoneCountryCode;
+          this.guestForm.name = '';
+          this.guestForm.email = '';
+          this.guestForm.phoneLocal = '';
+          this.companionNames = '';
+          this.guestForm.group = lastGroup;
+          this.guestForm.phoneCountryCode = lastCode || '+52';
+        } else {
+          this.resetGuestForm();
+        }
       },
       error: (error) => {
         this.guestError = this.buildGuestError(error, this.editingGuest ? 'No se pudo actualizar el invitado.' : 'No se pudo agregar el invitado.');
@@ -243,10 +349,13 @@ export class EventDetailComponent implements OnInit {
     this.editingGuest = guest;
     this.guestError = '';
     this.guestMessage = '';
+    const parsedPhone = this.parsePhoneParts(guest.phone);
     this.guestForm = {
       name: guest.name,
       email: guest.email || '',
       phone: guest.phone || '',
+      phoneCountryCode: parsedPhone.countryCode,
+      phoneLocal: parsedPhone.localNumber,
       group: guest.group || '',
       rolesText: (guest.roles || []).join(', '),
       tagsText: (guest.tags || []).join(', '),
@@ -858,6 +967,9 @@ export class EventDetailComponent implements OnInit {
     const eventId = this.getEventId();
     const songRequestId = songRequest._id || songRequest.id || '';
     if (!eventId || !songRequestId) return;
+    if (status === 'played') {
+      this.playSong(songRequest);
+    }
     this.api.updateSongRequest(eventId, songRequestId, status).subscribe({
       next: ({ songRequest: updated }) => {
         this.songRequests = this.songRequests.map((item) => (item._id || item.id) === songRequestId ? updated : item);
@@ -1272,7 +1384,7 @@ export class EventDetailComponent implements OnInit {
 
   private resetGuestForm(): void {
     this.editingGuest = undefined;
-    this.guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+    this.guestForm = { name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
     this.companionNames = '';
   }
 

@@ -26,6 +26,7 @@ export class NewInvitationEditorComponent implements OnInit {
   error = '';
   assetMessage = '';
   publicUrl = '';
+  musicError = false;
   lodgingText = '';
   customQuestionsText = '';
   customQuestionsList: Array<{
@@ -40,8 +41,30 @@ export class NewInvitationEditorComponent implements OnInit {
   allowedGroupsText = '';
   allowedEmailsText = '';
   allowedPhonesText = '';
+  locationSearchResults: Record<number, Array<{ name: string; address: string; lat: number; lon: number; mapUrl: string; wazeUrl: string }>> = {};
+  locationSearchLoading: Record<number, boolean> = {};
+  locationExtractLoading: Record<number, boolean> = {};
+  private searchTimeouts: Record<number, any> = {};
 
   activeSection = 'content';
+  collapsedSections: Record<string, boolean> = {};
+
+  toggleSection(sectionKey: string): void {
+    this.collapsedSections[sectionKey] = !this.collapsedSections[sectionKey];
+  }
+
+  isSectionCollapsed(sectionKey: string): boolean {
+    return Boolean(this.collapsedSections[sectionKey]);
+  }
+
+  expandAllSections(): void {
+    this.collapsedSections = {};
+  }
+
+  collapseAllSections(): void {
+    const keys = ['content', 'design', 'images', 'location', 'gifts', 'hotels', 'music', 'timeline', 'custom_questions', 'featured', 'spectacular', 'plans'];
+    keys.forEach(k => this.collapsedSections[k] = true);
+  }
 
   palettePresets = [
     { name: 'Clásico editorial', primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
@@ -191,15 +214,16 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/new/i/${invitation.slug}`;
-        this.message = 'Invitación guardada exitosamente.';
+        this.message = '✅ Cambios guardados correctamente en el servidor (HTTP 200).';
         this.saving = false;
         this.clearMessageAfterDelay();
       },
       error: (error) => {
+        const statusCode = error.status ? ` (HTTP ${error.status})` : '';
         if (error.error?.details?.fieldErrors?.body) {
-          this.error = `Error de validación: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
+          this.error = `❌ Error de validación${statusCode}: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
         } else {
-          this.error = error.error?.message || 'No se pudo guardar.';
+          this.error = `❌ Error al guardar${statusCode}: ${error.error?.message || 'No se pudo guardar.'}`;
         }
         this.saving = false;
       }
@@ -222,33 +246,54 @@ export class NewInvitationEditorComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.api.publishInvitation(invitationId).subscribe({
-          next: ({ invitation, publicUrl }) => {
+          next: (res) => {
+            const { invitation, publicUrl, message, warning } = res as any;
             this.invitation = invitation;
-            if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
-            if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
-            this.ensureContentCollections();
-            this.ensureRsvpSettings();
-            this.syncEditorTextFields();
+            if (this.invitation) {
+              if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+              if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+              this.ensureContentCollections();
+              this.ensureRsvpSettings();
+              this.syncEditorTextFields();
+            }
             this.publicUrl = publicUrl ? publicUrl.replace('/i/', '/new/i/') : `${window.location.origin}/new/i/${invitation.slug}`;
-            this.message = '¡Invitación guardada y publicada exitosamente!';
+            let successMsg = '🎉 ¡Invitación guardada y publicada exitosamente (HTTP 200)!';
+            if (message && message.includes('SMTP')) {
+              successMsg += ' (Nota: no se envió correo por SMTP no configurado)';
+            } else if (warning) {
+              successMsg += ` (${warning})`;
+            }
+            this.message = successMsg;
             this.publishing = false;
             this.clearMessageAfterDelay();
           },
           error: (error) => {
-            this.error = error.error?.message || 'No se pudo publicar.';
+            const statusCode = error.status ? ` (HTTP ${error.status})` : '';
+            this.error = `❌ Error al publicar la invitación${statusCode}: ${error.error?.message || 'No se pudo publicar.'}`;
             this.publishing = false;
           }
         });
       },
       error: (error) => {
+        const statusCode = error.status ? ` (HTTP ${error.status})` : '';
         if (error.error?.details?.fieldErrors?.body) {
-          this.error = `Error de validación al guardar: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
+          this.error = `❌ Error de validación al guardar previa a publicar${statusCode}: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
         } else {
-          this.error = error.error?.message || 'No se pudo guardar la invitación antes de publicar.';
+          this.error = `❌ Error al guardar antes de publicar${statusCode}: ${error.error?.message || 'No se pudo guardar la invitación.'}`;
         }
         this.publishing = false;
       }
     });
+  }
+
+  viewPublic(): void {
+    if (!this.invitation) return;
+    if (this.invitation.status !== 'published') {
+      this.message = '⚠️ La invitación está en borrador. Guardando y publicando para abrir la versión en vivo...';
+      this.publish();
+      return;
+    }
+    window.open(this.publicUrl || `/new/i/${this.invitation.slug}`, '_blank');
   }
 
   selectAsset(event: Event, folder: AssetFolder): void {
@@ -284,7 +329,10 @@ export class NewInvitationEditorComponent implements OnInit {
           next: () => {
             if (!this.invitation) return;
             if (folder === 'covers') this.invitation.content.coverImageUrl = upload.publicUrl;
-            if (folder === 'music') this.invitation.content.musicUrl = upload.publicUrl;
+            if (folder === 'music') {
+              this.invitation.content.musicUrl = upload.publicUrl;
+              this.message = '🎉 ¡Archivo de música de fondo subido exitosamente en el servidor (HTTP 200)!';
+            }
             if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
             if (folder === 'assets') {
               this.invitation.content.privateAlbumEnabled = true;
@@ -301,6 +349,40 @@ export class NewInvitationEditorComponent implements OnInit {
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo preparar la URL de subida.';
+        this.assetUploading = false;
+      }
+    });
+  }
+
+  uploadEnvelopeQr(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.invitation) return;
+
+    this.assetUploading = true;
+    this.assetMessage = '';
+    this.error = '';
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'covers', event: this.getEventId(), size: file.size }).subscribe({
+      next: (upload) => {
+        this.api.uploadAsset(upload.uploadUrl, file).subscribe({
+          next: () => {
+            if (!this.invitation) return;
+            if (!this.invitation.content.digitalEnvelope) {
+              this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
+            }
+            this.invitation.content.digitalEnvelope.qrImageUrl = upload.publicUrl;
+            this.persistUploadedAsset();
+            this.message = '✅ Foto de código QR bancario subida exitosamente (HTTP 200).';
+            input.value = '';
+          },
+          error: () => {
+            this.error = '❌ Error al subir la foto del código QR bancario.';
+            this.assetUploading = false;
+          }
+        });
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo preparar la URL para subir la imagen del QR.';
         this.assetUploading = false;
       }
     });
@@ -420,6 +502,61 @@ export class NewInvitationEditorComponent implements OnInit {
   removeLocation(index: number): void {
     if (!this.invitation?.content.locations) return;
     this.invitation.content.locations.splice(index, 1);
+    delete this.locationSearchResults[index];
+    delete this.locationSearchLoading[index];
+    delete this.locationExtractLoading[index];
+  }
+
+  onLocationNameInput(index: number, query?: string): void {
+    if (this.searchTimeouts[index]) clearTimeout(this.searchTimeouts[index]);
+    const trimmed = (query || '').trim();
+    if (!trimmed || trimmed.length < 3) {
+      this.locationSearchResults[index] = [];
+      this.locationSearchLoading[index] = false;
+      return;
+    }
+    this.locationSearchLoading[index] = true;
+    this.searchTimeouts[index] = setTimeout(() => {
+      this.api.searchPlaces(trimmed).subscribe({
+        next: (results) => {
+          this.locationSearchResults[index] = results;
+          this.locationSearchLoading[index] = false;
+        },
+        error: () => {
+          this.locationSearchResults[index] = [];
+          this.locationSearchLoading[index] = false;
+        }
+      });
+    }, 450);
+  }
+
+  selectLocationSearchResult(index: number, result: { name: string; address: string; mapUrl: string; wazeUrl: string }): void {
+    if (!this.invitation?.content.locations?.[index]) return;
+    const loc = this.invitation.content.locations[index];
+    if (result.name) loc.name = result.name;
+    if (result.address) loc.address = result.address;
+    if (result.mapUrl) loc.mapUrl = result.mapUrl;
+    if (result.wazeUrl) loc.wazeUrl = result.wazeUrl;
+    this.locationSearchResults[index] = [];
+  }
+
+  async extractInfoFromMapUrl(index: number): Promise<void> {
+    if (!this.invitation?.content.locations?.[index]) return;
+    const loc = this.invitation.content.locations[index];
+    if (!loc.mapUrl) return;
+
+    this.locationExtractLoading[index] = true;
+    try {
+      const parsed = await this.api.parseGoogleMapsUrl(loc.mapUrl);
+      if (parsed.name) loc.name = parsed.name;
+      if (parsed.address) loc.address = parsed.address;
+      if (parsed.wazeUrl) loc.wazeUrl = parsed.wazeUrl;
+      this.message = 'Información extraída del enlace de Google Maps.';
+    } catch (e) {
+      this.error = 'No se pudo extraer la información del enlace.';
+    } finally {
+      this.locationExtractLoading[index] = false;
+    }
   }
 
   addGiftRegistryItem(): void {
@@ -444,9 +581,11 @@ export class NewInvitationEditorComponent implements OnInit {
   removeMusic(): void {
     if (!this.invitation) return;
     this.invitation.content.musicUrl = '';
+    this.musicError = false;
     this.assetMessage = 'Música quitada. Guarda la invitación para confirmar.';
     this.clearMessageAfterDelay();
   }
+
 
   removeCover(): void {
     if (!this.invitation) return;
@@ -498,7 +637,8 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   onMusicPlaybackError(): void {
-    this.error = 'La música está guardada, pero no se puede reproducir. Revisa permisos de lectura S3/CloudFront.';
+    this.musicError = true;
+    this.error = 'La música está guardada, pero no se puede reproducir. Revisa la URL o sube un archivo en formato MP3/AAC.';
   }
 
   goBackToEvent(): void {

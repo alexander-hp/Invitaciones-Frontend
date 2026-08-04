@@ -68,53 +68,59 @@
         </div>
 
         <!-- Song list -->
-        <div style="display: grid; gap: 12px;">
-          <div *ngFor="let song of filteredSongRequests" class="nw-card" style="background: var(--nw-surface-2); padding: 16px; border: 1px solid var(--nw-border); border-radius: var(--nw-radius); display: flex; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-              <div style="display: flex; gap: 14px; align-items: center;">
-                <div style="width: 48px; height: 48px; border-radius: 10px; background: rgba(192, 156, 120, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow: hidden;">
-                  <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Cover" style="width: 100%; height: 100%; object-fit: cover;">
-                  <span *ngIf="!song.thumbnailUrl">🎵</span>
+        <div style="display: grid; gap: 14px;">
+          <div *ngFor="let song of filteredSongRequests" class="nw-dj-track-card">
+            <div class="nw-dj-track-header">
+              <div class="nw-dj-track-main">
+                <!-- Reorder buttons column (Left side, stacked vertically) -->
+                <div class="nw-dj-reorder-col">
+                  <button class="nw-dj-reorder-btn" type="button" (click)="moveSong(song, -1)" title="Subir en playlist">▲</button>
+                  <button class="nw-dj-reorder-btn" type="button" (click)="moveSong(song, 1)" title="Bajar en playlist">▼</button>
                 </div>
-                <div>
-                  <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--nw-text);">
+
+                <div class="nw-dj-cover-box" (click)="playSong(song)" title="Escuchar en la página">
+                  <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Cover">
+                  <span *ngIf="!song.thumbnailUrl">🎵</span>
+                  <div class="nw-dj-cover-overlay">▶</div>
+                </div>
+                
+                <div class="nw-dj-track-details">
+                  <h3 class="nw-dj-track-title" (click)="playSong(song)" title="Escuchar en la página">
                     {{ song.title }}
                   </h3>
-                  <p style="margin: 2px 0 0; font-size: 14px; color: var(--nw-text-2); font-weight: 600;">
+                  <p class="nw-dj-track-artist">
                     {{ song.artist || 'Artista no especificado' }}
                   </p>
-                  <p style="margin: 4px 0 0; font-size: 12px; color: var(--nw-text-3);">
-                    Pedida por: <strong>{{ getGuestName(song.guest, song.requesterName) }}</strong>
+                  <p class="nw-dj-track-requester">
+                    <span>👤</span> Pedida por: <strong>{{ getGuestName(song.guest, song.requesterName) }}</strong>
                   </p>
                 </div>
               </div>
 
-              <div style="display: flex; gap: 6px; align-items: center;">
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveSong(song, -1)" title="Subir" style="padding: 4px 8px; font-size: 14px;">🔼</button>
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveSong(song, 1)" title="Bajar" style="padding: 4px 8px; font-size: 14px;">🔽</button>
+              <div class="nw-dj-track-meta">
                 <span class="nw-pill" [class.warning]="song.status === 'pending'" [class.success]="song.status === 'approved'" [class.info]="song.status === 'played'" [class.danger]="song.status === 'rejected'" style="margin: 0;">
-                  {{ song.status === 'pending' ? 'Pendiente' : (song.status === 'approved' ? 'Aprobada' : (song.status === 'played' ? 'Sonada ✅' : 'Rechazada')) }}
+                  {{ song.status === 'pending' ? 'Pendiente ⏳' : (song.status === 'approved' ? 'Aprobada 👍' : (song.status === 'played' ? 'Sonada ✅' : 'Rechazada ✕')) }}
                 </span>
               </div>
             </div>
 
             <!-- Dedication text if present -->
-            <div *ngIf="song.dedication" style="padding: 8px 12px; background: var(--nw-surface); border-left: 3px solid var(--nw-gold); border-radius: 4px; font-size: 13px; font-style: italic; color: var(--nw-text-2);">
-              "{{ song.dedication }}"
+            <div *ngIf="song.dedication" class="nw-dj-dedication-box">
+              <span>💬</span> <span>"{{ song.dedication }}"</span>
             </div>
 
             <!-- Actions bar -->
-            <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 4px; flex-wrap: wrap;">
-              <a *ngIf="song.sourceUrl" class="nw-btn nw-btn-ghost nw-btn-sm" [href]="song.sourceUrl" target="_blank" style="color: var(--nw-info); border-color: rgba(80, 140, 230, 0.3);">
-                Ver origen 🔗
-              </a>
-              <button *ngIf="song.status !== 'approved'" class="nw-btn nw-btn-sm" style="background: rgba(74, 127, 98, 0.2); color: var(--nw-success); border: 1px solid var(--nw-success);" (click)="updateSongRequest(song, 'approved')">
+            <div class="nw-dj-action-bar">
+              <button *ngIf="song.sourceUrl || song.previewUrl" class="nw-dj-btn nw-dj-btn-listen" type="button" (click)="playSong(song)">
+                ▶ Escuchar
+              </button>
+              <button *ngIf="song.status !== 'approved'" class="nw-dj-btn nw-dj-btn-approve" type="button" (click)="updateSongRequest(song, 'approved')">
                 ✓ Aprobar
               </button>
-              <button *ngIf="song.status !== 'played'" class="nw-btn nw-btn-primary nw-btn-sm" (click)="updateSongRequest(song, 'played')">
-                ▶ Reproducir / Sonada
+              <button *ngIf="song.status !== 'played'" class="nw-dj-btn nw-dj-btn-played" type="button" (click)="updateSongRequest(song, 'played')">
+                ▶ Sonar / Tocada
               </button>
-              <button *ngIf="song.status !== 'rejected'" class="nw-btn nw-btn-danger nw-btn-sm" (click)="updateSongRequest(song, 'rejected')">
+              <button *ngIf="song.status !== 'rejected'" class="nw-dj-btn nw-dj-btn-reject" type="button" (click)="updateSongRequest(song, 'rejected')">
                 ✕ Rechazar
               </button>
             </div>
@@ -264,5 +270,38 @@
         </div>
       </section>
     </ng-container>
+  </div>
+</div>
+
+<!-- Floating / In-Page DJ Audio & Video Player -->
+<div *ngIf="activePlayingSong" class="nw-dj-player-backdrop" (click)="closePlayer()">
+  <div class="nw-dj-player-card" (click)="$event.stopPropagation()">
+    <div class="nw-dj-player-header">
+      <div class="nw-dj-player-info">
+        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover" class="nw-dj-player-cover">
+        <div *ngIf="!activePlayingSong.thumbnailUrl" class="nw-dj-player-cover-fallback">🎵</div>
+        <div>
+          <h4 class="nw-dj-player-title">{{ activePlayingSong.title }}</h4>
+          <p class="nw-dj-player-artist">{{ activePlayingSong.artist || 'Canción solicitada' }}</p>
+        </div>
+      </div>
+      <button class="nw-dj-player-close" (click)="closePlayer()" title="Cerrar reproductor">✕</button>
+    </div>
+
+    <div class="nw-dj-player-body">
+      <!-- Direct Audio Player -->
+      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl" controls autoplay class="nw-dj-audio-element"></audio>
+
+      <!-- Iframe Player (YouTube / Spotify / External) -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper" [class.spotify-wrapper]="activePlayingSong.isSpotify">
+        <iframe [src]="activePlayingSong.embedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Fallback when url is not embeddable directly -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && !activePlayingSong.embedUrl" class="nw-dj-player-empty">
+        <p>No se pudo generar vista previa directa para esta canción.</p>
+        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank" class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
+      </div>
+    </div>
   </div>
 </div>

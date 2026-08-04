@@ -105,24 +105,32 @@
             Anfitriones
             <input class="nw-input" [(ngModel)]="newEvent.hosts" placeholder="Ej: Ana, Carlos (separados por coma)">
           </label>
-          <label class="nw-label">
-            Lugar (nombre)
-            <input class="nw-input" [(ngModel)]="newEvent.venueName" placeholder="Salón Versalles">
+          <label class="nw-label" style="position: relative;">
+            Lugar (nombre) 🔍
+            <input class="nw-input" [(ngModel)]="newEvent.venueName" (input)="onVenueNameInput(newEvent.venueName)" placeholder="Salón Versalles / Hacienda">
+            <span *ngIf="locationSearchLoading" style="font-size: 11px; color: var(--nw-primary, #2563eb); display: block; margin-top: 2px;">Buscando lugar...</span>
+
+            <ul *ngIf="locationSearchResults?.length" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); list-style: none; padding: 4px 0; margin: 4px 0 0 0; max-height: 220px; overflow-y: auto;">
+              <li *ngFor="let res of locationSearchResults" (click)="selectVenueSearchResult(res)" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--nw-border-subtle, #f1f5f9); display: flex; flex-direction: column; text-align: left;">
+                <strong style="font-size: 13px; color: var(--nw-text-1, #1e293b);">{{ res.name }}</strong>
+                <small *ngIf="res.address" style="font-size: 11px; color: var(--nw-text-3, #64748b); margin-top: 2px;">{{ res.address }}</small>
+              </li>
+            </ul>
           </label>
           <label class="nw-label">
             Dirección
             <input class="nw-input" [(ngModel)]="newEvent.venueAddress" placeholder="Av. Reforma 123">
           </label>
           <label class="nw-label nw-form-wide">
-            Enlace de mapa
+            Enlace de mapa 📍
             <div style="display: flex; gap: 8px; margin-top: 4px;">
-              <input class="nw-input" [(ngModel)]="newEvent.mapUrl" placeholder="https://maps.google.com/?q=..." style="flex: 1;">
-              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openGoogleMapsSearch()" title="Buscar ubicación en Google Maps">
-                🗺️ Buscar en Maps
+              <input class="nw-input" [(ngModel)]="newEvent.mapUrl" placeholder="https://maps.app.goo.gl/... o https://google.com/maps/..." style="flex: 1;">
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="extractInfoFromMapUrl()" [disabled]="!newEvent.mapUrl || locationExtractLoading" style="white-space: nowrap;">
+                {{ locationExtractLoading ? 'Extrayendo...' : '⚡ Extraer datos' }}
               </button>
             </div>
             <span style="font-size: 11px; color: var(--nw-text-3); margin-top: 4px; display: block;">
-              Escribe el lugar y dirección arriba, haz clic en "Buscar en Maps" para encontrarlo y copia el enlace resultante aquí.
+              💡 Puedes buscar por nombre para autocompletar o pegar un enlace de Google Maps y presionar <strong>⚡ Extraer datos</strong>.
             </span>
           </label>
           

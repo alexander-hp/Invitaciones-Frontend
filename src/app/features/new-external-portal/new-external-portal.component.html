@@ -307,13 +307,15 @@
 
               <!-- Preview selection -->
               <div class="song-preview-box" *ngIf="songPreview" style="display:flex; align-items:center; gap:12px; background:var(--nw-surface-2); padding:12px; border-radius:8px; border:1px solid var(--nw-border); margin-bottom:12px;">
-                <a *ngIf="songPreview.thumbnailUrl" [href]="songPreview.sourceUrl" target="_blank" style="display:block; flex-shrink:0;">
-                  <img [src]="songPreview.thumbnailUrl" alt="Cover" style="width:56px; height:56px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); cursor:pointer;" title="Escuchar">
-                </a>
-                <div class="song-info" style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                <div *ngIf="songPreview.thumbnailUrl" (click)="playSong(songPreview)" style="display:block; flex-shrink:0; cursor:pointer;" title="Escuchar canción en la página">
+                  <img [src]="songPreview.thumbnailUrl" alt="Cover" style="width:56px; height:56px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                </div>
+                <div class="song-info" style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; cursor:pointer;" (click)="playSong(songPreview)">
                   <strong style="color:var(--nw-text-1); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ songPreview.title }}</strong>
                   <span style="font-size:13px; color:var(--nw-text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ songPreview.artist || songPreview.sourceProvider }}</span>
-                  <audio *ngIf="songPreview.previewUrl" [src]="songPreview.previewUrl" controls style="margin-top:6px; height:24px; width:100%; max-width:220px;"></audio>
+                  <button type="button" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold" style="align-self:flex-start; margin-top:4px;" (click)="$event.stopPropagation(); playSong(songPreview)">
+                    ▶ Escuchar vista previa
+                  </button>
                 </div>
               </div>
 
@@ -341,7 +343,7 @@
             <div class="upload-history" *ngIf="mySongRequests.length" style="margin-top:16px;">
               <h4>Mis canciones solicitadas</h4>
               <div class="song-list">
-                <div *ngFor="let s of mySongRequests" class="song-item">
+                <div *ngFor="let s of mySongRequests" class="song-item" (click)="playSong(s)" style="cursor:pointer;" title="Escuchar en la página">
                   <div class="song-details">
                     <strong>{{ s.title }}</strong>
                     <p>{{ s.artist }}</p>
@@ -396,4 +398,37 @@
       </div>
     </div>
   </ng-container>
+</div>
+
+<!-- Floating / In-Page DJ Audio & Video Player -->
+<div *ngIf="activePlayingSong" class="nw-dj-player-backdrop" (click)="closePlayer()">
+  <div class="nw-dj-player-card" (click)="$event.stopPropagation()">
+    <div class="nw-dj-player-header">
+      <div class="nw-dj-player-info">
+        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover" class="nw-dj-player-cover">
+        <div *ngIf="!activePlayingSong.thumbnailUrl" class="nw-dj-player-cover-fallback">🎵</div>
+        <div>
+          <h4 class="nw-dj-player-title">{{ activePlayingSong.title }}</h4>
+          <p class="nw-dj-player-artist">{{ activePlayingSong.artist || 'Canción solicitada' }}</p>
+        </div>
+      </div>
+      <button class="nw-dj-player-close" (click)="closePlayer()" title="Cerrar reproductor">✕</button>
+    </div>
+
+    <div class="nw-dj-player-body">
+      <!-- Direct Audio Player -->
+      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl" controls autoplay class="nw-dj-audio-element"></audio>
+
+      <!-- Iframe Player (YouTube / Spotify / External) -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper" [class.spotify-wrapper]="activePlayingSong.isSpotify">
+        <iframe [src]="activePlayingSong.embedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Fallback when url is not embeddable directly -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && !activePlayingSong.embedUrl" class="nw-dj-player-empty">
+        <p>No se pudo generar vista previa directa para esta canción.</p>
+        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank" class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
+      </div>
+    </div>
+  </div>
 </div>

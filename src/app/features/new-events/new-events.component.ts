@@ -28,7 +28,55 @@ export class NewEventsComponent implements OnInit {
   creating = false;
   createError = '';
 
+  locationSearchResults: Array<{ name: string; address: string; mapUrl: string; wazeUrl: string }> = [];
+  locationSearchLoading = false;
+  locationExtractLoading = false;
+  private searchTimeout: any;
+
   constructor(private api: ApiService, private router: Router) {}
+
+  onVenueNameInput(query?: string): void {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    const trimmed = (query || '').trim();
+    if (!trimmed || trimmed.length < 3) {
+      this.locationSearchResults = [];
+      this.locationSearchLoading = false;
+      return;
+    }
+    this.locationSearchLoading = true;
+    this.searchTimeout = setTimeout(() => {
+      this.api.searchPlaces(trimmed).subscribe({
+        next: (results) => {
+          this.locationSearchResults = results;
+          this.locationSearchLoading = false;
+        },
+        error: () => {
+          this.locationSearchResults = [];
+          this.locationSearchLoading = false;
+        }
+      });
+    }, 450);
+  }
+
+  selectVenueSearchResult(result: { name: string; address: string; mapUrl: string; wazeUrl: string }): void {
+    if (result.name) this.newEvent.venueName = result.name;
+    if (result.address) this.newEvent.venueAddress = result.address;
+    if (result.mapUrl) this.newEvent.mapUrl = result.mapUrl;
+    this.locationSearchResults = [];
+  }
+
+  async extractInfoFromMapUrl(): Promise<void> {
+    if (!this.newEvent.mapUrl) return;
+    this.locationExtractLoading = true;
+    try {
+      const parsed = await this.api.parseGoogleMapsUrl(this.newEvent.mapUrl);
+      if (parsed.name) this.newEvent.venueName = parsed.name;
+      if (parsed.address) this.newEvent.venueAddress = parsed.address;
+    } catch (e) {
+    } finally {
+      this.locationExtractLoading = false;
+    }
+  }
 
   ngOnInit(): void {
     this.load();

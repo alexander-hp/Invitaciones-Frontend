@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { AlbumAssetModel, DedicationModel, EventModel, GuestAccessResponse, RsvpResponse, SongRequestModel } from '../../core/models';
@@ -9,6 +10,17 @@ import { AlbumAssetModel, DedicationModel, EventModel, GuestAccessResponse, Rsvp
   styleUrls: ['./new-external-portal.component.css']
 })
 export class NewExternalPortalComponent implements OnInit, OnDestroy {
+  activePlayingSong?: {
+    title: string;
+    artist?: string;
+    thumbnailUrl?: string;
+    sourceUrl?: string;
+    embedUrl?: SafeResourceUrl | null;
+    previewUrl?: string;
+    isDirectAudio?: boolean;
+    isSpotify?: boolean;
+  };
+
   event?: EventModel;
   albumAssets: AlbumAssetModel[] = [];
   myAlbumUploads: AlbumAssetModel[] = [];
@@ -33,7 +45,55 @@ export class NewExternalPortalComponent implements OnInit, OnDestroy {
   private statusTimer?: ReturnType<typeof setInterval>;
   private dedicationTimer?: ReturnType<typeof setInterval>;
 
-  constructor(private route: ActivatedRoute, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, private api: ApiService, private sanitizer: DomSanitizer) {}
+
+  playSong(request?: Partial<SongRequestModel> | SongRequestModel): void {
+    if (!request) return;
+    const sourceUrl = request.sourceUrl || '';
+    const previewUrl = request.previewUrl || '';
+    const { embedUrl, isDirectAudio, isSpotify } = this.parseSongEmbedUrl(sourceUrl, previewUrl);
+    this.activePlayingSong = {
+      title: request.title || 'Canción',
+      artist: request.artist || '',
+      thumbnailUrl: request.thumbnailUrl || '',
+      sourceUrl,
+      previewUrl,
+      embedUrl,
+      isDirectAudio,
+      isSpotify
+    };
+  }
+
+  closePlayer(): void {
+    this.activePlayingSong = undefined;
+  }
+
+  private parseSongEmbedUrl(sourceUrl?: string, previewUrl?: string): { embedUrl: SafeResourceUrl | null; isDirectAudio: boolean; isSpotify: boolean } {
+    const url = sourceUrl || previewUrl || '';
+    if (!url) return { embedUrl: null, isDirectAudio: false, isSpotify: false };
+
+    if (/\.(mp3|wav|ogg|m4a)(\?.*)?$/i.test(url) || (previewUrl && !sourceUrl)) {
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url), isDirectAudio: true, isSpotify: false };
+    }
+
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      const embedStr = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&enablejsapi=1`;
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedStr), isDirectAudio: false, isSpotify: false };
+    }
+
+    const spMatch = url.match(/spotify\.com\/(?:intl-[a-z]+\/)?track\/([a-zA-Z0-9]+)/i);
+    if (spMatch && spMatch[1]) {
+      const embedStr = `https://open.spotify.com/embed/track/${spMatch[1]}?utm_source=generator&theme=0`;
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedStr), isDirectAudio: false, isSpotify: true };
+    }
+
+    if (/^https?:\/\//i.test(url)) {
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url), isDirectAudio: false, isSpotify: false };
+    }
+
+    return { embedUrl: null, isDirectAudio: false, isSpotify: false };
+  }
 
   ngOnInit(): void {
     this.load();

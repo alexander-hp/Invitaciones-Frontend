@@ -71,10 +71,10 @@
       <p *ngIf="!session.songRequests?.length" class="muted">No hay canciones solicitadas.</p>
       <div class="item-list" *ngIf="session.songRequests?.length">
         <article *ngFor="let song of session.songRequests">
-          <strong>{{ song.title }} <span *ngIf="song.artist">- {{ song.artist }}</span></strong>
+          <strong (click)="playSong(song)" style="cursor:pointer;" title="Escuchar en la página">🎵 {{ song.title }} <span *ngIf="song.artist">- {{ song.artist }}</span></strong>
           <span class="status-pill">{{ song.status }}</span>
           <p *ngIf="song.dedication">{{ song.dedication }}</p>
-          <a *ngIf="song.sourceUrl" [href]="song.sourceUrl" target="_blank" rel="noreferrer">Abrir enlace</a>
+          <button *ngIf="song.sourceUrl" class="ghost small" type="button" (click)="playSong(song)">▶ Escuchar</button>
           <div class="inline-actions">
             <button class="ghost small" type="button" (click)="updateSong(song, 'approved')">Aprobar</button>
             <button class="ghost small" type="button" (click)="updateSong(song, 'played')">Tocada</button>
@@ -85,3 +85,37 @@
     </section>
   </ng-container>
 </section>
+
+<!-- Floating / In-Page DJ Audio & Video Player -->
+<div *ngIf="activePlayingSong" class="nw-dj-player-backdrop" (click)="closePlayer()">
+  <div class="nw-dj-player-card" (click)="$event.stopPropagation()">
+    <div class="nw-dj-player-header">
+      <div class="nw-dj-player-info">
+        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover" class="nw-dj-player-cover">
+        <div *ngIf="!activePlayingSong.thumbnailUrl" class="nw-dj-player-cover-fallback">🎵</div>
+        <div>
+          <h4 class="nw-dj-player-title">{{ activePlayingSong.title }}</h4>
+          <p class="nw-dj-player-artist">{{ activePlayingSong.artist || 'Canción solicitada' }}</p>
+        </div>
+      </div>
+      <button class="nw-dj-player-close" (click)="closePlayer()" title="Cerrar reproductor">✕</button>
+    </div>
+
+    <div class="nw-dj-player-body">
+      <!-- Direct Audio Player -->
+      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl" controls autoplay class="nw-dj-audio-element"></audio>
+
+      <!-- Iframe Player (YouTube / Spotify / External) -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper" [class.spotify-wrapper]="activePlayingSong.isSpotify">
+        <iframe [src]="activePlayingSong.embedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Fallback when url is not embeddable directly -->
+      <div *ngIf="!activePlayingSong.isDirectAudio && !activePlayingSong.embedUrl" class="nw-dj-player-empty">
+        <p>No se pudo generar vista previa directa para esta canción.</p>
+        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank" class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
+      </div>
+    </div>
+  </div>
+</div>
+

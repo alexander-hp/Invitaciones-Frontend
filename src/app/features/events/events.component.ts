@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { EventMode, EventModel, EventPayload, EventType } from '../../core/models';
@@ -22,7 +22,55 @@ export class EventsComponent implements OnInit {
     externalSiteLabel: 'Abrir pagina del evento'
   };
 
+  locationSearchResults: Array<{ name: string; address: string; mapUrl: string; wazeUrl: string }> = [];
+  locationSearchLoading = false;
+  locationExtractLoading = false;
+  private searchTimeout: any;
+
   constructor(private api: ApiService, private router: Router) {}
+
+  onVenueNameInput(query?: string): void {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    const trimmed = (query || '').trim();
+    if (!trimmed || trimmed.length < 3) {
+      this.locationSearchResults = [];
+      this.locationSearchLoading = false;
+      return;
+    }
+    this.locationSearchLoading = true;
+    this.searchTimeout = setTimeout(() => {
+      this.api.searchPlaces(trimmed).subscribe({
+        next: (results) => {
+          this.locationSearchResults = results;
+          this.locationSearchLoading = false;
+        },
+        error: () => {
+          this.locationSearchResults = [];
+          this.locationSearchLoading = false;
+        }
+      });
+    }, 450);
+  }
+
+  selectVenueSearchResult(result: { name: string; address: string; mapUrl: string; wazeUrl: string }): void {
+    if (result.name) this.form.venueName = result.name;
+    if (result.address) this.form.venueAddress = result.address;
+    if (result.mapUrl) this.form.mapUrl = result.mapUrl;
+    this.locationSearchResults = [];
+  }
+
+  async extractInfoFromMapUrl(): Promise<void> {
+    if (!this.form.mapUrl) return;
+    this.locationExtractLoading = true;
+    try {
+      const parsed = await this.api.parseGoogleMapsUrl(this.form.mapUrl);
+      if (parsed.name) this.form.venueName = parsed.name;
+      if (parsed.address) this.form.venueAddress = parsed.address;
+    } catch (e) {
+    } finally {
+      this.locationExtractLoading = false;
+    }
+  }
 
   ngOnInit(): void {
     this.load();
