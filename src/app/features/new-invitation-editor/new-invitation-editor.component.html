@@ -962,38 +962,53 @@
         </div>
       </div>
 
-      <!-- ═══════════ 12. PLAN ═══════════ -->
-      <div class="nw-card" style="margin-bottom:16px;">
-        <div class="nw-card-header">
-          <h3>💎 Plan del evento</h3>
-          <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
-          <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
+      <!-- ═══════════ 13. PLAN ═══════════ -->
+      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('plans')" style="margin-bottom:16px;">
+        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('plans')">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0;">💎 Plan del evento</h3>
+            <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
+            <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
+            <span *ngIf="isSectionCollapsed('plans')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+          </div>
+          <button type="button" class="nw-collapse-btn">
+            {{ isSectionCollapsed('plans') ? '▲ Abrir' : '▼ Colapsar' }}
+          </button>
         </div>
-        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Un evento puede tener varias invitaciones
-          segmentadas. El plan desbloquea este evento completo.</p>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-          <div *ngFor="let plan of plans" class="nw-card"
-            style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-            <strong>{{ plan.name }}</strong>
-            <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
-            <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
-            <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
-            <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button"
-              (click)="checkout(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)">
-              {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar
-              pago') }}
-            </button>
-            <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'"
-              style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
+        <div class="nw-card-body" *ngIf="!isSectionCollapsed('plans')" style="padding-top:16px;">
+          <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Un evento puede tener varias invitaciones
+            segmentadas. El plan desbloquea este evento completo.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            <div *ngFor="let plan of plans" class="nw-card"
+              style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+              <strong>{{ plan.name }}</strong>
+              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
+              <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
+              <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
+              <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button"
+                (click)="checkout(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)">
+                {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar
+                pago') }}
+              </button>
+              <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'"
+                style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ═══════════ VISTA PREVIA ═══════════ -->
-      <div class="nw-card" style="margin-bottom:16px;">
-        <div class="nw-card-header">
-          <h3>👁️ Vista previa</h3>
+      <!-- ═══════════ 14. VISTA PREVIA ═══════════ -->
+      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('preview')" style="margin-bottom:16px;">
+        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('preview')">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0;">👁️ Vista previa rápida</h3>
+            <span *ngIf="isSectionCollapsed('preview')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+          </div>
+          <button type="button" class="nw-collapse-btn">
+            {{ isSectionCollapsed('preview') ? '▲ Abrir' : '▼ Colapsar' }}
+          </button>
         </div>
+        <div class="nw-card-body" *ngIf="!isSectionCollapsed('preview')" style="padding-top:16px;">
         <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
           [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
           [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"

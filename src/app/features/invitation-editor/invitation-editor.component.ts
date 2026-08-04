@@ -37,6 +37,25 @@ export class InvitationEditorComponent implements OnInit {
   locationExtractLoading: Record<number, boolean> = {};
   private searchTimeouts: Record<number, any> = {};
 
+  collapsedSections: Record<string, boolean> = {};
+
+  toggleSection(sectionKey: string): void {
+    this.collapsedSections[sectionKey] = !this.collapsedSections[sectionKey];
+  }
+
+  isSectionCollapsed(sectionKey: string): boolean {
+    return Boolean(this.collapsedSections[sectionKey]);
+  }
+
+  expandAllSections(): void {
+    this.collapsedSections = {};
+  }
+
+  collapseAllSections(): void {
+    const keys = ['content', 'visible_sections', 'itinerary', 'locations', 'rsvp_rules', 'gifts', 'dedications', 'lodging', 'assets', 'templates', 'plans'];
+    keys.forEach(k => this.collapsedSections[k] = true);
+  }
+
   palettePresets = [
     { name: 'Clasico editorial', primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
     { name: 'Jardin elegante', primary: '#244034', secondary: '#f4f7f0', accent: '#9f6f46' },
