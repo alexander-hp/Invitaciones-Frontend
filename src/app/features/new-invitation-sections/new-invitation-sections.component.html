@@ -2,22 +2,26 @@
   <aside class="nw-sidebar" app-new-sidebar></aside>
 
   <main class="nw-main">
-    <!-- Header -->
-    <div class="nw-editor-sticky-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-      <div style="display:flex; align-items:center; gap:16px;">
-        <button type="button" class="nw-back-btn" (click)="goBack()">
-          ← Volver
-        </button>
+    <!-- Header (Menu 1 Standard Layout) -->
+    <div class="nw-page-header nw-editor-sticky-header">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; width:100%;">
         <div>
-          <h1 style="font-size:22px; margin:0;">⚙️ Secciones de la Invitación</h1>
-          <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-3);" *ngIf="invitation">
-            {{ invitation.content?.headline || invitation.slug }}
+          <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-3)">
+            <a (click)="goBack()" style="color:var(--nw-accent-2); text-decoration:none; cursor:pointer;">← {{ event?.title || 'Eventos' }}</a>
+          </p>
+          <h1 style="font-size:22px; font-weight:700; margin:0; display:flex; align-items:center; gap:10px; color:var(--nw-text);">
+            ⚙️ Secciones de la Invitación <span *ngIf="invitation">- {{ invitation.content?.headline || invitation.slug }}</span>
+          </h1>
+          <p *ngIf="event" style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">
+            {{ formatDate(event.date) }}
+            <span *ngIf="event.venue?.name"> · 📍 {{ event.venue.name }}</span>
+            <span *ngIf="event.hosts?.length"> · 👤 {{ event.hosts.join(', ') }}</span>
           </p>
         </div>
+        <button class="nw-btn nw-btn-primary" (click)="save()" [disabled]="saving || loading">
+          {{ saving ? 'Guardando...' : '💾 Guardar Cambios' }}
+        </button>
       </div>
-      <button class="nw-btn nw-btn-primary" (click)="save()" [disabled]="saving || loading">
-        {{ saving ? 'Guardando...' : '💾 Guardar Cambios' }}
-      </button>
     </div>
 
     <!-- Alert status -->
@@ -27,146 +31,68 @@
 
     <div *ngIf="!loading && invitation" class="page-stack" style="margin-top:20px; padding-bottom:80px;">
 
-      <!-- CARD 1: Secciones Principales -->
-      <div class="panel">
+      <!-- PANEL 1: Secciones Activas -->
+      <div class="panel" style="border-left: 4px solid var(--nw-success);">
         <div class="section-heading">
-          <div>
-            <h2 style="margin:0 0 4px;">📌 1. Visibilidad de Secciones de la Invitación</h2>
-            <p class="muted" style="margin:0; font-size:13px;">
-              Cada interruptor permite activar o desactivar la presencia de una sección en la invitación web pública.
-            </p>
+          <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h2 style="margin:0 0 4px; display:flex; align-items:center; gap:8px;">
+                🟢 1. Secciones Activas en la Invitación
+              </h2>
+              <p class="muted" style="margin:0; font-size:13px;">
+                Estas secciones se mostrarán públicamente en tu invitación. Desactiva cualquiera con el interruptor.
+              </p>
+            </div>
+            <span class="nw-pill success" style="font-weight:700;">{{ activeSections.length }} activas</span>
           </div>
         </div>
 
+        <p *ngIf="!activeSections.length" style="margin-top:16px; font-size:13px; color:var(--nw-text-3);">
+          No tienes ninguna sección activa. Activa alguna de las secciones de abajo para mostrarla en la invitación.
+        </p>
+
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-top:16px;">
-          <!-- story -->
-          <div class="nw-toggle-row">
+          <div *ngFor="let sec of activeSections" class="nw-toggle-row" style="background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 12px 16px;">
             <div class="nw-toggle-info">
-              <strong>📖 Historia (Story)</strong>
-              <span>Historia de los festejados / novios.</span>
+              <strong>{{ sec.icon }} {{ sec.title }}</strong>
+              <span>{{ sec.description }}</span>
             </div>
             <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.story">
+              <input type="checkbox" [checked]="true" (change)="toggleSection(sec.key)">
               <span class="nw-slider"></span>
             </label>
           </div>
+        </div>
+      </div>
 
-          <!-- locations -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>📍 Mapas y Ubicaciones</strong>
-              <span>Ubicación de Ceremonia, Recepción, etc.</span>
+      <!-- PANEL 2: Secciones Desactivadas -->
+      <div class="panel" style="border-left: 4px solid var(--nw-text-3); opacity: 0.95;">
+        <div class="section-heading">
+          <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h2 style="margin:0 0 4px; color:var(--nw-text-2);">
+                ⚪ 2. Secciones Desactivadas (Ocultas)
+              </h2>
+              <p class="muted" style="margin:0; font-size:13px;">
+                Secciones ocultas. Activa el interruptor para moverlas a la sección visible.
+              </p>
             </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.locations">
-              <span class="nw-slider"></span>
-            </label>
+            <span class="nw-pill" style="font-weight:700;">{{ inactiveSections.length }} inactivas</span>
           </div>
+        </div>
 
-          <!-- itinerary -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>📅 Itinerario / Cronograma</strong>
-              <span>Agenda y horarios de las actividades.</span>
+        <p *ngIf="!inactiveSections.length" style="margin-top:16px; font-size:13px; color:var(--nw-success); font-weight:600;">
+          🎉 ¡Todas las secciones están activas e incluidas en tu invitación!
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-top:16px;">
+          <div *ngFor="let sec of inactiveSections" class="nw-toggle-row" style="background: var(--nw-surface); border: 1px dashed var(--nw-border); border-radius: 10px; padding: 12px 16px;">
+            <div class="nw-toggle-info" style="opacity: 0.75;">
+              <strong>{{ sec.icon }} {{ sec.title }}</strong>
+              <span>{{ sec.description }}</span>
             </div>
             <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.itinerary">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- dressCode -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>👔 Código de Vestimenta</strong>
-              <span>Instrucciones de vestuario para los invitados.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.dressCode">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- rsvp -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>💌 Confirmación de Asistencia (RSVP)</strong>
-              <span>Formulario para confirmación de invitados.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.rsvp">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- giftRegistry -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>🎁 Mesa de Regalos</strong>
-              <span>Sección con catálogo de regalos y enlaces.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.giftRegistry">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- digitalEnvelope -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>✉️ Sobre Digital / Transferencias</strong>
-              <span>Datos bancarios o QR para regalo en efectivo.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.digitalEnvelope">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- lodging -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>🏨 Hospedaje y Hoteles</strong>
-              <span>Recomendaciones de alojamiento cercano.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.lodging">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- gallery -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>🖼️ Galería Fotografíca</strong>
-              <span>Galería oficial de fotos del evento.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.gallery">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- guestAlbum -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>📸 Álbum Interactivo de Invitados</strong>
-              <span>Permite a los invitados subir sus propias fotos.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.guestAlbum">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <!-- dedications -->
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>💬 Dedicatorias y Libro de Visitas</strong>
-              <span>Libro de firmas y felicitaciones para los novios.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="sectionSettings.dedications">
+              <input type="checkbox" [checked]="false" (change)="toggleSection(sec.key)">
               <span class="nw-slider"></span>
             </label>
           </div>

@@ -1,11 +1,14 @@
 <div class="nw-shell">
-  <aside class="nw-sidebar">
-    <a routerLink="/new/dashboard" class="nw-sidebar-brand">
-      <span class="nw-brand-icon">I</span><span>Invitaciones</span>
-    </a>
-    <span class="nw-sidebar-label">Croquis</span>
+  <aside class="nw-sidebar" app-new-sidebar>
+    <span class="nw-sidebar-label" *ngIf="event">{{ event.title }}</span>
+    <nav *ngIf="event">
+      <a [routerLink]="['/new/events', event._id || event.id]" style="cursor:pointer">
+        <span class="nav-icon">←</span> Volver al evento
+      </a>
+    </nav>
+
+    <span class="nw-sidebar-label">Herramientas Croquis</span>
     <nav>
-      <a style="cursor:pointer" (click)="goBack()"><span class="nav-icon">←</span> Volver al evento</a>
       <a style="cursor:pointer" (click)="openCreateModal()"><span class="nav-icon">➕</span> Nueva mesa</a>
       <a style="cursor:pointer" (click)="openAutoAssignModal()"><span class="nav-icon">⚡</span> Auto-asignar</a>
       <a style="cursor:pointer" (click)="clearAssignments()"><span class="nav-icon">🧹</span> Limpiar mesas</a>
@@ -119,39 +122,50 @@
   </aside>
 
   <main class="nw-main" style="padding:0; display:flex; flex-direction:column; height:100vh;">
-    <div style="padding:16px 20px; border-bottom:1px solid var(--nw-border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <!-- ═══════════════ MENU 1: HEADER DEL EVENTO ═══════════════ -->
+    <div class="nw-page-header" style="padding:16px 24px; margin:0; border-bottom:1px solid var(--nw-border); border-radius:0; background:var(--nw-surface);">
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:12px;">
         <div>
-          <h1 style="margin:0; font-size:20px; font-family:var(--nw-font-display);">🪑 Croquis de mesas</h1>
-          <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-3);" *ngIf="event">{{ event.title }} · {{ tables.length }} mesa{{ tables.length !== 1 ? 's' : '' }}</p>
+          <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-3)" *ngIf="event">
+            <a [routerLink]="['/new/events', event._id || event.id]" style="color:var(--nw-accent-2); text-decoration:none">← {{ event.title }}</a>
+          </p>
+          <h1 style="font-size:22px; font-weight:700; margin:0; color:var(--nw-text);">
+            {{ event ? eventTypeIcon(event.type) : '🪑' }} Croquis de Mesas <span *ngIf="event">- {{ event.title }}</span>
+          </h1>
+          <p *ngIf="event" style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">
+            {{ formatDate(event.date) }}
+            <span *ngIf="event.venue?.name"> · 📍 {{ event.venue.name }}</span>
+            <span *ngIf="event.hosts?.length"> · 👤 {{ event.hosts.join(', ') }}</span>
+          </p>
         </div>
-
-        <!-- Header Floor Selector Pills -->
-        <div style="display:flex; align-items:center; gap:4px; background:var(--nw-surface-2); padding:4px 8px; border-radius:20px; border:1px solid var(--nw-border);">
-          <button *ngFor="let f of floorsList" 
-                  type="button" 
-                  class="nw-btn nw-btn-sm" 
-                  [class.nw-btn-primary]="activeFloor === f.id" 
-                  [class.nw-btn-ghost]="activeFloor !== f.id" 
-                  (click)="selectFloor(f.id)"
-                  style="font-size:12px; padding:3px 10px; border-radius:14px; min-height:26px;">
-            🏢 {{ f.name }} <span class="nw-pill" style="font-size:10px; padding:1px 5px; margin-left:2px;">{{ floorTableCount(f.id) }}</span>
-          </button>
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openAddFloorModal()" style="font-size:12px; padding:3px 8px; border-radius:14px; min-height:26px; color:var(--nw-accent);" title="Agregar un segundo piso o terraza">
-            ➕ Agregar piso
-          </button>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <!-- Header Floor Selector Pills -->
+          <div style="display:flex; align-items:center; gap:4px; background:var(--nw-surface-2); padding:4px 8px; border-radius:20px; border:1px solid var(--nw-border);">
+            <button *ngFor="let f of floorsList" 
+                    type="button" 
+                    class="nw-btn nw-btn-sm" 
+                    [class.nw-btn-primary]="activeFloor === f.id" 
+                    [class.nw-btn-ghost]="activeFloor !== f.id" 
+                    (click)="selectFloor(f.id)"
+                    style="font-size:12px; padding:3px 10px; border-radius:14px; min-height:26px;">
+              🏢 {{ f.name }} <span class="nw-pill" style="font-size:10px; padding:1px 5px; margin-left:2px;">{{ floorTableCount(f.id) }}</span>
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openAddFloorModal()" style="font-size:12px; padding:3px 8px; border-radius:14px; min-height:26px; color:var(--nw-accent);" title="Agregar un segundo piso o terraza">
+              ➕ Agregar piso
+            </button>
+          </div>
+          <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="openCreateModal()">➕ Nueva mesa</button>
+          <button class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openAutoAssignModal()">⚡ Auto-asignar</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearAssignments()" [disabled]="clearingTables || !hasAssignedGuests" title="Desasignar a todos los invitados de sus mesas">🧹 {{ clearingTables ? 'Limpiando...' : 'Limpiar mesas' }}</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="exportPDFPlan()" title="Exportar plano PDF">📄 Exportar PDF</button>
         </div>
       </div>
-      <div style="display:flex; gap:6px; align-items:center;">
+      <div style="display:flex; gap:6px; align-items:center; margin-top:10px;">
         <p *ngIf="message" class="nw-pill success" style="margin:0;">{{ message }}</p>
         <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="zoomOut()" title="Alejar">−</button>
         <span style="font-size:13px; color:var(--nw-text-3); min-width:40px; text-align:center;">{{ (zoom * 100) | number:'1.0-0' }}%</span>
         <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="zoomIn()" title="Acercar">+</button>
         <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="resetView()" title="Reset">↺</button>
-        <button class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openAutoAssignModal()">⚡ Auto-asignar</button>
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearAssignments()" [disabled]="clearingTables || !hasAssignedGuests" title="Desasignar a todos los invitados de sus mesas">🧹 {{ clearingTables ? 'Limpiando...' : 'Limpiar mesas' }}</button>
-        <button class="nw-btn nw-btn-secondary nw-btn-sm" (click)="exportPDFPlan()" title="Descargar o imprimir plano completo de todos los pisos en PDF">📄 Exportar PDF</button>
-        <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="openCreateModal()">+ Mesa</button>
       </div>
     </div>
 

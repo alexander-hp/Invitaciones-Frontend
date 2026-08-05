@@ -150,6 +150,26 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     { value: 'entrance', label: '🚪 Entrada / Acceso', icon: '🚪', category: 'element' }
   ];
 
+  eventTypeIcon(type?: string): string {
+    switch (type) {
+      case 'boda': return '💍';
+      case 'xv': return '👑';
+      case 'bautizo': return '🕊️';
+      case 'cumpleanos': return '🎂';
+      case 'graduacion': return '🎓';
+      case 'baby_shower': return '🍼';
+      case 'corporativo': return '💼';
+      default: return '🎉';
+    }
+  }
+
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
 
   ngOnInit(): void {

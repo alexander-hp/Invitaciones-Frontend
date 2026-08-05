@@ -168,6 +168,85 @@ export class NewEventDetailComponent implements OnInit {
     { code: '+598', country: '🇺🇾 Uruguay (+598)' },
     { code: '+58', country: '🇻🇪 Venezuela (+58)' }
   ];
+  countrySearchQuery = '';
+  showCountryDropdown = false;
+  guestFormSections = {
+    organization: false,
+    roles: false,
+    companions: false
+  };
+
+  get filteredCountryCodes(): Array<{ code: string; country: string }> {
+    if (!this.countrySearchQuery.trim()) {
+      return this.countryCodes;
+    }
+    const query = this.countrySearchQuery.toLowerCase().trim();
+    return this.countryCodes.filter(c =>
+      c.country.toLowerCase().includes(query) || c.code.toLowerCase().includes(query)
+    );
+  }
+
+  selectCountryCode(code: string): void {
+    this.guestForm.phoneCountryCode = code;
+    this.showCountryDropdown = false;
+    this.countrySearchQuery = '';
+  }
+
+  getSelectedCountryLabel(): string {
+    const found = this.countryCodes.find(c => c.code === this.guestForm.phoneCountryCode);
+    return found ? found.country : `${this.guestForm.phoneCountryCode || '+52'}`;
+  }
+
+  toggleGuestFormSection(section: 'organization' | 'roles' | 'companions'): void {
+    this.guestFormSections[section] = !this.guestFormSections[section];
+  }
+
+  expandAllGuestFormSections(expand: boolean): void {
+    this.guestFormSections.organization = expand;
+    this.guestFormSections.roles = expand;
+    this.guestFormSections.companions = expand;
+  }
+
+  companionList: Array<{ name: string }> = [];
+
+  onCompanionsCountChange(): void {
+    const targetCount = Math.max(0, Math.floor(Number(this.guestForm.allowedCompanions || 0)));
+    this.guestForm.allowedCompanions = targetCount;
+
+    while (this.companionList.length < targetCount) {
+      this.companionList.push({ name: '' });
+    }
+    if (this.companionList.length > targetCount) {
+      this.companionList = this.companionList.slice(0, targetCount);
+    }
+    this.syncCompanionNamesText();
+  }
+
+  onCompanionNameChange(): void {
+    this.syncCompanionNamesText();
+  }
+
+  addCompanionRow(): void {
+    this.companionList.push({ name: '' });
+    this.guestForm.allowedCompanions = this.companionList.length;
+    this.syncCompanionNamesText();
+  }
+
+  removeCompanionRow(index: number): void {
+    if (index >= 0 && index < this.companionList.length) {
+      this.companionList.splice(index, 1);
+      this.guestForm.allowedCompanions = this.companionList.length;
+      this.syncCompanionNamesText();
+    }
+  }
+
+  syncCompanionNamesText(): void {
+    this.companionNames = this.companionList
+      .map(c => (c.name || '').trim())
+      .filter(Boolean)
+      .join('\n');
+  }
+
   guestForm = {
     name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
     relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '',
@@ -176,53 +255,33 @@ export class NewEventDetailComponent implements OnInit {
   companionNames = '';
 
   // Guest form options
-  defaultGroupOptions: string[] = [
+  unifiedGuestOptions: string[] = [
     'Familia',
     'Familia de la Novia',
     'Familia del Novio',
     'Amigos',
     'Amigos de la Novia',
     'Amigos del Novio',
-    'Trabajo / Colegas',
-    'VIP',
-    'Staff'
+    'Padrinos / Madrinas',
+    'Damas de Honor / Best Men',
+    'Anfitriones / Novios',
+    'Compañeros de Trabajo',
+    'Invitados VIP',
+    'Staff / Proveedores'
   ];
 
-  get availableGroupOptions(): string[] {
-    const set = new Set([...this.defaultGroupOptions, ...this.guestGroups]);
-    return Array.from(set).filter(g => g && g !== 'General').sort();
+  get availableUnifiedOptions(): string[] {
+    const set = new Set([...this.unifiedGuestOptions, ...this.guestGroups]);
+    return Array.from(set).filter(g => g && g !== 'General');
   }
 
-  relationshipOptions: string[] = [
-    'Invitado',
-    'Novio',
-    'Novia',
-    'Festejado(a)',
-    'Anfitrión / Anfitriona',
-    'Padrino',
-    'Madrina',
-    'Dama de Honor',
-    'Best Man',
-    'Papá de la Novia',
-    'Mamá de la Novia',
-    'Papá del Novio',
-    'Mamá del Novio',
-    'Padres',
-    'Hermano / Hermana',
-    'Testigo',
-    'Graduado(a)',
-    'VIP',
-    'Staff'
-  ];
+  get availableGroupOptions(): string[] {
+    return this.availableUnifiedOptions;
+  }
 
-  visibilityOptions: Array<{ value: string; label: string }> = [
-    { value: 'general', label: 'General' },
-    { value: 'familia', label: 'Familia' },
-    { value: 'vip', label: 'VIP' },
-    { value: 'staff', label: 'Staff' },
-    { value: 'anfitriones', label: 'Anfitriones' },
-    { value: 'mesa_principal', label: 'Mesa Principal' }
-  ];
+  get relationshipOptions(): string[] {
+    return this.availableUnifiedOptions;
+  }
 
   roleOptions: Array<{ value: string; label: string }> = [
     { value: 'invitado', label: 'Invitado' },
@@ -408,22 +467,71 @@ h1 {
     });
   }
 
+  loadedTabs = new Set<Tab>();
+
+  selectTab(tab: Tab, force = false): void {
+    this.activeTab = tab;
+    if (!this.event) return;
+    this.loadTabContent(tab, force);
+  }
+
+  loadTabContent(tab: Tab, force = false): void {
+    const eventId = this.eventId;
+    if (!eventId) return;
+
+    if (!force && this.loadedTabs.has(tab)) {
+      return;
+    }
+
+    this.loadedTabs.add(tab);
+
+    switch (tab) {
+      case 'info':
+        this.loadInvitations(eventId);
+        this.loadEventMetrics(eventId);
+        this.loadPaymentStatus(eventId);
+        this.loadPlans();
+        this.loadAccessLinks(eventId);
+        this.loadMembers(eventId);
+        this.loadGuests(eventId);
+        break;
+      case 'guests':
+        this.loadGuests(eventId);
+        this.loadTables(eventId);
+        break;
+      case 'tables':
+        this.loadTables(eventId);
+        this.loadGuests(eventId);
+        break;
+      case 'rsvps':
+        this.loadRsvps(eventId);
+        this.loadGuests(eventId);
+        break;
+      case 'album':
+        this.loadAlbum(eventId);
+        break;
+      case 'communication':
+        this.loadGuests(eventId);
+        this.loadWhatsAppMedia(eventId);
+        this.loadWhatsAppStatus();
+        break;
+      case 'dj':
+        this.loadSongRequests(eventId);
+        break;
+      case 'dedications':
+        this.loadDedications(eventId);
+        break;
+      case 'integration':
+        if (this.event?.mode === 'external_dashboard') {
+          this.loadEmbedManifest(this.event);
+        }
+        break;
+    }
+  }
+
   private loadRelated(eventId: string): void {
-    this.loadInvitations(eventId);
-    this.loadGuests(eventId);
-    this.loadRsvps(eventId);
-    this.loadTables(eventId);
-    this.loadAlbum(eventId);
-    this.loadEventMetrics(eventId);
-    this.loadWhatsAppMedia(eventId);
-    this.loadWhatsAppStatus();
-    this.loadPaymentStatus(eventId);
-    this.loadPlans();
-    this.loadAccessLinks(eventId);
-    this.loadMembers(eventId);
-    this.loadSongRequests(eventId);
-    this.loadDedications(eventId);
-    if (this.event?.mode === 'external_dashboard') this.loadEmbedManifest(this.event);
+    this.loadedTabs.clear();
+    this.loadTabContent(this.activeTab, true);
   }
 
   // ── Getters ──
@@ -652,17 +760,117 @@ h1 {
     }
   }
 
-  // ── Invitation ──
+  // ── Invitation Wizard ──
+  showCreateWizardModal = false;
+  wizardSections: Record<string, boolean> = {
+    story: true,
+    locations: true,
+    itinerary: true,
+    dressCode: true,
+    rsvp: true,
+    giftRegistry: true,
+    digitalEnvelope: false,
+    lodging: false,
+    gallery: true,
+    guestAlbum: true,
+    dedications: true,
+    songRequests: true
+  };
 
+  readonly wizardSectionDefinitions = [
+    { key: 'story', icon: '📖', label: 'Historia de los Novios', description: 'Biografía o relato especial sobre la pareja o el festejado.' },
+    { key: 'locations', icon: '📍', label: 'Mapas y Ubicaciones', description: 'Dirección e integración de mapas para ceremonia y fiesta.' },
+    { key: 'itinerary', icon: '📅', label: 'Itinerario / Agenda', description: 'Horarios de recepción, cena, baile, misa y eventos clave.' },
+    { key: 'dressCode', icon: '👔', label: 'Código de Vestimenta', description: 'Indicaciones sobre estilo o colores de vestuario recomendados.' },
+    { key: 'rsvp', icon: '💌', label: 'Confirmación RSVP', description: 'Formulario dinámico para que los invitados confirmen asistencia.' },
+    { key: 'giftRegistry', icon: '🎁', label: 'Mesa de Regalos', description: 'Catálogo con enlaces a mesas de regalos en tiendas.' },
+    { key: 'digitalEnvelope', icon: '✉️', label: 'Sobre Digital / Transferencias', description: 'Datos bancarios y QR para obsequios en efectivo.' },
+    { key: 'lodging', icon: '🏨', label: 'Hospedaje y Hoteles', description: 'Opciones de hoteles y estancia recomendada para invitados.' },
+    { key: 'gallery', icon: '🖼️', label: 'Galería Fotográfica', description: 'Colección de fotos oficiales o de pre-boda.' },
+    { key: 'guestAlbum', icon: '📸', label: 'Álbum de Invitados', description: 'Permite a los asistentes subir sus propias fotos del evento.' },
+    { key: 'dedications', icon: '💬', label: 'Libro de Visitas / Dedicatorias', description: 'Espacio para que los invitados dejen felicitaciones y notas.' },
+    { key: 'songRequests', icon: '🎵', label: 'Música / Pedir Canciones', description: 'Permite sugerir canciones para la lista del DJ.' }
+  ];
 
-  createInvitation(): void {
+  openCreateInvitationWizard(): void {
     if (!this.event) return;
     if (this.event.mode === 'external_dashboard') {
       this.error = 'Este evento está en modo dashboard externo.';
       return;
     }
+    this.wizardSections = {
+      story: true,
+      locations: true,
+      itinerary: true,
+      dressCode: true,
+      rsvp: true,
+      giftRegistry: true,
+      digitalEnvelope: false,
+      lodging: false,
+      gallery: true,
+      guestAlbum: true,
+      dedications: true,
+      songRequests: true
+    };
+    this.showCreateWizardModal = true;
+  }
+
+  closeCreateInvitationWizard(): void {
+    this.showCreateWizardModal = false;
+  }
+
+  applyWizardPreset(preset: 'all' | 'essential' | 'none'): void {
+    if (preset === 'all') {
+      this.wizardSectionDefinitions.forEach(sec => this.wizardSections[sec.key] = true);
+    } else if (preset === 'essential') {
+      this.wizardSectionDefinitions.forEach(sec => {
+        this.wizardSections[sec.key] = ['locations', 'itinerary', 'dressCode', 'rsvp'].includes(sec.key);
+      });
+    } else if (preset === 'none') {
+      this.wizardSectionDefinitions.forEach(sec => this.wizardSections[sec.key] = false);
+    }
+  }
+
+  toggleWizardSection(key: string): void {
+    this.wizardSections[key] = !this.wizardSections[key];
+  }
+
+  get activeWizardSectionsCount(): number {
+    return Object.values(this.wizardSections).filter(Boolean).length;
+  }
+
+  confirmCreateInvitation(): void {
+    if (!this.event) return;
     this.saving = true;
     this.error = '';
+
+    const sectionSettings = {
+      story: Boolean(this.wizardSections['story']),
+      locations: Boolean(this.wizardSections['locations']),
+      itinerary: Boolean(this.wizardSections['itinerary']),
+      dressCode: Boolean(this.wizardSections['dressCode']),
+      rsvp: Boolean(this.wizardSections['rsvp']),
+      giftRegistry: Boolean(this.wizardSections['giftRegistry']),
+      digitalEnvelope: Boolean(this.wizardSections['digitalEnvelope']),
+      lodging: Boolean(this.wizardSections['lodging']),
+      gallery: Boolean(this.wizardSections['gallery']),
+      guestAlbum: Boolean(this.wizardSections['guestAlbum']),
+      dedications: Boolean(this.wizardSections['dedications'])
+    };
+
+    const giftSettings = {
+      enabled: Boolean(this.wizardSections['giftRegistry']),
+      showRegistry: Boolean(this.wizardSections['giftRegistry']),
+      showEnvelope: Boolean(this.wizardSections['digitalEnvelope']),
+      introText: 'Tu presencia es nuestro mejor regalo, pero si deseas hacer un detalle:'
+    };
+
+    const dedicationSettings = {
+      enabled: Boolean(this.wizardSections['dedications']),
+      requireApproval: true,
+      introText: 'Escríbenos un mensaje para recordar este día especial.'
+    };
+
     this.api.createInvitation({
       event: this.eventId,
       slug: this.slugify(this.event.title),
@@ -672,12 +880,48 @@ h1 {
         subheadline: 'Nos encantaría que nos acompañes',
         message: 'Confirma tu asistencia y comparte este día especial con nosotros.',
         palette: { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
-        gallery: []
+        gallery: [],
+        sectionSettings,
+        giftSettings,
+        dedicationSettings,
+        privateAlbumEnabled: Boolean(this.wizardSections['guestAlbum'])
       }
     }).subscribe({
-      next: ({ invitation }) => this.router.navigate(['/new/invitations', this.getInvitationId(invitation), 'editor']),
-      error: (err) => { this.error = err.error?.message || 'No se pudo crear la invitación.'; this.saving = false; }
+      next: ({ invitation }) => {
+        this.showCreateWizardModal = false;
+
+        // Optionally update event externalContent if songRequests option is selected
+        if (this.eventId && this.event) {
+          const rawExternalContent = {
+            ...(this.event.externalContent || {}),
+            songRequestSettings: {
+              enabled: Boolean(this.wizardSections['songRequests']),
+              maxRequestsPerGuest: 3,
+              allowDedications: true,
+              requireApproval: true
+            }
+          };
+          this.api.updateEvent(this.eventId, { externalContent: rawExternalContent }).subscribe({
+            next: () => {
+              this.router.navigate(['/new/invitations', this.getInvitationId(invitation), 'editor']);
+            },
+            error: () => {
+              this.router.navigate(['/new/invitations', this.getInvitationId(invitation), 'editor']);
+            }
+          });
+        } else {
+          this.router.navigate(['/new/invitations', this.getInvitationId(invitation), 'editor']);
+        }
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'No se pudo crear la invitación.';
+        this.saving = false;
+      }
     });
+  }
+
+  createInvitation(): void {
+    this.openCreateInvitationWizard();
   }
 
   deleteInvitation(inv: InvitationModel): void {
@@ -713,6 +957,9 @@ h1 {
     this.editingGuest = guest;
     this.guestError = '';
     this.guestMessage = '';
+    this.countrySearchQuery = '';
+    this.showCountryDropdown = false;
+
     if (guest) {
       const parsedPhone = this.parsePhoneParts(guest.phone);
       const groupVal = guest.group || '';
@@ -722,7 +969,7 @@ h1 {
       const relSel = !relVal ? '' : (this.relationshipOptions.includes(relVal) ? relVal : 'otro');
 
       const visVal = guest.visibilityGroup || '';
-      const visSel = !visVal ? '' : (this.visibilityOptions.some(o => o.value === visVal) ? visVal : 'otro');
+      const visSel = !visVal ? '' : (this.availableUnifiedOptions.includes(visVal) ? visVal : 'otro');
 
       const rolesVal = (guest.roles || []).join(', ');
       const roleSel = !rolesVal ? '' : (this.roleOptions.some(o => o.value === rolesVal) ? rolesVal : 'otro');
@@ -746,13 +993,31 @@ h1 {
         seatLabel: guest.seatLabel || '',
         allowedCompanions: guest.allowedCompanions || 0
       };
-      this.companionNames = (guest.companions || []).map(c => c.name || '').filter(Boolean).join('\n');
+      
+      const companionArr = (guest.companions || []).map(c => c.name || '').filter(Boolean);
+      this.companionNames = companionArr.join('\n');
+      const count = Math.max(Number(guest.allowedCompanions || 0), companionArr.length);
+      this.guestForm.allowedCompanions = count;
+
+      this.companionList = [];
+      for (let i = 0; i < count; i++) {
+        this.companionList.push({ name: companionArr[i] || '' });
+      }
+
+      // Desplegar secciones si el invitado editado contiene datos en ellas
+      this.guestFormSections = {
+        organization: Boolean(groupVal || guest.tableName || guest.seatLabel),
+        roles: Boolean(relVal || visVal || rolesVal),
+        companions: Boolean(count || (guest.tags && guest.tags.length > 0))
+      };
     } else {
       this.guestForm = {
         name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
         relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '', allowedCompanions: 0
       };
       this.companionNames = '';
+      this.companionList = [];
+      this.guestFormSections = { organization: false, roles: false, companions: false };
     }
     this.showGuestForm = true;
 
@@ -778,28 +1043,79 @@ h1 {
     if (this.guestForm.groupSelect !== 'otro') {
       this.guestForm.group = this.guestForm.groupSelect;
     } else {
-      if (this.availableGroupOptions.includes(this.guestForm.group)) {
+      if (this.availableUnifiedOptions.includes(this.guestForm.group)) {
         this.guestForm.group = '';
       }
     }
+    this.syncCrossFields('group', this.guestForm.group);
   }
 
   onRelationshipSelectChange(): void {
     if (this.guestForm.relationshipSelect !== 'otro') {
       this.guestForm.relationshipLabel = this.guestForm.relationshipSelect;
     } else {
-      if (this.relationshipOptions.includes(this.guestForm.relationshipLabel)) {
+      if (this.availableUnifiedOptions.includes(this.guestForm.relationshipLabel)) {
         this.guestForm.relationshipLabel = '';
       }
     }
+    this.syncCrossFields('relationship', this.guestForm.relationshipLabel);
   }
 
   onVisibilitySelectChange(): void {
     if (this.guestForm.visibilitySelect !== 'otro') {
       this.guestForm.visibilityGroup = this.guestForm.visibilitySelect;
     } else {
-      if (this.visibilityOptions.some(o => o.value === this.guestForm.visibilityGroup)) {
+      if (this.availableUnifiedOptions.includes(this.guestForm.visibilityGroup)) {
         this.guestForm.visibilityGroup = '';
+      }
+    }
+    this.syncCrossFields('visibility', this.guestForm.visibilityGroup);
+  }
+
+  syncCrossFields(source: 'group' | 'relationship' | 'visibility', val: string): void {
+    if (!val || val === 'otro') return;
+
+    const selectVal = this.availableUnifiedOptions.includes(val) ? val : 'otro';
+
+    // 1. Auto-llenar Grupo / Categoría SOLO SI ESTÁ VACÍO
+    if (source !== 'group' && (!this.guestForm.group || !this.guestForm.groupSelect)) {
+      this.guestForm.group = val;
+      this.guestForm.groupSelect = selectVal;
+    }
+
+    // 2. Auto-llenar Rol visible SOLO SI ESTÁ VACÍO
+    if (source !== 'relationship' && (!this.guestForm.relationshipLabel || !this.guestForm.relationshipSelect)) {
+      this.guestForm.relationshipLabel = val;
+      this.guestForm.relationshipSelect = selectVal;
+    }
+
+    // 3. Auto-llenar Visibilidad SOLO SI ESTÁ VACÍA
+    if (source !== 'visibility' && (!this.guestForm.visibilityGroup || !this.guestForm.visibilitySelect)) {
+      this.guestForm.visibilityGroup = val;
+      this.guestForm.visibilitySelect = selectVal;
+    }
+
+    // 4. Auto-sugerir Rol del sistema SOLO SI ESTÁ VACÍO O ES 'invitado'
+    if (!this.guestForm.roleSelect || this.guestForm.roleSelect === 'invitado') {
+      const lower = val.toLowerCase();
+      if (lower.includes('padrino') || lower.includes('madrina')) {
+        this.guestForm.roleSelect = 'padrino';
+        this.guestForm.rolesText = 'padrino';
+      } else if (lower.includes('dama') || lower.includes('best men')) {
+        this.guestForm.roleSelect = 'dama_honor';
+        this.guestForm.rolesText = 'dama_honor';
+      } else if (lower.includes('anfitrión') || lower.includes('novio') || lower.includes('festejado')) {
+        this.guestForm.roleSelect = 'anfitrion';
+        this.guestForm.rolesText = 'anfitrion';
+      } else if (lower.includes('staff') || lower.includes('proveedor')) {
+        this.guestForm.roleSelect = 'staff';
+        this.guestForm.rolesText = 'staff';
+      } else if (lower.includes('vip')) {
+        this.guestForm.roleSelect = 'vip';
+        this.guestForm.rolesText = 'vip';
+      } else if (lower.includes('familia')) {
+        this.guestForm.roleSelect = 'familia';
+        this.guestForm.rolesText = 'familia';
       }
     }
   }
@@ -812,12 +1128,62 @@ h1 {
         this.guestForm.rolesText = '';
       }
     }
+
+    const roleVal = this.guestForm.roleSelect;
+    if (!roleVal || roleVal === 'otro') return;
+
+    // Auto-sincronizar relationshipSelect si está vacío
+    if (!this.guestForm.relationshipSelect) {
+      const match = this.relationshipOptions.find(opt => {
+        const lowerOpt = opt.toLowerCase();
+        if (roleVal === 'padrino') return lowerOpt.includes('padrino') || lowerOpt.includes('madrina');
+        if (roleVal === 'dama_honor') return lowerOpt.includes('dama');
+        if (roleVal === 'anfitrion') return lowerOpt.includes('anfitrión') || lowerOpt.includes('anfitriona');
+        if (roleVal === 'staff') return lowerOpt.includes('staff');
+        if (roleVal === 'vip') return lowerOpt.includes('vip');
+        if (roleVal === 'familia') return lowerOpt.includes('familia') || lowerOpt.includes('padres');
+        if (roleVal === 'graduado') return lowerOpt.includes('graduado');
+        return false;
+      });
+      if (match) {
+        this.guestForm.relationshipSelect = match;
+        this.guestForm.relationshipLabel = match;
+      }
+    }
+
+    // Auto-sincronizar visibilitySelect si está vacío
+    if (!this.guestForm.visibilitySelect) {
+      if (['padrino', 'vip'].includes(roleVal)) {
+        this.guestForm.visibilitySelect = 'vip';
+        this.guestForm.visibilityGroup = 'vip';
+      } else if (roleVal === 'staff') {
+        this.guestForm.visibilitySelect = 'staff';
+        this.guestForm.visibilityGroup = 'staff';
+      } else if (roleVal === 'anfitrion') {
+        this.guestForm.visibilitySelect = 'anfitriones';
+        this.guestForm.visibilityGroup = 'anfitriones';
+      } else if (roleVal === 'familia') {
+        this.guestForm.visibilitySelect = 'familia';
+        this.guestForm.visibilityGroup = 'familia';
+      }
+    }
   }
 
   saveGuest(keepOpen = false): void {
-    if (!this.guestForm.name.trim()) { this.guestError = 'El nombre del invitado es obligatorio'; return; }
+    const nameClean = (this.guestForm.name || '').trim();
+    if (!nameClean) {
+      this.guestError = 'El nombre del invitado es obligatorio.';
+      return;
+    }
 
     const cleanLocal = (this.guestForm.phoneLocal || '').trim().replace(/\D/g, '');
+    const emailClean = (this.guestForm.email || '').trim();
+
+    if (!cleanLocal && !emailClean) {
+      this.guestError = 'Por favor ingresa al menos un medio de contacto (Teléfono o Correo electrónico).';
+      return;
+    }
+
     const fullPhone = cleanLocal ? `${this.guestForm.phoneCountryCode || '+52'}${cleanLocal}` : '';
     this.guestForm.phone = fullPhone;
 
@@ -830,8 +1196,8 @@ h1 {
     this.guestError = '';
     const wasEditing = Boolean(this.editingGuest);
     const guestData: Omit<GuestPayload, 'event'> = {
-      name: this.guestForm.name,
-      email: this.guestForm.email || undefined,
+      name: nameClean,
+      email: emailClean || undefined,
       phone: fullPhone || undefined,
       group: this.guestForm.group || undefined,
       roles: this.splitCsv(this.guestForm.rolesText),
@@ -862,15 +1228,30 @@ h1 {
           const lastGroupSel = this.guestForm.groupSelect;
           const lastCode = this.guestForm.phoneCountryCode;
           const lastTable = this.guestForm.tableName;
+          const lastRelLabel = this.guestForm.relationshipLabel;
+          const lastRelSel = this.guestForm.relationshipSelect;
+          const lastRoleText = this.guestForm.rolesText;
+          const lastRoleSel = this.guestForm.roleSelect;
+          const lastVisGroup = this.guestForm.visibilityGroup;
+          const lastVisSel = this.guestForm.visibilitySelect;
 
           this.guestForm.name = '';
           this.guestForm.email = '';
           this.guestForm.phoneLocal = '';
           this.companionNames = '';
+          this.companionList = [];
+          this.guestForm.allowedCompanions = 0;
+
           this.guestForm.phoneCountryCode = lastCode || '+52';
           this.guestForm.group = lastGroup;
           this.guestForm.groupSelect = lastGroupSel;
           this.guestForm.tableName = lastTable;
+          this.guestForm.relationshipLabel = lastRelLabel;
+          this.guestForm.relationshipSelect = lastRelSel;
+          this.guestForm.rolesText = lastRoleText;
+          this.guestForm.roleSelect = lastRoleSel;
+          this.guestForm.visibilityGroup = lastVisGroup;
+          this.guestForm.visibilitySelect = lastVisSel;
 
           setTimeout(() => {
             const input = document.getElementById('guestNameInput') as HTMLInputElement;

@@ -58,6 +58,79 @@ export class NewInvitationSectionsComponent implements OnInit {
     requireApproval: true
   };
 
+  readonly allSectionsList = [
+    { key: 'story', icon: '📖', title: 'Historia (Story)', description: 'Historia de los festejados / novios.' },
+    { key: 'locations', icon: '📍', title: 'Mapas y Ubicaciones', description: 'Ubicación de Ceremonia, Recepción, etc.' },
+    { key: 'itinerary', icon: '📅', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades.' },
+    { key: 'dressCode', icon: '👔', title: 'Código de Vestimenta', description: 'Instrucciones de vestuario para los invitados.' },
+    { key: 'rsvp', icon: '💌', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario para confirmación de invitados.' },
+    { key: 'giftRegistry', icon: '🎁', title: 'Mesa de Regalos', description: 'Sección con catálogo de regalos y enlaces.' },
+    { key: 'digitalEnvelope', icon: '✉️', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios o QR para regalo en efectivo.' },
+    { key: 'lodging', icon: '🏨', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento cercano.' },
+    { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica', description: 'Galería oficial de fotos del evento.' },
+    { key: 'guestAlbum', icon: '📸', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus propias fotos.' },
+    { key: 'dedications', icon: '💬', title: 'Dedicatorias y Libro de Visitas', description: 'Libro de firmas y felicitaciones para los novios.' },
+    { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones', description: 'Permite a los invitados recomendar canciones para el DJ.' }
+  ];
+
+  isSectionActive(key: string): boolean {
+    if (key === 'songRequests') {
+      return Boolean(this.songRequestSettings.enabled);
+    }
+    return Boolean((this.sectionSettings as any)[key]);
+  }
+
+  toggleSection(key: string): void {
+    if (key === 'songRequests') {
+      this.songRequestSettings.enabled = !this.songRequestSettings.enabled;
+      return;
+    }
+    const current = Boolean((this.sectionSettings as any)[key]);
+    const newValue = !current;
+    (this.sectionSettings as any)[key] = newValue;
+
+    if (key === 'giftRegistry') {
+      this.giftSettings.enabled = newValue;
+      this.giftSettings.showRegistry = newValue;
+    } else if (key === 'digitalEnvelope') {
+      this.giftSettings.showEnvelope = newValue;
+    } else if (key === 'dedications') {
+      this.dedicationSettings.enabled = newValue;
+    } else if (key === 'guestAlbum') {
+      if (this.invitation?.content) {
+        this.invitation.content.privateAlbumEnabled = newValue;
+      }
+    }
+  }
+
+  get activeSections() {
+    return this.allSectionsList.filter(sec => this.isSectionActive(sec.key));
+  }
+
+  get inactiveSections() {
+    return this.allSectionsList.filter(sec => !this.isSectionActive(sec.key));
+  }
+
+  eventTypeIcon(type?: string): string {
+    switch (type) {
+      case 'boda': return '💍';
+      case 'xv': return '👑';
+      case 'bautizo': return '🕊️';
+      case 'cumpleanos': return '🎂';
+      case 'graduacion': return '🎓';
+      case 'baby_shower': return '🍼';
+      case 'corporativo': return '💼';
+      default: return '🎉';
+    }
+  }
+
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,

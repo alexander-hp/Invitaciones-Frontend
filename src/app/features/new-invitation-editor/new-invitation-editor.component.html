@@ -22,21 +22,25 @@
     </div>
 
     <ng-container *ngIf="invitation">
-      <!-- Top Page Header (Scrolls away naturally, persistent actions remain in bottom floating bar) -->
+      <!-- Top Page Header (Menu 1 Standard Layout) -->
       <div class="nw-page-header nw-editor-sticky-header">
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; width:100%;">
-          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-            <button class="nw-back-btn" (click)="goBackToEvent()" type="button" title="Regresar al evento">
-              ← Regresar al evento
-            </button>
-            <div style="height:24px; width:1px; background:#cbd5e1;"></div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <h1 style="font-size:20px; font-weight:700; margin:0; color:#1e293b;">✏️ {{ invitation.content.headline || invitation.slug }}</h1>
+          <div>
+            <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-3)">
+              <a (click)="goBackToEvent()" style="color:var(--nw-accent-2); text-decoration:none; cursor:pointer;">← {{ event?.title || 'Eventos' }}</a>
+            </p>
+            <h1 style="font-size:22px; font-weight:700; margin:0; display:flex; align-items:center; gap:10px; color:var(--nw-text);">
+              {{ event ? eventTypeIcon(event.type) : '✏️' }} {{ invitation.content.headline || invitation.slug }}
               <span class="nw-pill" [class.success]="invitation.status === 'published'"
-                [class.warning]="invitation.status === 'draft'">
+                [class.warning]="invitation.status === 'draft'" style="font-size:12px;">
                 {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
               </span>
-            </div>
+            </h1>
+            <p *ngIf="event" style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">
+              {{ formatDate(event.date) }}
+              <span *ngIf="event.venue?.name"> · 📍 {{ event.venue.name }}</span>
+              <span *ngIf="event.hosts?.length"> · 👤 {{ event.hosts.join(', ') }}</span>
+            </p>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
             <a class="nw-btn nw-btn-ghost"
@@ -187,122 +191,22 @@
         </div>
       </div>
 
-      <!-- ═══════════ 3. SECCIONES VISIBLES ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('visible_sections')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('visible_sections')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">👁️ Secciones visibles</h3>
-            <span *ngIf="isSectionCollapsed('visible_sections')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
-          </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('visible_sections') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('visible_sections')" style="padding-top:16px;">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;"
-            *ngIf="invitation.content.sectionSettings as sections">
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Nuestra historia</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.story">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Ubicaciones</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.locations">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Itinerario</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.itinerary">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Código de vestimenta</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.dressCode">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">RSVP</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.rsvp">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Mesa de regalos</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.giftRegistry">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Sobre digital</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.digitalEnvelope">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Hospedaje</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.lodging">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Galería de fotos</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.gallery">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Álbum colectivo</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.guestAlbum">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row"
-              style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px;">
-              <div class="nw-toggle-info"><strong style="font-size:13px;">Muro de dedicatorias</strong></div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="sections.dedications">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 4. ITINERARIO ═══════════ -->
+      <!-- ═══════════ 3. ITINERARIO ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('itinerary')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('itinerary')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">🕐 Itinerario</h3>
-            <span *ngIf="isSectionCollapsed('itinerary')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('itinerary')" [class.warning]="!isSectionActive('itinerary')">
+              {{ isSectionActive('itinerary') ? 'Activo' : 'Inactivo' }}
+            </span>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="$event.stopPropagation(); addItineraryItem()">+ Agregar horario</button>
-            <button type="button" class="nw-collapse-btn">
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar itinerario en la invitación">
+              <input type="checkbox" [checked]="isSectionActive('itinerary')" (change)="toggleSectionActive('itinerary', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addItineraryItem()">+ Agregar horario</button>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('itinerary')">
               {{ isSectionCollapsed('itinerary') ? '▲ Abrir' : '▼ Colapsar' }}
             </button>
           </div>
@@ -331,16 +235,22 @@
         </div>
       </div>
 
-      <!-- ═══════════ 5. UBICACIONES ═══════════ -->
+      <!-- ═══════════ 4. UBICACIONES ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('locations')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('locations')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">📍 Ubicaciones</h3>
-            <span *ngIf="isSectionCollapsed('locations')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('locations')" [class.warning]="!isSectionActive('locations')">
+              {{ isSectionActive('locations') ? 'Activo' : 'Inactivo' }}
+            </span>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="$event.stopPropagation(); addLocation()">+ Agregar ubicación</button>
-            <button type="button" class="nw-collapse-btn">
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar ubicaciones en la invitación">
+              <input type="checkbox" [checked]="isSectionActive('locations')" (change)="toggleSectionActive('locations', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLocation()">+ Agregar ubicación</button>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('locations')">
               {{ isSectionCollapsed('locations') ? '▲ Abrir' : '▼ Colapsar' }}
             </button>
           </div>
@@ -410,16 +320,24 @@
         </div>
       </div>
 
-      <!-- ═══════════ 6. RSVP ═══════════ -->
+      <!-- ═══════════ 5. RSVP ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('rsvp_rules')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('rsvp_rules')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">💌 Reglas RSVP</h3>
-            <span *ngIf="isSectionCollapsed('rsvp_rules')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('rsvp_rules')" [class.warning]="!isSectionActive('rsvp_rules')">
+              {{ isSectionActive('rsvp_rules') ? 'Activo' : 'Inactivo' }}
+            </span>
           </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('rsvp_rules') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar RSVP en la invitación">
+              <input type="checkbox" [checked]="isSectionActive('rsvp_rules')" (change)="toggleSectionActive('rsvp_rules', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('rsvp_rules')">
+              {{ isSectionCollapsed('rsvp_rules') ? '▲ Abrir' : '▼ Colapsar' }}
+            </button>
+          </div>
         </div>
         <div class="nw-card-body" *ngIf="!isSectionCollapsed('rsvp_rules')" style="padding-top:16px;">
         <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.rsvpSettings as rsvpSettings">
@@ -576,17 +494,24 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- ═══════════ 7. REGALOS & SOBRE DIGITAL ═══════════ -->
+      <!-- ═══════════ 6. REGALOS & SOBRE DIGITAL ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('gifts')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('gifts')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">🎁 Regalos y Sobre Digital</h3>
-            <span *ngIf="isSectionCollapsed('gifts')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('gifts')" [class.warning]="!isSectionActive('gifts')">
+              {{ isSectionActive('gifts') ? 'Activo' : 'Inactivo' }}
+            </span>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="$event.stopPropagation(); addGiftRegistryItem()">+ Agregar mesa de regalos</button>
-            <button type="button" class="nw-collapse-btn">
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar sección de regalos">
+              <input type="checkbox" [checked]="isSectionActive('gifts')" (change)="toggleSectionActive('gifts', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addGiftRegistryItem()">+ Agregar mesa de regalos</button>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('gifts')">
               {{ isSectionCollapsed('gifts') ? '▲ Abrir' : '▼ Colapsar' }}
             </button>
           </div>
@@ -687,16 +612,24 @@
         </div>
       </div>
 
-      <!-- ═══════════ 8. DEDICATORIAS ═══════════ -->
+      <!-- ═══════════ 7. DEDICATORIAS ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('dedications')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('dedications')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">💬 Dedicatorias</h3>
-            <span *ngIf="isSectionCollapsed('dedications')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('dedications')" [class.warning]="!isSectionActive('dedications')">
+              {{ isSectionActive('dedications') ? 'Activo' : 'Inactivo' }}
+            </span>
           </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('dedications') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar dedicatorias">
+              <input type="checkbox" [checked]="isSectionActive('dedications')" (change)="toggleSectionActive('dedications', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('dedications')">
+              {{ isSectionCollapsed('dedications') ? '▲ Abrir' : '▼ Colapsar' }}
+            </button>
+          </div>
         </div>
         <div class="nw-card-body" *ngIf="!isSectionCollapsed('dedications')" style="padding-top:16px;">
           <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.dedicationSettings as dedicationSettings">
@@ -728,20 +661,24 @@
         </div>
       </div>
 
-      <!-- ═══════════ 9. ÁLBUM DE INVITADOS ═══════════ -->
+      <!-- ═══════════ 8. ÁLBUM DE INVITADOS ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('guest_album')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('guest_album')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">📸 Álbum de invitados</h3>
-            <span class="nw-pill" [class.success]="invitation.content.privateAlbumEnabled"
-              [class.warning]="!invitation.content.privateAlbumEnabled">
-              {{ invitation.content.privateAlbumEnabled ? 'Activo' : 'Inactivo' }}
+            <span class="nw-pill" [class.success]="isSectionActive('guest_album')" [class.warning]="!isSectionActive('guest_album')">
+              {{ isSectionActive('guest_album') ? 'Activo' : 'Inactivo' }}
             </span>
-            <span *ngIf="isSectionCollapsed('guest_album')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
           </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('guest_album') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar álbum de invitados">
+              <input type="checkbox" [checked]="isSectionActive('guest_album')" (change)="toggleSectionActive('guest_album', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('guest_album')">
+              {{ isSectionCollapsed('guest_album') ? '▲ Abrir' : '▼ Colapsar' }}
+            </button>
+          </div>
         </div>
         <div class="nw-card-body" *ngIf="!isSectionCollapsed('guest_album')" style="padding-top:16px;">
           <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:16px;">
@@ -761,16 +698,22 @@
         </div>
       </div>
 
-      <!-- ═══════════ 10. HOSPEDAJE ═══════════ -->
+      <!-- ═══════════ 9. HOSPEDAJE ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('lodging')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('lodging')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">🏨 Hospedaje Recomendado</h3>
-            <span *ngIf="isSectionCollapsed('lodging')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('lodging')" [class.warning]="!isSectionActive('lodging')">
+              {{ isSectionActive('lodging') ? 'Activo' : 'Inactivo' }}
+            </span>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="$event.stopPropagation(); addLodgingItem()">+ Agregar hotel</button>
-            <button type="button" class="nw-collapse-btn">
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar la sección hospedaje">
+              <input type="checkbox" [checked]="isSectionActive('lodging')" (change)="toggleSectionActive('lodging', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingItem()">+ Agregar hotel</button>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('lodging')">
               {{ isSectionCollapsed('lodging') ? '▲ Abrir' : '▼ Colapsar' }}
             </button>
           </div>
@@ -800,16 +743,24 @@
         </div>
       </div>
 
-      <!-- ═══════════ 11. ASSETS ═══════════ -->
+      <!-- ═══════════ 10. ASSETS ═══════════ -->
       <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('assets')" style="margin-bottom:16px;">
         <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('assets')">
           <div style="display:flex; align-items:center; gap:10px;">
             <h3 style="margin:0;">🖼️ Assets (Portada, Música, Galería)</h3>
-            <span *ngIf="isSectionCollapsed('assets')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
+            <span class="nw-pill" [class.success]="isSectionActive('gallery')" [class.warning]="!isSectionActive('gallery')">
+              {{ isSectionActive('gallery') ? 'Galería Activa' : 'Galería Inactiva' }}
+            </span>
           </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('assets') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
+          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
+            <label class="nw-switch" title="Activar / Desactivar galería de fotos">
+              <input type="checkbox" [checked]="isSectionActive('gallery')" (change)="toggleSectionActive('gallery', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+            <button type="button" class="nw-collapse-btn" (click)="toggleSection('assets')">
+              {{ isSectionCollapsed('assets') ? '▲ Abrir' : '▼ Colapsar' }}
+            </button>
+          </div>
         </div>
         <div class="nw-card-body" *ngIf="!isSectionCollapsed('assets')" style="padding-top:16px;">
           <!-- Portada -->
@@ -948,17 +899,18 @@
           </button>
         </div>
         <div class="nw-card-body" *ngIf="!isSectionCollapsed('templates')" style="padding-top:16px;">
-        <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Selecciona una plantilla para aplicar
-          estilo predefinido.</p>
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-          <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
-            (click)="applyTemplate(template)"
-            style="display:flex; flex-direction:column; align-items:flex-start; padding:12px; text-align:left;">
-            <strong>{{ template.name }}</strong>
-            <span style="font-size:12px; color:var(--nw-text-3);">{{ template.eventType }} · {{ template.tier }}</span>
-            <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
-              style="margin-top:6px; font-size:11px;">Requiere upgrade</span>
-          </button>
+          <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Selecciona una plantilla para aplicar
+            estilo predefinido.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+            <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
+              (click)="applyTemplate(template)"
+              style="display:flex; flex-direction:column; align-items:flex-start; padding:12px; text-align:left;">
+              <strong>{{ template.name }}</strong>
+              <span style="font-size:12px; color:var(--nw-text-3);">{{ template.eventType }} · {{ template.tier }}</span>
+              <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
+                style="margin-top:6px; font-size:11px;">Requiere upgrade</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1009,66 +961,67 @@
           </button>
         </div>
         <div class="nw-card-body" *ngIf="!isSectionCollapsed('preview')" style="padding-top:16px;">
-        <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
-          [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
-          [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"
-          [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
-          <div *ngIf="invitation.content.coverImageUrl" style="width:100%; height:200px; overflow:hidden;">
-            <img [src]="invitation.content.coverImageUrl" alt="Portada"
-              style="width:100%; height:100%; object-fit:cover;">
-          </div>
-          <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
-            style="padding:32px; text-align:center;">
-            <p [style.color]="invitation.content.palette?.accent || '#b67b4b'"
-              style="text-transform:uppercase; font-size:13px; letter-spacing:2px; margin:0 0 8px;">{{
-              invitation.content.subheadline }}</p>
-            <h2 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-              style="font-family:var(--nw-font-display); font-size:28px; font-weight:800; margin:0 0 8px;">{{
-              invitation.content.headline }}</h2>
-            <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size:14px; margin:0;">{{
-              event?.date | date:'fullDate' }}</p>
-          </div>
-          <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
-            style="padding:0 32px 32px; display:grid; gap:16px;">
-            <div *ngIf="invitation.content.message">
-              <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:16px; margin:0 0 6px;">Mensaje</h3>
-              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:14px; opacity:0.8; margin:0; line-height:1.6;">{{ invitation.content.message }}</p>
+          <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
+            [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
+            [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"
+            [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
+            <div *ngIf="invitation.content.coverImageUrl" style="width:100%; height:200px; overflow:hidden;">
+              <img [src]="invitation.content.coverImageUrl" alt="Portada"
+                style="width:100%; height:100%; object-fit:cover;">
             </div>
-            <div *ngIf="event?.venue?.name">
-              <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:16px; margin:0 0 6px;">Lugar</h3>
-              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:14px; opacity:0.8; margin:0;">{{ event?.venue?.name }}</p>
-              <p *ngIf="event?.venue?.address" [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:13px; opacity:0.6; margin:4px 0 0;">{{ event?.venue?.address }}</p>
+            <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
+              style="padding:32px; text-align:center;">
+              <p [style.color]="invitation.content.palette?.accent || '#b67b4b'"
+                style="text-transform:uppercase; font-size:13px; letter-spacing:2px; margin:0 0 8px;">{{
+                invitation.content.subheadline }}</p>
+              <h2 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                style="font-family:var(--nw-font-display); font-size:28px; font-weight:800; margin:0 0 8px;">{{
+                invitation.content.headline }}</h2>
+              <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size:14px; margin:0;">{{
+                event?.date | date:'fullDate' }}</p>
             </div>
-            <div *ngIf="invitation.content.dressCode">
-              <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:16px; margin:0 0 6px;">Detalles</h3>
-              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:14px; opacity:0.8; margin:0;">Dress code: {{ invitation.content.dressCode }}</p>
+            <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
+              style="padding:0 32px 32px; display:grid; gap:16px;">
+              <div *ngIf="invitation.content.message">
+                <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:16px; margin:0 0 6px;">Mensaje</h3>
+                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:14px; opacity:0.8; margin:0; line-height:1.6;">{{ invitation.content.message }}</p>
+              </div>
+              <div *ngIf="event?.venue?.name">
+                <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:16px; margin:0 0 6px;">Lugar</h3>
+                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:14px; opacity:0.8; margin:0;">{{ event?.venue?.name }}</p>
+                <p *ngIf="event?.venue?.address" [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:13px; opacity:0.6; margin:4px 0 0;">{{ event?.venue?.address }}</p>
+              </div>
+              <div *ngIf="invitation.content.dressCode">
+                <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:16px; margin:0 0 6px;">Detalles</h3>
+                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:14px; opacity:0.8; margin:0;">Dress code: {{ invitation.content.dressCode }}</p>
+              </div>
+              <div *ngIf="invitation.content.itinerary?.length" style="text-align:left;">
+                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:13px; opacity:0.6; margin:0;">✓ Itinerario configurado ({{
+                  invitation.content.itinerary?.length }} momentos)</p>
+              </div>
+              <div *ngIf="invitation.content.giftRegistry?.length" style="text-align:left;">
+                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:13px; opacity:0.6; margin:0;">✓ Mesa de regalos configurada</p>
+              </div>
+              <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align:left;">
+                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+                  style="font-size:13px; opacity:0.6; margin:0;">✓ Álbum de invitados activo</p>
+              </div>
             </div>
-            <div *ngIf="invitation.content.itinerary?.length" style="text-align:left;">
-              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:13px; opacity:0.6; margin:0;">✓ Itinerario configurado ({{
-                invitation.content.itinerary?.length }} momentos)</p>
+            <!-- Gallery preview -->
+            <div *ngIf="invitation.content.gallery?.length"
+              style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
+              <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy"
+                decoding="async" style="width:100%; height:80px; object-fit:cover;">
             </div>
-            <div *ngIf="invitation.content.giftRegistry?.length" style="text-align:left;">
-              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:13px; opacity:0.6; margin:0;">✓ Mesa de regalos configurada</p>
-            </div>
-            <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align:left;">
-              <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-size:13px; opacity:0.6; margin:0;">✓ Álbum de invitados activo</p>
-            </div>
-          </div>
-          <!-- Gallery preview -->
-          <div *ngIf="invitation.content.gallery?.length"
-            style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
-            <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy"
-              decoding="async" style="width:100%; height:80px; object-fit:cover;">
           </div>
         </div>
       </div>

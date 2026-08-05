@@ -62,8 +62,54 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   collapseAllSections(): void {
-    const keys = ['content', 'design', 'images', 'location', 'gifts', 'hotels', 'music', 'timeline', 'custom_questions', 'featured', 'spectacular', 'plans'];
+    const keys = ['content', 'style', 'itinerary', 'locations', 'rsvp_rules', 'gifts', 'dedications', 'guest_album', 'lodging', 'assets', 'templates', 'plans', 'preview'];
     keys.forEach(k => this.collapsedSections[k] = true);
+  }
+
+  isSectionActive(key: string): boolean {
+    if (!this.invitation?.content.sectionSettings) return true;
+    const settings = this.invitation.content.sectionSettings as any;
+    if (key === 'rsvp_rules' || key === 'rsvp') return settings.rsvp !== false;
+    if (key === 'guest_album' || key === 'guestAlbum') return Boolean(this.invitation.content.privateAlbumEnabled);
+    if (key === 'dedications') return Boolean(this.invitation.content.dedicationSettings?.enabled && settings.dedications !== false);
+    if (key === 'gifts') return Boolean(this.invitation.content.giftSettings?.enabled && settings.giftRegistry !== false);
+    if (key === 'gallery') return settings.gallery !== false;
+    return settings[key] !== false;
+  }
+
+  toggleSectionActive(key: string, active: boolean, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!this.invitation) return;
+    this.ensureContentCollections();
+    const settings = this.invitation.content.sectionSettings as any;
+
+    if (key === 'rsvp_rules' || key === 'rsvp') {
+      settings.rsvp = active;
+    } else if (key === 'guest_album' || key === 'guestAlbum') {
+      this.invitation.content.privateAlbumEnabled = active;
+      settings.guestAlbum = active;
+    } else if (key === 'dedications') {
+      if (this.invitation.content.dedicationSettings) {
+        this.invitation.content.dedicationSettings.enabled = active;
+      }
+      settings.dedications = active;
+    } else if (key === 'gifts') {
+      if (this.invitation.content.giftSettings) {
+        this.invitation.content.giftSettings.enabled = active;
+      }
+      settings.giftRegistry = active;
+      settings.digitalEnvelope = active;
+    } else if (key === 'gallery') {
+      settings.gallery = active;
+    } else {
+      settings[key] = active;
+    }
+
+    if (!active) {
+      this.collapsedSections[key] = true;
+    } else {
+      this.collapsedSections[key] = false;
+    }
   }
 
   palettePresets = [
@@ -83,6 +129,26 @@ export class NewInvitationEditorComponent implements OnInit {
     this.load();
   }
 
+  eventTypeIcon(type?: string): string {
+    switch (type) {
+      case 'boda': return '💍';
+      case 'xv': return '👑';
+      case 'bautizo': return '🕊️';
+      case 'cumpleanos': return '🎂';
+      case 'graduacion': return '🎓';
+      case 'baby_shower': return '🍼';
+      case 'corporativo': return '💼';
+      default: return '🎉';
+    }
+  }
+
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
   load(): void {
     const id = this.route.snapshot.paramMap.get('id') || '';
     this.loading = true;
@@ -97,7 +163,19 @@ export class NewInvitationEditorComponent implements OnInit {
         }
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
-        this.event = typeof this.invitation.event === 'string' ? undefined : this.invitation.event;
+        
+        const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event?._id || this.invitation.event?.id);
+        if (typeof this.invitation.event === 'object' && this.invitation.event) {
+          this.event = this.invitation.event;
+        }
+
+        if (eventId && !this.event?.date) {
+          this.api.getEvent(eventId).subscribe({
+            next: ({ event }) => this.event = event,
+            error: () => {}
+          });
+        }
+
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
