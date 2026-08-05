@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { AutoAssignStrategy, AutoAssignTablesResponse, EventModel, EventTableModel, GuestModel, GuestStatus, TableAutoAssignStrategy, TableShape } from '../../core/models';
 
 interface DragState {
@@ -23,6 +24,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
   loading = true;
   error = '';
   message = '';
+  isInspectorCollapsed = false;
 
   Math = Math;
 
@@ -39,7 +41,18 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
 
   // Create modal
   showCreateModal = false;
-  newTable = { name: '', capacity: 8, shape: 'round' as TableShape, width: 1.2, height: 1.2 };
+  showAdvancedDimensions = false;
+  createTab: 'single' | 'batch' = 'single';
+  newTable: { name: string; capacity: number; shape: TableShape; width: number; height: number; floor?: number } = { name: '', capacity: 8, shape: 'round' as TableShape, width: 1.2, height: 1.2, floor: 1 };
+  batchForm = {
+    quantity: 10,
+    capacity: 8,
+    floor: 1,
+    shape: 'round' as TableShape,
+    prefix: 'Mesa',
+    width: 1.2,
+    height: 1.2
+  };
   creating = false;
   createError = '';
 
@@ -53,8 +66,16 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     includeConfirmed: true,
     includePending: false,
     includeDeclined: false,
-    overwrite: false
+    overwrite: true
   };
+
+  clearingTables = false;
+  deletingAllTables = false;
+
+  // Guest Detail Modal
+  showGuestDetailModal = false;
+  loadingGuestDetail = false;
+  selectedGuestForDetail: GuestModel | null = null;
 
   // Guest panel
   guestSearch = '';
@@ -71,6 +92,8 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
   venueWidth = 12;
   venueHeight = 8;
   showVenueSettings = false;
+  showToolsInSidebar = false;
+  showHeroHeader = true;
 
   // Floor / Level Management
   activeFloor = 1;
@@ -107,6 +130,67 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     this.activeFloor = nextId;
     this.showAddFloorModal = false;
     this.message = `Nivel "${newFloor.name}" agregado.`;
+    setTimeout(() => this.message = '', 3000);
+  }
+
+  deleteFloor(floorId: number, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    if (this.floorsList.length <= 1) {
+      this.error = 'Debe haber al menos un nivel en el recinto.';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+    const floorObj = this.floorsList.find(f => f.id === floorId);
+    if (!floorObj) return;
+
+    const count = this.floorTableCount(floorId);
+    const confirmMsg = count > 0 
+      ? `¿Eliminar el nivel "${floorObj.name}"? Sus ${count} mesa(s) se moverán automáticamente a Planta Baja.`
+      : `¿Estás seguro de eliminar el nivel "${floorObj.name}"?`;
+
+    this.confirmDialogService.confirm({
+      title: 'Eliminar Nivel',
+      message: confirmMsg,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+
+      const tablesOnFloor = this.tables.filter(t => (t.floor || 1) === floorId);
+      if (tablesOnFloor.length > 0 && this.eventId) {
+        const requests = tablesOnFloor.map(t =>
+          this.api.updateTable(this.eventId, this.getTableId(t), { floor: 1, floorName: 'Planta Baja' } as any)
+        );
+        forkJoin(requests).subscribe({
+          next: () => {
+            this.tables.forEach(t => {
+              if ((t.floor || 1) === floorId) {
+                t.floor = 1;
+                t.floorName = 'Planta Baja';
+              }
+            });
+            this.finishFloorDeletion(floorId, floorObj.name);
+          },
+          error: (err) => {
+            this.error = err.error?.message || 'Error al reubicar mesas del nivel.';
+          }
+        });
+      } else {
+        this.finishFloorDeletion(floorId, floorObj.name);
+      }
+    });
+  }
+
+  private finishFloorDeletion(floorId: number, floorName: string): void {
+    this.floorsList = this.floorsList.filter(f => f.id !== floorId);
+    if (this.activeFloor === floorId) {
+      this.activeFloor = this.floorsList[0]?.id || 1;
+    }
+    this.message = `Nivel "${floorName}" eliminado correctamente.`;
     setTimeout(() => this.message = '', 3000);
   }
 
@@ -170,7 +254,12 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     return date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private api: ApiService,
+    private confirmDialogService: ConfirmDialogService
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -184,10 +273,45 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     this.api.getEvent(eventId).subscribe({
       next: ({ event }) => {
         this.event = event;
+        if (event.venue?.width) {
+          this.venueWidth = event.venue.width;
+        }
+        if (event.venue?.height) {
+          this.venueHeight = event.venue.height;
+        }
         this.loadTables(eventId);
         this.loadGuests(eventId);
       },
       error: (err) => { this.error = err.error?.message || 'Evento no encontrado'; this.loading = false; }
+    });
+  }
+
+  saveVenueDimensions(): void {
+    const eventId = this.eventId;
+    if (!eventId) return;
+
+    const currentVenue = this.event?.venue || {};
+    const newWidth = Number(this.venueWidth) || 12;
+    const newHeight = Number(this.venueHeight) || 8;
+
+    const updatedVenue = {
+      ...currentVenue,
+      width: newWidth,
+      height: newHeight
+    };
+
+    this.api.updateEvent(eventId, { venue: updatedVenue }).subscribe({
+      next: ({ event }) => {
+        if (this.event) {
+          this.event.venue = event.venue;
+        }
+        this.resetView();
+        this.message = 'Medidas del salón guardadas correctamente.';
+        setTimeout(() => this.message = '', 3000);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error al guardar las medidas del salón.';
+      }
     });
   }
 
@@ -349,10 +473,51 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     }
   }
 
+  onBatchShapeSelect(shape: TableShape): void {
+    this.batchForm.shape = shape;
+    switch (shape) {
+      case 'rect':
+        this.batchForm.width = 2.0;
+        this.batchForm.height = 1.0;
+        break;
+      case 'oval':
+        this.batchForm.width = 2.2;
+        this.batchForm.height = 1.2;
+        break;
+      case 'square':
+        this.batchForm.width = 1.5;
+        this.batchForm.height = 1.5;
+        break;
+      case 'round':
+      default:
+        this.batchForm.width = 1.2;
+        this.batchForm.height = 1.2;
+        break;
+    }
+  }
+
   // ── Create Table / Element ──
   openCreateModal(): void {
     const diningTables = this.tables.filter(t => !this.isElementShape(t.shape));
-    this.newTable = { name: `Mesa ${diningTables.length + 1}`, capacity: 8, shape: 'round', width: 1.2, height: 1.2 };
+    this.newTable = {
+      name: `Mesa ${diningTables.length + 1}`,
+      capacity: 8,
+      shape: 'round',
+      width: 1.2,
+      height: 1.2,
+      floor: this.activeFloor
+    };
+    this.batchForm = {
+      quantity: 10,
+      capacity: 8,
+      floor: this.activeFloor,
+      shape: 'round',
+      prefix: 'Mesa',
+      width: 1.2,
+      height: 1.2
+    };
+    this.createTab = 'single';
+    this.showAdvancedDimensions = false;
     this.createError = '';
     this.showCreateModal = true;
   }
@@ -362,9 +527,13 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     this.creating = true;
     this.createError = '';
 
-    // Position in empty area
-    const x = 80 + (this.tables.length % 5) * 180;
-    const y = 80 + Math.floor(this.tables.length / 5) * 180;
+    const targetFloorId = Number(this.newTable.floor || this.activeFloor);
+    const floorObj = this.floorsList.find(f => f.id === targetFloorId) || { id: targetFloorId, name: `Piso ${targetFloorId}` };
+
+    // Position in empty area of selected floor
+    const floorTables = this.tables.filter(t => (t.floor || 1) === targetFloorId);
+    const x = 80 + (floorTables.length % 5) * 180;
+    const y = 80 + Math.floor(floorTables.length / 5) * 180;
 
     this.api.createTable(this.eventId, {
       name: this.newTable.name.trim(),
@@ -372,8 +541,8 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       shape: this.newTable.shape,
       width: Math.min(1200, Math.max(40, Math.round((this.newTable.width || 1.2) * 100))),
       height: Math.min(1200, Math.max(40, Math.round((this.newTable.height || 1.2) * 100))),
-      floor: this.activeFloor,
-      floorName: this.activeFloorObject.name,
+      floor: targetFloorId,
+      floorName: floorObj.name,
       x, y, order: this.tables.length
     }).subscribe({
       next: ({ table }) => {
@@ -384,14 +553,131 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
           shape: table.shape || this.newTable.shape, 
           width: table.width || Math.round(this.newTable.width * 100), 
           height: table.height || Math.round(this.newTable.height * 100), 
+          floor: table.floor || targetFloorId,
+          floorName: table.floorName || floorObj.name,
           guests: [] 
         }];
+        this.activeFloor = targetFloorId;
         this.showCreateModal = false;
         this.creating = false;
-        this.message = `Mesa "${table.name}" creada`;
+        this.message = `Mesa "${table.name}" creada en ${floorObj.name}`;
         setTimeout(() => this.message = '', 3000);
       },
       error: (err) => { this.createError = err.error?.message || 'Error creando mesa'; this.creating = false; }
+    });
+  }
+
+  createBatchTables(): void {
+    const qty = Math.max(1, Math.min(50, Number(this.batchForm.quantity || 1)));
+    const cap = Math.max(1, Math.min(100, Number(this.batchForm.capacity || 1)));
+    const targetFloorId = Number(this.batchForm.floor || this.activeFloor);
+    const floorObj = this.floorsList.find(f => f.id === targetFloorId) || { id: targetFloorId, name: `Piso ${targetFloorId}` };
+    const shape = this.batchForm.shape || 'round';
+    const prefix = (this.batchForm.prefix || 'Mesa').trim();
+
+    this.creating = true;
+    this.createError = '';
+
+    const existingNames = new Set(this.tables.map(t => t.name.toLowerCase()));
+    
+    let startNumber = 1;
+    const prefixLower = prefix.toLowerCase();
+    const regex = new RegExp(`^${prefixLower}\\s*(\\d+)$`, 'i');
+    for (const t of this.tables) {
+      const match = t.name.match(regex);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num >= startNumber) {
+          startNumber = num + 1;
+        }
+      }
+    }
+
+    const floorTableCount = this.tables.filter(t => (t.floor || 1) === targetFloorId).length;
+
+    const payloadList: Array<{ name: string; capacity: number; shape: string; width: number; height: number; floor: number; floorName: string; x: number; y: number; order: number }> = [];
+
+    let currentNum = startNumber;
+    for (let i = 0; i < qty; i++) {
+      let tableName = `${prefix} ${currentNum}`;
+      while (existingNames.has(tableName.toLowerCase())) {
+        currentNum++;
+        tableName = `${prefix} ${currentNum}`;
+      }
+      existingNames.add(tableName.toLowerCase());
+
+      const idx = floorTableCount + i;
+      const col = idx % 5;
+      const row = Math.floor(idx / 5);
+      const x = 80 + col * 180;
+      const y = 80 + row * 180;
+
+      const widthPx = Math.min(1200, Math.max(40, Math.round((this.batchForm.width || 1.2) * 100)));
+      const heightPx = Math.min(1200, Math.max(40, Math.round((this.batchForm.height || 1.2) * 100)));
+
+      payloadList.push({
+        name: tableName,
+        capacity: cap,
+        shape,
+        width: widthPx,
+        height: heightPx,
+        floor: targetFloorId,
+        floorName: floorObj.name,
+        x,
+        y,
+        order: this.tables.length + i
+      });
+      currentNum++;
+    }
+
+    const applyTablesSuccess = (tables: EventTableModel[]) => {
+      this.tables = [...this.tables, ...tables];
+      this.activeFloor = targetFloorId;
+      this.showCreateModal = false;
+      this.creating = false;
+      this.message = `¡Se crearon ${tables.length} mesas exitosamente en ${floorObj.name}!`;
+      setTimeout(() => this.message = '', 4000);
+    };
+
+    this.api.createTablesBatch(this.eventId, payloadList).subscribe({
+      next: ({ tables }) => {
+        const mappedTables = tables.map((table, idx) => ({
+          ...table,
+          x: table.x || payloadList[idx].x,
+          y: table.y || payloadList[idx].y,
+          shape: table.shape || shape,
+          width: table.width || 120,
+          height: table.height || 120,
+          floor: table.floor || targetFloorId,
+          floorName: table.floorName || floorObj.name,
+          guests: []
+        }));
+        applyTablesSuccess(mappedTables);
+      },
+      error: () => {
+        // Fallback: parallel single table creation if batch route is not reached
+        const requests = payloadList.map(p => this.api.createTable(this.eventId, p));
+        forkJoin(requests).subscribe({
+          next: (results) => {
+            const mappedTables = results.map((res, idx) => ({
+              ...res.table,
+              x: res.table.x || payloadList[idx].x,
+              y: res.table.y || payloadList[idx].y,
+              shape: res.table.shape || shape,
+              width: res.table.width || 120,
+              height: res.table.height || 120,
+              floor: res.table.floor || targetFloorId,
+              floorName: res.table.floorName || floorObj.name,
+              guests: []
+            }));
+            applyTablesSuccess(mappedTables);
+          },
+          error: (err) => {
+            this.createError = err.error?.message || 'Error al generar mesas en lote.';
+            this.creating = false;
+          }
+        });
+      }
     });
   }
 
@@ -439,8 +725,6 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     });
   }
 
-  clearingTables = false;
-
   get hasAssignedGuests(): boolean {
     return this.guests.some(g => !!g.tableName);
   }
@@ -453,28 +737,34 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (!confirm(`¿Estás seguro de que deseas desasignar a los ${assigned.length} invitados de sus mesas?`)) {
-      return;
-    }
+    this.confirmDialogService.confirm({
+      title: 'Limpiar Asignaciones',
+      message: `¿Estás seguro de que deseas desasignar a los ${assigned.length} invitados de sus mesas?`,
+      confirmText: 'Sí, desasignar',
+      cancelText: 'Cancelar',
+      type: 'warning'
+    }).then(confirmed => {
+      if (!confirmed) return;
 
-    const eventId = this.route.snapshot.paramMap.get('id') || '';
-    this.clearingTables = true;
-    const requests = assigned.map(g => this.api.updateGuest((g._id || g.id)!, { tableName: '', seatLabel: '' } as any));
+      const eventId = this.route.snapshot.paramMap.get('id') || '';
+      this.clearingTables = true;
+      const requests = assigned.map(g => this.api.updateGuest((g._id || g.id)!, { tableName: '', seatLabel: '' } as any));
 
-    forkJoin(requests).subscribe({
-      next: () => {
-        this.clearingTables = false;
-        this.message = `Se desasignaron ${assigned.length} invitados de sus mesas.`;
-        if (eventId) {
-          this.loadTables(eventId);
-          this.loadGuests(eventId);
+      forkJoin(requests).subscribe({
+        next: () => {
+          this.clearingTables = false;
+          this.message = `Se desasignaron ${assigned.length} invitados de sus mesas.`;
+          if (eventId) {
+            this.loadTables(eventId);
+            this.loadGuests(eventId);
+          }
+          setTimeout(() => this.message = '', 4000);
+        },
+        error: (err) => {
+          this.clearingTables = false;
+          this.error = err.error?.message || 'Error al limpiar asignaciones de mesas.';
         }
-        setTimeout(() => this.message = '', 4000);
-      },
-      error: (err) => {
-        this.clearingTables = false;
-        this.error = err.error?.message || 'Error al limpiar asignaciones de mesas.';
-      }
+      });
     });
   }
 
@@ -525,29 +815,44 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       this.error = 'Selecciona al menos un estado para autoasignar.';
       return;
     }
-    if (this.autoAssignOverwrite && !confirm('Esto puede reemplazar mesas ya asignadas para los estados seleccionados. ¿Continuar?')) return;
 
-    this.autoAssigning = true;
-    this.error = '';
-    this.autoAssignSummary = undefined;
-    this.api.autoAssignTables(this.eventId, {
-      strategy: this.autoAssignStrategy,
-      includeStatuses,
-      overwrite: this.autoAssignOverwrite
-    }).subscribe({
-      next: ({ assigned, skipped, tables }) => {
-        this.tables = tables;
-        this.autoAssignSummary = { assigned: assigned.length, skipped: skipped.length };
-        this.message = `Autoasignación lista: ${assigned.length} asignados, ${skipped.length} sin espacio.`;
-        this.autoAssigning = false;
-        this.loadGuests(this.eventId);
-        setTimeout(() => this.message = '', 4000);
-      },
-      error: (err) => {
-        this.error = err.error?.message || 'No se pudo autoasignar mesas.';
-        this.autoAssigning = false;
-      }
-    });
+    const executeAutoAssign = () => {
+      this.autoAssigning = true;
+      this.error = '';
+      this.autoAssignSummary = undefined;
+      this.api.autoAssignTables(this.eventId, {
+        strategy: this.autoAssignStrategy,
+        includeStatuses,
+        overwrite: this.autoAssignOverwrite
+      }).subscribe({
+        next: ({ assigned, skipped, tables }) => {
+          this.tables = tables;
+          this.autoAssignSummary = { assigned: assigned.length, skipped: skipped.length };
+          this.message = `Autoasignación lista: ${assigned.length} asignados, ${skipped.length} sin espacio.`;
+          this.autoAssigning = false;
+          this.loadGuests(this.eventId);
+          setTimeout(() => this.message = '', 4000);
+        },
+        error: (err) => {
+          this.error = err.error?.message || 'No se pudo autoasignar mesas.';
+          this.autoAssigning = false;
+        }
+      });
+    };
+
+    if (this.autoAssignOverwrite) {
+      this.confirmDialogService.confirm({
+        title: 'Auto-asignación de Mesas',
+        message: 'Esto puede reemplazar mesas ya asignadas para los estados seleccionados. ¿Deseas continuar?',
+        confirmText: 'Sí, reemplazar',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      }).then(confirmed => {
+        if (confirmed) executeAutoAssign();
+      });
+    } else {
+      executeAutoAssign();
+    }
   }
 
   updateTableProperties(t: EventTableModel): void {
@@ -574,16 +879,88 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
   }
 
   deleteTable(t: EventTableModel): void {
-    if (!confirm(`¿Eliminar mesa "${t.name}"?`)) return;
-    this.api.deleteTable(this.eventId, this.getTableId(t)).subscribe({
-      next: () => {
-        this.tables = this.tables.filter(table => this.getTableId(table) !== this.getTableId(t));
-        if (this.selectedTable && this.getTableId(this.selectedTable) === this.getTableId(t)) this.selectedTable = undefined;
-        this.message = 'Mesa eliminada';
-        setTimeout(() => this.message = '', 3000);
-      },
-      error: (err) => this.error = err.error?.message || 'Error eliminando mesa'
+    this.confirmDialogService.confirm({
+      title: 'Eliminar Mesa',
+      message: `¿Estás seguro de eliminar la mesa "${t.name}"?`,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.api.deleteTable(this.eventId, this.getTableId(t)).subscribe({
+        next: () => {
+          this.tables = this.tables.filter(table => this.getTableId(table) !== this.getTableId(t));
+          if (this.selectedTable && this.getTableId(this.selectedTable) === this.getTableId(t)) this.selectedTable = undefined;
+          this.message = 'Mesa eliminada';
+          setTimeout(() => this.message = '', 3000);
+        },
+        error: (err) => this.error = err.error?.message || 'Error eliminando mesa'
+      });
     });
+  }
+
+  deleteAllTables(): void {
+    if (!this.eventId || this.tables.length === 0) return;
+    const count = this.tables.length;
+    this.confirmDialogService.confirm({
+      title: 'Borrar Todas las Mesas',
+      message: `⚠️ ¿Estás seguro de que deseas ELIMINAR TODAS LAS MESAS (${count})? Esta acción borrará todas las mesas del croquis.`,
+      confirmText: 'Sí, borrar todas',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+
+      this.deletingAllTables = true;
+      const deleteRequests = this.tables.map(t => this.api.deleteTable(this.eventId!, this.getTableId(t)!));
+
+      forkJoin(deleteRequests).subscribe({
+        next: () => {
+          this.deletingAllTables = false;
+          this.selectedTable = undefined;
+          this.message = `Se eliminaron las ${count} mesas correctamente.`;
+          if (this.eventId) {
+            this.loadTables(this.eventId);
+            this.loadGuests(this.eventId);
+          }
+          setTimeout(() => this.message = '', 3000);
+        },
+        error: (err) => {
+          this.deletingAllTables = false;
+          this.error = err.error?.message || 'Error al borrar las mesas.';
+          if (this.eventId) {
+            this.loadTables(this.eventId);
+            this.loadGuests(this.eventId);
+          }
+        }
+      });
+    });
+  }
+
+  openGuestDetailModal(guestInput: GuestModel | { id?: string; _id?: string; name: string }): void {
+    const guestId = guestInput._id || guestInput.id || '';
+    const foundLocal = this.guests.find(g => (g._id || g.id) === guestId);
+
+    this.selectedGuestForDetail = foundLocal || (guestInput as GuestModel);
+    this.showGuestDetailModal = true;
+    this.loadingGuestDetail = !!guestId;
+
+    if (guestId) {
+      this.api.getGuest(guestId).subscribe({
+        next: ({ guest }) => {
+          this.selectedGuestForDetail = guest;
+          this.loadingGuestDetail = false;
+        },
+        error: () => {
+          this.loadingGuestDetail = false;
+        }
+      });
+    }
+  }
+
+  closeGuestDetailModal(): void {
+    this.showGuestDetailModal = false;
+    this.selectedGuestForDetail = null;
   }
 
   // ── Drag Tables ──
@@ -736,14 +1113,22 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     if (!printWin) return;
 
     const eventTitle = this.event?.title || 'Evento';
+    const eventDateStr = this.formatDate(this.event?.date);
+    const venueName = this.event?.venue?.name || '';
+    const hostsStr = this.event?.hosts?.join(', ') || '';
+
     const totalTablesCount = this.tables.length;
     const totalSeatsCount = this.tables.reduce((acc, t) => acc + (t.capacity || 0), 0);
     const totalOccupiedCount = this.tables.reduce((acc, t) => acc + (t.occupied || 0), 0);
+    const unassignedCount = this.unassignedGuests.length;
 
     let floorsHtml = '';
 
+    // Generar páginas por cada nivel / piso
     this.floorsList.forEach(floorObj => {
       const floorTables = this.tables.filter(t => (t.floor || 1) === floorObj.id);
+      const floorSeatsCount = floorTables.reduce((acc, t) => acc + (t.capacity || 0), 0);
+      const floorOccupiedCount = floorTables.reduce((acc, t) => acc + (t.occupied || 0), 0);
 
       // SVG graphics for this floor
       let svgTablesHtml = '';
@@ -759,64 +1144,82 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
         let shapeSvg = '';
         switch (t.shape) {
           case 'round':
-            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(96,165,250,.12)" stroke="#3b82f6" stroke-width="2"/>`;
+            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(192, 156, 120, 0.14)" stroke="#c09c78" stroke-width="2.5"/>`;
             break;
           case 'oval':
-            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry * 0.65}" fill="rgba(96,165,250,.12)" stroke="#3b82f6" stroke-width="2"/>`;
+            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry * 0.65}" fill="rgba(192, 156, 120, 0.14)" stroke="#c09c78" stroke-width="2.5"/>`;
             break;
           case 'rect':
           case 'square':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${t.shape === 'square' ? w : h}" rx="6" fill="rgba(96,165,250,.12)" stroke="#3b82f6" stroke-width="2"/>`;
+            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${t.shape === 'square' ? w : h}" rx="8" fill="rgba(192, 156, 120, 0.14)" stroke="#c09c78" stroke-width="2.5"/>`;
             break;
           case 'dance_floor':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="8" fill="rgba(139,92,246,.14)" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="6 3"/>`;
+            shapeSvg = `<g><rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="10" fill="rgba(139, 92, 246, 0.14)" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="6 3"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#7c3aed" font-size="14" font-weight="800">💃 PISTA DE BAILE</text></g>`;
             break;
           case 'stage_dj':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="8" fill="rgba(30,41,59,.9)" stroke="#6366f1" stroke-width="2.5"/>`;
+            shapeSvg = `<g><rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="10" fill="rgba(30, 41, 59, 0.92)" stroke="#6366f1" stroke-width="2.5"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-size="13" font-weight="800">🎧 ESCENARIO / DJ</text></g>`;
             break;
           case 'bar':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="8" fill="rgba(245,158,11,.15)" stroke="#f59e0b" stroke-width="2.5"/>`;
+            shapeSvg = `<g><rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="10" fill="rgba(245, 158, 11, 0.16)" stroke="#f59e0b" stroke-width="2.5"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#d97706" font-size="13" font-weight="800">🍸 BARRA DE BEBIDAS</text></g>`;
             break;
           case 'gift_table':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="8" fill="rgba(236,72,153,.15)" stroke="#ec4899" stroke-width="2.5"/>`;
+            shapeSvg = `<g><rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="10" fill="rgba(236, 72, 153, 0.16)" stroke="#ec4899" stroke-width="2.5"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#db2777" font-size="13" font-weight="800">🎁 MESA DE REGALOS</text></g>`;
             break;
           case 'cake_table':
-            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(244,114,182,.18)" stroke="#f472b6" stroke-width="2.5"/>`;
+            shapeSvg = `<g><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(244, 114, 182, 0.18)" stroke="#f472b6" stroke-width="2.5"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#db2777" font-size="13" font-weight="800">🎂 PASTEL</text></g>`;
             break;
           case 'photobooth':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="8" fill="rgba(59,130,246,.15)" stroke="#3b82f6" stroke-width="2.5"/>`;
+            shapeSvg = `<g><rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="10" fill="rgba(59, 130, 246, 0.16)" stroke="#3b82f6" stroke-width="2.5"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#2563eb" font-size="13" font-weight="800">📷 PHOTO BOOTH</text></g>`;
             break;
           case 'entrance':
-            shapeSvg = `<rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="6" fill="rgba(16,185,129,.15)" stroke="#10b981" stroke-width="2.5"/>`;
+            shapeSvg = `<g><rect x="${t.x || 0}" y="${t.y || 0}" width="${w}" height="${h}" rx="8" fill="rgba(16, 185, 129, 0.16)" stroke="#10b981" stroke-width="2.5"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" fill="#059669" font-size="13" font-weight="800">🚪 ENTRADA PRINCIPAL</text></g>`;
             break;
           default:
-            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(96,165,250,.12)" stroke="#3b82f6" stroke-width="2"/>`;
+            shapeSvg = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(192, 156, 120, 0.14)" stroke="#c09c78" stroke-width="2.5"/>`;
             break;
         }
 
         const seatsSvg = this.seatPositions(t).map((s, si) => 
-          `<circle cx="${s.cx}" cy="${s.cy}" r="6" fill="${si < (t.occupied || 0) ? '#3b82f6' : '#cbd5e1'}" stroke="#3b82f6" stroke-width="1"/>`
+          `<circle cx="${s.cx}" cy="${s.cy}" r="6" fill="${si < (t.occupied || 0) ? '#c09c78' : '#e2e8f0'}" stroke="#94a3b8" stroke-width="1.2"/>`
         ).join('');
 
-        const labelText = `<text x="${cx}" y="${isElem ? cy : cy - 5}" text-anchor="middle" dominant-baseline="middle" fill="#0f172a" font-size="12" font-weight="700">${t.name}</text>`;
-        const occText = !isElem ? `<text x="${cx}" y="${cy + 10}" text-anchor="middle" dominant-baseline="middle" fill="#2563eb" font-size="10" font-weight="600">${t.occupied || 0}/${t.capacity}</text>` : '';
+        const labelText = !isElem ? `<text x="${cx}" y="${cy - 5}" text-anchor="middle" dominant-baseline="middle" fill="#1e293b" font-size="13" font-weight="800">${t.name}</text>` : '';
+        const occText = !isElem ? `<text x="${cx}" y="${cy + 11}" text-anchor="middle" dominant-baseline="middle" fill="#64748b" font-size="11" font-weight="700">${t.occupied || 0}/${t.capacity} sillas</text>` : '';
 
         svgTablesHtml += `<g>${shapeSvg}${seatsSvg}${labelText}${occText}</g>`;
       });
 
-      // Tables Breakdown HTML
+      // Tarjetas de Montaje Operativo por Mesa
       let tablesBreakdownHtml = '';
       floorTables.forEach(t => {
         const isElem = this.isElementShape(t.shape);
+        if (isElem) return; // No generar tarjeta de armar sillas para pista/escenario
+
         const guestsList = t.guests?.map(g => 
-          `<li><strong>${g.name}</strong> (${g.seats} lugar${g.seats !== 1 ? 'es' : ''})${g.group ? ` <span class="badge">🏷️ ${g.group}</span>` : ''}</li>`
-        ).join('') || '<li class="empty">Sin invitados asignados</li>';
+          `<li>
+            <span class="chk-box">[ ]</span>
+            <span class="guest-name"><strong>${g.name}</strong></span>
+            <span class="guest-seats">(${g.seats} lugar${g.seats !== 1 ? 'es' : ''})</span>
+            ${g.group ? `<span class="badge">🏷️ ${g.group}</span>` : ''}
+          </li>`
+        ).join('') || '<li class="empty"><span class="chk-box">[ ]</span> Sin invitados asignados a esta mesa</li>';
+
+        const freeChairs = Math.max(0, (t.capacity || 0) - (t.occupied || 0));
 
         tablesBreakdownHtml += `
           <div class="table-card">
             <div class="table-card-header">
-              <strong>${t.name}</strong>
-              <span>${isElem ? 'Elemento' : `Capacidad: ${t.occupied || 0}/${t.capacity}`}</span>
+              <div class="table-card-title">
+                <strong>🪑 ${t.name}</strong>
+                <span class="table-shape-pill">${t.shape ? t.shape.toUpperCase() : 'MESA'}</span>
+              </div>
+              <div class="chair-count-badge">
+                🪑 COLOCAR ${t.capacity} SILLAS
+              </div>
+            </div>
+            <div class="table-card-sub">
+              <span>Ocupación: <strong>${t.occupied || 0}/${t.capacity}</strong></span>
+              ${freeChairs > 0 ? `<span class="free-text">(${freeChairs} libres)</span>` : '<span class="full-text">🟢 Completa</span>'}
             </div>
             <ul class="guest-list">
               ${guestsList}
@@ -826,78 +1229,383 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       });
 
       floorsHtml += `
-        <div class="floor-page">
-          <div class="floor-title-bar">
-            <h2>🏢 ${floorObj.name}</h2>
-            <span>${floorTables.length} elementos/mesas en este nivel</span>
+        <!-- SECCIÓN 1: PLANO GRÁFICO DEL NIVEL -->
+        <div class="pdf-page">
+          <div class="page-header">
+            <div>
+              <span class="op-badge">GUÍA DE MONTAJE Y PLANO OPERATIVO</span>
+              <h2>🏢 NIVEL: ${floorObj.name.toUpperCase()}</h2>
+            </div>
+            <div class="floor-stats">
+              <span>Mesas: <strong>${floorTables.length}</strong></span>
+              <span>Sillas a colocar: <strong>${floorSeatsCount}</strong></span>
+              <span>Invitados: <strong>${floorOccupiedCount}</strong></span>
+            </div>
           </div>
 
           <div class="svg-container">
             <svg viewBox="0 0 ${this.venueWidth * 100} ${this.venueHeight * 100}" width="100%" height="100%">
-              <rect x="0" y="0" width="${this.venueWidth * 100}" height="${this.venueHeight * 100}" fill="#f8fafc" rx="8" stroke="#cbd5e1" stroke-width="2"/>
+              <rect x="0" y="0" width="${this.venueWidth * 100}" height="${this.venueHeight * 100}" fill="#faf7f2" rx="10" stroke="#cbd5e1" stroke-width="2"/>
+              <!-- Grid Background -->
+              <pattern id="pdfGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <circle cx="20" cy="20" r="1" fill="#94a3b8" opacity="0.3" />
+              </pattern>
+              <rect width="${this.venueWidth * 100}" height="${this.venueHeight * 100}" fill="url(#pdfGrid)" />
               ${svgTablesHtml}
             </svg>
           </div>
 
-          <h3 style="margin-top:16px; margin-bottom:8px; font-size:13px; text-transform:uppercase; color:#64748b;">Desglose de Mesas e Invitados</h3>
+          <!-- Leyenda de Simbología de Montaje -->
+          <div class="legend-bar">
+            <strong>Simbología:</strong>
+            <span>🪑 Mesa & Sillas</span>
+            <span>💃 Pista</span>
+            <span>🎧 Escenario/DJ</span>
+            <span>🍸 Barra</span>
+            <span>🎁 Regalos</span>
+            <span>🎂 Pastel</span>
+            <span>📷 Photo Booth</span>
+            <span>🚪 Entrada</span>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: HOJA DE MONTAJE Y ASIGNACIÓN DE MESAS PARA PERSONAL -->
+        <div class="pdf-page">
+          <div class="page-header">
+            <div>
+              <span class="op-badge">CHECKLIST PARA CAPITÁN Y HOSTESSES</span>
+              <h2>📋 MONTAJE DE MESAS Y SILLAS - ${floorObj.name.toUpperCase()}</h2>
+            </div>
+            <span style="font-size:12px; color:#64748b;">Marque [ ] al colocar las sillas e instalar invitados</span>
+          </div>
+
           <div class="tables-grid">
-            ${tablesBreakdownHtml || '<p style="color:#94a3b8;">No hay mesas registradas en este nivel.</p>'}
+            ${tablesBreakdownHtml || '<p style="color:#94a3b8; font-style:italic;">No hay mesas de invitados registradas en este nivel.</p>'}
           </div>
         </div>
       `;
     });
+
+    // Generar Directorio Alfabético de Invitados para Recepción / Hostesses
+    const assignedGuestsSorted = [...this.guests]
+      .filter(g => !!g.tableName)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    let directoryRowsHtml = '';
+    assignedGuestsSorted.forEach((g, idx) => {
+      const guestSeatsCount = (g as any).seats || (1 + (g.allowedCompanions || 0));
+      directoryRowsHtml += `
+        <tr>
+          <td style="width: 30px; text-align: center; font-weight: 600; color: #94a3b8;">${idx + 1}</td>
+          <td><strong>${g.name}</strong></td>
+          <td>${g.group ? `<span class="badge">🏷️ ${g.group}</span>` : '-'}</td>
+          <td style="text-align: center;"><strong>${guestSeatsCount}</strong></td>
+          <td style="color: #c09c78; font-weight: 800;">🪑 ${g.tableName}</td>
+          <td>${g.seatLabel || '-'}</td>
+          <td style="text-align: center; font-weight: 600;">[ ]</td>
+        </tr>
+      `;
+    });
+
+    const directoryPageHtml = `
+      <div class="pdf-page">
+        <div class="page-header">
+          <div>
+            <span class="op-badge">DIRECTORIO DE RECEPCIÓN & HOSTESSES</span>
+            <h2>🔎 BÚSQUEDA RÁPIDA ALFABÉTICA DE INVITADOS</h2>
+          </div>
+          <span style="font-size:12px; color:#64748b;">Total Ubicados: <strong>${assignedGuestsSorted.length}</strong> invitados</span>
+        </div>
+
+        <table class="directory-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre del Invitado</th>
+              <th>Grupo / Familia</th>
+              <th style="text-align: center;">Pases</th>
+              <th>Mesa Asignada</th>
+              <th>Silla / Nota</th>
+              <th style="text-align: center;">Check [ ]</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${directoryRowsHtml || '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">No hay invitados asignados a mesas aún.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
 
     const fullHtml = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Plano de Mesas - ${eventTitle}</title>
+        <title>Plano de Mesas y Guía de Montaje - ${eventTitle}</title>
         <style>
-          @page { size: landscape A4; margin: 12mm; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0f172a; margin: 0; padding: 0; background: #fff; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
-          .header h1 { margin: 0; font-size: 22px; color: #1e293b; }
-          .header p { margin: 4px 0 0; font-size: 13px; color: #64748b; }
-          .stats-bar { display: flex; gap: 16px; font-size: 13px; font-weight: 600; color: #334155; }
-          .floor-page { page-break-after: always; padding-bottom: 20px; }
-          .floor-page:last-child { page-break-after: avoid; }
-          .floor-title-bar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #3b82f6; }
-          .floor-title-bar h2 { margin: 0; font-size: 16px; color: #1e293b; }
-          .floor-title-bar span { font-size: 12px; color: #64748b; }
-          .svg-container { width: 100%; height: 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-          .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-          .table-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; background: #fff; font-size: 12px; page-break-inside: avoid; }
-          .table-card-header { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 6px; }
-          .guest-list { margin: 0; padding-left: 14px; font-size: 11px; color: #334155; }
-          .guest-list li { margin-bottom: 2px; }
-          .guest-list li.empty { list-style-type: none; margin-left: -14px; color: #94a3b8; font-style: italic; }
-          .badge { font-size: 10px; color: #2563eb; background: #eff6ff; padding: 1px 4px; border-radius: 4px; font-weight: 600; }
+          @page { size: landscape A4; margin: 8mm; }
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            font-size: 12px;
+          }
+          
+          .op-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #c09c78;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+          }
+          .op-header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #1e293b;
+            font-weight: 800;
+          }
+          .op-header p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: #64748b;
+          }
+          .op-metrics {
+            display: flex;
+            gap: 12px;
+          }
+          .metric-box {
+            background: #faf7f2;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #c09c78;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-align: center;
+          }
+          .metric-box label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+            display: block;
+          }
+          .metric-box span {
+            font-size: 14px;
+            font-weight: 800;
+            color: #1e293b;
+          }
+
+          .pdf-page {
+            page-break-after: always;
+            padding-bottom: 10px;
+          }
+          .pdf-page:last-child {
+            page-break-after: avoid;
+          }
+
+          .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: #f8fafc;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border-left: 4px solid #c09c78;
+            margin-bottom: 12px;
+          }
+          .op-badge {
+            font-size: 10px;
+            font-weight: 800;
+            color: #c09c78;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+          }
+          .page-header h2 {
+            margin: 2px 0 0;
+            font-size: 16px;
+            color: #1e293b;
+          }
+          .floor-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #475569;
+          }
+
+          .svg-container {
+            width: 100%;
+            height: 380px;
+            background: #faf7f2;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+          }
+
+          .legend-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #f1f5f9;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: #475569;
+            flex-wrap: wrap;
+          }
+
+          .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+          }
+
+          .table-card {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            background: #ffffff;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+          }
+          .table-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+          }
+          .table-card-title strong {
+            font-size: 13px;
+            color: #1e293b;
+          }
+          .table-shape-pill {
+            font-size: 9px;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-left: 4px;
+          }
+          .chair-count-badge {
+            background: #c09c78;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.02em;
+          }
+          .table-card-sub {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 6px;
+          }
+          .free-text { color: #d97706; font-weight: 700; }
+          .full-text { color: #16a34a; font-weight: 700; }
+
+          .guest-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 11px;
+          }
+          .guest-list li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 0;
+            border-bottom: 1px dashed #f1f5f9;
+          }
+          .guest-list li:last-child { border-bottom: none; }
+          .chk-box { font-family: monospace; color: #94a3b8; font-weight: bold; }
+          .guest-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+          .guest-seats { color: #64748b; font-size: 10px; }
+          .badge {
+            font-size: 9px;
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+          }
+          .guest-list li.empty { color: #94a3b8; font-style: italic; }
+
+          .directory-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 6px;
+          }
+          .directory-table th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 700;
+            text-align: left;
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+          }
+          .directory-table td {
+            padding: 5px 10px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+          }
+          .directory-table tr:nth-child(even) {
+            background: #faf7f2;
+          }
+
           @media print {
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           }
         </style>
       </head>
       <body>
-        <div class="header">
+        <!-- ENCABEZADO DE GUÍA OPERATIVA DEL EVENTO -->
+        <div class="op-header">
           <div>
-            <h1>🪑 Plano Completo de Distribución de Mesas</h1>
-            <p><strong>Evento:</strong> ${eventTitle}</p>
+            <h1>🪑 GUÍA OPERATIVA Y PLANO DE MONTAJE DE MESAS</h1>
+            <p>
+              <strong>Evento:</strong> ${eventTitle}
+              ${eventDateStr ? ` · 🗓️ ${eventDateStr}` : ''}
+              ${venueName ? ` · 📍 ${venueName}` : ''}
+              ${hostsStr ? ` · 👤 ${hostsStr}` : ''}
+            </p>
           </div>
-          <div class="stats-bar">
-            <span><strong>Niveles:</strong> ${this.floorsList.length}</span>
-            <span><strong>Mesas:</strong> ${totalTablesCount}</span>
-            <span><strong>Lugares:</strong> ${totalOccupiedCount}/${totalSeatsCount}</span>
+          <div class="op-metrics">
+            <div class="metric-box">
+              <label>Niveles</label>
+              <span>${this.floorsList.length}</span>
+            </div>
+            <div class="metric-box">
+              <label>Mesas</label>
+              <span>${totalTablesCount}</span>
+            </div>
+            <div class="metric-box">
+              <label>Sillas Total</label>
+              <span>${totalSeatsCount}</span>
+            </div>
+            <div class="metric-box">
+              <label>Invitados Ubicados</label>
+              <span>${totalOccupiedCount}</span>
+            </div>
           </div>
         </div>
 
         ${floorsHtml}
 
+        ${directoryPageHtml}
+
         <script>
           window.onload = function() {
             setTimeout(function() {
               window.print();
-            }, 500);
+            }, 600);
           };
         </script>
       </body>

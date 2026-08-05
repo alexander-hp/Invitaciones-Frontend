@@ -105,6 +105,8 @@ export interface EventModel {
     name?: string;
     address?: string;
     mapUrl?: string;
+    width?: number;
+    height?: number;
   };
   agenda?: EventAgendaItem[];
   plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
@@ -154,6 +156,8 @@ export interface EventPayload {
     name?: string;
     address?: string;
     mapUrl?: string;
+    width?: number;
+    height?: number;
   };
   agenda?: EventAgendaItem[];
   status?: EventStatus;
@@ -503,6 +507,8 @@ export interface GuestCompanion {
   seatLabel?: string;
   checkedIn?: boolean;
   checkedInAt?: string;
+  dietaryRestrictions?: string;
+  confirmed?: boolean;
 }
 
 export type TemplateTier = 'free' | 'premium';

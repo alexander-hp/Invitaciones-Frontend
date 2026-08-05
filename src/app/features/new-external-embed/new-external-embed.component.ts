@@ -109,7 +109,7 @@ export class NewExternalEmbedComponent implements OnInit, OnDestroy {
       next: ({ event }) => {
         this.event = event;
         this.loadToken();
-        if (['album', 'gallery', 'full-portal'].includes(this.widget)) {
+        if (['album', 'guest-album', 'gallery', 'full-portal'].includes(this.widget)) {
           this.loadAlbum();
           this.startAlbumPolling();
         }
@@ -334,7 +334,7 @@ export class NewExternalEmbedComponent implements OnInit, OnDestroy {
   }
 
   get showIdentity(): boolean {
-    return ['rsvp', 'guest-pass', 'song-requests', 'dedications', 'full-portal'].includes(this.widget);
+    return ['rsvp', 'guest-pass', 'pass', 'song-requests', 'dj', 'dedications', 'seating', 'croquis', 'full-portal'].includes(this.widget);
   }
 
   get locations(): any[] {

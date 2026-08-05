@@ -272,6 +272,10 @@ export class ApiService {
     return this.http.post<{ table: EventTableModel }>(`${this.apiUrl}/events/${eventId}/tables`, payload);
   }
 
+  createTablesBatch(eventId: string, tables: Array<{ name: string; capacity: number; notes?: string; order?: number; x?: number; y?: number; shape?: string; width?: number; height?: number; floor?: number; floorName?: string }>): Observable<{ tables: EventTableModel[] }> {
+    return this.http.post<{ tables: EventTableModel[] }>(`${this.apiUrl}/events/${eventId}/tables/batch`, { tables });
+  }
+
   updateTable(eventId: string, tableId: string, payload: Partial<EventTableModel>): Observable<{ table: EventTableModel }> {
     return this.http.patch<{ table: EventTableModel }>(`${this.apiUrl}/events/${eventId}/tables/${tableId}`, payload);
   }
@@ -368,6 +372,10 @@ export class ApiService {
 
   createGuest(payload: GuestPayload): Observable<{ guest: GuestModel }> {
     return this.http.post<{ guest: GuestModel }>(`${this.apiUrl}/guests`, payload);
+  }
+
+  getGuest(id: string): Observable<{ guest: GuestModel }> {
+    return this.http.get<{ guest: GuestModel }>(`${this.apiUrl}/guests/${id}`);
   }
 
   updateGuest(id: string, payload: Partial<GuestPayload>): Observable<{ guest: GuestModel }> {

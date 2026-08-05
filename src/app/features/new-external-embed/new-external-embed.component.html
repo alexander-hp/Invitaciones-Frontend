@@ -94,7 +94,7 @@
       </form>
 
       <!-- GUEST PASS (QR) -->
-      <section *ngIf="widget === 'guest-pass' || (widget === 'full-portal' && guest)" class="nw-embed-card nw-embed-pass-ticket">
+      <section *ngIf="widget === 'guest-pass' || widget === 'pass' || (widget === 'full-portal' && guest)" class="nw-embed-card nw-embed-pass-ticket">
         <div class="nw-embed-ticket-header">
           <h3>🎟️ Pase de Entrada Digital</h3>
           <p>Muestra este código QR al ingresar al evento.</p>
@@ -120,6 +120,38 @@
         </div>
       </section>
 
+      <!-- SEATING / CROQUIS DE MESAS -->
+      <section *ngIf="widget === 'seating' || widget === 'croquis' || widget === 'full-portal'" class="nw-embed-card">
+        <div class="nw-embed-card-header">
+          <h3>🍽️ Croquis & Asignación de Mesa</h3>
+          <p *ngIf="guest">Mesa asignada a: <strong>{{ guest.name }}</strong></p>
+          <p *ngIf="!guest" class="nw-embed-muted-text">Identifícate arriba para ver tu mesa y asiento asignados.</p>
+        </div>
+
+        <div *ngIf="guest" class="nw-embed-seating-box" style="background:var(--nw-surface-2); padding:20px; border-radius:12px; border:1px solid var(--nw-border); text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">🪑</div>
+          <h4 style="margin:0 0 6px 0; font-size:20px; color:var(--nw-accent); font-weight:700;">
+            {{ guest.tableName || 'Mesa pendiente de asignación' }}
+          </h4>
+          <p style="margin:0 0 12px 0; font-size:14px; color:var(--nw-text-2);" *ngIf="guest.seatLabel">
+            Asiento / Lugar: <strong>{{ guest.seatLabel }}</strong>
+          </p>
+          <div *ngIf="guest.allowedCompanions" style="font-size:13px; color:var(--nw-text-3); margin-top:8px;">
+            👥 Acompañantes autorizados: <strong>{{ guest.allowedCompanions }}</strong>
+          </div>
+          <div *ngIf="companionNames.length" style="margin-top:12px; font-size:13px; color:var(--nw-text-2);">
+            <strong>Nombres de acompañantes:</strong> {{ companionNames.join(', ') }}
+          </div>
+        </div>
+
+        <div *ngIf="!guest" class="nw-embed-seating-placeholder" style="background:var(--nw-surface-2); padding:20px; border-radius:12px; border:1px solid var(--nw-border); text-align:center;">
+          <div style="font-size:32px; margin-bottom:8px;">🔍</div>
+          <p style="margin:0; font-size:13.5px; color:var(--nw-text-2);">
+            Por favor ingresa tu correo electrónico, teléfono o código de acceso arriba para consultar tu lugar en el evento.
+          </p>
+        </div>
+      </section>
+
       <!-- GALLERY / CAROUSEL -->
       <section *ngIf="widget === 'gallery' || widget === 'full-portal'" class="nw-embed-card">
         <div class="nw-embed-card-header">
@@ -134,7 +166,7 @@
       </section>
 
       <!-- MAPS / LOCATIONS -->
-      <section *ngIf="widget === 'map' || widget === 'full-portal'" class="nw-embed-card">
+      <section *ngIf="widget === 'map' || widget === 'locations' || widget === 'full-portal'" class="nw-embed-card">
         <div class="nw-embed-card-header">
           <h3>📍 Ubicación y Horarios</h3>
           <p>Consulta cómo llegar y los horarios de cada actividad.</p>
@@ -157,7 +189,7 @@
       </section>
 
       <!-- GIFT REGISTRY / DIGITAL ENVELOPE -->
-      <section *ngIf="widget === 'gifts' || widget === 'full-details' || widget === 'full-portal'" class="nw-embed-card">
+      <section *ngIf="widget === 'gifts' || widget === 'gift' || widget === 'full-details' || widget === 'full-portal'" class="nw-embed-card">
         <div class="nw-embed-card-header">
           <h3>🎁 Mesa de Regalos</h3>
           <p class="muted">{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
@@ -216,7 +248,7 @@
       </section>
 
       <!-- ALBUM -->
-      <section *ngIf="widget === 'album' || widget === 'full-portal'" class="nw-embed-card">
+      <section *ngIf="widget === 'album' || widget === 'guest-album' || widget === 'full-portal'" class="nw-embed-card">
         <div class="nw-embed-card-header">
           <h3>📸 Álbum de Fotos de los Invitados</h3>
           <p>¡Comparte tus momentos favoritos del evento con los demás!</p>

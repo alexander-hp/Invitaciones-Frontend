@@ -1,31 +1,50 @@
-<section>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-    <div>
-      <h3 style="margin:0; color:var(--nw-text)">Organización de mesas</h3>
-      <p style="margin:4px 0 0; font-size:14px; color:var(--nw-text-3)">Administra mesas o usa el croquis visual interactivo</p>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <button class="nw-btn nw-btn-secondary" (click)="openAutoAssignModal()">⚡ Auto-asignar</button>
-      <button class="nw-btn nw-btn-ghost" (click)="clearAssignments()"
-        [disabled]="clearingTables || !hasAssignedGuests" title="Desasignar a todos los invitados de sus mesas">🧹
-        {{ clearingTables ? 'Limpiando...' : 'Limpiar mesas' }}</button>
-      <button class="nw-btn nw-btn-ghost" (click)="showTableForm = !showTableForm">{{ showTableForm ? 'Ocultar' : '+ Nueva mesa' }}</button>
-      <button class="nw-btn nw-btn-primary" (click)="goToSeating()">🪑 Abrir croquis</button>
-    </div>
+<!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="tableMessage || tableError">
+  <div *ngIf="tableMessage" class="nw-toast success">
+    <span>✨ {{ tableMessage }}</span>
+    <button type="button" class="nw-toast-close" (click)="tableMessage=''">✕</button>
   </div>
+  <div *ngIf="tableError" class="nw-toast error">
+    <span>⚠️ {{ tableError }}</span>
+    <button type="button" class="nw-toast-close" (click)="tableError=''">✕</button>
+  </div>
+</div>
 
-  <p *ngIf="tableMessage" class="nw-alert success" style="margin-bottom:14px;">{{ tableMessage }}</p>
-  <p *ngIf="tableError" class="nw-alert error" style="margin-bottom:14px;">{{ tableError }}</p>
+<section>
+  <!-- Menú de Acciones: Fila 1 Texto | Fila 2 Todos los Botones -->
+  <div
+    style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px; background:var(--nw-surface); padding:18px 20px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <!-- Fila 1: Título y Descripción -->
+    <div>
+      <h3 style="margin:0; font-size:20px; color:var(--nw-text); font-weight:800; font-family:var(--nw-font-display);">
+        Organización de mesas</h3>
+      <p style="margin:4px 0 0; font-size:14px; color:var(--nw-text-3)">Administra mesas, asigna invitados directamente
+        a sus lugares o abre el croquis interactivo</p>
+    </div>
 
-  <!-- Formulario Nueva Mesa -->
-  <div class="nw-card" *ngIf="showTableForm" style="margin-bottom:16px; padding:16px;">
-    <h4 style="margin:0 0 12px;">Nueva mesa</h4>
-    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-      <label class="nw-label">Nombre <input class="nw-input" [(ngModel)]="tableForm.name" placeholder="Mesa VIP" required></label>
-      <label class="nw-label">Capacidad <input class="nw-input" type="number" min="1" [(ngModel)]="tableForm.capacity"></label>
-      <label class="nw-label">Orden <input class="nw-input" type="number" [(ngModel)]="tableForm.order"></label>
-      <label class="nw-label" style="flex:1; min-width:200px;">Notas <input class="nw-input" [(ngModel)]="tableForm.notes" placeholder="Opcional"></label>
-      <button class="nw-btn nw-btn-primary" (click)="createTable()" [disabled]="!tableForm.name">Crear mesa</button>
+    <!-- Fila 2: Todos los Botones Reunidos -->
+    <div
+      style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-top:1px dashed var(--nw-border); padding-top:14px;">
+      <button class="nw-btn nw-btn-primary" style="padding:10px 18px; font-size:13.5px; font-weight:700;"
+        (click)="openCreateModal()">➕ Nueva Mesa / Elemento</button>
+      <button class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700;"
+        (click)="openAssignModal()">👤 Asignar Invitado</button>
+      <button class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700;"
+        (click)="openAutoAssignModal()">⚡ Auto-asignar</button>
+      <button class="nw-btn nw-btn-ghost"
+        style="padding:10px 18px; font-size:13.5px; font-weight:700; border:1px solid var(--nw-border); background:var(--nw-surface-2);"
+        (click)="goToSeating()">🪑 Abrir croquis</button>
+      <button class="nw-btn nw-btn-ghost"
+        style="padding:10px 18px; font-size:13.5px; font-weight:600; color:var(--nw-text-2);"
+        (click)="clearAssignments()" [disabled]="clearingTables || !hasAssignedGuests"
+        title="Desasignar a todos los invitados de sus mesas">
+        🧹 {{ clearingTables ? 'Limpiando...' : 'Limpiar mesas' }}
+      </button>
+      <button class="nw-btn nw-btn-danger nw-btn-ghost" style="padding:10px 18px; font-size:13.5px; font-weight:600;"
+        (click)="deleteAllTables()" [disabled]="deletingAllTables || tables.length === 0"
+        title="Borrar todas las mesas creadas en el evento">
+        🗑️ {{ deletingAllTables ? 'Borrando...' : 'Borrar mesas' }}
+      </button>
     </div>
   </div>
 
@@ -37,110 +56,269 @@
     <p>Crea mesas aquí o en el croquis interactivo.</p>
   </div>
 
-  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px;" *ngIf="!tablesLoading && tables.length > 0">
+  <!-- Grid de Tarjetas de Mesas -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px;"
+    *ngIf="!tablesLoading && tables.length > 0">
     <div class="nw-card" *ngFor="let t of tables"
-      [style.border-left]="'3px solid ' + (t.overCapacity ? 'var(--nw-danger)' : (t.available === 0 ? 'var(--nw-warning)' : 'var(--nw-success)'))">
+      [style.border-left]="'4px solid ' + (t.overCapacity ? 'var(--nw-danger)' : (t.available === 0 ? 'var(--nw-warning)' : 'var(--nw-success)'))">
+
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <div>
           <strong style="font-size:16px;">{{ t.name }}</strong>
-          <span *ngIf="t.floorName || (t.floor && t.floor > 1)" style="font-size:11px; color:var(--nw-text-3); display:block;">
+          <span *ngIf="t.floorName || (t.floor && t.floor > 1)"
+            style="font-size:11px; color:var(--nw-text-3); display:block;">
             🏢 {{ t.floorName || ('Piso ' + t.floor) }}
           </span>
         </div>
         <div style="display:flex; gap:4px; align-items:center;">
-          <span class="nw-pill" [class.danger]="t.overCapacity"
-            [class.warning]="!t.overCapacity && t.available === 0"
+          <span class="nw-pill" [class.danger]="t.overCapacity" [class.warning]="!t.overCapacity && t.available === 0"
             [class.success]="!t.overCapacity && (t.available || 0) > 0">{{ t.occupied || 0 }}/{{ t.capacity }}</span>
-          <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteTable(t)" style="padding:2px 6px;">🗑️</button>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteTable(t)" style="padding:2px 6px;"
+            title="Eliminar mesa">🗑️</button>
         </div>
       </div>
+
       <div class="nw-progress" style="margin-bottom:10px;">
         <div class="nw-progress-fill" [style.width.%]="Math.min(100, ((t.occupied || 0) / t.capacity) * 100)"
           [style.background]="t.overCapacity ? 'var(--nw-danger)' : ''"></div>
       </div>
-      <div *ngIf="t.guests?.length" style="display:grid; gap:4px;">
-        <div *ngFor="let g of t.guests" style="display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0;">
-          <span class="nw-guest-avatar">{{ g.name.charAt(0).toUpperCase() }}</span>
-          <div style="display:grid; gap:1px; overflow:hidden;">
-            <span style="font-weight:600;">{{ g.name }}</span>
-            <span style="font-size:11px; color:var(--nw-accent); font-weight:600;" *ngIf="g.group">🏷️ {{ g.group }}</span>
+
+      <!-- Lista de Invitados en la Mesa -->
+      <div *ngIf="t.guests?.length" style="display:grid; gap:6px;">
+        <div *ngFor="let g of t.guests"
+          style="display:flex; align-items:center; gap:8px; font-size:12.5px; padding:4px 8px; background:var(--nw-surface-2); border-radius:6px; border:1px solid var(--nw-border);">
+          <span class="nw-guest-avatar" (click)="openGuestDetailModal(g)" style="cursor:pointer;"
+            title="Ver información del invitado">
+            {{ guestInitials(g.name) }}
+          </span>
+          <div style="display:grid; gap:1px; overflow:hidden; flex:1;">
+            <span style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{ g.name
+              }}</span>
+            <span style="font-size:10px; color:var(--nw-accent); font-weight:600;" *ngIf="g.group">🏷️ {{ g.group
+              }}</span>
           </div>
-          <span class="nw-pill" style="margin-left:auto; font-size:11px;">{{ g.seats }} lugar{{ g.seats !== 1 ? 'es' : '' }}</span>
+          <span class="nw-pill" style="font-size:10px; font-weight:700;">{{ g.seats }} lugar{{ g.seats !== 1 ? 'es' : ''
+            }}</span>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" style="padding:0 5px; font-size:10px; min-height:22px;"
+            (click)="unassignGuest(g)" title="Desasignar invitado de esta mesa">✕</button>
         </div>
       </div>
-      <p *ngIf="!t.guests?.length" style="font-size:13px; color:var(--nw-text-3); margin:0;">Sin invitados asignados</p>
+
+      <p *ngIf="!t.guests?.length" style="font-size:13px; color:var(--nw-text-3); margin:6px 0;">Sin invitados asignados
+      </p>
+
+      <!-- Botón directo Asignar invitado a esta mesa -->
+      <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--nw-border);">
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openAssignModal(t)"
+          style="width:100%; justify-content:center; font-size:11.5px; font-weight:700; color:var(--nw-accent); border:1px solid var(--nw-border); background:var(--nw-surface);">
+          ➕ Asignar invitado a esta mesa
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Auto Assign Modal -->
+  <!-- 👤 MODAL DIRECTO PARA ASIGNAR INVITADOS A MESA (MULTI-SELECCIÓN + FILTROS) 👤 -->
+  <div class="nw-modal-backdrop" *ngIf="showAssignGuestModal" (click)="showAssignGuestModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 620px;">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--nw-border); padding-bottom: 12px; margin-bottom: 16px;">
+        <div>
+          <h2
+            style="margin: 0; font-size: 20px; color: var(--nw-text); font-weight: 800; font-family: var(--nw-font-display);">
+            👤 Asignar Invitados a Mesa
+          </h2>
+          <span style="font-size: 12px; color: var(--nw-text-3);">
+            Selecciona uno o múltiples invitados y asignalos en lote a la mesa elegida
+          </span>
+        </div>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showAssignGuestModal = false"
+          style="font-size: 16px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Selector de Mesa Destino -->
+        <label class="nw-label" style="margin: 0;">
+          Seleccionar Mesa Destino
+          <select class="nw-select" [(ngModel)]="selectedTableForAssign" style="font-weight: 700;">
+            <option *ngFor="let t of tables" [ngValue]="t">
+              🪑 {{ t.name }} ({{ t.occupied || 0 }}/{{ t.capacity }} lugares{{ (t.occupied || 0) >= t.capacity ? ' -
+              Llena' : '' }})
+            </option>
+          </select>
+        </label>
+
+        <!-- Barra de Filtros de Invitados -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--nw-surface-2); padding: 12px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+          <div>
+            <label class="nw-label" style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase;">🟢 Filtrar por
+              Estado</label>
+            <select class="nw-select nw-select-sm" [(ngModel)]="assignStatusFilter">
+              <option value="all">🌐 Todos los estados</option>
+              <option value="confirmed">🟢 Confirmados</option>
+              <option value="pending">🟡 Pendientes</option>
+              <option value="declined">🔴 Rechazados</option>
+            </select>
+          </div>
+          <div>
+            <label class="nw-label" style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase;">👨‍👩‍👧
+              Filtrar por Grupo / Familia</label>
+            <select class="nw-select nw-select-sm" [(ngModel)]="assignGroupFilter">
+              <option value="all">👨‍👩‍👧 Todos los grupos</option>
+              <option *ngFor="let grp of distinctGroups" [value]="grp">🏷️ {{ grp }}</option>
+            </select>
+          </div>
+          <div style="grid-column: span 2;">
+            <input class="nw-input nw-input-sm" [(ngModel)]="assignSearch"
+              placeholder="🔍 Buscar por nombre o grupo de familia..." style="margin: 0;">
+          </div>
+        </div>
+
+        <!-- Alerta Prominente si se Sobrepasa la Capacidad -->
+        <div *ngIf="isOverCapacityWarning" class="nw-alert warning"
+          style="margin: 0; padding: 10px 14px; font-size: 12.5px; border-left: 4px solid var(--nw-danger); display: flex; align-items: flex-start; gap: 10px;">
+          <span style="font-size: 18px;">⚠️</span>
+          <div>
+            <strong>Capacidad sobrepasada en {{ selectedTableForAssign?.name }}:</strong><br>
+            Has seleccionado <strong>{{ selectedGuestIds.length }} invitado(s) (total {{ selectedSeatsCount }}
+              pases/lugares)</strong>, pero a la mesa solo le quedan <strong>{{ selectedTableAvailableSeats }} lugares
+              disponibles</strong>.
+            <span style="color: var(--nw-danger); font-weight: 700; display: block; margin-top: 2px;">
+              Exceso detectado: +{{ overCapacityExcess }} pase(s) de más.
+            </span>
+          </div>
+        </div>
+
+        <!-- Barra de Resumen de Selección y Conteo de Pases -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="color: var(--nw-text-2); font-weight: 600;">
+              Listados: <strong>{{ filteredUnassignedGuests.length }}</strong> •
+              Selección: <strong style="color: var(--nw-accent);">{{ selectedGuestIds.length }} invitado(s) ({{
+                selectedSeatsCount }} pases)</strong>
+            </span>
+            <span *ngIf="selectedTableForAssign" class="nw-pill" [class.danger]="isOverCapacityWarning"
+              [class.success]="!isOverCapacityWarning" style="font-size: 11px; font-weight: 700;">
+              {{ selectedTableAvailableSeats }} libres en {{ selectedTableForAssign.name }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Lista de Invitados con Checkboxes de Selección Múltiple -->
+        <div
+          style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+          <div *ngFor="let g of filteredUnassignedGuests" (click)="toggleGuestSelection(g)"
+            [style.background]="isGuestSelected(g) ? 'rgba(192, 156, 120, 0.15)' : 'var(--nw-surface)'"
+            [style.border-color]="isGuestSelected(g) ? 'var(--nw-accent)' : 'var(--nw-border)'"
+            style="padding: 10px 12px; border-radius: 6px; border: 1px solid var(--nw-border); font-size: 13px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s ease;">
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" [checked]="isGuestSelected(g)"
+                (click)="$event.stopPropagation(); toggleGuestSelection(g)"
+                style="width: 16px; height: 16px; cursor: pointer;">
+              <span class="nw-guest-avatar" style="width: 30px; height: 30px; font-size: 11px;">{{ guestInitials(g.name)
+                }}</span>
+              <div>
+                <strong style="display: block; color: var(--nw-text);">{{ g.name }}</strong>
+                <span *ngIf="g.group" style="font-size: 11px; color: var(--nw-accent); font-weight: 600;">🏷️ {{ g.group
+                  }}</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="nw-pill" [class.success]="g.status === 'confirmed'" [class.warning]="g.status === 'pending'"
+                [class.danger]="g.status === 'declined'" style="font-size: 10px;">
+                {{ g.status === 'confirmed' ? '🟢 Confirmado' : (g.status === 'declined' ? '🔴 Rechazado' : '🟡
+                Pendiente') }}
+              </span>
+              <span class="nw-pill" style="font-size: 11px; font-weight: 700;">{{ 1 + (g.allowedCompanions || 0) }}
+                pase{{ (g.allowedCompanions || 0) !== 0 ? 's' : '' }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="filteredUnassignedGuests.length === 0"
+            style="padding: 20px; text-align: center; color: var(--nw-text-3); font-size: 13px;">
+            {{ unassignedGuests.length === 0 ? '🎉 Todos los invitados están asignados a una mesa.' : 'No se encontraron
+            invitados con los filtros seleccionados.' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="nw-modal-actions" style="margin-top: 20px;">
+        <button class="nw-btn nw-btn-ghost" (click)="showAssignGuestModal = false">Cancelar</button>
+        <button class="nw-btn" [class.nw-btn-warning]="isOverCapacityWarning"
+          [class.nw-btn-primary]="!isOverCapacityWarning"
+          [disabled]="selectedGuestIds.length === 0 || !selectedTableForAssign || assigningGuests"
+          (click)="assignSelectedGuestsToTable()">
+          {{ assigningGuests ? 'Asignando...' : ('📌 Asignar (' + selectedGuestIds.length + ' inv. / ' +
+          selectedSeatsCount + ' pases) a ' + (selectedTableForAssign?.name || 'Mesa')) }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚡ MODAL DE AUTO-ASIGNACIÓN (IDÉNTICO A CROQUIS) ⚡ -->
   <div class="nw-modal-backdrop" *ngIf="showAutoAssignModal" (click)="showAutoAssignModal = false">
-    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 540px;">
-      <h2 style="margin:0 0 4px; color:var(--nw-text);">⚡ Acomodar mesas en automático</h2>
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 520px;">
+      <h2 style="margin: 0 0 4px; font-size: 20px; font-weight: 700; color: var(--nw-text);">⚡ Acomodar mesas en
+        automático</h2>
       <p style="font-size: 13px; color: var(--nw-text-3); margin-top: 0; margin-bottom: 16px;">
         Asigna asientos dinámicamente considerando al invitado principal y sus acompañantes.
       </p>
 
-      <p *ngIf="autoAssignError" class="nw-alert error" style="margin-bottom:14px;">{{ autoAssignError }}</p>
-      <p *ngIf="tables.length === 0" class="nw-alert warning" style="margin-bottom:14px;">
-        ⚠️ Tu evento aún no tiene mesas creadas. Crea primero tus mesas (con su capacidad deseada) para que el sistema pueda distribuir a los invitados en ellas.
+      <p *ngIf="autoAssignError" class="nw-alert error" style="margin-bottom: 14px;">{{ autoAssignError }}</p>
+      <p *ngIf="tables.length === 0" class="nw-alert warning" style="margin-bottom: 14px;">
+        ⚠️ Tu evento aún no tiene mesas creadas. Crea primero tus mesas para que el sistema pueda distribuir a los
+        invitados.
       </p>
 
-      <div *ngIf="!autoAssignResult">
-        <div style="display: grid; gap: 16px;">
-          <div>
-            <label class="nw-label" style="font-weight: 700; margin-bottom: 8px; display: block;">Estrategia de Asignación</label>
-            <div style="display: grid; gap: 8px;">
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; cursor: pointer; padding: 10px; border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); background: var(--nw-surface-2);">
-                <input type="radio" name="strategy" value="by_group" [(ngModel)]="autoAssignForm.strategy" style="margin-top: 3px;">
-                <div>
-                  <strong>👨‍👩‍👧‍👦 Por Familia / Grupo (Recomendado)</strong>
-                  <div style="color: var(--nw-text-3); font-size: 12px; margin-top: 2px;">Agrupa a miembros de la misma familia/grupo en la misma mesa.</div>
-                </div>
-              </label>
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; cursor: pointer; padding: 10px; border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); background: var(--nw-surface-2);">
-                <input type="radio" name="strategy" value="fill_order" [(ngModel)]="autoAssignForm.strategy" style="margin-top: 3px;">
-                <div>
-                  <strong>🔤 Orden Alfabético</strong>
-                  <div style="color: var(--nw-text-3); font-size: 12px; margin-top: 2px;">Ordena alfabéticamente y va llenando mesas según su capacidad.</div>
-                </div>
-              </label>
-            </div>
-          </div>
+      <div *ngIf="!autoAssignResult" style="display: flex; flex-direction: column; gap: 14px;">
+        <label class="nw-label" style="margin: 0;">
+          Estrategia de Asignación
+          <select class="nw-select" [(ngModel)]="autoAssignForm.strategy" style="font-weight: 700;">
+            <option value="by_group">👨‍👩‍👧‍👦 Por Familia / Grupo (Recomendado)</option>
+            <option value="fill_order">🔤 Orden Alfabético</option>
+          </select>
+        </label>
 
-          <div>
-            <label class="nw-label" style="font-weight: 700; margin-bottom: 8px; display: block;">Incluir invitados con estado:</label>
-            <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px;">
-              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <input type="checkbox" [(ngModel)]="autoAssignForm.includeConfirmed">
-                <span>🟢 Confirmados</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <input type="checkbox" [(ngModel)]="autoAssignForm.includePending">
-                <span>🟡 Pendientes</span>
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <input type="checkbox" [(ngModel)]="autoAssignForm.includeDeclined">
-                <span>🔴 Rechazados</span>
-              </label>
-            </div>
-          </div>
-
-          <div style="padding-top: 10px; border-top: 1px solid var(--nw-border);">
-            <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; cursor: pointer;">
-              <input type="checkbox" [(ngModel)]="autoAssignForm.overwrite" style="margin-top: 3px;">
-              <div>
-                <strong>🔄 Reiniciar asignaciones existentes (Sobrescribir)</strong>
-                <div style="color: var(--nw-text-3); font-size: 12px; margin-top: 2px;">
-                  Desasigna a todos los invitados antes de reacomodarlos. Si se desmarca, conserva las asignaciones actuales y solo acomoda a los que no tienen mesa.
-                </div>
-              </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span class="nw-label" style="margin: 0; font-size: 13px; font-weight: 700; color: var(--nw-text-2);">Incluir
+            invitados con estado:</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <label class="nw-status-chip" [class.active]="autoAssignForm.includeConfirmed">
+              <input type="checkbox" [(ngModel)]="autoAssignForm.includeConfirmed">
+              <span>🟢 Confirmados</span>
+            </label>
+            <label class="nw-status-chip" [class.active]="autoAssignForm.includePending">
+              <input type="checkbox" [(ngModel)]="autoAssignForm.includePending">
+              <span>🟡 Pendientes</span>
+            </label>
+            <label class="nw-status-chip" [class.active]="autoAssignForm.includeDeclined">
+              <input type="checkbox" [(ngModel)]="autoAssignForm.includeDeclined">
+              <span>🔴 Rechazados</span>
             </label>
           </div>
         </div>
 
+        <div
+          style="border-top: 1px dashed var(--nw-border); padding-top: 14px; margin-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <div>
+            <strong style="font-size: 13px; color: var(--nw-text); display: block;">🔄 Reiniciar asignaciones
+              (Sobrescribir)</strong>
+            <span style="color: var(--nw-text-3); font-size: 12px;">Reacomoda a todos los invitados desde cero</span>
+          </div>
+
+          <label class="nw-switch" title="Activar para desasignar a todos antes de reacomodarlos">
+            <input type="checkbox" [(ngModel)]="autoAssignForm.overwrite">
+            <span class="nw-switch-slider"></span>
+          </label>
+        </div>
+
         <div class="nw-modal-actions" style="margin-top: 20px;">
           <button class="nw-btn nw-btn-ghost" (click)="showAutoAssignModal = false">Cancelar</button>
-          <button class="nw-btn nw-btn-primary" [disabled]="autoAssigning || tables.length === 0" (click)="runAutoAssign()">
+          <button class="nw-btn nw-btn-primary" [disabled]="autoAssigning || tables.length === 0"
+            (click)="runAutoAssign()">
             {{ autoAssigning ? '⚡ Acomodando...' : '⚡ Ejecutar asignación' }}
           </button>
         </div>
@@ -149,22 +327,384 @@
       <div *ngIf="autoAssignResult">
         <div class="nw-alert success" style="margin-bottom: 16px;">
           🎉 <strong>¡Asignación completada!</strong><br>
-          Se ubicaron con éxito <strong>{{ autoAssignResult.assigned.length }}</strong> invitados en las mesas disponibles.
+          Se ubicaron con éxito <strong>{{ autoAssignResult.assigned.length }}</strong> invitados en las mesas
+          disponibles.
         </div>
 
         <div *ngIf="autoAssignResult.skipped.length > 0" style="margin-bottom: 16px;">
-          <h4 style="margin: 0 0 8px; color: var(--nw-warning); font-size: 14px;">⚠️ Invitados sin ubicar ({{ autoAssignResult.skipped.length }})</h4>
-          <div style="max-height: 140px; overflow-y: auto; display: grid; gap: 6px; padding: 8px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
-            <div *ngFor="let s of autoAssignResult.skipped" style="display: flex; justify-content: space-between; font-size: 12px;">
-              <strong>{{ s.guest.name }} ({{ s.guest.seats }} lugar{{ s.guest.seats !== 1 ? 'es' : '' }})</strong>
-              <span style="color: var(--nw-danger);">{{ s.reason }}</span>
+          <h4 style="margin: 0 0 8px; color: var(--nw-warning); font-size: 14px;">⚠️ Invitados sin ubicar ({{
+            autoAssignResult.skipped.length }})</h4>
+          <div
+            style="max-height: 140px; overflow-y: auto; display: grid; gap: 6px; padding: 8px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+            <div *ngFor="let s of autoAssignResult.skipped" style="font-size: 12px; color: var(--nw-text-2);">
+              • {{ s.guest.name }} <span *ngIf="s.guest.group">({{ s.guest.group }})</span>
             </div>
           </div>
         </div>
 
         <div class="nw-modal-actions">
-          <button class="nw-btn nw-btn-primary" (click)="showAutoAssignModal = false">Entendido</button>
+          <button class="nw-btn nw-btn-primary" (click)="showAutoAssignModal = false">Aceptar</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ➕ MODAL UNIFICADO DE CREACIÓN DE MESAS Y ELEMENTOS ➕ -->
+  <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="showCreateModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 580px;">
+      <h2 style="margin: 0 0 4px;">➕ Agregar al croquis</h2>
+      <p style="font-size: 13px; color: var(--nw-text-3); margin: 0 0 14px;">
+        Agrega mesas individuales, elementos del salón o genera un grupo de mesas por lote o presets.
+      </p>
+
+      <!-- Pestañas de Modo (Individual vs Lote vs Presets) -->
+      <div
+        style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--nw-border); padding-bottom: 10px;">
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="createTab === 'single'"
+          [class.nw-btn-ghost]="createTab !== 'single'" (click)="createTab = 'single'">
+          🪑 Individual
+        </button>
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="createTab === 'batch'"
+          [class.nw-btn-ghost]="createTab !== 'batch'" (click)="createTab = 'batch'">
+          ⚡ Por Lote (N Mesas)
+        </button>
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="createTab === 'preset'"
+          [class.nw-btn-ghost]="createTab !== 'preset'" (click)="createTab = 'preset'">
+          🎪 Presets
+        </button>
+      </div>
+
+      <!-- MODO INDIVIDUAL -->
+      <div *ngIf="createTab === 'single'">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <label class="nw-label" style="margin: 0;">
+            Tipo de Elemento o Mesa
+            <select class="nw-select" [(ngModel)]="newTable.shape" (change)="onShapeSelect(newTable.shape)"
+              style="font-weight: 700;">
+              <optgroup label="🪑 Mesas de Invitados">
+                <ng-container *ngFor="let s of shapes">
+                  <option *ngIf="s.category === 'table'" [value]="s.value">{{ s.icon }} {{ s.label }}</option>
+                </ng-container>
+              </optgroup>
+              <optgroup label="🎪 Elementos del Salón">
+                <ng-container *ngFor="let s of shapes">
+                  <option *ngIf="s.category === 'element'" [value]="s.value">{{ s.icon }} {{ s.label }}</option>
+                </ng-container>
+              </optgroup>
+            </select>
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label class="nw-label" style="margin: 0;">
+              Nombre / Etiqueta
+              <input class="nw-input" [(ngModel)]="newTable.name" placeholder="Ej: Mesa 1, Pista de Baile...">
+            </label>
+            <label class="nw-label" style="margin: 0;" *ngIf="!isElementShape(newTable.shape)">
+              Capacidad (sillas)
+              <input class="nw-input" type="number" [(ngModel)]="newTable.capacity" min="1" max="100">
+            </label>
+            <div *ngIf="isElementShape(newTable.shape)"
+              style="display: flex; align-items: center; font-size: 12px; color: var(--nw-text-3); font-style: italic;">
+              * Elemento de ambientación (sin sillas)
+            </div>
+          </div>
+
+          <label class="nw-label" style="margin: 0;">
+            Piso / Nivel Destino
+            <select class="nw-select" [(ngModel)]="newTable.floor">
+              <option *ngFor="let f of floorsList" [value]="f.id">🏢 {{ f.name }}</option>
+            </select>
+          </label>
+
+          <div style="border-top: 1px dashed var(--nw-border); padding-top: 12px; margin-top: 4px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+              (click)="showAdvancedDimensions = !showAdvancedDimensions"
+              style="font-size: 12px; color: var(--nw-text-2); font-weight: 600; padding: 4px 8px; border: 1px solid var(--nw-border);">
+              {{ showAdvancedDimensions ? '▲ Ocultar dimensiones' : '▼ 📐 Ajustar dimensiones (Ancho x Alto)' }}
+            </button>
+
+            <div *ngIf="showAdvancedDimensions"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+              <label class="nw-label" style="margin: 0;">
+                Ancho (m)
+                <input class="nw-input" type="number" [(ngModel)]="newTable.width" min="0.4" max="12.0" step="0.1">
+              </label>
+              <label class="nw-label" style="margin: 0;">
+                Alto (m)
+                <input class="nw-input" type="number" [(ngModel)]="newTable.height" min="0.4" max="12.0" step="0.1">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating || !newTable.name" (click)="createSingleTable()">
+            {{ creating ? 'Agregando...' : '+ Agregar al croquis' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- MODO POR LOTE -->
+      <div *ngIf="createTab === 'batch'">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div
+            style="background: var(--nw-surface-2); padding: 10px 14px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 13px; color: var(--nw-text-2);">
+            💡 Genera múltiples mesas del mismo tamaño rápidamente y distribúyelas automáticamente en el plano del piso
+            seleccionado.
+          </div>
+
+          <label class="nw-label" style="margin: 0;">
+            Tipo / Forma de las Mesas
+            <select class="nw-select" [(ngModel)]="batchForm.shape" (change)="onBatchShapeSelect(batchForm.shape)"
+              style="font-weight: 700;">
+              <ng-container *ngFor="let s of shapes">
+                <option *ngIf="s.category === 'table'" [value]="s.value">{{ s.icon }} {{ s.label }}</option>
+              </ng-container>
+            </select>
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label class="nw-label" style="margin: 0;">
+              ¿Cuántas mesas crear?
+              <input class="nw-input" type="number" [(ngModel)]="batchForm.quantity" min="1" max="50">
+            </label>
+
+            <label class="nw-label" style="margin: 0;">
+              Prefijo del nombre
+              <input class="nw-input" [(ngModel)]="batchForm.prefix" placeholder="Ej: Mesa (Mesa 1, Mesa 2...)">
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label class="nw-label" style="margin: 0;">
+              Capacidad por mesa (sillas)
+              <input class="nw-input" type="number" [(ngModel)]="batchForm.capacity" min="1" max="100">
+            </label>
+
+            <label class="nw-label" style="margin: 0;">
+              Piso / Nivel Destino
+              <select class="nw-select" [(ngModel)]="batchForm.floor">
+                <option *ngFor="let f of floorsList" [value]="f.id">🏢 {{ f.name }}</option>
+              </select>
+            </label>
+          </div>
+
+          <div style="border-top: 1px dashed var(--nw-border); padding-top: 12px; margin-top: 4px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+              (click)="showAdvancedDimensions = !showAdvancedDimensions"
+              style="font-size: 12px; color: var(--nw-text-2); font-weight: 600; padding: 4px 8px; border: 1px solid var(--nw-border);">
+              {{ showAdvancedDimensions ? '▲ Ocultar dimensiones' : '▼ 📐 Ajustar dimensiones (Ancho x Alto)' }}
+            </button>
+
+            <div *ngIf="showAdvancedDimensions"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+              <label class="nw-label" style="margin: 0;">
+                Ancho (m)
+                <input class="nw-input" type="number" [(ngModel)]="batchForm.width" min="0.4" max="12.0" step="0.1">
+              </label>
+              <label class="nw-label" style="margin: 0;">
+                Alto (m)
+                <input class="nw-input" type="number" [(ngModel)]="batchForm.height" min="0.4" max="12.0" step="0.1">
+              </label>
+            </div>
+          </div>
+
+          <div style="margin-top: 2px; font-size: 12px; color: var(--nw-accent); font-weight: 600;">
+            📊 Resultado estimado: Se agregarán <strong>{{ batchForm.quantity || 0 }}</strong> mesas de <strong>{{
+              batchForm.capacity || 0 }}</strong> asientos (total <strong>{{ (batchForm.quantity || 0) *
+              (batchForm.capacity || 0) }}</strong> lugares).
+          </div>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating || batchForm.quantity < 1"
+            (click)="createBatchTables()">
+            {{ creating ? 'Generando...' : '⚡ Generar ' + (batchForm.quantity || 0) + ' Mesas' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- MODO PLANTILLAS RÁPIDAS (PRESETS POR CAPACIDAD) -->
+      <div *ngIf="createTab === 'preset'">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div
+            style="background: var(--nw-surface-2); padding: 10px 14px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 13px; color: var(--nw-text-2);">
+            💡 Selecciona la cantidad total de invitados estimada para crear automáticamente el conjunto de mesas
+            recomendado (10 personas por mesa).
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(10)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">🎉</span>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">100 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">10 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(15)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">🎊</span>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">150 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">15 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(20)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">🥂</span>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">200 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">20 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(25)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">👑</span>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">250 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">25 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(30)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px; grid-column: span 2;">
+              <span style="font-size: 20px;">✨</span>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">300 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">30 mesas de 10 sillas</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest Detail Popup Modal -->
+  <div class="nw-modal-backdrop" *ngIf="showGuestDetailModal" (click)="closeGuestDetailModal()">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 560px;">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--nw-border); padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="nw-guest-avatar"
+            style="width: 44px; height: 44px; font-size: 16px; background: linear-gradient(135deg, var(--nw-accent-2), var(--nw-accent)); color: #fff;">
+            {{ selectedGuestForDetail ? guestInitials(selectedGuestForDetail.name) : '👤' }}
+          </span>
+          <div>
+            <h2 style="margin: 0; font-size: 18px; color: var(--nw-text); font-weight: 700;">
+              {{ selectedGuestForDetail?.name || 'Cargando invitado...' }}
+            </h2>
+            <span *ngIf="selectedGuestForDetail?.status" class="nw-pill"
+              [class.success]="selectedGuestForDetail?.status === 'confirmed'"
+              [class.warning]="selectedGuestForDetail?.status === 'pending'"
+              [class.danger]="selectedGuestForDetail?.status === 'declined'" style="margin-top: 4px; font-size: 11px;">
+              {{ selectedGuestForDetail?.status === 'confirmed' ? '🟢 Confirmado' : (selectedGuestForDetail?.status ===
+              'declined' ? '🔴 Rechazado' : '🟡 Pendiente') }}
+            </span>
+          </div>
+        </div>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="closeGuestDetailModal()"
+          style="font-size: 16px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <p *ngIf="loadingGuestDetail" class="nw-alert info nw-loading" style="margin-bottom: 16px;">Cargando datos
+        completos del invitado desde la API...</p>
+
+      <div *ngIf="selectedGuestForDetail" style="display: grid; gap: 16px;">
+        <!-- Information Grid -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--nw-surface-2); padding: 14px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 13px;">
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">📧
+              Correo Electrónico</span>
+            <strong>{{ selectedGuestForDetail.email || 'No registrado' }}</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">📞
+              Teléfono</span>
+            <strong>{{ selectedGuestForDetail.phone || 'No registrado' }}</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">👨‍👩‍👧
+              Grupo / Familia</span>
+            <strong>{{ selectedGuestForDetail.group || 'Sin grupo' }}</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">🪑
+              Mesa Asignada</span>
+            <strong [style.color]="selectedGuestForDetail.tableName ? 'var(--nw-accent)' : 'var(--nw-text-3)'">
+              {{ selectedGuestForDetail.tableName ? '📍 ' + selectedGuestForDetail.tableName : 'Sin mesa (En espera)' }}
+            </strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">🎟️
+              Acompañantes Permitidos</span>
+            <strong>+{{ selectedGuestForDetail.allowedCompanions || 0 }} lugares</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px;">🏷️
+              Relación / Rol</span>
+            <strong>{{ getGuestGroupOrRole(selectedGuestForDetail) }}</strong>
+          </div>
+        </div>
+
+        <!-- Companions List if available -->
+        <div *ngIf="selectedGuestForDetail.companions && selectedGuestForDetail.companions.length > 0">
+          <span
+            style="font-size: 12px; font-weight: 700; color: var(--nw-text-2); text-transform: uppercase; display: block; margin-bottom: 6px;">
+            👥 Acompañantes registrados ({{ selectedGuestForDetail.companions.length }}):
+          </span>
+          <div style="display: grid; gap: 6px;">
+            <div *ngFor="let comp of selectedGuestForDetail.companions"
+              style="padding: 8px 12px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>{{ comp.name }}</strong>
+                <span *ngIf="comp.dietaryRestrictions"
+                  style="display: block; font-size: 11px; color: var(--nw-warning);">🥗 {{ comp.dietaryRestrictions
+                  }}</span>
+              </div>
+              <span class="nw-pill" [class.success]="comp.confirmed" style="font-size: 10px;">{{ comp.confirmed ?
+                'Confirmado' : 'Pendiente' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Check-in & System details -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; padding: 10px 14px; background: rgba(99,102,241,0.06); border: 1px dashed rgba(99,102,241,0.3); border-radius: var(--nw-radius-sm);">
+          <div>
+            <span style="color: var(--nw-text-3); font-weight: 600;">🔑 Código Check-In:</span>
+            <strong style="display: block; font-size: 13px; color: var(--nw-accent-2);">{{
+              selectedGuestForDetail.checkInCode || selectedGuestForDetail.invitationToken || 'Sin código' }}</strong>
+          </div>
+          <div>
+            <span style="color: var(--nw-text-3); font-weight: 600;">🚪 Estado Check-In:</span>
+            <strong style="display: block; font-size: 13px;"
+              [style.color]="selectedGuestForDetail.checkedIn ? 'var(--nw-success)' : 'var(--nw-text-3)'">
+              {{ selectedGuestForDetail.checkedIn ? '✓ Ingresó al evento' : 'Pendiente' }}
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="nw-modal-actions" style="margin-top: 20px;">
+        <button class="nw-btn nw-btn-primary" (click)="closeGuestDetailModal()">Cerrar</button>
       </div>
     </div>
   </div>

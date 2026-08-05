@@ -103,20 +103,21 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
     });
   }
 
-  get newEmbedWidgets(): Array<{ widgetKey: string; label: string; url: string; snippet: string }> {
+  get newEmbedWidgets(): Array<{ widgetKey: string; label: string; url: string; snippet: string; height: number }> {
     if (!this.event?.externalPortalSlug) return [];
     const slug = this.event.externalPortalSlug;
     const origin = window.location.origin;
     const widgets = [
-      { key: 'rsvp', label: 'RSVP Formular' },
-      { key: 'pass', label: 'Pase VIP & QR' },
-      { key: 'song-requests', label: 'Peticiones al DJ' },
-      { key: 'guest-album', label: 'Álbum de Fotos' },
-      { key: 'dedications', label: 'Muro de Dedicatorias' },
-      { key: 'gift', label: 'Mesa de Regalos' },
-      { key: 'seating', label: 'Croquis de Mesas' },
-      { key: 'hero', label: 'Hero Header' },
-      { key: 'full-portal', label: 'Portal Completo' }
+      { key: 'rsvp', label: 'RSVP Formulario', height: 720 },
+      { key: 'guest-pass', label: 'Pase VIP & QR', height: 520 },
+      { key: 'album', label: 'Álbum de Fotos', height: 720 },
+      { key: 'gallery', label: 'Galería del Evento', height: 520 },
+      { key: 'map', label: 'Ubicación & Mapa', height: 480 },
+      { key: 'song-requests', label: 'Peticiones al DJ', height: 520 },
+      { key: 'dedications', label: 'Muro de Dedicatorias', height: 600 },
+      { key: 'gifts', label: 'Mesa de Regalos & Sobre', height: 600 },
+      { key: 'seating', label: 'Croquis & Mesas', height: 520 },
+      { key: 'full-portal', label: 'Portal Completo', height: 900 }
     ];
     return widgets.map(w => {
       const u = `${origin}/new/embed/${slug}/${w.key}`;
@@ -124,9 +125,22 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
         widgetKey: w.key,
         label: w.label,
         url: u,
-        snippet: `<iframe src="${u}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
+        height: w.height,
+        snippet: `<iframe src="${u}" width="100%" height="${w.height}" style="border:0" allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>`
       };
     });
+  }
+
+  get divScriptSnippet(): string {
+    if (!this.event?.externalPortalSlug) return '';
+    const slug = this.event.externalPortalSlug;
+    const origin = window.location.origin;
+    return `<div data-kyndra-widget="rsvp" data-portal="${slug}"></div>\n<script src="${origin}/assets/kyndra-embed.js"></script>`;
+  }
+
+  get newPortalUrl(): string {
+    if (!this.event?.externalPortalSlug) return '';
+    return `${window.location.origin}/new/e/${this.event.externalPortalSlug}`;
   }
 
   saveExternalConfig(): void {
