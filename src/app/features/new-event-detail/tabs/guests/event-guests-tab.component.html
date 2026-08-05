@@ -1,0 +1,194 @@
+<section class="nw-card">
+  <!-- Acciones y Filtros -->
+  <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px;">
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; flex:1;">
+      <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar por nombre, email, teléfono o grupo..." style="max-width:320px;">
+      
+      <select class="nw-select" [(ngModel)]="guestStatusFilter" style="width:160px;">
+        <option value="">Todos los RSVPs</option>
+        <option value="confirmed">Confirmados ✅</option>
+        <option value="pending">Pendientes ⏳</option>
+        <option value="declined">Rechazados ❌</option>
+      </select>
+
+      <select class="nw-select" [(ngModel)]="guestGroupFilter" style="width:160px;">
+        <option value="">Todos los grupos</option>
+        <option *ngFor="let grp of guestGroups" [value]="grp">{{ grp }}</option>
+      </select>
+    </div>
+
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openScanner()">📷 Escanear QR</button>
+      <button class="nw-btn nw-btn-secondary nw-btn-sm" (click)="exportGuests()" [disabled]="exportingGuests">
+        📥 Exportar CSV
+      </button>
+      <label class="nw-btn nw-btn-secondary nw-btn-sm" style="cursor:pointer; margin:0;">
+        📤 Importar CSV
+        <input type="file" accept=".csv" (change)="selectImportFile($event)" style="display:none;">
+      </label>
+      <button class="nw-btn nw-btn-primary" (click)="openGuestForm()">
+        ➕ Nuevo Invitado
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="guestMessage" class="nw-alert success" style="margin-bottom:16px;">{{ guestMessage }}</div>
+  <div *ngIf="guestError" class="nw-alert error" style="margin-bottom:16px;">{{ guestError }}</div>
+  <div *ngIf="guestsLoading" class="nw-alert info nw-loading">Cargando invitados...</div>
+
+  <!-- Tabla de Invitados -->
+  <div class="nw-table-responsive" *ngIf="!guestsLoading">
+    <div *ngIf="filteredGuests.length === 0" style="padding:40px; text-align:center; color:var(--nw-text-3)">
+      <p style="font-size:32px; margin-bottom:8px;">👥</p>
+      <p style="margin:0; font-size:15px; font-weight:600;">No se encontraron invitados.</p>
+      <p style="font-size:13px; margin-top:4px;">Prueba ajustando los filtros o agrega tu primer invitado.</p>
+    </div>
+
+    <table class="nw-table" *ngIf="filteredGuests.length > 0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Grupo</th>
+          <th>Mesa</th>
+          <th>RSVP</th>
+          <th>Pases</th>
+          <th>Contacto</th>
+          <th style="text-align:right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let g of filteredGuests">
+          <td style="white-space:nowrap;">
+            <strong>{{ g.name }}</strong>
+            <span *ngIf="g.checkedInAt" class="nw-pill success" style="margin-left:6px; font-size:10px;">Check-in</span>
+          </td>
+          <td style="white-space:nowrap;">
+            <span *ngIf="g.group" class="nw-pill">{{ g.group }}</span>
+            <span *ngIf="!g.group" style="color:var(--nw-text-3)">—</span>
+          </td>
+          <td style="white-space:nowrap;">
+            <span *ngIf="g.tableName" class="nw-pill accent">{{ g.tableName }}</span>
+            <span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span>
+          </td>
+          <td style="white-space:nowrap;">
+            <span class="nw-pill" [class.success]="g.status === 'confirmed'"
+              [class.warning]="g.status === 'pending'" [class.danger]="g.status === 'declined'">
+              {{ g.status === 'confirmed' ? 'Confirmado' : (g.status === 'declined' ? 'Rechazado' : 'Pendiente') }}
+            </span>
+          </td>
+          <td style="white-space:nowrap;">{{ (g.allowedCompanions || 0) + 1 }} personas</td>
+          <td style="font-size:12px; color:var(--nw-text-2); white-space:nowrap;">
+            <span *ngIf="g.phone">📱 {{ g.phone }}</span>
+            <span *ngIf="g.email" style="margin-left:6px;">📧 {{ g.email }}</span>
+          </td>
+          <td style="text-align:right; white-space:nowrap;">
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openGuestForm(g)">✏️ Editar</button>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteGuest(g)">🗑️</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal Formulario Invitado -->
+  <div class="nw-modal-backdrop" *ngIf="showGuestForm" (click)="showGuestForm = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()"
+      style="max-width: 680px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+      
+      <!-- Modal Header -->
+      <div style="padding:20px 24px; background:var(--nw-surface); border-bottom:1px solid var(--nw-border); display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <h2 style="margin:0; font-size:20px; font-weight:700; color:var(--nw-text);">
+            {{ editingGuest ? '✏️ Editar invitado' : '➕ Nuevo invitado' }}
+          </h2>
+          <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">
+            {{ editingGuest ? 'Modifica los datos del invitado.' : 'Ingresa la información básica y de acompañantes.' }}
+          </p>
+        </div>
+        <button type="button" (click)="showGuestForm = false" class="nw-btn nw-btn-ghost nw-btn-sm" style="font-size:18px;">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div style="padding:24px; overflow-y:auto; flex:1;">
+        <div style="display:grid; gap:16px;">
+          <div>
+            <label class="nw-label" style="font-weight:700;">Nombre completo *</label>
+            <input class="nw-input" [(ngModel)]="guestForm.name" placeholder="Ej. Sofia Garcia" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
+            <div>
+              <label class="nw-label">Email</label>
+              <input class="nw-input" type="email" [(ngModel)]="guestForm.email" placeholder="sofia@ejemplo.com">
+            </div>
+            <div>
+              <label class="nw-label">Teléfono (WhatsApp)</label>
+              <div style="display:flex; gap:6px;">
+                <select class="nw-select" [(ngModel)]="guestForm.phoneCountryCode" style="width:100px;">
+                  <option *ngFor="let c of countryCodes" [value]="c.code">{{ c.code }}</option>
+                </select>
+                <input class="nw-input" [(ngModel)]="guestForm.phoneLocalNumber" placeholder="3312345678" style="flex:1;">
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px;">
+            <div>
+              <label class="nw-label">Grupo / Familia</label>
+              <input class="nw-input" [(ngModel)]="guestForm.group" placeholder="Ej. Familia Garcia">
+            </div>
+            <div>
+              <label class="nw-label">Mesa asignada</label>
+              <select class="nw-select" [(ngModel)]="guestForm.tableId">
+                <option value="">Sin mesa</option>
+                <option *ngFor="let t of tables" [value]="t._id || t.id">{{ t.name }} ({{ t.occupied || 0 }}/{{ t.capacity }})</option>
+              </select>
+            </div>
+            <div>
+              <label class="nw-label">Número de Pases Acompañantes</label>
+              <input class="nw-input" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions" (ngModelChange)="onCompanionsCountChange()">
+            </div>
+          </div>
+
+          <!-- Acompañantes lista -->
+          <div *ngIf="companionList.length > 0" style="background:var(--nw-surface-2); padding:14px; border-radius:8px;">
+            <h4 style="margin:0 0 10px; font-size:14px;">Nombres de acompañantes</h4>
+            <div style="display:grid; gap:8px;">
+              <div *ngFor="let comp of companionList; let i = index" style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:12px; color:var(--nw-text-3); min-width:20px;">#{{ i + 1 }}</span>
+                <input class="nw-input" [(ngModel)]="comp.name" (ngModelChange)="onCompanionNameChange()" placeholder="Nombre del acompañante" style="flex:1;">
+                <button type="button" (click)="removeCompanionRow(i)" class="nw-btn nw-btn-danger nw-btn-sm">🗑️</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="nw-label">Restricciones alimenticias / Alergias</label>
+            <input class="nw-input" [(ngModel)]="guestForm.dietaryRestrictions" placeholder="Ej. Vegetariano, alergia a nueces">
+          </div>
+
+          <div>
+            <label class="nw-label">Notas internas</label>
+            <textarea class="nw-input" rows="2" [(ngModel)]="guestForm.notes" placeholder="Notas solo visibles para organizadores"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding:16px 24px; background:var(--nw-surface); border-top:1px solid var(--nw-border); display:flex; justify-content:space-between; align-items:center;">
+        <button class="nw-btn nw-btn-ghost" type="button" (click)="showGuestForm = false">Cancelar</button>
+        <div style="display:flex; gap:10px;">
+          <button *ngIf="!editingGuest" class="nw-btn nw-btn-secondary" type="button" [disabled]="guestSaving" (click)="saveGuest(true)">
+            ➕ Guardar y agregar otro
+          </button>
+          <button class="nw-btn nw-btn-primary" type="button" [disabled]="guestSaving" (click)="saveGuest(false)">
+            {{ guestSaving ? 'Guardando...' : editingGuest ? 'Actualizar' : '💾 Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Scanner Modal Component -->
+  <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
+</section>

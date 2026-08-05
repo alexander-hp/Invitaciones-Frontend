@@ -22,6 +22,18 @@ import { NewRegisterComponent } from './features/new-register/new-register.compo
 import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.component';
 import { NewEventsComponent } from './features/new-events/new-events.component';
 import { NewEventDetailComponent } from './features/new-event-detail/new-event-detail.component';
+
+// Tab Subcomponents
+import { EventInfoTabComponent } from './features/new-event-detail/tabs/info/event-info-tab.component';
+import { EventGuestsTabComponent } from './features/new-event-detail/tabs/guests/event-guests-tab.component';
+import { EventTablesTabComponent } from './features/new-event-detail/tabs/tables/event-tables-tab.component';
+import { EventRsvpsTabComponent } from './features/new-event-detail/tabs/rsvps/event-rsvps-tab.component';
+import { EventAlbumTabComponent } from './features/new-event-detail/tabs/album/event-album-tab.component';
+import { EventCommunicationTabComponent } from './features/new-event-detail/tabs/communication/event-communication-tab.component';
+import { EventDjTabComponent } from './features/new-event-detail/tabs/dj/event-dj-tab.component';
+import { EventDedicationsTabComponent } from './features/new-event-detail/tabs/dedications/event-dedications-tab.component';
+import { EventIntegrationTabComponent } from './features/new-event-detail/tabs/integration/event-integration-tab.component';
+
 import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
@@ -62,6 +74,15 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     NewDashboardComponent,
     NewEventsComponent,
     NewEventDetailComponent,
+    EventInfoTabComponent,
+    EventGuestsTabComponent,
+    EventTablesTabComponent,
+    EventRsvpsTabComponent,
+    EventAlbumTabComponent,
+    EventCommunicationTabComponent,
+    EventDjTabComponent,
+    EventDedicationsTabComponent,
+    EventIntegrationTabComponent,
     SeatingChartComponent,
     PasswordResetConfirmComponent,
     PasswordResetComponent,

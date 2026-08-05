@@ -1,0 +1,385 @@
+<section>
+  <div class="nw-metrics">
+    <div class="nw-metric success"><span class="metric-label">Confirmados</span><span class="metric-value">{{ confirmedCount }}</span></div>
+    <div class="nw-metric warning"><span class="metric-label">Pendientes</span><span class="metric-value">{{ pendingCount }}</span></div>
+    <div class="nw-metric danger"><span class="metric-label">Rechazados</span><span class="metric-value">{{ declinedCount }}</span></div>
+    <div class="nw-metric info"><span class="metric-label">Check-in</span><span class="metric-value">{{ checkedInCount }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Lugares totales</span><span class="metric-value">{{ totalSeats }}</span></div>
+  </div>
+
+  <!-- Detalles del evento -->
+  <div class="nw-card" style="margin-top:20px;" *ngIf="event">
+    <div class="nw-card-header">
+      <h3>Detalles del evento</h3>
+    </div>
+    <div class="nw-form-grid" style="gap:16px;">
+      <div><span style="font-size:13px; color:var(--nw-text-3)">Tipo</span>
+        <p style="margin:4px 0 0; font-weight:600">{{ eventTypeIcon(event.type) }} {{ event.type }}</p>
+      </div>
+      <div>
+        <span style="font-size:13px; color:var(--nw-text-3)">Estado</span>
+        <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+          <span class="nw-pill" [class.success]="event.status === 'published'"
+            [class.warning]="event.status === 'draft'" [class.danger]="event.status === 'archived'">
+            {{ event.status === 'published' ? 'Publicado' : (event.status === 'draft' ? 'Borrador' : 'Archivado') }}
+          </span>
+          <select class="nw-select"
+            style="padding:4px 8px; font-size:12px; height:32px; width:auto; min-width:110px;"
+            [ngModel]="event.status" (ngModelChange)="changeStatus($event)" [disabled]="saving">
+            <option value="draft">📁 Borrador</option>
+            <option value="published">🌐 Publicado</option>
+            <option value="archived">🗄️ Archivado</option>
+          </select>
+        </div>
+      </div>
+      <div *ngIf="event.hosts?.length"><span style="font-size:13px; color:var(--nw-text-3)">Anfitriones</span>
+        <p style="margin:4px 0 0; font-weight:600">{{ event.hosts.join(', ') }}</p>
+      </div>
+      <div *ngIf="event.venue?.name"><span style="font-size:13px; color:var(--nw-text-3)">Lugar</span>
+        <p style="margin:4px 0 0; font-weight:600">{{ event.venue.name }}</p>
+      </div>
+      <div *ngIf="event.venue?.address"><span style="font-size:13px; color:var(--nw-text-3)">Dirección</span>
+        <p style="margin:4px 0 0">{{ event.venue.address }}</p>
+      </div>
+      <div><span style="font-size:13px; color:var(--nw-text-3)">Modo</span>
+        <p style="margin:4px 0 0">{{ event.mode === 'external_dashboard' ? 'Dashboard externo' : 'Invitación digital' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Planes y Pagos -->
+  <div class="nw-card" style="margin-top:16px;">
+    <div class="nw-card-header">
+      <h3>Planes y Pagos</h3>
+      <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
+      <span class="nw-pill warning" *ngIf="!currentPlan && !eventPlanActive && !subscriptionActive">Plan Gratuito</span>
+      <span class="nw-pill success" *ngIf="eventPlanActive || subscriptionActive">Suscripción Activa ✅</span>
+    </div>
+
+    <!-- Si YA PAGÓ / Tiene Suscripción Activa -->
+    <div *ngIf="eventPlanActive || subscriptionActive"
+      style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--nw-radius-sm); padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div
+          style="width: 44px; height: 44px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">
+          ✓
+        </div>
+        <div>
+          <strong style="font-size: 16px; color: var(--nw-text); display: block;">Suscripción / Plan Activo</strong>
+          <p style="margin: 4px 0 0; font-size: 13.5px; color: var(--nw-text-2);">
+            {{ subscriptionActive ? 'Suscripción Planner Pro activa con acceso ilimitado.' : 'Plan del evento activo' }}
+            <span *ngIf="eventPlanExpiresAt"> · Vence: <strong>{{ formatShortDate(eventPlanExpiresAt) }}</strong></span>
+          </p>
+        </div>
+      </div>
+      <span class="nw-pill success" style="font-size: 13px; font-weight: 700; padding: 6px 14px;">
+        Premium Habilitado
+      </span>
+    </div>
+
+    <!-- Si AÚN NO HA PAGADO -->
+    <div *ngIf="!eventPlanActive && !subscriptionActive">
+      <div style="margin-bottom:16px;">
+        <p class="nw-alert warning"
+          style="margin-bottom:12px; background:rgba(251,191,36,0.06); border:1px dashed rgba(251,191,36,0.3); color:var(--nw-warning);">
+          Plan Gratuito. Activa un plan premium para funciones avanzadas.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+        <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+          <strong>Evento Individual</strong>
+          <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice(event.mode === 'external_dashboard' ? 'external_dashboard_12m' : 'event_12m') }}</span>
+          <span style="font-size:13px; color:var(--nw-text-3);">Pago único 12 meses</span>
+          <button *ngIf="event.mode !== 'external_dashboard'" class="nw-btn nw-btn-primary nw-btn-sm"
+            (click)="checkoutPlan('event_12m')"
+            [disabled]="checkoutLoading !== '' || hasPendingPayment('event_12m')">
+            {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (hasPendingPayment('event_12m') ? 'Pendiente' : 'Activar') }}
+          </button>
+          <button *ngIf="event.mode === 'external_dashboard'" class="nw-btn nw-btn-primary nw-btn-sm"
+            (click)="checkoutPlan('external_dashboard_12m')"
+            [disabled]="checkoutLoading !== '' || hasPendingPayment('external_dashboard_12m')">
+            {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' : (hasPendingPayment('external_dashboard_12m') ? 'Pendiente' : 'Activar Dashboard') }}
+          </button>
+        </div>
+        <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+          <strong>Planner Pro (Mensual)</strong>
+          <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_monthly') }}</span>
+          <span style="font-size:13px; color:var(--nw-text-3);">Acceso ilimitado</span>
+          <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_monthly')"
+            [disabled]="checkoutLoading !== '' || hasPendingPayment('planner_pro_monthly')">
+            {{ hasPendingPayment('planner_pro_monthly') ? 'Pendiente' : 'Activar Pro' }}
+          </button>
+        </div>
+        <div class="nw-card" style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+          <strong>Planner Pro (Anual)</strong>
+          <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ getPlanPrice('planner_pro_yearly') }}</span>
+          <span style="font-size:13px; color:var(--nw-text-3);">Ahorra hasta 20%</span>
+          <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_yearly')"
+            [disabled]="checkoutLoading !== '' || hasPendingPayment('planner_pro_yearly')">
+            {{ hasPendingPayment('planner_pro_yearly') ? 'Pendiente' : 'Activar Anual' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invitaciones -->
+  <div class="nw-card" style="margin-top:16px;">
+    <div class="nw-card-header">
+      <h3>Invitaciones</h3>
+      <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="createInvitation()"
+        [disabled]="saving || event.mode === 'external_dashboard'">+ Crear invitación</button>
+    </div>
+    <p *ngIf="!invitations.length" style="color:var(--nw-text-3); font-size:14px;">Este evento aún no tiene invitaciones.</p>
+    <div style="display:grid; gap:8px;">
+      <div *ngFor="let inv of invitations"
+        style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+        <div>
+          <strong>{{ inv.content?.headline || inv.slug }}</strong>
+          <span style="color:var(--nw-text-3); font-size:13px; margin-left:8px;">/new/i/{{ inv.slug }}</span>
+          <span class="nw-pill" style="margin-left:8px;" [class.success]="inv.status === 'published'"
+            [class.warning]="inv.status === 'draft'">{{ inv.status }}</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a [routerLink]="['/new/invitations', inv._id || inv.id, 'sections']"
+            class="nw-btn nw-btn-ghost nw-btn-sm">Secciones ⚙️</a>
+          <a [routerLink]="['/new/invitations', inv._id || inv.id, 'editor']"
+            class="nw-btn nw-btn-ghost nw-btn-sm">Editar ✏️</a>
+          <button (click)="deleteInvitation(inv)" class="nw-btn nw-btn-danger nw-btn-sm" [disabled]="saving">🗑️ Borrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permisos y Accesos -->
+  <div style="margin-top: 24px; margin-bottom: 16px; padding: 20px; background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius); display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 24px;">🤝</span>
+      <div>
+        <h3 style="margin: 0; font-family: var(--nw-font-display); font-weight: 700; font-size: 17px; color: var(--nw-text);">
+          Gestión de Colaboradores y Permisos</h3>
+        <p style="margin: 2px 0 0; font-size: 13px; color: var(--nw-text-2);">Configura los accesos de tu equipo técnico y operativo según sus necesidades del evento.</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+      <div style="background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 14px; border-top: 4px solid var(--nw-accent); display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--nw-shadow-sm);">
+        <span style="font-size: 20px; background: var(--nw-accent-glow); padding: 6px; border-radius: 8px; line-height: 1;">👥</span>
+        <div>
+          <strong style="font-size: 13px; color: var(--nw-text); display: block; margin-bottom: 4px;">Equipo Interno (Cuentas Permanentes)</strong>
+          <span style="font-size: 12px; color: var(--nw-text-2); line-height: 1.45; display: block;">
+            Para organizadores, clientes o proveedores con cuenta registrada. Permite acceso al panel de control mediante inicio de sesión estándar.
+          </span>
+          <span style="font-size: 11px; font-weight: 700; color: var(--nw-accent); display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;">
+            🔒 Seguridad Alta · ⚙️ Control Detallado
+          </span>
+        </div>
+      </div>
+
+      <div style="background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 14px; border-top: 4px solid var(--nw-accent-2); display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--nw-shadow-sm);">
+        <span style="font-size: 20px; background: rgba(219, 141, 128, 0.08); padding: 6px; border-radius: 8px; line-height: 1;">🔗</span>
+        <div>
+          <strong style="font-size: 13px; color: var(--nw-text); display: block; margin-bottom: 4px;">Accesos Externos (Enlaces Temporales)</strong>
+          <span style="font-size: 12px; color: var(--nw-text-2); line-height: 1.45; display: block;">
+            Para personal del evento (DJ, fotografía, personal de mesa) sin registro. Enlace único directo y seguro que expira automáticamente.
+          </span>
+          <span style="font-size: 11px; font-weight: 700; color: var(--nw-accent-2); display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;">
+            ⏳ Enlace Temporal · 🚀 Acceso sin Contraseña
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equipo Interno -->
+  <div class="nw-card" style="margin-top:20px; border-top: 4px solid var(--nw-accent); padding: 24px;">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h3 style="margin:0; font-size: 18px; font-weight: 700;">👥 Equipo Interno</h3>
+        <span class="nw-pill accent" style="font-size:10px; font-weight:700; text-transform: uppercase;">🔒 Permanente</span>
+      </div>
+      <span class="nw-pill success" style="font-weight:700;">{{ eventMembers.length }} miembros</span>
+    </div>
+    <p style="color:var(--nw-text-2); font-size:13.5px; margin-top:0; margin-bottom:20px; line-height: 1.5;">
+      Colaboradores fijos del evento. Permite asignar perfiles con permisos granulares específicos para la gestión del tablero administrativo.
+    </p>
+
+    <!-- Formulario Agregar Miembro -->
+    <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:20px; margin-bottom:20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+      <h4 style="margin:0 0 14px; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 6px;">
+        ➕ Invitar nuevo miembro</h4>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:16px;">
+        <div>
+          <label class="nw-label" style="font-weight:600; margin-bottom:6px; display:block;">Email</label>
+          <input class="nw-input" type="email" [(ngModel)]="memberForm.email" placeholder="persona@dominio.com"
+            style="height:40px; padding:8px 12px; font-size:13px;">
+        </div>
+        <div>
+          <label class="nw-label" style="font-weight:600; margin-bottom:6px; display:block;">Nombre</label>
+          <input class="nw-input" [(ngModel)]="memberForm.name" placeholder="Opcional"
+            style="height:40px; padding:8px 12px; font-size:13px;">
+        </div>
+        <div>
+          <label class="nw-label" style="font-weight:600; margin-bottom:6px; display:block;">Rol por Defecto</label>
+          <select class="nw-select" [(ngModel)]="memberForm.role" (change)="onMemberRoleChange()"
+            style="height:40px; padding:8px 12px; font-size:13px; cursor:pointer;">
+            <option *ngFor="let role of memberRoles" [value]="role.value">{{ role.label }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Checkboxes de Permisos Granulares -->
+      <div style="margin-bottom:16px;">
+        <span class="nw-label" style="font-weight:600; margin-bottom:8px; display:block;">Permisos asignados:</span>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
+          <label *ngFor="let permission of eventPermissions"
+            [style.borderColor]="memberForm.permissions.includes(permission) ? 'var(--nw-accent)' : 'var(--nw-border)'"
+            [style.background]="memberForm.permissions.includes(permission) ? 'var(--nw-accent-glow)' : 'var(--nw-surface)'"
+            [style.color]="memberForm.permissions.includes(permission) ? 'var(--nw-text)' : 'var(--nw-text-2)'"
+            style="display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; cursor:pointer; padding:8px 12px; border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); user-select:none; transition: all var(--nw-duration) var(--nw-ease);">
+            <span style="font-weight:600;">{{ permissionLabel(permission) }}</span>
+            <span class="nw-switch" style="width:36px; height:20px; flex-shrink:0;">
+              <input type="checkbox" [checked]="memberForm.permissions.includes(permission)"
+                (change)="toggleMemberPermission(permission, $any($event.target).checked)">
+              <span class="nw-slider" style="border-radius:20px;"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="createMember()">
+          Invitar al Equipo
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de Miembros -->
+    <div style="display:grid; gap:10px;">
+      <div *ngFor="let member of eventMembers"
+        style="display:flex; flex-direction:column; padding:16px; border:1px solid var(--nw-border); background:var(--nw-surface); border-radius:var(--nw-radius-sm); gap:12px; box-shadow: var(--nw-shadow-sm); transition: border-color var(--nw-duration) var(--nw-ease);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+            <div
+              style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, var(--nw-accent), var(--nw-accent-2)); color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; box-shadow:0 2px 6px rgba(192, 156, 120, 0.25);">
+              {{ (member.name || member.email).substring(0, 2).toUpperCase() }}
+            </div>
+            <div style="min-width:0;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <strong style="font-size:14px; color:var(--nw-text);">{{ member.name || member.email }}</strong>
+                <span class="nw-pill accent" style="font-size:10px; padding:2px 8px; font-weight: 700;">{{ memberRoleLabel(member.role) }}</span>
+                <span class="nw-pill" [class.success]="member.status === 'active'"
+                  [class.warning]="member.status === 'invited'" [class.danger]="member.status === 'disabled'"
+                  style="font-size:9.5px; padding:2px 6px; text-transform:uppercase; font-weight: 700;">
+                  {{ member.status }}
+                </span>
+              </div>
+              <div style="color:var(--nw-text-3); font-size:12.5px; margin-top:2px;">{{ member.email }}</div>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select class="nw-select" [ngModel]="member.role" (ngModelChange)="updateMemberRole(member, $event)"
+              [disabled]="member.status === 'disabled'"
+              style="width:auto; height:34px; padding:4px 10px; font-size:12.5px; cursor:pointer;">
+              <option *ngFor="let role of memberRoles" [value]="role.value">{{ role.label }}</option>
+            </select>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="disableMember(member)"
+              [disabled]="member.status === 'disabled'" style="padding:5px 12px; font-size:12.5px; height:34px;">
+              Desactivar
+            </button>
+          </div>
+        </div>
+
+        <!-- Permisos Actuales -->
+        <div style="padding-top:10px; border-top:1px dashed var(--nw-border); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11px; color:var(--nw-text-3); font-weight:700; margin-right:4px;">Permisos:</span>
+          <span *ngFor="let perm of member.permissions" class="nw-pill success"
+            style="font-size:10px; padding:2px 8px; background:rgba(74, 127, 98, 0.06); color:var(--nw-success); border:1px solid rgba(74, 127, 98, 0.15);">
+            {{ permissionLabel(perm) }}
+          </span>
+          <span *ngIf="!member.permissions?.length" style="font-size:11px; color:var(--nw-text-3); font-style:italic;">Ninguno (Solo ver)</span>
+        </div>
+      </div>
+      <div *ngIf="eventMembers.length === 0"
+        style="padding:24px; text-align:center; color:var(--nw-text-3); font-size:13.5px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px dashed var(--nw-border);">
+        No hay miembros registrados en el equipo interno.
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos Externos -->
+  <div class="nw-card" style="margin-top:20px; border-top: 4px solid var(--nw-accent-2); padding: 24px;">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h3 style="margin:0; font-size: 18px; font-weight: 700;">🔗 Accesos Externos</h3>
+        <span class="nw-pill warning" style="font-size:10px; font-weight:700; text-transform: uppercase;">⏳ Enlace Temporal</span>
+      </div>
+      <span class="nw-pill info" style="font-weight:700;">{{ eventAccessLinks.length }} links</span>
+    </div>
+    <p style="color:var(--nw-text-2); font-size:13.5px; margin-top:0; margin-bottom:20px; line-height: 1.5;">
+      Enlaces sin registro de usuario con token de expiración. Ideales para personal operativo del día del evento (DJs, fotógrafos, asistentes de check-in).
+    </p>
+
+    <!-- Formulario Crear Link -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:20px; background:var(--nw-surface-2); padding:20px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border); align-items: end; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+      <div>
+        <span style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Sección / Rol</span>
+        <select class="nw-select" [(ngModel)]="accessLinkForm.role"
+          style="height:40px; padding:6px 12px; font-size:13px; cursor:pointer;">
+          <option value="check_in">🔑 Check-in</option>
+          <option value="album_review">📸 Revisión álbum</option>
+          <option value="client_view">👤 Vista cliente</option>
+          <option value="guest_ops">👥 Operación invitados</option>
+          <option value="dj">🎧 Sección DJ (Canciones)</option>
+        </select>
+      </div>
+      <div>
+        <span style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Etiqueta (DJ Pedro, Barra, etc.)</span>
+        <input class="nw-input" [(ngModel)]="accessLinkForm.label" placeholder="Ej: Staff de Entrada"
+          style="height:40px; padding:8px 12px; font-size:13px;">
+      </div>
+      <div style="max-width:120px;">
+        <span style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Días de validez</span>
+        <input class="nw-input" type="number" min="1" max="90" [(ngModel)]="accessLinkForm.days"
+          style="height:40px; padding:8px; font-size:13px; text-align:center;">
+      </div>
+      <div>
+        <button class="nw-btn nw-btn-primary" (click)="createAccessLink()"
+          style="height:40px; font-size:13px; padding:0 20px; width: 100%;">Crear enlace</button>
+      </div>
+    </div>
+
+    <!-- Lista de Links -->
+    <div style="display:grid; gap:10px;">
+      <div *ngFor="let link of eventAccessLinks"
+        style="display:flex; align-items:center; justify-content:space-between; padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); gap:12px; font-size:13px; box-shadow: var(--nw-shadow-sm); transition: border-color var(--nw-duration) var(--nw-ease);">
+        <div style="min-width:0; display:grid; gap:4px; flex: 1;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <strong style="font-size:14px; color:var(--nw-text);">{{ link.label || link.role }}</strong>
+            <span class="nw-pill info" style="font-size:10px; padding:2px 8px; text-transform:uppercase; font-weight: 700;">{{ link.role }}</span>
+            <span *ngIf="link.revokedAt" class="nw-pill danger" style="font-size:10px; padding:2px 8px; font-weight: 700;">Revocado</span>
+            <span *ngIf="!link.revokedAt" class="nw-pill success" style="font-size:10px; padding:2px 8px; background:rgba(74,127,98,0.08); color:var(--nw-success); font-weight: 700;">Activo</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--nw-text-3); word-break:break-all;">
+            <span>🔗 {{ link.url }}</span>
+            <span>•</span>
+            <span>Expira: {{ formatShortDate(link.expiresAt) }}</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+          <a class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getNewAccessUrl(link)" target="_blank"
+            [style.pointer-events]="link.revokedAt ? 'none' : 'auto'"
+            [style.opacity]="link.revokedAt ? '0.5' : '1'"
+            style="height:32px; padding: 0 12px; font-size:12px;">Abrir</a>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="revokeAccessLink(link)"
+            [disabled]="!!link.revokedAt" style="height:32px; padding: 0 12px; font-size:12px;">Revocar</button>
+        </div>
+      </div>
+      <div *ngIf="eventAccessLinks.length === 0"
+        style="padding:24px; text-align:center; color:var(--nw-text-3); font-size:13.5px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px dashed var(--nw-border);">
+        No hay accesos externos temporales generados.
+      </div>
+    </div>
+  </div>
+</section>

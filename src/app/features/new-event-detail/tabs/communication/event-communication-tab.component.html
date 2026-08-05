@@ -1,0 +1,299 @@
+<section>
+  <h3 style="margin:0 0 16px;">📱 Centro de comunicación</h3>
+  <p *ngIf="guestMessage" class="nw-alert success" style="margin-bottom:14px;">{{ guestMessage }}</p>
+  <p *ngIf="guestError" class="nw-alert error" style="margin-bottom:14px;">{{ guestError }}</p>
+
+  <!-- Metrics -->
+  <div class="nw-metrics" style="margin-bottom:16px;">
+    <div class="nw-metric"><span class="metric-label">Email enviados</span><span class="metric-value">{{ eventMetrics.emailSent || 0 }}</span></div>
+    <div class="nw-metric"><span class="metric-label">WhatsApp enviados</span><span class="metric-value">{{ eventMetrics.whatsappSent || 0 }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Abiertas</span><span class="metric-value">{{ eventMetrics.opened || 0 }}</span></div>
+    <div class="nw-metric danger"><span class="metric-label">Fallidas</span><span class="metric-value">{{ eventMetrics.failed || 0 }}</span></div>
+    <div class="nw-metric success"><span class="metric-label">Check-in</span><span class="metric-value">{{ eventMetrics.checkedIn || 0 }}</span></div>
+  </div>
+
+  <div class="nw-metrics" style="margin-bottom:16px;">
+    <div class="nw-metric"><span class="metric-label">Por enviar</span><span class="metric-value">{{ pendingCommunicationGuests }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Enviados</span><span class="metric-value">{{ sentCommunicationGuests }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Entregados</span><span class="metric-value">{{ deliveredCommunicationGuests }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Leídos</span><span class="metric-value">{{ readCommunicationGuests }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Abiertos</span><span class="metric-value">{{ openedCommunicationGuests }}</span></div>
+    <div class="nw-metric danger"><span class="metric-label">Fallidos</span><span class="metric-value">{{ failedCommunicationGuests }}</span></div>
+    <div class="nw-metric success"><span class="metric-label">Confirmados</span><span class="metric-value">{{ confirmedCommunicationGuests }}</span></div>
+  </div>
+
+  <!-- WhatsApp status -->
+  <div class="nw-card" style="margin-bottom:16px;">
+    <div class="nw-card-header">
+      <h3>Configuración de envío</h3>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+      <span class="nw-pill">WhatsApp: {{ whatsappProvider }}</span>
+      <span class="nw-pill" *ngIf="whatsappProvider === 'openwa'">{{ openWaReady ? '🟢 Listo' : ('🔴 ' + openWaStatus) }}</span>
+      <span class="nw-pill" *ngIf="whatsappFallbackProvider">Fallback: {{ whatsappFallbackProvider }}</span>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+      <label class="nw-label">Plantilla
+        <select class="nw-select" [(ngModel)]="selectedMessageType">
+          <option *ngFor="let t of messageTemplates" [value]="t.value">{{ t.label }}</option>
+        </select>
+      </label>
+      <button class="nw-btn nw-btn-ghost" (click)="showPendingReminders()">Ver pendientes</button>
+      <button class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !activeRecipients.length">
+        {{ emailBulkSending ? 'Enviando...' : '📧 Email masivo' }}
+      </button>
+      <button class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
+        [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeRecipients.length">
+        {{ whatsappBulkSending ? 'Enviando...' : '📱 WhatsApp masivo' }}
+      </button>
+    </div>
+    <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--nw-border-subtle); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <span class="nw-switch">
+          <input type="checkbox" [(ngModel)]="includePassInMessage">
+          <span class="nw-slider"></span>
+        </span>
+        <span style="font-size:14px; font-weight:500;">🎫 Adjuntar Pase VIP como tarjeta/archivo en los mensajes (Email y WhatsApp)</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; background:rgba(245, 158, 11, 0.08); padding:6px 12px; border-radius:20px; border:1px solid rgba(245, 158, 11, 0.25);">
+        <span class="nw-switch">
+          <input type="checkbox" [(ngModel)]="simulationMode">
+          <span class="nw-slider"></span>
+        </span>
+        <span style="font-size:13px; font-weight:600; color:var(--nw-accent);">🧪 Modo Simulación (Probar sin SMTP / WA real)</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="nw-card" style="margin-bottom:16px;">
+    <div class="nw-card-header">
+      <h3>Modo de entrega WhatsApp</h3>
+    </div>
+    <div style="display:grid; gap:12px;">
+      <p style="margin:0; color:var(--nw-text-2); font-size:13px;">
+        La invitación completa se verá en la página digital. Para proteger el número de WhatsApp, la imagen solo aplica para grupos especiales y máximo {{ whatsappPremiumMediaLimit }} invitados.
+      </p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label style="display:flex; align-items:flex-start; gap:8px; border:1px solid var(--nw-border); border-radius:10px; padding:10px; flex:1; min-width:220px; cursor:pointer;">
+          <input type="radio" name="whatsappBulkDeliveryMode" value="safe" [(ngModel)]="whatsappBulkDeliveryMode">
+          <span>
+            <strong style="display:block;">Mensaje seguro con link</strong>
+            <small style="color:var(--nw-text-3);">Para todos los destinatarios activos. Recomendado para listas grandes.</small>
+          </span>
+        </label>
+        <label style="display:flex; align-items:flex-start; gap:8px; border:1px solid var(--nw-border); border-radius:10px; padding:10px; flex:1; min-width:220px; cursor:pointer;">
+          <input type="radio" name="whatsappBulkDeliveryMode" value="premium" [(ngModel)]="whatsappBulkDeliveryMode">
+          <span>
+            <strong style="display:block;">Imagen para invitados especiales</strong>
+            <small style="color:var(--nw-text-3);">VIP, familia, padrinos, damas, anfitriones u otros grupos seleccionados.</small>
+          </span>
+        </label>
+      </div>
+
+      <div *ngIf="whatsappBulkDeliveryMode === 'premium'"
+        style="display:grid; gap:10px; background:var(--nw-surface-2); border-radius:10px; padding:12px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="nw-pill">Con imagen: {{ whatsappPremiumMediaGuests.length }}/{{ whatsappPremiumMediaLimit }}</span>
+          <span class="nw-pill">Con link seguro: {{ whatsappSafeMessageGuests.length }}</span>
+          <span class="nw-pill" [class.danger]="whatsappPremiumMediaOverLimit > 0">Exceso: {{ whatsappPremiumMediaOverLimit }}</span>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <label *ngFor="let segment of whatsappPremiumSegmentOptions"
+            style="display:flex; align-items:center; gap:6px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:999px; padding:6px 10px; cursor:pointer;">
+            <input type="checkbox" [checked]="isWhatsappPremiumSegmentSelected(segment.key)"
+              (change)="toggleWhatsappPremiumSegment(segment.key, $any($event.target).checked)">
+            <span>{{ segment.label }} <small style="color:var(--nw-text-3);">({{ segment.count }})</small></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Media -->
+  <div class="nw-card" style="margin-bottom:16px;">
+    <div class="nw-card-header">
+      <h3>Media para WhatsApp</h3>
+    </div>
+    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+      <span class="nw-switch">
+        <input type="checkbox" [(ngModel)]="whatsappMedia.enabled">
+        <span class="nw-slider"></span>
+      </span>
+      <span style="font-size:14px; font-weight:500;">Adjuntar media</span>
+    </label>
+    <div *ngIf="whatsappMedia.enabled" style="display:grid; gap:10px; margin-top:12px;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <label class="nw-label">Media guardada
+          <select class="nw-select" [(ngModel)]="whatsappMedia.assetId">
+            <option value="">URL manual</option>
+            <option *ngFor="let asset of whatsappMediaAssets" [value]="getWhatsAppMediaAssetId(asset)">{{ asset.fileName }} · {{ asset.type }}</option>
+          </select>
+        </label>
+        <label class="nw-label">Subir archivo <input type="file"
+            accept="image/*,video/mp4,video/webm,video/quicktime,audio/*,application/pdf"
+            (change)="onWhatsappMediaSelected($event)"></label>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="uploadWhatsappMedia()"
+          [disabled]="whatsappMediaUploading || !selectedWhatsappMediaFile">{{ whatsappMediaUploading ? 'Subiendo...' : 'Subir a S3' }}</button>
+      </div>
+      <div *ngIf="!whatsappMedia.assetId" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <label class="nw-label" style="flex:1; min-width:250px;">URL <input class="nw-input" [(ngModel)]="whatsappMedia.url" placeholder="https://..."></label>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="inspectWhatsappMediaUrl()" [disabled]="mediaInspecting || !whatsappMedia.url">
+          {{ mediaInspecting ? 'Analizando...' : 'Analizar' }}
+        </button>
+      </div>
+      <label class="nw-label">Caption <textarea class="nw-input" rows="2" [(ngModel)]="whatsappMedia.caption" placeholder="Texto que acompaña la media"></textarea></label>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="nw-card" style="margin-bottom:16px;">
+    <div class="nw-card-header">
+      <h3>Preview WhatsApp</h3>
+    </div>
+    <p style="font-size:14px; color:var(--nw-text-2);">Destinatarios activos: {{ whatsappRecipientCount }}. Excepciones: {{ exceptionCount }}. Sin teléfono: {{ whatsappMissingPhoneCount }}.</p>
+    <pre style="background:var(--nw-surface-2); padding:12px; border-radius:var(--nw-radius-sm); white-space:pre-wrap; font-size:13px; color:var(--nw-text-2);">{{ bulkWhatsappPreview }}</pre>
+  </div>
+
+  <!-- Lista de Destinatarios y Excepciones -->
+  <div class="nw-card" style="margin-bottom:16px;">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="margin:0;">📋 Lista de Destinatarios y Excepciones</h3>
+        <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3)">Desmarca los invitados que desees excluir de los envíos masivos.</p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="nw-pill warning" *ngIf="exceptionCount > 0">🚫 {{ exceptionCount }} Excepción(es)</span>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="selectAllRecipients()">Seleccionar todos</button>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" *ngIf="exceptionCount > 0" (click)="clearExceptions()">Limpiar excepciones</button>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+      <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar destinatario..." style="max-width:240px;">
+      <select class="nw-select" [(ngModel)]="guestStatusFilter" style="width:auto;">
+        <option value="">Todos los estados</option>
+        <option value="pending">Pendientes</option>
+        <option value="confirmed">Confirmados</option>
+        <option value="declined">Rechazados</option>
+      </select>
+      <select class="nw-select" [(ngModel)]="guestCommunicationFilter" style="width:auto;">
+        <option value="">Seguimiento</option>
+        <option value="pending">Por enviar</option>
+        <option value="sent">Enviados</option>
+        <option value="delivered">Entregados</option>
+        <option value="read">Leídos</option>
+        <option value="opened">Abiertos</option>
+        <option value="failed">Fallidos</option>
+        <option value="confirmed">Confirmados</option>
+      </select>
+      <select class="nw-select" [(ngModel)]="guestGroupFilter" style="width:auto;">
+        <option value="">Todos los grupos</option>
+        <option *ngFor="let group of guestGroups" [value]="group">{{ group }}</option>
+      </select>
+      <span class="nw-pill" style="margin-left:auto;">{{ activeRecipients.length }} activos / {{ filteredGuests.length }} filtrados</span>
+    </div>
+
+    <div *ngIf="filteredGuests.length === 0" class="nw-empty" style="padding:20px;">
+      <p>No se encontraron invitados con los filtros seleccionados.</p>
+    </div>
+
+    <div class="nw-table-wrap" *ngIf="filteredGuests.length > 0">
+      <table class="nw-table">
+        <thead>
+          <tr>
+            <th style="width:40px; text-align:center;">Enviar</th>
+            <th>Invitado</th>
+            <th>Contacto</th>
+            <th>Mesa</th>
+            <th>Pase VIP</th>
+            <th>Seguimiento</th>
+            <th style="text-align:right;">Acciones Individuales</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let g of filteredGuests" [style.opacity]="isExcluded(g) ? '0.5' : '1'"
+            [style.background]="isExcluded(g) ? 'rgba(239, 68, 68, 0.04)' : 'transparent'">
+            <td style="text-align:center; white-space:nowrap;">
+              <input type="checkbox" [checked]="!isExcluded(g)" (change)="toggleException(g)" title="Desmarcar para excluir">
+            </td>
+            <td style="white-space:nowrap;">
+              <strong>{{ g.name }}</strong>
+              <span class="nw-pill danger" *ngIf="isExcluded(g)" style="margin-left:6px; font-size:10px;">Excepción</span>
+              <span class="nw-pill" *ngIf="g.group" style="margin-left:4px; font-size:11px;">{{ g.group }}</span>
+            </td>
+            <td style="font-size:12px; color:var(--nw-text-2); white-space:nowrap;">
+              <span *ngIf="g.email">📧 {{ g.email }}</span>
+              <span *ngIf="g.phone" style="margin-left:6px;">📱 {{ g.phone }}</span>
+              <span *ngIf="!g.email && !g.phone" style="color:var(--nw-text-3)">Sin contacto</span>
+            </td>
+            <td style="font-size:13px; white-space:nowrap;">
+              <span *ngIf="g.tableName" class="nw-pill accent">{{ g.tableName }} <small *ngIf="g.seatLabel">/ {{ g.seatLabel }}</small></span>
+              <span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span>
+            </td>
+            <td style="white-space:nowrap;">
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="downloadGuestPass(g)">📄 Pase VIP</button>
+            </td>
+            <td style="white-space:nowrap;">
+              <span class="nw-pill" [class.success]="getCommunicationStatus(g) === 'confirmed'">{{ communicationLabel(getCommunicationStatus(g)) }}</span>
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <div style="display:flex; align-items:center; justify-content:flex-end; gap:3px; white-space:nowrap;">
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="openPreviewModal(g, 'email')">👁️ Preview</button>
+                <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)">📧 Email</button>
+                <button *ngIf="canSendRealWhatsapp(g) || simulationMode" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)">📱 WA</button>
+                <a *ngIf="canEmailGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')">✉️</a>
+                <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getWhatsappLink(g)" target="_blank" (click)="markMessageSent(g, 'whatsapp')">💬</a>
+                <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="setCommunicationStatus(g, 'pending')">⏳</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal de Previsualización Email / WhatsApp -->
+  <div class="nw-modal-backdrop" *ngIf="showPreviewModal" (click)="closePreviewModal()">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width:680px; width:95%; max-height:90vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--nw-border); padding-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'email'" [class.nw-btn-ghost]="previewModalKind !== 'email'" (click)="previewModalKind = 'email'">📧 Vista Email</button>
+          <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'whatsapp'" [class.nw-btn-ghost]="previewModalKind !== 'whatsapp'" (click)="previewModalKind = 'whatsapp'">📱 Vista WhatsApp</button>
+        </div>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="closePreviewModal()">✕ Cerrar</button>
+      </div>
+
+      <!-- Preview EMAIL -->
+      <div *ngIf="previewModalKind === 'email'" style="background:#ffffff; border:1px solid #dde4d7; border-radius:12px; overflow:hidden;">
+        <div style="background:#1f2a44; color:#ffffff; padding:16px; font-size:13px; display:grid; gap:6px;">
+          <div><strong>De:</strong> {{ event?.title || 'Invitación Digital' }} &lt;invitaciones@kyndrasoft.com&gt;</div>
+          <div><strong>Para:</strong> {{ previewGuest?.name || 'Nombre del Invitado' }} &lt;{{ previewGuest?.email || 'invitado@ejemplo.com' }}&gt;</div>
+          <div><strong>Asunto:</strong> {{ getMessageSubject(selectedMessageType) }}</div>
+        </div>
+        <div style="padding:24px; background:#f7f2ea; color:#1f2a44;">
+          <div style="max-width:540px; margin:0 auto; background:#ffffff; border-radius:16px; padding:24px;">
+            <h2>{{ event?.title || 'Invitación Especial' }}</h2>
+            <p style="white-space:pre-wrap; font-size:14px; line-height:1.6; margin:16px 0;">{{ buildMessage(previewGuest || guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview WHATSAPP -->
+      <div *ngIf="previewModalKind === 'whatsapp'" style="background:#efeae2; border-radius:12px; padding:20px;">
+        <div style="background:#075e54; color:#ffffff; padding:12px 16px; border-radius:8px 8px 0 0;">
+          <strong>{{ previewGuest?.name || 'Invitado' }}</strong>
+        </div>
+        <div style="background:#ffffff; border-radius:0 12px 12px 12px; padding:14px; margin-top:12px;">
+          <p style="margin:0; white-space:pre-wrap; font-size:14px; line-height:1.5;">{{ buildMessage(previewGuest || guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
+        </div>
+      </div>
+
+      <div class="nw-modal-actions" style="margin-top:16px;">
+        <button class="nw-btn nw-btn-ghost" (click)="closePreviewModal()">Cerrar</button>
+        <button *ngIf="previewGuest" class="nw-btn nw-btn-primary" (click)="simulateSendGuest(previewGuest, previewModalKind)">
+          🧪 Simular como enviado a {{ previewGuest.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

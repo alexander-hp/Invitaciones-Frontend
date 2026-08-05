@@ -1,0 +1,35 @@
+<section>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h3 style="margin:0;">💬 Dedicatorias</h3>
+    <span class="nw-pill">{{ dedications.length }} mensajes</span>
+  </div>
+  <p *ngIf="dedicationMessage" class="nw-alert success" style="margin-bottom:14px;">{{ dedicationMessage }}</p>
+  <p *ngIf="dedicationError" class="nw-alert error" style="margin-bottom:14px;">{{ dedicationError }}</p>
+
+  <div *ngIf="loadingDedications" class="nw-alert info">Cargando dedicatorias...</div>
+
+  <div *ngIf="!loadingDedications && !dedications.length" class="nw-empty">
+    <span class="empty-icon">💬</span>
+    <h3>Sin dedicatorias</h3>
+    <p>Las dedicatorias aparecerán cuando los invitados las envíen desde la invitación digital.</p>
+  </div>
+
+  <div style="display:grid; gap:10px;" *ngIf="!loadingDedications && dedications.length">
+    <div *ngFor="let d of dedications" class="nw-card" style="padding:12px 16px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="flex:1;">
+          <strong>{{ d.publicName || 'Invitado' }}</strong>
+          <span class="nw-pill" style="margin-left:8px;" [class.success]="d.status === 'approved'"
+            [class.warning]="d.status === 'pending'" [class.danger]="d.status === 'rejected'">{{ d.status }}</span>
+          <span class="nw-pill" style="margin-left:4px;">{{ d.type }}</span>
+          <p style="margin:6px 0 0; color:var(--nw-text-2); font-size:14px; line-height:1.5;">{{ d.message }}</p>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="updateDedication(d, 'approved')">✅</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="updateDedication(d, 'hidden')">👁️‍🗨️</button>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="updateDedication(d, 'rejected')">❌</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
