@@ -7,7 +7,7 @@
       <div class="confirm-dialog-title-area">
         <h3>{{ state.options.title || '¿Confirmar acción?' }}</h3>
       </div>
-      <button type="button" class="confirm-dialog-close" (click)="onCancel()" aria-label="Cerrar">✕</button>
+      <button type="button" class="confirm-dialog-close" *ngIf="!state.options.hideCancel" (click)="onCancel()" aria-label="Cerrar">✕</button>
     </div>
 
     <div class="confirm-dialog-body">
@@ -15,7 +15,7 @@
     </div>
 
     <div class="confirm-dialog-footer">
-      <button type="button" class="btn-cancel" (click)="onCancel()">
+      <button type="button" class="btn-cancel" *ngIf="!state.options.hideCancel" (click)="onCancel()">
         {{ state.options.cancelText || 'Cancelar' }}
       </button>
       <button type="button" class="btn-confirm" [ngClass]="state.options.type || 'danger'" (click)="onConfirm()">

@@ -27,7 +27,7 @@
 
           <label class="nw-label" style="position: relative;">
             Nombre / Buscar lugar 🔍
-            <input class="nw-input" [(ngModel)]="location.name" (input)="searchLocation.emit({ index: i, query: location.name })"
+            <input class="nw-input" [(ngModel)]="location.name" (input)="searchLocation.emit({ index: i, query: location.name || '' })"
               placeholder="Ej. Parroquia / Salón / Hacienda">
             <span *ngIf="locationSearchLoading[i]"
               style="font-size: 11px; color: var(--nw-primary, #2563eb); display: block; margin-top: 2px;">Buscando

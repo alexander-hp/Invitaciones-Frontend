@@ -90,102 +90,385 @@
     </table>
   </div>
 
-  <!-- Modal Formulario Invitado -->
-  <div class="nw-modal-backdrop" *ngIf="showGuestForm" (click)="showGuestForm = false">
+  <!-- Modal Formulario Invitado (Rediseñado con Secciones y LADA) -->
+  <div class="nw-modal-backdrop" *ngIf="showGuestForm" (click)="showGuestForm = false; showCountryDropdown = false;">
     <div class="nw-modal" (click)="$event.stopPropagation()"
-      style="max-width: 680px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
-      
+      style="max-width: 680px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); box-shadow: var(--nw-shadow-lg);">
+
       <!-- Modal Header -->
-      <div style="padding:20px 24px; background:var(--nw-surface); border-bottom:1px solid var(--nw-border); display:flex; align-items:center; justify-content:space-between;">
+      <div style="padding: 18px 24px; border-bottom: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; background: var(--nw-surface, #ffffff); flex-shrink: 0;">
         <div>
-          <h2 style="margin:0; font-size:20px; font-weight:700; color:var(--nw-text);">
-            {{ editingGuest ? '✏️ Editar invitado' : '➕ Nuevo invitado' }}
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+            {{ editingGuest ? '✏️ Editar invitado' : '➕ Agregar nuevo invitado' }}
           </h2>
-          <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">
-            {{ editingGuest ? 'Modifica los datos del invitado.' : 'Ingresa la información básica y de acompañantes.' }}
+          <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--nw-text-2, #6e6157);">
+            Completa los datos del invitado. <span style="color: var(--nw-danger, #b75959); font-weight: 600;">* Nombre y al menos un contacto son requeridos.</span>
           </p>
         </div>
-        <button type="button" (click)="showGuestForm = false" class="nw-btn nw-btn-ghost nw-btn-sm" style="font-size:18px;">✕</button>
+        <button type="button" (click)="showGuestForm = false"
+          style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nw-text-3, #9e9083); padding: 4px 8px; border-radius: 8px;"
+          title="Cerrar">✕</button>
       </div>
 
-      <!-- Modal Body -->
-      <div style="padding:24px; overflow-y:auto; flex:1;">
-        <div style="display:grid; gap:16px;">
-          <div>
-            <label class="nw-label" style="font-weight:700;">Nombre completo *</label>
-            <input class="nw-input" [(ngModel)]="guestForm.name" placeholder="Ej. Sofia Garcia" required>
+      <!-- Modal Body Scrollable -->
+      <div style="padding: 20px 24px 36px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; background: var(--nw-bg, #faf7f2);">
+
+        <!-- Alerts -->
+        <p *ngIf="guestError" class="nw-alert error" style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-radius: var(--nw-radius-sm, 12px);">
+          <span>{{ guestError }}</span>
+          <button type="button" (click)="guestError=''" style="background: none; border: none; color: inherit; cursor: pointer;">✕</button>
+        </p>
+        <p *ngIf="guestMessage" class="nw-alert success" style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-radius: var(--nw-radius-sm, 12px);">
+          <span>{{ guestMessage }}</span>
+          <button type="button" (click)="guestMessage=''" style="background: none; border: none; color: inherit; cursor: pointer;">✕</button>
+        </p>
+
+        <!-- BLOQUE PRINCIPAL: INFORMACIÓN DE CONTACTO -->
+        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 18px; box-shadow: var(--nw-shadow-sm); overflow: visible;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <span style="font-size: 14px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px; font-family: var(--nw-font-display);">
+              📌 Información Principal <span style="color: var(--nw-danger, #b75959); font-size: 12px; font-weight: 600;">(Obligatoria)</span>
+            </span>
           </div>
 
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
-            <div>
-              <label class="nw-label">Email</label>
-              <input class="nw-input" type="email" [(ngModel)]="guestForm.email" placeholder="sofia@ejemplo.com">
-            </div>
-            <div>
-              <label class="nw-label">Teléfono (WhatsApp)</label>
-              <div style="display:flex; gap:6px;">
-                <select class="nw-select" [(ngModel)]="guestForm.phoneCountryCode" style="width:100px;">
-                  <option *ngFor="let c of countryCodes" [value]="c.code">{{ c.code }}</option>
-                </select>
-                <input class="nw-input" [(ngModel)]="guestForm.phoneLocalNumber" placeholder="3312345678" style="flex:1;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- Nombre del invitado -->
+            <label class="nw-label" style="margin: 0;">
+              Nombre del invitado <span style="color: var(--nw-danger, #b75959); font-weight: bold;">*</span>
+              <input id="guestNameInput" class="nw-input" [(ngModel)]="guestForm.name"
+                placeholder="Ej. Juan Pérez García" (keyup.enter)="saveGuest(false)"
+                style="height: 42px; margin-top: 2px;">
+            </label>
+
+            <!-- Teléfono y Correo -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-items: start;">
+
+              <!-- Teléfono con Buscador de LADA -->
+              <div>
+                <label class="nw-label" style="margin: 0;">
+                  Teléfono <span style="color: var(--nw-danger, #b75959); font-weight: bold;">* (o correo)</span>
+                </label>
+
+                <div style="display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(0, 2fr); gap: 6px; margin-top: 2px; position: relative;">
+
+                  <!-- Searchable Country Dropdown Trigger -->
+                  <div style="position: relative;">
+                    <button type="button"
+                      (click)="$event.stopPropagation(); showCountryDropdown = !showCountryDropdown"
+                      class="nw-input"
+                      style="display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; background: var(--nw-surface, #fff); cursor: pointer; padding: 0 12px; height: 42px; font-size: 13.5px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+                      title="Seleccionar Código de País / LADA">
+                      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;">
+                        {{ getSelectedCountryLabel() }}
+                      </span>
+                      <span style="font-size: 10px; color: var(--nw-text-3); margin-left: 4px;">▼</span>
+                    </button>
+
+                    <!-- Country Dropdown Overlay -->
+                    <div *ngIf="showCountryDropdown" (click)="$event.stopPropagation()"
+                      style="position: absolute; top: calc(100% + 4px); left: 0; width: 270px; z-index: 1050; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); box-shadow: var(--nw-shadow-lg); max-height: 240px; display: flex; flex-direction: column; overflow: hidden;">
+
+                      <!-- Search box -->
+                      <div style="padding: 8px; background: var(--nw-surface-2, #f5f1ea); border-bottom: 1px solid var(--nw-border, #eadecc);">
+                        <input type="text" class="nw-input" [(ngModel)]="countrySearchQuery"
+                          placeholder="🔍 Buscar país o LADA (ej. mex, +34)..."
+                          style="font-size: 12.5px; padding: 0 10px; height: 34px;"
+                          (click)="$event.stopPropagation()">
+                      </div>
+
+                      <!-- List -->
+                      <div style="overflow-y: auto; flex: 1;">
+                        <div *ngFor="let item of filteredCountryCodes" (click)="selectCountryCode(item.code)"
+                          style="padding: 9px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--nw-surface-2); display: flex; justify-content: space-between; align-items: center; transition: background 0.12s;"
+                          [style.background]="item.code === guestForm.phoneCountryCode ? 'var(--nw-surface-3, #eadecc)' : 'transparent'"
+                          [style.color]="'var(--nw-text, #2e2621)'">
+                          <span>{{ item.country }}</span>
+                          <span *ngIf="item.code === guestForm.phoneCountryCode"
+                            style="font-weight: bold; font-size: 12px; color: var(--nw-accent, #c09c78);">✓</span>
+                        </div>
+                        <div *ngIf="filteredCountryCodes.length === 0"
+                          style="padding: 12px; font-size: 12.5px; color: var(--nw-text-3); text-align: center;">
+                          No hay coincidencias para "{{ countrySearchQuery }}"
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Local Phone Input -->
+                  <input class="nw-input" type="tel" [(ngModel)]="guestForm.phoneLocal" placeholder="10 dígitos"
+                    (keyup.enter)="saveGuest(false)" style="height: 42px; font-size: 13.5px;">
+                </div>
               </div>
+
+              <!-- Correo electrónico -->
+              <div>
+                <label class="nw-label" style="margin: 0;">
+                  Correo electrónico <span style="color: var(--nw-danger, #b75959); font-weight: bold;">* (o teléfono)</span>
+                  <input class="nw-input" type="email" [(ngModel)]="guestForm.email"
+                    placeholder="invitado@ejemplo.com" (keyup.enter)="saveGuest(false)"
+                    style="height: 42px; margin-top: 2px;">
+                </label>
+              </div>
+
             </div>
           </div>
+        </div>
 
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px;">
-            <div>
-              <label class="nw-label">Grupo / Familia</label>
-              <input class="nw-input" [(ngModel)]="guestForm.group" placeholder="Ej. Familia Garcia">
+        <!-- Action Bar to Expand / Collapse All -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px; padding: 0 4px;">
+          <span style="font-size: 11.5px; font-weight: 700; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.06em;">
+            Opciones secundarias agrupadas
+          </span>
+          <div style="display: flex; gap: 12px;">
+            <button type="button" (click)="expandAllGuestFormSections(true)"
+              style="background: none; border: none; color: var(--nw-accent, #c09c78); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0;">
+              📂 Desplegar todas
+            </button>
+            <span style="color: var(--nw-border-2);">|</span>
+            <button type="button" (click)="expandAllGuestFormSections(false)"
+              style="background: none; border: none; color: var(--nw-text-2); font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 0;">
+              📁 Colapsar todas
+            </button>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 1: ORGANIZACIÓN & UBICACIÓN (COLAPSABLE) -->
+        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
+          <button type="button" (click)="toggleGuestFormSection('organization')"
+            style="width: 100%; height: 48px; padding: 0 16px; background: var(--nw-surface, #ffffff); border: none; border-radius: var(--nw-radius-sm, 12px); display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: left; outline: none;"
+            [style.border-bottom-left-radius]="guestFormSections.organization ? '0px' : '12px'"
+            [style.border-bottom-right-radius]="guestFormSections.organization ? '0px' : '12px'">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;">🍷</span>
+              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+                Organización & Mesa
+              </span>
+              <span *ngIf="guestForm.group || guestForm.tableName"
+                style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2); padding: 2px 8px; border-radius: 10px; margin-left: 4px;">
+                {{ guestForm.group || 'Sin grupo' }} • {{ guestForm.tableName ? ('Mesa: ' + guestForm.tableName) : 'Sin mesa' }}
+              </span>
             </div>
-            <div>
-              <label class="nw-label">Mesa asignada</label>
-              <select class="nw-select" [(ngModel)]="guestForm.tableId">
-                <option value="">Sin mesa</option>
-                <option *ngFor="let t of tables" [value]="t._id || t.id">{{ t.name }} ({{ t.occupied || 0 }}/{{ t.capacity }})</option>
+            <span style="font-size: 12px; color: var(--nw-text-2); font-weight: 600;">
+              {{ guestFormSections.organization ? '▲ Ocultar' : '▼ Mostrar' }}
+            </span>
+          </button>
+
+          <div *ngIf="guestFormSections.organization"
+            style="padding: 16px; border-top: 1px solid var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start;">
+            <!-- Grupo -->
+            <label class="nw-label" style="margin: 0;">
+              Grupo / Categoría
+              <select class="nw-select" [(ngModel)]="guestForm.groupSelect" (change)="onGroupSelectChange()"
+                style="height: 42px; margin-top: 2px;">
+                <option value="">-- Seleccionar grupo --</option>
+                <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
+                <option value="otro">✨ Otro (Personalizado)...</option>
               </select>
+              <input *ngIf="guestForm.groupSelect === 'otro'" class="nw-input"
+                style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.group"
+                placeholder="Nombre del grupo...">
+            </label>
+
+            <!-- Mesa asignada -->
+            <label class="nw-label" style="margin: 0;">
+              Mesa asignada
+              <input class="nw-input" [(ngModel)]="guestForm.tableName" placeholder="Ej. Mesa 1, Mesa Honor"
+                style="height: 42px; margin-top: 2px;">
+            </label>
+
+            <!-- Asiento -->
+            <label class="nw-label" style="margin: 0;">
+              Asiento
+              <input class="nw-input" [(ngModel)]="guestForm.seatLabel" placeholder="Ej. A1, Silla 3"
+                style="height: 42px; margin-top: 2px;">
+            </label>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 2: ROLES & VISIBILIDAD (COLAPSABLE WITH AUTO-FILL) -->
+        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
+          <button type="button" (click)="toggleGuestFormSection('roles')"
+            style="width: 100%; height: 48px; padding: 0 16px; background: var(--nw-surface, #ffffff); border: none; border-radius: var(--nw-radius-sm, 12px); display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: left; outline: none;"
+            [style.border-bottom-left-radius]="guestFormSections.roles ? '0px' : '12px'"
+            [style.border-bottom-right-radius]="guestFormSections.roles ? '0px' : '12px'">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;">🎭</span>
+              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+                Roles & Visibilidad
+              </span>
+              <span *ngIf="guestForm.relationshipLabel || guestForm.rolesText"
+                style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2); padding: 2px 8px; border-radius: 10px; margin-left: 4px;">
+                {{ guestForm.relationshipLabel || guestForm.rolesText }}
+              </span>
             </div>
-            <div>
-              <label class="nw-label">Número de Pases Acompañantes</label>
-              <input class="nw-input" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions" (ngModelChange)="onCompanionsCountChange()">
+            <span style="font-size: 12px; color: var(--nw-text-2); font-weight: 600;">
+              {{ guestFormSections.roles ? '▲ Ocultar' : '▼ Mostrar' }}
+            </span>
+          </button>
+
+          <div *ngIf="guestFormSections.roles"
+            style="padding: 16px; border-top: 1px solid var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="font-size: 12px; color: var(--nw-text-2); background: var(--nw-surface-2); padding: 8px 12px; border-radius: var(--nw-radius-sm); border-left: 3px solid var(--nw-accent);">
+              💡 <strong>Auto-llenado inteligente:</strong> Al elegir una opción (en Grupo, Rol o Visibilidad), los campos vacíos se completarán automáticamente sin sobreescribir los que ya hayas personalizado.
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start;">
+              <!-- Rol Visible -->
+              <label class="nw-label" style="margin: 0;">
+                Rol visible
+                <select class="nw-select" [(ngModel)]="guestForm.relationshipSelect"
+                  (change)="onRelationshipSelectChange()" style="height: 42px; margin-top: 2px;">
+                  <option value="">-- Seleccionar rol --</option>
+                  <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
+                  <option value="otro">✨ Otro (Personalizado)...</option>
+                </select>
+                <input *ngIf="guestForm.relationshipSelect === 'otro'" class="nw-input"
+                  style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.relationshipLabel"
+                  placeholder="Ej. Dama de honor, Padrino...">
+              </label>
+
+              <!-- Visibilidad -->
+              <label class="nw-label" style="margin: 0;">
+                Visibilidad
+                <select class="nw-select" [(ngModel)]="guestForm.visibilitySelect"
+                  (change)="onVisibilitySelectChange()" style="height: 42px; margin-top: 2px;">
+                  <option value="">-- Seleccionar visibilidad --</option>
+                  <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
+                  <option value="otro">✨ Otro (Personalizado)...</option>
+                </select>
+                <input *ngIf="guestForm.visibilitySelect === 'otro'" class="nw-input"
+                  style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.visibilityGroup"
+                  placeholder="familia, vip, staff...">
+              </label>
+
+              <!-- Roles principales del sistema -->
+              <label class="nw-label" style="margin: 0;">
+                Rol del sistema
+                <select class="nw-select" [(ngModel)]="guestForm.roleSelect" (change)="onRoleSelectChange()"
+                  style="height: 42px; margin-top: 2px;">
+                  <option value="">-- Seleccionar rol principal --</option>
+                  <option *ngFor="let opt of roleOptions" [value]="opt.value">{{ opt.label }}</option>
+                  <option value="otro">✨ Otro (Personalizado / Múltiples)...</option>
+                </select>
+                <input *ngIf="guestForm.roleSelect === 'otro'" class="nw-input"
+                  style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.rolesText"
+                  placeholder="anfitrion, padrino, dama_honor...">
+              </label>
             </div>
           </div>
+        </div>
 
-          <!-- Acompañantes lista -->
-          <div *ngIf="companionList.length > 0" style="background:var(--nw-surface-2); padding:14px; border-radius:8px;">
-            <h4 style="margin:0 0 10px; font-size:14px;">Nombres de acompañantes</h4>
-            <div style="display:grid; gap:8px;">
-              <div *ngFor="let comp of companionList; let i = index" style="display:flex; gap:8px; align-items:center;">
-                <span style="font-size:12px; color:var(--nw-text-3); min-width:20px;">#{{ i + 1 }}</span>
-                <input class="nw-input" [(ngModel)]="comp.name" (ngModelChange)="onCompanionNameChange()" placeholder="Nombre del acompañante" style="flex:1;">
-                <button type="button" (click)="removeCompanionRow(i)" class="nw-btn nw-btn-danger nw-btn-sm">🗑️</button>
+        <!-- SECCIÓN 3: ACOMPAÑANTES & ETIQUETAS (COLAPSABLE) -->
+        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
+          <button type="button" (click)="toggleGuestFormSection('companions')"
+            style="width: 100%; height: 48px; padding: 0 16px; background: var(--nw-surface, #ffffff); border: none; border-radius: var(--nw-radius-sm, 12px); display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: left; outline: none;"
+            [style.border-bottom-left-radius]="guestFormSections.companions ? '0px' : '12px'"
+            [style.border-bottom-right-radius]="guestFormSections.companions ? '0px' : '12px'">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;">👥</span>
+              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+                Acompañantes & Extras
+              </span>
+              <span *ngIf="guestForm.allowedCompanions > 0"
+                style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2); padding: 2px 8px; border-radius: 10px; margin-left: 4px;">
+                +{{ guestForm.allowedCompanions }} acompañantes
+              </span>
+            </div>
+            <span style="font-size: 12px; color: var(--nw-text-2); font-weight: 600;">
+              {{ guestFormSections.companions ? '▲ Ocultar' : '▼ Mostrar' }}
+            </span>
+          </button>
+
+          <div *ngIf="guestFormSections.companions"
+            style="padding: 16px; border-top: 1px solid var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: flex; flex-direction: column; gap: 14px;">
+
+            <!-- Pases de acompañantes extra -->
+            <div>
+              <label class="nw-label" style="margin: 0;">
+                Pases de acompañantes extra
+                <input class="nw-input" type="number" [(ngModel)]="guestForm.allowedCompanions"
+                  (ngModelChange)="onCompanionsCountChange()" min="0" placeholder="0"
+                  style="height: 42px; margin-top: 2px;">
+              </label>
+            </div>
+
+            <!-- Tabla Dinámica de Nombres de Acompañantes (1 fila por pase) -->
+            <div *ngIf="companionList.length > 0" style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="nw-label" style="margin: 0; font-weight: 600;">
+                  Nombres de los acompañantes ({{ companionList.length }}):
+                </label>
+                <button type="button" (click)="addCompanionRow()" class="nw-btn nw-btn-ghost"
+                  style="font-size: 12px; min-height: 32px; padding: 0 12px;">
+                  ➕ Añadir fila
+                </button>
+              </div>
+
+              <div style="border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); overflow: hidden; background: var(--nw-surface, #ffffff);">
+                <table class="nw-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                  <thead>
+                    <tr style="background: var(--nw-surface-2, #f5f1ea); border-bottom: 1px solid var(--nw-border, #eadecc);">
+                      <th style="padding: 10px 14px; text-align: left; font-weight: 700; color: var(--nw-text-2); width: 44px;">#</th>
+                      <th style="padding: 10px 14px; text-align: left; font-weight: 700; color: var(--nw-text-2);">Nombre del acompañante</th>
+                      <th style="padding: 10px 14px; text-align: center; font-weight: 700; color: var(--nw-text-2); width: 50px;">Quitar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of companionList; let i = index" style="border-bottom: 1px solid var(--nw-surface-2);">
+                      <td style="padding: 8px 14px; font-weight: 700; color: var(--nw-text-2); vertical-align: middle;">
+                        {{ i + 1 }}
+                      </td>
+                      <td style="padding: 6px 14px; vertical-align: middle;">
+                        <input class="nw-input" type="text" [(ngModel)]="item.name"
+                          (ngModelChange)="onCompanionNameChange()" [placeholder]="'Ej. Acompañante ' + (i + 1)"
+                          style="height: 38px; font-size: 13px; margin: 0;">
+                      </td>
+                      <td style="padding: 6px 14px; text-align: center; vertical-align: middle;">
+                        <button type="button" (click)="removeCompanionRow(i)"
+                          style="background: none; border: none; cursor: pointer; color: var(--nw-danger, #b75959); font-size: 15px; padding: 4px;"
+                          title="Quitar acompañante">
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label class="nw-label">Restricciones alimenticias / Alergias</label>
-            <input class="nw-input" [(ngModel)]="guestForm.dietaryRestrictions" placeholder="Ej. Vegetariano, alergia a nueces">
+            <!-- Tags / Etiquetas -->
+            <label class="nw-label" style="margin: 0; margin-top: 4px;">
+              Tags / Etiquetas <span style="color: var(--nw-text-3); font-weight: normal;">(separadas por coma)</span>
+              <textarea class="nw-input" rows="2" [(ngModel)]="guestForm.tagsText"
+                placeholder="mesa_vip, lado_novia, hotel, after"
+                style="margin-top: 2px; font-size: 13px; min-height: 60px;"></textarea>
+            </label>
           </div>
+        </div>
 
-          <div>
-            <label class="nw-label">Notas internas</label>
-            <textarea class="nw-input" rows="2" [(ngModel)]="guestForm.notes" placeholder="Notas solo visibles para organizadores"></textarea>
-          </div>
+      </div>
+
+      <!-- Modal Footer Actions -->
+      <div style="padding: 16px 24px; background: var(--nw-surface, #ffffff); border-top: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
+        <button class="nw-btn nw-btn-ghost" type="button" (click)="showGuestForm = false"
+          style="font-size: 14px; min-height: 42px;">
+          Cancelar
+        </button>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button *ngIf="!editingGuest" class="nw-btn nw-btn-secondary" type="button" [disabled]="guestSaving"
+            (click)="saveGuest(true)" style="min-height: 42px; font-size: 14px; font-weight: 600;"
+            title="Conserva el Grupo, Mesa, Rol y LADA para agregar el siguiente invitado al instante">
+            ➕ Guardar y agregar otro (Mismo grupo/rol)
+          </button>
+
+          <button class="nw-btn nw-btn-primary" type="button" [disabled]="guestSaving" (click)="saveGuest(false)"
+            style="min-height: 42px; font-size: 14px; font-weight: 600; padding: 0 24px;">
+            {{ guestSaving ? 'Guardando...' : editingGuest ? 'Actualizar invitado' : '💾 Guardar invitado' }}
+          </button>
         </div>
       </div>
 
-      <!-- Modal Footer -->
-      <div style="padding:16px 24px; background:var(--nw-surface); border-top:1px solid var(--nw-border); display:flex; justify-content:space-between; align-items:center;">
-        <button class="nw-btn nw-btn-ghost" type="button" (click)="showGuestForm = false">Cancelar</button>
-        <div style="display:flex; gap:10px;">
-          <button *ngIf="!editingGuest" class="nw-btn nw-btn-secondary" type="button" [disabled]="guestSaving" (click)="saveGuest(true)">
-            ➕ Guardar y agregar otro
-          </button>
-          <button class="nw-btn nw-btn-primary" type="button" [disabled]="guestSaving" (click)="saveGuest(false)">
-            {{ guestSaving ? 'Guardando...' : editingGuest ? 'Actualizar' : '💾 Guardar' }}
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 

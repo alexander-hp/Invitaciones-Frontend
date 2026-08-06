@@ -30,14 +30,16 @@ import { NewExternalEmbedComponent } from './features/new-external-embed/new-ext
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
+import { NewPasswordResetComponent } from './features/new-password-reset/new-password-reset.component';
+import { NewPasswordResetConfirmComponent } from './features/new-password-reset-confirm/new-password-reset-confirm.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
   { path: 'login', redirectTo: 'new/login' },
   { path: 'register', redirectTo: 'new/register' },
+  { path: 'password-reset', redirectTo: 'new/password-reset' },
+  { path: 'password-reset/confirm', redirectTo: 'new/password-reset/confirm' },
   { path: 'contact', component: ContactComponent },
-  { path: 'password-reset', component: PasswordResetComponent },
-  { path: 'password-reset/confirm', component: PasswordResetConfirmComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'events', component: EventsComponent, canActivate: [AuthGuard] },
   { path: 'events/:id', component: EventDetailComponent, canActivate: [AuthGuard] },
@@ -50,6 +52,8 @@ const routes: Routes = [
   // ── New pages ──
   { path: 'new/login', component: NewLoginComponent },
   { path: 'new/register', component: NewRegisterComponent },
+  { path: 'new/password-reset', component: NewPasswordResetComponent },
+  { path: 'new/password-reset/confirm', component: NewPasswordResetConfirmComponent },
   { path: 'new/dashboard', component: NewDashboardComponent, canActivate: [AuthGuard] },
   { path: 'new/events', component: NewEventsComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id', component: NewEventDetailComponent, canActivate: [AuthGuard] },

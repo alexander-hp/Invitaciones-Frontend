@@ -37,6 +37,8 @@ import { EventIntegrationTabComponent } from './features/new-event-detail/tabs/i
 import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
+import { NewPasswordResetComponent } from './features/new-password-reset/new-password-reset.component';
+import { NewPasswordResetConfirmComponent } from './features/new-password-reset-confirm/new-password-reset-confirm.component';
 import { PublicInvitationComponent } from './features/public-invitation/public-invitation.component';
 import { RegisterComponent } from './features/register/register.component';
 import { NewContactComponent } from './features/new-contact/new-contact.component';
@@ -104,6 +106,8 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     SeatingChartComponent,
     PasswordResetConfirmComponent,
     PasswordResetComponent,
+    NewPasswordResetComponent,
+    NewPasswordResetConfirmComponent,
     PublicInvitationComponent,
     NewPublicInvitationComponent,
     RegisterComponent,

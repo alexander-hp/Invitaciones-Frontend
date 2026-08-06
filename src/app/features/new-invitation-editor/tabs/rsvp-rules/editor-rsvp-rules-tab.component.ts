@@ -25,7 +25,7 @@ export class EditorRsvpRulesTabComponent {
   @Output() allowedEmailsTextChange = new EventEmitter<string>();
   @Output() allowedPhonesTextChange = new EventEmitter<string>();
 
-  @Output() toggleIdentityMethod = new EventEmitter<{ method: string; checked: boolean }>();
+  @Output() toggleIdentityMethod = new EventEmitter<{ method: 'email' | 'phone'; checked: boolean }>();
   @Output() addCustomQuestion = new EventEmitter<void>();
   @Output() removeCustomQuestion = new EventEmitter<number>();
   @Output() addQuestionPreset = new EventEmitter<'song' | 'diet' | 'menu' | 'transport'>();

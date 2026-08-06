@@ -10,7 +10,7 @@ export class EditorItineraryTabComponent {
   @Input() event?: EventModel;
   @Output() addItineraryItem = new EventEmitter<void>();
   @Output() removeItineraryItem = new EventEmitter<number>();
-  @Output() moveItineraryItem = new EventEmitter<{ index: number; dir: number }>();
+  @Output() moveItineraryItem = new EventEmitter<{ index: number; dir: 1 | -1 }>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
 
   isSectionActive(key: string): boolean {

@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { InvitationModel, EventModel, TemplateModel, PlanDefinition } from '../../../../core/models';
+import { InvitationModel, EventModel, TemplateModel, PlanDefinition, PaymentPackage } from '../../../../core/models';
 
 @Component({
   selector: 'app-editor-plans-tab',
@@ -15,7 +15,7 @@ export class EditorPlansTabComponent {
   @Input() payments: any[] = [];
 
   @Output() applyTemplate = new EventEmitter<TemplateModel>();
-  @Output() checkout = new EventEmitter<string>();
+  @Output() checkout = new EventEmitter<PaymentPackage>();
 
   canUsePremiumTemplates(): boolean {
     if (!this.currentPlan) return false;

@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
 import {
-  GuestModel, GuestPayload, EventTableModel, InvitationModel, GuestCommunicationStatus
+  GuestModel, GuestPayload, EventTableModel, InvitationModel
 } from '../../../../core/models';
 
 @Component({
@@ -43,6 +43,29 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
 
   companionList: Array<{ name: string }> = [];
 
+  unifiedGuestOptions = [
+    'Familia del Novio / Anfitrión',
+    'Familia de la Novia / Anfitriona',
+    'Amigos Cercanos',
+    'Padrinos / Madrinas',
+    'Damas de Honor / Best Men',
+    'Anfitriones / Novios',
+    'Compañeros de Trabajo',
+    'Invitados VIP',
+    'Staff / Proveedores'
+  ];
+
+  roleOptions: Array<{ value: string; label: string }> = [
+    { value: 'invitado', label: 'Invitado' },
+    { value: 'anfitrion', label: 'Anfitrión' },
+    { value: 'padrino', label: 'Padrino' },
+    { value: 'dama_honor', label: 'Dama de honor' },
+    { value: 'familia', label: 'Familia' },
+    { value: 'graduado', label: 'Graduado' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'vip', label: 'VIP' }
+  ];
+
   countryCodes = [
     { code: '+52', country: '🇲🇽 México (+52)' },
     { code: '+1', country: '🇺🇸 EE.UU. / 🇨🇦 Canadá (+1)' },
@@ -64,41 +87,27 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   guestForm = {
     name: '',
     email: '',
+    phone: '',
     phoneCountryCode: '+52',
-    phoneLocalNumber: '',
+    phoneLocal: '',
     group: '',
-    tableId: '',
-    seatLabel: '',
-    allowedCompanions: 0,
+    groupSelect: '',
+    rolesText: '',
+    roleSelect: '',
     tagsText: '',
-    roleKey: '',
-    dietaryRestrictions: '',
-    menuOption: '',
-    notes: '',
-    sendPassViaWhatsapp: true
+    relationshipLabel: '',
+    relationshipSelect: '',
+    visibilityGroup: '',
+    visibilitySelect: '',
+    tableName: '',
+    seatLabel: '',
+    allowedCompanions: 0
   };
 
   companionNames = '';
 
   importFile?: File;
   importMessage = '';
-  showImportMappingModal = false;
-  importCsvHeaders: string[] = [];
-  importRawRows: any[][] = [];
-  importDuplicateOption: 'skip' | 'update' | 'allow' = 'skip';
-  importColumnMapping: Record<string, string> = {
-    name: '',
-    email: '',
-    phone: '',
-    group: '',
-    table: '',
-    companions: '',
-    companionNames: '',
-    role: '',
-    dietary: '',
-    notes: '',
-    tags: ''
-  };
 
   checkInCode = '';
   checkInLink = '';
@@ -133,6 +142,19 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
         this.guestsLoading = false;
       }
     });
+  }
+
+  get availableUnifiedOptions(): string[] {
+    const set = new Set([...this.unifiedGuestOptions, ...this.guestGroups]);
+    return Array.from(set).filter(g => g && g !== 'General');
+  }
+
+  get availableGroupOptions(): string[] {
+    return this.availableUnifiedOptions;
+  }
+
+  get relationshipOptions(): string[] {
+    return this.availableUnifiedOptions;
   }
 
   get guestGroups(): string[] {
@@ -190,6 +212,142 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     this.guestFormSections.companions = expand;
   }
 
+  onGroupSelectChange(): void {
+    if (this.guestForm.groupSelect !== 'otro') {
+      this.guestForm.group = this.guestForm.groupSelect;
+    } else {
+      if (this.availableUnifiedOptions.includes(this.guestForm.group)) {
+        this.guestForm.group = '';
+      }
+    }
+    this.syncCrossFields('group', this.guestForm.group);
+  }
+
+  onRelationshipSelectChange(): void {
+    if (this.guestForm.relationshipSelect !== 'otro') {
+      this.guestForm.relationshipLabel = this.guestForm.relationshipSelect;
+    } else {
+      if (this.availableUnifiedOptions.includes(this.guestForm.relationshipLabel)) {
+        this.guestForm.relationshipLabel = '';
+      }
+    }
+    this.syncCrossFields('relationship', this.guestForm.relationshipLabel);
+  }
+
+  onVisibilitySelectChange(): void {
+    if (this.guestForm.visibilitySelect !== 'otro') {
+      this.guestForm.visibilityGroup = this.guestForm.visibilitySelect;
+    } else {
+      if (this.availableUnifiedOptions.includes(this.guestForm.visibilityGroup)) {
+        this.guestForm.visibilityGroup = '';
+      }
+    }
+    this.syncCrossFields('visibility', this.guestForm.visibilityGroup);
+  }
+
+  syncCrossFields(source: 'group' | 'relationship' | 'visibility', val: string): void {
+    if (!val || val === 'otro') return;
+
+    const selectVal = this.availableUnifiedOptions.includes(val) ? val : 'otro';
+
+    if (source !== 'group' && (!this.guestForm.group || !this.guestForm.groupSelect)) {
+      this.guestForm.group = val;
+      this.guestForm.groupSelect = selectVal;
+    }
+
+    if (source !== 'relationship' && (!this.guestForm.relationshipLabel || !this.guestForm.relationshipSelect)) {
+      this.guestForm.relationshipLabel = val;
+      this.guestForm.relationshipSelect = selectVal;
+    }
+
+    if (source !== 'visibility' && (!this.guestForm.visibilityGroup || !this.guestForm.visibilitySelect)) {
+      this.guestForm.visibilityGroup = val;
+      this.guestForm.visibilitySelect = selectVal;
+    }
+
+    if (!this.guestForm.roleSelect || this.guestForm.roleSelect === 'invitado') {
+      const lower = val.toLowerCase();
+      if (lower.includes('padrino') || lower.includes('madrina')) {
+        this.guestForm.roleSelect = 'padrino';
+        this.guestForm.rolesText = 'padrino';
+      } else if (lower.includes('dama') || lower.includes('best men')) {
+        this.guestForm.roleSelect = 'dama_honor';
+        this.guestForm.rolesText = 'dama_honor';
+      } else if (lower.includes('anfitrión') || lower.includes('novio') || lower.includes('festejado')) {
+        this.guestForm.roleSelect = 'anfitrion';
+        this.guestForm.rolesText = 'anfitrion';
+      } else if (lower.includes('staff') || lower.includes('proveedor')) {
+        this.guestForm.roleSelect = 'staff';
+        this.guestForm.rolesText = 'staff';
+      } else if (lower.includes('vip')) {
+        this.guestForm.roleSelect = 'vip';
+        this.guestForm.rolesText = 'vip';
+      } else if (lower.includes('familia')) {
+        this.guestForm.roleSelect = 'familia';
+        this.guestForm.rolesText = 'familia';
+      }
+    }
+  }
+
+  onRoleSelectChange(): void {
+    if (this.guestForm.roleSelect !== 'otro') {
+      this.guestForm.rolesText = this.guestForm.roleSelect;
+    } else {
+      if (this.roleOptions.some(o => o.value === this.guestForm.rolesText)) {
+        this.guestForm.rolesText = '';
+      }
+    }
+
+    const roleVal = this.guestForm.roleSelect;
+    if (!roleVal || roleVal === 'otro') return;
+
+    if (!this.guestForm.relationshipSelect) {
+      const match = this.relationshipOptions.find(opt => {
+        const lowerOpt = opt.toLowerCase();
+        if (roleVal === 'padrino') return lowerOpt.includes('padrino') || lowerOpt.includes('madrina');
+        if (roleVal === 'dama_honor') return lowerOpt.includes('dama');
+        if (roleVal === 'anfitrion') return lowerOpt.includes('anfitrión') || lowerOpt.includes('anfitriona');
+        if (roleVal === 'staff') return lowerOpt.includes('staff');
+        if (roleVal === 'vip') return lowerOpt.includes('vip');
+        if (roleVal === 'familia') return lowerOpt.includes('familia') || lowerOpt.includes('padres');
+        if (roleVal === 'graduado') return lowerOpt.includes('graduado');
+        return false;
+      });
+      if (match) {
+        this.guestForm.relationshipSelect = match;
+        this.guestForm.relationshipLabel = match;
+      }
+    }
+
+    if (!this.guestForm.visibilitySelect) {
+      if (['padrino', 'vip'].includes(roleVal)) {
+        this.guestForm.visibilitySelect = 'vip';
+        this.guestForm.visibilityGroup = 'vip';
+      } else if (roleVal === 'staff') {
+        this.guestForm.visibilitySelect = 'staff';
+        this.guestForm.visibilityGroup = 'staff';
+      } else if (roleVal === 'anfitrion') {
+        this.guestForm.visibilitySelect = 'anfitriones';
+        this.guestForm.visibilityGroup = 'anfitriones';
+      } else if (roleVal === 'familia') {
+        this.guestForm.visibilitySelect = 'familia';
+        this.guestForm.visibilityGroup = 'familia';
+      }
+    }
+  }
+
+  parsePhoneParts(phone?: string): { countryCode: string; localNumber: string } {
+    if (!phone) return { countryCode: '+52', localNumber: '' };
+    const clean = phone.trim();
+    const codes = ['+52', '+1', '+54', '+56', '+57', '+593', '+34', '+502', '+51', '+506', '+503', '+504', '+595', '+598', '+58'];
+    for (const code of codes) {
+      if (clean.startsWith(code)) {
+        return { countryCode: code, localNumber: clean.substring(code.length).replace(/\D/g, '') };
+      }
+    }
+    return { countryCode: '+52', localNumber: clean.replace(/\D/g, '') };
+  }
+
   onCompanionsCountChange(): void {
     const targetCount = Math.max(0, Math.floor(Number(this.guestForm.allowedCompanions || 0)));
     this.guestForm.allowedCompanions = targetCount;
@@ -230,78 +388,117 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   openGuestForm(guest?: GuestModel): void {
     this.guestError = '';
     this.guestMessage = '';
+    this.countrySearchQuery = '';
+    this.showCountryDropdown = false;
+
     if (guest) {
       this.editingGuest = guest;
-      let code = '+52';
-      let localNum = guest.phone || '';
-      for (const c of this.countryCodes) {
-        if (localNum.startsWith(c.code)) {
-          code = c.code;
-          localNum = localNum.slice(c.code.length).trim();
-          break;
-        }
-      }
+      const parsedPhone = this.parsePhoneParts(guest.phone);
+      const groupVal = guest.group || '';
+      const groupSel = !groupVal ? '' : (this.availableGroupOptions.includes(groupVal) ? groupVal : 'otro');
+
+      const relVal = guest.relationshipLabel || '';
+      const relSel = !relVal ? '' : (this.relationshipOptions.includes(relVal) ? relVal : 'otro');
+
+      const visVal = guest.visibilityGroup || '';
+      const visSel = !visVal ? '' : (this.availableUnifiedOptions.includes(visVal) ? visVal : 'otro');
+
+      const rolesVal = (guest.roles || []).join(', ');
+      const roleSel = !rolesVal ? '' : (this.roleOptions.some(o => o.value === rolesVal) ? rolesVal : 'otro');
+
       this.guestForm = {
         name: guest.name || '',
         email: guest.email || '',
-        phoneCountryCode: code,
-        phoneLocalNumber: localNum,
-        group: guest.group || '',
-        tableId: '',
-        seatLabel: guest.seatLabel || '',
-        allowedCompanions: guest.allowedCompanions || 0,
+        phone: guest.phone || '',
+        phoneCountryCode: parsedPhone.countryCode,
+        phoneLocal: parsedPhone.localNumber,
+        group: groupVal,
+        groupSelect: groupSel,
+        rolesText: rolesVal,
+        roleSelect: roleSel,
         tagsText: (guest.tags || []).join(', '),
-        roleKey: (guest.roles && guest.roles[0]) || '',
-        dietaryRestrictions: '',
-        menuOption: '',
-        notes: '',
-        sendPassViaWhatsapp: true
+        relationshipLabel: relVal,
+        relationshipSelect: relSel,
+        visibilityGroup: visVal,
+        visibilitySelect: visSel,
+        tableName: guest.tableName || '',
+        seatLabel: guest.seatLabel || '',
+        allowedCompanions: guest.allowedCompanions || 0
       };
-      this.companionList = (guest.companions || []).map(c => ({ name: c.name || '' }));
-      this.syncCompanionNamesText();
-      this.expandAllGuestFormSections(true);
+
+      const companionArr = (guest.companions || []).map(c => c.name || '').filter(Boolean);
+      this.companionNames = companionArr.join('\n');
+      const count = Math.max(Number(guest.allowedCompanions || 0), companionArr.length);
+      this.guestForm.allowedCompanions = count;
+
+      this.companionList = [];
+      for (let i = 0; i < count; i++) {
+        this.companionList.push({ name: companionArr[i] || '' });
+      }
+
+      this.guestFormSections = {
+        organization: Boolean(groupVal || guest.tableName || guest.seatLabel),
+        roles: Boolean(relVal || visVal || rolesVal),
+        companions: Boolean(count || (guest.tags && guest.tags.length > 0))
+      };
     } else {
       this.editingGuest = undefined;
       this.guestForm = {
-        name: '', email: '', phoneCountryCode: '+52', phoneLocalNumber: '',
-        group: '', tableId: '', seatLabel: '', allowedCompanions: 0,
-        tagsText: '', roleKey: '', dietaryRestrictions: '', menuOption: '',
-        notes: '', sendPassViaWhatsapp: true
+        name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
+        relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '', allowedCompanions: 0
       };
-      this.companionList = [];
       this.companionNames = '';
-      this.expandAllGuestFormSections(false);
+      this.companionList = [];
+      this.guestFormSections = { organization: false, roles: false, companions: false };
     }
     this.showGuestForm = true;
+
+    setTimeout(() => {
+      const input = document.getElementById('guestNameInput') as HTMLInputElement;
+      if (input) input.focus();
+    }, 100);
   }
 
-  saveGuest(keepContext = false): void {
-    if (!this.guestForm.name.trim()) {
+  saveGuest(keepOpen = false): void {
+    const nameClean = (this.guestForm.name || '').trim();
+    if (!nameClean) {
       this.guestError = 'El nombre del invitado es obligatorio.';
       return;
     }
+
+    const cleanLocal = (this.guestForm.phoneLocal || '').trim().replace(/\D/g, '');
+    const emailClean = (this.guestForm.email || '').trim();
+
+    if (!cleanLocal && !emailClean) {
+      this.guestError = 'Por favor ingresa al menos un medio de contacto (Teléfono o Correo electrónico).';
+      return;
+    }
+
+    const fullPhone = cleanLocal ? `${this.guestForm.phoneCountryCode || '+52'}${cleanLocal}` : '';
+    this.guestForm.phone = fullPhone;
+
     this.guestSaving = true;
     this.guestError = '';
-
-    const fullPhone = this.guestForm.phoneLocalNumber.trim()
-      ? `${this.guestForm.phoneCountryCode}${this.guestForm.phoneLocalNumber.trim()}`
-      : undefined;
+    const wasEditing = Boolean(this.editingGuest);
 
     const companionsArray = this.companionList
-      .map(c => ({ name: c.name.trim() }))
+      .map(c => ({ name: c.name.trim(), tableName: this.guestForm.tableName || undefined }))
       .filter(c => !!c.name);
 
     const payload: GuestPayload = {
       event: this.eventId,
-      name: this.guestForm.name.trim(),
-      email: this.guestForm.email.trim() || undefined,
-      phone: fullPhone,
-      group: this.guestForm.group.trim() || undefined,
-      seatLabel: this.guestForm.seatLabel.trim() || undefined,
+      name: nameClean,
+      email: emailClean || undefined,
+      phone: fullPhone || undefined,
+      group: this.guestForm.group || undefined,
+      roles: this.splitCsv(this.guestForm.rolesText),
+      tags: this.splitCsv(this.guestForm.tagsText),
+      relationshipLabel: this.guestForm.relationshipLabel || undefined,
+      visibilityGroup: this.guestForm.visibilityGroup || undefined,
+      tableName: this.guestForm.tableName || undefined,
+      seatLabel: this.guestForm.seatLabel || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0),
-      companions: companionsArray,
-      roles: this.guestForm.roleKey ? [this.guestForm.roleKey] : undefined,
-      tags: this.guestForm.tagsText.split(',').map(t => t.trim()).filter(Boolean)
+      companions: companionsArray
     };
 
     if (this.editingGuest) {
@@ -313,11 +510,11 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
           if (idx !== -1) this.guests[idx] = updated;
           this.guestSaving = false;
           this.showGuestForm = false;
-          this.guestMessage = `Invitado ${updated.name} actualizado.`;
+          this.guestMessage = `✅ Invitado "${updated.name}" actualizado.`;
           this.guestsUpdated.emit();
         },
         error: err => {
-          this.guestError = err?.error?.message || 'Error al actualizar invitado';
+          this.guestError = err?.error?.message || 'Error al actualizar invitado.';
           this.guestSaving = false;
         }
       });
@@ -328,33 +525,66 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
           this.guests.push(created);
           this.guestSaving = false;
           this.guestsUpdated.emit();
-          if (keepContext) {
-            this.guestMessage = `¡Invitado ${created.name} guardado! Puedes agregar otro.`;
+          this.guestMessage = `🎉 ¡Invitado "${created.name}" guardado exitosamente!`;
+
+          if (keepOpen) {
+            const lastGroup = this.guestForm.group;
+            const lastGroupSel = this.guestForm.groupSelect;
+            const lastCode = this.guestForm.phoneCountryCode;
+            const lastTable = this.guestForm.tableName;
+            const lastRelLabel = this.guestForm.relationshipLabel;
+            const lastRelSel = this.guestForm.relationshipSelect;
+            const lastRoleText = this.guestForm.rolesText;
+            const lastRoleSel = this.guestForm.roleSelect;
+            const lastVisGroup = this.guestForm.visibilityGroup;
+            const lastVisSel = this.guestForm.visibilitySelect;
+
             this.guestForm.name = '';
             this.guestForm.email = '';
-            this.guestForm.phoneLocalNumber = '';
-            this.guestForm.allowedCompanions = 0;
-            this.companionList = [];
+            this.guestForm.phoneLocal = '';
             this.companionNames = '';
+            this.companionList = [];
+            this.guestForm.allowedCompanions = 0;
+
+            this.guestForm.phoneCountryCode = lastCode || '+52';
+            this.guestForm.group = lastGroup;
+            this.guestForm.groupSelect = lastGroupSel;
+            this.guestForm.tableName = lastTable;
+            this.guestForm.relationshipLabel = lastRelLabel;
+            this.guestForm.relationshipSelect = lastRelSel;
+            this.guestForm.rolesText = lastRoleText;
+            this.guestForm.roleSelect = lastRoleSel;
+            this.guestForm.visibilityGroup = lastVisGroup;
+            this.guestForm.visibilitySelect = lastVisSel;
+
+            setTimeout(() => {
+              const input = document.getElementById('guestNameInput') as HTMLInputElement;
+              if (input) input.focus();
+            }, 50);
           } else {
             this.showGuestForm = false;
-            this.guestMessage = `Invitado ${created.name} agregado con éxito.`;
           }
         },
         error: err => {
-          this.guestError = err?.error?.message || 'Error al agregar invitado';
+          this.guestError = err?.error?.message || 'Error al agregar invitado.';
           this.guestSaving = false;
         }
       });
     }
   }
 
+  private splitCsv(val?: string): string[] | undefined {
+    if (!val) return undefined;
+    const items = val.split(',').map(s => s.trim()).filter(Boolean);
+    return items.length ? items : undefined;
+  }
+
   deleteGuest(guest: GuestModel): void {
     const gId = (guest._id || guest.id)!;
     this.confirmDialogService.confirm({
-      title: 'Eliminar invitado',
-      message: `¿Estás seguro de eliminar a ${guest.name}?`,
-      confirmText: 'Sí, eliminar',
+      title: '¿Eliminar invitado?',
+      message: `¿Estás seguro de que deseas eliminar a "${guest.name}"?`,
+      confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       type: 'danger'
     }).then(confirmed => {
@@ -362,7 +592,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       this.apiService.deleteGuest(gId).subscribe({
         next: () => {
           this.guests = this.guests.filter(g => (g._id || g.id) !== gId);
-          this.guestMessage = `Invitado ${guest.name} eliminado.`;
+          this.guestMessage = `Invitado "${guest.name}" eliminado.`;
           this.guestsUpdated.emit();
         },
         error: err => {
@@ -384,7 +614,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     if (!this.importFile) return;
     this.importing = true;
     this.apiService.importGuests(this.eventId, this.importFile).subscribe({
-      next: res => {
+      next: () => {
         this.importing = false;
         this.importFile = undefined;
         this.guestMessage = `¡Importación completada! Se procesaron los invitados correctamente.`;

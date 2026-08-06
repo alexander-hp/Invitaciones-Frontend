@@ -6,6 +6,7 @@ export interface ConfirmDialogOptions {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  hideCancel?: boolean;
   type?: 'danger' | 'warning' | 'info';
   icon?: string;
 }

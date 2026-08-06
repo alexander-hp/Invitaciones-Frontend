@@ -69,6 +69,7 @@ this.confirmDialogService.confirm({
 | `message` | `string` | Mensaje descriptivo de la acción. | `''` (Requerido) |
 | `confirmText` | `string` | Texto del botón principal de confirmación. | `'Aceptar'` |
 | `cancelText` | `string` | Texto del botón de cancelación. | `'Cancelar'` |
+| `hideCancel` | `boolean` | Oculta el botón de cancelación y la 'X' de cierre (modal informativo con solo 1 botón). | `false` |
 | `type` | `'danger' \| 'warning' \| 'info'` | Define el esquema cromático del botón de confirmación. | `'danger'` |
 | `icon` | `string` | *(Opcional)* Emoji o icono personalizado. | `undefined` |
 
