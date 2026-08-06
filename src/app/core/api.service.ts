@@ -260,6 +260,10 @@ export class ApiService {
     return this.updateEventAccessSong(token, songRequestId, status);
   }
 
+  addEventAccessSong(token: string, payload: { title?: string; artist?: string; sourceUrl?: string; query?: string; dedication?: string; requesterName?: string }): Observable<{ songRequest: SongRequestModel }> {
+    return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests`, payload);
+  }
+
   createCheckInLink(eventId: string, payload: { label?: string; days?: number }): Observable<{ token: string; url: string; expiresAt: string }> {
     return this.http.post<{ token: string; url: string; expiresAt: string }>(`${this.apiUrl}/events/${eventId}/check-in-link`, payload);
   }

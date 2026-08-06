@@ -43,9 +43,14 @@
 
       <!-- Scanner Options & Fallback -->
       <div class="qr-options">
-        <label class="qr-toggle-label">
-          <input type="checkbox" [(ngModel)]="isContinuous">
-          Modo escaneo continuo (para procesar varios invitados)
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+          <span class="nw-switch" style="width: 36px; height: 20px; flex-shrink: 0;">
+            <input type="checkbox" [(ngModel)]="isContinuous">
+            <span class="nw-slider" style="border-radius: 20px;"></span>
+          </span>
+          <span style="font-size: 13px; font-weight: 600; color: var(--nw-text);">
+            Modo escaneo continuo (para procesar varios invitados)
+          </span>
         </label>
 
         <div class="qr-file-upload">

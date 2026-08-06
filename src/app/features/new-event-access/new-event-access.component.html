@@ -1,9 +1,20 @@
 <div class="nw-standalone-page" style="min-height: 100vh; background: var(--nw-bg); padding: 40px 16px; font-family: var(--nw-font); color: var(--nw-text);">
+  <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+  <div class="nw-toast-container" *ngIf="message || error">
+    <div *ngIf="message" class="nw-toast success">
+      <span>✨ {{ message }}</span>
+      <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
+    </div>
+    <div *ngIf="error" class="nw-toast error">
+      <span>⚠️ {{ error }}</span>
+      <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+    </div>
+  </div>
+
   <div style="max-width: 800px; margin: 0 auto; display: grid; gap: var(--nw-gap);">
     <!-- Notifications/Messages -->
     <p *ngIf="loading" class="nw-alert info nw-loading">Cargando acceso...</p>
     <p *ngIf="error" class="nw-alert error">{{ error }}</p>
-    <p *ngIf="message" class="nw-alert success" style="margin-bottom: 0;">{{ message }}</p>
 
     <ng-container *ngIf="session">
       <!-- Event Header Card -->
@@ -26,249 +37,54 @@
         </div>
       </header>
 
-      <!-- Section: DJ (Peticiones de Canciones) -->
-      <section class="nw-card" *ngIf="hasPermission('song_review')">
-        <div class="nw-card-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <span class="nw-pill gold" style="text-transform: uppercase; font-size: 11px;">Música & Playlist</span>
-            <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 24px; font-weight: 800;">🎧 Cabina de DJ</h2>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <span class="nw-pill warning" style="font-size: 13px; font-weight: 700;">{{ songPendingCount }} Pendientes</span>
-            <span class="nw-pill success" style="font-size: 13px; font-weight: 700;">{{ songApprovedCount }} Aprobadas</span>
-            <span class="nw-pill info" style="font-size: 13px; font-weight: 700;">{{ songPlayedCount }} Sonadas</span>
-          </div>
-        </div>
+      <!-- 1. Sección DJ / Música -->
+      <app-access-dj-view
+        *ngIf="hasPermission('dj') || hasPermission('song_review')"
+        [session]="session"
+        (playSongEvent)="playSong($event)"
+        (updateSongEvent)="updateSongRequest($event.song, $event.status)"
+        (moveSongEvent)="moveSong($event.song, $event.direction)"
+        (addSongEvent)="addSong($event)">
+      </app-access-dj-view>
 
-        <!-- Filters & Search -->
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="songFilter === 'all'" [class.nw-btn-ghost]="songFilter !== 'all'" (click)="songFilter = 'all'">
-              Todas ({{ (session.songRequests || []).length }})
-            </button>
-            <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="songFilter === 'pending'" [class.nw-btn-ghost]="songFilter !== 'pending'" (click)="songFilter = 'pending'">
-              Pendientes ({{ songPendingCount }})
-            </button>
-            <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="songFilter === 'approved'" [class.nw-btn-ghost]="songFilter !== 'approved'" (click)="songFilter = 'approved'">
-              Aprobadas ({{ songApprovedCount }})
-            </button>
-            <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="songFilter === 'played'" [class.nw-btn-ghost]="songFilter !== 'played'" (click)="songFilter = 'played'">
-              Sonadas ({{ songPlayedCount }})
-            </button>
-            <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="songFilter === 'rejected'" [class.nw-btn-ghost]="songFilter !== 'rejected'" (click)="songFilter = 'rejected'">
-              Rechazadas ({{ songRejectedCount }})
-            </button>
-          </div>
-          <input class="nw-input" [(ngModel)]="songSearch" placeholder="🔍 Buscar canción, artista o invitado..." style="max-width: 260px; margin-left: auto;">
-        </div>
+      <!-- 2. Sección Check-in -->
+      <app-access-checkin-view
+        *ngIf="hasPermission('check_in')"
+        [session]="session"
+        [checking]="checking"
+        [(code)]="code"
+        [(search)]="search"
+        [(guestStatusFilter)]="guestStatusFilter"
+        [showScanner]="showScanner"
+        (checkInEvent)="checkIn()"
+        (directCheckInEvent)="checkInDirectly($event)"
+        (openScannerEvent)="openScanner()"
+        (closeScannerEvent)="closeScanner()"
+        (qrScannedEvent)="onQrScanned($event)">
+      </app-access-checkin-view>
 
-        <!-- Empty state -->
-        <div *ngIf="filteredSongRequests.length === 0" style="text-align: center; padding: 48px; border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm); color: var(--nw-text-3);">
-          <p style="font-size: 16px; margin: 0;">No hay solicitudes de canciones en este filtro. 🎵</p>
-        </div>
+      <!-- 3. Sección Operación Invitados (Desactivado temporalmente) -->
+      <!--
+      <app-access-guestops-view
+        *ngIf="hasPermission('guest_ops')"
+        [session]="session"
+        [(search)]="search"
+        [(guestStatusFilter)]="guestStatusFilter">
+      </app-access-guestops-view>
+      -->
 
-        <!-- Song list -->
-        <div style="display: grid; gap: 14px;">
-          <div *ngFor="let song of filteredSongRequests" class="nw-dj-track-card">
-            <div class="nw-dj-track-header">
-              <div class="nw-dj-track-main">
-                <!-- Reorder buttons column (Left side, stacked vertically) -->
-                <div class="nw-dj-reorder-col">
-                  <button class="nw-dj-reorder-btn" type="button" (click)="moveSong(song, -1)" title="Subir en playlist">▲</button>
-                  <button class="nw-dj-reorder-btn" type="button" (click)="moveSong(song, 1)" title="Bajar en playlist">▼</button>
-                </div>
+      <!-- 4. Sección Resumen Cliente -->
+      <app-access-client-view
+        *ngIf="hasPermission('client_view')"
+        [session]="session">
+      </app-access-client-view>
 
-                <div class="nw-dj-cover-box" (click)="playSong(song)" title="Escuchar en la página">
-                  <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Cover">
-                  <span *ngIf="!song.thumbnailUrl">🎵</span>
-                  <div class="nw-dj-cover-overlay">▶</div>
-                </div>
-                
-                <div class="nw-dj-track-details">
-                  <h3 class="nw-dj-track-title" (click)="playSong(song)" title="Escuchar en la página">
-                    {{ song.title }}
-                  </h3>
-                  <p class="nw-dj-track-artist">
-                    {{ song.artist || 'Artista no especificado' }}
-                  </p>
-                  <p class="nw-dj-track-requester">
-                    <span>👤</span> Pedida por: <strong>{{ getGuestName(song.guest, song.requesterName) }}</strong>
-                  </p>
-                </div>
-              </div>
-
-              <div class="nw-dj-track-meta">
-                <span class="nw-pill" [class.warning]="song.status === 'pending'" [class.success]="song.status === 'approved'" [class.info]="song.status === 'played'" [class.danger]="song.status === 'rejected'" style="margin: 0;">
-                  {{ song.status === 'pending' ? 'Pendiente ⏳' : (song.status === 'approved' ? 'Aprobada 👍' : (song.status === 'played' ? 'Sonada ✅' : 'Rechazada ✕')) }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Dedication text if present -->
-            <div *ngIf="song.dedication" class="nw-dj-dedication-box">
-              <span>💬</span> <span>"{{ song.dedication }}"</span>
-            </div>
-
-            <!-- Actions bar -->
-            <div class="nw-dj-action-bar">
-              <button *ngIf="song.sourceUrl || song.previewUrl" class="nw-dj-btn nw-dj-btn-listen" type="button" (click)="playSong(song)">
-                ▶ Escuchar
-              </button>
-              <button *ngIf="song.status !== 'approved'" class="nw-dj-btn nw-dj-btn-approve" type="button" (click)="updateSongRequest(song, 'approved')">
-                ✓ Aprobar
-              </button>
-              <button *ngIf="song.status !== 'played'" class="nw-dj-btn nw-dj-btn-played" type="button" (click)="updateSongRequest(song, 'played')">
-                ▶ Sonar / Tocada
-              </button>
-              <button *ngIf="song.status !== 'rejected'" class="nw-dj-btn nw-dj-btn-reject" type="button" (click)="updateSongRequest(song, 'rejected')">
-                ✕ Rechazar
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Section: Check-in -->
-      <section class="nw-card" *ngIf="hasPermission('check_in')">
-        <div class="nw-card-header" style="margin-bottom: 24px;">
-          <div>
-            <span class="nw-pill success" style="text-transform: uppercase; font-size: 11px;">Entrada</span>
-            <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Check-in</h2>
-          </div>
-          <span class="nw-pill success" style="font-size: 14px; font-weight: 700; height: 32px; padding: 0 16px;">
-            {{ checkedInCount }} / {{ session.guests.length }} Registrados
-          </span>
-        </div>
-
-        <!-- Registration input form -->
-        <div style="display: grid; gap: 16px; margin-bottom: 24px; grid-template-columns: 1fr auto auto; align-items: flex-end;">
-          <label class="nw-label" style="grid-column: 1 / -1; margin-bottom: 0;">
-            Código de Invitado
-          </label>
-          <input class="nw-input" name="checkInCode" [(ngModel)]="code" placeholder="Escribe o escanea el código (ej. QR)" (keyup.enter)="checkIn()">
-          <button class="nw-btn" type="button" (click)="openScanner()" style="background: var(--nw-surface-2, #f1f5f9); border: 1px solid var(--nw-border, #cbd5e1); color: var(--nw-text, #0f172a); display: inline-flex; align-items: center; gap: 6px;">
-            <span>📷</span> Abrir Cámara QR
-          </button>
-          <button class="nw-btn nw-btn-primary" type="button" (click)="checkIn()" [disabled]="!code || checking">
-            {{ checking ? 'Registrando...' : 'Registrar entrada' }}
-          </button>
-        </div>
-        <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
-
-        <div style="border-top: 1px solid var(--nw-border); margin: 24px 0;"></div>
-
-        <!-- Filter & Table -->
-        <div style="margin-bottom: 16px;">
-          <label class="nw-label">
-            Buscar Invitados
-            <input class="nw-input" name="search" [(ngModel)]="search" placeholder="Buscar por nombre, grupo, mesa o código...">
-          </label>
-        </div>
-
-        <div class="nw-table-wrap">
-          <table class="nw-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Mesa</th>
-                <th>Código</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let guest of filteredGuests">
-                <td style="font-weight: 600;">{{ guest.name }}</td>
-                <td>
-                  {{ guest.tableName || 'Sin mesa' }}
-                  <span *ngIf="guest.seatLabel" style="color: var(--nw-text-3); font-size: 12px; margin-left: 4px;">
-                    / {{ guest.seatLabel }}
-                  </span>
-                </td>
-                <td style="font-family: monospace; font-size: 13px;">{{ guest.checkInCode }}</td>
-                <td>
-                  <span class="nw-pill" [class.success]="guest.checkedIn" [class.warning]="!guest.checkedIn && guest.status === 'pending'" [class.danger]="!guest.checkedIn && guest.status === 'declined'">
-                    {{ guest.checkedIn ? 'check-in ✅' : (guest.status === 'confirmed' ? 'Confirmado' : (guest.status === 'declined' ? 'Rechazado' : 'Pendiente')) }}
-                  </span>
-                </td>
-              </tr>
-              <tr *ngIf="filteredGuests.length === 0">
-                <td colspan="4" style="text-align: center; color: var(--nw-text-3); padding: 32px;">
-                  No se encontraron invitados.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Section: Resumen cliente -->
-      <section class="nw-card" *ngIf="hasPermission('client_view')">
-        <div class="nw-card-header" style="margin-bottom: 24px;">
-          <div>
-            <span class="nw-pill info" style="text-transform: uppercase; font-size: 11px;">Resumen</span>
-            <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Vista Cliente</h2>
-          </div>
-        </div>
-
-        <div class="nw-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-          <div class="nw-metric accent" style="background: var(--nw-surface-2); padding: var(--nw-gap); border-radius: var(--nw-radius); position: relative; border: 1px solid var(--nw-border); overflow: hidden; display: flex; flex-direction: column;">
-            <span class="metric-label" style="font-size: 12px; color: var(--nw-text-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Invitados</span>
-            <span class="metric-value" style="font-family: var(--nw-font-display); font-size: 36px; font-weight: 800; color: var(--nw-text); margin-top: 8px;">{{ session.guests.length }}</span>
-            <span class="metric-icon" style="position: absolute; right: 16px; bottom: 16px; font-size: 32px; opacity: 0.2;">👥</span>
-          </div>
-          <div class="nw-metric success" style="background: var(--nw-surface-2); padding: var(--nw-gap); border-radius: var(--nw-radius); position: relative; border: 1px solid var(--nw-border); overflow: hidden; display: flex; flex-direction: column;">
-            <span class="metric-label" style="font-size: 12px; color: var(--nw-text-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Confirmados / RSVPs</span>
-            <span class="metric-value" style="font-family: var(--nw-font-display); font-size: 36px; font-weight: 800; color: var(--nw-text); margin-top: 8px;">{{ session.rsvps.length }}</span>
-            <span class="metric-icon" style="position: absolute; right: 16px; bottom: 16px; font-size: 32px; opacity: 0.2;">💌</span>
-          </div>
-          <div class="nw-metric info" style="background: var(--nw-surface-2); padding: var(--nw-gap); border-radius: var(--nw-radius); position: relative; border: 1px solid var(--nw-border); overflow: hidden; display: flex; flex-direction: column;">
-            <span class="metric-label" style="font-size: 12px; color: var(--nw-text-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Mesas Configuradas</span>
-            <span class="metric-value" style="font-family: var(--nw-font-display); font-size: 36px; font-weight: 800; color: var(--nw-text); margin-top: 8px;">{{ session.tables.length }}</span>
-            <span class="metric-icon" style="position: absolute; right: 16px; bottom: 16px; font-size: 32px; opacity: 0.2;">🪑</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Section: Revisión álbum -->
-      <section class="nw-card" *ngIf="hasPermission('album_review')">
-        <div class="nw-card-header" style="margin-bottom: 24px;">
-          <div>
-            <span class="nw-pill warning" style="text-transform: uppercase; font-size: 11px;">Fotografías</span>
-            <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Revisión de Álbum</h2>
-          </div>
-          <span class="nw-pill warning" style="font-size: 14px; font-weight: 700;">{{ session.albumAssets.length }} Assets</span>
-        </div>
-
-        <p *ngIf="!session.albumAssets.length" style="color: var(--nw-text-3); text-align: center; padding: 48px; border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm);">
-          Aún no se han subido fotos para revisar. 📸
-        </p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--nw-gap); margin-top: 16px;">
-          <article *ngFor="let asset of session.albumAssets" class="nw-card" style="padding: 12px; display: flex; flex-direction: column; gap: var(--nw-gap-sm); transition: transform 0.2s; border-color: var(--nw-border);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-            <div style="position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--nw-radius-sm); background: #eee;">
-              <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" decoding="async">
-              <span class="nw-pill" [class.success]="asset.status === 'approved'" [class.danger]="asset.status === 'rejected'" [class.warning]="asset.status === 'pending'" style="position: absolute; top: 8px; right: 8px; font-size: 11px;">
-                {{ asset.status === 'approved' ? 'Aprobada' : (asset.status === 'rejected' ? 'Rechazada' : 'Pendiente') }}
-              </span>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px;">
-              <span style="font-size: 14px; font-weight: 700; color: var(--nw-text);">
-                {{ asset.uploaderName || 'Invitado' }}
-              </span>
-            </div>
-
-            <div style="display: flex; gap: 8px; margin-top: auto; padding: 0 4px;">
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" style="flex: 1; border-color: var(--nw-success); color: var(--nw-success);" (click)="updateAlbum(asset, 'approved')">
-                Aprobar
-              </button>
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" style="flex: 1; border-color: var(--nw-danger); color: var(--nw-danger);" (click)="updateAlbum(asset, 'rejected')">
-                Rechazar
-              </button>
-            </div>
-        </article>
-        </div>
-      </section>
+      <!-- 5. Sección Revisión Álbum -->
+      <app-access-album-view
+        *ngIf="hasPermission('album_review')"
+        [session]="session"
+        (updateAlbumEvent)="updateAlbum($event.asset, $event.status)">
+      </app-access-album-view>
     </ng-container>
   </div>
 </div>

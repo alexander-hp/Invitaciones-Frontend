@@ -45,6 +45,11 @@ import { NewContactComponent } from './features/new-contact/new-contact.componen
 import { NewSidebarComponent } from './features/new-sidebar/new-sidebar.component';
 import { NewPlanComponent } from './features/new-plan/new-plan.component';
 import { NewEventAccessComponent } from './features/new-event-access/new-event-access.component';
+import { AccessDjViewComponent } from './features/new-event-access/views/access-dj-view.component';
+import { AccessCheckinViewComponent } from './features/new-event-access/views/access-checkin-view.component';
+import { AccessGuestopsViewComponent } from './features/new-event-access/views/access-guestops-view.component';
+import { AccessClientViewComponent } from './features/new-event-access/views/access-client-view.component';
+import { AccessAlbumViewComponent } from './features/new-event-access/views/access-album-view.component';
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
@@ -115,6 +120,11 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     NewSidebarComponent,
     NewPlanComponent,
     NewEventAccessComponent,
+    AccessDjViewComponent,
+    AccessCheckinViewComponent,
+    AccessGuestopsViewComponent,
+    AccessClientViewComponent,
+    AccessAlbumViewComponent,
     NewCheckInStaffComponent,
     NewExternalEmbedComponent,
     NewExternalPortalComponent

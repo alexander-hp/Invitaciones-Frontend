@@ -7,7 +7,7 @@ export type InvitationAccessMode = 'open' | 'public' | 'guest_list' | 'specific_
 export type UserRole = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'admin';
 export type AccountType = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'planner' | 'staff';
 export type AuthProvider = 'password' | 'google' | 'facebook' | 'apple';
-export type EventMemberRole = 'organizer' | 'client' | 'venue_owner' | 'vendor' | 'staff' | 'dj' | 'photographer';
+export type EventMemberRole = 'owner' | 'organizer' | 'client' | 'venue_owner' | 'vendor' | 'staff' | 'dj' | 'photographer';
 export type EventMemberStatus = 'invited' | 'active' | 'disabled';
 export type EventPermission =
   'view_event' | 'edit_event' | 'view_metrics' | 'manage_guests' | 'manage_tables' |

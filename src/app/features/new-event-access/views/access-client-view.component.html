@@ -1,0 +1,26 @@
+<section class="nw-card">
+  <div class="nw-card-header" style="margin-bottom: 24px;">
+    <div>
+      <span class="nw-pill info" style="text-transform: uppercase; font-size: 11px;">Resumen</span>
+      <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Vista Cliente</h2>
+    </div>
+  </div>
+
+  <div class="nw-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+    <div class="nw-metric accent" style="background: var(--nw-surface-2); padding: var(--nw-gap); border-radius: var(--nw-radius); position: relative; border: 1px solid var(--nw-border); overflow: hidden; display: flex; flex-direction: column;">
+      <span class="metric-label" style="font-size: 12px; color: var(--nw-text-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Invitados</span>
+      <span class="metric-value" style="font-family: var(--nw-font-display); font-size: 36px; font-weight: 800; color: var(--nw-text); margin-top: 8px;">{{ session.guests.length }}</span>
+      <span class="metric-icon" style="position: absolute; right: 16px; bottom: 16px; font-size: 32px; opacity: 0.2;">👥</span>
+    </div>
+    <div class="nw-metric success" style="background: var(--nw-surface-2); padding: var(--nw-gap); border-radius: var(--nw-radius); position: relative; border: 1px solid var(--nw-border); overflow: hidden; display: flex; flex-direction: column;">
+      <span class="metric-label" style="font-size: 12px; color: var(--nw-text-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Confirmados / RSVPs</span>
+      <span class="metric-value" style="font-family: var(--nw-font-display); font-size: 36px; font-weight: 800; color: var(--nw-text); margin-top: 8px;">{{ session.rsvps.length }}</span>
+      <span class="metric-icon" style="position: absolute; right: 16px; bottom: 16px; font-size: 32px; opacity: 0.2;">💌</span>
+    </div>
+    <div class="nw-metric info" style="background: var(--nw-surface-2); padding: var(--nw-gap); border-radius: var(--nw-radius); position: relative; border: 1px solid var(--nw-border); overflow: hidden; display: flex; flex-direction: column;">
+      <span class="metric-label" style="font-size: 12px; color: var(--nw-text-2); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Mesas Configuradas</span>
+      <span class="metric-value" style="font-family: var(--nw-font-display); font-size: 36px; font-weight: 800; color: var(--nw-text); margin-top: 8px;">{{ session.tables.length }}</span>
+      <span class="metric-icon" style="position: absolute; right: 16px; bottom: 16px; font-size: 32px; opacity: 0.2;">🪑</span>
+    </div>
+  </div>
+</section>

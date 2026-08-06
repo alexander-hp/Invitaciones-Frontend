@@ -1,0 +1,39 @@
+<section class="nw-card">
+  <div class="nw-card-header" style="margin-bottom: 24px;">
+    <div>
+      <span class="nw-pill warning" style="text-transform: uppercase; font-size: 11px;">Fotografías</span>
+      <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Revisión de Álbum</h2>
+    </div>
+    <span class="nw-pill warning" style="font-size: 14px; font-weight: 700;">{{ session.albumAssets.length }} Assets</span>
+  </div>
+
+  <p *ngIf="!session.albumAssets.length" style="color: var(--nw-text-3); text-align: center; padding: 48px; border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm);">
+    Aún no se han subido fotos para revisar. 📸
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--nw-gap); margin-top: 16px;">
+    <article *ngFor="let asset of session.albumAssets" class="nw-card" style="padding: 12px; display: flex; flex-direction: column; gap: var(--nw-gap-sm); transition: transform 0.2s; border-color: var(--nw-border);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+      <div style="position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--nw-radius-sm); background: #eee;">
+        <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" decoding="async">
+        <span class="nw-pill" [class.success]="asset.status === 'approved'" [class.danger]="asset.status === 'rejected'" [class.warning]="asset.status === 'pending'" style="position: absolute; top: 8px; right: 8px; font-size: 11px;">
+          {{ asset.status === 'approved' ? 'Aprobada' : (asset.status === 'rejected' ? 'Rechazada' : 'Pendiente') }}
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px;">
+        <span style="font-size: 14px; font-weight: 700; color: var(--nw-text);">
+          {{ asset.uploaderName || 'Invitado' }}
+        </span>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: auto; padding: 0 4px;">
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" style="flex: 1; border-color: var(--nw-success); color: var(--nw-success);" (click)="updateAlbumStatus(asset, 'approved')">
+          Aprobar
+        </button>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" style="flex: 1; border-color: var(--nw-danger); color: var(--nw-danger);" (click)="updateAlbumStatus(asset, 'rejected')">
+          Rechazar
+        </button>
+      </div>
+    </article>
+  </div>
+</section>

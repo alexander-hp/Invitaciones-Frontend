@@ -1,0 +1,108 @@
+<section class="nw-card">
+  <div class="nw-card-header" style="margin-bottom: 24px;">
+    <div>
+      <span class="nw-pill success" style="text-transform: uppercase; font-size: 11px;">Entrada</span>
+      <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">Check-in</h2>
+    </div>
+    <span class="nw-pill success" style="font-size: 14px; font-weight: 700; height: 32px; padding: 0 16px;">
+      {{ checkedInCount }} / {{ session.guests.length }} Registrados
+    </span>
+  </div>
+
+  <!-- Registration input form -->
+  <div style="display: grid; gap: 16px; margin-bottom: 24px; grid-template-columns: 1fr auto auto; align-items: flex-end;">
+    <label class="nw-label" style="grid-column: 1 / -1; margin-bottom: 0;">
+      Código de Invitado
+    </label>
+    <input class="nw-input" name="checkInCode" [ngModel]="code" (ngModelChange)="onCodeInput($event)" placeholder="Escribe o escanea el código (ej. QR)" (keyup.enter)="triggerCheckIn()">
+    <button class="nw-btn" type="button" (click)="openScanner()" style="background: var(--nw-surface-2, #f1f5f9); border: 1px solid var(--nw-border, #cbd5e1); color: var(--nw-text, #0f172a); display: inline-flex; align-items: center; gap: 6px;">
+      <span>📷</span> Escanear
+    </button>
+    <button class="nw-btn nw-btn-primary" type="button" (click)="triggerCheckIn()" [disabled]="!code || checking">
+      {{ checking ? 'Registrando...' : 'Registrar entrada' }}
+    </button>
+  </div>
+  <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
+
+  <div style="border-top: 1px solid var(--nw-border); margin: 24px 0;"></div>
+
+  <!-- Filter & Controls Toolbar -->
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+    <!-- 1. Text Search Input First -->
+    <div style="flex: 1; min-width: 240px;">
+      <input class="nw-input" name="search" [ngModel]="search" (ngModelChange)="onSearchInput($event)" placeholder="🔍 Buscar por nombre, mesa, grupo o código..." style="height: 38px; padding: 6px 12px; font-size: 13px;">
+    </div>
+
+    <!-- 2. Status Dropdown -->
+    <div style="min-width: 170px;">
+      <select class="nw-select" [ngModel]="guestStatusFilter" (ngModelChange)="setFilter($event)" style="height: 38px; padding: 6px 12px; font-size: 13px; font-weight: 600;">
+        <option value="all">📊 Estado: Todos ({{ (session.guests || []).length }})</option>
+        <option value="checkedIn">✅ Registrados ({{ checkedInCount }})</option>
+        <option value="confirmed">📩 Confirmados ({{ guestConfirmedCount }})</option>
+        <option value="pending">⏳ Pendientes ({{ guestPendingCount }})</option>
+        <option value="declined">✕ Rechazados ({{ guestDeclinedCount }})</option>
+      </select>
+    </div>
+
+    <!-- 3. Table Dropdown -->
+    <div style="min-width: 160px;">
+      <select class="nw-select" [(ngModel)]="selectedTable" style="height: 38px; padding: 6px 12px; font-size: 13px; font-weight: 600;">
+        <option value="all">🪑 Mesa: Todas</option>
+        <option value="Sin mesa">Sin mesa asignada</option>
+        <option *ngFor="let table of availableTables" [value]="table">
+          Mesa: {{ table }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div class="nw-table-wrap">
+    <table class="nw-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Mesa</th>
+          <th>Pases</th>
+          <th>Código</th>
+          <th>Estado</th>
+          <th style="text-align: right;">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let guest of filteredGuests">
+          <td style="font-weight: 600;">{{ guest.name }}</td>
+          <td>
+            {{ guest.tableName || 'Sin mesa' }}
+            <span *ngIf="guest.seatLabel" style="color: var(--nw-text-3); font-size: 12px; margin-left: 4px;">
+              / {{ guest.seatLabel }}
+            </span>
+          </td>
+          <td>
+            <span class="nw-pill accent" style="font-size: 12px; font-weight: 700;">
+              🎟️ {{ guest.allowedCompanions || 1 }} {{ (guest.allowedCompanions || 1) === 1 ? 'pase' : 'pases' }}
+            </span>
+          </td>
+          <td style="font-family: monospace; font-size: 13px;">{{ guest.checkInCode }}</td>
+          <td>
+            <span class="nw-pill" [class.success]="guest.checkedIn" [class.warning]="!guest.checkedIn && guest.status === 'pending'" [class.danger]="!guest.checkedIn && guest.status === 'declined'">
+              {{ guest.checkedIn ? 'check-in ✅' : (guest.status === 'confirmed' ? 'Confirmado' : (guest.status === 'declined' ? 'Rechazado' : 'Pendiente')) }}
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <button *ngIf="!guest.checkedIn" class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="registerGuestDirectly(guest)" [disabled]="checking" style="font-size: 12px; padding: 4px 10px;">
+              ✅ Registrar
+            </button>
+            <span *ngIf="guest.checkedIn" style="color: var(--nw-success); font-size: 12px; font-weight: 700;">
+              ✅ Registrado
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="filteredGuests.length === 0">
+          <td colspan="6" style="text-align: center; color: var(--nw-text-3); padding: 32px;">
+            No se encontraron invitados.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

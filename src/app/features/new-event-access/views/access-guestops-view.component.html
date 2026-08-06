@@ -1,0 +1,82 @@
+<section class="nw-card">
+  <div class="nw-card-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <span class="nw-pill accent" style="text-transform: uppercase; font-size: 11px;">Operación</span>
+      <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700;">👥 Operación de Invitados</h2>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <span class="nw-pill success" style="font-size: 13px; font-weight: 700;">{{ guestConfirmedCount + checkedInCount }} Confirmados</span>
+      <span class="nw-pill warning" style="font-size: 13px; font-weight: 700;">{{ guestPendingCount }} Pendientes</span>
+      <span class="nw-pill danger" style="font-size: 13px; font-weight: 700;">{{ guestDeclinedCount }} Rechazados</span>
+    </div>
+  </div>
+
+  <p style="color: var(--nw-text-2); font-size: 13.5px; margin-bottom: 20px;">
+    Gestión operativa de pases, asignación de mesas y seguimiento de invitados del evento.
+  </p>
+
+  <!-- Filter & Search -->
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="guestStatusFilter === 'all'" [class.nw-btn-ghost]="guestStatusFilter !== 'all'" (click)="setFilter('all')">
+        Todos ({{ (session.guests || []).length }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="guestStatusFilter === 'confirmed'" [class.nw-btn-ghost]="guestStatusFilter !== 'confirmed'" (click)="setFilter('confirmed')">
+        Confirmados ({{ guestConfirmedCount }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="guestStatusFilter === 'checkedIn'" [class.nw-btn-ghost]="guestStatusFilter !== 'checkedIn'" (click)="setFilter('checkedIn')">
+        Registrados ✅ ({{ checkedInCount }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="guestStatusFilter === 'pending'" [class.nw-btn-ghost]="guestStatusFilter !== 'pending'" (click)="setFilter('pending')">
+        Pendientes ({{ guestPendingCount }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="guestStatusFilter === 'declined'" [class.nw-btn-ghost]="guestStatusFilter !== 'declined'" (click)="setFilter('declined')">
+        Rechazados ({{ guestDeclinedCount }})
+      </button>
+    </div>
+
+    <div style="min-width: 240px; flex: 1; max-width: 320px;">
+      <input class="nw-input" name="search" [ngModel]="search" (ngModelChange)="onSearchInput($event)" placeholder="🔍 Buscar invitado, grupo o mesa..." style="height: 36px; padding: 6px 12px; font-size: 13px;">
+    </div>
+  </div>
+
+  <div class="nw-table-wrap">
+    <table class="nw-table">
+      <thead>
+        <tr>
+          <th>Invitado</th>
+          <th>Grupo</th>
+          <th>Mesa / Asiento</th>
+          <th>Pases / Acompañantes</th>
+          <th>Estado RSVP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let guest of filteredGuests">
+          <td>
+            <strong style="font-size: 14px; color: var(--nw-text); display: block;">{{ guest.name }}</strong>
+            <span style="font-family: monospace; font-size: 11px; color: var(--nw-text-3);">{{ guest.checkInCode }}</span>
+          </td>
+          <td>{{ guest.group || 'General' }}</td>
+          <td>
+            {{ guest.tableName || 'Sin mesa' }}
+            <span *ngIf="guest.seatLabel" style="color: var(--nw-text-3); font-size: 12px; margin-left: 4px;">
+              / {{ guest.seatLabel }}
+            </span>
+          </td>
+          <td>{{ guest.allowedCompanions || 1 }} pases</td>
+          <td>
+            <span class="nw-pill" [class.success]="guest.checkedIn || guest.status === 'confirmed'" [class.warning]="!guest.checkedIn && guest.status === 'pending'" [class.danger]="guest.status === 'declined'">
+              {{ guest.checkedIn ? 'check-in ✅' : (guest.status === 'confirmed' ? 'Confirmado' : (guest.status === 'declined' ? 'Rechazado' : 'Pendiente')) }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="filteredGuests.length === 0">
+          <td colspan="5" style="text-align: center; color: var(--nw-text-3); padding: 32px;">
+            No se encontraron invitados con este filtro.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

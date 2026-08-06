@@ -32,6 +32,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   saving = false;
   loadingData = false;
   error = '';
+  message = '';
 
   memberForm = {
     email: '',
@@ -41,15 +42,52 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   };
 
   memberRoles: Array<{ value: EventMemberRole; label: string }> = [
-    { value: 'organizer', label: 'Organizador' },
-    { value: 'client', label: 'Cliente' },
-    { value: 'staff', label: 'Staff' },
+    { value: 'owner', label: 'Propietario / Dueño' },
+    { value: 'organizer', label: 'Organizador / Wedding Planner' },
+    { value: 'client', label: 'Cliente / Anfitrión' },
+    { value: 'venue_owner', label: 'Salón / Lugar del Evento' },
     { value: 'vendor', label: 'Proveedor' },
-    { value: 'dj', label: 'DJ' },
+    { value: 'staff', label: 'Staff / Recepción' },
+    { value: 'dj', label: 'DJ / Sonido' },
     { value: 'photographer', label: 'Fotógrafo' }
   ];
 
   rolePermissions: Record<string, EventPermission[]> = {};
+
+  collapsedCards: Record<string, boolean> = {
+    details: false,
+    plans: false,
+    invitations: false,
+    team: false,
+    external: false
+  };
+
+  collapsedTeamInvite = false;
+  collapsedTeamList = false;
+
+  editingMemberId: string | null = null;
+
+  showSuccess(text: string): void {
+    this.message = text;
+    setTimeout(() => { this.message = ''; }, 3500);
+  }
+
+  showError(text: string): void {
+    this.error = text;
+    setTimeout(() => { this.error = ''; }, 4000);
+  }
+
+  toggleCard(cardKey: string): void {
+    this.collapsedCards[cardKey] = !this.collapsedCards[cardKey];
+  }
+
+  toggleTeamInvite(): void {
+    this.collapsedTeamInvite = !this.collapsedTeamInvite;
+  }
+
+  toggleTeamList(): void {
+    this.collapsedTeamList = !this.collapsedTeamList;
+  }
 
   accessLinkForm = {
     role: 'check_in' as EventAccessRole,
@@ -169,10 +207,11 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       next: res => {
         this.event.status = res.event.status;
         this.saving = false;
+        this.showSuccess('Estado del evento actualizado');
         this.eventUpdated.emit();
       },
       error: err => {
-        this.error = err?.error?.message || 'Error al cambiar estado';
+        this.showError(err?.error?.message || 'Error al cambiar estado');
         this.saving = false;
       }
     });
@@ -198,9 +237,10 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
         next: () => {
           this.invitations = this.invitations.filter(i => (i._id || i.id) !== invId);
           this.saving = false;
+          this.showSuccess('Invitación eliminada correctamente');
         },
         error: err => {
-          this.error = err?.error?.message || 'Error al borrar invitación';
+          this.showError(err?.error?.message || 'Error al borrar invitación');
           this.saving = false;
         }
       });
@@ -229,7 +269,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       },
       error: err => {
         this.checkoutLoading = '';
-        this.error = err?.error?.message || 'Error al iniciar checkout';
+        this.showError(err?.error?.message || 'Error al iniciar checkout');
       }
     });
   }
@@ -284,9 +324,48 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
         this.eventMembers.push(res.member);
         this.memberForm.email = '';
         this.memberForm.name = '';
+        this.showSuccess('Miembro invitado al equipo correctamente');
       },
       error: err => {
-        this.error = err?.error?.message || 'Error al agregar miembro';
+        this.showError(err?.error?.message || 'Error al agregar miembro');
+      }
+    });
+  }
+
+  toggleEditPermissions(member: EventMemberModel): void {
+    const mId = (member._id || member.id)!;
+    if (this.editingMemberId === mId) {
+      this.editingMemberId = null;
+    } else {
+      this.editingMemberId = mId;
+    }
+  }
+
+  hasMemberPermission(member: EventMemberModel, perm: EventPermission): boolean {
+    return Array.isArray(member.permissions) && member.permissions.includes(perm);
+  }
+
+  toggleExistingMemberPermission(member: EventMemberModel, perm: EventPermission, checked: boolean): void {
+    if (!member.permissions) {
+      member.permissions = [];
+    }
+    if (checked) {
+      if (!member.permissions.includes(perm)) {
+        member.permissions.push(perm);
+      }
+    } else {
+      member.permissions = member.permissions.filter(p => p !== perm);
+    }
+
+    const id = (this.event._id || this.event.id)!;
+    const mId = (member._id || member.id)!;
+    this.apiService.updateEventMember(id, mId, { permissions: member.permissions }).subscribe({
+      next: res => {
+        member.permissions = res.member.permissions;
+        this.showSuccess('Permisos actualizados');
+      },
+      error: err => {
+        this.showError(err?.error?.message || 'Error al actualizar permisos');
       }
     });
   }
@@ -298,9 +377,10 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       next: res => {
         member.role = res.member.role;
         member.permissions = res.member.permissions;
+        this.showSuccess('Rol actualizado correctamente');
       },
       error: err => {
-        this.error = err?.error?.message || 'Error al actualizar rol';
+        this.showError(err?.error?.message || 'Error al actualizar rol');
       }
     });
   }
@@ -319,9 +399,10 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       this.apiService.removeEventMember(id, mId).subscribe({
         next: () => {
           member.status = 'disabled';
+          this.showSuccess('Miembro desactivado correctamente');
         },
         error: err => {
-          this.error = err?.error?.message || 'Error al desactivar miembro';
+          this.showError(err?.error?.message || 'Error al desactivar miembro');
         }
       });
     });
@@ -337,9 +418,10 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       next: res => {
         this.eventAccessLinks.unshift(res.link);
         this.accessLinkForm.label = '';
+        this.showSuccess('Enlace de acceso externo creado');
       },
       error: err => {
-        this.error = err?.error?.message || 'Error al generar enlace';
+        this.showError(err?.error?.message || 'Error al generar enlace');
       }
     });
   }
@@ -350,14 +432,20 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     this.apiService.revokeEventAccessLink(id, lId).subscribe({
       next: () => {
         link.revokedAt = new Date().toISOString();
+        this.showSuccess('Enlace revocado correctamente');
       },
       error: err => {
-        this.error = err?.error?.message || 'Error al revocar enlace';
+        this.showError(err?.error?.message || 'Error al revocar enlace');
       }
     });
   }
 
   getNewAccessUrl(link: EventAccessLinkModel): string {
-    return link.url || `/new/external-access/${link._id || link.id}`;
+    if (!link) return '';
+    let url = link.url || `/new/external-access/${link._id || link.id}`;
+    if (url.includes('/external-access/') && !url.includes('/new/external-access/')) {
+      url = url.replace('/external-access/', '/new/external-access/');
+    }
+    return url;
   }
 }

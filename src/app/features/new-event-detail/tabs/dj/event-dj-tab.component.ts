@@ -14,6 +14,54 @@ export class EventDjTabComponent implements OnInit, OnChanges {
   loadingDj = false;
   djError = '';
   djMessage = '';
+  showAddForm = false;
+  adding = false;
+  newSong = {
+    title: '',
+    artist: '',
+    sourceUrl: '',
+    dedication: ''
+  };
+
+  getYouTubeVideoId(url: string): string {
+    if (!url) return '';
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    return match ? match[1] : '';
+  }
+
+  getYouTubeThumbnail(url: string): string {
+    const videoId = this.getYouTubeVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  }
+
+  addSongInternal(): void {
+    if (!this.newSong.title.trim() && !this.newSong.sourceUrl.trim()) return;
+    this.adding = true;
+    const ytId = this.getYouTubeVideoId(this.newSong.sourceUrl);
+    const sourceUrl = this.newSong.sourceUrl.trim();
+    const title = this.newSong.title.trim() || (ytId ? 'Canción de YouTube' : (sourceUrl || 'Canción agregada'));
+    const artist = this.newSong.artist.trim() || (ytId ? 'YouTube' : '');
+
+    const newRequest: SongRequestModel = {
+      _id: 'temp_' + Date.now(),
+      event: this.eventId,
+      title,
+      artist,
+      sourceUrl,
+      sourceProvider: ytId ? 'youtube' : 'manual',
+      thumbnailUrl: ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined,
+      dedication: this.newSong.dedication,
+      requesterName: 'DJ (Interno)',
+      status: 'approved',
+      createdAt: new Date().toISOString()
+    };
+
+    this.songRequests = [newRequest, ...this.songRequests];
+    this.djMessage = `Canción "${title}" agregada a la lista ✅`;
+    this.newSong = { title: '', artist: '', sourceUrl: '', dedication: '' };
+    this.showAddForm = false;
+    this.adding = false;
+  }
 
   activePlayingSong?: {
     title: string;

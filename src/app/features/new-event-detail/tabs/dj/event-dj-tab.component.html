@@ -1,10 +1,60 @@
 <section>
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
     <h3 style="margin:0;">🎵 Solicitudes al DJ</h3>
-    <span class="nw-pill">{{ songRequests.length }} solicitudes</span>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="nw-btn nw-btn-gold nw-btn-sm" type="button" (click)="showAddForm = !showAddForm">
+        {{ showAddForm ? '✕ Cerrar formulario' : '➕ Agregar Canción' }}
+      </button>
+      <span class="nw-pill">{{ songRequests.length }} solicitudes</span>
+    </div>
   </div>
   <p *ngIf="djMessage" class="nw-alert success" style="margin-bottom:14px;">{{ djMessage }}</p>
   <p *ngIf="djError" class="nw-alert error" style="margin-bottom:14px;">{{ djError }}</p>
+
+  <!-- Form: Add Song (Internal / YouTube) -->
+  <div *ngIf="showAddForm" class="nw-card" style="background: var(--nw-surface-2); border: 1px solid var(--nw-border); padding: 20px; margin-bottom: 24px; border-radius: var(--nw-radius);">
+    <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 700; color: var(--nw-text);">
+      🎵 Agregar Canción Interna (YouTube / Enlace)
+    </h3>
+    <form (ngSubmit)="addSongInternal()" style="display: grid; gap: 14px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <label class="nw-label" style="margin-bottom: 0;">
+          Título de la Canción
+          <input class="nw-input" name="title" [(ngModel)]="newSong.title" placeholder="ej. Amor Eterno">
+        </label>
+        <label class="nw-label" style="margin-bottom: 0;">
+          Artista / Grupo
+          <input class="nw-input" name="artist" [(ngModel)]="newSong.artist" placeholder="ej. Juan Gabriel">
+        </label>
+      </div>
+
+      <label class="nw-label" style="margin-bottom: 0;">
+        Link de YouTube o Enlace de audio (opcional)
+        <input class="nw-input" name="sourceUrl" [(ngModel)]="newSong.sourceUrl" placeholder="https://www.youtube.com/watch?v=...">
+      </label>
+
+      <!-- Live YouTube Thumbnail Preview -->
+      <div *ngIf="getYouTubeThumbnail(newSong.sourceUrl)" style="display: flex; align-items: center; gap: 12px; background: var(--nw-surface); padding: 10px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+        <img [src]="getYouTubeThumbnail(newSong.sourceUrl)" alt="YouTube Preview" style="width: 80px; height: 60px; object-fit: cover; border-radius: 6px;">
+        <div>
+          <span class="nw-pill red" style="font-size: 10px;">YouTube Detectado</span>
+          <p style="margin: 4px 0 0; font-size: 13px; font-weight: 600;">Vista previa de portada lista</p>
+        </div>
+      </div>
+
+      <label class="nw-label" style="margin-bottom: 0;">
+        Nota o Dedicatoria (opcional)
+        <input class="nw-input" name="dedication" [(ngModel)]="newSong.dedication" placeholder="ej. Solicitud interna para abrir la pista">
+      </label>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showAddForm = false">Cancelar</button>
+        <button class="nw-btn nw-btn-primary nw-btn-sm" type="submit" [disabled]="!newSong.title.trim() && !newSong.sourceUrl.trim()">
+          ➕ Añadir a la Playlist
+        </button>
+      </div>
+    </form>
+  </div>
 
   <div *ngIf="loadingDj" class="nw-alert info">Cargando canciones solicitadas...</div>
 

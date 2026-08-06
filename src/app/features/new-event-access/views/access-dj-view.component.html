@@ -1,0 +1,148 @@
+<section class="nw-card">
+  <div class="nw-card-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <span class="nw-pill gold" style="text-transform: uppercase; font-size: 11px;">Música & Playlist</span>
+      <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 24px; font-weight: 800;">🎧 Cabina de DJ</h2>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+      <button class="nw-btn nw-btn-gold nw-btn-sm" type="button" (click)="showAddForm = !showAddForm">
+        {{ showAddForm ? '✕ Cerrar formulario' : '➕ Agregar Canción' }}
+      </button>
+      <span class="nw-pill warning" style="font-size: 13px; font-weight: 700;">{{ songPendingCount }} Pendientes</span>
+      <span class="nw-pill success" style="font-size: 13px; font-weight: 700;">{{ songApprovedCount }} Aprobadas</span>
+      <span class="nw-pill info" style="font-size: 13px; font-weight: 700;">{{ songPlayedCount }} Sonadas</span>
+    </div>
+  </div>
+
+  <!-- Form: Add Song (Internal / YouTube) -->
+  <div *ngIf="showAddForm" class="nw-card" style="background: var(--nw-surface-2); border: 1px solid var(--nw-border); padding: 20px; margin-bottom: 24px; border-radius: var(--nw-radius);">
+    <h3 style="margin: 0 0 12px; font-size: 16px; font-weight: 700; color: var(--nw-text);">
+      🎵 Agregar Canción Interna (YouTube / Enlace)
+    </h3>
+    <form (ngSubmit)="submitNewSong()" style="display: grid; gap: 14px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <label class="nw-label" style="margin-bottom: 0;">
+          Título de la Canción
+          <input class="nw-input" name="title" [(ngModel)]="newSong.title" placeholder="ej. Amor Eterno">
+        </label>
+        <label class="nw-label" style="margin-bottom: 0;">
+          Artista / Grupo
+          <input class="nw-input" name="artist" [(ngModel)]="newSong.artist" placeholder="ej. Juan Gabriel">
+        </label>
+      </div>
+
+      <label class="nw-label" style="margin-bottom: 0;">
+        Link de YouTube o Enlace de audio (opcional)
+        <input class="nw-input" name="sourceUrl" [(ngModel)]="newSong.sourceUrl" placeholder="https://www.youtube.com/watch?v=...">
+      </label>
+
+      <!-- Live YouTube Thumbnail Preview -->
+      <div *ngIf="getYouTubeThumbnail(newSong.sourceUrl)" style="display: flex; align-items: center; gap: 12px; background: var(--nw-surface); padding: 10px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+        <img [src]="getYouTubeThumbnail(newSong.sourceUrl)" alt="YouTube Preview" style="width: 80px; height: 60px; object-fit: cover; border-radius: 6px;">
+        <div>
+          <span class="nw-pill red" style="font-size: 10px;">YouTube Detectado</span>
+          <p style="margin: 4px 0 0; font-size: 13px; font-weight: 600;">Vista previa de portada lista</p>
+        </div>
+      </div>
+
+      <label class="nw-label" style="margin-bottom: 0;">
+        Nota o Dedicatoria (opcional)
+        <input class="nw-input" name="dedication" [(ngModel)]="newSong.dedication" placeholder="ej. Solicitud interna para abrir la pista">
+      </label>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showAddForm = false">Cancelar</button>
+        <button class="nw-btn nw-btn-primary nw-btn-sm" type="submit" [disabled]="!newSong.title.trim() && !newSong.sourceUrl.trim()">
+          ➕ Añadir a la Playlist
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filters & Search -->
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="songFilter === 'all'" [class.nw-btn-ghost]="songFilter !== 'all'" (click)="songFilter = 'all'">
+        Todas ({{ (session.songRequests || []).length }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="songFilter === 'pending'" [class.nw-btn-ghost]="songFilter !== 'pending'" (click)="songFilter = 'pending'">
+        Pendientes ({{ songPendingCount }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="songFilter === 'approved'" [class.nw-btn-ghost]="songFilter !== 'approved'" (click)="songFilter = 'approved'">
+        Aprobadas ({{ songApprovedCount }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="songFilter === 'played'" [class.nw-btn-ghost]="songFilter !== 'played'" (click)="songFilter = 'played'">
+        Sonadas ({{ songPlayedCount }})
+      </button>
+      <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="songFilter === 'rejected'" [class.nw-btn-ghost]="songFilter !== 'rejected'" (click)="songFilter = 'rejected'">
+        Rechazadas ({{ songRejectedCount }})
+      </button>
+    </div>
+    <input class="nw-input" [(ngModel)]="songSearch" placeholder="🔍 Buscar canción, artista o invitado..." style="max-width: 260px; margin-left: auto;">
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="filteredSongRequests.length === 0" style="text-align: center; padding: 48px; border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm); color: var(--nw-text-3);">
+    <p style="font-size: 16px; margin: 0;">No hay solicitudes de canciones en este filtro. 🎵</p>
+  </div>
+
+  <!-- Song list -->
+  <div style="display: grid; gap: 14px;">
+    <div *ngFor="let song of filteredSongRequests" class="nw-dj-track-card">
+      <div class="nw-dj-track-header">
+        <div class="nw-dj-track-main">
+          <!-- Reorder buttons column -->
+          <div class="nw-dj-reorder-col">
+            <button class="nw-dj-reorder-btn" type="button" (click)="moveSong(song, -1)" title="Subir en playlist">▲</button>
+            <button class="nw-dj-reorder-btn" type="button" (click)="moveSong(song, 1)" title="Bajar en playlist">▼</button>
+          </div>
+
+          <div class="nw-dj-cover-box" (click)="playSong(song)" title="Escuchar en la página">
+            <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Cover">
+            <span *ngIf="!song.thumbnailUrl">🎵</span>
+            <div class="nw-dj-cover-overlay">▶</div>
+          </div>
+          
+          <div class="nw-dj-track-details">
+            <h3 class="nw-dj-track-title" (click)="playSong(song)" title="Escuchar en la página">
+              {{ song.title }}
+            </h3>
+            <p class="nw-dj-track-artist">
+              {{ song.artist || 'Artista no especificado' }}
+            </p>
+            <p class="nw-dj-track-requester">
+              <span>👤</span> Pedida por: <strong>{{ getGuestName(song.guest, song.requesterName) }}</strong>
+            </p>
+          </div>
+        </div>
+
+        <div class="nw-dj-track-meta">
+          <span class="nw-pill" [class.warning]="song.status === 'pending'" [class.success]="song.status === 'approved'" [class.info]="song.status === 'played'" [class.danger]="song.status === 'rejected'" style="margin: 0;">
+            {{ song.status === 'pending' ? 'Pendiente ⏳' : (song.status === 'approved' ? 'Aprobada 👍' : (song.status === 'played' ? 'Sonada ✅' : 'Rechazada ✕')) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Dedication text if present -->
+      <div *ngIf="song.dedication" class="nw-dj-dedication-box">
+        <span>💬</span> <span>"{{ song.dedication }}"</span>
+      </div>
+
+      <!-- Actions bar -->
+      <div class="nw-dj-action-bar">
+        <button *ngIf="song.sourceUrl || song.previewUrl" class="nw-dj-btn nw-dj-btn-listen" type="button" (click)="playSong(song)">
+          ▶ Escuchar
+        </button>
+        <button *ngIf="song.status !== 'approved'" class="nw-dj-btn nw-dj-btn-approve" type="button" (click)="updateSongStatus(song, 'approved')">
+          ✓ Aprobar
+        </button>
+        <button *ngIf="song.status !== 'played'" class="nw-dj-btn nw-dj-btn-played" type="button" (click)="updateSongStatus(song, 'played')">
+          ▶ Sonar / Tocada
+        </button>
+        <button *ngIf="song.status !== 'rejected'" class="nw-dj-btn nw-dj-btn-reject" type="button" (click)="updateSongStatus(song, 'rejected')">
+          ✕ Rechazar
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

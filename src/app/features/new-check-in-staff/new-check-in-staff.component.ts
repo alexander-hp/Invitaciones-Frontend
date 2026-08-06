@@ -62,6 +62,18 @@ export class NewCheckInStaffComponent implements OnInit {
     });
   }
 
+  guestStatusFilter: 'all' | 'checkedIn' | 'pending' = 'all';
+
+  showSuccess(text: string): void {
+    this.message = text;
+    setTimeout(() => { this.message = ''; }, 3500);
+  }
+
+  showError(text: string): void {
+    this.error = text;
+    setTimeout(() => { this.error = ''; }, 4000);
+  }
+
   async checkIn(autoConfirm = false): Promise<void> {
     const token = this.token;
     const code = this.code.trim();
@@ -76,8 +88,6 @@ export class NewCheckInStaffComponent implements OnInit {
     }
 
     this.checking = true;
-    this.message = '';
-    this.error = '';
     this.api.staffCheckIn(token, codeToSend).subscribe({
       next: ({ guest }) => {
         this.guests = this.guests.map((item) =>
@@ -86,25 +96,65 @@ export class NewCheckInStaffComponent implements OnInit {
         if (!this.guests.some((item) => this.getGuestId(item) === this.getGuestId(guest))) {
           this.guests = [guest, ...this.guests];
         }
-        this.message = `${guest.name} registrado ✅`;
+        this.showSuccess(`${guest.name} registrado con éxito ✅`);
         this.code = '';
         this.checking = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo registrar la entrada.';
+        this.showError(error.error?.message || 'No se pudo registrar la entrada.');
         this.checking = false;
       }
     });
   }
 
+  selectedTable = 'all';
+
+  get availableTables(): string[] {
+    const tables = new Set<string>();
+    (this.guests || []).forEach((g: GuestModel) => {
+      if (g.tableName && g.tableName.trim()) {
+        tables.add(g.tableName.trim());
+      }
+    });
+    return Array.from(tables).sort();
+  }
+
   get filteredGuests(): GuestModel[] {
     const query = this.search.toLowerCase().trim();
-    if (!query) return this.guests;
-    return this.guests.filter((guest) =>
+    let guests = this.guests;
+
+    if (this.guestStatusFilter === 'checkedIn') {
+      guests = guests.filter((g) => g.checkedIn);
+    } else if (this.guestStatusFilter === 'pending') {
+      guests = guests.filter((g) => !g.checkedIn);
+    }
+
+    if (this.selectedTable !== 'all') {
+      if (this.selectedTable === 'Sin mesa') {
+        guests = guests.filter((g) => !g.tableName || !g.tableName.trim());
+      } else {
+        guests = guests.filter((g) => (g.tableName || '').trim() === this.selectedTable);
+      }
+    }
+
+    if (!query) return guests;
+    return guests.filter((guest) =>
       [guest.name, guest.group, guest.tableName, guest.checkInCode, guest.qrCode, guest.invitationToken].some((value) =>
         (value || '').toLowerCase().includes(query)
       )
     );
+  }
+
+  checkInDirectly(guest: GuestModel): void {
+    const code = guest.checkInCode || guest.qrCode || guest.invitationToken || this.getGuestId(guest);
+    if (code) {
+      this.code = code;
+      this.checkIn(true);
+    }
+  }
+
+  get guestPendingCount(): number {
+    return this.guests.filter((g) => !g.checkedIn).length;
   }
 
   get checkedInCount(): number {

@@ -43,6 +43,19 @@ export class NewEventAccessComponent implements OnInit {
     this.checkIn();
   }
 
+  // Check-in filter & toast state
+  guestStatusFilter: 'all' | 'checkedIn' | 'confirmed' | 'pending' | 'declined' = 'all';
+
+  showSuccess(text: string): void {
+    this.message = text;
+    setTimeout(() => { this.message = ''; }, 3500);
+  }
+
+  showError(text: string): void {
+    this.error = text;
+    setTimeout(() => { this.error = ''; }, 4000);
+  }
+
   // DJ tab / section state
   songFilter: 'all' | 'pending' | 'approved' | 'played' | 'rejected' = 'all';
   songSearch = '';
@@ -80,8 +93,8 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
-  async checkIn(autoConfirm = false): Promise<void> {
-    const code = this.code.trim();
+  async checkIn(codeOverride?: string, autoConfirm = false): Promise<void> {
+    const code = (codeOverride || this.code).trim();
     if (!code) return;
 
     let codeToSend = code;
@@ -93,8 +106,6 @@ export class NewEventAccessComponent implements OnInit {
     }
 
     this.checking = true;
-    this.message = '';
-    this.error = '';
     this.api.eventAccessCheckIn(this.token, codeToSend).subscribe({
       next: ({ guest }) => {
         if (this.session) {
@@ -102,15 +113,22 @@ export class NewEventAccessComponent implements OnInit {
             this.getGuestId(item) === this.getGuestId(guest) ? guest : item
           );
         }
-        this.message = `${guest.name} registrado ✅`;
+        this.showSuccess(`${guest.name} registrado con éxito ✅`);
         this.code = '';
         this.checking = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo registrar la entrada.';
+        this.showError(error.error?.message || 'No se pudo registrar la entrada.');
         this.checking = false;
       }
     });
+  }
+
+  checkInDirectly(guest: GuestModel): void {
+    const code = guest.checkInCode || guest.qrCode || guest.invitationToken || this.getGuestId(guest);
+    if (code) {
+      this.checkIn(code, true);
+    }
   }
 
   updateAlbum(asset: AlbumAssetModel, status: AlbumAssetModel['status']): void {
@@ -123,9 +141,9 @@ export class NewEventAccessComponent implements OnInit {
             (item._id || item.id) === assetId ? updated : item
           );
         }
-        this.message = 'Álbum actualizado.';
+        this.showSuccess('Estado de foto en álbum actualizado.');
       },
-      error: (error) => this.error = error.error?.message || 'No se pudo actualizar el álbum.'
+      error: (error) => this.showError(error.error?.message || 'No se pudo actualizar el álbum.')
     });
   }
 
@@ -206,31 +224,84 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
+  addSong(payload: { title: string; artist: string; sourceUrl: string; dedication: string }): void {
+    if (!this.token) return;
+    this.api.addEventAccessSong(this.token, {
+      title: payload.title,
+      artist: payload.artist,
+      sourceUrl: payload.sourceUrl,
+      dedication: payload.dedication,
+      requesterName: 'DJ (Cabina)'
+    }).subscribe({
+      next: ({ songRequest }) => {
+        if (this.session) {
+          this.session.songRequests = [songRequest, ...(this.session.songRequests || [])];
+        }
+        this.showSuccess(`Canción "${songRequest.title}" agregada a la lista ✅`);
+      },
+      error: (error) => this.showError(error.error?.message || 'No se pudo agregar la canción.')
+    });
+  }
+
   updateSong(songRequest: SongRequestModel, status: SongRequestStatus): void {
     this.updateSongRequest(songRequest, status);
   }
 
   hasPermission(permission: string): boolean {
+    if (!this.session) return false;
+    const role = this.session.role;
+    const perms = this.session.permissions || [];
+
     if (permission === 'dj' || permission === 'song_requests' || permission === 'song_review') {
-      return Boolean(
-        this.session?.role === 'dj' ||
-        this.session?.permissions?.includes('dj') ||
-        this.session?.permissions?.includes('song_requests') ||
-        this.session?.permissions?.includes('song_review')
-      );
+      return role === 'dj' || perms.includes('dj') || perms.includes('song_requests') || perms.includes('song_review') || perms.includes('manage_songs');
     }
-    return Boolean(this.session?.permissions?.includes(permission));
+    if (permission === 'check_in') {
+      return role === 'check_in' || perms.includes('check_in');
+    }
+    if (permission === 'album_review' || permission === 'review_album') {
+      return role === 'album_review' || perms.includes('album_review') || perms.includes('review_album');
+    }
+    if (permission === 'client_view') {
+      return role === 'client_view' || perms.includes('client_view');
+    }
+    if (permission === 'guest_ops' || permission === 'manage_guests') {
+      return role === 'guest_ops' || perms.includes('guest_ops') || perms.includes('manage_guests');
+    }
+    return perms.includes(permission) || role === permission;
   }
 
   get filteredGuests(): GuestModel[] {
     const query = this.search.toLowerCase().trim();
-    const guests = this.session?.guests || [];
+    let guests = this.session?.guests || [];
+
+    if (this.guestStatusFilter === 'checkedIn') {
+      guests = guests.filter((g) => g.checkedIn);
+    } else if (this.guestStatusFilter === 'confirmed') {
+      guests = guests.filter((g) => !g.checkedIn && g.status === 'confirmed');
+    } else if (this.guestStatusFilter === 'pending') {
+      guests = guests.filter((g) => !g.checkedIn && (g.status === 'pending' || !g.status));
+    } else if (this.guestStatusFilter === 'declined') {
+      guests = guests.filter((g) => !g.checkedIn && g.status === 'declined');
+    }
+
     if (!query) return guests;
     return guests.filter((guest) =>
-      [guest.name, guest.group, guest.tableName, guest.checkInCode].some((value) =>
+      [guest.name, guest.group, guest.tableName, guest.checkInCode, guest.qrCode, guest.invitationToken].some((value) =>
         (value || '').toLowerCase().includes(query)
       )
     );
+  }
+
+  get guestConfirmedCount(): number {
+    return (this.session?.guests || []).filter((g) => !g.checkedIn && g.status === 'confirmed').length;
+  }
+
+  get guestPendingCount(): number {
+    return (this.session?.guests || []).filter((g) => !g.checkedIn && (g.status === 'pending' || !g.status)).length;
+  }
+
+  get guestDeclinedCount(): number {
+    return (this.session?.guests || []).filter((g) => !g.checkedIn && g.status === 'declined').length;
   }
 
   get filteredSongRequests(): SongRequestModel[] {
