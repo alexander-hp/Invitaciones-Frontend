@@ -22,7 +22,7 @@
     </div>
 
     <ng-container *ngIf="invitation">
-      <!-- Top Page Header (Menu 1 Standard Layout) -->
+      <!-- Top Page Header -->
       <div class="nw-page-header nw-editor-sticky-header">
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; width:100%;">
           <div>
@@ -49,984 +49,143 @@
         </div>
       </div>
 
-      <!-- Barra de navegación rápida y colapso de secciones -->
-      <div class="nw-editor-quick-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; padding:12px 18px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span style="font-weight:700; font-size:14px; color:var(--nw-text);">📁 Secciones del editor:</span>
-          <span class="nw-pill gold" style="font-size:12px;">Tarjetas colapsables</span>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="expandAllSections()">
-            📖 Expandir todo
-          </button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="collapseAllSections()">
-            📁 Colapsar todo
-          </button>
-        </div>
+      <!-- Barra de pestañas de navegación (Tabs) -->
+      <div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:20px; padding:6px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'content'" [class.nw-btn-ghost]="activeTab !== 'content'" (click)="setActiveTab('content')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          📝 Contenido
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'style'" [class.nw-btn-ghost]="activeTab !== 'style'" (click)="setActiveTab('style')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          🎨 Estilo
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'itinerary'" [class.nw-btn-ghost]="activeTab !== 'itinerary'" (click)="setActiveTab('itinerary')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          🕐 Itinerario
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'locations'" [class.nw-btn-ghost]="activeTab !== 'locations'" (click)="setActiveTab('locations')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          📍 Ubicaciones
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'rsvp'" [class.nw-btn-ghost]="activeTab !== 'rsvp'" (click)="setActiveTab('rsvp')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          💌 RSVP
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'gifts'" [class.nw-btn-ghost]="activeTab !== 'gifts'" (click)="setActiveTab('gifts')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          🎁 Regalos
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'dedications'" [class.nw-btn-ghost]="activeTab !== 'dedications'" (click)="setActiveTab('dedications')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          💬 Dedicatorias
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'assets'" [class.nw-btn-ghost]="activeTab !== 'assets'" (click)="setActiveTab('assets')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          🖼️ Archivos
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'plans'" [class.nw-btn-ghost]="activeTab !== 'plans'" (click)="setActiveTab('plans')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          💎 Plantillas / Plan
+        </button>
+        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'all'" [class.nw-btn-ghost]="activeTab !== 'all'" (click)="setActiveTab('all')" style="font-weight:700; font-size:13px; padding:8px 14px;">
+          📖 Ver todo
+        </button>
       </div>
 
-      <!-- ═══════════ 1. CONTENIDO ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('content')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('content')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">📝 Contenido</h3>
-            <span *ngIf="isSectionCollapsed('content')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
-          </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('content') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('content')" style="padding-top:16px;">
-          <div class="nw-form-grid" style="gap:16px;">
-            <label class="nw-label nw-form-wide">Slug (URL)
-              <input class="nw-input" [(ngModel)]="invitation.slug" required placeholder="mi-boda">
-            </label>
-            <label class="nw-label">Acceso RSVP
-              <select class="nw-select" [(ngModel)]="invitation.accessMode">
-                <option value="public">Publica: todos pueden verla y confirmar</option>
-                <option value="guest_list">Lista cerrada: solo invitados registrados</option>
-                <option value="specific_users">Usuarios especificos: roles, grupos, correos o telefonos</option>
-                <option value="open">Abierta: cualquiera con el link</option>
-              </select>
-            </label>
-            <label class="nw-label">Titular
-              <input class="nw-input" [(ngModel)]="invitation.content.headline" placeholder="Boda Ana & Carlos">
-            </label>
-            <label class="nw-label">Subtítulo
-              <input class="nw-input" [(ngModel)]="invitation.content.subheadline"
-                placeholder="Nos encantaría que nos acompañes">
-            </label>
-            <label class="nw-label nw-form-wide">Mensaje
-              <textarea class="nw-input" [(ngModel)]="invitation.content.message" rows="3"
-                placeholder="Confirma tu asistencia..."></textarea>
-            </label>
-            <label class="nw-label">Dress code
-              <input class="nw-input" [(ngModel)]="invitation.content.dressCode" placeholder="Formal / Casual elegante">
-            </label>
-            <label class="nw-label">Logo anfitrión
-              <input class="nw-input" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png">
-            </label>
-            <div class="nw-toggle-row nw-form-wide">
-              <div class="nw-toggle-info">
-                <strong>Ocultar marca KyndraSoft</strong>
-                <span>Remueve la marca y créditos de KyndraSoft (Requiere plan Pro).</span>
-              </div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel()">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-          </div>
-          <p *ngIf="invitation.accessMode === 'guest_list'"
-            style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En lista cerrada, la persona debe validar su
-            correo o telefono antes de confirmar asistencia.</p>
-          <p *ngIf="invitation.accessMode === 'specific_users'"
-            style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">Usa roles, grupos, correos o telefonos para
-            una invitacion segmentada: padrinos, damas, VIP o familia.</p>
-          <p *ngIf="invitation.accessMode === 'open' || invitation.accessMode === 'public'"
-            style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo publico, cualquiera con el link puede
-            ver la invitacion y enviar RSVP.</p>
-          <p *ngIf="!canUseWhiteLabel()" style="font-size:13px; color:var(--nw-warning); margin:8px 0 0;">Marca blanca
-            requiere plan Pro.</p>
+      <!-- Pestañas de contenido -->
+      <app-editor-content-tab
+        *ngIf="activeTab === 'content' || activeTab === 'all'"
+        [invitation]="invitation"
+        [canUseWhiteLabel]="canUseWhiteLabel()"
+        (applyTextVariant)="applyTextVariant($event)">
+      </app-editor-content-tab>
 
-          <!-- Variantes de texto -->
-          <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
-            <span style="font-size:13px; color:var(--nw-text-3); align-self:center;">Variantes rápidas:</span>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyTextVariant('formal')">Texto
-              formal</button>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyTextVariant('warm')">Texto
-              cálido</button>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyTextVariant('brief')">Texto
-              breve</button>
-          </div>
-        </div>
-      </div>
+      <app-editor-style-tab
+        *ngIf="activeTab === 'style' || activeTab === 'all'"
+        [invitation]="invitation"
+        [palettePresets]="palettePresets"
+        (applyPalette)="applyPalette($event)">
+      </app-editor-style-tab>
 
-      <!-- ═══════════ 2. ESTILO ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('style')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('style')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">🎨 Estilo y colores</h3>
-            <span *ngIf="isSectionCollapsed('style')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
-          </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('style') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('style')" style="padding-top:16px;">
-          <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.content.palette as palette">
-            <label class="nw-label">Color principal
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input class="nw-input" [(ngModel)]="palette.primary" style="flex:1;">
-                <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);"
-                  [style.background]="palette.primary"></span>
-              </div>
-            </label>
-            <label class="nw-label">Color fondo
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input class="nw-input" [(ngModel)]="palette.secondary" style="flex:1;">
-                <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);"
-                  [style.background]="palette.secondary"></span>
-              </div>
-            </label>
-            <label class="nw-label">Color acento
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input class="nw-input" [(ngModel)]="palette.accent" style="flex:1;">
-                <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);"
-                  [style.background]="palette.accent"></span>
-              </div>
-            </label>
-          </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
-            <button *ngFor="let preset of palettePresets" class="nw-btn nw-btn-ghost nw-btn-sm" type="button"
-              (click)="applyPalette(preset)" style="display:flex; align-items:center; gap:6px;">
-              <span style="display:flex; gap:2px;">
-                <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.primary"></span>
-                <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.secondary"></span>
-                <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.accent"></span>
-              </span>
-              {{ preset.name }}
-            </button>
-          </div>
-        </div>
-      </div>
+      <app-editor-itinerary-tab
+        *ngIf="activeTab === 'itinerary' || activeTab === 'all'"
+        [invitation]="invitation"
+        [event]="event"
+        (addItineraryItem)="addItineraryItem()"
+        (removeItineraryItem)="removeItineraryItem($event)"
+        (moveItineraryItem)="moveItineraryItem($event.index, $event.dir)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-itinerary-tab>
 
-      <!-- ═══════════ 3. ITINERARIO ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('itinerary')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('itinerary')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">🕐 Itinerario</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('itinerary')" [class.warning]="!isSectionActive('itinerary')">
-              {{ isSectionActive('itinerary') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar itinerario en la invitación">
-              <input type="checkbox" [checked]="isSectionActive('itinerary')" (change)="toggleSectionActive('itinerary', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addItineraryItem()">+ Agregar horario</button>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('itinerary')">
-              {{ isSectionCollapsed('itinerary') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('itinerary')" style="padding-top:16px;">
-          <p *ngIf="!invitation.content.itinerary?.length" style="font-size:14px; color:var(--nw-text-3);">Sin horarios
-            configurados. Agrega momentos del evento.</p>
-          <div style="display:grid; gap:12px;">
-            <div *ngFor="let item of invitation.content.itinerary; let i = index"
-              style="display:flex; gap:10px; align-items:flex-start; padding:12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
-              <div style="flex:1; display:grid; grid-template-columns:120px 1fr; gap:8px;">
-                <input type="time" class="nw-input" [(ngModel)]="item.time" title="Seleccionar hora">
-                <input class="nw-input" [(ngModel)]="item.title" placeholder="Ceremonia / Recepción">
-                <input class="nw-input" [(ngModel)]="item.description" placeholder="Jardín principal / Salón"
-                  style="grid-column:span 2;">
-              </div>
-              <div style="display:flex; flex-direction:column; gap:4px;">
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem(i, -1)"
-                  [disabled]="i === 0">↑</button>
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem(i, 1)"
-                  [disabled]="i === invitation.content.itinerary!.length - 1">↓</button>
-                <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeItineraryItem(i)">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <app-editor-locations-tab
+        *ngIf="activeTab === 'locations' || activeTab === 'all'"
+        [invitation]="invitation"
+        [event]="event"
+        [locationSearchResults]="locationSearchResults"
+        [locationSearchLoading]="locationSearchLoading"
+        [locationExtractLoading]="locationExtractLoading"
+        (addLocation)="addLocation()"
+        (removeLocation)="removeLocation($event)"
+        (searchLocation)="onLocationNameInput($event.index, $event.query)"
+        (selectSearchResult)="selectLocationSearchResult($event.index, $event.result)"
+        (extractMapInfo)="extractInfoFromMapUrl($event)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-locations-tab>
 
-      <!-- ═══════════ 4. UBICACIONES ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('locations')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('locations')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">📍 Ubicaciones</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('locations')" [class.warning]="!isSectionActive('locations')">
-              {{ isSectionActive('locations') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar ubicaciones en la invitación">
-              <input type="checkbox" [checked]="isSectionActive('locations')" (change)="toggleSectionActive('locations', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLocation()">+ Agregar ubicación</button>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('locations')">
-              {{ isSectionCollapsed('locations') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('locations')" style="padding-top:16px;">
-          <p *ngIf="!invitation.content.locations?.length" style="font-size:14px; color:var(--nw-text-3);">Sin ubicaciones
-            configuradas.</p>
-          <div style="display:grid; gap:12px;">
-            <div *ngFor="let location of invitation.content.locations; let i = index"
-              style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
-              <div class="nw-form-grid" style="gap:10px;">
-                <label class="nw-label">Tipo <input class="nw-input" [(ngModel)]="location.type"
-                    placeholder="Iglesia, recepción, hotel"></label>
+      <app-editor-rsvp-rules-tab
+        *ngIf="activeTab === 'rsvp' || activeTab === 'all'"
+        [invitation]="invitation"
+        [customQuestionsList]="customQuestionsList"
+        [(allowedRolesText)]="allowedRolesText"
+        [(allowedGroupsText)]="allowedGroupsText"
+        [(allowedEmailsText)]="allowedEmailsText"
+        [(allowedPhonesText)]="allowedPhonesText"
+        (toggleIdentityMethod)="toggleIdentityMethod($event.method, $event.checked)"
+        (addCustomQuestion)="addCustomQuestion()"
+        (removeCustomQuestion)="removeCustomQuestion($event)"
+        (addQuestionPreset)="addQuestionPreset($event)"
+        (syncQuestions)="syncCustomQuestionsToPayload()"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-rsvp-rules-tab>
 
-                <label class="nw-label" style="position: relative;">
-                  Nombre / Buscar lugar 🔍
-                  <input class="nw-input" [(ngModel)]="location.name" (input)="onLocationNameInput(i, location.name)"
-                    placeholder="Ej. Parroquia / Salón / Hacienda">
-                  <span *ngIf="locationSearchLoading[i]"
-                    style="font-size: 11px; color: var(--nw-primary, #2563eb); display: block; margin-top: 2px;">Buscando
-                    sugerencias...</span>
+      <app-editor-gifts-tab
+        *ngIf="activeTab === 'gifts' || activeTab === 'all'"
+        [invitation]="invitation"
+        [assetUploading]="assetUploading"
+        (addGiftItem)="addGiftRegistryItem()"
+        (removeGiftItem)="removeGiftRegistryItem($event)"
+        (uploadEnvelopeQr)="uploadEnvelopeQr($event)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-gifts-tab>
 
-                  <ul *ngIf="locationSearchResults[i]?.length"
-                    style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); list-style: none; padding: 4px 0; margin: 4px 0 0 0; max-height: 220px; overflow-y: auto;">
-                    <li *ngFor="let res of locationSearchResults[i]" (click)="selectLocationSearchResult(i, res)"
-                      style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--nw-border-subtle, #f1f5f9); display: flex; flex-direction: column; text-align: left;">
-                      <strong style="font-size: 13px; color: var(--nw-text-1, #1e293b);">{{ res.name }}</strong>
-                      <small *ngIf="res.address"
-                        style="font-size: 11px; color: var(--nw-text-3, #64748b); margin-top: 2px;">{{ res.address
-                        }}</small>
-                    </li>
-                  </ul>
-                </label>
+      <app-editor-dedications-tab
+        *ngIf="activeTab === 'dedications' || activeTab === 'all'"
+        [invitation]="invitation"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-dedications-tab>
 
-                <label class="nw-label nw-form-wide">Dirección <input class="nw-input" [(ngModel)]="location.address"
-                    placeholder="Calle, número, colonia, ciudad"></label>
+      <app-editor-assets-tab
+        *ngIf="activeTab === 'assets' || activeTab === 'all'"
+        [invitation]="invitation"
+        [assetUploading]="assetUploading"
+        [musicError]="musicError"
+        (selectAsset)="selectAsset($event.event, $event.folder)"
+        (removeCover)="removeCover()"
+        (removeMusic)="removeMusic()"
+        (removeGalleryImage)="removeGalleryImage($event)"
+        (uploadSectionMusic)="uploadSectionMusic($event.event, $event.sectionKey)"
+        (removeSectionMusic)="removeSectionMusic($event)"
+        (musicPlaybackError)="onMusicPlaybackError()"
+        (addLodgingItem)="addLodgingItem()"
+        (removeLodgingItem)="removeLodgingItem($event)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-assets-tab>
 
-                <label class="nw-label nw-form-wide">
-                  Google Maps 📍
-                  <span
-                    style="font-weight: normal; font-size: 12px; color: var(--nw-text-3, #6b7280); margin-left: 4px;">(Escribe
-                    o pega el enlace)</span>
-                  <div style="display: flex; gap: 8px; margin-top: 4px;">
-                    <input class="nw-input" [(ngModel)]="location.mapUrl"
-                      placeholder="https://maps.app.goo.gl/... o https://google.com/maps/..." style="flex: 1;">
-                    <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="extractInfoFromMapUrl(i)"
-                      [disabled]="!location.mapUrl || locationExtractLoading[i]" style="white-space: nowrap;">
-                      {{ locationExtractLoading[i] ? 'Extrayendo...' : '⚡ Extraer datos' }}
-                    </button>
-                  </div>
-                </label>
+      <app-editor-plans-tab
+        *ngIf="activeTab === 'plans' || activeTab === 'all'"
+        [invitation]="invitation"
+        [event]="event"
+        [templates]="templates"
+        [plans]="plans"
+        [currentPlan]="currentPlan"
+        [checkoutLoading]="checkoutLoading"
+        [payments]="payments"
+        (applyTemplate)="applyTemplate($event)"
+        (checkout)="checkout($event)">
+      </app-editor-plans-tab>
 
-                <label class="nw-label">Waze 🚗 <input class="nw-input" [(ngModel)]="location.wazeUrl"
-                    placeholder="https://waze.com/..."></label>
-                <label class="nw-label nw-form-wide">Notas <input class="nw-input" [(ngModel)]="location.notes"
-                    placeholder="Entrada por avenida principal"></label>
-              </div>
-              <div
-                style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <small style="color: var(--nw-text-3, #6b7280);">💡 Busca por nombre para autocompletar o pega un enlace
-                  de Google Maps y presiona <strong>⚡ Extraer datos</strong>.</small>
-                <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLocation(i)">Quitar
-                  ubicación</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 5. RSVP ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('rsvp_rules')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('rsvp_rules')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">💌 Reglas RSVP</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('rsvp_rules')" [class.warning]="!isSectionActive('rsvp_rules')">
-              {{ isSectionActive('rsvp_rules') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar RSVP en la invitación">
-              <input type="checkbox" [checked]="isSectionActive('rsvp_rules')" (change)="toggleSectionActive('rsvp_rules', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('rsvp_rules')">
-              {{ isSectionCollapsed('rsvp_rules') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('rsvp_rules')" style="padding-top:16px;">
-        <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.rsvpSettings as rsvpSettings">
-          <label class="nw-label">Fecha límite RSVP
-            <input class="nw-input" type="datetime-local" [(ngModel)]="rsvpSettings.deadline">
-          </label>
-          <label class="nw-label">Días antes para recordatorio
-            <input class="nw-input" type="number" min="0" max="60"
-              [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline">
-          </label>
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>Permitir "No estoy seguro"</strong>
-              <span>Opción de respuesta intermedia al confirmar asistencia.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>Permitir cambios hasta la fecha límite</strong>
-              <span>Los invitados podrán modificar su RSVP libremente.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-          <div class="nw-toggle-row nw-form-wide">
-            <div class="nw-toggle-info">
-              <strong>Confirmación al declinar</strong>
-              <span>Pedir confirmación extra cuando un invitado indique que no asistirá.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>Confirmar por correo</strong>
-              <span>Requerir validación por email al enviar RSVP.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')"
-                (change)="toggleIdentityMethod('email', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>Confirmar por teléfono</strong>
-              <span>Requerir validación de teléfono/SMS al enviar RSVP.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')"
-                (change)="toggleIdentityMethod('phone', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>Permitir acompañantes por default</strong>
-              <span>Los invitados podrán especificar cuántas personas asisten.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-          <label class="nw-label">Máximo acompañantes default
-            <input class="nw-input" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions">
-          </label>
-          <label class="nw-label">Máximo asistentes total
-            <input class="nw-input" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150">
-          </label>
-          <ng-container *ngIf="invitation.accessMode === 'specific_users'">
-            <label class="nw-label">Roles permitidos<textarea class="nw-input" rows="3" [(ngModel)]="allowedRolesText"
-                placeholder="padrino&#10;dama_honor&#10;vip"></textarea></label>
-            <label class="nw-label">Grupos permitidos<textarea class="nw-input" rows="3" [(ngModel)]="allowedGroupsText"
-                placeholder="Familia novia&#10;Mesa VIP"></textarea></label>
-            <label class="nw-label">Correos permitidos<textarea class="nw-input" rows="3"
-                [(ngModel)]="allowedEmailsText" placeholder="correo@dominio.com"></textarea></label>
-            <label class="nw-label">Teléfonos permitidos<textarea class="nw-input" rows="3"
-                [(ngModel)]="allowedPhonesText" placeholder="2727088143"></textarea></label>
-          </ng-container>
-
-          <!-- Preguntas Personalizadas Visual Editor -->
-          <div class="nw-form-wide" style="margin-top:16px; border-top:1px solid var(--nw-border); padding-top:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <strong style="font-size:15px; color:var(--nw-text);">Preguntas personalizadas para tus invitados</strong>
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addCustomQuestion()">+ Agregar
-                pregunta</button>
-            </div>
-
-            <!-- Quick Presets -->
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
-              <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Sugeridas:</span>
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('song')">+ 🎵
-                Canción preferida</button>
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('diet')">+ 🥗
-                Restricciones alimenticias</button>
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('menu')">+ 🍽️
-                Selección de menú</button>
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset('transport')">+ 🚌
-                Transporte</button>
-            </div>
-
-            <p *ngIf="!customQuestionsList.length" style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
-              Sin preguntas personalizadas aún. Puedes agregar preguntas sugeridas o crear una propia.
-            </p>
-
-            <div style="display:grid; gap:12px;">
-              <div *ngFor="let q of customQuestionsList; let i = index"
-                style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-                <div class="nw-form-grid" style="gap:10px;">
-                  <label class="nw-label nw-form-wide">Pregunta / Texto
-                    <input class="nw-input" [(ngModel)]="q.label" (ngModelChange)="syncCustomQuestionsToPayload()"
-                      placeholder="Ej. ¿Tienes alguna alergia o dieta especial?">
-                  </label>
-                  <label class="nw-label">Tipo de respuesta
-                    <select class="nw-select" [(ngModel)]="q.type" (ngModelChange)="syncCustomQuestionsToPayload()">
-                      <option value="text">Texto corto</option>
-                      <option value="textarea">Texto largo / comentario</option>
-                      <option value="select">Opción múltiple (lista)</option>
-                      <option value="boolean">Casilla Sí / No</option>
-                    </select>
-                  </label>
-                  <div class="nw-toggle-row" style="padding:8px 12px;">
-                    <div class="nw-toggle-info">
-                      <strong style="font-size:13px;">¿Respuesta obligatoria?</strong>
-                    </div>
-                    <label class="nw-switch">
-                      <input type="checkbox" [(ngModel)]="q.required" (ngModelChange)="syncCustomQuestionsToPayload()">
-                      <span class="nw-slider"></span>
-                    </label>
-                  </div>
-                  <label class="nw-label nw-form-wide" *ngIf="q.type === 'select'">Opciones (separadas por punto y coma
-                    ;)
-                    <input class="nw-input" [(ngModel)]="q.optionsText"
-                      (ngModelChange)="q.options = parseOptionsText(q.optionsText); syncCustomQuestionsToPayload()"
-                      placeholder="Pollo; Carne; Vegetariano; Menú infantil">
-                  </label>
-                </div>
-                <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCustomQuestion(i)"
-                  style="margin-top:10px;">✕ Quitar pregunta</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-      <!-- ═══════════ 6. REGALOS & SOBRE DIGITAL ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('gifts')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('gifts')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">🎁 Regalos y Sobre Digital</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('gifts')" [class.warning]="!isSectionActive('gifts')">
-              {{ isSectionActive('gifts') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar sección de regalos">
-              <input type="checkbox" [checked]="isSectionActive('gifts')" (change)="toggleSectionActive('gifts', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addGiftRegistryItem()">+ Agregar mesa de regalos</button>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('gifts')">
-              {{ isSectionCollapsed('gifts') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('gifts')" style="padding-top:16px;">
-          <div class="nw-form-grid" style="gap:12px; margin-bottom:16px;"
-            *ngIf="invitation.content.giftSettings as giftSettings">
-            <div class="nw-toggle-row nw-form-wide">
-              <div class="nw-toggle-info">
-                <strong>Mostrar sección de regalos</strong>
-                <span>Habilita el módulo global de regalos en la invitación.</span>
-              </div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="giftSettings.enabled">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row">
-              <div class="nw-toggle-info">
-                <strong>Mostrar mesa de regalos</strong>
-                <span>Despliega los enlaces a las tiendas registradas.</span>
-              </div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="giftSettings.showRegistry">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row">
-              <div class="nw-toggle-info">
-                <strong>Mostrar sobre digital</strong>
-                <span>Muestra datos bancarios y código QR.</span>
-              </div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="giftSettings.showEnvelope">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <label class="nw-label nw-form-wide">Texto introductorio
-              <textarea class="nw-input" rows="2" [(ngModel)]="giftSettings.introText"
-                placeholder="Tu presencia es el mejor regalo..."></textarea>
-            </label>
-          </div>
-
-          <!-- Gift Registry Items -->
-          <div style="display:grid; gap:12px; margin-bottom:16px;">
-            <div *ngFor="let gift of invitation.content.giftRegistry; let i = index"
-              style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
-              <div class="nw-form-grid" style="gap:10px;">
-                <label class="nw-label">Tienda <input class="nw-input" [(ngModel)]="gift.store"
-                    placeholder="Liverpool"></label>
-                <label class="nw-label">Título <input class="nw-input" [(ngModel)]="gift.title"
-                    placeholder="Mesa de regalos"></label>
-                <label class="nw-label nw-form-wide">URL <input class="nw-input" [(ngModel)]="gift.url"
-                    placeholder="https://..."></label>
-                <label class="nw-label nw-form-wide">Imagen/logo <input class="nw-input" [(ngModel)]="gift.imageUrl"
-                    placeholder="https://.../logo.png"></label>
-                <label class="nw-label nw-form-wide">Nota <input class="nw-input" [(ngModel)]="gift.note"></label>
-                <label class="nw-label">Prioridad <input class="nw-input" type="number"
-                    [(ngModel)]="gift.priority"></label>
-              </div>
-              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGiftRegistryItem(i)"
-                style="margin-top:8px;">Quitar mesa</button>
-            </div>
-          </div>
-
-          <!-- Sobre Digital -->
-          <div *ngIf="invitation.content.digitalEnvelope as envelope"
-            style="padding:16px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-            <strong style="display:block; margin-bottom:12px; font-size:15px;">💳 Datos bancarios (sobre digital)</strong>
-            <div class="nw-form-grid" style="gap:12px;">
-              <label class="nw-label">Banco <input class="nw-input" [(ngModel)]="envelope.bank" placeholder="BBVA / Banamex / Nu"></label>
-              <label class="nw-label">Titular <input class="nw-input" [(ngModel)]="envelope.holder" placeholder="Nombre del titular"></label>
-              <label class="nw-label">Cuenta <input class="nw-input" [(ngModel)]="envelope.account" placeholder="Número de cuenta"></label>
-              <label class="nw-label">CLABE <input class="nw-input" [(ngModel)]="envelope.clabe" placeholder="18 dígitos CLABE"></label>
-
-              <div class="nw-form-wide" style="display:flex; flex-direction:column; gap:8px;">
-                <label class="nw-label">Foto / Imagen de Código QR (Banco, CoDi, SPEI, PayPal)</label>
-                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                  <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                    📤 Subir foto de QR
-                    <input type="file" accept="image/*" (change)="uploadEnvelopeQr($event)" [disabled]="assetUploading" style="display:none;">
-                  </label>
-                  <input class="nw-input" [(ngModel)]="envelope.qrImageUrl" placeholder="O pega enlace directo: https://.../qr.png" style="flex:1; min-width:240px;">
-                </div>
-                <div *ngIf="envelope.qrImageUrl" style="display:flex; align-items:center; gap:14px; margin-top:6px; padding:10px; background:#ffffff; border:1px solid var(--nw-border); border-radius:8px; width:fit-content;">
-                  <img [src]="envelope.qrImageUrl" alt="QR sobre digital" style="max-width:110px; max-height:110px; object-fit:contain; border-radius:6px; border:1px solid #e2e8f0;">
-                  <div style="display:flex; flex-direction:column; gap:6px;">
-                    <span style="font-size:12.5px; color:#1e293b; font-weight:600;">✅ Imagen de QR configurada</span>
-                    <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="envelope.qrImageUrl=''">✕ Eliminar QR</button>
-                  </div>
-                </div>
-              </div>
-
-              <label class="nw-label nw-form-wide">Nota / Instrucciones <textarea class="nw-input" rows="2"
-                  [(ngModel)]="envelope.note" placeholder="Si deseas realizarnos un obsequio en efectivo..."></textarea></label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 7. DEDICATORIAS ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('dedications')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('dedications')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">💬 Dedicatorias</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('dedications')" [class.warning]="!isSectionActive('dedications')">
-              {{ isSectionActive('dedications') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar dedicatorias">
-              <input type="checkbox" [checked]="isSectionActive('dedications')" (change)="toggleSectionActive('dedications', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('dedications')">
-              {{ isSectionCollapsed('dedications') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('dedications')" style="padding-top:16px;">
-          <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.dedicationSettings as dedicationSettings">
-            <div class="nw-toggle-row">
-              <div class="nw-toggle-info">
-                <strong>Permitir dedicatorias</strong>
-                <span>Muestra el muro de comentarios y deseos.</span>
-              </div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="dedicationSettings.enabled">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <div class="nw-toggle-row">
-              <div class="nw-toggle-info">
-                <strong>Requerir aprobación</strong>
-                <span>Revisar y aprobar los mensajes antes de hacerlos públicos.</span>
-              </div>
-              <label class="nw-switch">
-                <input type="checkbox" [(ngModel)]="dedicationSettings.requireApproval">
-                <span class="nw-slider"></span>
-              </label>
-            </div>
-            <label class="nw-label nw-form-wide">Texto introductorio
-              <textarea class="nw-input" rows="2" [(ngModel)]="dedicationSettings.introText"
-                placeholder="Deja un mensaje para los anfitriones."></textarea>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 8. ÁLBUM DE INVITADOS ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('guest_album')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('guest_album')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">📸 Álbum de invitados</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('guest_album')" [class.warning]="!isSectionActive('guest_album')">
-              {{ isSectionActive('guest_album') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar álbum de invitados">
-              <input type="checkbox" [checked]="isSectionActive('guest_album')" (change)="toggleSectionActive('guest_album', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('guest_album')">
-              {{ isSectionCollapsed('guest_album') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('guest_album')" style="padding-top:16px;">
-          <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:16px;">
-            Permite que tus invitados suban fotos del evento desde su invitación digital. Podrás revisarlas y aprobarlas
-            en la pestaña <strong>Álbum</strong> del evento.
-          </p>
-          <div class="nw-toggle-row">
-            <div class="nw-toggle-info">
-              <strong>Habilitar álbum de invitados</strong>
-              <span>Los invitados verán la opción para subir fotos en su invitación.</span>
-            </div>
-            <label class="nw-switch">
-              <input type="checkbox" [checked]="invitation.content.privateAlbumEnabled" (change)="togglePrivateAlbum()">
-              <span class="nw-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 9. HOSPEDAJE ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('lodging')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('lodging')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">🏨 Hospedaje Recomendado</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('lodging')" [class.warning]="!isSectionActive('lodging')">
-              {{ isSectionActive('lodging') ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar la sección hospedaje">
-              <input type="checkbox" [checked]="isSectionActive('lodging')" (change)="toggleSectionActive('lodging', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingItem()">+ Agregar hotel</button>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('lodging')">
-              {{ isSectionCollapsed('lodging') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('lodging')" style="padding-top:16px;">
-          <p *ngIf="!invitation.content.lodging?.length" style="font-size:14px; color:var(--nw-text-3);">
-            Sin hoteles configurados. Agrega sugerencias de alojamiento para tus invitados de fuera.
-          </p>
-          <div style="display:grid; gap:12px;">
-            <div *ngFor="let item of invitation.content.lodging; let i = index"
-              style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-              <div class="nw-form-grid" style="gap:10px;">
-                <label class="nw-label">Nombre del hotel / hospedaje
-                  <input class="nw-input" [(ngModel)]="item.name" placeholder="Hotel Gran Plaza">
-                </label>
-                <label class="nw-label">Descripción / Tarifa preferente
-                  <input class="nw-input" [(ngModel)]="item.description" placeholder="15% desc. con código BODA2026">
-                </label>
-                <label class="nw-label nw-form-wide">Link / Mapa del hotel (URL)
-                  <input class="nw-input" [(ngModel)]="item.url" placeholder="https://maps.google.com/...">
-                </label>
-              </div>
-              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLodgingItem(i)"
-                style="margin-top:10px;">✕ Quitar hotel</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 10. ASSETS ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('assets')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('assets')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">🖼️ Assets (Portada, Música, Galería)</h3>
-            <span class="nw-pill" [class.success]="isSectionActive('gallery')" [class.warning]="!isSectionActive('gallery')">
-              {{ isSectionActive('gallery') ? 'Galería Activa' : 'Galería Inactiva' }}
-            </span>
-          </div>
-          <div style="display:flex; align-items:center; gap:12px;" (click)="$event.stopPropagation()">
-            <label class="nw-switch" title="Activar / Desactivar galería de fotos">
-              <input type="checkbox" [checked]="isSectionActive('gallery')" (change)="toggleSectionActive('gallery', $any($event.target).checked)">
-              <span class="nw-slider"></span>
-            </label>
-            <button type="button" class="nw-collapse-btn" (click)="toggleSection('assets')">
-              {{ isSectionCollapsed('assets') ? '▲ Abrir' : '▼ Colapsar' }}
-            </button>
-          </div>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('assets')" style="padding-top:16px;">
-          <!-- Portada -->
-          <div style="margin-bottom:16px;">
-            <strong style="font-size:14px; display:block; margin-bottom:8px;">Portada</strong>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-                📁 Subir portada
-                <input type="file" accept="image/*" (change)="selectAsset($event, 'covers')" [disabled]="assetUploading"
-                  style="display:none;">
-              </label>
-              <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo...</span>
-            </div>
-            <div *ngIf="invitation.content.coverImageUrl"
-              style="margin-top:10px; position:relative; display:inline-block;">
-              <img [src]="invitation.content.coverImageUrl" alt="Portada" loading="lazy" decoding="async"
-                style="max-width:300px; max-height:200px; border-radius:var(--nw-radius-sm); object-fit:cover;">
-              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover()"
-                style="position:absolute; top:6px; right:6px;">✕ Quitar</button>
-            </div>
-          </div>
-
-          <!-- Configuración de Música y Audio por Sección -->
-          <div
-            style="margin-bottom:20px; background:var(--nw-surface-2); padding:16px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <div>
-                <strong style="font-size:15px; display:block;">🎵 Configuración de Música y Audio</strong>
-                <span style="font-size:12.5px; color:var(--nw-text-3);">Asigna una canción global o reproduce canciones
-                  específicas automáticamente cuando el invitado llega a cada sección (Focus).</span>
-              </div>
-            </div>
-
-            <!-- Música Global -->
-            <div
-              style="margin-bottom:16px; padding:14px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-              <strong style="font-size:13.5px; display:block; margin-bottom:6px; color:var(--nw-accent);">🎼 Música Global
-                (Fondo principal)</strong>
-              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-                  📁 Subir audio global
-                  <input type="file" accept="audio/*" (change)="selectAsset($event, 'music')" [disabled]="assetUploading"
-                    style="display:none;">
-                </label>
-                <input class="nw-input" [(ngModel)]="invitation.content.musicUrl"
-                  placeholder="URL canción global: https://.../cancion.mp3" style="flex:1; min-width:260px;">
-              </div>
-
-              <!-- Aviso sobre el estado de la música -->
-              <div *ngIf="invitation.content.musicUrl && !musicError"
-                style="margin-top:10px; padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <span style="font-size:16px;">🎵</span>
-                  <span style="font-size:13px; color:#166534; font-weight:600;">Estado: Audio configurado y activo para reproducción de fondo en la invitación (HTTP 200).</span>
-                </div>
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="removeMusic()" style="color:#991b1b; border-color:#fca5a5;">✕ Quitar</button>
-              </div>
-              <div *ngIf="musicError"
-                style="margin-top:10px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#991b1b; font-size:13px; display:flex; align-items:center; gap:8px;">
-                <span>⚠️ Aviso de estado: El archivo o URL asignado presenta problema de reproducción. Se recomienda subir un archivo de audio directo en formato MP3 o AAC.</span>
-              </div>
-
-              <div *ngIf="invitation.content.musicUrl"
-                style="margin-top:10px; display:flex; align-items:center; gap:10px; padding:8px; background:var(--nw-surface-2); border-radius:6px;">
-                <audio controls [src]="invitation.content.musicUrl" (error)="onMusicPlaybackError()"
-                  style="flex:1; height:36px;"></audio>
-              </div>
-            </div>
-
-            <!-- Música Específica por Sección (Focus) -->
-            <div
-              style="padding:12px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-              <strong style="font-size:13.5px; display:block; margin-bottom:4px; color:var(--nw-accent);">🎯 Música por
-                Sección (Al hacer Focus / Scroll)</strong>
-              <p style="font-size:12px; color:var(--nw-text-3); margin:0 0 12px 0;">Cuando el invitado se desplace a una
-                sección con canción asignada, la música cambiará automáticamente a este audio.</p>
-
-              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
-                <div *ngFor="let sec of sectionMusicOptions"
-                  style="background:var(--nw-surface-2); padding:10px 12px; border-radius:6px; border:1px solid var(--nw-border); display:flex; flex-direction:column; gap:6px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="font-size:12.5px;">{{ sec.label }}</strong>
-                    <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:11px; padding:2px 8px;">
-                      📂 Subir
-                      <input type="file" accept="audio/*" (change)="uploadSectionMusic($event, sec.key)"
-                        [disabled]="assetUploading" style="display:none;">
-                    </label>
-                  </div>
-                  <div style="display:flex; gap:6px; align-items:center;">
-                    <input class="nw-input" [ngModel]="invitation.content.sectionMusic?.[sec.key]"
-                      (ngModelChange)="setSectionMusicUrl(sec.key, $event)" placeholder="URL audio de esta sección"
-                      style="font-size:12px; height:34px; flex:1;">
-                    <button *ngIf="invitation.content.sectionMusic?.[sec.key]" class="nw-btn nw-btn-danger nw-btn-sm"
-                      type="button" (click)="removeSectionMusic(sec.key)" style="padding:4px 8px;"
-                      title="Quitar audio">✕</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Galería -->
-          <div>
-            <strong style="font-size:14px; display:block; margin-bottom:8px;">Galería</strong>
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-              <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-                📁 Agregar imagen
-                <input type="file" accept="image/*" (change)="selectAsset($event, 'gallery')" [disabled]="assetUploading"
-                  style="display:none;">
-              </label>
-              <span style="font-size:13px; color:var(--nw-text-3);">{{ invitation.content.gallery?.length || 0 }}
-                imágenes</span>
-            </div>
-            <div *ngIf="invitation.content.gallery?.length"
-              style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
-              <div *ngFor="let url of invitation.content.gallery; let i = index" style="position:relative;">
-                <img [src]="url" alt="Galería" loading="lazy" decoding="async"
-                  style="width:100%; height:100px; object-fit:cover; border-radius:var(--nw-radius-sm);">
-                <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGalleryImage(i)"
-                  style="position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px;">✕</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 12. PLANTILLAS ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('templates')" style="margin-bottom:16px;" *ngIf="templates.length">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('templates')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">🎨 Plantillas</h3>
-            <span *ngIf="isSectionCollapsed('templates')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
-          </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('templates') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('templates')" style="padding-top:16px;">
-          <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Selecciona una plantilla para aplicar
-            estilo predefinido.</p>
-          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-            <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
-              (click)="applyTemplate(template)"
-              style="display:flex; flex-direction:column; align-items:flex-start; padding:12px; text-align:left;">
-              <strong>{{ template.name }}</strong>
-              <span style="font-size:12px; color:var(--nw-text-3);">{{ template.eventType }} · {{ template.tier }}</span>
-              <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
-                style="margin-top:6px; font-size:11px;">Requiere upgrade</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 13. PLAN ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('plans')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('plans')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">💎 Plan del evento</h3>
-            <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
-            <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
-            <span *ngIf="isSectionCollapsed('plans')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
-          </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('plans') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('plans')" style="padding-top:16px;">
-          <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Un evento puede tener varias invitaciones
-            segmentadas. El plan desbloquea este evento completo.</p>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-            <div *ngFor="let plan of plans" class="nw-card"
-              style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-              <strong>{{ plan.name }}</strong>
-              <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
-              <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
-              <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
-              <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button"
-                (click)="checkout(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)">
-                {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar
-                pago') }}
-              </button>
-              <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'"
-                style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ 14. VISTA PREVIA ═══════════ -->
-      <div class="nw-card nw-collapsible-card" [class.is-collapsed]="isSectionCollapsed('preview')" style="margin-bottom:16px;">
-        <div class="nw-card-header nw-collapsible-header" (click)="toggleSection('preview')">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <h3 style="margin:0;">👁️ Vista previa rápida</h3>
-            <span *ngIf="isSectionCollapsed('preview')" class="nw-pill" style="font-size:11px; background:var(--nw-surface-3); color:var(--nw-text-2);">Colapsado</span>
-          </div>
-          <button type="button" class="nw-collapse-btn">
-            {{ isSectionCollapsed('preview') ? '▲ Abrir' : '▼ Colapsar' }}
-          </button>
-        </div>
-        <div class="nw-card-body" *ngIf="!isSectionCollapsed('preview')" style="padding-top:16px;">
-          <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
-            [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
-            [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"
-            [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
-            <div *ngIf="invitation.content.coverImageUrl" style="width:100%; height:200px; overflow:hidden;">
-              <img [src]="invitation.content.coverImageUrl" alt="Portada"
-                style="width:100%; height:100%; object-fit:cover;">
-            </div>
-            <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
-              style="padding:32px; text-align:center;">
-              <p [style.color]="invitation.content.palette?.accent || '#b67b4b'"
-                style="text-transform:uppercase; font-size:13px; letter-spacing:2px; margin:0 0 8px;">{{
-                invitation.content.subheadline }}</p>
-              <h2 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                style="font-family:var(--nw-font-display); font-size:28px; font-weight:800; margin:0 0 8px;">{{
-                invitation.content.headline }}</h2>
-              <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size:14px; margin:0;">{{
-                event?.date | date:'fullDate' }}</p>
-            </div>
-            <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
-              style="padding:0 32px 32px; display:grid; gap:16px;">
-              <div *ngIf="invitation.content.message">
-                <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:16px; margin:0 0 6px;">Mensaje</h3>
-                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:14px; opacity:0.8; margin:0; line-height:1.6;">{{ invitation.content.message }}</p>
-              </div>
-              <div *ngIf="event?.venue?.name">
-                <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:16px; margin:0 0 6px;">Lugar</h3>
-                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:14px; opacity:0.8; margin:0;">{{ event?.venue?.name }}</p>
-                <p *ngIf="event?.venue?.address" [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:13px; opacity:0.6; margin:4px 0 0;">{{ event?.venue?.address }}</p>
-              </div>
-              <div *ngIf="invitation.content.dressCode">
-                <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:16px; margin:0 0 6px;">Detalles</h3>
-                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:14px; opacity:0.8; margin:0;">Dress code: {{ invitation.content.dressCode }}</p>
-              </div>
-              <div *ngIf="invitation.content.itinerary?.length" style="text-align:left;">
-                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:13px; opacity:0.6; margin:0;">✓ Itinerario configurado ({{
-                  invitation.content.itinerary?.length }} momentos)</p>
-              </div>
-              <div *ngIf="invitation.content.giftRegistry?.length" style="text-align:left;">
-                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:13px; opacity:0.6; margin:0;">✓ Mesa de regalos configurada</p>
-              </div>
-              <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align:left;">
-                <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-                  style="font-size:13px; opacity:0.6; margin:0;">✓ Álbum de invitados activo</p>
-              </div>
-            </div>
-            <!-- Gallery preview -->
-            <div *ngIf="invitation.content.gallery?.length"
-              style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
-              <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy"
-                decoding="async" style="width:100%; height:80px; object-fit:cover;">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Floating Save Bar at the bottom for quick access when scrolling -->
+      <!-- Floating Save Bar at the bottom for quick access -->
       <div class="nw-floating-save-bar">
         <div class="nw-floating-bar-content">
           <div style="display:flex; align-items:center; gap:8px;">

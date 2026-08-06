@@ -32,9 +32,9 @@ import { NewPublicInvitationComponent } from './features/new-public-invitation/n
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 
 const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
+  { path: 'login', redirectTo: 'new/login' },
+  { path: 'register', redirectTo: 'new/register' },
   { path: 'contact', component: ContactComponent },
   { path: 'password-reset', component: PasswordResetComponent },
   { path: 'password-reset/confirm', component: PasswordResetConfirmComponent },
@@ -65,7 +65,7 @@ const routes: Routes = [
   { path: 'new/embed/:portalSlug/:widget', component: NewExternalEmbedComponent },
   { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
   { path: 'new/i/:slug', component: NewPublicInvitationComponent },
-  { path: '**', redirectTo: 'dashboard' }
+  { path: '**', redirectTo: 'new/dashboard' }
 ];
 
 @NgModule({

@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, from, of } from 'rxjs';
+import { mergeMap, toArray } from 'rxjs/operators';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
 import {
@@ -317,7 +318,13 @@ export class EventTablesTabComponent implements OnInit, OnChanges {
       }));
     }
 
-    forkJoin(requests).subscribe({
+    if (requests.length === 0) return;
+    this.creating = true;
+
+    from(requests).pipe(
+      mergeMap(req => req, 3),
+      toArray()
+    ).subscribe({
       next: () => {
         this.creating = false;
         this.showCreateModal = false;
@@ -376,7 +383,10 @@ export class EventTablesTabComponent implements OnInit, OnChanges {
       if (!confirmed) return;
       this.deletingAllTables = true;
       const deleteRequests = this.tables.map(t => this.apiService.deleteTable(this.eventId, (t._id || t.id)!));
-      forkJoin(deleteRequests).subscribe({
+      from(deleteRequests).pipe(
+        mergeMap(req => req, 3),
+        toArray()
+      ).subscribe({
         next: () => {
           this.deletingAllTables = false;
           this.tables = [];
@@ -456,7 +466,10 @@ export class EventTablesTabComponent implements OnInit, OnChanges {
         this.apiService.updateGuest((g._id || g.id)!, { tableName: '' })
       );
 
-      forkJoin(requests).subscribe({
+      from(requests).pipe(
+        mergeMap(req => req, 3),
+        toArray()
+      ).subscribe({
         next: () => {
           this.clearingTables = false;
           this.notifySuccess(`✨ Se desasignaron ${assignedGuests.length} invitados de sus mesas.`);
@@ -582,7 +595,10 @@ export class EventTablesTabComponent implements OnInit, OnChanges {
       this.apiService.updateGuest(gId, { tableName })
     );
 
-    forkJoin(requests).subscribe({
+    from(requests).pipe(
+      mergeMap(req => req, 3),
+      toArray()
+    ).subscribe({
       next: () => {
         this.assigningGuests = false;
         this.notifySuccess(`✨ ${count} invitado${count !== 1 ? 's' : ''} asignado${count !== 1 ? 's' : ''} a ${tableName}.`);

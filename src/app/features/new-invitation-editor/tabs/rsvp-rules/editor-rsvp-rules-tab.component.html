@@ -1,0 +1,179 @@
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">💌 Reglas RSVP y Preguntas</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('rsvp_rules')" [class.warning]="!isSectionActive('rsvp_rules')">
+        {{ isSectionActive('rsvp_rules') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar RSVP en la invitación">
+        <input type="checkbox" [checked]="isSectionActive('rsvp_rules')" (change)="toggleSectionActive.emit({ key: 'rsvp_rules', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.rsvpSettings as rsvpSettings">
+      <label class="nw-label">Fecha límite RSVP
+        <input class="nw-input" type="datetime-local" [(ngModel)]="rsvpSettings.deadline">
+      </label>
+      <label class="nw-label">Días antes para recordatorio
+        <input class="nw-input" type="number" min="0" max="60"
+          [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline">
+      </label>
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir "No estoy seguro"</strong>
+          <span>Opción de respuesta intermedia al confirmar asistencia.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir cambios hasta la fecha límite</strong>
+          <span>Los invitados podrán modificar su RSVP libremente.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <div class="nw-toggle-row nw-form-wide">
+        <div class="nw-toggle-info">
+          <strong>Confirmación al declinar</strong>
+          <span>Pedir confirmación extra cuando un invitado indique que no asistirá.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Confirmar por correo</strong>
+          <span>Requerir validación por email al enviar RSVP.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')"
+            (change)="toggleIdentityMethod.emit({ method: 'email', checked: $any($event.target).checked })">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Confirmar por teléfono</strong>
+          <span>Requerir validación de teléfono/SMS al enviar RSVP.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')"
+            (change)="toggleIdentityMethod.emit({ method: 'phone', checked: $any($event.target).checked })">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir acompañantes por default</strong>
+          <span>Los invitados podrán especificar cuántas personas asisten.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <label class="nw-label">Máximo acompañantes default
+        <input class="nw-input" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions">
+      </label>
+      <label class="nw-label">Máximo asistentes total
+        <input class="nw-input" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150">
+      </label>
+
+      <ng-container *ngIf="invitation.accessMode === 'specific_users'">
+        <label class="nw-label">Roles permitidos
+          <textarea class="nw-input" rows="3" [ngModel]="allowedRolesText" (ngModelChange)="allowedRolesTextChange.emit($event)"
+            placeholder="padrino&#10;dama_honor&#10;vip"></textarea>
+        </label>
+        <label class="nw-label">Grupos permitidos
+          <textarea class="nw-input" rows="3" [ngModel]="allowedGroupsText" (ngModelChange)="allowedGroupsTextChange.emit($event)"
+            placeholder="Familia novia&#10;Mesa VIP"></textarea>
+        </label>
+        <label class="nw-label">Correos permitidos
+          <textarea class="nw-input" rows="3" [ngModel]="allowedEmailsText" (ngModelChange)="allowedEmailsTextChange.emit($event)"
+            placeholder="correo@dominio.com"></textarea>
+        </label>
+        <label class="nw-label">Teléfonos permitidos
+          <textarea class="nw-input" rows="3" [ngModel]="allowedPhonesText" (ngModelChange)="allowedPhonesTextChange.emit($event)"
+            placeholder="2727088143"></textarea>
+        </label>
+      </ng-container>
+
+      <!-- Preguntas Personalizadas Visual Editor -->
+      <div class="nw-form-wide" style="margin-top:16px; border-top:1px solid var(--nw-border); padding-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="font-size:15px; color:var(--nw-text);">Preguntas personalizadas para tus invitados</strong>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addCustomQuestion.emit()">+ Agregar
+            pregunta</button>
+        </div>
+
+        <!-- Quick Presets -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+          <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Sugeridas:</span>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('song')">+ 🎵
+            Canción preferida</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('diet')">+ 🥗
+            Restricciones alimenticias</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('menu')">+ 🍽️
+            Selección de menú</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('transport')">+ 🚌
+            Transporte</button>
+        </div>
+
+        <p *ngIf="!customQuestionsList.length" style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
+          Sin preguntas personalizadas aún. Puedes agregar preguntas sugeridas o crear una propia.
+        </p>
+
+        <div style="display:grid; gap:12px;">
+          <div *ngFor="let q of customQuestionsList; let i = index"
+            style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+            <div class="nw-form-grid" style="gap:10px;">
+              <label class="nw-label nw-form-wide">Pregunta / Texto
+                <input class="nw-input" [(ngModel)]="q.label" (ngModelChange)="syncQuestions.emit()"
+                  placeholder="Ej. ¿Tienes alguna alergia o dieta especial?">
+              </label>
+              <label class="nw-label">Tipo de respuesta
+                <select class="nw-select" [(ngModel)]="q.type" (ngModelChange)="syncQuestions.emit()">
+                  <option value="text">Texto corto</option>
+                  <option value="textarea">Texto largo / comentario</option>
+                  <option value="select">Opción múltiple (lista)</option>
+                  <option value="boolean">Casilla Sí / No</option>
+                </select>
+              </label>
+              <div class="nw-toggle-row" style="padding:8px 12px;">
+                <div class="nw-toggle-info">
+                  <strong style="font-size:13px;">¿Respuesta obligatoria?</strong>
+                </div>
+                <label class="nw-switch">
+                  <input type="checkbox" [(ngModel)]="q.required" (ngModelChange)="syncQuestions.emit()">
+                  <span class="nw-slider"></span>
+                </label>
+              </div>
+              <label class="nw-label nw-form-wide" *ngIf="q.type === 'select'">Opciones (separadas por punto y coma ;)
+                <input class="nw-input" [(ngModel)]="q.optionsText"
+                  (ngModelChange)="q.options = parseOptionsText(q.optionsText); syncQuestions.emit()"
+                  placeholder="Pollo; Carne; Vegetariano; Menú infantil">
+              </label>
+            </div>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCustomQuestion.emit(i)"
+              style="margin-top:10px;">✕ Quitar pregunta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

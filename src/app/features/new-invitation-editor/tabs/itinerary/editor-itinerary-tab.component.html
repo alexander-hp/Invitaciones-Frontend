@@ -1,0 +1,40 @@
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">🕐 Itinerario de Eventos</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('itinerary')" [class.warning]="!isSectionActive('itinerary')">
+        {{ isSectionActive('itinerary') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar itinerario en la invitación">
+        <input type="checkbox" [checked]="isSectionActive('itinerary')" (change)="toggleSectionActive.emit({ key: 'itinerary', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addItineraryItem.emit()">+ Agregar horario</button>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <p *ngIf="!invitation.content.itinerary?.length" style="font-size:14px; color:var(--nw-text-3);">
+      Sin horarios configurados. Agrega momentos del evento (Recepción, Ceremonia, Baile, etc.).
+    </p>
+    <div style="display:grid; gap:12px;">
+      <div *ngFor="let item of invitation.content.itinerary; let i = index"
+        style="display:flex; gap:10px; align-items:flex-start; padding:12px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+        <div style="flex:1; display:grid; grid-template-columns:120px 1fr; gap:8px;">
+          <input type="time" class="nw-input" [(ngModel)]="item.time" title="Seleccionar hora">
+          <input class="nw-input" [(ngModel)]="item.title" placeholder="Ceremonia / Recepción">
+          <input class="nw-input" [(ngModel)]="item.description" placeholder="Jardín principal / Salón"
+            style="grid-column:span 2;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem.emit({ index: i, dir: -1 })"
+            [disabled]="i === 0">↑</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveItineraryItem.emit({ index: i, dir: 1 })"
+            [disabled]="i === invitation.content.itinerary!.length - 1">↓</button>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeItineraryItem.emit(i)">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

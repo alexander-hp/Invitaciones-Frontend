@@ -1,0 +1,80 @@
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">📍 Ubicaciones y Mapas</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('locations')" [class.warning]="!isSectionActive('locations')">
+        {{ isSectionActive('locations') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar ubicaciones en la invitación">
+        <input type="checkbox" [checked]="isSectionActive('locations')" (change)="toggleSectionActive.emit({ key: 'locations', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLocation.emit()">+ Agregar ubicación</button>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <p *ngIf="!invitation.content.locations?.length" style="font-size:14px; color:var(--nw-text-3);">
+      Sin ubicaciones configuradas. Agrega los mapas y lugares de tu evento.
+    </p>
+    <div style="display:grid; gap:12px;">
+      <div *ngFor="let location of invitation.content.locations; let i = index"
+        style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+        <div class="nw-form-grid" style="gap:10px;">
+          <label class="nw-label">Tipo <input class="nw-input" [(ngModel)]="location.type"
+              placeholder="Iglesia, recepción, hotel"></label>
+
+          <label class="nw-label" style="position: relative;">
+            Nombre / Buscar lugar 🔍
+            <input class="nw-input" [(ngModel)]="location.name" (input)="searchLocation.emit({ index: i, query: location.name })"
+              placeholder="Ej. Parroquia / Salón / Hacienda">
+            <span *ngIf="locationSearchLoading[i]"
+              style="font-size: 11px; color: var(--nw-primary, #2563eb); display: block; margin-top: 2px;">Buscando
+              sugerencias...</span>
+
+            <ul *ngIf="locationSearchResults[i]?.length"
+              style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); list-style: none; padding: 4px 0; margin: 4px 0 0 0; max-height: 220px; overflow-y: auto;">
+              <li *ngFor="let res of locationSearchResults[i]" (click)="selectSearchResult.emit({ index: i, result: res })"
+                style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--nw-border-subtle, #f1f5f9); display: flex; flex-direction: column; text-align: left;">
+                <strong style="font-size: 13px; color: var(--nw-text-1, #1e293b);">{{ res.name }}</strong>
+                <small *ngIf="res.address"
+                  style="font-size: 11px; color: var(--nw-text-3, #64748b); margin-top: 2px;">{{ res.address }}</small>
+              </li>
+            </ul>
+          </label>
+
+          <label class="nw-label nw-form-wide">Dirección <input class="nw-input" [(ngModel)]="location.address"
+              placeholder="Calle, número, colonia, ciudad"></label>
+
+          <label class="nw-label nw-form-wide">
+            Google Maps 📍
+            <span
+              style="font-weight: normal; font-size: 12px; color: var(--nw-text-3, #6b7280); margin-left: 4px;">(Escribe
+              o pega el enlace)</span>
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <input class="nw-input" [(ngModel)]="location.mapUrl"
+                placeholder="https://maps.app.goo.gl/... o https://google.com/maps/..." style="flex: 1;">
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="extractMapInfo.emit(i)"
+                [disabled]="!location.mapUrl || locationExtractLoading[i]" style="white-space: nowrap;">
+                {{ locationExtractLoading[i] ? 'Extrayendo...' : '⚡ Extraer datos' }}
+              </button>
+            </div>
+          </label>
+
+          <label class="nw-label">Waze 🚗 <input class="nw-input" [(ngModel)]="location.wazeUrl"
+              placeholder="https://waze.com/..."></label>
+          <label class="nw-label nw-form-wide">Notas <input class="nw-input" [(ngModel)]="location.notes"
+              placeholder="Entrada por avenida principal"></label>
+        </div>
+        <div
+          style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <small style="color: var(--nw-text-3, #6b7280);">💡 Busca por nombre para autocompletar o pega un enlace
+            de Google Maps y presiona <strong>⚡ Extraer datos</strong>.</small>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLocation.emit(i)">Quitar
+            ubicación</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

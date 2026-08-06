@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, from, of } from 'rxjs';
+import { mergeMap, toArray } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { AutoAssignStrategy, AutoAssignTablesResponse, EventModel, EventTableModel, GuestModel, GuestStatus, TableAutoAssignStrategy, TableShape } from '../../core/models';
@@ -165,7 +166,10 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
         const requests = tablesOnFloor.map(t =>
           this.api.updateTable(this.eventId, this.getTableId(t), { floor: 1, floorName: 'Planta Baja' } as any)
         );
-        forkJoin(requests).subscribe({
+        from(requests).pipe(
+          mergeMap(req => req, 3),
+          toArray()
+        ).subscribe({
           next: () => {
             this.tables.forEach(t => {
               if ((t.floor || 1) === floorId) {
@@ -657,7 +661,10 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       error: () => {
         // Fallback: parallel single table creation if batch route is not reached
         const requests = payloadList.map(p => this.api.createTable(this.eventId, p));
-        forkJoin(requests).subscribe({
+        from(requests).pipe(
+          mergeMap(req => req, 3),
+          toArray()
+        ).subscribe({
           next: (results) => {
             const mappedTables = results.map((res, idx) => ({
               ...res.table,
@@ -750,7 +757,10 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       this.clearingTables = true;
       const requests = assigned.map(g => this.api.updateGuest((g._id || g.id)!, { tableName: '', seatLabel: '' } as any));
 
-      forkJoin(requests).subscribe({
+      from(requests).pipe(
+        mergeMap(req => req, 3),
+        toArray()
+      ).subscribe({
         next: () => {
           this.clearingTables = false;
           this.message = `Se desasignaron ${assigned.length} invitados de sus mesas.`;
@@ -914,7 +924,10 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
       this.deletingAllTables = true;
       const deleteRequests = this.tables.map(t => this.api.deleteTable(this.eventId!, this.getTableId(t)!));
 
-      forkJoin(deleteRequests).subscribe({
+      from(deleteRequests).pipe(
+        mergeMap(req => req, 3),
+        toArray()
+      ).subscribe({
         next: () => {
           this.deletingAllTables = false;
           this.selectedTable = undefined;

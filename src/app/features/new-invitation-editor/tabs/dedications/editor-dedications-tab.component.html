@@ -1,0 +1,78 @@
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">💬 Dedicatorias y Libro de Visitas</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('dedications')" [class.warning]="!isSectionActive('dedications')">
+        {{ isSectionActive('dedications') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar dedicatorias">
+        <input type="checkbox" [checked]="isSectionActive('dedications')" (change)="toggleSectionActive.emit({ key: 'dedications', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <div class="nw-form-grid" style="gap:12px;" *ngIf="invitation.content.dedicationSettings as dedicationSettings">
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir dedicatorias</strong>
+          <span>Muestra el muro de comentarios y deseos.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="dedicationSettings.enabled">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Requerir aprobación</strong>
+          <span>Revisar y aprobar los mensajes antes de hacerlos públicos.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="dedicationSettings.requireApproval">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <label class="nw-label nw-form-wide">Texto introductorio
+        <textarea class="nw-input" rows="2" [(ngModel)]="dedicationSettings.introText"
+          placeholder="Deja un mensaje para los anfitriones."></textarea>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ÁLBUM DE INVITADOS -->
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">📸 Álbum de invitados</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('guest_album')" [class.warning]="!isSectionActive('guest_album')">
+        {{ isSectionActive('guest_album') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar álbum de invitados">
+        <input type="checkbox" [checked]="isSectionActive('guest_album')" (change)="toggleSectionActive.emit({ key: 'guest_album', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:16px;">
+      Permite que tus invitados suban fotos del evento desde su invitación digital. Podrás revisarlas y aprobarlas
+      en la pestaña <strong>Álbum</strong> del evento.
+    </p>
+    <div class="nw-toggle-row">
+      <div class="nw-toggle-info">
+        <strong>Habilitar álbum de invitados</strong>
+        <span>Los invitados verán la opción para subir fotos en su invitación.</span>
+      </div>
+      <label class="nw-switch">
+        <input type="checkbox" [(ngModel)]="invitation.content.privateAlbumEnabled">
+        <span class="nw-slider"></span>
+      </label>
+    </div>
+  </div>
+</div>

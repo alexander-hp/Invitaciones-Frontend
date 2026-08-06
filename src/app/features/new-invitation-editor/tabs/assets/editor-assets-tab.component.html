@@ -1,0 +1,179 @@
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">🖼️ Archivos Multimedia (Portada, Música, Galería)</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('gallery')" [class.warning]="!isSectionActive('gallery')">
+        {{ isSectionActive('gallery') ? 'Galería Activa' : 'Galería Inactiva' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar galería de fotos">
+        <input type="checkbox" [checked]="isSectionActive('gallery')" (change)="toggleSectionActive.emit({ key: 'gallery', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <!-- Portada -->
+    <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--nw-border);">
+      <strong style="font-size:15px; display:block; margin-bottom:8px;">🖼️ Imagen de Portada</strong>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+          📁 Subir portada
+          <input type="file" accept="image/*" (change)="selectAsset.emit({ event: $event, folder: 'covers' })" [disabled]="assetUploading"
+            style="display:none;">
+        </label>
+        <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo...</span>
+      </div>
+      <div *ngIf="invitation.content.coverImageUrl"
+        style="margin-top:10px; position:relative; display:inline-block;">
+        <img [src]="invitation.content.coverImageUrl" alt="Portada" loading="lazy" decoding="async"
+          style="max-width:300px; max-height:200px; border-radius:var(--nw-radius-sm); object-fit:cover;">
+        <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover.emit()"
+          style="position:absolute; top:6px; right:6px;">✕ Quitar</button>
+      </div>
+    </div>
+
+    <!-- Configuración de Música y Audio por Sección -->
+    <div
+      style="margin-bottom:20px; background:var(--nw-surface-2); padding:16px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <strong style="font-size:15px; display:block;">🎵 Configuración de Música y Audio</strong>
+          <span style="font-size:12.5px; color:var(--nw-text-3);">Asigna una canción global o reproduce canciones
+            específicas automáticamente cuando el invitado llega a cada sección (Focus).</span>
+        </div>
+      </div>
+
+      <!-- Música Global -->
+      <div
+        style="margin-bottom:16px; padding:14px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+        <strong style="font-size:13.5px; display:block; margin-bottom:6px; color:var(--nw-accent);">🎼 Música Global (Fondo principal)</strong>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+            📁 Subir audio global
+            <input type="file" accept="audio/*" (change)="selectAsset.emit({ event: $event, folder: 'music' })" [disabled]="assetUploading"
+              style="display:none;">
+          </label>
+          <input class="nw-input" [(ngModel)]="invitation.content.musicUrl"
+            placeholder="URL canción global: https://.../cancion.mp3" style="flex:1; min-width:260px;">
+        </div>
+
+        <!-- Aviso sobre el estado de la música -->
+        <div *ngIf="invitation.content.musicUrl && !musicError"
+          style="margin-top:10px; padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:16px;">🎵</span>
+            <span style="font-size:13px; color:#166534; font-weight:600;">Estado: Audio configurado y activo para reproducción de fondo en la invitación (HTTP 200).</span>
+          </div>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="removeMusic.emit()" style="color:#991b1b; border-color:#fca5a5;">✕ Quitar</button>
+        </div>
+        <div *ngIf="musicError"
+          style="margin-top:10px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#991b1b; font-size:13px; display:flex; align-items:center; gap:8px;">
+          <span>⚠️ Aviso de estado: El archivo o URL asignado presenta problema de reproducción. Se recomienda subir un archivo de audio directo en formato MP3 o AAC.</span>
+        </div>
+
+        <div *ngIf="invitation.content.musicUrl"
+          style="margin-top:10px; display:flex; align-items:center; gap:10px; padding:8px; background:var(--nw-surface-2); border-radius:6px;">
+          <audio controls [src]="invitation.content.musicUrl" (error)="musicPlaybackError.emit()"
+            style="flex:1; height:36px;"></audio>
+        </div>
+      </div>
+
+      <!-- Música Específica por Sección (Focus) -->
+      <div
+        style="padding:12px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+        <strong style="font-size:13.5px; display:block; margin-bottom:4px; color:var(--nw-accent);">🎯 Música por Sección (Al hacer Focus / Scroll)</strong>
+        <p style="font-size:12px; color:var(--nw-text-3); margin:0 0 12px 0;">Cuando el invitado se desplace a una
+          sección con canción asignada, la música cambiará automáticamente a este audio.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+          <div *ngFor="let sec of sectionMusicOptions"
+            style="background:var(--nw-surface-2); padding:10px 12px; border-radius:6px; border:1px solid var(--nw-border); display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:12.5px;">{{ sec.label }}</strong>
+              <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:11px; padding:2px 8px;">
+                📂 Subir
+                <input type="file" accept="audio/*" (change)="uploadSectionMusic.emit({ event: $event, sectionKey: sec.key })"
+                  [disabled]="assetUploading" style="display:none;">
+              </label>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input class="nw-input" [ngModel]="invitation.content.sectionMusic?.[sec.key]"
+                (ngModelChange)="setSectionMusicUrl(sec.key, $event)" placeholder="URL audio de esta sección"
+                style="font-size:12px; height:34px; flex:1;">
+              <button *ngIf="invitation.content.sectionMusic?.[sec.key]" class="nw-btn nw-btn-danger nw-btn-sm"
+                type="button" (click)="removeSectionMusic.emit(sec.key)" style="padding:4px 8px;"
+                title="Quitar audio">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Galería -->
+    <div>
+      <strong style="font-size:15px; display:block; margin-bottom:8px;">📸 Galería de Fotos</strong>
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+        <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
+          📁 Agregar imagen
+          <input type="file" accept="image/*" (change)="selectAsset.emit({ event: $event, folder: 'gallery' })" [disabled]="assetUploading"
+            style="display:none;">
+        </label>
+        <span style="font-size:13px; color:var(--nw-text-3);">{{ invitation.content.gallery?.length || 0 }}
+          imágenes</span>
+      </div>
+      <div *ngIf="invitation.content.gallery?.length"
+        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
+        <div *ngFor="let url of invitation.content.gallery; let i = index" style="position:relative;">
+          <img [src]="url" alt="Galería" loading="lazy" decoding="async"
+            style="width:100%; height:100px; object-fit:cover; border-radius:var(--nw-radius-sm);">
+          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGalleryImage.emit(i)"
+            style="position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px;">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOSPEDAJE RECOMENDADO -->
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <h3 style="margin:0;">🏨 Hospedaje Recomendado</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('lodging')" [class.warning]="!isSectionActive('lodging')">
+        {{ isSectionActive('lodging') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar la sección hospedaje">
+        <input type="checkbox" [checked]="isSectionActive('lodging')" (change)="toggleSectionActive.emit({ key: 'lodging', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingItem.emit()">+ Agregar hotel</button>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <p *ngIf="!invitation.content.lodging?.length" style="font-size:14px; color:var(--nw-text-3);">
+      Sin hoteles configurados. Agrega sugerencias de alojamiento para tus invitados de fuera.
+    </p>
+    <div style="display:grid; gap:12px;">
+      <div *ngFor="let item of invitation.content.lodging; let i = index"
+        style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+        <div class="nw-form-grid" style="gap:10px;">
+          <label class="nw-label">Nombre del hotel / hospedaje
+            <input class="nw-input" [(ngModel)]="item.name" placeholder="Hotel Gran Plaza">
+          </label>
+          <label class="nw-label">Descripción / Tarifa preferente
+            <input class="nw-input" [(ngModel)]="item.description" placeholder="15% desc. con código BODA2026">
+          </label>
+          <label class="nw-label nw-form-wide">Link / Mapa del hotel (URL)
+            <input class="nw-input" [(ngModel)]="item.url" placeholder="https://maps.google.com/...">
+          </label>
+        </div>
+        <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLodgingItem.emit(i)"
+          style="margin-top:10px;">✕ Quitar hotel</button>
+      </div>
+    </div>
+  </div>
+</div>

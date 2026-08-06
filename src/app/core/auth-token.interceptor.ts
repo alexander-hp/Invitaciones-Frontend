@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, throwError } from 'rxjs';
@@ -20,7 +20,7 @@ export class AuthTokenInterceptor implements HttpInterceptor {
         const isAuthEntryPoint = ['/auth/login', '/auth/register', '/auth/social'].some((path) => req.url.includes(path));
         if (isApiRequest && error.status === 401 && !isAuthEntryPoint) {
           localStorage.removeItem(TOKEN_KEY);
-          this.router.navigate(['/login']);
+          this.router.navigate(['/new/login']);
         }
         return throwError(() => error);
       })

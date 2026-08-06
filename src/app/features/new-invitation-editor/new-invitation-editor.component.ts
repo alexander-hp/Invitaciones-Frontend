@@ -47,7 +47,12 @@ export class NewInvitationEditorComponent implements OnInit {
   private searchTimeouts: Record<number, any> = {};
 
   activeSection = 'content';
+  activeTab: 'content' | 'style' | 'itinerary' | 'locations' | 'rsvp' | 'gifts' | 'dedications' | 'assets' | 'plans' | 'all' = 'content';
   collapsedSections: Record<string, boolean> = {};
+
+  setActiveTab(tab: 'content' | 'style' | 'itinerary' | 'locations' | 'rsvp' | 'gifts' | 'dedications' | 'assets' | 'plans' | 'all'): void {
+    this.activeTab = tab;
+  }
 
   toggleSection(sectionKey: string): void {
     this.collapsedSections[sectionKey] = !this.collapsedSections[sectionKey];

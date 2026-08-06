@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
@@ -48,7 +48,7 @@ export class AuthService {
   logout(redirect = true): void {
     localStorage.removeItem(TOKEN_KEY);
     this.userSubject.next(null);
-    if (redirect) this.router.navigate(['/login']);
+    if (redirect) this.router.navigate(['/new/login']);
   }
 
   private saveSession(response: AuthResponse): void {

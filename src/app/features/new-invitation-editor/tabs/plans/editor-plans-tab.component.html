@@ -1,0 +1,119 @@
+<!-- PLANTILLAS -->
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="templates.length">
+  <div class="nw-card-header">
+    <h3 style="margin:0;">🎨 Plantillas de Diseño</h3>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Selecciona una plantilla para aplicar
+      estilo predefinido.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+      <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
+        (click)="applyTemplate.emit(template)"
+        style="display:flex; flex-direction:column; align-items:flex-start; padding:12px; text-align:left;">
+        <strong>{{ template.name }}</strong>
+        <span style="font-size:12px; color:var(--nw-text-3);">{{ template.eventType }} · {{ template.tier }}</span>
+        <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
+          style="margin-top:6px; font-size:11px;">Requiere upgrade</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAN DEL EVENTO -->
+<div class="nw-card" style="margin-bottom:16px;">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">💎 Plan y Licencia del Evento</h3>
+    <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
+    <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Un evento puede tener varias invitaciones
+      segmentadas. El plan desbloquea este evento completo.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+      <div *ngFor="let plan of plans" class="nw-card"
+        style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
+        <strong>{{ plan.name }}</strong>
+        <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
+        <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
+        <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
+        <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button"
+          (click)="checkout.emit(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)">
+          {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar pago') }}
+        </button>
+        <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'"
+          style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISTA PREVIA RÁPIDA -->
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header">
+    <h3 style="margin:0;">👁️ Vista Previa Rápida</h3>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
+      [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
+      [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"
+      [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
+      <div *ngIf="invitation.content.coverImageUrl" style="width:100%; height:200px; overflow:hidden;">
+        <img [src]="invitation.content.coverImageUrl" alt="Portada"
+          style="width:100%; height:100%; object-fit:cover;">
+      </div>
+      <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
+        style="padding:32px; text-align:center;">
+        <p [style.color]="invitation.content.palette?.accent || '#b67b4b'"
+          style="text-transform:uppercase; font-size:13px; letter-spacing:2px; margin:0 0 8px;">{{
+          invitation.content.subheadline }}</p>
+        <h2 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+          style="font-family:var(--nw-font-display); font-size:28px; font-weight:800; margin:0 0 8px;">{{
+          invitation.content.headline }}</h2>
+        <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size:14px; margin:0;">{{
+          event?.date | date:'fullDate' }}</p>
+      </div>
+      <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
+        style="padding:0 32px 32px; display:grid; gap:16px;">
+        <div *ngIf="invitation.content.message">
+          <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:16px; margin:0 0 6px;">Mensaje</h3>
+          <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:14px; opacity:0.8; margin:0; line-height:1.6;">{{ invitation.content.message }}</p>
+        </div>
+        <div *ngIf="event?.venue?.name">
+          <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:16px; margin:0 0 6px;">Lugar</h3>
+          <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:14px; opacity:0.8; margin:0;">{{ event?.venue?.name }}</p>
+          <p *ngIf="event?.venue?.address" [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:13px; opacity:0.6; margin:4px 0 0;">{{ event?.venue?.address }}</p>
+        </div>
+        <div *ngIf="invitation.content.dressCode">
+          <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:16px; margin:0 0 6px;">Detalles</h3>
+          <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:14px; opacity:0.8; margin:0;">Dress code: {{ invitation.content.dressCode }}</p>
+        </div>
+        <div *ngIf="invitation.content.itinerary?.length" style="text-align:left;">
+          <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:13px; opacity:0.6; margin:0;">✓ Itinerario configurado ({{
+            invitation.content.itinerary?.length }} momentos)</p>
+        </div>
+        <div *ngIf="invitation.content.giftRegistry?.length" style="text-align:left;">
+          <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:13px; opacity:0.6; margin:0;">✓ Mesa de regalos configurada</p>
+        </div>
+        <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align:left;">
+          <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
+            style="font-size:13px; opacity:0.6; margin:0;">✓ Álbum de invitados activo</p>
+        </div>
+      </div>
+      <!-- Gallery preview -->
+      <div *ngIf="invitation.content.gallery?.length"
+        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
+        <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy"
+          decoding="async" style="width:100%; height:80px; object-fit:cover;">
+      </div>
+    </div>
+  </div>
+</div>

@@ -48,6 +48,15 @@ import { NewExternalEmbedComponent } from './features/new-external-embed/new-ext
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
+import { EditorContentTabComponent } from './features/new-invitation-editor/tabs/content/editor-content-tab.component';
+import { EditorStyleTabComponent } from './features/new-invitation-editor/tabs/style/editor-style-tab.component';
+import { EditorItineraryTabComponent } from './features/new-invitation-editor/tabs/itinerary/editor-itinerary-tab.component';
+import { EditorLocationsTabComponent } from './features/new-invitation-editor/tabs/locations/editor-locations-tab.component';
+import { EditorRsvpRulesTabComponent } from './features/new-invitation-editor/tabs/rsvp-rules/editor-rsvp-rules-tab.component';
+import { EditorGiftsTabComponent } from './features/new-invitation-editor/tabs/gifts/editor-gifts-tab.component';
+import { EditorDedicationsTabComponent } from './features/new-invitation-editor/tabs/dedications/editor-dedications-tab.component';
+import { EditorAssetsTabComponent } from './features/new-invitation-editor/tabs/assets/editor-assets-tab.component';
+import { EditorPlansTabComponent } from './features/new-invitation-editor/tabs/plans/editor-plans-tab.component';
 
 import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
 import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
@@ -67,6 +76,15 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     ExternalPortalComponent,
     InvitationEditorComponent,
     NewInvitationEditorComponent,
+    EditorContentTabComponent,
+    EditorStyleTabComponent,
+    EditorItineraryTabComponent,
+    EditorLocationsTabComponent,
+    EditorRsvpRulesTabComponent,
+    EditorGiftsTabComponent,
+    EditorDedicationsTabComponent,
+    EditorAssetsTabComponent,
+    EditorPlansTabComponent,
     NewInvitationSectionsComponent,
     LoginComponent,
     NewLoginComponent,
