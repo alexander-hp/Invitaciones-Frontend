@@ -520,6 +520,36 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges {
     }
   }
 
+  getEventDateText(): string {
+    return this.event?.date ? new Date(this.event.date).toLocaleDateString('es-MX', { dateStyle: 'full' }) : '';
+  }
+
+  getEventLocationText(): string {
+    return [this.event?.venue?.name, this.event?.venue?.address].filter(Boolean).join(' - ');
+  }
+
+  getEmailPreviewBadge(type: GuestMessageType): string {
+    switch (type) {
+      case 'invitation': return '✨ INVITACIÓN DIGITAL';
+      case 'reminder': return '💌 RECORDATORIO RSVP';
+      case 'event_reminder': return '🎉 PRÓXIMO EVENTO';
+      case 'location_change': return '📍 CAMBIO DE UBICACIÓN';
+      case 'thanks': return '❤️ GRACIAS POR CONFIRMAR';
+      default: return '✨ INVITACIÓN DIGITAL';
+    }
+  }
+
+  getEmailPreviewCta(type: GuestMessageType): string {
+    switch (type) {
+      case 'invitation': return '✉️ Ver Mi Invitación Digital';
+      case 'reminder': return '💌 Confirmar Asistencia';
+      case 'event_reminder': return '✨ Ver Detalles del Evento';
+      case 'location_change': return '🗺️ Ver Nueva Ubicación';
+      case 'thanks': return '💖 Ver Detalles del Evento';
+      default: return '✉️ Ver Mi Invitación Digital';
+    }
+  }
+
   getEmailLink(g: GuestModel): string {
     const subject = encodeURIComponent(this.getMessageSubject(this.selectedMessageType));
     const body = encodeURIComponent(this.buildMessage(g, this.selectedMessageType));
