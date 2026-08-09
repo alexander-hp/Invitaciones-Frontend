@@ -1,25 +1,55 @@
 <div class="nw-portal-shell">
   <!-- Top Progress / Alerts -->
   <div *ngIf="loading" class="nw-portal-alert nw-portal-loading">Cargando portal del evento...</div>
-  <div *ngIf="error" class="nw-portal-alert nw-portal-error">{{ error }}</div>
+  <div *ngIf="error && event" class="nw-portal-alert nw-portal-error">{{ error }}</div>
   <div *ngIf="message" class="nw-portal-alert nw-portal-success">{{ message }}</div>
+
+  <!-- Full-Page Error Screen (when portal/event is unavailable) -->
+  <div *ngIf="error && !event && !loading" class="nw-portal-error-screen">
+    <div class="nw-portal-error-card">
+      <div class="nw-portal-error-icon-wrapper">
+        <div class="nw-portal-error-icon">🏛️</div>
+        <div class="nw-portal-error-badge">404</div>
+      </div>
+      <h1 class="nw-portal-error-title">Portal No Disponible</h1>
+      <div class="nw-portal-error-message-chip">
+        <span>⚠️</span> {{ error }}
+      </div>
+      <p class="nw-portal-error-description">
+        El portal externo al que intentas acceder no se encuentra activo o no existe. Verifica que el enlace sea correcto o que los anfitriones hayan habilitado el portal.
+      </p>
+      <div class="nw-portal-error-actions">
+        <button type="button" class="nw-portal-btn nw-portal-btn-gold" (click)="load()">
+          🔄 Reintentar Carga
+        </button>
+        <a class="nw-portal-btn nw-portal-btn-primary" routerLink="/new/dashboard">
+          🏠 Ir al Inicio
+        </a>
+      </div>
+    </div>
+  </div>
 
   <ng-container *ngIf="event">
     <!-- HERO HEADER -->
     <header class="nw-portal-hero">
-      <div class="nw-portal-hero-bg" [style.backgroundImage]="event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl ? 'url(' + (event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl) + ')' : ''"></div>
+      <div class="nw-portal-hero-bg"
+        [style.backgroundImage]="event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl ? 'url(' + (event.externalContent?.heroImageUrl || event.externalContent?.coverImageUrl) + ')' : ''">
+      </div>
       <div class="nw-portal-hero-overlay"></div>
       <div class="nw-portal-hero-content">
         <p class="nw-portal-eyebrow">{{ event.externalPortalSettings?.brandLabel || 'Portal de Invitados' }}</p>
         <h1>{{ event.title }}</h1>
         <p class="date">📅 {{ event.date | date:'fullDate' }}</p>
-        <p class="welcome-msg" *ngIf="event.externalPortalSettings?.welcomeMessage">{{ event.externalPortalSettings?.welcomeMessage }}</p>
-        
+        <p class="welcome-msg" *ngIf="event.externalPortalSettings?.welcomeMessage">{{
+          event.externalPortalSettings?.welcomeMessage }}</p>
+
         <div class="nw-portal-hero-actions">
-          <a *ngIf="event.externalSiteUrl" class="nw-portal-btn nw-portal-btn-primary" [href]="event.externalSiteUrl" target="_blank" rel="noreferrer">
+          <a *ngIf="event.externalSiteUrl" class="nw-portal-btn nw-portal-btn-primary" [href]="event.externalSiteUrl"
+            target="_blank" rel="noreferrer">
             {{ event.externalSiteLabel || 'Ver Web del Evento' }}
           </a>
-          <a *ngIf="calendarUrl && event.externalPortalSettings?.calendarEnabled !== false" class="nw-portal-btn nw-portal-btn-secondary" [href]="calendarUrl" target="_blank" rel="noreferrer">
+          <a *ngIf="calendarUrl && event.externalPortalSettings?.calendarEnabled !== false"
+            class="nw-portal-btn nw-portal-btn-secondary" [href]="calendarUrl" target="_blank" rel="noreferrer">
             📅 Agregar al Calendario
           </a>
         </div>
@@ -30,13 +60,14 @@
     <div class="nw-portal-layout">
       <!-- LEFT COLUMN: Event details & content feeds -->
       <div class="nw-portal-column nw-portal-details">
-        
+
         <!-- LOCATIONS & MAPS -->
-        <section *ngIf="event.externalPortalSettings?.showLocation !== false && (event.venue?.name || locations.length)" class="nw-portal-card">
+        <section *ngIf="event.externalPortalSettings?.showLocation !== false && (event.venue?.name || locations.length)"
+          class="nw-portal-card">
           <div class="nw-portal-card-header">
             <h2>📍 Ubicación e Itinerario</h2>
           </div>
-          
+
           <div class="nw-portal-locations">
             <!-- Venue main -->
             <article class="nw-portal-location-card main-venue" *ngIf="event.venue?.name">
@@ -45,7 +76,8 @@
                 <strong>Lugar Principal: {{ event.venue?.name }}</strong>
                 <p class="address">{{ event.venue?.address }}</p>
                 <div class="nw-portal-loc-actions" style="margin-top: 10px;">
-                  <a *ngIf="event.venue?.mapUrl" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold" [href]="event.venue.mapUrl" target="_blank" rel="noreferrer">🗺️ Ver en Google Maps</a>
+                  <a *ngIf="event.venue?.mapUrl" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold"
+                    [href]="event.venue.mapUrl" target="_blank" rel="noreferrer">🗺️ Ver en Google Maps</a>
                 </div>
               </div>
             </article>
@@ -59,8 +91,10 @@
                 <p class="time" *ngIf="location.time">⏰ {{ location.time }}</p>
                 <p class="notes" *ngIf="location.notes">📝 {{ location.notes }}</p>
                 <div class="nw-portal-loc-actions" style="margin-top: 8px;" *ngIf="location.mapUrl || location.wazeUrl">
-                  <a *ngIf="location.mapUrl" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold" [href]="location.mapUrl" target="_blank" rel="noreferrer">Google Maps</a>
-                  <a *ngIf="location.wazeUrl" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-secondary" [href]="location.wazeUrl" target="_blank" rel="noreferrer">Waze</a>
+                  <a *ngIf="location.mapUrl" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold"
+                    [href]="location.mapUrl" target="_blank" rel="noreferrer">Google Maps</a>
+                  <a *ngIf="location.wazeUrl" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-secondary"
+                    [href]="location.wazeUrl" target="_blank" rel="noreferrer">Waze</a>
                 </div>
               </div>
             </article>
@@ -72,22 +106,28 @@
           <div class="nw-portal-card-header">
             <h2>🎁 Mesa de Regalos</h2>
           </div>
-          <p class="intro-text">{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es nuestro mayor regalo, pero si deseas hacernos un detalle, te dejamos nuestras opciones.' }}</p>
-          
+          <p class="intro-text">{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es nuestro mayor
+            regalo, pero si deseas hacernos un detalle, te dejamos nuestras opciones.' }}</p>
+
           <!-- Stores -->
-          <div class="nw-portal-gift-grid" *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
+          <div class="nw-portal-gift-grid"
+            *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
             <article *ngFor="let gift of event.externalContent?.giftRegistry" class="nw-portal-gift-card">
-              <div class="nw-portal-gift-logo" *ngIf="gift.imageUrl" [style.backgroundImage]="'url(' + gift.imageUrl + ')'"></div>
+              <div class="nw-portal-gift-logo" *ngIf="gift.imageUrl"
+                [style.backgroundImage]="'url(' + gift.imageUrl + ')'"></div>
               <div class="nw-portal-gift-details">
                 <strong>{{ gift.title || gift.label || gift.store }}</strong>
                 <p *ngIf="gift.note">{{ gift.note }}</p>
-                <a *ngIf="gift.url" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold" [href]="gift.url" target="_blank" rel="noreferrer">Ver Mesa de Regalos</a>
+                <a *ngIf="gift.url" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold" [href]="gift.url"
+                  target="_blank" rel="noreferrer">Ver Mesa de Regalos</a>
               </div>
             </article>
           </div>
 
           <!-- Digital Envelope / Card info -->
-          <article *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)" class="nw-portal-envelope-card">
+          <article
+            *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)"
+            class="nw-portal-envelope-card">
             <div class="envelope-header">
               <h4>✉️ Sobre Digital / Transferencia</h4>
               <p>Si deseas apoyarnos con una transferencia, estos son los datos:</p>
@@ -97,11 +137,16 @@
                 <img [src]="event.externalContent?.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
               </div>
               <div class="envelope-details">
-                <p *ngIf="event.externalContent?.digitalEnvelope?.bank"><strong>Banco:</strong> {{ event.externalContent?.digitalEnvelope?.bank }}</p>
-                <p *ngIf="event.externalContent?.digitalEnvelope?.holder"><strong>Titular:</strong> {{ event.externalContent?.digitalEnvelope?.holder }}</p>
-                <p *ngIf="event.externalContent?.digitalEnvelope?.account"><strong>Cuenta:</strong> {{ event.externalContent?.digitalEnvelope?.account }}</p>
-                <p *ngIf="event.externalContent?.digitalEnvelope?.clabe"><strong>CLABE:</strong> {{ event.externalContent?.digitalEnvelope?.clabe }}</p>
-                <small class="envelope-notes" *ngIf="event.externalContent?.digitalEnvelope?.note">{{ event.externalContent?.digitalEnvelope?.note }}</small>
+                <p *ngIf="event.externalContent?.digitalEnvelope?.bank"><strong>Banco:</strong> {{
+                  event.externalContent?.digitalEnvelope?.bank }}</p>
+                <p *ngIf="event.externalContent?.digitalEnvelope?.holder"><strong>Titular:</strong> {{
+                  event.externalContent?.digitalEnvelope?.holder }}</p>
+                <p *ngIf="event.externalContent?.digitalEnvelope?.account"><strong>Cuenta:</strong> {{
+                  event.externalContent?.digitalEnvelope?.account }}</p>
+                <p *ngIf="event.externalContent?.digitalEnvelope?.clabe"><strong>CLABE:</strong> {{
+                  event.externalContent?.digitalEnvelope?.clabe }}</p>
+                <small class="envelope-notes" *ngIf="event.externalContent?.digitalEnvelope?.note">{{
+                  event.externalContent?.digitalEnvelope?.note }}</small>
               </div>
             </div>
           </article>
@@ -119,7 +164,8 @@
               <div class="section-image" *ngIf="section.imageUrl">
                 <img [src]="section.imageUrl" alt="Imagen de la sección" loading="lazy" decoding="async">
               </div>
-              <a *ngIf="section.url" class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" [href]="section.url" target="_blank" rel="noreferrer" style="margin-top:14px;">
+              <a *ngIf="section.url" class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" [href]="section.url"
+                target="_blank" rel="noreferrer" style="margin-top:14px;">
                 Ver más información
               </a>
             </div>
@@ -127,7 +173,8 @@
         </div>
 
         <!-- DEDICATIONS BOARD (PUBLIC VIEW) -->
-        <section *ngIf="event.externalContent?.dedicationSettings?.enabled !== false && dedications.length" class="nw-portal-card">
+        <section *ngIf="event.externalContent?.dedicationSettings?.enabled !== false && dedications.length"
+          class="nw-portal-card">
           <div class="nw-portal-card-header">
             <h2>✍️ Mensajes de los Invitados</h2>
           </div>
@@ -140,7 +187,8 @@
         </section>
 
         <!-- PUBLIC PHOTO GALLERY -->
-        <section *ngIf="event.externalPortalSettings?.albumEnabled !== false && albumAssets.length" class="nw-portal-card">
+        <section *ngIf="event.externalPortalSettings?.albumEnabled !== false && albumAssets.length"
+          class="nw-portal-card">
           <div class="nw-portal-card-header">
             <h2>📸 Galería del Evento</h2>
           </div>
@@ -156,14 +204,14 @@
 
       <!-- RIGHT COLUMN: Interaction box (RSVP, QR Pass, Photo Upload, Dedications Form) -->
       <div class="nw-portal-column nw-portal-actions">
-        
+
         <!-- STEP 1: GUEST IDENTIFICATION -->
         <div *ngIf="!guest" class="nw-portal-card nw-portal-action-card identity-box">
           <div class="nw-portal-card-header">
             <h2>🔑 Confirmar Asistencia</h2>
             <p>Ingresa tus datos para registrar RSVP, obtener tu pase QR y subir fotos.</p>
           </div>
-          
+
           <div class="nw-portal-form">
             <div class="nw-portal-field">
               <label>Método de búsqueda</label>
@@ -176,7 +224,8 @@
 
             <div class="nw-portal-field">
               <label>Dato de Invitado</label>
-              <input class="nw-portal-input" name="identifier" [(ngModel)]="identifier" placeholder="ej: email, celular o código" (keyup.enter)="identify()">
+              <input class="nw-portal-input" name="identifier" [(ngModel)]="identifier"
+                placeholder="ej: email, celular o código" (keyup.enter)="identify()">
             </div>
 
             <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" type="button" (click)="identify()">
@@ -187,9 +236,10 @@
 
         <!-- STEP 2: ACTIVE GUEST VIEW -->
         <ng-container *ngIf="guest">
-          
+
           <!-- RSVP CARD -->
-          <form *ngIf="event.externalPortalSettings?.rsvpEnabled !== false" class="nw-portal-card nw-portal-action-card rsvp-box" (ngSubmit)="submitRsvp()">
+          <form *ngIf="event.externalPortalSettings?.rsvpEnabled !== false"
+            class="nw-portal-card nw-portal-action-card rsvp-box" (ngSubmit)="submitRsvp()">
             <div class="nw-portal-card-header">
               <h2>💌 Confirmación</h2>
               <p>Hola <strong>{{ guest.name }}</strong>, por favor confirma tu asistencia y la de tus acompañantes.</p>
@@ -209,23 +259,27 @@
               <ng-container *ngIf="rsvp.response === 'confirmed'">
                 <div class="nw-portal-field">
                   <label>Acompañantes adicionales (Máximo: {{ guest.allowedCompanions || 0 }})</label>
-                  <input class="nw-portal-input" name="companions" type="number" min="0" [max]="guest.allowedCompanions || 0" [(ngModel)]="rsvp.companions">
+                  <input class="nw-portal-input" name="companions" type="number" min="0"
+                    [max]="guest.allowedCompanions || 0" [(ngModel)]="rsvp.companions">
                 </div>
 
                 <div class="nw-portal-field" *ngIf="rsvp.companions > 0">
                   <label>Nombres de tus acompañantes</label>
-                  <textarea class="nw-portal-textarea" name="companionsText" [(ngModel)]="companionNamesText" rows="3" placeholder="Un nombre completo por línea"></textarea>
+                  <textarea class="nw-portal-textarea" name="companionsText" [(ngModel)]="companionNamesText" rows="3"
+                    placeholder="Un nombre completo por línea"></textarea>
                 </div>
 
                 <div class="nw-portal-field">
                   <label>Preferencia alimenticia (Opcional)</label>
-                  <input class="nw-portal-input" name="meal" [(ngModel)]="rsvp.mealPreference" placeholder="Ej. vegetariano, alergia a mariscos...">
+                  <input class="nw-portal-input" name="meal" [(ngModel)]="rsvp.mealPreference"
+                    placeholder="Ej. vegetariano, alergia a mariscos...">
                 </div>
               </ng-container>
 
               <div class="nw-portal-field">
                 <label>Mensaje especial para los anfitriones</label>
-                <textarea class="nw-portal-textarea" name="messageText" [(ngModel)]="rsvp.message" rows="3" placeholder="Escribe un mensaje..."></textarea>
+                <textarea class="nw-portal-textarea" name="messageText" [(ngModel)]="rsvp.message" rows="3"
+                  placeholder="Escribe un mensaje..."></textarea>
               </div>
 
               <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" type="submit" [disabled]="sending">
@@ -235,12 +289,13 @@
           </form>
 
           <!-- GUEST QR PASS TICKET -->
-          <section *ngIf="event.externalPortalSettings?.passEnabled !== false" class="nw-portal-card nw-portal-ticket-card">
+          <section *ngIf="event.externalPortalSettings?.passEnabled !== false"
+            class="nw-portal-card nw-portal-ticket-card">
             <div class="ticket-header">
               <h2>🎟️ Pase de Entrada Digital</h2>
               <p>Muestra este QR en el acceso del evento.</p>
             </div>
-            
+
             <div class="ticket-body">
               <div class="ticket-qr">
                 <img *ngIf="qrUrl" [src]="qrUrl" alt="Pase QR">
@@ -248,7 +303,8 @@
               </div>
               <div class="ticket-info">
                 <h4>{{ guest.name }}</h4>
-                <div class="ticket-mesa">🪑 Mesa: <strong>{{ guest.tableName || 'Pendiente' }}</strong> <span *ngIf="guest.seatLabel">/ Asiento {{ guest.seatLabel }}</span></div>
+                <div class="ticket-mesa">🪑 Mesa: <strong>{{ guest.tableName || 'Pendiente' }}</strong> <span
+                    *ngIf="guest.seatLabel">/ Asiento {{ guest.seatLabel }}</span></div>
                 <div class="ticket-roles" *ngIf="guest.roles?.length">
                   <span *ngFor="let r of guest.roles" class="role-badge">{{ r }}</span>
                 </div>
@@ -257,20 +313,22 @@
           </section>
 
           <!-- UPLOAD PHOTO TO PRIVATE ALBUM -->
-          <section *ngIf="event.externalPortalSettings?.albumEnabled !== false" class="nw-portal-card nw-portal-action-card album-upload">
+          <section *ngIf="event.externalPortalSettings?.albumEnabled !== false"
+            class="nw-portal-card nw-portal-action-card album-upload">
             <div class="nw-portal-card-header">
               <h2>📸 Subir Fotos al Álbum</h2>
               <p>Comparte tus fotos del evento con los anfitriones.</p>
             </div>
-            
+
             <div class="nw-portal-upload-wrapper">
               <label class="nw-portal-file-label">
                 <span>📁 Seleccionar Foto</span>
                 <input type="file" accept="image/*" (change)="selectAlbumFile($event)" style="display: none;">
               </label>
               <p class="file-name" *ngIf="selectedAlbumFile">📄 Seleccionado: {{ selectedAlbumFile.name }}</p>
-              
-              <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" style="margin-top: 10px;" type="button" (click)="uploadAlbum()" [disabled]="!selectedAlbumFile || sending">
+
+              <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" style="margin-top: 10px;"
+                type="button" (click)="uploadAlbum()" [disabled]="!selectedAlbumFile || sending">
                 {{ sending ? 'Subiendo...' : 'Enviar Foto al Álbum' }}
               </button>
             </div>
@@ -281,7 +339,8 @@
               <div class="history-grid">
                 <div *ngFor="let asset of myAlbumUploads" class="history-item">
                   <img [src]="asset.url" alt="Mi foto" loading="lazy">
-                  <span class="status-badge" [class.approved]="asset.status === 'approved'" [class.pending]="asset.status === 'pending'" [class.rejected]="asset.status === 'rejected'">
+                  <span class="status-badge" [class.approved]="asset.status === 'approved'"
+                    [class.pending]="asset.status === 'pending'" [class.rejected]="asset.status === 'rejected'">
                     {{ statusLabel(asset.status) }}
                   </span>
                 </div>
@@ -290,7 +349,8 @@
           </section>
 
           <!-- SONG REQUEST PANEL (DJ) -->
-          <form *ngIf="event.externalContent?.songRequestSettings?.enabled !== false" class="nw-portal-card nw-portal-action-card dj-requests" (ngSubmit)="requestSong()">
+          <form *ngIf="event.externalContent?.songRequestSettings?.enabled !== false"
+            class="nw-portal-card nw-portal-action-card dj-requests" (ngSubmit)="requestSong()">
             <div class="nw-portal-card-header">
               <h2>🎵 Pedir Canciones al DJ</h2>
               <p>Propón tus canciones favoritas para animar la fiesta.</p>
@@ -300,20 +360,33 @@
               <div class="nw-portal-field">
                 <label>Buscar canción (Spotify/YouTube)</label>
                 <div style="display: flex; gap: 8px;">
-                  <input class="nw-portal-input" style="flex: 1;" name="songQuery" [(ngModel)]="song.query" placeholder="Ej. Earth Wind Fire September">
-                  <button class="nw-portal-btn nw-portal-btn-gold" type="button" (click)="lookupSong()" [disabled]="sending">Buscar</button>
+                  <input class="nw-portal-input" style="flex: 1;" name="songQuery" [(ngModel)]="song.query"
+                    placeholder="Ej. Earth Wind Fire September">
+                  <button class="nw-portal-btn nw-portal-btn-gold" type="button" (click)="lookupSong()"
+                    [disabled]="sending">Buscar</button>
                 </div>
               </div>
 
               <!-- Preview selection -->
-              <div class="song-preview-box" *ngIf="songPreview" style="display:flex; align-items:center; gap:12px; background:var(--nw-surface-2); padding:12px; border-radius:8px; border:1px solid var(--nw-border); margin-bottom:12px;">
-                <div *ngIf="songPreview.thumbnailUrl" (click)="playSong(songPreview)" style="display:block; flex-shrink:0; cursor:pointer;" title="Escuchar canción en la página">
-                  <img [src]="songPreview.thumbnailUrl" alt="Cover" style="width:56px; height:56px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+              <div class="song-preview-box" *ngIf="songPreview"
+                style="display:flex; align-items:center; gap:12px; background:var(--nw-surface-2); padding:12px; border-radius:8px; border:1px solid var(--nw-border); margin-bottom:12px;">
+                <div *ngIf="songPreview.thumbnailUrl" (click)="playSong(songPreview)"
+                  style="display:block; flex-shrink:0; cursor:pointer;" title="Escuchar canción en la página">
+                  <img [src]="songPreview.thumbnailUrl" alt="Cover"
+                    style="width:56px; height:56px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
                 </div>
-                <div class="song-info" style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; cursor:pointer;" (click)="playSong(songPreview)">
-                  <strong style="color:var(--nw-text-1); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ songPreview.title }}</strong>
-                  <span style="font-size:13px; color:var(--nw-text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ songPreview.artist || songPreview.sourceProvider }}</span>
-                  <button type="button" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold" style="align-self:flex-start; margin-top:4px;" (click)="$event.stopPropagation(); playSong(songPreview)">
+                <div class="song-info"
+                  style="flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; cursor:pointer;"
+                  (click)="playSong(songPreview)">
+                  <strong
+                    style="color:var(--nw-text-1); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{
+                    songPreview.title }}</strong>
+                  <span
+                    style="font-size:13px; color:var(--nw-text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{
+                    songPreview.artist || songPreview.sourceProvider }}</span>
+                  <button type="button" class="nw-portal-btn nw-portal-btn-sm nw-portal-btn-gold"
+                    style="align-self:flex-start; margin-top:4px;"
+                    (click)="$event.stopPropagation(); playSong(songPreview)">
                     ▶ Escuchar vista previa
                   </button>
                 </div>
@@ -321,17 +394,20 @@
 
               <div class="nw-portal-field">
                 <label>Título de la canción</label>
-                <input class="nw-portal-input" name="songTitle" [(ngModel)]="song.title" required placeholder="Ej. September">
+                <input class="nw-portal-input" name="songTitle" [(ngModel)]="song.title" required
+                  placeholder="Ej. September">
               </div>
 
               <div class="nw-portal-field">
                 <label>Artista / Banda</label>
-                <input class="nw-portal-input" name="songArtist" [(ngModel)]="song.artist" placeholder="Ej. Earth, Wind & Fire">
+                <input class="nw-portal-input" name="songArtist" [(ngModel)]="song.artist"
+                  placeholder="Ej. Earth, Wind & Fire">
               </div>
 
               <div class="nw-portal-field">
                 <label>Dedicatoria (Opcional)</label>
-                <textarea class="nw-portal-textarea" name="songDedication" [(ngModel)]="song.dedication" rows="2" placeholder="Dedicatoria especial..."></textarea>
+                <textarea class="nw-portal-textarea" name="songDedication" [(ngModel)]="song.dedication" rows="2"
+                  placeholder="Dedicatoria especial..."></textarea>
               </div>
 
               <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" type="submit" [disabled]="sending">
@@ -343,12 +419,14 @@
             <div class="upload-history" *ngIf="mySongRequests.length" style="margin-top:16px;">
               <h4>Mis canciones solicitadas</h4>
               <div class="song-list">
-                <div *ngFor="let s of mySongRequests" class="song-item" (click)="playSong(s)" style="cursor:pointer;" title="Escuchar en la página">
+                <div *ngFor="let s of mySongRequests" class="song-item" (click)="playSong(s)" style="cursor:pointer;"
+                  title="Escuchar en la página">
                   <div class="song-details">
                     <strong>{{ s.title }}</strong>
                     <p>{{ s.artist }}</p>
                   </div>
-                  <span class="status-badge" [class.approved]="s.status === 'approved' || s.status === 'played'" [class.pending]="s.status === 'pending'">
+                  <span class="status-badge" [class.approved]="s.status === 'approved' || s.status === 'played'"
+                    [class.pending]="s.status === 'pending'">
                     {{ statusLabel(s.status) }}
                   </span>
                 </div>
@@ -357,7 +435,8 @@
           </form>
 
           <!-- DEDICATIONS FORM -->
-          <form *ngIf="event.externalContent?.dedicationSettings?.enabled !== false" class="nw-portal-card nw-portal-action-card dedication-form" (ngSubmit)="submitDedication()">
+          <form *ngIf="event.externalContent?.dedicationSettings?.enabled !== false"
+            class="nw-portal-card nw-portal-action-card dedication-form" (ngSubmit)="submitDedication()">
             <div class="nw-portal-card-header">
               <h2>✍️ Enviar Dedicatoria</h2>
               <p>Envía un bonito mensaje a los anfitriones del evento.</p>
@@ -366,15 +445,18 @@
             <div class="nw-portal-form">
               <div class="nw-portal-field">
                 <label>Nombre Público</label>
-                <input class="nw-portal-input" name="dedicationName" [(ngModel)]="dedication.publicName" [placeholder]="guest.name">
+                <input class="nw-portal-input" name="dedicationName" [(ngModel)]="dedication.publicName"
+                  [placeholder]="guest.name">
               </div>
 
               <div class="nw-portal-field">
                 <label>Mensaje</label>
-                <textarea class="nw-portal-textarea" name="dedicationMessage" [(ngModel)]="dedication.message" required rows="3" placeholder="Escribe tu dedicatoria..."></textarea>
+                <textarea class="nw-portal-textarea" name="dedicationMessage" [(ngModel)]="dedication.message" required
+                  rows="3" placeholder="Escribe tu dedicatoria..."></textarea>
               </div>
 
-              <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" type="submit" [disabled]="sending || !dedication.message">
+              <button class="nw-portal-btn nw-portal-btn-gold nw-portal-btn-full" type="submit"
+                [disabled]="sending || !dedication.message">
                 Enviar Mensaje
               </button>
             </div>
@@ -385,7 +467,8 @@
               <div class="song-list">
                 <div *ngFor="let d of myDedications" class="song-item">
                   <p class="message-trim">"{{ d.message }}"</p>
-                  <span class="status-badge" [class.approved]="d.status === 'approved'" [class.pending]="d.status === 'pending'">
+                  <span class="status-badge" [class.approved]="d.status === 'approved'"
+                    [class.pending]="d.status === 'pending'">
                     {{ statusLabel(d.status) }}
                   </span>
                 </div>
@@ -405,7 +488,8 @@
   <div class="nw-dj-player-card" (click)="$event.stopPropagation()">
     <div class="nw-dj-player-header">
       <div class="nw-dj-player-info">
-        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover" class="nw-dj-player-cover">
+        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover"
+          class="nw-dj-player-cover">
         <div *ngIf="!activePlayingSong.thumbnailUrl" class="nw-dj-player-cover-fallback">🎵</div>
         <div>
           <h4 class="nw-dj-player-title">{{ activePlayingSong.title }}</h4>
@@ -417,17 +501,22 @@
 
     <div class="nw-dj-player-body">
       <!-- Direct Audio Player -->
-      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl" controls autoplay class="nw-dj-audio-element"></audio>
+      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl"
+        controls autoplay class="nw-dj-audio-element"></audio>
 
       <!-- Iframe Player (YouTube / Spotify / External) -->
-      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper" [class.spotify-wrapper]="activePlayingSong.isSpotify">
-        <iframe [src]="activePlayingSong.embedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper"
+        [class.spotify-wrapper]="activePlayingSong.isSpotify">
+        <iframe [src]="activePlayingSong.embedUrl" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
       </div>
 
       <!-- Fallback when url is not embeddable directly -->
       <div *ngIf="!activePlayingSong.isDirectAudio && !activePlayingSong.embedUrl" class="nw-dj-player-empty">
         <p>No se pudo generar vista previa directa para esta canción.</p>
-        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank" class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
+        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank"
+          class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
       </div>
     </div>
   </div>

@@ -23,11 +23,15 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
 
   guestMessage = '';
   guestError = '';
+  private messageTimeout?: any;
+  private errorTimeout?: any;
 
   guestSearch = '';
   guestStatusFilter = '';
   guestCommunicationFilter = '';
   guestGroupFilter = '';
+
+  showImpExpMenu = false;
 
   // Guest Form
   showGuestForm = false;
@@ -101,7 +105,8 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     visibilitySelect: '',
     tableName: '',
     seatLabel: '',
-    allowedCompanions: 0
+    allowedCompanions: 0,
+    checkedIn: false
   };
 
   companionNames = '';
@@ -385,6 +390,34 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       .join('\n');
   }
 
+  showSuccess(msg: string): void {
+    this.guestMessage = msg;
+    if (this.messageTimeout) clearTimeout(this.messageTimeout);
+    this.messageTimeout = setTimeout(() => {
+      this.guestMessage = '';
+    }, 3500);
+  }
+
+  showError(msg: string): void {
+    this.guestError = msg;
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+    this.errorTimeout = setTimeout(() => {
+      this.guestError = '';
+    }, 4000);
+  }
+
+  clearFilters(): void {
+    this.guestSearch = '';
+    this.guestStatusFilter = '';
+    this.guestGroupFilter = '';
+    this.guestCommunicationFilter = '';
+  }
+
+  toggleImpExpMenu(event: Event): void {
+    event.stopPropagation();
+    this.showImpExpMenu = !this.showImpExpMenu;
+  }
+
   openGuestForm(guest?: GuestModel): void {
     this.guestError = '';
     this.guestMessage = '';
@@ -423,7 +456,8 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
         visibilitySelect: visSel,
         tableName: guest.tableName || '',
         seatLabel: guest.seatLabel || '',
-        allowedCompanions: guest.allowedCompanions || 0
+        allowedCompanions: guest.allowedCompanions || 0,
+        checkedIn: Boolean(guest.checkedIn || guest.checkedInAt)
       };
 
       const companionArr = (guest.companions || []).map(c => c.name || '').filter(Boolean);
@@ -445,7 +479,8 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       this.editingGuest = undefined;
       this.guestForm = {
         name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
-        relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '', allowedCompanions: 0
+        relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '', allowedCompanions: 0,
+        checkedIn: false
       };
       this.companionNames = '';
       this.companionList = [];
@@ -462,7 +497,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   saveGuest(keepOpen = false): void {
     const nameClean = (this.guestForm.name || '').trim();
     if (!nameClean) {
-      this.guestError = 'El nombre del invitado es obligatorio.';
+      this.showError('El nombre del invitado es obligatorio.');
       return;
     }
 
@@ -470,7 +505,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     const emailClean = (this.guestForm.email || '').trim();
 
     if (!cleanLocal && !emailClean) {
-      this.guestError = 'Por favor ingresa al menos un medio de contacto (Teléfono o Correo electrónico).';
+      this.showError('Por favor ingresa al menos un medio de contacto (Teléfono o Correo electrónico).');
       return;
     }
 
@@ -498,7 +533,8 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       tableName: this.guestForm.tableName || undefined,
       seatLabel: this.guestForm.seatLabel || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0),
-      companions: companionsArray
+      companions: companionsArray,
+      checkedIn: this.guestForm.checkedIn
     };
 
     if (this.editingGuest) {
@@ -510,11 +546,11 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
           if (idx !== -1) this.guests[idx] = updated;
           this.guestSaving = false;
           this.showGuestForm = false;
-          this.guestMessage = `✅ Invitado "${updated.name}" actualizado.`;
+          this.showSuccess(`Invitado "${updated.name}" actualizado.`);
           this.guestsUpdated.emit();
         },
         error: err => {
-          this.guestError = err?.error?.message || 'Error al actualizar invitado.';
+          this.showError(err?.error?.message || 'Error al actualizar invitado.');
           this.guestSaving = false;
         }
       });
@@ -525,7 +561,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
           this.guests.push(created);
           this.guestSaving = false;
           this.guestsUpdated.emit();
-          this.guestMessage = `🎉 ¡Invitado "${created.name}" guardado exitosamente!`;
+          this.showSuccess(`¡Invitado "${created.name}" guardado exitosamente!`);
 
           if (keepOpen) {
             const lastGroup = this.guestForm.group;
@@ -545,6 +581,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
             this.companionNames = '';
             this.companionList = [];
             this.guestForm.allowedCompanions = 0;
+            this.guestForm.checkedIn = false;
 
             this.guestForm.phoneCountryCode = lastCode || '+52';
             this.guestForm.group = lastGroup;
@@ -566,7 +603,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
           }
         },
         error: err => {
-          this.guestError = err?.error?.message || 'Error al agregar invitado.';
+          this.showError(err?.error?.message || 'Error al agregar invitado.');
           this.guestSaving = false;
         }
       });
@@ -592,11 +629,11 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       this.apiService.deleteGuest(gId).subscribe({
         next: () => {
           this.guests = this.guests.filter(g => (g._id || g.id) !== gId);
-          this.guestMessage = `Invitado "${guest.name}" eliminado.`;
+          this.showSuccess(`Invitado "${guest.name}" eliminado.`);
           this.guestsUpdated.emit();
         },
         error: err => {
-          this.guestError = err?.error?.message || 'Error al eliminar invitado';
+          this.showError(err?.error?.message || 'Error al eliminar invitado');
         }
       });
     });
@@ -617,13 +654,13 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       next: () => {
         this.importing = false;
         this.importFile = undefined;
-        this.guestMessage = `¡Importación completada! Se procesaron los invitados correctamente.`;
+        this.showSuccess(`¡Importación completada! Se procesaron los invitados correctamente.`);
         this.loadGuests();
         this.guestsUpdated.emit();
       },
       error: err => {
         this.importing = false;
-        this.guestError = err?.error?.message || 'Error al importar archivo';
+        this.showError(err?.error?.message || 'Error al importar archivo');
       }
     });
   }
@@ -639,9 +676,11 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
         a.click();
         window.URL.revokeObjectURL(url);
         this.exportingGuests = false;
+        this.showSuccess('Archivo de invitados exportado exitosamente.');
       },
       error: () => {
         this.exportingGuests = false;
+        this.showError('Error al exportar la lista de invitados.');
       }
     });
   }
@@ -658,14 +697,14 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     if (!this.checkInCode.trim()) return;
     this.apiService.checkInGuest(this.checkInCode.trim()).subscribe({
       next: res => {
-        this.guestMessage = `Check-in exitoso para ${res.guest?.name || 'invitado'}`;
+        this.showSuccess(`Check-in exitoso para ${res.guest?.name || 'invitado'}`);
         this.checkInCode = '';
         this.showScanner = false;
         this.loadGuests();
         this.guestsUpdated.emit();
       },
       error: err => {
-        this.guestError = err?.error?.message || 'Error en check-in';
+        this.showError(err?.error?.message || 'Error en check-in');
       }
     });
   }

@@ -3,8 +3,23 @@
     
     <!-- Alerts -->
     <div *ngIf="loading" class="nw-embed-alert nw-embed-loading">Cargando...</div>
-    <div *ngIf="error" class="nw-embed-alert nw-embed-error">{{ error }}</div>
+    <div *ngIf="error && event" class="nw-embed-alert nw-embed-error">{{ error }}</div>
     <div *ngIf="message" class="nw-embed-alert nw-embed-success">{{ message }}</div>
+
+    <!-- Full Embed Error Screen -->
+    <div *ngIf="error && !event && !loading" class="nw-embed-error-screen">
+      <div class="nw-embed-error-card">
+        <div class="nw-embed-error-icon-wrapper">
+          <div class="nw-embed-error-icon">🏛️</div>
+        </div>
+        <h3 class="nw-embed-error-title">Widget No Disponible</h3>
+        <p class="nw-embed-error-msg">{{ error }}</p>
+        <p class="nw-embed-error-sub">El portal o widget del evento no se encuentra disponible o ha sido desactivado.</p>
+        <button type="button" class="nw-embed-btn nw-embed-btn-gold" (click)="load()" style="margin-top: 10px;">
+          🔄 Reintentar
+        </button>
+      </div>
+    </div>
 
     <ng-container *ngIf="event">
       

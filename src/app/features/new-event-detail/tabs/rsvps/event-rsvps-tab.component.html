@@ -1,62 +1,184 @@
-<section>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-    <h3 style="margin:0;">Respuestas RSVP</h3>
-    <div style="display:flex; gap:8px; align-items:center;">
-      <span class="nw-pill">{{ rsvps.length }} respuestas</span>
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="exportRsvps()"
-        [disabled]="exportingRsvps || !rsvps.length">{{ exportingRsvps ? 'Exportando...' : '📊 Exportar CSV' }}</button>
+<!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="message || error">
+  <div *ngIf="message" class="nw-toast success">
+    <span>✨ {{ message }}</span>
+    <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
+  </div>
+  <div *ngIf="error" class="nw-toast error">
+    <span>⚠️ {{ error }}</span>
+    <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+  </div>
+</div>
+
+<section class="nw-card">
+  <!-- ENCABEZADO ESTÁNDAR DE LA SECCIÓN -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
+        📋 Respuestas RSVP
+        <span class="nw-badge" style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ rsvps.length }} respuestas
+        </span>
+        <span *ngIf="pendingCount > 0" class="nw-pill warning" style="font-size: 12px; font-weight: 700;">
+          ⏳ {{ pendingCount }} pendientes
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Consulta, filtra y exporta las respuestas de asistencia enviadas por tus invitados desde el portal web.
+      </p>
+    </div>
+
+    <!-- Acciones Principales -->
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <button class="nw-btn nw-btn-primary" (click)="exportRsvps()" [disabled]="exportingRsvps || !rsvps.length" style="display: flex; align-items: center; gap: 6px; height: 38px;">
+        📊 {{ exportingRsvps ? 'Exportando CSV...' : 'Exportar CSV' }}
+      </button>
     </div>
   </div>
-  <p *ngIf="rsvpError" class="nw-alert error">{{ rsvpError }}</p>
 
-  <div *ngIf="rsvpsLoading" class="nw-alert info">Cargando respuestas RSVP...</div>
+  <!-- TARJETAS DE MÉTRICAS KPI -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px;">👥 Total Respuestas</span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">{{ rsvps.length }}</div>
+    </div>
 
-  <div *ngIf="!rsvpsLoading && rsvps.length === 0" class="nw-empty">
-    <span class="empty-icon">💌</span>
-    <h3>Sin respuestas aún</h3>
-    <p>Las respuestas aparecerán cuando los invitados respondan desde su invitación digital.</p>
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm); border-left: 4px solid var(--nw-success, #2e7d32);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-success, #2e7d32); text-transform: uppercase; letter-spacing: 0.5px;">✅ Confirmados</span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">
+        {{ confirmedCount }} <small style="font-size: 12px; font-weight: 600; color: var(--nw-text-2);">({{ totalAttendingGuests }} personas)</small>
+      </div>
+    </div>
+
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm); border-left: 4px solid var(--nw-danger, #d32f2f);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-danger, #d32f2f); text-transform: uppercase; letter-spacing: 0.5px;">❌ Rechazados</span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">{{ declinedCount }}</div>
+    </div>
+
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm); border-left: 4px solid var(--nw-warning, #ed6c02);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-warning, #ed6c02); text-transform: uppercase; letter-spacing: 0.5px;">⏳ Pendientes</span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">{{ pendingCount }}</div>
+    </div>
   </div>
 
-  <div class="nw-table-wrap" *ngIf="!rsvpsLoading && rsvps.length > 0">
-    <table class="nw-table">
+  <!-- BARRA DE FILTROS EN UNA SOLA FILA HORIZONTAL -->
+  <div style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+    
+    <!-- Buscador -->
+    <div style="flex: 1; min-width: 220px;">
+      <input class="nw-input" [(ngModel)]="searchQuery" placeholder="🔍 Buscar por invitado, correo, teléfono o mensaje..." style="height: 42px; padding: 0 14px; width: 100%; font-size: 13px; box-sizing: border-box;">
+    </div>
+    
+    <!-- Filtro Estado -->
+    <select class="nw-select" [(ngModel)]="statusFilter" style="height: 42px; padding: 0 28px 0 12px; width: 175px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <option value="">Todos los estados</option>
+      <option value="confirmed">Confirmados ✅</option>
+      <option value="declined">Rechazados ❌</option>
+      <option value="pending">Pendientes ⏳</option>
+    </select>
+
+    <!-- Filtro Acompañantes -->
+    <select class="nw-select" [(ngModel)]="companionsFilter" style="height: 42px; padding: 0 28px 0 12px; width: 185px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <option value="">Acompañantes (Todos)</option>
+      <option value="with_companions">Con Acompañantes 👥</option>
+      <option value="solo">Sin Acompañantes 👤</option>
+    </select>
+
+    <!-- Limpiar Filtros -->
+    <button *ngIf="searchQuery || statusFilter || companionsFilter" type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearFilters()" style="white-space: nowrap; height: 42px; font-size: 12px; flex-shrink: 0;">
+      ✕ Limpiar
+    </button>
+  </div>
+
+  <!-- ESTADO CARGANDO -->
+  <div *ngIf="rsvpsLoading" class="nw-alert info" style="margin-bottom: 16px;">
+    Cargando respuestas RSVP...
+  </div>
+
+  <!-- ESTADO VACÍO -->
+  <div *ngIf="!rsvpsLoading && filteredRsvps.length === 0" class="nw-empty" style="padding: 40px 20px; text-align: center; color: var(--nw-text-3);">
+    <span class="empty-icon" style="font-size: 40px; display: block; margin-bottom: 8px;">💌</span>
+    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text);">
+      {{ rsvps.length === 0 ? 'Sin respuestas aún' : 'No hay respuestas que coincidan con la búsqueda' }}
+    </h3>
+    <p style="font-size: 13px; margin-top: 4px; color: var(--nw-text-2);">
+      {{ rsvps.length === 0 ? 'Las respuestas aparecerán cuando los invitados confirmen desde la invitación digital.' : 'Intenta ajustar los filtros de búsqueda.' }}
+    </p>
+  </div>
+
+  <!-- TABLA RESPONSIVA DE RSVPS -->
+  <div class="nw-table-responsive" *ngIf="!rsvpsLoading && filteredRsvps.length > 0" style="overflow-x: auto; max-width: 100%; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+    <table class="nw-table" style="width: 100%; min-width: 820px; margin: 0;">
       <thead>
         <tr>
-          <th>Nombre</th>
-          <th>Contacto</th>
-          <th>Respuesta</th>
-          <th>Acompañantes</th>
-          <th>Preguntas y respuestas personalizadas</th>
-          <th>Mensaje</th>
-          <th>Fecha</th>
+          <th style="padding: 12px 14px;">Invitado</th>
+          <th style="padding: 12px 14px;">Contacto</th>
+          <th style="padding: 12px 14px;">Estado</th>
+          <th style="padding: 12px 14px;">Acompañantes</th>
+          <th style="padding: 12px 14px;">Menú / Respuestas</th>
+          <th style="padding: 12px 14px;">Mensaje</th>
+          <th style="padding: 12px 14px; text-align: right;">Fecha</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let r of rsvps">
-          <td style="white-space:nowrap;"><strong>{{ r.name }}</strong></td>
-          <td style="color:var(--nw-text-2); font-size:13px; white-space:nowrap;">
-            {{ r.email || r.phoneE164 || r.phone || '—' }}
-            <small *ngIf="r.email && (r.phoneE164 || r.phone)"
-              style="display:block; color:var(--nw-text-3); font-size:11px;">{{ r.phoneE164 || r.phone }}</small>
+        <tr *ngFor="let r of filteredRsvps">
+          <!-- Nombre Invitado -->
+          <td style="white-space: nowrap; padding: 12px 14px;">
+            <strong style="color: var(--nw-text); font-size: 14px;">{{ r.name }}</strong>
           </td>
-          <td style="white-space:nowrap;">
-            <span class="nw-pill" [ngClass]="statusPillClass(r.response)">{{ statusLabel(r.response) }}</span>
+
+          <!-- Contacto en 2 Líneas Apiladas -->
+          <td style="font-size: 12.5px; color: var(--nw-text-2); padding: 10px 14px; white-space: nowrap;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div *ngIf="r.phone || r.phoneE164" style="display: flex; align-items: center; gap: 4px; font-weight: 500;">
+                <span style="font-size: 11px;">📱</span> {{ r.phoneE164 || r.phone }}
+              </div>
+              <div *ngIf="r.email" style="display: flex; align-items: center; gap: 4px; color: var(--nw-text-3); font-size: 12px;">
+                <span style="font-size: 11px;">📧</span> {{ r.email }}
+              </div>
+              <span *ngIf="!r.email && !r.phone && !r.phoneE164" style="color: var(--nw-text-3);">—</span>
+            </div>
           </td>
-          <td style="white-space:nowrap;">
-            {{ r.companions || 0 }}
-            <small *ngIf="r.companionNames?.length"
-              style="display:block; color:var(--nw-text-3); font-size:11px;">({{ r.companionNames?.join(', ') }})</small>
+
+          <!-- Estado RSVP -->
+          <td style="white-space: nowrap; padding: 12px 14px;">
+            <span class="nw-pill" [ngClass]="statusPillClass(r.response)" style="font-weight: 600;">
+              {{ statusLabel(r.response) }}
+            </span>
           </td>
-          <td>
-            <div *ngIf="getCustomAnswersList(r).length > 0" style="display:flex; flex-direction:column; gap:4px; max-width:320px;">
-              <span *ngFor="let qa of getCustomAnswersList(r)" class="nw-pill"
-                style="font-size:11.5px; padding:3px 8px; line-height:1.3; text-align:left; background:var(--nw-surface-2); border:1px solid var(--nw-border); display:inline-block; word-break:break-word;">
-                <strong style="color:var(--nw-accent);">{{ qa.label }}:</strong> {{ qa.value }}
+
+          <!-- Acompañantes -->
+          <td style="white-space: nowrap; padding: 12px 14px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-weight: 700; font-size: 13px;">
+                {{ r.companions || 0 }} {{ (r.companions || 0) === 1 ? 'persona' : 'personas' }}
+              </span>
+              <span *ngIf="r.companionNames?.length" style="font-size: 11.5px; color: var(--nw-text-3);">
+                👥 {{ r.companionNames?.join(', ') }}
               </span>
             </div>
-            <span *ngIf="getCustomAnswersList(r).length === 0" style="color:var(--nw-text-3)">—</span>
           </td>
-          <td style="max-width:220px; color:var(--nw-text-2); font-size:13px;">{{ r.message || '—' }}</td>
-          <td style="color:var(--nw-text-3); font-size:12px; white-space:nowrap;">{{ formatShortDate(r.createdAt || '') }}</td>
+
+          <!-- Menú y Preguntas Personalizadas -->
+          <td style="padding: 10px 14px;">
+            <div *ngIf="getCustomAnswersList(r).length > 0" style="display: flex; flex-direction: column; gap: 4px; max-width: 320px;">
+              <span *ngFor="let qa of getCustomAnswersList(r)" class="nw-pill" style="font-size: 11.5px; padding: 3px 8px; line-height: 1.3; text-align: left; background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); display: inline-block; word-break: break-word;">
+                <strong style="color: var(--nw-accent, #c9a96e);">{{ qa.label }}:</strong> {{ qa.value }}
+              </span>
+            </div>
+            <span *ngIf="getCustomAnswersList(r).length === 0" style="color: var(--nw-text-3);">—</span>
+          </td>
+
+          <!-- Mensaje -->
+          <td style="max-width: 240px; color: var(--nw-text-2); font-size: 13px; padding: 12px 14px;">
+            <span *ngIf="r.message" style="font-style: italic;">“{{ r.message }}”</span>
+            <span *ngIf="!r.message" style="color: var(--nw-text-3);">—</span>
+          </td>
+
+          <!-- Fecha -->
+          <td style="color: var(--nw-text-3); font-size: 12px; white-space: nowrap; padding: 12px 14px; text-align: right;">
+            {{ formatShortDate(r.createdAt || '') || '—' }}
+          </td>
         </tr>
       </tbody>
     </table>

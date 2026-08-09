@@ -1,7 +1,15 @@
 <section class="embed-shell">
   <p *ngIf="loading" class="notice">Cargando...</p>
-  <p *ngIf="error" class="error">{{ error }}</p>
+  <p *ngIf="error && event" class="error">{{ error }}</p>
   <p *ngIf="message" class="success">{{ message }}</p>
+
+  <div *ngIf="error && !event && !loading" class="legacy-embed-error-card" style="padding: 24px 16px; text-align: center; background: #ffffff; border-radius: 12px; border: 1px solid #e8e0d5; margin: 20px auto; max-width: 400px;">
+    <div style="font-size: 32px; margin-bottom: 8px;">🏛️</div>
+    <h3 style="margin: 0 0 6px; font-size: 18px; color: #2c2c2c;">Widget No Disponible</h3>
+    <p style="color: #d9534f; font-weight: 600; font-size: 13px; margin: 0 0 8px;">{{ error }}</p>
+    <p style="color: #7a7a7a; font-size: 12px; margin: 0 0 16px;">El portal o widget solicitado no está disponible.</p>
+    <button (click)="load()" type="button" style="padding: 8px 16px; background: #c9a96e; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">🔄 Reintentar</button>
+  </div>
 
   <ng-container *ngIf="event">
     <header *ngIf="widget === 'full-portal'" class="public-hero">

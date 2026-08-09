@@ -76,7 +76,33 @@ export class NewEventDetailComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.eventId = id;
+      this.restoreActiveTab();
       this.loadEvent();
+    }
+
+    this.route.queryParamMap.subscribe(params => {
+      const tabParam = params.get('tab') as Tab;
+      if (tabParam && this.isValidTab(tabParam) && tabParam !== this.activeTab) {
+        this.activeTab = tabParam;
+        if (this.eventId) {
+          localStorage.setItem(`newEventDetail_tab_${this.eventId}`, tabParam);
+        }
+      }
+    });
+  }
+
+  private isValidTab(tab: string): tab is Tab {
+    return ['info', 'guests', 'tables', 'rsvps', 'album', 'communication', 'dedications', 'dj', 'integration'].includes(tab);
+  }
+
+  private restoreActiveTab(): void {
+    const tabFromQuery = this.route.snapshot.queryParamMap.get('tab') as Tab;
+    const tabFromStorage = this.eventId ? (localStorage.getItem(`newEventDetail_tab_${this.eventId}`) as Tab) : null;
+
+    if (tabFromQuery && this.isValidTab(tabFromQuery)) {
+      this.activeTab = tabFromQuery;
+    } else if (tabFromStorage && this.isValidTab(tabFromStorage)) {
+      this.activeTab = tabFromStorage;
     }
   }
 
@@ -140,6 +166,15 @@ export class NewEventDetailComponent implements OnInit {
 
   selectTab(tab: Tab): void {
     this.activeTab = tab;
+    if (this.eventId) {
+      localStorage.setItem(`newEventDetail_tab_${this.eventId}`, tab);
+    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   formatDate(dateStr?: string): string {

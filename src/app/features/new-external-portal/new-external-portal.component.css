@@ -755,3 +755,136 @@
     margin: 0 auto;
   }
 }
+
+/* ===============================================================
+   FULL-PAGE ERROR SCREEN (PORTAL NO DISPONIBLE)
+   =============================================================== */
+.nw-portal-error-screen {
+  min-height: calc(85vh - 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.nw-portal-error-card {
+  background: var(--nw-surface, #ffffff);
+  border: 1px solid var(--nw-border, #e8e0d5);
+  border-radius: var(--nw-radius-lg, 24px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 48px 36px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+  animation: errorCardEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nw-portal-error-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #d9534f, var(--nw-accent, #c9a96e), #d9534f);
+}
+
+.nw-portal-error-icon-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(217, 83, 79, 0.12), rgba(201, 169, 110, 0.15));
+  border: 1px solid rgba(217, 83, 79, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.nw-portal-error-icon {
+  font-size: 44px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+.nw-portal-error-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #d9534f;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(217, 83, 79, 0.35);
+}
+
+.nw-portal-error-title {
+  font-family: var(--nw-font-display, 'Cormorant Garamond', serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--nw-text, #2c2c2c);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.nw-portal-error-message-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--nw-danger-bg, #fdf2f2);
+  border: 1px solid rgba(217, 83, 79, 0.25);
+  color: var(--nw-danger, #d9534f);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.nw-portal-error-description {
+  font-size: 14px;
+  color: var(--nw-text-2, #666666);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 420px;
+}
+
+.nw-portal-error-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nw-portal-error-actions .nw-portal-btn {
+  flex: 1;
+  min-width: 140px;
+  justify-content: center;
+  padding: 12px 20px;
+}
+
+@keyframes errorCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
