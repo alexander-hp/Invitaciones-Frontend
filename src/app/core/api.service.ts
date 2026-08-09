@@ -176,6 +176,23 @@ export class ApiService {
     return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/events/${eventId}/song-requests`);
   }
 
+  createSongRequest(eventId: string, payload: SongRequestPayload): Observable<{ songRequest: SongRequestModel }> {
+    return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests`, payload).pipe(
+      catchError(err => {
+        if (err.status === 404) {
+          return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${eventId}/song-requests`, payload);
+        }
+        throw err;
+      })
+    );
+  }
+
+  lookupYouTubeVideo(eventId: string, query: string): Observable<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }> {
+    return this.http.post<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }>(`${this.apiUrl}/events/${eventId}/song-requests/lookup-youtube`, { query }).pipe(
+      catchError(() => of({ video: undefined }))
+    );
+  }
+
   updateSongRequest(eventId: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
     const body = typeof payload === 'string' ? { status: payload } : payload;
     return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, body);

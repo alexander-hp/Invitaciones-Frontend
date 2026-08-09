@@ -499,6 +499,8 @@ export interface GuestPayload {
   seatLabel?: string;
   companions?: GuestCompanion[];
   allowedCompanions?: number;
+  checkedIn?: boolean;
+  checkedInAt?: string;
 }
 
 export interface GuestCompanion {
