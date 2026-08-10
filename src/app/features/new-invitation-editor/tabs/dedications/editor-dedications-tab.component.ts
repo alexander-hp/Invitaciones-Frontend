@@ -7,6 +7,7 @@ import { InvitationModel } from '../../../../core/models';
 })
 export class EditorDedicationsTabComponent {
   @Input() invitation!: InvitationModel;
+  @Input() activeTab = 'all';
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
 
   isSectionActive(key: string): boolean {

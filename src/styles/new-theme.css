@@ -1931,6 +1931,122 @@
   opacity: 1;
 }
 
+/* ===============================================================
+   INVITATION SECTIONS REDESIGN (Activas & Desactivadas)
+   =============================================================== */
+.nw-sections-nav-wrapper {
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius);
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: var(--nw-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nw-sections-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nw-sections-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nw-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nw-sections-group-header .nw-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.nw-sections-group-header .nw-dot.green {
+  background: var(--nw-success);
+  box-shadow: 0 0 6px rgba(74, 127, 98, 0.4);
+}
+
+.nw-sections-group-header .nw-dot.gray {
+  background: var(--nw-text-3);
+}
+
+.nw-sections-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nw-section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--nw-border);
+  background: var(--nw-surface-2);
+  color: var(--nw-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.nw-section-chip:hover {
+  background: var(--nw-surface-3);
+  border-color: var(--nw-accent);
+}
+
+.nw-section-chip.active {
+  background: var(--nw-surface);
+  border-color: var(--nw-accent);
+  box-shadow: 0 2px 8px rgba(192, 156, 120, 0.2);
+}
+
+.nw-section-chip.selected {
+  background: var(--nw-accent);
+  color: #ffffff;
+  border-color: var(--nw-accent);
+}
+
+.nw-section-chip.mandatory {
+  background: rgba(192, 156, 120, 0.12);
+  border-color: rgba(192, 156, 120, 0.3);
+  color: var(--nw-text);
+}
+
+.nw-section-chip.inactive {
+  background: var(--nw-surface);
+  border: 1px dashed var(--nw-border);
+  color: var(--nw-text-3);
+}
+
+.nw-btn-activate-chip {
+  background: var(--nw-success);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.nw-btn-activate-chip:hover {
+  transform: scale(1.05);
+  background: #3b664f;
+}
+
+
 
 
 

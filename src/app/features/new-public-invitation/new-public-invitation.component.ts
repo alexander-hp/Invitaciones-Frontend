@@ -350,6 +350,27 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     });
   }
 
+  submitRsvp(): void {
+    this.submit();
+  }
+
+  submitDedicationFromData(data: { publicName: string; message: string }): void {
+    this.dedication.publicName = data.publicName;
+    this.dedication.message = data.message;
+    this.submitDedication();
+  }
+
+  onFileSelectedDirect(file: File): void {
+    this.selectedAlbumFile = file;
+    this.uploadAlbumPhoto();
+  }
+
+  checkGuestAccessByCredentials(email: string, phone: string): void {
+    if (email) this.guestAccessEmail = email;
+    if (phone) this.guestAccessPhone = phone;
+    this.checkGuestAccess();
+  }
+
   selectAlbumFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.selectedAlbumFile = input.files?.[0] || undefined;
@@ -502,6 +523,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
         this.toastMessage = '';
       }
     }, 3500);
+  }
+
+  get currentTemplate(): string {
+    return (this.invitation?.content as any)?.template || this.invitation?.template || 'envelope-cards';
+  }
+
+  isEnvelopeCardsTemplate(): boolean {
+    const t = this.currentTemplate;
+    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope';
   }
 
   get requiresGuestValidation(): boolean {

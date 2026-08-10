@@ -11,6 +11,9 @@
         <input type="checkbox" [checked]="isSectionActive('gifts')" (change)="toggleSectionActive.emit({ key: 'gifts', active: $any($event.target).checked })">
         <span class="nw-slider"></span>
       </label>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showStoreGuide = !showStoreGuide">
+        {{ showStoreGuide ? '👁️ Ocultar Guía de Tiendas' : '💡 Ver Guía y Ventajas de Tiendas' }}
+      </button>
       <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addGiftItem.emit()">+ Agregar mesa de regalos</button>
     </div>
   </div>
@@ -53,20 +56,68 @@
       </label>
     </div>
 
+    <!-- GUÍA DE TIENDAS Y VENTAJAS DE MESAS DE REGALOS -->
+    <div *ngIf="showStoreGuide" style="margin-bottom:20px; padding:16px; background:var(--nw-surface-2); border:1px solid var(--nw-accent); border-radius:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h4 style="margin:0; font-size:16px; font-weight:700; color:var(--nw-accent-2);">💡 Guía de Tiendas y Beneficios de Mesas de Regalos</h4>
+        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showStoreGuide = false">✕ Cerrar</button>
+      </div>
+      <p style="margin:0 0 16px; font-size:13px; color:var(--nw-text-2);">
+        Selecciona las tiendas de tu preferencia. Haz clic en <strong>+ Agregar esta mesa</strong> para incluirla automáticamente con su logo y enlace sugerido.
+      </p>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px;">
+        <div *ngFor="let s of presetStores" style="background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:10px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong style="font-size:14px; font-weight:700; color:var(--nw-text);">{{ s.name }}</strong>
+              <span class="nw-pill warning" style="font-size:10px;">{{ s.badge }}</span>
+            </div>
+            <p style="margin:0; font-size:12px; color:var(--nw-text-3); line-height:1.4;">
+              {{ s.advantages }}
+            </p>
+          </div>
+          <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="addPresetStore(s)">
+            + Agregar {{ s.name }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Gift Registry Items -->
-    <div style="display:grid; gap:12px; margin-bottom:16px;">
+    <div style="display:grid; gap:12px; margin-bottom:16px;" *ngIf="activeTab === 'giftRegistry' || activeTab === 'gifts' || activeTab === 'all'">
       <div *ngFor="let gift of invitation.content.giftRegistry; let i = index"
         style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
         <div class="nw-form-grid" style="gap:10px;">
-          <label class="nw-label">Tienda <input class="nw-input" [(ngModel)]="gift.store"
-              placeholder="Liverpool"></label>
+          <label class="nw-label">Tienda Sugerida / Catálogo
+            <select class="nw-select" (change)="onSelectPresetForGift(gift, $any($event.target).value)">
+              <option value="">-- Seleccionar de catálogo o escribir --</option>
+              <option *ngFor="let ps of presetStores" [value]="ps.name" [selected]="gift.store === ps.name">
+                {{ ps.name }}
+              </option>
+            </select>
+          </label>
+          <label class="nw-label">Nombre de Tienda <input class="nw-input" [(ngModel)]="gift.store"
+              placeholder="Liverpool / Amazon"></label>
           <label class="nw-label">Título <input class="nw-input" [(ngModel)]="gift.title"
               placeholder="Mesa de regalos"></label>
-          <label class="nw-label nw-form-wide">URL <input class="nw-input" [(ngModel)]="gift.url"
+          <label class="nw-label nw-form-wide">URL enlace directo <input class="nw-input" [(ngModel)]="gift.url"
               placeholder="https://..."></label>
-          <label class="nw-label nw-form-wide">Imagen/logo <input class="nw-input" [(ngModel)]="gift.imageUrl"
+          <label class="nw-label nw-form-wide">Imagen / Logo <input class="nw-input" [(ngModel)]="gift.imageUrl"
               placeholder="https://.../logo.png"></label>
-          <label class="nw-label nw-form-wide">Nota <input class="nw-input" [(ngModel)]="gift.note"></label>
+
+          <!-- Beneficios / Ventajas explicativas de la tienda -->
+          <div *ngIf="getAdvantagesForStore(gift.store)" class="nw-form-wide" style="padding:10px 14px; background:rgba(59, 130, 246, 0.06); border:1px solid rgba(59, 130, 246, 0.2); border-radius:8px; font-size:12.5px; color:var(--nw-text-2);">
+            <strong>💡 Beneficios & Ventajas de {{ gift.store }}:</strong> {{ getAdvantagesForStore(gift.store) }}
+          </div>
+
+          <div *ngIf="gift.imageUrl" class="nw-form-wide" style="display:flex; align-items:center; gap:12px; margin-top:4px; padding:8px 12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:8px;">
+            <div style="width:70px; height:45px; background:#ffffff; border-radius:6px; border:1px solid var(--nw-border); padding:4px; display:flex; align-items:center; justify-content:center;">
+              <img [src]="gift.imageUrl" [alt]="gift.store || 'Tienda'" style="max-width:100%; max-height:100%; object-fit:contain;">
+            </div>
+            <span style="font-size:12px; font-weight:600; color:var(--nw-text-2);">Logo de tienda cargado</span>
+          </div>
+          <label class="nw-label nw-form-wide">Nota / Instrucciones <input class="nw-input" [(ngModel)]="gift.note"></label>
           <label class="nw-label">Prioridad <input class="nw-input" type="number"
               [(ngModel)]="gift.priority"></label>
         </div>
@@ -76,7 +127,7 @@
     </div>
 
     <!-- Sobre Digital -->
-    <div *ngIf="invitation.content.digitalEnvelope as envelope"
+    <div *ngIf="(activeTab === 'digitalEnvelope' || activeTab === 'gifts' || activeTab === 'all') && invitation.content.digitalEnvelope as envelope"
       style="padding:16px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
       <strong style="display:block; margin-bottom:12px; font-size:15px;">💳 Datos bancarios (sobre digital)</strong>
       <div class="nw-form-grid" style="gap:12px;">
@@ -94,11 +145,16 @@
             </label>
             <input class="nw-input" [(ngModel)]="envelope.qrImageUrl" placeholder="O pega enlace directo: https://.../qr.png" style="flex:1; min-width:240px;">
           </div>
-          <div *ngIf="envelope.qrImageUrl" style="display:flex; align-items:center; gap:14px; margin-top:6px; padding:10px; background:#ffffff; border:1px solid var(--nw-border); border-radius:8px; width:fit-content;">
-            <img [src]="envelope.qrImageUrl" alt="QR sobre digital" style="max-width:110px; max-height:110px; object-fit:contain; border-radius:6px; border:1px solid #e2e8f0;">
+          <div *ngIf="envelope.qrImageUrl" style="display:flex; align-items:center; gap:16px; margin-top:8px; padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow:var(--nw-shadow-sm); width:fit-content;">
+            <div style="width:110px; height:110px; background:#ffffff; border-radius:8px; border:1px solid var(--nw-border); padding:6px; display:flex; align-items:center; justify-content:center;">
+              <img [src]="envelope.qrImageUrl" alt="QR sobre digital" style="max-width:100%; max-height:100%; object-fit:contain;">
+            </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
-              <span style="font-size:12.5px; color:#1e293b; font-weight:600;">✅ Imagen de QR configurada</span>
-              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="envelope.qrImageUrl=''">✕ Eliminar QR</button>
+              <strong style="font-size:13.5px; color:var(--nw-text);">✅ Imagen de QR Configurada</strong>
+              <span style="font-size:12px; color:var(--nw-text-3);">Los invitados podrán escanear este código para realizar transferencias.</span>
+              <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="envelope.qrImageUrl=''" style="width:fit-content; margin-top:4px;">
+                🗑️ Eliminar QR
+              </button>
             </div>
           </div>
         </div>

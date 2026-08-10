@@ -52,6 +52,25 @@
         </p>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-top:16px;">
+          <!-- Obligatoria 1: Contenido -->
+          <div class="nw-toggle-row" style="background: rgba(192, 156, 120, 0.08); border: 1px solid rgba(192, 156, 120, 0.3); border-radius: 10px; padding: 12px 16px;">
+            <div class="nw-toggle-info">
+              <strong>📝 Contenido Principal</strong>
+              <span>Slug, titulares, mensaje y configuración general (Obligatoria / Fija).</span>
+            </div>
+            <span class="nw-pill warning" style="font-size:11px; font-weight:700;">Obligatoria</span>
+          </div>
+
+          <!-- Obligatoria 2: Estilo -->
+          <div class="nw-toggle-row" style="background: rgba(192, 156, 120, 0.08); border: 1px solid rgba(192, 156, 120, 0.3); border-radius: 10px; padding: 12px 16px;">
+            <div class="nw-toggle-info">
+              <strong>🎨 Estilo y Paletas de Colores</strong>
+              <span>Paleta principal, secundario, acento y temas visuales (Obligatoria / Fija).</span>
+            </div>
+            <span class="nw-pill warning" style="font-size:11px; font-weight:700;">Obligatoria</span>
+          </div>
+
+          <!-- Secciones configurables activas -->
           <div *ngFor="let sec of activeSections" class="nw-toggle-row" style="background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 12px 16px;">
             <div class="nw-toggle-info">
               <strong>{{ sec.icon }} {{ sec.title }}</strong>

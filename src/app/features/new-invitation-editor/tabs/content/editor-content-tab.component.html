@@ -32,6 +32,19 @@
       <label class="nw-label">Logo anfitrión
         <input class="nw-input" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png">
       </label>
+      <div *ngIf="invitation.content.brandLogoUrl" class="nw-form-wide"
+        style="padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); display:flex; align-items:center; gap:16px; box-shadow:var(--nw-shadow-sm);">
+        <div style="width:120px; height:80px; background:#ffffff; border-radius:8px; border:1px solid var(--nw-border); padding:6px; display:flex; align-items:center; justify-content:center;">
+          <img [src]="invitation.content.brandLogoUrl" alt="Logo Anfitrión" style="max-width:100%; max-height:100%; object-fit:contain;">
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+          <strong style="font-size:13.5px; color:var(--nw-text);">✅ Logo de Anfitrión Configurado</strong>
+          <span style="font-size:12px; color:var(--nw-text-3);">Esta imagen se mostrará en el encabezado o pie de la invitación digital.</span>
+          <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="invitation.content.brandLogoUrl=''" style="width:fit-content; margin-top:4px;">
+            🗑️ Eliminar Logo
+          </button>
+        </div>
+      </div>
       <div class="nw-toggle-row nw-form-wide">
         <div class="nw-toggle-info">
           <strong>Ocultar marca KyndraSoft</strong>

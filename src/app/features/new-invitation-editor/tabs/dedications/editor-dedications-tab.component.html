@@ -1,4 +1,4 @@
-<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'dedications' || activeTab === 'all')">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
       <h3 style="margin:0;">💬 Dedicatorias y Libro de Visitas</h3>
@@ -44,7 +44,7 @@
 </div>
 
 <!-- ÁLBUM DE INVITADOS -->
-<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'guestAlbum' || activeTab === 'guest_album' || activeTab === 'all')">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
       <h3 style="margin:0;">📸 Álbum de invitados</h3>

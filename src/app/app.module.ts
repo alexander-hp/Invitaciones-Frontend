@@ -54,6 +54,7 @@ import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-chec
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
+import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { EditorContentTabComponent } from './features/new-invitation-editor/tabs/content/editor-content-tab.component';
 import { EditorStyleTabComponent } from './features/new-invitation-editor/tabs/style/editor-style-tab.component';
@@ -115,6 +116,7 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     NewPasswordResetConfirmComponent,
     PublicInvitationComponent,
     NewPublicInvitationComponent,
+    NewPublicInvitationEnvelopeCardsComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

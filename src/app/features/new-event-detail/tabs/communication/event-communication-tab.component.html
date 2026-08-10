@@ -33,19 +33,12 @@
       <span class="nw-pill" *ngIf="whatsappFallbackProvider">Fallback: {{ whatsappFallbackProvider }}</span>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-      <label class="nw-label">Plantilla
+      <label class="nw-label" style="flex:1; min-width:260px;">Plantilla de mensaje activa
         <select class="nw-select" [(ngModel)]="selectedMessageType">
           <option *ngFor="let t of messageTemplates" [value]="t.value">{{ t.label }}</option>
         </select>
       </label>
-      <button class="nw-btn nw-btn-ghost" (click)="showPendingReminders()">Ver pendientes</button>
-      <button class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !activeRecipients.length">
-        {{ emailBulkSending ? 'Enviando...' : '📧 Email masivo' }}
-      </button>
-      <button class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
-        [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeRecipients.length">
-        {{ whatsappBulkSending ? 'Enviando...' : '📱 WhatsApp masivo' }}
-      </button>
+      <button class="nw-btn nw-btn-ghost" (click)="showPendingReminders()">Filtrar por enviar</button>
     </div>
     <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--nw-border-subtle); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
       <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
@@ -193,6 +186,25 @@
       <span class="nw-pill" style="margin-left:auto;">{{ activeRecipients.length }} activos / {{ filteredGuests.length }} filtrados</span>
     </div>
 
+    <!-- BARRA DESTACADA DE ACCIONES DE ENVÍO JUNTO A LA TABLA -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:rgba(192, 156, 120, 0.08); border:1px solid rgba(192, 156, 120, 0.3); border-radius:10px; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:14px; font-weight:700; color:var(--nw-text);">
+          🚀 Acciones de Envío Masivo:
+        </span>
+        <span class="nw-pill success" style="font-weight:700;">{{ activeRecipients.length }} activos seleccionados</span>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !activeRecipients.length">
+          {{ emailBulkSending ? 'Enviando Email...' : '📧 Enviar Email Masivo (' + activeRecipients.length + ')' }}
+        </button>
+        <button class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
+          [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeRecipients.length">
+          {{ whatsappBulkSending ? 'Enviando WhatsApp...' : '📱 Enviar WhatsApp Masivo (' + activeRecipients.length + ')' }}
+        </button>
+      </div>
+    </div>
+
     <div *ngIf="filteredGuests.length === 0" class="nw-empty" style="padding:20px;">
       <p>No se encontraron invitados con los filtros seleccionados.</p>
     </div>
@@ -249,6 +261,22 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- FOOTER DE ACCIONES AL PIE DE LA TABLA -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:var(--nw-surface-2); border-top:1px solid var(--nw-border);">
+        <span style="font-size:13px; color:var(--nw-text-2);">
+          Mostrando {{ filteredGuests.length }} invitados (<strong>{{ activeRecipients.length }} activos listos para envío</strong>).
+        </span>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !activeRecipients.length">
+            {{ emailBulkSending ? 'Enviando...' : '📧 Enviar Email (' + activeRecipients.length + ')' }}
+          </button>
+          <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="sendBulkWhatsapp()"
+            [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeRecipients.length">
+            {{ whatsappBulkSending ? 'Enviando...' : '📱 Enviar WhatsApp (' + activeRecipients.length + ')' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -7,14 +7,22 @@ import { InvitationModel, AssetFolder } from '../../../../core/models';
 })
 export class EditorAssetsTabComponent {
   @Input() invitation!: InvitationModel;
+  @Input() activeTab = 'all';
   @Input() assetUploading = false;
   @Input() musicError = false;
   @Input() sectionMusicOptions: Array<{ key: string; label: string }> = [
-    { key: 'hero', label: 'Portada / Bienvenida (Hero)' },
-    { key: 'itinerary', label: 'Itinerario de eventos' },
-    { key: 'locations', label: 'Ubicaciones y mapa' },
-    { key: 'gifts', label: 'Mesa de regalos' },
-    { key: 'gallery', label: 'Galería de fotos' }
+    { key: 'hero', label: '💍 Portada / Bienvenida' },
+    { key: 'story', label: '📖 Nuestra Historia' },
+    { key: 'locations', label: '📍 Ubicaciones y Mapa' },
+    { key: 'itinerary', label: '📅 Itinerario / Cronograma' },
+    { key: 'dressCode', label: '👔 Código de Vestimenta' },
+    { key: 'gifts', label: '🎁 Mesa de Regalos y Sobre Digital' },
+    { key: 'gallery', label: '🖼️ Galería Fotográfica' },
+    { key: 'guestAlbum', label: '📸 Álbum Interactivo de Invitados' },
+    { key: 'dedications', label: '💬 Dedicatorias y Libro de Firmas' },
+    { key: 'songRequests', label: '🎵 Música DJ / Peticiones' },
+    { key: 'lodging', label: '🏨 Hospedaje y Hoteles' },
+    { key: 'rsvp', label: '💌 Confirmación de Asistencia (RSVP)' }
   ];
 
   @Output() selectAsset = new EventEmitter<{ event: Event; folder: AssetFolder }>();

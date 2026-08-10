@@ -49,41 +49,76 @@
         </div>
       </div>
 
-      <!-- Barra de pestañas de navegación (Tabs) -->
-      <div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:20px; padding:6px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow:0 2px 8px rgba(0,0,0,0.03);">
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'content'" [class.nw-btn-ghost]="activeTab !== 'content'" (click)="setActiveTab('content')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          📝 Contenido
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'style'" [class.nw-btn-ghost]="activeTab !== 'style'" (click)="setActiveTab('style')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          🎨 Estilo
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'itinerary'" [class.nw-btn-ghost]="activeTab !== 'itinerary'" (click)="setActiveTab('itinerary')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          🕐 Itinerario
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'locations'" [class.nw-btn-ghost]="activeTab !== 'locations'" (click)="setActiveTab('locations')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          📍 Ubicaciones
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'rsvp'" [class.nw-btn-ghost]="activeTab !== 'rsvp'" (click)="setActiveTab('rsvp')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          💌 RSVP
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'gifts'" [class.nw-btn-ghost]="activeTab !== 'gifts'" (click)="setActiveTab('gifts')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          🎁 Regalos
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'dedications'" [class.nw-btn-ghost]="activeTab !== 'dedications'" (click)="setActiveTab('dedications')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          💬 Dedicatorias
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'assets'" [class.nw-btn-ghost]="activeTab !== 'assets'" (click)="setActiveTab('assets')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          🖼️ Archivos
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'plans'" [class.nw-btn-ghost]="activeTab !== 'plans'" (click)="setActiveTab('plans')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          💎 Plantillas / Plan
-        </button>
-        <button class="nw-btn" [class.nw-btn-primary]="activeTab === 'all'" [class.nw-btn-ghost]="activeTab !== 'all'" (click)="setActiveTab('all')" style="font-weight:700; font-size:13px; padding:8px 14px;">
-          📖 Ver todo
-        </button>
+      <!-- Sub-Menú de Secciones Dividido en Activas y Desactivadas -->
+      <div class="nw-sections-nav-wrapper">
+        <!-- Grupo 1: Secciones Activas -->
+        <div class="nw-sections-group">
+          <div class="nw-sections-group-header">
+            <span class="nw-dot green"></span>
+            <span>🟢 Secciones Activas en la Invitación</span>
+            <span class="nw-pill success" style="font-size:11px; padding:2px 8px;">{{ activeConfigurableSections.length + 2 }} activas</span>
+          </div>
+          <div class="nw-sections-chips">
+            <!-- Obligatoria 1: Contenido -->
+            <div class="nw-section-chip mandatory" [class.selected]="activeTab === 'content'" (click)="setActiveTab('content')">
+              <span>📝 Contenido</span>
+              <span class="nw-pill warning" style="font-size:10px; padding:1px 6px;">Fija</span>
+            </div>
+
+            <!-- Obligatoria 2: Estilo -->
+            <div class="nw-section-chip mandatory" [class.selected]="activeTab === 'style'" (click)="setActiveTab('style')">
+              <span>🎨 Estilo</span>
+              <span class="nw-pill warning" style="font-size:10px; padding:1px 6px;">Fija</span>
+            </div>
+
+            <!-- Secciones configurables activas -->
+            <div *ngFor="let sec of activeConfigurableSections" 
+                 class="nw-section-chip active" 
+                 [class.selected]="activeTab === sec.key" 
+                 (click)="setActiveTab(sec.key)">
+              <span>{{ sec.icon }} {{ sec.title }}</span>
+              <label class="nw-switch" (click)="$event.stopPropagation()" style="transform: scale(0.7); margin-left:-4px;">
+                <input type="checkbox" [checked]="true" (change)="toggleSectionActive(sec.key, false)">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grupo 2: Secciones Desactivadas -->
+        <div class="nw-sections-group" *ngIf="inactiveConfigurableSections.length" style="border-top: 1px dashed var(--nw-border); padding-top: 12px;">
+          <div class="nw-sections-group-header">
+            <span class="nw-dot gray"></span>
+            <span>⚪ Secciones Desactivadas (Ocultas)</span>
+            <span class="nw-pill" style="font-size:11px; padding:2px 8px;">{{ inactiveConfigurableSections.length }} inactivas</span>
+          </div>
+          <div class="nw-sections-chips">
+            <div *ngFor="let sec of inactiveConfigurableSections" 
+                 class="nw-section-chip inactive" 
+                 [class.selected]="activeTab === sec.key"
+                 (click)="setActiveTab(sec.key)">
+              <span style="opacity: 0.75;">{{ sec.icon }} {{ sec.title }}</span>
+              <button type="button" class="nw-btn-activate-chip" (click)="toggleSectionActive(sec.key, true); setActiveTab(sec.key); $event.stopPropagation();">
+                + Activar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Utilidad Global -->
+        <div style="display:flex; gap:8px; border-top: 1px solid var(--nw-border); padding-top: 12px; align-items:center;">
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'plans'" (click)="setActiveTab('plans')" style="font-weight:700;">
+            💎 Plantillas / Plan
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'all'" (click)="setActiveTab('all')" style="font-weight:700;">
+            📖 Ver todo
+          </button>
+        </div>
       </div>
 
-      <!-- Pestañas de contenido -->
+      <!-- CARDS DE CONTENIDO -->
+
+      <!-- 1. Contenido Principal (Mandatorio) -->
       <app-editor-content-tab
         *ngIf="activeTab === 'content' || activeTab === 'all'"
         [invitation]="invitation"
@@ -91,6 +126,7 @@
         (applyTextVariant)="applyTextVariant($event)">
       </app-editor-content-tab>
 
+      <!-- 2. Estilo y Paleta (Mandatorio) -->
       <app-editor-style-tab
         *ngIf="activeTab === 'style' || activeTab === 'all'"
         [invitation]="invitation"
@@ -98,6 +134,127 @@
         (applyPalette)="applyPalette($event)">
       </app-editor-style-tab>
 
+      <!-- 3. Nuestra Historia (story) -->
+      <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'story' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0;">📖 Nuestra Historia</h3>
+            <span class="nw-pill" [class.success]="isSectionActive('story')" [class.warning]="!isSectionActive('story')">
+              {{ isSectionActive('story') ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="nw-switch" title="Activar / Desactivar Nuestra Historia">
+              <input type="checkbox" [checked]="isSectionActive('story')" (change)="toggleSectionActive('story', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="nw-card-body" style="padding-top:16px;">
+          <p style="font-size:13px; color:var(--nw-text-3); margin-bottom:14px;">
+            Escribe la historia de cómo se conocieron o una reseña personal para los invitados.
+          </p>
+          <div class="nw-form-grid" style="gap:14px;">
+            <label class="nw-label nw-form-wide">Título de la sección
+              <input class="nw-input" [(ngModel)]="invitation.content.storyTitle" placeholder="Nuestra Historia / Cómo nos conocimos">
+            </label>
+            <label class="nw-label nw-form-wide">Reseña / Texto de la historia
+              <textarea class="nw-input" [(ngModel)]="invitation.content.storyBody" rows="4" placeholder="Hace 5 años nos conocimos en..."></textarea>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Código de Vestimenta (dressCode) -->
+      <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'dressCode' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0;">👔 Código de Vestimenta</h3>
+            <span class="nw-pill" [class.success]="isSectionActive('dressCode')" [class.warning]="!isSectionActive('dressCode')">
+              {{ isSectionActive('dressCode') ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="nw-switch" title="Activar / Desactivar Código de Vestimenta">
+              <input type="checkbox" [checked]="isSectionActive('dressCode')" (change)="toggleSectionActive('dressCode', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="nw-card-body" style="padding-top:16px;">
+          <div class="nw-form-grid" style="gap:14px;">
+            <label class="nw-label">Seleccionar opción de Etiqueta / Vestimenta
+              <select class="nw-select" [ngModel]="isCustomDressCode() ? 'Otro (Especificar personalizado...)' : invitation.content.dressCode" (ngModelChange)="onDressCodePresetChange($event)">
+                <option value="">-- Seleccionar código de vestimenta --</option>
+                <option *ngFor="let option of dressCodePresets" [value]="option">
+                  {{ option }}
+                </option>
+              </select>
+            </label>
+            <label class="nw-label nw-form-wide" *ngIf="isCustomDressCode() || !invitation.content.dressCode">
+              Especificar código de vestimenta personalizado
+              <input class="nw-input" [(ngModel)]="invitation.content.dressCode" placeholder="Ej. Marilyn Monroe / Temática Años 50 / Guayabera de Lino">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Música / Pedir Canciones al DJ (songRequests) -->
+      <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'songRequests' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0;">🎵 Música y Peticiones de Canciones (DJ)</h3>
+            <span class="nw-pill" [class.success]="isSectionActive('songRequests')" [class.warning]="!isSectionActive('songRequests')">
+              {{ isSectionActive('songRequests') ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="nw-switch" title="Activar / Desactivar peticiones de DJ">
+              <input type="checkbox" [checked]="isSectionActive('songRequests')" (change)="toggleSectionActive('songRequests', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="nw-card-body" style="padding-top:16px;" *ngIf="event">
+          <div class="nw-form-grid" style="gap:14px;" *ngIf="event.externalContent?.songRequestSettings as dj">
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Habilitar peticiones de canciones</strong>
+                <span>Permite que los invitados sugieran temas para el DJ desde la invitación.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dj.enabled">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Permitir dedicatorias</strong>
+                <span>Los invitados pueden adjuntar un mensaje al sugerir su canción.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dj.allowDedications">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Requerir aprobación</strong>
+                <span>La canción requiere validación previa antes de aparecer en el playlist.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dj.requireApproval">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+            <label class="nw-label" style="max-width:240px;">Límite de canciones por invitado
+              <input type="number" class="nw-input" min="1" max="20" [(ngModel)]="dj.maxRequestsPerGuest">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Itinerario -->
       <app-editor-itinerary-tab
         *ngIf="activeTab === 'itinerary' || activeTab === 'all'"
         [invitation]="invitation"
@@ -108,6 +265,7 @@
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-itinerary-tab>
 
+      <!-- 7. Ubicaciones -->
       <app-editor-locations-tab
         *ngIf="activeTab === 'locations' || activeTab === 'all'"
         [invitation]="invitation"
@@ -123,6 +281,7 @@
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-locations-tab>
 
+      <!-- 8. RSVP y Reglas -->
       <app-editor-rsvp-rules-tab
         *ngIf="activeTab === 'rsvp' || activeTab === 'all'"
         [invitation]="invitation"
@@ -139,9 +298,11 @@
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-rsvp-rules-tab>
 
+      <!-- 9 & 10. Mesa de Regalos y Sobre Digital -->
       <app-editor-gifts-tab
-        *ngIf="activeTab === 'gifts' || activeTab === 'all'"
+        *ngIf="activeTab === 'gifts' || activeTab === 'giftRegistry' || activeTab === 'digitalEnvelope' || activeTab === 'all'"
         [invitation]="invitation"
+        [activeTab]="activeTab"
         [assetUploading]="assetUploading"
         (addGiftItem)="addGiftRegistryItem()"
         (removeGiftItem)="removeGiftRegistryItem($event)"
@@ -149,15 +310,19 @@
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-gifts-tab>
 
+      <!-- 11 & 12. Dedicatorias y Álbum Interactivo -->
       <app-editor-dedications-tab
-        *ngIf="activeTab === 'dedications' || activeTab === 'all'"
+        *ngIf="activeTab === 'dedications' || activeTab === 'guestAlbum' || activeTab === 'all'"
         [invitation]="invitation"
+        [activeTab]="activeTab"
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-dedications-tab>
 
+      <!-- 13, 14 & 15. Archivos, Galería, Hospedaje y Música de Fondo -->
       <app-editor-assets-tab
-        *ngIf="activeTab === 'assets' || activeTab === 'all'"
+        *ngIf="activeTab === 'assets' || activeTab === 'gallery' || activeTab === 'lodging' || activeTab === 'backgroundMusic' || activeTab === 'all'"
         [invitation]="invitation"
+        [activeTab]="activeTab"
         [assetUploading]="assetUploading"
         [musicError]="musicError"
         (selectAsset)="selectAsset($event.event, $event.folder)"
@@ -172,6 +337,7 @@
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-assets-tab>
 
+      <!-- Plantillas / Plan del evento -->
       <app-editor-plans-tab
         *ngIf="activeTab === 'plans' || activeTab === 'all'"
         [invitation]="invitation"
@@ -182,6 +348,7 @@
         [checkoutLoading]="checkoutLoading"
         [payments]="payments"
         (applyTemplate)="applyTemplate($event)"
+        (saveChanges)="save()"
         (checkout)="checkout($event)">
       </app-editor-plans-tab>
 

@@ -1,0 +1,485 @@
+<div class="mobile-template-root"
+  [style.--primary]="invitation?.content?.palette?.primary || '#1f2a44'"
+  [style.--secondary]="invitation?.content?.palette?.secondary || '#f7f2ea'"
+  [style.--accent]="invitation?.content?.palette?.accent || '#b67b4b'">
+
+  <!-- BACKGROUND IMAGE WITH OVERLAY -->
+  <div class="bg-cover-wrapper">
+    <div class="bg-cover-image"
+      [style.background-image]="'url(' + getCoverImageUrl() + ')'">
+    </div>
+    <div class="bg-cover-overlay"></div>
+  </div>
+
+  <!-- 1. ENVELOPE INTRO SCREEN -->
+  <div class="envelope-screen" *ngIf="!envelopeOpened" [class.opening]="isOpeningEnvelope">
+    <div class="envelope-card-container">
+      
+      <!-- Animated Envelope Outer -->
+      <div class="envelope-outer">
+        <div class="envelope-flap"></div>
+        <div class="envelope-pocket">
+          <div class="wax-seal" (click)="openEnvelope()">
+            <span class="seal-icon">💍</span>
+          </div>
+        </div>
+
+        <div class="envelope-content-inner">
+          <p class="env-subtitle">{{ invitation?.content?.subheadline || 'Nuestra Boda / Evento Especial' }}</p>
+          <h1 class="env-title">{{ invitation?.content?.headline || event?.title || 'Invitación Especial' }}</h1>
+          
+          <div class="env-date-pill" *ngIf="event?.date">
+            <span>📅 {{ formatDate(event?.date) }}</span>
+          </div>
+
+          <!-- GUEST ACCESS VERIFICATION PROMPT IF REQUIRED -->
+          <div class="env-auth-box" *ngIf="requiresGuestAuth">
+            <p class="env-auth-desc">
+              🔒 Esta invitación es privada. Por favor ingresa tu correo electrónico o número telefónico registrado para acceder.
+            </p>
+            <div class="env-auth-input-group">
+              <input type="text" 
+                     class="env-input" 
+                     [(ngModel)]="guestAccessInput" 
+                     placeholder="Tu correo o teléfono (ej. 5512345678)"
+                     (keyup.enter)="openEnvelope()">
+              <button type="button" class="env-btn-open" (click)="openEnvelope()" [disabled]="checkingGuest">
+                {{ checkingGuest ? 'Verificando...' : 'Verificar e Ingresar ✉️' }}
+              </button>
+            </div>
+            <p class="env-error" *ngIf="error">{{ error }}</p>
+          </div>
+
+          <!-- OPEN ENVELOPE BUTTON FOR PUBLIC ACCESS -->
+          <div class="env-action-box" *ngIf="!requiresGuestAuth">
+            <p class="env-welcome" *ngIf="verifiedGuest">
+              ¡Hola, <strong>{{ verifiedGuest.name }}</strong>! Haz clic para abrir tu invitación.
+            </p>
+            <p class="env-welcome" *ngIf="!verifiedGuest">
+              Te invitamos a compartir este momento tan importante con nosotros.
+            </p>
+            <button type="button" class="env-btn-open" (click)="openEnvelope()">
+              Abrir Invitación ✉️
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. MAIN SWIPABLE CARDS INVITATION VIEW -->
+  <div class="invitation-main-view" *ngIf="envelopeOpened">
+
+    <!-- FLOATING TOP BAR -->
+    <header class="top-nav-bar">
+      <div class="top-brand">
+        <span class="top-title">{{ invitation?.content?.headline || 'Invitación' }}</span>
+      </div>
+    </header>
+
+    <!-- CARD NAVIGATION INDICATORS -->
+    <div class="cards-progress-bar">
+      <div class="cards-dots">
+        <button *ngFor="let card of activeCards; let i = index"
+                type="button"
+                class="dot-btn"
+                [class.active]="i === currentCardIndex"
+                (click)="goToCard(i)"
+                [title]="card.title">
+        </button>
+      </div>
+      <span class="cards-counter">{{ currentCardIndex + 1 }} / {{ activeCards.length }}</span>
+    </div>
+
+    <!-- CAROUSEL CARDS WRAPPER -->
+    <div class="cards-viewport" 
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+
+      <!-- SIDE NAVIGATION BUTTONS -->
+      <button type="button" 
+              class="nav-arrow nav-arrow-left" 
+              *ngIf="currentCardIndex > 0" 
+              (click)="prevCard()">
+        ‹
+      </button>
+
+      <button type="button" 
+              class="nav-arrow nav-arrow-right" 
+              *ngIf="currentCardIndex < activeCards.length - 1" 
+              (click)="nextCard()">
+        ›
+      </button>
+
+      <!-- CARDS SLIDER CONTAINER -->
+      <div class="cards-slider" [style.transform]="'translateX(-' + (currentCardIndex * 100) + '%)'">
+
+        <!-- CARD 1: HERO / PORTADA -->
+        <div class="card-slide">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>💍 PORTADA</span>
+            </div>
+            
+            <div class="hero-avatar-frame">
+              <img [src]="getCoverImageUrl()" alt="Portada" class="hero-avatar-img">
+            </div>
+
+            <p class="hero-sub">{{ invitation?.content?.subheadline || 'NUESTRA BODA' }}</p>
+            <h2 class="hero-headline">{{ invitation?.content?.headline || 'Nos Casamos' }}</h2>
+
+            <div class="hero-date-box" *ngIf="event?.date">
+              <span class="hero-date">{{ formatDate(event?.date) }}</span>
+              <span class="hero-venue" *ngIf="event?.venue?.name">📍 {{ event?.venue?.name }}</span>
+            </div>
+
+            <!-- COUNTDOWN TIMER -->
+            <div class="hero-countdown" *ngIf="event?.date && !countdown.isOver">
+              <p class="countdown-title">FALTAN SOLO:</p>
+              <div class="countdown-grid">
+                <div class="cd-item">
+                  <span class="cd-val">{{ countdown.days }}</span>
+                  <span class="cd-lbl">Días</span>
+                </div>
+                <div class="cd-item">
+                  <span class="cd-val">{{ countdown.hours }}</span>
+                  <span class="cd-lbl">Horas</span>
+                </div>
+                <div class="cd-item">
+                  <span class="cd-val">{{ countdown.minutes }}</span>
+                  <span class="cd-lbl">Min</span>
+                </div>
+                <div class="cd-item">
+                  <span class="cd-val">{{ countdown.seconds }}</span>
+                  <span class="cd-lbl">Seg</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="hero-msg" *ngIf="invitation?.content?.message">
+              "{{ invitation?.content?.message }}"
+            </p>
+
+            <div class="swipe-hint">
+              <span>Desliza a la derecha para ver más ➔</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: CONFIRMACIÓN RSVP -->
+        <div class="card-slide" *ngIf="isSectionActive('rsvp')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>💌 CONFIRMACIÓN RSVP</span>
+            </div>
+            <h3 class="card-title">Confirma tu Asistencia</h3>
+
+            <div class="card-body-scroll">
+              <form (ngSubmit)="onRsvpSubmit()" class="rsvp-form">
+                <label class="form-field">
+                  <span>Tu Nombre Completo *</span>
+                  <input class="card-input" [(ngModel)]="rsvp.name" name="name" required placeholder="Nombre completo">
+                </label>
+
+                <label class="form-field">
+                  <span>Correo Electrónico</span>
+                  <input class="card-input" type="email" [(ngModel)]="rsvp.email" name="email" placeholder="correo@ejemplo.com">
+                </label>
+
+                <div class="rsvp-response-buttons">
+                  <button type="button" 
+                          class="resp-btn confirm" 
+                          [class.selected]="rsvp.response === 'confirmed'"
+                          (click)="rsvp.response = 'confirmed'">
+                    ✅ Asistiré
+                  </button>
+                  <button type="button" 
+                          class="resp-btn decline" 
+                          [class.selected]="rsvp.response === 'declined'"
+                          (click)="rsvp.response = 'declined'">
+                    ❌ No podré asistir
+                  </button>
+                </div>
+
+                <div *ngIf="rsvp.response === 'confirmed'" class="confirmed-options">
+                  <label class="form-field">
+                    <span>Número de acompañantes</span>
+                    <input class="card-input" type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="companions">
+                  </label>
+
+                  <label class="form-field" *ngIf="rsvp.companions > 0">
+                    <span>Nombres de los acompañantes</span>
+                    <input class="card-input" [(ngModel)]="companionNamesText" name="companionNamesText" placeholder="Ej. Maria Pérez, Juan Pérez">
+                  </label>
+
+                  <label class="form-field">
+                    <span>Restricciones alimentarias / Alergias</span>
+                    <input class="card-input" [(ngModel)]="rsvp.dietaryRestrictions" name="dietaryRestrictions" placeholder="Vegetariano, celíaco, etc.">
+                  </label>
+                </div>
+
+                <button type="submit" class="card-primary-btn submit-rsvp-btn" [disabled]="sending">
+                  {{ sending ? 'Enviando...' : 'Enviar Confirmación 💌' }}
+                </button>
+
+                <p class="success-hint" *ngIf="success">{{ success }}</p>
+                <p class="error-hint" *ngIf="error">{{ error }}</p>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: NUESTRA HISTORIA -->
+        <div class="card-slide" *ngIf="isSectionActive('story')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>📖 NUESTRA HISTORIA</span>
+            </div>
+            <h3 class="card-title">{{ invitation?.content?.storyTitle || 'Nuestra Historia' }}</h3>
+            <div class="card-body-scroll">
+              <p class="story-text" *ngIf="invitation?.content?.storyBody">
+                {{ invitation?.content?.storyBody }}
+              </p>
+              <p class="story-text-empty" *ngIf="!invitation?.content?.storyBody">
+                Próximamente compartiremos los momentos especiales de nuestra historia aquí.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: UBICACIONES Y MAPAS -->
+        <div class="card-slide" *ngIf="isSectionActive('locations')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>📍 UBICACIONES</span>
+            </div>
+            <h3 class="card-title">¿Dónde y Cuándo?</h3>
+
+            <div class="card-body-scroll">
+              <div class="locations-list">
+                <div class="location-item" *ngFor="let loc of locationsList">
+                  <h4 class="loc-name">{{ loc.name }}</h4>
+                  <p class="loc-addr" *ngIf="loc.address">{{ loc.address }}</p>
+                  <p class="loc-notes" *ngIf="loc.notes">{{ loc.notes }}</p>
+
+                  <div class="loc-buttons">
+                    <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener" class="loc-btn map-btn">
+                      🗺️ Abrir en Google Maps
+                    </a>
+                    <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener" class="loc-btn waze-btn">
+                      🚘 Abrir en Waze
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 4: ITINERARIO / CRONOGRAMA -->
+        <div class="card-slide" *ngIf="isSectionActive('itinerary')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>📅 ITINERARIO</span>
+            </div>
+            <h3 class="card-title">Programa del Evento</h3>
+
+            <div class="card-body-scroll">
+              <div class="itinerary-timeline" *ngIf="invitation?.content?.itinerary?.length">
+                <div class="timeline-item" *ngFor="let item of invitation?.content?.itinerary">
+                  <div class="time-badge">{{ item.time }}</div>
+                  <div class="time-content">
+                    <strong class="item-title">{{ item.title }}</strong>
+                    <p class="item-desc" *ngIf="item.description">{{ item.description }}</p>
+                  </div>
+                </div>
+              </div>
+              <p *ngIf="!invitation?.content?.itinerary?.length" class="empty-hint">
+                El itinerario detallado se mostrará aquí muy pronto.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 5: CÓDIGO DE VESTIMENTA -->
+        <div class="card-slide" *ngIf="isSectionActive('dressCode')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>👔 VESTIMENTA</span>
+            </div>
+            <h3 class="card-title">Código de Vestimenta</h3>
+
+            <div class="card-body-scroll text-center">
+              <div class="dress-icon-large">🤵‍♀️💃</div>
+              <p class="dress-code-highlight">
+                {{ invitation?.content?.dressCode || 'Formal / Etiqueta Rigurosa' }}
+              </p>
+              <p class="dress-code-hint">
+                Te sugerimos vestimenta elegante acorde a la ocasión para lucir espectaculares en las fotografías.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 6: MESA DE REGALOS & SOBRE DIGITAL -->
+        <div class="card-slide" *ngIf="isSectionActive('giftRegistry') || isSectionActive('digitalEnvelope')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>🎁 REGALOS</span>
+            </div>
+            <h3 class="card-title">Mesa de Regalos & Obsequios</h3>
+
+            <div class="card-body-scroll">
+              <p class="gift-intro">
+                {{ invitation?.content?.giftSettings?.introText || 'Tu presencia es nuestro mejor regalo. Si deseas realizarnos un detalle:' }}
+              </p>
+
+              <!-- MESA DE REGALOS TIENDAS -->
+              <div class="gift-registries" *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length">
+                <div class="registry-card" *ngFor="let item of invitation?.content?.giftRegistry">
+                  <strong class="reg-title">{{ item.title || item.store || item.label }}</strong>
+                  <p class="reg-number" *ngIf="item.note">{{ item.note }}</p>
+                  <a *ngIf="item.url" [href]="item.url" target="_blank" rel="noopener" class="reg-link-btn">
+                    Ver Mesa de Regalos 🛍️
+                  </a>
+                </div>
+              </div>
+
+              <!-- SOBRE DIGITAL / TRANSFERENCIAS -->
+              <div class="digital-envelope-box" *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.digitalEnvelope">
+                <h4 class="env-digital-title">✉️ Sobre Digital / Transferencia</h4>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.bank">
+                  <strong>Banco:</strong> {{ invitation?.content?.digitalEnvelope?.bank }}
+                </p>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.clabe">
+                  <strong>CLABE:</strong> <span class="clabe-code">{{ invitation?.content?.digitalEnvelope?.clabe }}</span>
+                </p>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.account">
+                  <strong>Cuenta:</strong> {{ invitation?.content?.digitalEnvelope?.account }}
+                </p>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.holder">
+                  <strong>Titular:</strong> {{ invitation?.content?.digitalEnvelope?.holder }}
+                </p>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.note">
+                  <strong>Nota:</strong> {{ invitation?.content?.digitalEnvelope?.note }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 7: ÁLBUM Y FOTOS -->
+        <div class="card-slide" *ngIf="isSectionActive('guestAlbum') || isSectionActive('gallery')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>📸 FOTOS & ÁLBUM</span>
+            </div>
+            <h3 class="card-title">Álbum de Fotos</h3>
+
+            <div class="card-body-scroll">
+              <!-- SUBIR FOTO AL ÁLBUM -->
+              <div class="upload-album-box" *ngIf="isSectionActive('guestAlbum')">
+                <p class="upload-hint">¡Sube tus fotos del evento para compartirlas con todos!</p>
+                <label class="upload-btn">
+                  <span>{{ uploadingAlbum ? 'Subiendo foto...' : '📷 Tomar o Elegir Foto' }}</span>
+                  <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display:none;" [disabled]="uploadingAlbum">
+                </label>
+                <p class="success-hint" *ngIf="albumMessage">{{ albumMessage }}</p>
+              </div>
+
+              <!-- GRID DE FOTOS -->
+              <div class="album-grid" *ngIf="publicAlbumAssets.length">
+                <div class="album-thumb" *ngFor="let photo of publicAlbumAssets" (click)="openLightbox.emit(photo.url)">
+                  <img [src]="photo.url" alt="Foto de invitado" loading="lazy">
+                  <span class="uploader-tag" *ngIf="photo.uploaderName">{{ photo.uploaderName }}</span>
+                </div>
+              </div>
+              <p *ngIf="!publicAlbumAssets.length" class="empty-hint">
+                Aún no hay fotos subidas. ¡Sé el primero en compartir una foto!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 8: DEDICATORIAS -->
+        <div class="card-slide" *ngIf="isSectionActive('dedications')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>💬 DEDICATORIAS</span>
+            </div>
+            <h3 class="card-title">Libro de Dedicatorias</h3>
+
+            <div class="card-body-scroll">
+              <!-- FORMULARIO DE DEDICATORIA -->
+              <div class="dedication-form">
+                <input class="card-input" 
+                       [(ngModel)]="newDedicationName" 
+                       placeholder="Tu nombre (ej. Familia Pérez)" />
+                <textarea class="card-textarea" 
+                          [(ngModel)]="newDedicationMessage" 
+                          rows="3" 
+                          placeholder="Escribe tus mejores deseos..."></textarea>
+                <button type="button" class="card-primary-btn" (click)="onDedicationSubmit()">
+                  Enviar Felicitación 💌
+                </button>
+                <p class="success-hint" *ngIf="dedicationMessage">{{ dedicationMessage }}</p>
+              </div>
+
+              <!-- LISTA DE DEDICATORIAS -->
+              <div class="dedications-wall" *ngIf="dedications.length">
+                <div class="dedication-item" *ngFor="let item of dedications">
+                  <strong class="ded-author">{{ item.publicName || 'Invitado' }}</strong>
+                  <p class="ded-body">{{ item.message }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 9: MÚSICA DJ -->
+        <div class="card-slide" *ngIf="isSectionActive('songRequests')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>🎵 MÚSICA DJ</span>
+            </div>
+            <h3 class="card-title">Pide tu Canción</h3>
+
+            <div class="card-body-scroll text-center">
+              <p class="dj-hint">
+                ¿Qué canción no puede faltar en la fiesta? ¡Sugiérela directamente al DJ!
+              </p>
+              <div class="dj-form-box">
+                <input class="card-input" placeholder="Nombre de la canción y artista" />
+                <button type="button" class="card-primary-btn">
+                  Enviar al DJ 🎧
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- BOTTOM MOBILE FOOTER NAVIGATION -->
+    <footer class="bottom-card-nav">
+      <button type="button" class="nav-bottom-btn" [disabled]="currentCardIndex === 0" (click)="prevCard()">
+        ◀ Anterior
+      </button>
+      
+      <span class="nav-bottom-label">
+        {{ activeCards[currentCardIndex]?.icon }} {{ activeCards[currentCardIndex]?.title }}
+      </span>
+
+      <button type="button" class="nav-bottom-btn" [disabled]="currentCardIndex === activeCards.length - 1" (click)="nextCard()">
+        Siguiente ▶
+      </button>
+    </footer>
+
+  </div>
+
+</div>

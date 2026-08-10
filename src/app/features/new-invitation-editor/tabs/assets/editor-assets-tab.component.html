@@ -1,4 +1,4 @@
-<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'gallery' || activeTab === 'backgroundMusic' || activeTab === 'assets' || activeTab === 'all')">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
       <h3 style="margin:0;">🖼️ Archivos Multimedia (Portada, Música, Galería)</h3>
@@ -15,7 +15,7 @@
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
     <!-- Portada -->
-    <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--nw-border);">
+    <div *ngIf="activeTab === 'assets' || activeTab === 'all'" style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--nw-border);">
       <strong style="font-size:15px; display:block; margin-bottom:8px;">🖼️ Imagen de Portada</strong>
       <div style="display:flex; gap:10px; align-items:center;">
         <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
@@ -26,16 +26,20 @@
         <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo...</span>
       </div>
       <div *ngIf="invitation.content.coverImageUrl"
-        style="margin-top:10px; position:relative; display:inline-block;">
-        <img [src]="invitation.content.coverImageUrl" alt="Portada" loading="lazy" decoding="async"
-          style="max-width:300px; max-height:200px; border-radius:var(--nw-radius-sm); object-fit:cover;">
-        <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover.emit()"
-          style="position:absolute; top:6px; right:6px;">✕ Quitar</button>
+        style="margin-top:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:12px; max-width:420px; box-shadow:var(--nw-shadow-sm); overflow:hidden;">
+        <div style="width:100%; height:200px; border-radius:8px; overflow:hidden; border:1px solid var(--nw-border); background:var(--nw-surface-2);">
+          <img [src]="invitation.content.coverImageUrl" alt="Portada" loading="lazy" decoding="async"
+            style="width:100%; height:100%; object-fit:cover; display:block;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+          <span style="font-size:12.5px; font-weight:600; color:var(--nw-text-2);">🖼️ Imagen de portada activa</span>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover.emit()">🗑️ Quitar portada</button>
+        </div>
       </div>
     </div>
 
     <!-- Configuración de Música y Audio por Sección -->
-    <div
+    <div *ngIf="activeTab === 'backgroundMusic' || activeTab === 'assets' || activeTab === 'all'"
       style="margin-bottom:20px; background:var(--nw-surface-2); padding:16px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div>
@@ -112,7 +116,7 @@
     </div>
 
     <!-- Galería -->
-    <div>
+    <div *ngIf="activeTab === 'gallery' || activeTab === 'assets' || activeTab === 'all'">
       <strong style="font-size:15px; display:block; margin-bottom:8px;">📸 Galería de Fotos</strong>
       <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
         <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
@@ -124,12 +128,18 @@
           imágenes</span>
       </div>
       <div *ngIf="invitation.content.gallery?.length"
-        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
-        <div *ngFor="let url of invitation.content.gallery; let i = index" style="position:relative;">
-          <img [src]="url" alt="Galería" loading="lazy" decoding="async"
-            style="width:100%; height:100px; object-fit:cover; border-radius:var(--nw-radius-sm);">
-          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGalleryImage.emit(i)"
-            style="position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px;">✕</button>
+        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:14px; margin-top:12px;">
+        <div *ngFor="let url of invitation.content.gallery; let i = index" class="nw-card-item"
+          style="background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--nw-shadow-sm); transition:transform 0.2s, box-shadow 0.2s;">
+          <div style="width:100%; height:130px; overflow:hidden; background:var(--nw-surface-2);">
+            <img [src]="url" alt="Galería" loading="lazy" decoding="async"
+              style="width:100%; height:100%; object-fit:cover; display:block;">
+          </div>
+          <div style="padding:8px 10px; display:flex; justify-content:space-between; align-items:center; background:var(--nw-surface-2); border-top:1px solid var(--nw-border);">
+            <span style="font-size:11.5px; font-weight:600; color:var(--nw-text-3);">Foto #{{ i + 1 }}</span>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGalleryImage.emit(i)"
+              style="padding:3px 8px; font-size:11px;">🗑️</button>
+          </div>
         </div>
       </div>
     </div>
@@ -137,7 +147,7 @@
 </div>
 
 <!-- HOSPEDAJE RECOMENDADO -->
-<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'lodging' || activeTab === 'assets' || activeTab === 'all')">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
       <h3 style="margin:0;">🏨 Hospedaje Recomendado</h3>

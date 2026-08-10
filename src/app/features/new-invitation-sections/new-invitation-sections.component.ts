@@ -59,23 +59,27 @@ export class NewInvitationSectionsComponent implements OnInit {
   };
 
   readonly allSectionsList = [
-    { key: 'story', icon: '📖', title: 'Historia (Story)', description: 'Historia de los festejados / novios.' },
-    { key: 'locations', icon: '📍', title: 'Mapas y Ubicaciones', description: 'Ubicación de Ceremonia, Recepción, etc.' },
-    { key: 'itinerary', icon: '📅', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades.' },
-    { key: 'dressCode', icon: '👔', title: 'Código de Vestimenta', description: 'Instrucciones de vestuario para los invitados.' },
-    { key: 'rsvp', icon: '💌', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario para confirmación de invitados.' },
-    { key: 'giftRegistry', icon: '🎁', title: 'Mesa de Regalos', description: 'Sección con catálogo de regalos y enlaces.' },
-    { key: 'digitalEnvelope', icon: '✉️', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios o QR para regalo en efectivo.' },
-    { key: 'lodging', icon: '🏨', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento cercano.' },
-    { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica', description: 'Galería oficial de fotos del evento.' },
-    { key: 'guestAlbum', icon: '📸', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus propias fotos.' },
-    { key: 'dedications', icon: '💬', title: 'Dedicatorias y Libro de Visitas', description: 'Libro de firmas y felicitaciones para los novios.' },
-    { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones', description: 'Permite a los invitados recomendar canciones para el DJ.' }
+    { key: 'guestAlbum', icon: '📸', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real durante el evento.' },
+    { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica Oficial', description: 'Muestra la galería con fotos del evento o sesión de los novios/festejados.' },
+    { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones (DJ)', description: 'Módulo interactivo para que los invitados sugieran canciones al DJ.' },
+    { key: 'dedications', icon: '💬', title: 'Dedicatorias y Libro de Firmas', description: 'Muro de mensajes, felicitaciones y buenos deseos para los festejados.' },
+    { key: 'rsvp', icon: '💌', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario de confirmación de asistencia, pases y acompañantes.' },
+    { key: 'story', icon: '📖', title: 'Nuestra Historia', description: 'Reseña o historia de la pareja / festejado(a).' },
+    { key: 'locations', icon: '📍', title: 'Mapas y Ubicaciones', description: 'Direcciones de misa/recepción con enlaces directos a Google Maps o Waze.' },
+    { key: 'itinerary', icon: '📅', title: 'Itinerario / Cronograma', description: 'Agenda con horarios y actividades del evento.' },
+    { key: 'dressCode', icon: '👔', title: 'Código de Vestimenta', description: 'Indicaciones de etiqueta y vestuario sugerido para los asistentes.' },
+    { key: 'giftRegistry', icon: '🎁', title: 'Mesa de Regalos', description: 'Catálogo y enlaces externos a tiendas (Amazon, Liverpool, etc.).' },
+    { key: 'digitalEnvelope', icon: '✉️', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios, CLABE y código QR para obsequios en efectivo.' },
+    { key: 'lodging', icon: '🏨', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos al evento.' },
+    { key: 'backgroundMusic', icon: '🎼', title: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
   ];
 
   isSectionActive(key: string): boolean {
     if (key === 'songRequests') {
       return Boolean(this.songRequestSettings.enabled);
+    }
+    if (key === 'backgroundMusic') {
+      return Boolean((this.sectionSettings as any).backgroundMusic !== false);
     }
     return Boolean((this.sectionSettings as any)[key]);
   }

@@ -47,10 +47,10 @@ export class NewInvitationEditorComponent implements OnInit {
   private searchTimeouts: Record<number, any> = {};
 
   activeSection = 'content';
-  activeTab: 'content' | 'style' | 'itinerary' | 'locations' | 'rsvp' | 'gifts' | 'dedications' | 'assets' | 'plans' | 'all' = 'content';
+  activeTab: string = 'content';
   collapsedSections: Record<string, boolean> = {};
 
-  setActiveTab(tab: 'content' | 'style' | 'itinerary' | 'locations' | 'rsvp' | 'gifts' | 'dedications' | 'assets' | 'plans' | 'all'): void {
+  setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
 
@@ -71,41 +71,132 @@ export class NewInvitationEditorComponent implements OnInit {
     keys.forEach(k => this.collapsedSections[k] = true);
   }
 
+  readonly configurableSectionsList = [
+    { key: 'guestAlbum', icon: '📸', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real.' },
+    { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica Oficial', description: 'Galería oficial con fotos del evento o novios.' },
+    { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones (DJ)', description: 'Permite a los invitados sugerir temas para el DJ.' },
+    { key: 'dedications', icon: '💬', title: 'Dedicatorias y Libro de Firmas', description: 'Muro de firmas, felicitaciones y mensajes.' },
+    { key: 'rsvp', icon: '💌', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario, reglas y preguntas personalizadas de RSVP.' },
+    { key: 'story', icon: '📖', title: 'Nuestra Historia', description: 'Reseña o historia de los novios / festejados.' },
+    { key: 'locations', icon: '📍', title: 'Mapas y Ubicaciones', description: 'Direcciones con enlaces directos a Google Maps o Waze.' },
+    { key: 'itinerary', icon: '📅', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades del evento.' },
+    { key: 'dressCode', icon: '👔', title: 'Código de Vestimenta', description: 'Instrucciones de etiqueta y vestuario sugerido.' },
+    { key: 'giftRegistry', icon: '🎁', title: 'Mesa de Regalos', description: 'Catálogo y enlaces a tiendas externas (Amazon, Liverpool, etc.).' },
+    { key: 'digitalEnvelope', icon: '✉️', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios, CLABE y QR para obsequios en efectivo.' },
+    { key: 'lodging', icon: '🏨', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
+    { key: 'backgroundMusic', icon: '🎼', title: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
+  ];
+
+  readonly dressCodePresets = [
+    'Formal / Etiqueta Rigurosa 🤵‍♀️💃',
+    'Formal / Traje Oscuro 🤵‍♂️👗',
+    'Semiformal / Coctel 🥂✨',
+    'Guayabera Elegante / Lino 🌴👔',
+    'Playa / Casual Elegante 🏖️👗',
+    'Blanco / All White 🤍✨',
+    'Casual / Libre 👟👕',
+    'Otro (Especificar personalizado...)'
+  ];
+
+  selectedDressCodePreset = '';
+
+  onDressCodePresetChange(value: string): void {
+    this.selectedDressCodePreset = value;
+    if (!this.invitation?.content) return;
+    if (value !== 'Otro (Especificar personalizado...)') {
+      this.invitation.content.dressCode = value;
+    }
+  }
+
+  isCustomDressCode(): boolean {
+    if (this.selectedDressCodePreset === 'Otro (Especificar personalizado...)') return true;
+    if (!this.invitation?.content?.dressCode) return false;
+    return !this.dressCodePresets.slice(0, -1).includes(this.invitation.content.dressCode);
+  }
+
+  get activeConfigurableSections() {
+    return this.configurableSectionsList.filter(sec => this.isSectionActive(sec.key));
+  }
+
+  get inactiveConfigurableSections() {
+    return this.configurableSectionsList.filter(sec => !this.isSectionActive(sec.key));
+  }
+
   isSectionActive(key: string): boolean {
-    if (!this.invitation?.content.sectionSettings) return true;
-    const settings = this.invitation.content.sectionSettings as any;
-    if (key === 'rsvp_rules' || key === 'rsvp') return settings.rsvp !== false;
-    if (key === 'guest_album' || key === 'guestAlbum') return Boolean(this.invitation.content.privateAlbumEnabled);
-    if (key === 'dedications') return Boolean(this.invitation.content.dedicationSettings?.enabled && settings.dedications !== false);
-    if (key === 'gifts') return Boolean(this.invitation.content.giftSettings?.enabled && settings.giftRegistry !== false);
-    if (key === 'gallery') return settings.gallery !== false;
-    return settings[key] !== false;
+    if (!this.invitation?.content) return true;
+    const settings = this.invitation.content.sectionSettings || {};
+
+    if (key === 'content' || key === 'style') return true;
+    if (key === 'songRequests') {
+      return Boolean(this.event?.externalContent?.songRequestSettings?.enabled !== false);
+    }
+    if (key === 'guestAlbum' || key === 'guest_album') {
+      return Boolean(settings.guestAlbum !== false && this.invitation.content.privateAlbumEnabled !== false);
+    }
+    if (key === 'dedications') {
+      return Boolean(settings.dedications !== false && this.invitation.content.dedicationSettings?.enabled !== false);
+    }
+    if (key === 'giftRegistry' || key === 'gifts') {
+      return Boolean(settings.giftRegistry !== false && this.invitation.content.giftSettings?.showRegistry !== false);
+    }
+    if (key === 'digitalEnvelope') {
+      return Boolean(settings.digitalEnvelope !== false && this.invitation.content.giftSettings?.showEnvelope !== false);
+    }
+    if (key === 'backgroundMusic') {
+      return Boolean(settings.backgroundMusic !== false);
+    }
+    if (key === 'rsvp' || key === 'rsvp_rules') {
+      return settings.rsvp !== false;
+    }
+
+    return (settings as any)[key] !== false;
   }
 
   toggleSectionActive(key: string, active: boolean, event?: Event): void {
     if (event) event.stopPropagation();
     if (!this.invitation) return;
     this.ensureContentCollections();
+    if (!this.invitation.content.sectionSettings) {
+      this.invitation.content.sectionSettings = {};
+    }
     const settings = this.invitation.content.sectionSettings as any;
 
-    if (key === 'rsvp_rules' || key === 'rsvp') {
-      settings.rsvp = active;
-    } else if (key === 'guest_album' || key === 'guestAlbum') {
+    if (key === 'songRequests') {
+      if (this.event) {
+        if (!this.event.externalContent) this.event.externalContent = {};
+        if (!this.event.externalContent.songRequestSettings) {
+          this.event.externalContent.songRequestSettings = {};
+        }
+        this.event.externalContent.songRequestSettings.enabled = active;
+      }
+    } else if (key === 'guestAlbum' || key === 'guest_album') {
       this.invitation.content.privateAlbumEnabled = active;
       settings.guestAlbum = active;
     } else if (key === 'dedications') {
-      if (this.invitation.content.dedicationSettings) {
+      if (!this.invitation.content.dedicationSettings) {
+        this.invitation.content.dedicationSettings = { enabled: active };
+      } else {
         this.invitation.content.dedicationSettings.enabled = active;
       }
       settings.dedications = active;
-    } else if (key === 'gifts') {
-      if (this.invitation.content.giftSettings) {
-        this.invitation.content.giftSettings.enabled = active;
+    } else if (key === 'giftRegistry' || key === 'gifts') {
+      if (!this.invitation.content.giftSettings) {
+        this.invitation.content.giftSettings = { enabled: active, showRegistry: active };
+      } else {
+        this.invitation.content.giftSettings.showRegistry = active;
       }
       settings.giftRegistry = active;
+    } else if (key === 'digitalEnvelope') {
+      if (!this.invitation.content.giftSettings) {
+        this.invitation.content.giftSettings = { enabled: active, showEnvelope: active };
+      } else {
+        this.invitation.content.giftSettings.showEnvelope = active;
+      }
       settings.digitalEnvelope = active;
-    } else if (key === 'gallery') {
-      settings.gallery = active;
+    } else if (key === 'backgroundMusic') {
+      settings.backgroundMusic = active;
+    } else if (key === 'rsvp' || key === 'rsvp_rules') {
+      settings.rsvp = active;
     } else {
       settings[key] = active;
     }
@@ -282,11 +373,15 @@ export class NewInvitationEditorComponent implements OnInit {
     this.saving = true;
     this.message = '';
     this.error = '';
+
+    const isObjectId = Boolean(this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template));
+    const rootTemplate = isObjectId ? this.invitation.template : undefined;
+
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
-      template: this.invitation.template,
+      template: rootTemplate,
       content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: ({ invitation }) => {
@@ -757,11 +852,14 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private persistUploadedAsset(): void {
     if (!this.invitation) return;
+    const isObjectId = Boolean(this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template));
+    const rootTemplate = isObjectId ? this.invitation.template : undefined;
+
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
-      template: this.invitation.template,
+      template: rootTemplate,
       content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: ({ invitation }) => {
@@ -969,6 +1067,7 @@ export class NewInvitationEditorComponent implements OnInit {
     if (!this.invitation) return undefined;
     return {
       ...this.invitation.content,
+      template: (this.invitation.content as any).template || this.invitation.template,
       sectionMusic: this.cleanSectionMusic(this.invitation.content.sectionMusic || {}),
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),

@@ -185,6 +185,7 @@ export interface SectionSettings {
   gallery?: boolean;
   guestAlbum?: boolean;
   dedications?: boolean;
+  backgroundMusic?: boolean;
 }
 
 export interface SongRequestSettings {
@@ -268,6 +269,8 @@ export interface InvitationContent {
   brandLogoUrl?: string;
   hideBranding?: boolean;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
+  storyTitle?: string;
+  storyBody?: string;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
 }

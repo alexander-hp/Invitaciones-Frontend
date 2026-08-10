@@ -16,6 +16,50 @@ export class EditorPlansTabComponent {
 
   @Output() applyTemplate = new EventEmitter<TemplateModel>();
   @Output() checkout = new EventEmitter<PaymentPackage>();
+  @Output() selectTemplateKey = new EventEmitter<string>();
+  @Output() saveChanges = new EventEmitter<void>();
+
+  builtinTemplates = [
+    {
+      id: 'envelope-cards',
+      name: 'Sobre Interactivo & Cards Deslizables',
+      badge: '📱 Recomendado Móvil',
+      description: 'Apertura animada de sobrecito digital con sello, verificación opcional de acceso (correo/teléfono), fondo de boda elegante y tarjetas independientes deslizables a izquierda/derecha.',
+      icon: '✉️📲',
+      features: ['Sobre 3D animado', 'Navegación por Swipe (Tarjetas)', 'Autenticación en sobre', 'Optimizado Celulares']
+    },
+    {
+      id: 'classic-vertical',
+      name: 'Clásica Editorial Vertical',
+      badge: '📜 Estándar',
+      description: 'Formato editorial continuo de scroll vertical. Diseño clásico con tipografía limpia y secciones de lectura secuencial.',
+      icon: '📜✨',
+      features: ['Scroll vertical continuo', 'Portada hero amplia', 'Lectura secuencial', 'Excelente en Escritorio']
+    }
+  ];
+
+  setTemplate(key: string): void {
+    if (this.invitation) {
+      if (!this.invitation.content) this.invitation.content = {};
+      (this.invitation.content as any).template = key;
+      this.invitation.template = key;
+      this.selectTemplateKey.emit(key);
+      this.saveChanges.emit();
+    }
+  }
+
+  setTemplateAndPreview(key: string): void {
+    if (this.invitation) {
+      if (!this.invitation.content) this.invitation.content = {};
+      (this.invitation.content as any).template = key;
+      this.invitation.template = key;
+      this.selectTemplateKey.emit(key);
+      this.saveChanges.emit();
+      setTimeout(() => {
+        window.open(`/new/i/${this.invitation.slug}`, '_blank');
+      }, 300);
+    }
+  }
 
   canUsePremiumTemplates(): boolean {
     if (!this.currentPlan) return false;

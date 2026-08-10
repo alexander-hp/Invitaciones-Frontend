@@ -43,4 +43,47 @@ export class EditorRsvpRulesTabComponent {
     if (!text) return [];
     return text.split(';').map(s => s.trim()).filter(Boolean);
   }
+
+  ensureOptionsArray(q: any): string[] {
+    if (!q.options || !q.options.length) {
+      q.options = this.parseOptionsText(q.optionsText);
+    }
+    return q.options;
+  }
+
+  addQuestionOption(q: any, defaultText = 'Nueva opción'): void {
+    if (!q.options) q.options = [];
+    q.options.push(defaultText);
+    q.optionsText = q.options.join('; ');
+    this.syncQuestions.emit();
+  }
+
+  removeQuestionOption(q: any, index: number): void {
+    if (!q.options) return;
+    q.options.splice(index, 1);
+    q.optionsText = q.options.join('; ');
+    this.syncQuestions.emit();
+  }
+
+  onOptionRowChange(q: any): void {
+    if (q.options) {
+      q.optionsText = q.options.join('; ');
+    }
+    this.syncQuestions.emit();
+  }
+
+  getOptionValue(q: any, idx: number): string {
+    return q.options && q.options[idx] !== undefined ? q.options[idx] : '';
+  }
+
+  setOptionValue(q: any, idx: number, val: string): void {
+    if (!q.options) q.options = [];
+    q.options[idx] = val;
+    q.optionsText = q.options.join('; ');
+    this.syncQuestions.emit();
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
 }
