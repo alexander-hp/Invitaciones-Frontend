@@ -5,6 +5,7 @@ import { EventModel, EventType } from '../../core/models';
 
 @Component({ selector: 'app-new-events', templateUrl: './new-events.component.html' })
 export class NewEventsComponent implements OnInit {
+  sidebarOpen = false;
   loading = true;
   error = '';
   events: EventModel[] = [];

@@ -408,4 +408,41 @@ th { color: #607080; font-size: 13px; }
   transform: scale(1.03);
 }
 
+/* -- Responsive: Editor Header & Floating Save Bar -- */
+@media (max-width: 768px) {
+  .nw-editor-sticky-header {
+    margin: -16px -16px 16px -16px;
+    padding: 12px 16px;
+  }
+
+  .nw-floating-save-bar {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .nw-floating-bar-content {
+    border-radius: 0;
+    padding: 10px 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .nw-editor-sticky-header {
+    margin: -12px -12px 12px -12px;
+    padding: 10px 12px;
+  }
+
+  .nw-floating-bar-content {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+}
 

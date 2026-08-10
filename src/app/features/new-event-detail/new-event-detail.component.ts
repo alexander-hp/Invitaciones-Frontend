@@ -19,6 +19,7 @@ interface WizardSectionDef {
   templateUrl: './new-event-detail.component.html'
 })
 export class NewEventDetailComponent implements OnInit {
+  sidebarOpen = false;
   activeTab: Tab = 'info';
   event?: EventModel;
   eventId = '';

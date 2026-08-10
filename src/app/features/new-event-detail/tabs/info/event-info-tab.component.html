@@ -164,7 +164,7 @@
       <p *ngIf="!invitations.length" style="color:var(--nw-text-3); font-size:14px;">Este evento aún no tiene invitaciones.</p>
       <div style="display:grid; gap:8px;">
         <div *ngFor="let inv of invitations"
-          style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
+          style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:10px 14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm);">
           <div>
             <strong>{{ inv.content?.headline || inv.slug }}</strong>
             <span style="color:var(--nw-text-3); font-size:13px; margin-left:8px;">/new/i/{{ inv.slug }}</span>

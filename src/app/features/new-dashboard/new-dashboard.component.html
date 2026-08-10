@@ -1,6 +1,10 @@
 <div class="nw-shell">
+  <!-- Mobile Hamburger -->
+  <button class="nw-hamburger" (click)="sidebarOpen = !sidebarOpen">☰</button>
+  <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
+
   <!-- Sidebar -->
-  <aside class="nw-sidebar" app-new-sidebar></aside>
+  <aside class="nw-sidebar" [class.open]="sidebarOpen" app-new-sidebar></aside>
 
   <!-- Main -->
   <main class="nw-main">

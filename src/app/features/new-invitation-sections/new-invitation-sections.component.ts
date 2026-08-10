@@ -17,6 +17,7 @@ import {
   templateUrl: './new-invitation-sections.component.html'
 })
 export class NewInvitationSectionsComponent implements OnInit {
+  sidebarOpen = false;
   invitation?: InvitationModel;
   event?: EventModel;
   loading = true;

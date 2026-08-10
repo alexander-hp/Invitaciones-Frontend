@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth.service';
   templateUrl: './new-contact.component.html'
 })
 export class NewContactComponent implements OnInit {
+  sidebarOpen = false;
   form = { name: '', email: '', message: '' };
   loading = false;
   success = '';

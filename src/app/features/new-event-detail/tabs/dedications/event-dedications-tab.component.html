@@ -53,7 +53,7 @@
   </div>
 
   <!-- FILTROS SEGMENTADOS DE ESTADO (PILLS) -->
-  <div style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 14px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
     <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'all'"
       [class.nw-btn-primary]="filterStatus === 'all'" [class.nw-btn-ghost]="filterStatus !== 'all'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
@@ -80,7 +80,7 @@
   </div>
 
   <!-- BARRA DE BÚSQUEDA Y TIPO DE DEDICATORIA EN 1 FILA -->
-  <div style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+  <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
     <div style="flex: 1; min-width: 220px;">
       <input class="nw-input" [(ngModel)]="searchQuery" placeholder="🔍 Buscar dedicatoria por remitente, correo o texto..." style="height: 42px; padding: 0 14px; width: 100%; font-size: 13px; box-sizing: border-box;">
     </div>

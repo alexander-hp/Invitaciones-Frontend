@@ -5,6 +5,7 @@ import { DashboardMetrics, EventModel } from '../../core/models';
 
 @Component({ selector: 'app-new-dashboard', templateUrl: './new-dashboard.component.html' })
 export class NewDashboardComponent implements OnInit {
+  sidebarOpen = false;
   loading = true;
   error = '';
   metrics: DashboardMetrics = {

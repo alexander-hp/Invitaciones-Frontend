@@ -10,6 +10,7 @@ export class NewInvitationEditorComponent implements OnInit {
   private readonly maxImageSize = 5 * 1024 * 1024;
   private readonly maxAudioSize = 10 * 1024 * 1024;
 
+  sidebarOpen = false;
   invitation?: InvitationModel;
   event?: EventModel;
   templates: TemplateModel[] = [];

@@ -1,5 +1,8 @@
 <div class="nw-shell">
-  <aside class="nw-sidebar" app-new-sidebar></aside>
+  <button class="nw-hamburger" (click)="sidebarOpen = !sidebarOpen">☰</button>
+  <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+  <aside class="nw-sidebar" [class.open]="sidebarOpen" app-new-sidebar></aside>
 
   <main class="nw-main">
     <!-- Header (Menu 1 Standard Layout) -->

@@ -66,7 +66,7 @@
   </div>
 
   <!-- Barra de Filtros Segmentados por Estado -->
-  <div style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
     <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'all'"
       [class.nw-btn-primary]="filterStatus === 'all'" [class.nw-btn-ghost]="filterStatus !== 'all'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">

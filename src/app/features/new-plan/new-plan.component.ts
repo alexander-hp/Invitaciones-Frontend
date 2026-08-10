@@ -8,6 +8,7 @@ import { PaymentModel, PlanDefinition, SubscriptionStatus } from '../../core/mod
   templateUrl: './new-plan.component.html'
 })
 export class NewPlanComponent implements OnInit {
+  sidebarOpen = false;
   loading = true;
   error = '';
   currentPlan?: PlanDefinition;
