@@ -40,10 +40,12 @@ export class NewContactComponent implements OnInit {
         this.success = response.message || 'Mensaje enviado correctamente.';
         this.form.message = ''; // Clear only the message, keep name and email
         this.loading = false;
+        setTimeout(() => this.success = '', 4000);
       },
       error: (err) => {
         this.error = err.error?.message || 'No se pudo enviar el mensaje.';
         this.loading = false;
+        setTimeout(() => this.error = '', 4000);
       }
     });
   }

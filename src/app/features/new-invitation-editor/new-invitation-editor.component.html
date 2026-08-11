@@ -25,32 +25,8 @@
     </div>
 
     <ng-container *ngIf="invitation">
-      <!-- Top Page Header -->
-      <div class="nw-page-header nw-editor-sticky-header">
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; width:100%;">
-          <div>
-            <p style="margin:0 0 4px; font-size:13px; color:var(--nw-text-3)">
-              <a (click)="goBackToEvent()" style="color:var(--nw-accent-2); text-decoration:none; cursor:pointer;">← {{ event?.title || 'Eventos' }}</a>
-            </p>
-            <h1 style="font-size:22px; font-weight:700; margin:0; display:flex; align-items:center; gap:10px; color:var(--nw-text);">
-              {{ event ? eventTypeIcon(event.type) : '✏️' }} {{ invitation.content.headline || invitation.slug }}
-              <span class="nw-pill" [class.success]="invitation.status === 'published'"
-                [class.warning]="invitation.status === 'draft'" style="font-size:12px;">
-                {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
-              </span>
-            </h1>
-            <p *ngIf="event" style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3);">
-              {{ formatDate(event.date) }}
-              <span *ngIf="event.venue?.name"> · 📍 {{ event.venue.name }}</span>
-              <span *ngIf="event.hosts?.length"> · 👤 {{ event.hosts.join(', ') }}</span>
-            </p>
-          </div>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <a class="nw-btn nw-btn-ghost"
-              [routerLink]="['/new/invitations', invitation._id || invitation.id, 'sections']">⚙️ Secciones</a>
-          </div>
-        </div>
-      </div>
+      <!-- Reusable Event Header Widget -->
+      <app-event-header [event]="event" [backUrl]="'/new/events/' + getEventId()" [backLabel]="event?.title || 'Detalle del Evento'"></app-event-header>
 
       <!-- Sub-Menú de Secciones Dividido en Activas y Desactivadas -->
       <div class="nw-sections-nav-wrapper">
@@ -109,13 +85,17 @@
         </div>
 
         <!-- Botones de Utilidad Global -->
-        <div style="display:flex; gap:8px; border-top: 1px solid var(--nw-border); padding-top: 12px; align-items:center;">
+        <div style="display:flex; gap:8px; border-top: 1px solid var(--nw-border); padding-top: 12px; align-items:center; flex-wrap: wrap;">
           <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'plans'" (click)="setActiveTab('plans')" style="font-weight:700;">
             💎 Plantillas / Plan
           </button>
           <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'all'" (click)="setActiveTab('all')" style="font-weight:700;">
             📖 Ver todo
           </button>
+          <a class="nw-btn nw-btn-ghost nw-btn-sm"
+             [routerLink]="['/new/invitations', invitation._id || invitation.id, 'sections']" style="font-weight:700; margin-left: auto;">
+            ⚙️ Secciones
+          </a>
         </div>
       </div>
 

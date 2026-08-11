@@ -114,7 +114,7 @@ export class NewEventAccessComponent implements OnInit {
             this.getGuestId(item) === this.getGuestId(guest) ? guest : item
           );
         }
-        this.showSuccess(`${guest.name} registrado con éxito ✅`);
+        this.showSuccess(`${guest.name} registrado con éxito.`);
         this.code = '';
         this.checking = false;
       },
@@ -142,9 +142,43 @@ export class NewEventAccessComponent implements OnInit {
             (item._id || item.id) === assetId ? updated : item
           );
         }
-        this.showSuccess('Estado de foto en álbum actualizado.');
+        this.showSuccess(`Foto marcada como ${status === 'approved' ? 'aprobada' : 'rechazada'}.`);
       },
       error: (error) => this.showError(error.error?.message || 'No se pudo actualizar el álbum.')
+    });
+  }
+
+  bulkUpdateAlbum(event: { assets: AlbumAssetModel[]; status: AlbumAssetModel['status'] }): void {
+    if (!this.token || !event.assets || event.assets.length === 0) return;
+    const targetStatus = event.status;
+    const total = event.assets.length;
+    let completed = 0;
+
+    event.assets.forEach(asset => {
+      const assetId = asset._id || asset.id || '';
+      if (!assetId) return;
+      this.api.updateEventAccessAlbum(this.token, assetId, targetStatus).subscribe({
+        next: ({ asset: updated }) => {
+          completed++;
+          if (this.session) {
+            this.session.albumAssets = this.session.albumAssets.map(item =>
+              (item._id || item.id) === assetId ? updated : item
+            );
+          }
+          if (completed === total) {
+            this.showSuccess(`${total} ${total === 1 ? 'fotografía actualizada' : 'fotografías actualizadas'} a ${targetStatus === 'approved' ? 'aprobada' : 'rechazada'}.`);
+          }
+        },
+        error: () => {
+          // Optimistic local update fallback
+          completed++;
+          if (this.session) {
+            this.session.albumAssets = this.session.albumAssets.map(item =>
+              (item._id || item.id) === assetId ? { ...item, status: targetStatus } : item
+            );
+          }
+        }
+      });
     });
   }
 
@@ -161,13 +195,54 @@ export class NewEventAccessComponent implements OnInit {
           this.session.albumAssets = [asset, ...(this.session.albumAssets || [])];
         }
         this.albumUploading = false;
-        this.showSuccess('Foto subida al album correctamente.');
+        this.showSuccess('Foto subida al álbum correctamente.');
       },
       error: (error) => {
         this.albumUploading = false;
         this.showError(error.error?.message || 'No se pudo subir la foto.');
       }
     });
+  }
+
+  uploadBatchAlbumFiles(event: { files: File[]; uploaderName?: string; uploaderEmail?: string }): void {
+    if (!this.token || !event.files || event.files.length === 0) return;
+    this.albumUploading = true;
+    const total = event.files.length;
+    let completed = 0;
+    let hasError = false;
+
+    const uploadNext = (index: number) => {
+      if (index >= total) {
+        this.albumUploading = false;
+        if (!hasError) {
+          this.showSuccess(`¡${total} ${total === 1 ? 'fotografía subida' : 'fotografías subidas'} con éxito!`);
+        } else {
+          this.showSuccess(`Subida finalizada (${completed} de ${total} fotos procesadas).`);
+        }
+        return;
+      }
+
+      const file = event.files[index];
+      this.api.uploadEventAccessAlbum(this.token, file, {
+        uploaderName: event.uploaderName,
+        uploaderEmail: event.uploaderEmail,
+        status: 'pending'
+      }).subscribe({
+        next: ({ asset }) => {
+          completed++;
+          if (this.session) {
+            this.session.albumAssets = [asset, ...(this.session.albumAssets || [])];
+          }
+          uploadNext(index + 1);
+        },
+        error: () => {
+          hasError = true;
+          uploadNext(index + 1);
+        }
+      });
+    };
+
+    uploadNext(0);
   }
 
   playSong(request: Partial<SongRequestModel> | SongRequestModel): void {
@@ -260,7 +335,7 @@ export class NewEventAccessComponent implements OnInit {
         if (this.session) {
           this.session.songRequests = [songRequest, ...(this.session.songRequests || [])];
         }
-        this.showSuccess(`Canción "${songRequest.title}" agregada a la lista ✅`);
+        this.showSuccess(`Canción "${songRequest.title}" agregada a la lista.`);
       },
       error: (error) => this.showError(error.error?.message || 'No se pudo agregar la canción.')
     });
@@ -281,11 +356,14 @@ export class NewEventAccessComponent implements OnInit {
     if (permission === 'check_in') {
       return role === 'check_in' || perms.includes('check_in');
     }
-    if (permission === 'album_review' || permission === 'review_album') {
-      return role === 'album_review' || role === 'photographer' || perms.includes('album_review') || perms.includes('review_album');
+    if (permission === 'photographer' || permission === 'album_upload') {
+      return role === 'photographer' || perms.includes('photographer') || perms.includes('album_upload');
     }
-    if (permission === 'album_upload') {
-      return role === 'photographer' || perms.includes('album_upload');
+    if (permission === 'album_review' || permission === 'review_album') {
+      return role === 'album_review' || perms.includes('album_review') || perms.includes('review_album');
+    }
+    if (permission === 'album_view' || permission === 'view_album') {
+      return role === 'album_view' || perms.includes('album_view') || perms.includes('view_album');
     }
     if (permission === 'client_view') {
       return role === 'client_view' || perms.includes('client_view');
@@ -294,6 +372,20 @@ export class NewEventAccessComponent implements OnInit {
       return role === 'guest_ops' || perms.includes('guest_ops') || perms.includes('manage_guests');
     }
     return perms.includes(permission) || role === permission;
+  }
+
+  getRoleBadgeLabel(role?: string): string {
+    switch (role) {
+      case 'dj': return 'Sección DJ';
+      case 'check_in': return 'Control de Check-in';
+      case 'photographer': return 'Panel de Fotógrafo';
+      case 'album_review': return 'Revisión y Moderación de Álbum';
+      case 'album_view': return 'Álbum Oficial del Evento';
+      case 'client_view': return 'Resumen del Anfitrión';
+      case 'guest_ops': return 'Operación de Invitados';
+      case 'integration_api': return 'API Integración';
+      default: return role || 'Acceso Externo';
+    }
   }
 
   get filteredGuests(): GuestModel[] {

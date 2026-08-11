@@ -210,17 +210,40 @@ export class NewEventDetailComponent implements OnInit {
     }
   }
 
-  eventTypeIcon(type: string): string {
-    switch (type) {
-      case 'boda': return '💍';
-      case 'xv': return '👑';
-      case 'cumpleanos': return '🎂';
-      case 'bautizo': return '🕊️';
-      case 'baby_shower': return '🍼';
-      case 'graduacion': return '🎓';
-      case 'corporativo': return '🏢';
-      default: return '🎉';
+  getNormalizedEventType(eventObj?: EventModel | string, eventTitle?: string): string {
+    let type = typeof eventObj === 'string' ? eventObj : eventObj?.type;
+    let title = typeof eventObj === 'object' ? eventObj?.title : eventTitle;
+
+    if (title) {
+      const t = title.toLowerCase().trim();
+      if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+      if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+      if (t.includes('gradua')) return 'graduacion';
+      if (t.includes('cumple')) return 'cumpleanos';
+      if (t.includes('bautiz')) return 'bautizo';
+      if (t.includes('otro') || t.includes('fiesta') || t.includes('evento')) return 'otro';
     }
+
+    if (!type) return 'otro';
+    const t = type.toLowerCase().trim();
+    if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+    if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+    if (t.includes('gradua')) return 'graduacion';
+    if (t.includes('cumple')) return 'cumpleanos';
+    if (t.includes('bautiz')) return 'bautizo';
+    return 'otro';
+  }
+
+  eventTypeIcon(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
+    const icons: Record<string, string> = { boda: '💍', xv: '👑', graduacion: '🎓', cumpleanos: '🎂', bautizo: '⛪', otro: '🎉' };
+    return icons[norm] || '🎉';
+  }
+
+  eventTypeLabel(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
+    const labels: Record<string, string> = { boda: 'Boda', xv: 'XV Años', graduacion: 'Graduación', cumpleanos: 'Cumpleaños', bautizo: 'Bautizo', otro: 'Otro' };
+    return labels[norm] || (typeof eventObj === 'string' ? eventObj : eventObj?.type) || 'Otro';
   }
 
   onEventUpdated(): void {

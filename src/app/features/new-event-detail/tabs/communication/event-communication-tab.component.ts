@@ -270,7 +270,8 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges {
       this.apiService.sendBulkEmail(id, {
         confirm: true,
         messageType: this.selectedMessageType,
-        guestIds: this.activeRecipients.map(g => this.getGuestId(g))
+        guestIds: this.activeRecipients.map(g => this.getGuestId(g)),
+        attachPass: this.includePassInMessage
       }).subscribe({
         next: res => {
           this.emailBulkSending = false;
@@ -318,7 +319,8 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges {
     if (!gId) return;
     this.emailSending = gId;
     this.apiService.sendGuestEmail(gId, {
-      messageType: this.selectedMessageType
+      messageType: this.selectedMessageType,
+      attachPass: this.includePassInMessage
     }).subscribe({
       next: () => {
         this.emailSending = '';
@@ -613,5 +615,9 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges {
     a.download = `Pase_VIP_${g.name.replace(/\s+/g, '_')}.html`;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  getGuestsByRole(role: string): GuestModel[] {
+    return this.guests.filter(g => g.roles && g.roles.includes(role));
   }
 }

@@ -1,4 +1,16 @@
 <div class="nw-shell">
+  <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+  <div class="nw-toast-container" *ngIf="success || error">
+    <div *ngIf="success" class="nw-toast success">
+      <span>✨ {{ success }}</span>
+      <button type="button" class="nw-toast-close" (click)="success=''">✕</button>
+    </div>
+    <div *ngIf="error" class="nw-toast error">
+      <span>⚠️ {{ error }}</span>
+      <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+    </div>
+  </div>
+
   <button class="nw-hamburger" (click)="sidebarOpen = !sidebarOpen">☰</button>
   <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
 
@@ -9,51 +21,170 @@
   <main class="nw-main">
     <div class="nw-page-header">
       <div>
-        <h1>Contacto</h1>
-        <p>Escríbenos y nos pondremos en contacto contigo lo antes posible.</p>
+        <h1 style="display: flex; align-items: center; gap: 10px;">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Contacto y Soporte
+        </h1>
+        <p>¿Tienes dudas o necesitas ayuda? Escríbenos y nuestro equipo te atenderá lo antes posible.</p>
       </div>
     </div>
 
-    <!-- Contact Form Section -->
-    <div style="max-width: 600px; margin-top: 24px;">
-      <form class="nw-card" (ngSubmit)="submit()" style="display: grid; gap: 20px;">
-        <h2
-          style="margin: 0 0 10px; font-size: 20px; font-family: var(--nw-font-display); font-weight: 700; color: var(--nw-text);">
-          Enviar un mensaje
-        </h2>
+    <!-- Contact View Layout Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 24px; max-width: 960px;">
+      
+      <!-- Left Column: Support Cards -->
+      <div style="display: grid; gap: 16px; align-content: start;">
+        
+        <!-- Response Time Card -->
+        <div class="nw-card" style="position: relative; overflow: hidden; padding: 20px 24px;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-accent);"></div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="card-icon-badge badge-boda" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: var(--nw-text); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Tiempo de respuesta</h4>
+              <p style="margin: 4px 0 0; font-size: 16px; font-weight: 700; color: var(--nw-accent);">Menos de 24 horas</p>
+            </div>
+          </div>
+        </div>
 
-        <label class="nw-label">
-          Nombre
-          <input class="nw-input" name="name" [(ngModel)]="form.name" minlength="2" required placeholder="Tu nombre">
-        </label>
+        <!-- Contact Email Card -->
+        <div class="nw-card" style="position: relative; overflow: hidden; padding: 20px 24px;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-info);"></div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="card-icon-badge badge-graduacion" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Escríbenos por Correo</h4>
+              <a href="mailto:soporte@invitaciones.com" style="margin: 4px 0 0; font-size: 15px; font-weight: 700; color: var(--nw-text); text-decoration: none; display: block; word-break: break-all;">
+                soporte@invitaciones.com
+              </a>
+            </div>
+          </div>
+        </div>
 
-        <label class="nw-label">
-          Email
-          <input class="nw-input" name="email" type="email" [(ngModel)]="form.email" required
-            placeholder="tu@correo.com">
-        </label>
+        <!-- Support Hours Card -->
+        <div class="nw-card" style="position: relative; overflow: hidden; padding: 20px 24px;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-success);"></div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="card-icon-badge badge-boda" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; color: var(--nw-success); border-color: rgba(74, 127, 98, 0.25);">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Horario de Soporte</h4>
+              <p style="margin: 4px 0 0; font-size: 14px; font-weight: 700; color: var(--nw-text);">Lun a Vie: 9 AM - 6 PM</p>
+            </div>
+          </div>
+        </div>
 
-        <label class="nw-label">
-          Mensaje
-          <textarea class="nw-textarea" name="message" [(ngModel)]="form.message" minlength="10" required
-            placeholder="Escribe tu mensaje aquí..." style="min-height: 120px; resize: vertical;"></textarea>
-        </label>
+        <!-- Phone Support Card -->
+        <div class="nw-card" style="position: relative; overflow: hidden; padding: 20px 24px;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-accent);"></div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="card-icon-badge badge-cumpleanos" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; border-color: rgba(195, 137, 68, 0.25);">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Llámanos</h4>
+              <a href="tel:+525512345678" style="margin: 4px 0 0; font-size: 15px; font-weight: 700; color: var(--nw-text); text-decoration: none; display: block;">
+                +52 (55) 1234-5678
+              </a>
+            </div>
+          </div>
+        </div>
 
-        <p *ngIf="success" class="nw-pill success"
-          style="padding: 10px 16px; border-radius: var(--nw-radius-sm); font-size: 13px; font-weight: 500; text-align: center; display: block; min-height: auto;">
-          {{ success }}
-        </p>
-        <p *ngIf="error" class="nw-pill danger"
-          style="padding: 10px 16px; border-radius: var(--nw-radius-sm); font-size: 13px; font-weight: 500; text-align: center; display: block; min-height: auto;">
-          {{ error }}
-        </p>
+        <!-- Social Networks Card -->
+        <div class="nw-card" style="position: relative; overflow: hidden; padding: 20px 24px;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-info);"></div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="card-icon-badge badge-xv" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; border-color: rgba(142, 90, 168, 0.25);">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+              </svg>
+            </div>
+            <div style="flex: 1;">
+              <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Síguenos</h4>
+              <div style="display: flex; gap: 12px; margin-top: 6px;">
+                <a href="#" style="color: var(--nw-text-2); transition: color var(--nw-duration);" title="Instagram">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                  </svg>
+                </a>
+                <a href="#" style="color: var(--nw-text-2); transition: color var(--nw-duration);" title="Facebook">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                  </svg>
+                </a>
+                <a href="#" style="color: var(--nw-text-2); transition: color var(--nw-duration);" title="Twitter / X">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4l11.733 16h4.267l-11.733 -16z M4 20l6.768 -6.768 M20 4l-6.768 6.768"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <button class="nw-btn nw-btn-primary" type="submit"
-          [disabled]="loading || !form.name || !form.email || !form.message"
-          style="justify-content: center; width: 100%;">
-          {{ loading ? 'Enviando...' : 'Enviar mensaje' }}
-        </button>
+      </div>
+
+      <!-- Right Column: Message Form Card -->
+      <form class="nw-card" (ngSubmit)="submit()" style="position: relative; overflow: hidden; display: grid; gap: 18px; align-content: start;">
+        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-accent);"></div>
+
+        <div style="padding-left: 6px;">
+          <h2 style="margin: 0; font-size: 18px; font-family: var(--nw-font-display); font-weight: 700; color: var(--nw-text);">
+            Enviar Mensaje
+          </h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2);">Completa el formulario y te responderemos a la brevedad.</p>
+        </div>
+
+        <div style="padding-left: 6px; display: grid; gap: 16px;">
+          <label class="nw-label">
+            Nombre completo
+            <input class="nw-input" name="name" [(ngModel)]="form.name" minlength="2" required placeholder="Ingresa tu nombre">
+          </label>
+
+          <label class="nw-label">
+            Correo electrónico
+            <input class="nw-input" name="email" type="email" [(ngModel)]="form.email" required placeholder="tu@correo.com">
+          </label>
+
+          <label class="nw-label">
+            Mensaje / Consulta
+            <textarea class="nw-input" name="message" [(ngModel)]="form.message" minlength="10" required placeholder="Cuéntanos en qué te podemos ayudar..." style="min-height: 140px; resize: vertical; padding-top: 10px;"></textarea>
+          </label>
+        </div>
+
+        <div style="padding-left: 6px; margin-top: 6px;">
+          <button class="nw-btn nw-btn-primary" type="submit" [disabled]="loading || !form.name || !form.email || !form.message" style="justify-content: center; width: 100%; display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" *ngIf="!loading">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            <span>{{ loading ? 'Enviando Mensaje...' : 'Enviar Mensaje' }}</span>
+          </button>
+        </div>
       </form>
+
     </div>
   </main>
 </div>

@@ -8,6 +8,9 @@ export class NewDashboardComponent implements OnInit {
   sidebarOpen = false;
   loading = true;
   error = '';
+  message = '';
+  coverImageMap: Record<string, string> = {};
+
   metrics: DashboardMetrics = {
     events: 0,
     invitations: 0,
@@ -40,9 +43,33 @@ export class NewDashboardComponent implements OnInit {
 
   loadEvents(): void {
     this.api.listEvents().subscribe({
-      next: ({ events }) => this.events = events.slice(0, 6),
+      next: ({ events }) => {
+        this.events = events.slice(0, 6);
+        this.loadInvitationsCoverMap();
+      },
       error: () => {}
     });
+  }
+
+  loadInvitationsCoverMap(): void {
+    this.api.listInvitations().subscribe({
+      next: ({ invitations }) => {
+        (invitations || []).forEach(inv => {
+          const evId = typeof inv.event === 'string' ? inv.event : (inv.event?._id || inv.event?.id);
+          if (evId && inv.content?.coverImageUrl) {
+            this.coverImageMap[String(evId).trim()] = inv.content.coverImageUrl;
+          }
+        });
+      },
+      error: () => {}
+    });
+  }
+
+  getCoverImage(ev: EventModel): string {
+    const id = String(ev._id || ev.id || '').trim();
+    if (this.coverImageMap[id]) return this.coverImageMap[id];
+    if (ev.externalContent?.coverImageUrl) return ev.externalContent.coverImageUrl;
+    return '';
   }
 
   get confirmRate(): number {
@@ -65,9 +92,40 @@ export class NewDashboardComponent implements OnInit {
     return Math.round((successful / total) * 100);
   }
 
-  eventTypeIcon(type: string): string {
+  getNormalizedEventType(eventObj?: EventModel | string, eventTitle?: string): string {
+    let type = typeof eventObj === 'string' ? eventObj : eventObj?.type;
+    let title = typeof eventObj === 'object' ? eventObj?.title : eventTitle;
+
+    if (title) {
+      const t = title.toLowerCase().trim();
+      if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+      if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+      if (t.includes('gradua')) return 'graduacion';
+      if (t.includes('cumple')) return 'cumpleanos';
+      if (t.includes('bautiz')) return 'bautizo';
+      if (t.includes('otro') || t.includes('fiesta') || t.includes('evento')) return 'otro';
+    }
+
+    if (!type) return 'otro';
+    const t = type.toLowerCase().trim();
+    if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+    if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+    if (t.includes('gradua')) return 'graduacion';
+    if (t.includes('cumple')) return 'cumpleanos';
+    if (t.includes('bautiz')) return 'bautizo';
+    return 'otro';
+  }
+
+  eventTypeIcon(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
     const icons: Record<string, string> = { boda: '💍', xv: '👑', graduacion: '🎓', cumpleanos: '🎂', bautizo: '⛪', otro: '🎉' };
-    return icons[type] || '🎉';
+    return icons[norm] || '🎉';
+  }
+
+  eventTypeLabel(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
+    const labels: Record<string, string> = { boda: 'Boda', xv: 'XV Años', graduacion: 'Graduación', cumpleanos: 'Cumpleaños', bautizo: 'Bautizo', otro: 'Otro' };
+    return labels[norm] || (typeof eventObj === 'string' ? eventObj : eventObj?.type) || 'Evento';
   }
 
   formatDate(date: string): string {

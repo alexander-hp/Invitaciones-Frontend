@@ -1,26 +1,47 @@
 <a routerLink="/new/dashboard" class="nw-sidebar-brand">
-  <span class="nw-brand-icon">I</span>
-  <span>Invitaciones</span>
+  <div class="nw-brand-icon">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+  </div>
+  <div style="display: flex; flex-direction: column;">
+    <span style="font-family: var(--nw-font-display); font-weight: 800; font-size: 18px; line-height: 1.1;">Invitaciones</span>
+    <span style="font-size: 10px; font-weight: 700; color: var(--nw-accent); letter-spacing: 0.1em; text-transform: uppercase;">Digital Suite</span>
+  </div>
 </a>
 
 <!-- User Profile -->
 <div class="nw-sidebar-user" *ngIf="auth.user$ | async as user">
-  <div class="nw-user-avatar">
-    {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
-  </div>
-  <div class="nw-user-details">
-    <div class="nw-user-name">{{ user.name }}</div>
-    <div class="nw-user-email">{{ user.email }}</div>
+  <div class="nw-user-details" style="min-width: 0; width: 100%;">
+    <div class="nw-user-name" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; color: var(--nw-text);">{{ user.name }}</div>
+    <div class="nw-user-email" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--nw-text-3); margin-top: 2px;">{{ user.email }}</div>
   </div>
 </div>
 
 <span class="nw-sidebar-label">Principal</span>
 <nav>
   <a routerLink="/new/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
-    <span class="nav-icon">📊</span> Dashboard
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="9" rx="1"/>
+        <rect x="14" y="3" width="7" height="5" rx="1"/>
+        <rect x="14" y="12" width="7" height="9" rx="1"/>
+        <rect x="3" y="16" width="7" height="5" rx="1"/>
+      </svg>
+    </span>
+    <span>Dashboard</span>
   </a>
+
   <a routerLink="/new/events" routerLinkActive="active">
-    <span class="nav-icon">🎉</span> Eventos
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </span>
+    <span>Eventos</span>
   </a>
 </nav>
 
@@ -30,19 +51,47 @@
 <span class="nw-sidebar-label">Cuenta</span>
 <nav>
   <a routerLink="/new/plan" routerLinkActive="active">
-    <span class="nav-icon">💎</span> Plan actual
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+        <polyline points="2 17 12 22 22 17"/>
+        <polyline points="2 12 12 17 22 12"/>
+      </svg>
+    </span>
+    <span>Plan actual</span>
   </a>
+
   <a routerLink="/new/contact" routerLinkActive="active">
-    <span class="nav-icon">✉️</span> Contacto
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+    </span>
+    <span>Contacto</span>
   </a>
+
   <a style="cursor: pointer;" (click)="auth.logout()">
-    <span class="nav-icon">🚪</span> Salir
+    <span class="nav-icon" style="color: var(--nw-danger);">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </span>
+    <span style="color: var(--nw-danger);">Cerrar sesión</span>
   </a>
 </nav>
 
 <span class="nw-sidebar-label">Orígenes</span>
 <nav>
   <a routerLink="/dashboard">
-    <span class="nav-icon">↩️</span> Vista clásica
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+      </svg>
+    </span>
+    <span>Vista clásica</span>
   </a>
 </nav>

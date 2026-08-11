@@ -62,8 +62,11 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     external: false
   };
 
-  collapsedTeamInvite = false;
-  collapsedTeamList = false;
+  collapsedTeamInvite = true;
+  collapsedTeamList = true;
+  collapsedDisabledTeam = true;
+  collapsedRevokedAccess = true;
+  visibleTokens: Record<string, boolean> = {};
 
   editingMemberId: string | null = null;
 
@@ -168,17 +171,40 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   get premiumActive(): boolean { return this.eventPlanActive || this.subscriptionActive; }
   isOwner(): boolean { return this.event?.access?.owner === true; }
 
-  eventTypeIcon(type: string): string {
-    switch (type) {
-      case 'boda': return '💍';
-      case 'xv': return '👑';
-      case 'cumpleanos': return '🎂';
-      case 'bautizo': return '🕊️';
-      case 'baby_shower': return '🍼';
-      case 'graduacion': return '🎓';
-      case 'corporativo': return '🏢';
-      default: return '🎉';
+  getNormalizedEventType(eventObj?: EventModel | string, eventTitle?: string): string {
+    let type = typeof eventObj === 'string' ? eventObj : eventObj?.type;
+    let title = typeof eventObj === 'object' ? eventObj?.title : eventTitle;
+
+    if (title) {
+      const t = title.toLowerCase().trim();
+      if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+      if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+      if (t.includes('gradua')) return 'graduacion';
+      if (t.includes('cumple')) return 'cumpleanos';
+      if (t.includes('bautiz')) return 'bautizo';
+      if (t.includes('otro') || t.includes('fiesta') || t.includes('evento')) return 'otro';
     }
+
+    if (!type) return 'otro';
+    const t = type.toLowerCase().trim();
+    if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+    if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+    if (t.includes('gradua')) return 'graduacion';
+    if (t.includes('cumple')) return 'cumpleanos';
+    if (t.includes('bautiz')) return 'bautizo';
+    return 'otro';
+  }
+
+  eventTypeIcon(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
+    const icons: Record<string, string> = { boda: '💍', xv: '👑', graduacion: '🎓', cumpleanos: '🎂', bautizo: '⛪', otro: '🎉' };
+    return icons[norm] || '🎉';
+  }
+
+  eventTypeLabel(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
+    const labels: Record<string, string> = { boda: 'Boda', xv: 'XV Años', graduacion: 'Graduación', cumpleanos: 'Cumpleaños', bautizo: 'Bautizo', otro: 'Otro' };
+    return labels[norm] || (typeof eventObj === 'string' ? eventObj : eventObj?.type) || 'Otro';
   }
 
   formatDate(dateStr?: string): string {
@@ -467,5 +493,66 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     }).catch(() => {
       this.showError('No se pudo copiar el token.');
     });
+  }
+
+  copyInvitationLink(slug?: string): void {
+    if (!slug) return;
+    const fullUrl = `${window.location.origin}/new/i/${slug}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      this.showSuccess('Enlace de la invitación copiado al portapapeles');
+    }).catch(() => {
+      this.showError('No se pudo copiar el enlace');
+    });
+  }
+
+  get activeMembersCount(): number {
+    return this.eventMembers.filter(m => m.status !== 'disabled').length;
+  }
+
+  get disabledMembersCount(): number {
+    return this.eventMembers.filter(m => m.status === 'disabled').length;
+  }
+
+  get activeLinksCount(): number {
+    return this.eventAccessLinks.filter(l => !l.revokedAt).length;
+  }
+
+  get revokedLinksCount(): number {
+    return this.eventAccessLinks.filter(l => l.revokedAt).length;
+  }
+
+  hasDisabledMembers(): boolean {
+    return this.eventMembers.some(m => m.status === 'disabled');
+  }
+
+  hasActiveMembers(): boolean {
+    return this.eventMembers.some(m => m.status !== 'disabled');
+  }
+
+  hasRevokedLinks(): boolean {
+    return this.eventAccessLinks.some(l => l.revokedAt);
+  }
+
+  hasActiveLinks(): boolean {
+    return this.eventAccessLinks.some(l => !l.revokedAt);
+  }
+
+  copyAccessLinkUrl(link: EventAccessLinkModel): void {
+    const url = this.getNewAccessUrl(link);
+    navigator.clipboard.writeText(url).then(() => {
+      this.showSuccess('Enlace de acceso copiado al portapapeles');
+    }).catch(() => {
+      this.showError('No se pudo copiar el enlace');
+    });
+  }
+
+  toggleTokenVisibility(linkId?: string): void {
+    if (!linkId) return;
+    this.visibleTokens[linkId] = !this.visibleTokens[linkId];
+  }
+
+  isTokenVisible(linkId?: string): boolean {
+    if (!linkId) return false;
+    return !!this.visibleTokens[linkId];
   }
 }

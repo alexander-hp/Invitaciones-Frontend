@@ -17,7 +17,7 @@ export class NewPlanComponent implements OnInit {
   subscriptionCurrentPeriodEnd = '';
   payments: PaymentModel[] = [];
 
-  constructor(private api: ApiService, public auth: AuthService) {}
+  constructor(private api: ApiService, public auth: AuthService) { }
 
   ngOnInit(): void {
     this.loadPaymentStatus();

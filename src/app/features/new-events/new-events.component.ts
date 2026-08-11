@@ -8,11 +8,19 @@ export class NewEventsComponent implements OnInit {
   sidebarOpen = false;
   loading = true;
   error = '';
+  message = '';
   events: EventModel[] = [];
+  coverImageMap: Record<string, string> = {};
+
   filterType = '';
   filterStatus = '';
   filterSearch = '';
   showCreateModal = false;
+
+  // Paginación
+  currentPage = 1;
+  pageSize = 12;
+  pageSizeOptions = [6, 12, 24, 48, 96];
 
   newEvent = {
     mode: 'invitation',
@@ -86,9 +94,37 @@ export class NewEventsComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.api.listEvents().subscribe({
-      next: ({ events }) => { this.events = events; this.loading = false; },
-      error: (err) => { this.error = err.error?.message || 'Error cargando eventos'; this.loading = false; }
+      next: ({ events }) => {
+        this.events = events;
+        this.loading = false;
+        this.loadInvitationsCoverMap();
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error cargando eventos';
+        this.loading = false;
+      }
     });
+  }
+
+  loadInvitationsCoverMap(): void {
+    this.api.listInvitations().subscribe({
+      next: ({ invitations }) => {
+        (invitations || []).forEach(inv => {
+          const evId = typeof inv.event === 'string' ? inv.event : (inv.event?._id || inv.event?.id);
+          if (evId && inv.content?.coverImageUrl) {
+            this.coverImageMap[String(evId).trim()] = inv.content.coverImageUrl;
+          }
+        });
+      },
+      error: () => {}
+    });
+  }
+
+  getCoverImage(ev: EventModel): string {
+    const id = String(ev._id || ev.id || '').trim();
+    if (this.coverImageMap[id]) return this.coverImageMap[id];
+    if (ev.externalContent?.coverImageUrl) return ev.externalContent.coverImageUrl;
+    return '';
   }
 
   get filteredEvents(): EventModel[] {
@@ -105,6 +141,45 @@ export class NewEventsComponent implements OnInit {
       }
       return true;
     });
+  }
+
+  get paginatedEvents(): EventModel[] {
+    const filtered = this.filteredEvents;
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return filtered.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredEvents.length / this.pageSize) || 1;
+  }
+
+  get paginationStartIndex(): number {
+    if (this.filteredEvents.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get paginationEndIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredEvents.length);
+  }
+
+  get visiblePageNumbers(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    const delta = 2;
+    const range: number[] = [];
+    for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 1;
   }
 
   openGoogleMapsSearch(): void {
@@ -150,14 +225,40 @@ export class NewEventsComponent implements OnInit {
     });
   }
 
-  eventTypeIcon(type: string): string {
-    const icons: Record<string, string> = { boda: '💍', xv: '👑', graduacion: '🎓', cumpleanos: '🎂', bautizo: '⛪', otro: '🎉' };
-    return icons[type] || '🎉';
+  getNormalizedEventType(eventObj?: EventModel | string, eventTitle?: string): string {
+    let type = typeof eventObj === 'string' ? eventObj : eventObj?.type;
+    let title = typeof eventObj === 'object' ? eventObj?.title : eventTitle;
+
+    if (title) {
+      const t = title.toLowerCase().trim();
+      if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+      if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+      if (t.includes('gradua')) return 'graduacion';
+      if (t.includes('cumple')) return 'cumpleanos';
+      if (t.includes('bautiz')) return 'bautizo';
+      if (t.includes('otro') || t.includes('fiesta') || t.includes('evento')) return 'otro';
+    }
+
+    if (!type) return 'otro';
+    const t = type.toLowerCase().trim();
+    if (t.includes('boda') || t.includes('matrimonio') || t.includes('wedding')) return 'boda';
+    if (t.includes('xv') || t.includes('quince') || t.includes('15')) return 'xv';
+    if (t.includes('gradua')) return 'graduacion';
+    if (t.includes('cumple')) return 'cumpleanos';
+    if (t.includes('bautiz')) return 'bautizo';
+    return 'otro';
   }
 
-  eventTypeLabel(type: string): string {
+  eventTypeIcon(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
+    const icons: Record<string, string> = { boda: '💍', xv: '👑', graduacion: '🎓', cumpleanos: '🎂', bautizo: '⛪', otro: '🎉' };
+    return icons[norm] || '🎉';
+  }
+
+  eventTypeLabel(eventObj?: EventModel | string, title?: string): string {
+    const norm = this.getNormalizedEventType(eventObj, title);
     const labels: Record<string, string> = { boda: 'Boda', xv: 'XV Años', graduacion: 'Graduación', cumpleanos: 'Cumpleaños', bautizo: 'Bautizo', otro: 'Otro' };
-    return labels[type] || type;
+    return labels[norm] || (typeof eventObj === 'string' ? eventObj : eventObj?.type) || 'Otro';
   }
 
   formatDate(date: string): string {
