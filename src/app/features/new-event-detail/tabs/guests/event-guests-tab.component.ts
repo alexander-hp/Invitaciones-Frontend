@@ -539,7 +539,9 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
 
     if (this.editingGuest) {
       const gId = (this.editingGuest._id || this.editingGuest.id)!;
-      this.apiService.updateGuest(gId, payload).subscribe({
+      const updatePayload: Partial<GuestPayload> = { ...payload };
+      delete updatePayload.event;
+      this.apiService.updateGuest(gId, updatePayload).subscribe({
         next: res => {
           const updated = res.guest;
           const idx = this.guests.findIndex(g => (g._id || g.id) === gId);
