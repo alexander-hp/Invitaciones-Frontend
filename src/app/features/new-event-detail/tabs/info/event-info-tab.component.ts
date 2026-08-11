@@ -165,6 +165,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   get declinedCount(): number { return Number(this.metrics.declined || 0); }
   get checkedInCount(): number { return Number(this.metrics.checkedIn || 0); }
   get totalSeats(): number { return Number(this.metrics.guests || 0); }
+  get premiumActive(): boolean { return this.eventPlanActive || this.subscriptionActive; }
 
   eventTypeIcon(type: string): string {
     switch (type) {
@@ -253,8 +254,13 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   }
 
   hasPendingPayment(planCode: string): boolean {
+    if (this.premiumActive) return false;
     const id = (this.event._id || this.event.id)!;
-    return this.payments.some(p => p.package === planCode && p.status === 'pending' && p.event === id);
+    return this.payments.some(p => {
+      if (p.package !== planCode || p.status !== 'pending') return false;
+      const paymentEvent = typeof p.event === 'string' ? p.event : (p.event?._id || p.event?.id);
+      return paymentEvent === id || (String(planCode).startsWith('planner_pro') && !paymentEvent);
+    });
   }
 
   checkoutPlan(planCode: string): void {

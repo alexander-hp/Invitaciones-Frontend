@@ -71,8 +71,8 @@
       <div style="display:flex; align-items:center; gap:10px;">
         <h3>Planes y Pagos</h3>
         <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
-        <span class="nw-pill warning" *ngIf="!currentPlan && !eventPlanActive && !subscriptionActive">Plan Gratuito</span>
-        <span class="nw-pill success" *ngIf="eventPlanActive || subscriptionActive">Suscripción Activa ✅</span>
+        <span class="nw-pill warning" *ngIf="!currentPlan && !premiumActive">Plan Gratuito</span>
+        <span class="nw-pill success" *ngIf="premiumActive">Suscripción Activa ✅</span>
       </div>
       <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('plans')">
         {{ collapsedCards['plans'] ? '▼ Expandir' : '▲ Colapsar' }}
@@ -81,7 +81,7 @@
 
     <div *ngIf="!collapsedCards['plans']">
       <!-- Si YA PAGÓ / Tiene Suscripción Activa -->
-      <div *ngIf="eventPlanActive || subscriptionActive"
+      <div *ngIf="premiumActive"
         style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--nw-radius-sm); padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 14px;">
           <div
@@ -102,7 +102,7 @@
       </div>
 
       <!-- Si AÚN NO HA PAGADO -->
-      <div *ngIf="!eventPlanActive && !subscriptionActive">
+      <div *ngIf="!premiumActive">
         <div style="margin-bottom:16px;">
           <p class="nw-alert warning"
             style="margin-bottom:12px; background:rgba(251,191,36,0.06); border:1px dashed rgba(251,191,36,0.3); color:var(--nw-warning);">
@@ -471,6 +471,7 @@
     </div>
   </div>
 </section>
+
 
 
 
