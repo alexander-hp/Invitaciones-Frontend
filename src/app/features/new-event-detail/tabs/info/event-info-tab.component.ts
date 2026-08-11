@@ -116,7 +116,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     const id = (this.event._id || this.event.id)!;
     this.loadingData = true;
 
-    this.apiService.listInvitations().subscribe({
+    if (this.isOwner()) this.apiService.listInvitations().subscribe({
       next: res => {
         this.invitations = (res.invitations || []).filter(i => {
           const invEvId = typeof i.event === 'string' ? i.event : (i.event?._id || i.event?.id);
@@ -126,7 +126,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       error: () => {}
     });
 
-    this.apiService.listEventMembers(id).subscribe({
+    if (this.isOwner()) this.apiService.listEventMembers(id).subscribe({
       next: res => {
         this.eventMembers = res.members || [];
         this.eventPermissions = res.permissions || [];
@@ -138,7 +138,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       error: () => {}
     });
 
-    this.apiService.listEventAccessLinks(id).subscribe({
+    if (this.isOwner()) this.apiService.listEventAccessLinks(id).subscribe({
       next: res => { this.eventAccessLinks = res.links || []; },
       error: () => {}
     });
@@ -166,6 +166,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   get checkedInCount(): number { return Number(this.metrics.checkedIn || 0); }
   get totalSeats(): number { return Number(this.metrics.guests || 0); }
   get premiumActive(): boolean { return this.eventPlanActive || this.subscriptionActive; }
+  isOwner(): boolean { return this.event?.access?.owner === true; }
 
   eventTypeIcon(type: string): string {
     switch (type) {

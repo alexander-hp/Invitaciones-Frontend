@@ -9,28 +9,28 @@
       <a (click)="selectTab('info')" [class.active]="activeTab === 'info'" style="cursor:pointer">
         <span class="nav-icon">ℹ️</span> Información
       </a>
-      <a (click)="selectTab('guests')" [class.active]="activeTab === 'guests'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('guests')" (click)="selectTab('guests')" [class.active]="activeTab === 'guests'" style="cursor:pointer">
         <span class="nav-icon">👥</span> Invitados <span class="nw-pill" style="margin-left:auto">{{ guests.length }}</span>
       </a>
-      <a (click)="selectTab('tables')" [class.active]="activeTab === 'tables'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('tables')" (click)="selectTab('tables')" [class.active]="activeTab === 'tables'" style="cursor:pointer">
         <span class="nav-icon">🪑</span> Mesas <span class="nw-pill" style="margin-left:auto">{{ tables.length }}</span>
       </a>
-      <a (click)="selectTab('rsvps')" [class.active]="activeTab === 'rsvps'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('rsvps')" (click)="selectTab('rsvps')" [class.active]="activeTab === 'rsvps'" style="cursor:pointer">
         <span class="nav-icon">💌</span> RSVPs <span class="nw-pill" style="margin-left:auto">{{ rsvpsCount }}</span>
       </a>
-      <a (click)="selectTab('album')" [class.active]="activeTab === 'album'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('album')" (click)="selectTab('album')" [class.active]="activeTab === 'album'" style="cursor:pointer">
         <span class="nav-icon">📸</span> Álbum <span class="nw-pill" style="margin-left:auto" *ngIf="pendingAlbumAssets">{{ pendingAlbumAssets }}</span>
       </a>
-      <a (click)="selectTab('communication')" [class.active]="activeTab === 'communication'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('communication')" (click)="selectTab('communication')" [class.active]="activeTab === 'communication'" style="cursor:pointer">
         <span class="nav-icon">📱</span> Comunicación
       </a>
-      <a (click)="selectTab('dj')" [class.active]="activeTab === 'dj'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('dj')" (click)="selectTab('dj')" [class.active]="activeTab === 'dj'" style="cursor:pointer">
         <span class="nav-icon">🎵</span> DJ <span class="nw-pill" style="margin-left:auto">{{ songRequestsCount }}</span>
       </a>
-      <a (click)="selectTab('dedications')" [class.active]="activeTab === 'dedications'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('dedications')" (click)="selectTab('dedications')" [class.active]="activeTab === 'dedications'" style="cursor:pointer">
         <span class="nav-icon">💬</span> Dedicatorias <span class="nw-pill" style="margin-left:auto">{{ dedicationsCount }}</span>
       </a>
-      <a *ngIf="event.mode === 'external_dashboard'" (click)="selectTab('integration')" [class.active]="activeTab === 'integration'" style="cursor:pointer">
+      <a *ngIf="canOpenTab('integration')" (click)="selectTab('integration')" [class.active]="activeTab === 'integration'" style="cursor:pointer">
         <span class="nav-icon">🔌</span> Integración
       </a>
     </nav>
@@ -60,14 +60,14 @@
       <!-- Navigation Tabs -->
       <div class="nw-tabs">
         <button class="nw-tab" [class.active]="activeTab === 'info'" (click)="selectTab('info')">Información</button>
-        <button class="nw-tab" [class.active]="activeTab === 'guests'" (click)="selectTab('guests')">Invitados ({{ guests.length }})</button>
-        <button class="nw-tab" [class.active]="activeTab === 'tables'" (click)="selectTab('tables')">Mesas ({{ tables.length }})</button>
-        <button class="nw-tab" [class.active]="activeTab === 'rsvps'" (click)="selectTab('rsvps')">RSVPs ({{ rsvpsCount }})</button>
-        <button class="nw-tab" [class.active]="activeTab === 'album'" (click)="selectTab('album')">📸 Álbum</button>
-        <button class="nw-tab" [class.active]="activeTab === 'communication'" (click)="selectTab('communication')">📱 Comunicación</button>
-        <button class="nw-tab" [class.active]="activeTab === 'dj'" (click)="selectTab('dj')">🎵 DJ ({{ songRequestsCount }})</button>
-        <button class="nw-tab" [class.active]="activeTab === 'dedications'" (click)="selectTab('dedications')">💬 ({{ dedicationsCount }})</button>
-        <button *ngIf="event.mode === 'external_dashboard'" class="nw-tab" [class.active]="activeTab === 'integration'" (click)="selectTab('integration')">🔌 Integración</button>
+        <button *ngIf="canOpenTab('guests')" class="nw-tab" [class.active]="activeTab === 'guests'" (click)="selectTab('guests')">Invitados ({{ guests.length }})</button>
+        <button *ngIf="canOpenTab('tables')" class="nw-tab" [class.active]="activeTab === 'tables'" (click)="selectTab('tables')">Mesas ({{ tables.length }})</button>
+        <button *ngIf="canOpenTab('rsvps')" class="nw-tab" [class.active]="activeTab === 'rsvps'" (click)="selectTab('rsvps')">RSVPs ({{ rsvpsCount }})</button>
+        <button *ngIf="canOpenTab('album')" class="nw-tab" [class.active]="activeTab === 'album'" (click)="selectTab('album')">📸 Álbum</button>
+        <button *ngIf="canOpenTab('communication')" class="nw-tab" [class.active]="activeTab === 'communication'" (click)="selectTab('communication')">📱 Comunicación</button>
+        <button *ngIf="canOpenTab('dj')" class="nw-tab" [class.active]="activeTab === 'dj'" (click)="selectTab('dj')">🎵 DJ ({{ songRequestsCount }})</button>
+        <button *ngIf="canOpenTab('dedications')" class="nw-tab" [class.active]="activeTab === 'dedications'" (click)="selectTab('dedications')">💬 ({{ dedicationsCount }})</button>
+        <button *ngIf="canOpenTab('integration')" class="nw-tab" [class.active]="activeTab === 'integration'" (click)="selectTab('integration')">🔌 Integración</button>
       </div>
 
       <!-- Tab Content Components -->

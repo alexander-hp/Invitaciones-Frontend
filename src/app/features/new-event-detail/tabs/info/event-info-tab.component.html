@@ -102,7 +102,7 @@
       </div>
 
       <!-- Si AÚN NO HA PAGADO -->
-      <div *ngIf="!premiumActive">
+      <div *ngIf="!premiumActive && isOwner()">
         <div style="margin-bottom:16px;">
           <p class="nw-alert warning"
             style="margin-bottom:12px; background:rgba(251,191,36,0.06); border:1px dashed rgba(251,191,36,0.3); color:var(--nw-warning);">
@@ -148,7 +148,7 @@
   </div>
 
   <!-- Invitaciones -->
-  <div class="nw-card" [class.is-collapsed]="collapsedCards['invitations']" style="margin-top:16px;">
+  <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['invitations']" style="margin-top:16px;">
     <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" (click)="toggleCard('invitations')">
       <div style="display:flex; align-items:center; gap:12px;">
         <h3 style="margin:0;">Invitaciones</h3>
@@ -182,7 +182,7 @@
   </div>
 
   <!-- Permisos y Accesos Info Banner -->
-  <div style="margin-top: 24px; margin-bottom: 16px; padding: 20px; background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius); display: flex; flex-direction: column; gap: 14px;">
+  <div *ngIf="isOwner()" style="margin-top: 24px; margin-bottom: 16px; padding: 20px; background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius); display: flex; flex-direction: column; gap: 14px;">
     <div style="display: flex; align-items: center; gap: 10px;">
       <span style="font-size: 24px;">🤝</span>
       <div>
@@ -222,7 +222,7 @@
   </div>
 
   <!-- Equipo Interno -->
-  <div class="nw-card" [class.is-collapsed]="collapsedCards['team']" style="margin-top:20px; border-top: 4px solid var(--nw-accent); padding: 24px;">
+  <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['team']" style="margin-top:20px; border-top: 4px solid var(--nw-accent); padding: 24px;">
     <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor:pointer;" (click)="toggleCard('team')">
       <div style="display:flex; align-items:center; gap:8px;">
         <h3 style="margin:0; font-size: 18px; font-weight: 700;">👥 Equipo Interno</h3>
@@ -384,7 +384,7 @@
   </div>
 
   <!-- Accesos Externos -->
-  <div class="nw-card" [class.is-collapsed]="collapsedCards['external']" style="margin-top:20px; border-top: 4px solid var(--nw-accent-2); padding: 24px;">
+  <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['external']" style="margin-top:20px; border-top: 4px solid var(--nw-accent-2); padding: 24px;">
     <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor:pointer;" (click)="toggleCard('external')">
       <div style="display:flex; align-items:center; gap:8px;">
         <h3 style="margin:0; font-size: 18px; font-weight: 700;">🔗 Accesos Externos</h3>
@@ -471,6 +471,8 @@
     </div>
   </div>
 </section>
+
+
 
 
 

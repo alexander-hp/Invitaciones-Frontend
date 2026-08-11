@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, DashboardMetrics, GuestModel, EventTableModel, InvitationModel
+  EventModel, DashboardMetrics, GuestModel, EventTableModel, InvitationModel, EventPermission
 } from '../../core/models';
 
 type Tab = 'info' | 'guests' | 'tables' | 'rsvps' | 'album' | 'communication' | 'dedications' | 'dj' | 'integration';
@@ -111,8 +111,9 @@ export class NewEventDetailComponent implements OnInit {
     this.loading = true;
     this.apiService.getEvent(this.eventId).subscribe({
       next: res => {
-        this.event = res.event;
+        this.event = { ...res.event, access: res.access || res.event.access };
         this.loading = false;
+        if (!this.canOpenTab(this.activeTab)) this.selectTab('info');
         this.loadMetricsAndCounts();
       },
       error: err => {
@@ -125,39 +126,39 @@ export class NewEventDetailComponent implements OnInit {
   loadMetricsAndCounts(): void {
     if (!this.eventId) return;
 
-    this.apiService.getEventDashboard(this.eventId).subscribe({
+    if (this.can('view_metrics')) this.apiService.getEventDashboard(this.eventId).subscribe({
       next: res => {
         this.eventMetrics = res.metrics || {};
       },
       error: () => {}
     });
 
-    this.apiService.listGuests(this.eventId).subscribe({
+    if (this.can('manage_guests')) this.apiService.listGuests(this.eventId).subscribe({
       next: res => { this.guests = res.guests || []; },
       error: () => {}
     });
 
-    this.apiService.listTables(this.eventId).subscribe({
+    if (this.can('manage_tables')) this.apiService.listTables(this.eventId).subscribe({
       next: res => { this.tables = res.tables || []; },
       error: () => {}
     });
 
-    this.apiService.listSongRequests(this.eventId).subscribe({
+    if (this.can('manage_songs')) this.apiService.listSongRequests(this.eventId).subscribe({
       next: res => { this.songRequestsCount = (res.songRequests || []).length; },
       error: () => {}
     });
 
-    this.apiService.listDedications(this.eventId).subscribe({
+    if (this.can('review_dedications')) this.apiService.listDedications(this.eventId).subscribe({
       next: res => { this.dedicationsCount = (res.dedications || []).length; },
       error: () => {}
     });
 
-    this.apiService.listRsvps(this.eventId).subscribe({
+    if (this.can('manage_guests')) this.apiService.listRsvps(this.eventId).subscribe({
       next: res => { this.rsvpsCount = (res.rsvps || []).length; },
       error: () => {}
     });
 
-    this.apiService.listAlbum(this.eventId).subscribe({
+    if (this.can('review_album')) this.apiService.listAlbum(this.eventId).subscribe({
       next: res => {
         this.pendingAlbumAssets = (res.assets || []).filter(a => a.status === 'pending').length;
       },
@@ -166,6 +167,7 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   selectTab(tab: Tab): void {
+    if (!this.canOpenTab(tab)) tab = 'info';
     this.activeTab = tab;
     if (this.eventId) {
       localStorage.setItem(`newEventDetail_tab_${this.eventId}`, tab);
@@ -176,6 +178,26 @@ export class NewEventDetailComponent implements OnInit {
       queryParamsHandling: 'merge',
       replaceUrl: true
     });
+  }
+
+  isOwner(): boolean {
+    return this.event?.access?.owner === true;
+  }
+
+  can(permission: EventPermission): boolean {
+    if (this.isOwner()) return true;
+    return Boolean(this.event?.access?.permissions?.includes(permission));
+  }
+
+  canOpenTab(tab: Tab): boolean {
+    if (tab === 'info') return true;
+    if (tab === 'guests' || tab === 'rsvps' || tab === 'communication') return this.can('manage_guests');
+    if (tab === 'tables') return this.can('manage_tables');
+    if (tab === 'album') return this.can('review_album');
+    if (tab === 'dedications') return this.can('review_dedications');
+    if (tab === 'dj') return this.can('manage_songs');
+    if (tab === 'integration') return this.isOwner() && this.event?.mode === 'external_dashboard';
+    return false;
   }
 
   formatDate(dateStr?: string): string {

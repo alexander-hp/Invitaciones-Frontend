@@ -113,8 +113,8 @@ export class ApiService {
     return this.http.post<{ event: EventModel }>(`${this.apiUrl}/events`, payload);
   }
 
-  getEvent(id: string): Observable<{ event: EventModel }> {
-    return this.http.get<{ event: EventModel }>(`${this.apiUrl}/events/${id}`);
+  getEvent(id: string): Observable<{ event: EventModel; access?: EventModel['access'] }> {
+    return this.http.get<{ event: EventModel; access?: EventModel['access'] }>(`${this.apiUrl}/events/${id}`);
   }
 
   updateEvent(id: string, payload: Partial<EventPayload>): Observable<{ event: EventModel }> {
