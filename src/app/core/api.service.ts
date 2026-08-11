@@ -468,11 +468,11 @@ export class ApiService {
     return this.http.post<WhatsAppBulkResponse>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/bulk`, payload);
   }
 
-  sendGuestEmail(id: string, payload: { messageType?: GuestMessageType }): Observable<EmailSendResponse> {
+  sendGuestEmail(id: string, payload: { messageType?: GuestMessageType; attachPass?: boolean }): Observable<EmailSendResponse> {
     return this.http.post<EmailSendResponse>(`${this.apiUrl}/guests/${id}/send-email`, payload);
   }
 
-  sendBulkEmail(eventId: string, payload: { confirm: boolean; messageType?: GuestMessageType; guestIds?: string[] }): Observable<EmailBulkResponse> {
+  sendBulkEmail(eventId: string, payload: { confirm: boolean; messageType?: GuestMessageType; guestIds?: string[]; attachPass?: boolean }): Observable<EmailBulkResponse> {
     return this.http.post<EmailBulkResponse>(`${this.apiUrl}/events/${eventId}/send-email`, payload);
   }
 

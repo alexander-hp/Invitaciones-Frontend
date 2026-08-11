@@ -50,6 +50,8 @@ import { AccessCheckinViewComponent } from './features/new-event-access/views/ac
 import { AccessGuestopsViewComponent } from './features/new-event-access/views/access-guestops-view.component';
 import { AccessClientViewComponent } from './features/new-event-access/views/access-client-view.component';
 import { AccessAlbumViewComponent } from './features/new-event-access/views/access-album-view.component';
+import { AccessPhotographerViewComponent } from './features/new-event-access/views/access-photographer-view.component';
+import { AccessAlbumGalleryViewComponent } from './features/new-event-access/views/access-album-gallery-view.component';
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
@@ -69,12 +71,14 @@ import { EditorPlansTabComponent } from './features/new-invitation-editor/tabs/p
 
 import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
 import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
+import { EventHeaderComponent } from './core/event-header/event-header.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ConfirmDialogComponent,
     QrScannerModalComponent,
+    EventHeaderComponent,
     CheckInStaffComponent,
     ContactComponent,
     DashboardComponent,
@@ -129,6 +133,8 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     AccessGuestopsViewComponent,
     AccessClientViewComponent,
     AccessAlbumViewComponent,
+    AccessPhotographerViewComponent,
+    AccessAlbumGalleryViewComponent,
     NewCheckInStaffComponent,
     NewExternalEmbedComponent,
     NewExternalPortalComponent

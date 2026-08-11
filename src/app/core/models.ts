@@ -753,7 +753,7 @@ export interface StaffCheckInSession {
   expiresAt: string;
 }
 
-export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops' | 'dj' | 'photographer' | 'integration_api';
+export type EventAccessRole = 'check_in' | 'album_review' | 'photographer' | 'album_view' | 'client_view' | 'guest_ops' | 'dj' | 'integration_api';
 
 export interface EventAccessLinkModel {
   id?: string;
