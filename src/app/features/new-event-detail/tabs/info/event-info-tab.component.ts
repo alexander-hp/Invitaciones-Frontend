@@ -448,4 +448,13 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     }
     return url;
   }
+
+  copyAccessToken(link: EventAccessLinkModel): void {
+    if (!link.accessToken) return;
+    navigator.clipboard.writeText(link.accessToken).then(() => {
+      this.showSuccess('Token de integracion copiado.');
+    }).catch(() => {
+      this.showError('No se pudo copiar el token.');
+    });
+  }
 }

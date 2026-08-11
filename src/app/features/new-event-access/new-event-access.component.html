@@ -83,6 +83,9 @@
       <app-access-album-view
         *ngIf="hasPermission('album_review')"
         [session]="session"
+        [uploadAllowed]="hasPermission('album_upload')"
+        [uploading]="albumUploading"
+        (uploadAlbumEvent)="uploadAlbumFile($event)"
         (updateAlbumEvent)="updateAlbum($event.asset, $event.status)">
       </app-access-album-view>
     </ng-container>

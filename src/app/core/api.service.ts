@@ -268,6 +268,15 @@ export class ApiService {
     return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album/${assetId}`, { status });
   }
 
+  uploadEventAccessAlbum(token: string, file: File, payload: { uploaderName?: string; uploaderEmail?: string; status?: 'pending' | 'approved' } = {}): Observable<{ asset: AlbumAssetModel }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (payload.uploaderName) formData.append('uploaderName', payload.uploaderName);
+    if (payload.uploaderEmail) formData.append('uploaderEmail', payload.uploaderEmail);
+    if (payload.status) formData.append('status', payload.status);
+    return this.http.post<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album`, formData);
+  }
+
   updateEventAccessSong(token: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
     const body = typeof payload === 'string' ? { status: payload } : payload;
     return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests/${songRequestId}`, body);

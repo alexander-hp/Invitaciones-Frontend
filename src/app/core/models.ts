@@ -751,13 +751,15 @@ export interface StaffCheckInSession {
   expiresAt: string;
 }
 
-export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops' | 'dj';
+export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops' | 'dj' | 'photographer' | 'integration_api';
 
 export interface EventAccessLinkModel {
   id?: string;
   _id?: string;
   role: EventAccessRole;
   label?: string;
+  tokenPreview?: string;
+  accessToken?: string;
   expiresAt: string;
   revokedAt?: string;
   lastUsedAt?: string;

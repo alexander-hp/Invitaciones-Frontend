@@ -409,9 +409,11 @@
             style="height:40px; padding:6px 12px; font-size:13px; cursor:pointer;">
             <option value="check_in">🔑 Check-in</option>
             <option value="album_review">📸 Revisión álbum</option>
+            <option value="photographer">Fotografo: ver y subir fotos</option>
             <option value="client_view">👤 Vista cliente</option>
             <option value="guest_ops">👥 Operación invitados</option>
             <option value="dj">🎧 Sección DJ (Canciones)</option>
+            <option value="integration_api">API integracion externa</option>
           </select>
         </div>
         <div>
@@ -446,12 +448,17 @@
               <span>•</span>
               <span>Expira: {{ formatShortDate(link.expiresAt) }}</span>
             </div>
+            <div *ngIf="link.role === 'integration_api'" style="display:grid; gap:4px; padding:8px; background:var(--nw-surface-2); border-radius:8px; border:1px solid var(--nw-border); margin-top:6px;">
+              <span style="font-size:12px; color:var(--nw-text-2);">Token API: <strong>{{ link.accessToken || link.tokenPreview || 'Disponible al crear el enlace' }}</strong></span>
+              <code style="font-size:11px; color:var(--nw-text-3); word-break:break-all;">Authorization: Bearer {{ link.accessToken || '&lt;token&gt;' }}</code>
+            </div>
           </div>
           <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
             <a class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getNewAccessUrl(link)" target="_blank"
               [style.pointer-events]="link.revokedAt ? 'none' : 'auto'"
               [style.opacity]="link.revokedAt ? '0.5' : '1'"
               style="height:32px; padding: 0 12px; font-size:12px;">Abrir</a>
+            <button *ngIf="link.role === 'integration_api' && link.accessToken" class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="copyAccessToken(link)" style="height:32px; padding: 0 12px; font-size:12px;">Copiar token</button>
             <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="revokeAccessLink(link)"
               [disabled]="!!link.revokedAt" style="height:32px; padding: 0 12px; font-size:12px;">Revocar</button>
           </div>
@@ -464,3 +471,6 @@
     </div>
   </div>
 </section>
+
+
+

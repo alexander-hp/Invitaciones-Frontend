@@ -11,6 +11,40 @@
     Aún no se han subido fotos para revisar. 📸
   </p>
 
+  <form *ngIf="uploadAllowed" style="display:grid; gap:12px; margin-bottom:18px; padding:16px; border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); background:var(--nw-surface-2);" (ngSubmit)="uploadAlbum()">
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0; font-size:16px; font-weight:800;">Subir fotos del evento</h3>
+        <p style="margin:4px 0 0; color:var(--nw-text-3); font-size:13px;">Para fotografo o staff autorizado. Formatos: JPG, PNG, WEBP o GIF, maximo 8 MB.</p>
+      </div>
+      <span class="nw-pill accent" style="font-size:11px;">Acceso fotografo</span>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; align-items:end;">
+      <label style="display:grid; gap:6px; font-size:13px; font-weight:700;">
+        Archivo
+        <input class="nw-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="onFileSelected($event)">
+      </label>
+      <label style="display:grid; gap:6px; font-size:13px; font-weight:700;">
+        Nombre
+        <input class="nw-input" [(ngModel)]="uploadForm.uploaderName" name="uploaderName" placeholder="Fotografo / estudio">
+      </label>
+      <label style="display:grid; gap:6px; font-size:13px; font-weight:700;">
+        Email
+        <input class="nw-input" [(ngModel)]="uploadForm.uploaderEmail" name="uploaderEmail" type="email" placeholder="foto@estudio.com">
+      </label>
+      <label style="display:grid; gap:6px; font-size:13px; font-weight:700;">
+        Estado
+        <select class="nw-select" [(ngModel)]="uploadForm.status" name="status">
+          <option value="pending">Pendiente de revision</option>
+          <option value="approved">Aprobada</option>
+        </select>
+      </label>
+      <button class="nw-btn nw-btn-primary" type="submit" [disabled]="!selectedFile || uploading" style="height:42px;">
+        {{ uploading ? 'Subiendo...' : 'Subir foto' }}
+      </button>
+    </div>
+  </form>
+
   <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--nw-gap); margin-top: 16px;">
     <article *ngFor="let asset of session.albumAssets" class="nw-card" style="padding: 12px; display: flex; flex-direction: column; gap: var(--nw-gap-sm); transition: transform 0.2s; border-color: var(--nw-border);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
       <div style="position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--nw-radius-sm); background: #eee;">

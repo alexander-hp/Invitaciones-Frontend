@@ -29,6 +29,7 @@ export class NewEventAccessComponent implements OnInit {
   message = '';
   error = '';
   showScanner = false;
+  albumUploading = false;
 
   openScanner(): void {
     this.showScanner = true;
@@ -147,6 +148,28 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
+  uploadAlbumFile(event: { file: File; uploaderName?: string; uploaderEmail?: string; status?: 'pending' | 'approved' }): void {
+    if (!this.token || !event.file) return;
+    this.albumUploading = true;
+    this.api.uploadEventAccessAlbum(this.token, event.file, {
+      uploaderName: event.uploaderName,
+      uploaderEmail: event.uploaderEmail,
+      status: event.status
+    }).subscribe({
+      next: ({ asset }) => {
+        if (this.session) {
+          this.session.albumAssets = [asset, ...(this.session.albumAssets || [])];
+        }
+        this.albumUploading = false;
+        this.showSuccess('Foto subida al album correctamente.');
+      },
+      error: (error) => {
+        this.albumUploading = false;
+        this.showError(error.error?.message || 'No se pudo subir la foto.');
+      }
+    });
+  }
+
   playSong(request: Partial<SongRequestModel> | SongRequestModel): void {
     if (!request) return;
     const sourceUrl = request.sourceUrl || '';
@@ -259,7 +282,10 @@ export class NewEventAccessComponent implements OnInit {
       return role === 'check_in' || perms.includes('check_in');
     }
     if (permission === 'album_review' || permission === 'review_album') {
-      return role === 'album_review' || perms.includes('album_review') || perms.includes('review_album');
+      return role === 'album_review' || role === 'photographer' || perms.includes('album_review') || perms.includes('review_album');
+    }
+    if (permission === 'album_upload') {
+      return role === 'photographer' || perms.includes('album_upload');
     }
     if (permission === 'client_view') {
       return role === 'client_view' || perms.includes('client_view');
