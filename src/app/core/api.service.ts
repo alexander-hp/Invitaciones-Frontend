@@ -19,6 +19,8 @@ import {
   EventModel,
   EventMemberModel,
   EventMemberPayload,
+  EventMemberRole,
+  EventMemberStatus,
   EventPermission,
   EventAccessLinkModel,
   EventAccessRole,
@@ -244,8 +246,38 @@ export class ApiService {
     return this.http.get<{ members: EventMemberModel[]; permissions: EventPermission[]; rolePermissions: Record<string, EventPermission[]> }>(`${this.apiUrl}/events/${eventId}/members`);
   }
 
-  createEventMember(eventId: string, payload: EventMemberPayload): Observable<{ member: EventMemberModel }> {
-    return this.http.post<{ member: EventMemberModel }>(`${this.apiUrl}/events/${eventId}/members`, payload);
+  createEventMember(eventId: string, payload: EventMemberPayload): Observable<{ member: EventMemberModel; inviteEmailSent?: boolean; inviteEmailError?: string }> {
+    return this.http.post<{ member: EventMemberModel; inviteEmailSent?: boolean; inviteEmailError?: string }>(`${this.apiUrl}/events/${eventId}/members`, payload);
+  }
+
+  getEventMemberInvite(token: string): Observable<{
+    invite: {
+      email: string;
+      name?: string;
+      role: EventMemberRole;
+      permissions: EventPermission[];
+      status: EventMemberStatus;
+      acceptedAt?: string;
+      hasAccount: boolean;
+      event?: { id: string; title: string; date?: string };
+    };
+  }> {
+    return this.http.get<{
+      invite: {
+        email: string;
+        name?: string;
+        role: EventMemberRole;
+        permissions: EventPermission[];
+        status: EventMemberStatus;
+        acceptedAt?: string;
+        hasAccount: boolean;
+        event?: { id: string; title: string; date?: string };
+      };
+    }>(`${this.apiUrl}/events/member-invites/${encodeURIComponent(token)}`);
+  }
+
+  acceptEventMemberInvite(token: string): Observable<{ member: EventMemberModel; eventId: string }> {
+    return this.http.post<{ member: EventMemberModel; eventId: string }>(`${this.apiUrl}/events/member-invites/${encodeURIComponent(token)}/accept`, {});
   }
 
   updateEventMember(eventId: string, memberId: string, payload: Partial<EventMemberPayload> & { status?: EventMemberModel['status'] }): Observable<{ member: EventMemberModel }> {

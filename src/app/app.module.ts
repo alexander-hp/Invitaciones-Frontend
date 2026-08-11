@@ -56,6 +56,7 @@ import { NewExternalPortalComponent } from './features/new-external-portal/new-e
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
+import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { EditorContentTabComponent } from './features/new-invitation-editor/tabs/content/editor-content-tab.component';
 import { EditorStyleTabComponent } from './features/new-invitation-editor/tabs/style/editor-style-tab.component';
 import { EditorItineraryTabComponent } from './features/new-invitation-editor/tabs/itinerary/editor-itinerary-tab.component';
@@ -94,6 +95,7 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
     EditorAssetsTabComponent,
     EditorPlansTabComponent,
     NewInvitationSectionsComponent,
+    NewMemberInviteComponent,
     LoginComponent,
     NewLoginComponent,
     NewRegisterComponent,

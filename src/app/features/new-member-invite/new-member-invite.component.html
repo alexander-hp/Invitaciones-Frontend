@@ -1,0 +1,76 @@
+<main class="member-invite-page">
+  <section class="member-invite-card">
+    <div class="brand-mark">K</div>
+    <p class="eyebrow">Acceso de equipo interno</p>
+    <h1>Aceptar invitacion</h1>
+
+    <p *ngIf="loading" class="state">Cargando invitacion...</p>
+    <p *ngIf="error" class="alert error">{{ error }}</p>
+    <p *ngIf="success" class="alert success">{{ success }}</p>
+
+    <ng-container *ngIf="!loading && invite">
+      <div class="event-summary">
+        <span>Evento</span>
+        <strong>{{ invite.event?.title || 'Evento KyndraSoft' }}</strong>
+        <small>{{ invite.email }}</small>
+      </div>
+
+      <div class="permissions-summary">
+        <div>
+          <span>Rol</span>
+          <strong>{{ roleLabel(invite.role) }}</strong>
+        </div>
+        <div>
+          <span>Permisos</span>
+          <strong>{{ invite.permissions.length }}</strong>
+        </div>
+      </div>
+
+      <div class="mode-tabs">
+        <button type="button" [class.active]="mode === 'login'" (click)="mode = 'login'">Ya tengo cuenta</button>
+        <button type="button" [class.active]="mode === 'register'" (click)="mode = 'register'">Crear cuenta</button>
+      </div>
+
+      <form *ngIf="mode === 'login'" (ngSubmit)="submitLogin()" class="invite-form">
+        <label>
+          Email
+          <input type="email" name="loginEmail" [(ngModel)]="loginForm.email" readonly>
+        </label>
+        <label>
+          Contrasena
+          <input [type]="showPassword ? 'text' : 'password'" name="loginPassword" [(ngModel)]="loginForm.password" required>
+        </label>
+        <button type="submit" [disabled]="submitting || !loginForm.password">
+          {{ submitting ? 'Validando...' : 'Entrar y aceptar' }}
+        </button>
+      </form>
+
+      <form *ngIf="mode === 'register'" (ngSubmit)="submitRegister()" class="invite-form">
+        <label>
+          Nombre
+          <input type="text" name="registerName" [(ngModel)]="registerForm.name" required>
+        </label>
+        <label>
+          Email
+          <input type="email" name="registerEmail" [(ngModel)]="registerForm.email" readonly>
+        </label>
+        <label>
+          Contrasena
+          <input [type]="showPassword ? 'text' : 'password'" name="registerPassword" [(ngModel)]="registerForm.password" minlength="8" required>
+        </label>
+        <button type="submit" [disabled]="submitting || !registerForm.name.trim() || !registerForm.password">
+          {{ submitting ? 'Creando acceso...' : 'Crear cuenta y aceptar' }}
+        </button>
+      </form>
+
+      <label class="show-password">
+        <input type="checkbox" [(ngModel)]="showPassword" name="showPassword">
+        Mostrar contrasena
+      </label>
+
+      <p class="note">
+        No enviamos contrasenas por correo. Este acceso queda ligado a tu email y solo aplica para este evento.
+      </p>
+    </ng-container>
+  </section>
+</main>

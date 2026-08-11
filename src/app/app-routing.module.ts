@@ -30,6 +30,7 @@ import { NewExternalEmbedComponent } from './features/new-external-embed/new-ext
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
+import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { NewPasswordResetComponent } from './features/new-password-reset/new-password-reset.component';
 import { NewPasswordResetConfirmComponent } from './features/new-password-reset-confirm/new-password-reset-confirm.component';
 
@@ -54,6 +55,7 @@ const routes: Routes = [
   { path: 'new/register', component: NewRegisterComponent },
   { path: 'new/password-reset', component: NewPasswordResetComponent },
   { path: 'new/password-reset/confirm', component: NewPasswordResetConfirmComponent },
+  { path: 'new/member-invite/:token', component: NewMemberInviteComponent },
   { path: 'new/dashboard', component: NewDashboardComponent, canActivate: [AuthGuard] },
   { path: 'new/events', component: NewEventsComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id', component: NewEventDetailComponent, canActivate: [AuthGuard] },

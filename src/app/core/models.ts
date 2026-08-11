@@ -127,6 +127,8 @@ export interface EventMemberModel {
   permissions: EventPermission[];
   status: EventMemberStatus;
   invitedAt?: string;
+  inviteTokenExpiresAt?: string;
+  inviteEmailSentAt?: string;
   acceptedAt?: string;
   lastUsedAt?: string;
   createdAt?: string;

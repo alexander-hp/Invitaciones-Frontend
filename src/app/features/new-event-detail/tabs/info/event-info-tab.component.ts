@@ -331,7 +331,11 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
         this.eventMembers.push(res.member);
         this.memberForm.email = '';
         this.memberForm.name = '';
-        this.showSuccess('Miembro invitado al equipo correctamente');
+        if (res.inviteEmailSent) {
+          this.showSuccess('Miembro invitado y correo enviado correctamente');
+        } else {
+          this.showError(`Miembro creado, pero no se envio el correo: ${res.inviteEmailError || 'SMTP no configurado'}`);
+        }
       },
       error: err => {
         this.showError(err?.error?.message || 'Error al agregar miembro');
