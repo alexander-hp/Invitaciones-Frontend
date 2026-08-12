@@ -31,6 +31,20 @@ export class NewEventAccessComponent implements OnInit {
   showScanner = false;
   albumUploading = false;
 
+  collapsedSections: Record<string, boolean> = {
+    dj: false,
+    checkIn: false,
+    clientView: false,
+    photographer: false,
+    albumReview: false,
+    albumView: false,
+    integrationApi: false
+  };
+
+  toggleSection(sectionName: string): void {
+    this.collapsedSections[sectionName] = !this.collapsedSections[sectionName];
+  }
+
   openScanner(): void {
     this.showScanner = true;
   }
@@ -523,28 +537,39 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
-  moveSong(songRequest: SongRequestModel, direction: -1 | 1): void {
-    const songRequestId = songRequest._id || songRequest.id || '';
-    if (!songRequestId || !this.session?.songRequests?.length) return;
+  moveSong(payload: any, fallbackDir?: -1 | 1): void {
+    const song = payload?.song || payload;
+    const targetSong = payload?.targetSong;
+    const direction = payload?.direction || fallbackDir || -1;
+
+    const songId = song?._id || song?.id;
+    if (!songId || !this.session?.songRequests?.length) return;
 
     const list = [...this.session.songRequests];
-    const idx = list.findIndex(item => (item._id || item.id) === songRequestId);
-    if (idx === -1) return;
+    const fromIdx = list.findIndex(item => (item._id || item.id) === songId);
+    if (fromIdx === -1) return;
 
-    const targetIdx = idx + direction;
-    if (targetIdx < 0 || targetIdx >= list.length) return;
+    let toIdx = -1;
+    if (targetSong) {
+      const targetId = targetSong._id || targetSong.id;
+      toIdx = list.findIndex(item => (item._id || item.id) === targetId);
+    } else {
+      toIdx = fromIdx + direction;
+    }
+
+    if (toIdx === -1 || toIdx < 0 || toIdx >= list.length) return;
 
     // Swap items in local array instantly
-    const temp = list[idx];
-    list[idx] = list[targetIdx];
-    list[targetIdx] = temp;
+    const temp = list[fromIdx];
+    list[fromIdx] = list[toIdx];
+    list[toIdx] = temp;
 
     // Assign sequential sortOrder values
     list.forEach((item, i) => item.sortOrder = i + 1);
     this.session.songRequests = list;
 
-    const newOrder = list[targetIdx].sortOrder;
-    this.api.updateEventAccessSong(this.token, songRequestId, { sortOrder: newOrder }).subscribe({
+    const newOrder = list[toIdx].sortOrder;
+    this.api.updateEventAccessSong(this.token, songId, { sortOrder: newOrder }).subscribe({
       next: () => {
         this.message = 'Orden de canción actualizado.';
       },
@@ -552,7 +577,7 @@ export class NewEventAccessComponent implements OnInit {
     });
   }
 
-  private get token(): string {
+  get token(): string {
     return this.route.snapshot.paramMap.get('token') || '';
   }
 }

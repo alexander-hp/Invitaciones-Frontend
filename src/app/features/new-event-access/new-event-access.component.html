@@ -1,4 +1,4 @@
-<div class="nw-standalone-page" style="min-height: 100vh; background: var(--nw-bg); padding: 40px 16px; font-family: var(--nw-font); color: var(--nw-text);">
+<div class="nw-standalone-page" style="min-height: 100vh; background: var(--nw-bg); padding: 40px 16px; font-family: var(--nw-font); color: var(--nw-text); overflow-x: hidden;">
   <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
   <div class="nw-toast-container" *ngIf="message || error">
     <div *ngIf="message" class="nw-toast success">
@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <div style="max-width: 860px; margin: 0 auto; display: grid; gap: var(--nw-gap);">
+  <div style="max-width: 860px; width: 100%; margin: 0 auto; display: grid; gap: var(--nw-gap); min-width: 0; box-sizing: border-box;">
     <!-- Notifications/Messages -->
     <p *ngIf="loading" class="nw-alert info nw-loading">Cargando acceso...</p>
     <p *ngIf="error" class="nw-alert error">{{ error }}</p>
@@ -61,7 +61,7 @@
 
       <!-- 1. Sección DJ / Música -->
       <app-access-dj-view
-        *ngIf="hasPermission('dj') || hasPermission('song_review')"
+        *ngIf="(hasPermission('dj') || hasPermission('song_review')) && session?.role !== 'guest_ops'"
         [session]="session"
         (playSongEvent)="playSong($event)"
         (updateSongEvent)="updateSongRequest($event.song, $event.status)"
@@ -71,7 +71,7 @@
 
       <!-- 2. Sección Check-in -->
       <app-access-checkin-view
-        *ngIf="hasPermission('check_in')"
+        *ngIf="hasPermission('check_in') && session?.role !== 'guest_ops'"
         [session]="session"
         [checking]="checking"
         [(code)]="code"
@@ -87,13 +87,13 @@
 
       <!-- 3. Sección Resumen Cliente -->
       <app-access-client-view
-        *ngIf="hasPermission('client_view')"
+        *ngIf="hasPermission('client_view') && session?.role !== 'guest_ops'"
         [session]="session">
       </app-access-client-view>
 
       <!-- 4. Sección Fotógrafo Oficial (Subida y visualización sin moderar) -->
       <app-access-photographer-view
-        *ngIf="hasPermission('photographer')"
+        *ngIf="hasPermission('photographer') && session?.role !== 'guest_ops'"
         [session]="session"
         [uploading]="albumUploading"
         (uploadBatchEvent)="uploadBatchAlbumFiles($event)">
@@ -101,7 +101,7 @@
 
       <!-- 5. Sección Revisión y Moderación de Álbum (Organizadores / Anfitriones) -->
       <app-access-album-view
-        *ngIf="hasPermission('album_review')"
+        *ngIf="hasPermission('album_review') && session?.role !== 'guest_ops'"
         [session]="session"
         (updateAlbumEvent)="updateAlbum($event.asset, $event.status)"
         (bulkUpdateAlbumEvent)="bulkUpdateAlbum($event)">
@@ -109,9 +109,34 @@
 
       <!-- 6. Sección Ver Álbum (Galería Exclusiva de Fotos Aprobadas con Carrusel, Cuadrícula y Lista) -->
       <app-access-album-gallery-view
-        *ngIf="hasPermission('album_view')"
+        *ngIf="hasPermission('album_view') && session?.role !== 'guest_ops'"
         [session]="session">
       </app-access-album-gallery-view>
+
+      <!-- 8. Sección Operación de Invitados (Gestión centralizada para staff) -->
+      <app-access-guestops-view
+        *ngIf="hasPermission('guest_ops')"
+        [session]="session"
+        [checking]="checking"
+        [(code)]="code"
+        [(search)]="search"
+        [(guestStatusFilter)]="guestStatusFilter"
+        [showScanner]="showScanner"
+        [albumUploading]="albumUploading"
+        [token]="token"
+        (checkInEvent)="checkIn()"
+        (directCheckInEvent)="checkInDirectly($event)"
+        (openScannerEvent)="openScanner()"
+        (closeScannerEvent)="closeScanner()"
+        (qrScannedEvent)="onQrScanned($event)"
+        (playSongEvent)="playSong($event)"
+        (updateSongEvent)="updateSongRequest($event.song, $event.status)"
+        (moveSongEvent)="moveSong($event.song, $event.direction)"
+        (addSongEvent)="addSong($event)"
+        (updateAlbumEvent)="updateAlbum($event.asset, $event.status)"
+        (bulkUpdateAlbumEvent)="bulkUpdateAlbum($event)"
+        (uploadBatchEvent)="uploadBatchAlbumFiles($event)">
+      </app-access-guestops-view>
     </ng-container>
   </div>
 </div>

@@ -8,19 +8,34 @@
       <div>
         <p class="eyebrow">{{ event.type }}</p>
         <h1>{{ event.title }}</h1>
-        <p class="muted">{{ event.date | date:'fullDate' }} - {{ event.venue.name }} - {{ event.mode === 'external_dashboard' ? 'Dashboard externo' : 'Invitacion digital' }}</p>
+        <p class="muted">{{ event.date | date:'fullDate' }} - {{ event.venue.name }} - {{ event.mode ===
+          'external_dashboard' ? 'Dashboard externo' : 'Invitacion digital' }}</p>
       </div>
-      <button class="primary" type="button" (click)="createInvitation()" [disabled]="saving || event.mode === 'external_dashboard'">{{ saving ? 'Creando...' : 'Crear invitacion' }}</button>
+      <button class="primary" type="button" (click)="createInvitation()"
+        [disabled]="saving || event.mode === 'external_dashboard'">{{ saving ? 'Creando...' : 'Crear invitacion'
+        }}</button>
     </header>
 
     <div class="split-layout">
       <section class="panel">
         <h2>Detalles</h2>
         <dl class="detail-list">
-          <div><dt>Anfitriones</dt><dd>{{ event.hosts.join(', ') || 'Sin anfitriones' }}</dd></div>
-          <div><dt>Lugar</dt><dd>{{ event.venue.name || 'Sin lugar' }}</dd></div>
-          <div><dt>Direccion</dt><dd>{{ event.venue.address || 'Sin direccion' }}</dd></div>
-          <div><dt>Estado</dt><dd>{{ event.status }}</dd></div>
+          <div>
+            <dt>Anfitriones</dt>
+            <dd>{{ event.hosts.join(', ') || 'Sin anfitriones' }}</dd>
+          </div>
+          <div>
+            <dt>Lugar</dt>
+            <dd>{{ event.venue.name || 'Sin lugar' }}</dd>
+          </div>
+          <div>
+            <dt>Direccion</dt>
+            <dd>{{ event.venue.address || 'Sin direccion' }}</dd>
+          </div>
+          <div>
+            <dt>Estado</dt>
+            <dd>{{ event.status }}</dd>
+          </div>
         </dl>
       </section>
 
@@ -28,7 +43,8 @@
         <h2>Invitaciones</h2>
         <p *ngIf="!invitations.length" class="muted">Este evento aun no tiene invitaciones.</p>
         <div class="item-list">
-          <a *ngFor="let invitation of invitations" [routerLink]="['/invitations', getInvitationId(invitation), 'editor']">
+          <a *ngFor="let invitation of invitations"
+            [routerLink]="['/invitations', getInvitationId(invitation), 'editor']">
             <strong>{{ invitation.content.headline || invitation.slug }}</strong>
             <span>/i/{{ invitation.slug }}</span>
             <small>{{ invitation.status }}</small>
@@ -42,28 +58,42 @@
         <div>
           <p class="eyebrow">Integracion externa</p>
           <h2>Pagina externa + portal KyndraSoft</h2>
-          <p class="muted">Tu pagina externa sigue siendo la principal. KyndraSoft maneja RSVP, pase QR, album, mesas, invitados, WhatsApp y check-in.</p>
+          <p class="muted">Tu pagina externa sigue siendo la principal. KyndraSoft maneja RSVP, pase QR, album, mesas,
+            invitados, WhatsApp y check-in.</p>
         </div>
         <img *ngIf="externalPortalQrUrl" class="qr-thumb" [src]="externalPortalQrUrl" alt="QR portal externo">
       </div>
       <form class="filter-row" [formGroup]="externalForm" (ngSubmit)="saveExternalConfig()">
-        <label class="wide">URL pagina externa<input formControlName="externalSiteUrl" placeholder="https://pagina-del-cliente.com"></label>
+        <label class="wide">URL pagina externa<input formControlName="externalSiteUrl"
+            placeholder="https://pagina-del-cliente.com"></label>
         <label>Etiqueta<input formControlName="externalSiteLabel" placeholder="Abrir pagina del evento"></label>
         <label>Marca portal<input formControlName="brandLabel" placeholder="KyndraSoft"></label>
-        <label class="wide">Mensaje portal<input formControlName="welcomeMessage" placeholder="Confirma tu asistencia y consulta tu pase."></label>
-        <label class="wide">Imagen portada<input formControlName="coverImageUrl" placeholder="https://.../portada.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="uploadExternalAsset($event, 'cover')"></label>
-        <label class="wide">Hero / espectacular<input formControlName="heroImageUrl" placeholder="https://.../hero.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="uploadExternalAsset($event, 'hero')"></label>
-        <label class="wide">Audio principal<input formControlName="musicUrl" placeholder="https://.../cancion.mp3"><input type="file" accept="audio/mpeg,audio/mp3,audio/wav" (change)="uploadExternalAsset($event, 'music')"></label>
+        <label class="wide">Mensaje portal<input formControlName="welcomeMessage"
+            placeholder="Confirma tu asistencia y consulta tu pase."></label>
+        <label class="wide">Imagen portada<input formControlName="coverImageUrl"
+            placeholder="https://.../portada.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+            (change)="uploadExternalAsset($event, 'cover')"></label>
+        <label class="wide">Hero / espectacular<input formControlName="heroImageUrl"
+            placeholder="https://.../hero.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+            (change)="uploadExternalAsset($event, 'hero')"></label>
+        <label class="wide">Audio principal<input formControlName="musicUrl"
+            placeholder="https://.../cancion.mp3"><input type="file" accept="audio/mpeg,audio/mp3,audio/wav"
+            (change)="uploadExternalAsset($event, 'music')"></label>
         <p class="muted wide" *ngIf="externalAssetUploading">Subiendo archivo {{ externalAssetUploading }}...</p>
 
         <div class="wide communication-panel" formArrayName="carousel">
           <div class="section-heading">
-            <div><p class="eyebrow">Carrusel</p><h2>Imagenes principales</h2></div>
+            <div>
+              <p class="eyebrow">Carrusel</p>
+              <h2>Imagenes principales</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addUrlItem('carousel')">Agregar imagen</button>
           </div>
           <div class="item-list">
             <article *ngFor="let control of carouselItems.controls; let i = index">
-              <label>URL imagen {{ i + 1 }}<input [formControlName]="i" placeholder="https://.../imagen.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="uploadExternalAsset($event, 'carousel', i)"></label>
+              <label>URL imagen {{ i + 1 }}<input [formControlName]="i" placeholder="https://.../imagen.jpg"><input
+                  type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                  (change)="uploadExternalAsset($event, 'carousel', i)"></label>
               <button class="ghost small" type="button" (click)="removeArrayItem('carousel', i)">Eliminar</button>
             </article>
           </div>
@@ -71,12 +101,17 @@
 
         <div class="wide communication-panel" formArrayName="gallery">
           <div class="section-heading">
-            <div><p class="eyebrow">Galeria</p><h2>Fotos consumibles por la pagina externa</h2></div>
+            <div>
+              <p class="eyebrow">Galeria</p>
+              <h2>Fotos consumibles por la pagina externa</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addUrlItem('gallery')">Agregar foto</button>
           </div>
           <div class="item-list">
             <article *ngFor="let control of galleryItems.controls; let i = index">
-              <label>URL foto {{ i + 1 }}<input [formControlName]="i" placeholder="https://.../foto.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="uploadExternalAsset($event, 'gallery', i)"></label>
+              <label>URL foto {{ i + 1 }}<input [formControlName]="i" placeholder="https://.../foto.jpg"><input
+                  type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                  (change)="uploadExternalAsset($event, 'gallery', i)"></label>
               <button class="ghost small" type="button" (click)="removeArrayItem('gallery', i)">Eliminar</button>
             </article>
           </div>
@@ -84,27 +119,40 @@
 
         <div class="wide communication-panel" formArrayName="spectacularImages">
           <div class="section-heading">
-            <div><p class="eyebrow">Espectaculares</p><h2>Imagenes destacadas</h2></div>
+            <div>
+              <p class="eyebrow">Espectaculares</p>
+              <h2>Imagenes destacadas</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addUrlItem('spectacularImages')">Agregar imagen</button>
           </div>
           <div class="item-list">
             <article *ngFor="let control of spectacularItems.controls; let i = index">
-              <label>URL espectacular {{ i + 1 }}<input [formControlName]="i" placeholder="https://.../destacada.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="uploadExternalAsset($event, 'spectacular', i)"></label>
-              <button class="ghost small" type="button" (click)="removeArrayItem('spectacularImages', i)">Eliminar</button>
+              <label>URL espectacular {{ i + 1 }}<input [formControlName]="i"
+                  placeholder="https://.../destacada.jpg"><input type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  (change)="uploadExternalAsset($event, 'spectacular', i)"></label>
+              <button class="ghost small" type="button"
+                (click)="removeArrayItem('spectacularImages', i)">Eliminar</button>
             </article>
           </div>
         </div>
 
         <div class="wide communication-panel" formArrayName="audioSections">
           <div class="section-heading">
-            <div><p class="eyebrow">Audio</p><h2>Audios por seccion</h2></div>
+            <div>
+              <p class="eyebrow">Audio</p>
+              <h2>Audios por seccion</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addAudioSection()">Agregar audio</button>
           </div>
           <div class="item-list">
             <article *ngFor="let group of audioSectionItems.controls; let i = index" [formGroupName]="i">
               <label>Titulo<input formControlName="title" placeholder="Ceremonia"></label>
-              <label class="wide">URL audio<input formControlName="url" placeholder="https://.../audio.mp3"><input type="file" accept="audio/mpeg,audio/mp3,audio/wav" (change)="uploadExternalAsset($event, 'audioSection', i)"></label>
-              <label class="wide">Descripcion<input formControlName="description" placeholder="Cancion de entrada"></label>
+              <label class="wide">URL audio<input formControlName="url" placeholder="https://.../audio.mp3"><input
+                  type="file" accept="audio/mpeg,audio/mp3,audio/wav"
+                  (change)="uploadExternalAsset($event, 'audioSection', i)"></label>
+              <label class="wide">Descripcion<input formControlName="description"
+                  placeholder="Cancion de entrada"></label>
               <button class="ghost small" type="button" (click)="removeArrayItem('audioSections', i)">Eliminar</button>
             </article>
           </div>
@@ -112,18 +160,23 @@
 
         <div class="wide communication-panel" formArrayName="locations">
           <div class="section-heading">
-            <div><p class="eyebrow">Mapa</p><h2>Puntos y ubicaciones</h2></div>
+            <div>
+              <p class="eyebrow">Mapa</p>
+              <h2>Puntos y ubicaciones</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addLocation()">Agregar punto</button>
           </div>
           <div class="item-list">
             <article *ngFor="let group of locationItems.controls; let i = index" [formGroupName]="i">
               <label>Tipo<input formControlName="type" placeholder="ceremonia, recepcion, hotel"></label>
               <label>Nombre<input formControlName="name" placeholder="Salon Central"></label>
-              <label class="wide">Direccion<input formControlName="address" placeholder="Calle, colonia, ciudad"></label>
+              <label class="wide">Direccion<input formControlName="address"
+                  placeholder="Calle, colonia, ciudad"></label>
               <label class="wide">Maps<input formControlName="mapUrl" placeholder="https://maps.google.com/..."></label>
               <label class="wide">Waze<input formControlName="wazeUrl" placeholder="https://waze.com/..."></label>
               <label>Horario<input formControlName="time" placeholder="18:00"></label>
-              <label class="wide">Notas<input formControlName="notes" placeholder="Estacionamiento por puerta norte"></label>
+              <label class="wide">Notas<input formControlName="notes"
+                  placeholder="Estacionamiento por puerta norte"></label>
               <button class="ghost small" type="button" (click)="removeArrayItem('locations', i)">Eliminar</button>
             </article>
           </div>
@@ -131,7 +184,10 @@
 
         <div class="wide communication-panel" formArrayName="sections">
           <div class="section-heading">
-            <div><p class="eyebrow">Secciones libres</p><h2>Bloques para consumir en la pagina externa</h2></div>
+            <div>
+              <p class="eyebrow">Secciones libres</p>
+              <h2>Bloques para consumir en la pagina externa</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addSection()">Agregar seccion</button>
           </div>
           <div class="item-list">
@@ -158,8 +214,11 @@
               <label>Orden<input formControlName="order" type="number"></label>
               <label class="wide">Texto<textarea formControlName="body" rows="2"></textarea></label>
               <label class="wide">URL<input formControlName="url" placeholder="https://..."></label>
-              <label class="wide">Imagen<input formControlName="imageUrl" placeholder="https://.../imagen.jpg"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" (change)="uploadExternalAsset($event, 'sectionImage', i)"></label>
-              <label class="wide">Roles visibles<input formControlName="rolesText" placeholder="familia, vip, padrino"></label>
+              <label class="wide">Imagen<input formControlName="imageUrl" placeholder="https://.../imagen.jpg"><input
+                  type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                  (change)="uploadExternalAsset($event, 'sectionImage', i)"></label>
+              <label class="wide">Roles visibles<input formControlName="rolesText"
+                  placeholder="familia, vip, padrino"></label>
               <button class="ghost small" type="button" (click)="removeArrayItem('sections', i)">Eliminar</button>
             </article>
           </div>
@@ -167,19 +226,26 @@
 
         <div class="wide communication-panel" formArrayName="giftRegistry">
           <div class="section-heading">
-            <div><p class="eyebrow">Regalos</p><h2>Mesa de regalos externa</h2></div>
+            <div>
+              <p class="eyebrow">Regalos</p>
+              <h2>Mesa de regalos externa</h2>
+            </div>
             <button class="ghost small" type="button" (click)="addGift()">Agregar mesa</button>
           </div>
-          <label class="checkline"><input type="checkbox" formControlName="giftEnabled"> Mostrar modulo de regalos</label>
+          <label class="checkline"><input type="checkbox" formControlName="giftEnabled"> Mostrar modulo de
+            regalos</label>
           <label class="wide">Texto introductorio<textarea formControlName="giftIntroText" rows="2"></textarea></label>
-          <label class="checkline"><input type="checkbox" formControlName="giftShowRegistry"> Mostrar mesas de regalos</label>
-          <label class="checkline"><input type="checkbox" formControlName="giftShowEnvelope"> Mostrar sobre digital</label>
+          <label class="checkline"><input type="checkbox" formControlName="giftShowRegistry"> Mostrar mesas de
+            regalos</label>
+          <label class="checkline"><input type="checkbox" formControlName="giftShowEnvelope"> Mostrar sobre
+            digital</label>
           <div class="item-list">
             <article *ngFor="let group of giftItems.controls; let i = index" [formGroupName]="i">
               <label>Tienda<input formControlName="store" placeholder="Liverpool, Amazon, Palacio"></label>
               <label>Titulo<input formControlName="title" placeholder="Mesa de regalos"></label>
               <label class="wide">URL<input formControlName="url" placeholder="https://..."></label>
-              <label class="wide">Logo / imagen<input formControlName="imageUrl" placeholder="https://.../logo.png"></label>
+              <label class="wide">Logo / imagen<input formControlName="imageUrl"
+                  placeholder="https://.../logo.png"></label>
               <label class="wide">Nota<input formControlName="note" placeholder="Opcional"></label>
               <label>Prioridad<input formControlName="priority" type="number"></label>
               <button class="ghost small" type="button" (click)="removeArrayItem('giftRegistry', i)">Eliminar</button>
@@ -189,28 +255,39 @@
 
         <div class="wide communication-panel">
           <div class="section-heading">
-            <div><p class="eyebrow">Sobre digital</p><h2>Datos bancarios opcionales</h2></div>
+            <div>
+              <p class="eyebrow">Sobre digital</p>
+              <h2>Datos bancarios opcionales</h2>
+            </div>
           </div>
           <label>Banco<input formControlName="envelopeBank"></label>
           <label>Titular<input formControlName="envelopeHolder"></label>
           <label>Cuenta<input formControlName="envelopeAccount"></label>
           <label>CLABE<input formControlName="envelopeClabe"></label>
           <label class="wide">Nota<textarea formControlName="envelopeNote" rows="2"></textarea></label>
-          <label class="wide">QR / imagen<input formControlName="envelopeQrImageUrl" placeholder="https://.../qr.png"></label>
+          <label class="wide">QR / imagen<input formControlName="envelopeQrImageUrl"
+              placeholder="https://.../qr.png"></label>
         </div>
 
         <div class="wide communication-panel">
           <div class="section-heading">
-            <div><p class="eyebrow">Dedicatorias</p><h2>Libro de mensajes</h2></div>
+            <div>
+              <p class="eyebrow">Dedicatorias</p>
+              <h2>Libro de mensajes</h2>
+            </div>
           </div>
-          <label class="checkline"><input type="checkbox" formControlName="dedicationsEnabled"> Permitir dedicatorias</label>
-          <label class="checkline"><input type="checkbox" formControlName="dedicationsRequireApproval"> Requerir aprobacion</label>
-          <label class="wide">Texto introductorio<textarea formControlName="dedicationsIntroText" rows="2"></textarea></label>
+          <label class="checkline"><input type="checkbox" formControlName="dedicationsEnabled"> Permitir
+            dedicatorias</label>
+          <label class="checkline"><input type="checkbox" formControlName="dedicationsRequireApproval"> Requerir
+            aprobacion</label>
+          <label class="wide">Texto introductorio<textarea formControlName="dedicationsIntroText"
+              rows="2"></textarea></label>
         </div>
 
         <label class="checkline"><input type="checkbox" formControlName="songRequestsEnabled"> Solicitudes al DJ</label>
         <label>Max canciones<input formControlName="songRequestsMax" type="number" min="1" max="20"></label>
-        <label class="checkline"><input type="checkbox" formControlName="songRequestsDedications"> Permitir dedicatoria</label>
+        <label class="checkline"><input type="checkbox" formControlName="songRequestsDedications"> Permitir
+          dedicatoria</label>
         <label class="checkline"><input type="checkbox" formControlName="externalPortalEnabled"> Portal activo</label>
         <button class="primary" type="submit">Guardar integracion</button>
       </form>
@@ -232,7 +309,7 @@
   .then(({ event }) => console.log(event.content));</textarea>
             <textarea readonly rows="6">{{ externalIdentifyExample }}</textarea>
             <textarea readonly rows="8">{{ externalRsvpExample }}</textarea>
-              <textarea readonly rows="7">{{ externalSongRequestExample }}</textarea>
+            <textarea readonly rows="7">{{ externalSongRequestExample }}</textarea>
           </div>
         </div>
         <div class="item-list">
@@ -242,7 +319,8 @@
             <textarea readonly rows="2">{{ widget.snippet }}</textarea>
           </article>
         </div>
-        <textarea *ngIf="embedManifest?.snippets?.['script']" readonly rows="2">{{ embedManifest?.snippets?.['script'] }}</textarea>
+        <textarea *ngIf="embedManifest?.snippets?.['script']" readonly
+          rows="2">{{ embedManifest?.snippets?.['script'] }}</textarea>
       </div>
       <div class="guest-pass" *ngIf="externalPortalUrl && !newExternalPortalUrl" style="margin-bottom: 12px;">
         <img [src]="externalPortalQrUrl" alt="QR portal">
@@ -278,14 +356,20 @@
         <p *ngIf="!songRequests.length" class="muted">Aun no hay canciones solicitadas.</p>
         <div class="item-list" *ngIf="songRequests.length">
           <article *ngFor="let songRequest of songRequests">
-            <strong (click)="playSong(songRequest)" style="cursor:pointer;" title="Escuchar en la página">🎵 {{ songRequest.title }} <span *ngIf="songRequest.artist">- {{ songRequest.artist }}</span></strong>
-            <span>{{ songRequest.requesterName || 'Invitado' }} <small *ngIf="songRequest.dedication">/ {{ songRequest.dedication }}</small></span>
+            <strong (click)="playSong(songRequest)" style="cursor:pointer;" title="Escuchar en la página">🎵 {{
+              songRequest.title }} <span *ngIf="songRequest.artist">- {{ songRequest.artist }}</span></strong>
+            <span>{{ songRequest.requesterName || 'Invitado' }} <small *ngIf="songRequest.dedication">/ {{
+                songRequest.dedication }}</small></span>
             <small>{{ songRequest.status }}</small>
             <div class="inline-actions">
-              <button class="ghost small" type="button" (click)="playSong(songRequest)" title="Escuchar">▶ Escuchar</button>
-              <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'approved')">Aprobar</button>
-              <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'played')">Tocada</button>
-              <button class="ghost small" type="button" (click)="updateSongRequest(songRequest, 'rejected')">Rechazar</button>
+              <button class="ghost small" type="button" (click)="playSong(songRequest)" title="Escuchar">▶
+                Escuchar</button>
+              <button class="ghost small" type="button"
+                (click)="updateSongRequest(songRequest, 'approved')">Aprobar</button>
+              <button class="ghost small" type="button"
+                (click)="updateSongRequest(songRequest, 'played')">Tocada</button>
+              <button class="ghost small" type="button"
+                (click)="updateSongRequest(songRequest, 'rejected')">Rechazar</button>
             </div>
           </article>
         </div>
@@ -305,9 +389,12 @@
             <span>{{ dedication.message }}</span>
             <small>{{ dedication.status }} / {{ dedication.type }}</small>
             <div class="inline-actions">
-              <button class="ghost small" type="button" (click)="updateDedication(dedication, 'approved')">Aprobar</button>
-              <button class="ghost small" type="button" (click)="updateDedication(dedication, 'hidden')">Ocultar</button>
-              <button class="ghost small" type="button" (click)="updateDedication(dedication, 'rejected')">Rechazar</button>
+              <button class="ghost small" type="button"
+                (click)="updateDedication(dedication, 'approved')">Aprobar</button>
+              <button class="ghost small" type="button"
+                (click)="updateDedication(dedication, 'hidden')">Ocultar</button>
+              <button class="ghost small" type="button"
+                (click)="updateDedication(dedication, 'rejected')">Rechazar</button>
             </div>
           </article>
         </div>
@@ -330,7 +417,8 @@
               <option value="dj">🎧 Sección DJ (Canciones)</option>
             </select>
           </label>
-          <label>Etiqueta<input name="accessLabel" [(ngModel)]="accessLinkForm.label" placeholder="Entrada principal"></label>
+          <label>Etiqueta<input name="accessLabel" [(ngModel)]="accessLinkForm.label"
+              placeholder="Entrada principal"></label>
           <label>Dias<input name="accessDays" type="number" min="1" max="90" [(ngModel)]="accessLinkForm.days"></label>
           <button class="primary" type="submit">Crear link</button>
         </form>
@@ -340,8 +428,11 @@
             <span>{{ link.url }}</span>
             <small>Expira {{ link.expiresAt | date:'short' }} <span *ngIf="link.revokedAt">/ revocado</span></small>
             <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center;">
-              <a [href]="link.url" target="_blank" [style.pointer-events]="link.revokedAt ? 'none' : 'auto'" [style.opacity]="link.revokedAt ? '0.5' : '1'" style="font-size: 13px; font-weight: 600; text-decoration: underline; color: inherit;">Abrir</a>
-              <button class="ghost small" type="button" (click)="revokeAccessLink(link)" [disabled]="!!link.revokedAt">Revocar</button>
+              <a [href]="link.url" target="_blank" [style.pointer-events]="link.revokedAt ? 'none' : 'auto'"
+                [style.opacity]="link.revokedAt ? '0.5' : '1'"
+                style="font-size: 13px; font-weight: 600; text-decoration: underline; color: inherit;">Abrir</a>
+              <button class="ghost small" type="button" (click)="revokeAccessLink(link)"
+                [disabled]="!!link.revokedAt">Revocar</button>
             </div>
           </article>
         </div>
@@ -353,7 +444,8 @@
         <div>
           <p class="eyebrow">Plan {{ currentPlan.name }}</p>
           <h2>Diferenciales premium del evento</h2>
-          <p class="muted">Este plan aplica al evento completo, incluyendo todas sus invitaciones segmentadas. <span *ngIf="eventPlanExpiresLabel">Activo hasta {{ eventPlanExpiresLabel }}.</span></p>
+          <p class="muted">Este plan aplica al evento completo, incluyendo todas sus invitaciones segmentadas. <span
+              *ngIf="eventPlanExpiresLabel">Activo hasta {{ eventPlanExpiresLabel }}.</span></p>
         </div>
         <div class="feature-pill-list">
           <span class="feature-pill" [class.locked]="!hasPlanFeature('whatsappMessaging')">WhatsApp</span>
@@ -365,10 +457,17 @@
         </div>
       </div>
       <div class="inline-actions">
-        <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" class="ghost small" type="button" (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading">{{ eventPlanActive ? 'Renovar Evento Individual' : 'Activar Evento Individual' }}</button>
-        <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" class="ghost small" type="button" (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading">{{ eventPlanActive ? 'Renovar Dashboard Externo' : 'Activar Dashboard Externo' }}</button>
-        <button class="ghost small" type="button" (click)="checkoutPlan('planner_pro_monthly')" [disabled]="checkoutLoading">{{ subscriptionActive ? 'Planner Pro activo' : 'Mejorar a Planner Pro mensual' }}</button>
-        <button class="ghost small" type="button" (click)="checkoutPlan('planner_pro_yearly')" [disabled]="checkoutLoading || subscriptionActive">Planner Pro anual</button>
+        <button *ngIf="event.mode !== 'external_dashboard' && !subscriptionActive" class="ghost small" type="button"
+          (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading">{{ eventPlanActive ? 'Renovar Evento
+          Individual' : 'Activar Evento Individual' }}</button>
+        <button *ngIf="event.mode === 'external_dashboard' && !subscriptionActive" class="ghost small" type="button"
+          (click)="checkoutPlan('external_dashboard_12m')" [disabled]="checkoutLoading">{{ eventPlanActive ? 'Renovar
+          Dashboard Externo' : 'Activar Dashboard Externo' }}</button>
+        <button class="ghost small" type="button" (click)="checkoutPlan('planner_pro_monthly')"
+          [disabled]="checkoutLoading">{{ subscriptionActive ? 'Planner Pro activo' : 'Mejorar a Planner Pro mensual'
+          }}</button>
+        <button class="ghost small" type="button" (click)="checkoutPlan('planner_pro_yearly')"
+          [disabled]="checkoutLoading || subscriptionActive">Planner Pro anual</button>
       </div>
 
       <div class="section-heading">
@@ -378,7 +477,9 @@
         </div>
         <div class="inline-actions">
           <span class="count-pill">{{ filteredGuests.length }} de {{ guests.length }} invitados</span>
-          <button class="ghost small" type="button" (click)="exportGuests()" [disabled]="exportingGuests || !guests.length || !hasPlanFeature('exportData')">{{ exportingGuests ? 'Exportando...' : 'Exportar CSV' }}</button>
+          <button class="ghost small" type="button" (click)="exportGuests()"
+            [disabled]="exportingGuests || !guests.length || !hasPlanFeature('exportData')">{{ exportingGuests ?
+            'Exportando...' : 'Exportar CSV' }}</button>
         </div>
       </div>
 
@@ -407,37 +508,52 @@
           <article><span>Confirmados</span><strong>{{ confirmedCommunicationGuests }}</strong></article>
         </div>
         <div class="filter-row">
-          <span class="count-pill">WhatsApp: {{ whatsappProvider }} <ng-container *ngIf="whatsappProvider === 'openwa'">/ {{ openWaReady ? 'listo' : ('no listo: ' + openWaStatus) }}</ng-container></span>
-          <span class="count-pill" *ngIf="whatsappFallbackProvider">Fallback {{ whatsappFallbackProvider }}: {{ whatsappFallbackEnabled ? 'listo' : 'sin configurar' }}</span>
+          <span class="count-pill">WhatsApp: {{ whatsappProvider }} <ng-container
+              *ngIf="whatsappProvider === 'openwa'">/ {{ openWaReady ? 'listo' : ('no listo: ' + openWaStatus)
+              }}</ng-container></span>
+          <span class="count-pill" *ngIf="whatsappFallbackProvider">Fallback {{ whatsappFallbackProvider }}: {{
+            whatsappFallbackEnabled ? 'listo' : 'sin configurar' }}</span>
           <label>Plantilla
             <select name="messageTemplate" [(ngModel)]="selectedMessageType">
               <option *ngFor="let template of messageTemplates" [value]="template.value">{{ template.label }}</option>
             </select>
           </label>
           <button class="ghost" type="button" (click)="showPendingReminders()">Ver pendientes y recordar</button>
-          <button class="ghost" type="button" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !filteredGuests.length">{{ emailBulkSending ? 'Enviando email...' : 'Enviar email filtrados' }}</button>
-          <button class="primary" type="button" (click)="sendBulkWhatsapp()" [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !filteredGuests.length || !hasPlanFeature('whatsappBulk')">{{ whatsappBulkSending ? 'Enviando...' : 'Enviar WhatsApp filtrados' }}</button>
+          <button class="ghost" type="button" (click)="sendBulkEmail()"
+            [disabled]="emailBulkSending || !filteredGuests.length">{{ emailBulkSending ? 'Enviando email...' : 'Enviar
+            email filtrados' }}</button>
+          <button class="primary" type="button" (click)="sendBulkWhatsapp()"
+            [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !filteredGuests.length || !hasPlanFeature('whatsappBulk')">{{
+            whatsappBulkSending ? 'Enviando...' : 'Enviar WhatsApp filtrados' }}</button>
         </div>
         <p *ngIf="!hasPlanFeature('whatsappBulk')" class="muted">{{ featureLockedMessage('whatsappBulk') }}</p>
         <div class="filter-row">
           <label class="checkline">
-            <input type="checkbox" name="whatsappMediaEnabled" [(ngModel)]="whatsappMedia.enabled" [disabled]="!hasPlanFeature('whatsappMedia')">
+            <input type="checkbox" name="whatsappMediaEnabled" [(ngModel)]="whatsappMedia.enabled"
+              [disabled]="!hasPlanFeature('whatsappMedia')">
             Adjuntar media
           </label>
           <label *ngIf="whatsappMedia.enabled">Media guardada
             <select name="whatsappMediaAsset" [(ngModel)]="whatsappMedia.assetId">
               <option value="">URL manual</option>
-              <option *ngFor="let asset of whatsappMediaAssets" [value]="getWhatsAppMediaAssetId(asset)">{{ asset.fileName }} · {{ asset.type }}</option>
+              <option *ngFor="let asset of whatsappMediaAssets" [value]="getWhatsAppMediaAssetId(asset)">{{
+                asset.fileName }} · {{ asset.type }}</option>
             </select>
           </label>
           <label *ngIf="whatsappMedia.enabled">Subir archivo
-            <input type="file" name="whatsappMediaFile" accept="image/*,video/mp4,video/webm,video/quicktime,audio/*,application/pdf" (change)="onWhatsappMediaSelected($event)">
+            <input type="file" name="whatsappMediaFile"
+              accept="image/*,video/mp4,video/webm,video/quicktime,audio/*,application/pdf"
+              (change)="onWhatsappMediaSelected($event)">
           </label>
-          <button *ngIf="whatsappMedia.enabled" class="ghost small" type="button" (click)="uploadWhatsappMedia()" [disabled]="whatsappMediaUploading || !selectedWhatsappMediaFile">{{ whatsappMediaUploading ? 'Subiendo...' : 'Subir a S3' }}</button>
+          <button *ngIf="whatsappMedia.enabled" class="ghost small" type="button" (click)="uploadWhatsappMedia()"
+            [disabled]="whatsappMediaUploading || !selectedWhatsappMediaFile">{{ whatsappMediaUploading ? 'Subiendo...'
+            : 'Subir a S3' }}</button>
           <label *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId">URL
             <input name="whatsappMediaUrl" [(ngModel)]="whatsappMedia.url" placeholder="https://...">
           </label>
-          <button *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId" class="ghost small" type="button" (click)="inspectWhatsappMediaUrl()" [disabled]="mediaInspecting || !whatsappMedia.url">{{ mediaInspecting ? 'Analizando...' : 'Analizar URL' }}</button>
+          <button *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId" class="ghost small" type="button"
+            (click)="inspectWhatsappMediaUrl()" [disabled]="mediaInspecting || !whatsappMedia.url">{{ mediaInspecting ?
+            'Analizando...' : 'Analizar URL' }}</button>
           <label *ngIf="whatsappMedia.enabled && !whatsappMedia.assetId && mediaInspection">Archivo
             <input name="whatsappMediaFilename" [(ngModel)]="whatsappMedia.filename" placeholder="invitacion.png">
           </label>
@@ -453,7 +569,8 @@
           </div>
         </div>
         <label *ngIf="whatsappMedia.enabled">Caption media
-          <textarea name="whatsappMediaCaption" rows="2" [(ngModel)]="whatsappMedia.caption" placeholder="Texto que acompana la imagen, video o documento"></textarea>
+          <textarea name="whatsappMediaCaption" rows="2" [(ngModel)]="whatsappMedia.caption"
+            placeholder="Texto que acompana la imagen, video o documento"></textarea>
         </label>
         <div class="notice" *ngIf="hasPlanFeature('whatsappMessaging')">
           <strong>Preview WhatsApp</strong>
@@ -461,10 +578,13 @@
           <pre>{{ bulkWhatsappPreview }}</pre>
         </div>
         <div *ngIf="whatsappMedia.enabled && whatsappMediaAssets.length" class="inline-actions">
-          <button *ngFor="let asset of whatsappMediaAssets.slice(0, 4)" class="ghost small" type="button" (click)="deleteWhatsappMedia(asset)">Quitar {{ asset.fileName }}</button>
+          <button *ngFor="let asset of whatsappMediaAssets.slice(0, 4)" class="ghost small" type="button"
+            (click)="deleteWhatsappMedia(asset)">Quitar {{ asset.fileName }}</button>
         </div>
-        <p *ngIf="!hasPlanFeature('whatsappMessaging')" class="muted">{{ featureLockedMessage('whatsappMessaging') }}</p>
-        <p *ngIf="hasPlanFeature('whatsappMessaging') && !whatsappEnabled" class="muted">Proveedor automatico apagado; usa el boton manual wa.me por invitado.</p>
+        <p *ngIf="!hasPlanFeature('whatsappMessaging')" class="muted">{{ featureLockedMessage('whatsappMessaging') }}
+        </p>
+        <p *ngIf="hasPlanFeature('whatsappMessaging') && !whatsappEnabled" class="muted">Proveedor automatico apagado;
+          usa el boton manual wa.me por invitado.</p>
       </div>
 
       <div class="communication-panel">
@@ -473,12 +593,15 @@
             <p class="eyebrow">Entrada</p>
             <h2>Check-in staff</h2>
           </div>
-          <button class="ghost small" type="button" (click)="createCheckInLink()" [disabled]="!hasPlanFeature('checkIn')">Generar link staff</button>
+          <button class="ghost small" type="button" (click)="createCheckInLink()"
+            [disabled]="!hasPlanFeature('checkIn')">Generar link staff</button>
         </div>
-        <p class="muted">{{ hasPlanFeature('checkIn') ? 'Comparte este link con la persona de entrada. Solo permite ver invitados y registrar check-in.' : featureLockedMessage('checkIn') }}</p>
+        <p class="muted">{{ hasPlanFeature('checkIn') ? 'Comparte este link con la persona de entrada. Solo permite ver
+          invitados y registrar check-in.' : featureLockedMessage('checkIn') }}</p>
         <p *ngIf="checkInLink" class="notice" style="display:flex; justify-content:space-between; align-items:center;">
           <span>{{ checkInLink }}</span>
-          <a [href]="checkInLink" target="_blank" style="margin-left: 10px; font-weight:600; text-decoration:underline; color: inherit;">Abrir</a>
+          <a [href]="checkInLink" target="_blank"
+            style="margin-left: 10px; font-weight:600; text-decoration:underline; color: inherit;">Abrir</a>
         </p>
       </div>
 
@@ -510,7 +633,8 @@
             </div>
             <p *ngIf="table.overCapacity" class="error">Mesa sobre capacidad.</p>
             <ul class="compact-list">
-              <li *ngFor="let guest of table.guests">{{ guest.name }} - {{ guest.seats }} silla(s) <span *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</span></li>
+              <li *ngFor="let guest of table.guests">{{ guest.name }} - {{ guest.seats }} silla(s) <span
+                  *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</span></li>
             </ul>
           </article>
         </div>
@@ -535,7 +659,8 @@
           <input name="guestGroup" [(ngModel)]="guestForm.group" placeholder="Familia, Amigos, Trabajo">
         </label>
         <label>Rol visible <small style="color:#64748b;">(Opcional)</small>
-          <input name="guestRelationship" [(ngModel)]="guestForm.relationshipLabel" placeholder="Dama de honor, padrino...">
+          <input name="guestRelationship" [(ngModel)]="guestForm.relationshipLabel"
+            placeholder="Dama de honor, padrino...">
         </label>
         <label>Visibilidad <small style="color:#64748b;">(Opcional)</small>
           <input name="guestVisibilityGroup" [(ngModel)]="guestForm.visibilityGroup" placeholder="familia, vip, staff">
@@ -550,37 +675,48 @@
           <input name="guestCompanions" type="number" min="0" [(ngModel)]="guestForm.allowedCompanions">
         </label>
         <label class="wide">Roles <small style="color:#64748b;">(Opcional)</small>
-          <textarea name="guestRoles" rows="2" [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor, familia, graduado, staff, proveedor, vip"></textarea>
+          <textarea name="guestRoles" rows="2" [(ngModel)]="guestForm.rolesText"
+            placeholder="anfitrion, padrino, dama_honor, familia, graduado, staff, proveedor, vip"></textarea>
         </label>
         <label class="wide">Tags <small style="color:#64748b;">(Opcional)</small>
-          <textarea name="guestTags" rows="2" [(ngModel)]="guestForm.tagsText" placeholder="mesa_vip, lado_novia, hotel, after"></textarea>
+          <textarea name="guestTags" rows="2" [(ngModel)]="guestForm.tagsText"
+            placeholder="mesa_vip, lado_novia, hotel, after"></textarea>
         </label>
-        <label class="wide">Acompañantes nombrados <small style="color:#64748b;">(Opcional - un nombre por línea)</small>
-          <textarea name="guestCompanionNames" [(ngModel)]="companionNames" placeholder="Un nombre por línea"></textarea>
+        <label class="wide">Acompañantes nombrados <small style="color:#64748b;">(Opcional - un nombre por
+            línea)</small>
+          <textarea name="guestCompanionNames" [(ngModel)]="companionNames"
+            placeholder="Un nombre por línea"></textarea>
         </label>
         <div style="display:flex; gap:10px; width:100%; grid-column: span 2; margin-top:6px;">
-          <button *ngIf="!editingGuest" class="ghost" type="button" (click)="saveGuest(true)" [disabled]="guestSaving" style="border-color:#10b981; color:#065f46;">
+          <button *ngIf="!editingGuest" class="ghost" type="button" (click)="saveGuest(true)" [disabled]="guestSaving"
+            style="border-color:#10b981; color:#065f46;">
             ➕ Guardar y agregar otro
           </button>
           <button class="primary" type="submit" [disabled]="guestSaving">
-            {{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : '💾 Guardar invitado') }}
+            {{ guestSaving ? (editingGuest ? 'Guardando...' : 'Agregando...') : (editingGuest ? 'Guardar cambios' : '💾
+            Guardar invitado') }}
           </button>
-          <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()" [disabled]="guestSaving">Cancelar</button>
+          <button *ngIf="editingGuest" class="ghost" type="button" (click)="cancelEditGuest()"
+            [disabled]="guestSaving">Cancelar</button>
         </div>
       </form>
 
       <div class="import-row">
         <label>Importar CSV/XLSX<input type="file" accept=".csv,.xlsx" (change)="selectImportFile($event)"></label>
-        <button class="ghost" type="button" (click)="importGuests()" [disabled]="!selectedImportFile || importing">{{ importing ? 'Importando...' : 'Importar' }}</button>
+        <button class="ghost" type="button" (click)="importGuests()" [disabled]="!selectedImportFile || importing">{{
+          importing ? 'Importando...' : 'Importar' }}</button>
       </div>
 
       <div class="checkin-row">
-        <label>Check-in por QR/codigo<input name="checkInCode" [(ngModel)]="checkInCode" placeholder="Escanea o escribe el codigo"></label>
-        <button class="primary" type="button" (click)="checkInGuest()" [disabled]="!checkInCode">Registrar entrada</button>
+        <label>Check-in por QR/codigo<input name="checkInCode" [(ngModel)]="checkInCode"
+            placeholder="Escanea o escribe el codigo"></label>
+        <button class="primary" type="button" (click)="checkInGuest()" [disabled]="!checkInCode">Registrar
+          entrada</button>
       </div>
 
       <div class="filter-row">
-        <label>Buscar<input name="guestSearch" placeholder="Nombre, email, telefono o grupo" [(ngModel)]="guestFilters.search"></label>
+        <label>Buscar<input name="guestSearch" placeholder="Nombre, email, telefono o grupo"
+            [(ngModel)]="guestFilters.search"></label>
         <label>Estado
           <select name="guestStatusFilter" [(ngModel)]="guestFilters.status">
             <option value="">Todos</option>
@@ -617,7 +753,8 @@
       </ul>
       <p *ngIf="guestsLoading" class="notice">Cargando invitados...</p>
       <p *ngIf="!guestsLoading && !guests.length" class="muted">Aun no hay invitados registrados.</p>
-      <p *ngIf="!guestsLoading && guests.length && !filteredGuests.length" class="muted">No hay invitados con esos filtros.</p>
+      <p *ngIf="!guestsLoading && guests.length && !filteredGuests.length" class="muted">No hay invitados con esos
+        filtros.</p>
 
       <div class="table-wrap" *ngIf="filteredGuests.length">
         <table>
@@ -641,15 +778,19 @@
               <td>{{ guest.email || guest.phone || 'Sin contacto' }}</td>
               <td>{{ guest.group || 'General' }}</td>
               <td>{{ guest.relationshipLabel || guest.roles?.join(', ') || guest.visibilityGroup || '-' }}</td>
-              <td>{{ guest.tableName || 'Sin mesa' }} <small *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</small></td>
-              <td>{{ guest.allowedCompanions }} <small *ngIf="guest.companions?.length">({{ guest.companions?.length }} nombrados)</small></td>
+              <td>{{ guest.tableName || 'Sin mesa' }} <small *ngIf="guest.seatLabel">/ {{ guest.seatLabel }}</small>
+              </td>
+              <td>{{ guest.allowedCompanions }} <small *ngIf="guest.companions?.length">({{ guest.companions?.length }}
+                  nombrados)</small></td>
               <td>
                 <img class="qr-thumb" [src]="getQrImageUrl(guest)" alt="QR check-in">
                 <small>{{ guest.checkInCode || guest.qrCode }}</small>
               </td>
-              <td><span class="status-pill" [class.confirmed]="guest.status === 'confirmed'" [class.declined]="guest.status === 'declined'">{{ guest.status }}</span></td>
+              <td><span class="status-pill" [class.confirmed]="guest.status === 'confirmed'"
+                  [class.declined]="guest.status === 'declined'">{{ guest.status }}</span></td>
               <td>
-                <span class="status-pill" [class.confirmed]="getCommunicationStatus(guest) === 'confirmed'">{{ getCommunicationStatus(guest) }}</span>
+                <span class="status-pill" [class.confirmed]="getCommunicationStatus(guest) === 'confirmed'">{{
+                  getCommunicationStatus(guest) }}</span>
                 <span class="status-pill confirmed" *ngIf="guest.checkedIn">check-in</span>
                 <small *ngIf="guest.lastMessageType"> {{ getMessageTypeLabel(guest.lastMessageType) }}</small>
                 <small *ngIf="guest.invitationOpenedAt"> abierto {{ guest.invitationOpenedAt | date:'short' }}</small>
@@ -659,12 +800,22 @@
                 <div class="inline-actions">
                   <button class="ghost small" type="button" (click)="downloadGuestPass(guest)">Pase VIP</button>
                   <button class="ghost small" type="button" (click)="startEditGuest(guest)">Editar</button>
-                  <button *ngIf="canEmailGuest(guest)" class="ghost small" type="button" (click)="sendRealEmail(guest)" [disabled]="emailSending === getGuestId(guest)">{{ emailSending === getGuestId(guest) ? 'Enviando...' : 'Enviar email' }}</button>
-                  <button *ngIf="canSendRealWhatsapp(guest)" class="ghost small" type="button" (click)="sendRealWhatsapp(guest)" [disabled]="whatsappSending === getGuestId(guest) || !hasPlanFeature('whatsappMessaging')">{{ whatsappSending === getGuestId(guest) ? 'Enviando...' : 'Enviar WA' }}</button>
-                  <a *ngIf="canWhatsappGuest(guest) && hasPlanFeature('whatsappMessaging') && !whatsappEnabled" class="ghost small" [href]="getWhatsappLink(guest)" target="_blank" rel="noopener" (click)="markMessageSent(guest, 'whatsapp')">wa.me</a>
-                  <a *ngIf="canEmailGuest(guest)" class="ghost small" [href]="getEmailLink(guest)" (click)="markMessageSent(guest, 'email')">mailto</a>
-                  <button class="ghost small" type="button" (click)="setCommunicationStatus(guest, 'pending')">Pendiente</button>
-                  <button class="ghost small" type="button" (click)="deleteGuest(guest)" [disabled]="guestSaving">Eliminar</button>
+                  <button *ngIf="canEmailGuest(guest)" class="ghost small" type="button" (click)="sendRealEmail(guest)"
+                    [disabled]="emailSending === getGuestId(guest)">{{ emailSending === getGuestId(guest) ?
+                    'Enviando...' : 'Enviar email' }}</button>
+                  <button *ngIf="canSendRealWhatsapp(guest)" class="ghost small" type="button"
+                    (click)="sendRealWhatsapp(guest)"
+                    [disabled]="whatsappSending === getGuestId(guest) || !hasPlanFeature('whatsappMessaging')">{{
+                    whatsappSending === getGuestId(guest) ? 'Enviando...' : 'Enviar WA' }}</button>
+                  <a *ngIf="canWhatsappGuest(guest) && hasPlanFeature('whatsappMessaging') && !whatsappEnabled"
+                    class="ghost small" [href]="getWhatsappLink(guest)" target="_blank" rel="noopener"
+                    (click)="markMessageSent(guest, 'whatsapp')">wa.me</a>
+                  <a *ngIf="canEmailGuest(guest)" class="ghost small" [href]="getEmailLink(guest)"
+                    (click)="markMessageSent(guest, 'email')">mailto</a>
+                  <button class="ghost small" type="button"
+                    (click)="setCommunicationStatus(guest, 'pending')">Pendiente</button>
+                  <button class="ghost small" type="button" (click)="deleteGuest(guest)"
+                    [disabled]="guestSaving">Eliminar</button>
                 </div>
               </td>
             </tr>
@@ -681,7 +832,9 @@
         </div>
         <div class="inline-actions">
           <span class="count-pill">{{ rsvps.length }} respuestas</span>
-          <button class="ghost small" type="button" (click)="exportRsvps()" [disabled]="exportingRsvps || !rsvps.length || !hasPlanFeature('exportData')">{{ exportingRsvps ? 'Exportando...' : 'Exportar CSV' }}</button>
+          <button class="ghost small" type="button" (click)="exportRsvps()"
+            [disabled]="exportingRsvps || !rsvps.length || !hasPlanFeature('exportData')">{{ exportingRsvps ?
+            'Exportando...' : 'Exportar CSV' }}</button>
         </div>
       </div>
 
@@ -707,8 +860,10 @@
             <tr *ngFor="let rsvp of rsvps">
               <td>{{ rsvp.name }}</td>
               <td>{{ rsvp.email || 'Sin email' }}</td>
-              <td>{{ rsvp.phoneE164 || 'Sin telefono' }} <small *ngIf="rsvp.phoneE164">({{ rsvp.phoneVerificationStatus || 'not_started' }})</small></td>
-              <td><span class="status-pill" [class.confirmed]="rsvp.response === 'confirmed'" [class.declined]="rsvp.response === 'declined'">{{ rsvp.response }}</span></td>
+              <td>{{ rsvp.phoneE164 || 'Sin telefono' }} <small *ngIf="rsvp.phoneE164">({{ rsvp.phoneVerificationStatus
+                  || 'not_started' }})</small></td>
+              <td><span class="status-pill" [class.confirmed]="rsvp.response === 'confirmed'"
+                  [class.declined]="rsvp.response === 'declined'">{{ rsvp.response }}</span></td>
               <td>{{ rsvp.companions || 0 }}</td>
               <td>{{ rsvp.mealPreference || 'Sin preferencia' }}</td>
               <td>{{ rsvp.message || 'Sin mensaje' }}</td>
@@ -759,7 +914,8 @@
   <div class="nw-dj-player-card" (click)="$event.stopPropagation()">
     <div class="nw-dj-player-header">
       <div class="nw-dj-player-info">
-        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover" class="nw-dj-player-cover">
+        <img *ngIf="activePlayingSong.thumbnailUrl" [src]="activePlayingSong.thumbnailUrl" alt="Cover"
+          class="nw-dj-player-cover">
         <div *ngIf="!activePlayingSong.thumbnailUrl" class="nw-dj-player-cover-fallback">🎵</div>
         <div>
           <h4 class="nw-dj-player-title">{{ activePlayingSong.title }}</h4>
@@ -771,17 +927,22 @@
 
     <div class="nw-dj-player-body">
       <!-- Direct Audio Player -->
-      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl" controls autoplay class="nw-dj-audio-element"></audio>
+      <audio *ngIf="activePlayingSong.isDirectAudio" [src]="activePlayingSong.previewUrl || activePlayingSong.sourceUrl"
+        controls autoplay class="nw-dj-audio-element"></audio>
 
       <!-- Iframe Player (YouTube / Spotify / External) -->
-      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper" [class.spotify-wrapper]="activePlayingSong.isSpotify">
-        <iframe [src]="activePlayingSong.embedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <div *ngIf="!activePlayingSong.isDirectAudio && activePlayingSong.embedUrl" class="nw-dj-iframe-wrapper"
+        [class.spotify-wrapper]="activePlayingSong.isSpotify">
+        <iframe [src]="activePlayingSong.embedUrl" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
       </div>
 
       <!-- Fallback when url is not embeddable directly -->
       <div *ngIf="!activePlayingSong.isDirectAudio && !activePlayingSong.embedUrl" class="nw-dj-player-empty">
         <p>No se pudo generar vista previa directa para esta canción.</p>
-        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank" class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
+        <a *ngIf="activePlayingSong.sourceUrl" [href]="activePlayingSong.sourceUrl" target="_blank"
+          class="nw-btn nw-btn-gold nw-btn-sm">Abrir enlace de origen 🔗</a>
       </div>
     </div>
   </div>
