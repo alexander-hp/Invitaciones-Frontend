@@ -1,24 +1,65 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { AlbumAssetModel, EventAccessSession } from '../../../core/models';
 
 @Component({
   selector: 'app-access-album-view',
   templateUrl: './access-album-view.component.html'
 })
-export class AccessAlbumViewComponent implements OnInit {
+export class AccessAlbumViewComponent implements OnInit, OnChanges {
   @Input() session!: EventAccessSession;
   @Output() updateAlbumEvent = new EventEmitter<{ asset: AlbumAssetModel; status: AlbumAssetModel['status'] }>();
   @Output() bulkUpdateAlbumEvent = new EventEmitter<{ assets: AlbumAssetModel[]; status: AlbumAssetModel['status'] }>();
 
-  filterStatus: 'all' | 'pending' | 'approved' | 'rejected' = 'all';
-  searchQuery = '';
-  uploaderFilter = '';
-  roleFilter: 'all' | 'photographer' | 'guest' = 'all';
+  private _filterStatus: 'all' | 'pending' | 'approved' | 'rejected' = 'all';
+  get filterStatus(): 'all' | 'pending' | 'approved' | 'rejected' {
+    return this._filterStatus;
+  }
+  set filterStatus(val: 'all' | 'pending' | 'approved' | 'rejected') {
+    this._filterStatus = val;
+    this.currentPage = 1;
+  }
+
+  private _searchQuery = '';
+  get searchQuery(): string {
+    return this._searchQuery;
+  }
+  set searchQuery(val: string) {
+    this._searchQuery = val;
+    this.currentPage = 1;
+  }
+  nameFilter = '';
+  nameSearch = '';
+  showNameDropdown = false;
+
+  emailFilter = '';
+  emailSearch = '';
+  showEmailDropdown = false;
+
+  selectName(name: string): void {
+    this.nameFilter = name;
+    this.showNameDropdown = false;
+    this.currentPage = 1;
+  }
+
+  selectEmail(email: string): void {
+    this.emailFilter = email;
+    this.showEmailDropdown = false;
+    this.currentPage = 1;
+  }
+
+  currentPage = 1;
+  pageSize = 12;
 
   selectedAssetIds: Set<string> = new Set();
   selectedAsset?: AlbumAssetModel;
 
   ngOnInit(): void {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['session']) {
+      this.currentPage = 1;
+    }
+  }
 
   get filteredAssets(): AlbumAssetModel[] {
     const list = this.session?.albumAssets || [];
@@ -30,18 +71,18 @@ export class AccessAlbumViewComponent implements OnInit {
         return false;
       }
 
-      // Filter by uploader
-      if (this.uploaderFilter) {
-        const uploader = (asset.uploaderName || asset.uploaderEmail || '').toLowerCase();
-        if (uploader !== this.uploaderFilter.toLowerCase()) return false;
+      // Filter by uploader name
+      if (this.nameFilter) {
+        if ((asset.uploaderName || '').toLowerCase() !== this.nameFilter.toLowerCase()) {
+          return false;
+        }
       }
 
-      // Filter by inferred role
-      if (this.roleFilter !== 'all') {
-        const name = (asset.uploaderName || '').toLowerCase();
-        const isPhoto = name.includes('foto') || name.includes('estudio') || name.includes('camara') || name.includes('pro');
-        if (this.roleFilter === 'photographer' && !isPhoto) return false;
-        if (this.roleFilter === 'guest' && isPhoto) return false;
+      // Filter by uploader email
+      if (this.emailFilter) {
+        if ((asset.uploaderEmail || '').toLowerCase() !== this.emailFilter.toLowerCase()) {
+          return false;
+        }
       }
 
       // Filter by search query
@@ -55,14 +96,54 @@ export class AccessAlbumViewComponent implements OnInit {
     });
   }
 
-  get uniqueUploaders(): string[] {
+  get totalPages(): number {
+    return Math.ceil(this.filteredAssets.length / this.pageSize) || 1;
+  }
+
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.pageSize;
+  }
+
+  get endIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredAssets.length);
+  }
+
+  get paginatedAssets(): AlbumAssetModel[] {
+    return this.filteredAssets.slice(this.startIndex, this.endIndex);
+  }
+
+  get uniqueNames(): string[] {
     const list = this.session?.albumAssets || [];
     const names = new Set<string>();
     list.forEach(a => {
       if (a.uploaderName) names.add(a.uploaderName.trim());
-      else if (a.uploaderEmail) names.add(a.uploaderEmail.trim());
     });
     return Array.from(names).filter(Boolean).sort();
+  }
+
+  get uniqueEmails(): string[] {
+    const list = this.session?.albumAssets || [];
+    const emails = new Set<string>();
+    list.forEach(a => {
+      if (a.uploaderEmail && a.uploaderEmail.includes('@')) {
+        emails.add(a.uploaderEmail.trim());
+      }
+    });
+    return Array.from(emails).filter(Boolean).sort();
+  }
+
+  get filteredUniqueNames(): string[] {
+    const query = this.nameSearch.toLowerCase().trim();
+    const list = this.uniqueNames;
+    if (!query) return list;
+    return list.filter(n => n.toLowerCase().includes(query));
+  }
+
+  get filteredUniqueEmails(): string[] {
+    const query = this.emailSearch.toLowerCase().trim();
+    const list = this.uniqueEmails;
+    if (!query) return list;
+    return list.filter(e => e.toLowerCase().includes(query));
   }
 
   get totalCount(): number {
@@ -157,8 +238,12 @@ export class AccessAlbumViewComponent implements OnInit {
 
   clearFilters(): void {
     this.searchQuery = '';
-    this.uploaderFilter = '';
-    this.roleFilter = 'all';
+    this.nameFilter = '';
+    this.nameSearch = '';
+    this.showNameDropdown = false;
+    this.emailFilter = '';
+    this.emailSearch = '';
+    this.showEmailDropdown = false;
     this.filterStatus = 'all';
   }
 

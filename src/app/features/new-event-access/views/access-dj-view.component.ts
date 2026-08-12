@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../../core/api.service';
 import { EventAccessSession, SongRequestModel, SongRequestStatus } from '../../../core/models';
@@ -16,7 +16,7 @@ export interface YouTubeSearchResult {
   selector: 'app-access-dj-view',
   templateUrl: './access-dj-view.component.html'
 })
-export class AccessDjViewComponent {
+export class AccessDjViewComponent implements OnChanges {
   @Input() session!: EventAccessSession;
   @Output() playSongEvent = new EventEmitter<SongRequestModel | YouTubeSearchResult>();
   @Output() updateSongEvent = new EventEmitter<{ song: SongRequestModel; status: SongRequestStatus }>();
@@ -38,8 +38,32 @@ export class AccessDjViewComponent {
     dedication: ''
   };
 
-  songFilter: 'all' | 'pending' | 'approved' | 'played' | 'rejected' = 'all';
-  songSearch = '';
+  private _songFilter: 'all' | 'pending' | 'approved' | 'played' | 'rejected' = 'all';
+  get songFilter(): 'all' | 'pending' | 'approved' | 'played' | 'rejected' {
+    return this._songFilter;
+  }
+  set songFilter(val: 'all' | 'pending' | 'approved' | 'played' | 'rejected') {
+    this._songFilter = val;
+    this.currentPage = 1;
+  }
+
+  private _songSearch = '';
+  get songSearch(): string {
+    return this._songSearch;
+  }
+  set songSearch(val: string) {
+    this._songSearch = val;
+    this.currentPage = 1;
+  }
+
+  currentPage = 1;
+  pageSize = 10;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['session']) {
+      this.currentPage = 1;
+    }
+  }
 
   constructor(
     private http: HttpClient,
@@ -284,6 +308,22 @@ export class AccessDjViewComponent {
     });
   }
 
+  get totalPages(): number {
+    return Math.ceil(this.filteredSongRequests.length / this.pageSize) || 1;
+  }
+
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.pageSize;
+  }
+
+  get endIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredSongRequests.length);
+  }
+
+  get paginatedSongRequests(): SongRequestModel[] {
+    return this.filteredSongRequests.slice(this.startIndex, this.endIndex);
+  }
+
   get songPendingCount(): number {
     return (this.session?.songRequests || []).filter((s: SongRequestModel) => s.status === 'pending').length;
   }
@@ -314,7 +354,16 @@ export class AccessDjViewComponent {
   }
 
   moveSong(song: SongRequestModel, direction: -1 | 1): void {
-    this.moveSongEvent.emit({ song, direction });
+    const visibleList = this.filteredSongRequests;
+    const currentId = song._id || song.id;
+    const visibleIdx = visibleList.findIndex(s => (s._id || s.id) === currentId);
+    if (visibleIdx === -1) return;
+
+    const targetVisibleIdx = visibleIdx + direction;
+    if (targetVisibleIdx < 0 || targetVisibleIdx >= visibleList.length) return;
+
+    const targetSong = visibleList[targetVisibleIdx];
+    this.moveSongEvent.emit({ song, targetSong, direction } as any);
   }
 }
 

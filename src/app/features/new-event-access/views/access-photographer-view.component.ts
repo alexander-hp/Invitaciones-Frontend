@@ -21,10 +21,14 @@ export class AccessPhotographerViewComponent implements OnInit {
 
   ngOnInit(): void {
     try {
-      this.uploaderName = localStorage.getItem('nw_photographer_name') || 'Fotógrafo Oficial';
+      this.uploaderName = localStorage.getItem('nw_photographer_name') || '';
       this.uploaderEmail = localStorage.getItem('nw_photographer_email') || '';
+      if (this.uploaderName === 'Fotógrafo Oficial') {
+        this.uploaderName = '';
+      }
     } catch {
-      this.uploaderName = 'Fotógrafo Oficial';
+      this.uploaderName = '';
+      this.uploaderEmail = '';
     }
   }
 
@@ -33,6 +37,19 @@ export class AccessPhotographerViewComponent implements OnInit {
       if (this.uploaderName) localStorage.setItem('nw_photographer_name', this.uploaderName.trim());
       if (this.uploaderEmail) localStorage.setItem('nw_photographer_email', this.uploaderEmail.trim());
     } catch { }
+  }
+
+  get isAuthorInfoValid(): boolean {
+    const name = this.uploaderName.trim();
+    const contact = this.uploaderEmail.trim();
+
+    if (!name) return false;
+    if (!contact) return false;
+
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const simplePhonePattern = /^[+0-9\s-]{7,15}$/;
+
+    return emailPattern.test(contact) || simplePhonePattern.test(contact);
   }
 
   onFilesSelected(event: Event): void {
@@ -102,13 +119,13 @@ export class AccessPhotographerViewComponent implements OnInit {
   }
 
   uploadAll(): void {
-    if (this.selectedFiles.length === 0 || this.uploading) return;
+    if (this.selectedFiles.length === 0 || this.uploading || !this.isAuthorInfoValid) return;
     this.savePhotographerInfo();
 
     this.uploadBatchEvent.emit({
       files: [...this.selectedFiles],
-      uploaderName: this.uploaderName.trim() || 'Fotógrafo Oficial',
-      uploaderEmail: this.uploaderEmail.trim() || undefined
+      uploaderName: this.uploaderName.trim(),
+      uploaderEmail: this.uploaderEmail.trim()
     });
 
     this.clearSelected();
@@ -116,9 +133,24 @@ export class AccessPhotographerViewComponent implements OnInit {
 
   get myAssets(): AlbumAssetModel[] {
     const all = this.session?.albumAssets || [];
-    const query = this.searchQuery.toLowerCase().trim();
+    const currentName = this.uploaderName.trim().toLowerCase();
+    const currentEmail = this.uploaderEmail.trim().toLowerCase();
 
-    return all.filter(asset => {
+    if (!currentName && !currentEmail) {
+      return [];
+    }
+
+    const filteredByAuthor = all.filter(asset => {
+      const assetName = (asset.uploaderName || '').trim().toLowerCase();
+      const assetEmail = (asset.uploaderEmail || '').trim().toLowerCase();
+
+      const matchesName = currentName && assetName === currentName;
+      const matchesEmail = currentEmail && assetEmail === currentEmail;
+      return matchesName || matchesEmail;
+    });
+
+    const query = this.searchQuery.toLowerCase().trim();
+    return filteredByAuthor.filter(asset => {
       if (this.filterStatus !== 'all' && asset.status !== this.filterStatus) {
         return false;
       }
@@ -132,19 +164,19 @@ export class AccessPhotographerViewComponent implements OnInit {
   }
 
   get totalCount(): number {
-    return (this.session?.albumAssets || []).length;
+    return this.myAssets.length;
   }
 
   get pendingCount(): number {
-    return (this.session?.albumAssets || []).filter(a => a.status === 'pending').length;
+    return this.myAssets.filter(a => a.status === 'pending').length;
   }
 
   get approvedCount(): number {
-    return (this.session?.albumAssets || []).filter(a => a.status === 'approved').length;
+    return this.myAssets.filter(a => a.status === 'approved').length;
   }
 
   get rejectedCount(): number {
-    return (this.session?.albumAssets || []).filter(a => a.status === 'rejected').length;
+    return this.myAssets.filter(a => a.status === 'rejected').length;
   }
 
   openPreview(asset: AlbumAssetModel): void {

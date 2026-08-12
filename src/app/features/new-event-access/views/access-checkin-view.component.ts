@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { EventAccessSession, GuestModel } from '../../../core/models';
 
 @Component({
   selector: 'app-access-checkin-view',
   templateUrl: './access-checkin-view.component.html'
 })
-export class AccessCheckinViewComponent {
+export class AccessCheckinViewComponent implements OnChanges {
   @Input() session!: EventAccessSession;
   @Input() checking = false;
   @Input() code = '';
@@ -22,6 +22,15 @@ export class AccessCheckinViewComponent {
   @Output() closeScannerEvent = new EventEmitter<void>();
   @Output() qrScannedEvent = new EventEmitter<string>();
 
+  currentPage = 1;
+  pageSize = 10;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['search'] || changes['guestStatusFilter'] || changes['session']) {
+      this.currentPage = 1;
+    }
+  }
+
   registerGuestDirectly(guest: GuestModel): void {
     this.directCheckInEvent.emit(guest);
   }
@@ -34,7 +43,14 @@ export class AccessCheckinViewComponent {
     this.searchChange.emit(val);
   }
 
-  selectedTable = 'all';
+  private _selectedTable = 'all';
+  get selectedTable(): string {
+    return this._selectedTable;
+  }
+  set selectedTable(val: string) {
+    this._selectedTable = val;
+    this.currentPage = 1;
+  }
 
   get availableTables(): string[] {
     const tables = new Set<string>();
@@ -49,6 +65,7 @@ export class AccessCheckinViewComponent {
   setFilter(filter: 'all' | 'checkedIn' | 'confirmed' | 'pending' | 'declined'): void {
     this.guestStatusFilter = filter;
     this.guestStatusFilterChange.emit(filter);
+    this.currentPage = 1;
   }
 
   get filteredGuests(): GuestModel[] {
@@ -79,6 +96,22 @@ export class AccessCheckinViewComponent {
         (value || '').toLowerCase().includes(query)
       )
     );
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredGuests.length / this.pageSize) || 1;
+  }
+
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.pageSize;
+  }
+
+  get endIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredGuests.length);
+  }
+
+  get paginatedGuests(): GuestModel[] {
+    return this.filteredGuests.slice(this.startIndex, this.endIndex);
   }
 
   get checkedInCount(): number {

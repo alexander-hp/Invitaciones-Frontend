@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AlbumAssetModel, EventAccessSession } from '../../../core/models';
 
 @Component({
@@ -12,7 +12,11 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
   searchQuery = '';
   carouselIndex = 0;
   isPlaying = false;
+  isFullscreenPresentation = false;
+  showPresentationControls = true;
+  private controlsTimer?: ReturnType<typeof setTimeout>;
   private timer?: ReturnType<typeof setInterval>;
+  autoplayIntervalMs = 4000;
 
   selectedAsset?: AlbumAssetModel;
   lightboxIndex = 0;
@@ -25,6 +29,33 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopAutoplay();
+    if (this.controlsTimer) clearTimeout(this.controlsTimer);
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent): void {
+    if (this.isFullscreenPresentation) {
+      if (event.key === 'Escape') {
+        this.exitFullscreenPresentation();
+      } else if (event.key === ' ' || event.code === 'Space') {
+        event.preventDefault();
+        this.toggleAutoplay();
+      } else if (event.key === 'ArrowRight') {
+        this.nextSlide();
+        this.onPresentationMouseMove();
+      } else if (event.key === 'ArrowLeft') {
+        this.prevSlide();
+        this.onPresentationMouseMove();
+      }
+    } else if (this.selectedAsset) {
+      if (event.key === 'Escape') {
+        this.closeLightbox();
+      } else if (event.key === 'ArrowRight') {
+        this.nextLightbox();
+      } else if (event.key === 'ArrowLeft') {
+        this.prevLightbox();
+      }
+    }
   }
 
   get approvedAssets(): AlbumAssetModel[] {
@@ -46,10 +77,26 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
     return (this.session?.albumAssets || []).filter(a => a.status === 'approved').length;
   }
 
+  get safeCarouselIndex(): number {
+    const list = this.approvedAssets;
+    if (list.length === 0) return 0;
+    if (this.carouselIndex < 0) return 0;
+    if (this.carouselIndex >= list.length) return 0;
+    return this.carouselIndex;
+  }
+
+  get currentCarouselAsset(): AlbumAssetModel | undefined {
+    const list = this.approvedAssets;
+    if (list.length === 0) return undefined;
+    return list[this.safeCarouselIndex];
+  }
+
   setViewMode(mode: 'carousel' | 'grid' | 'list'): void {
     this.viewMode = mode;
     if (mode !== 'carousel') {
       this.stopAutoplay();
+    } else {
+      this.scrollToActiveThumb();
     }
   }
 
@@ -57,35 +104,81 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
   nextSlide(): void {
     const list = this.approvedAssets;
     if (list.length === 0) return;
-    this.carouselIndex = (this.carouselIndex + 1) % list.length;
+    this.carouselIndex = (this.safeCarouselIndex + 1) % list.length;
+    this.scrollToActiveThumb();
   }
 
   prevSlide(): void {
     const list = this.approvedAssets;
     if (list.length === 0) return;
-    this.carouselIndex = (this.carouselIndex - 1 + list.length) % list.length;
+    this.carouselIndex = (this.safeCarouselIndex - 1 + list.length) % list.length;
+    this.scrollToActiveThumb();
   }
 
   goToSlide(index: number): void {
     if (index >= 0 && index < this.approvedAssets.length) {
       this.carouselIndex = index;
+      this.scrollToActiveThumb();
     }
+  }
+
+  // Fullscreen Presentation Mode
+  startFullscreenPresentation(): void {
+    if (this.approvedAssets.length === 0) return;
+    this.isFullscreenPresentation = true;
+    this.showPresentationControls = true;
+    this.startAutoplay();
+    this.resetControlsTimeout();
+
+    try {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  exitFullscreenPresentation(): void {
+    this.isFullscreenPresentation = false;
+    this.stopAutoplay();
+    if (this.controlsTimer) clearTimeout(this.controlsTimer);
+
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  onPresentationMouseMove(): void {
+    this.showPresentationControls = true;
+    this.resetControlsTimeout();
+  }
+
+  private resetControlsTimeout(): void {
+    if (this.controlsTimer) clearTimeout(this.controlsTimer);
+    this.controlsTimer = setTimeout(() => {
+      if (this.isFullscreenPresentation && this.isPlaying) {
+        this.showPresentationControls = false;
+      }
+    }, 2800);
   }
 
   toggleAutoplay(): void {
     if (this.isPlaying) {
       this.stopAutoplay();
+      this.showPresentationControls = true;
     } else {
       this.startAutoplay();
+      this.resetControlsTimeout();
     }
   }
 
   startAutoplay(): void {
-    this.isPlaying = true;
     this.stopAutoplay();
+    this.isPlaying = true;
     this.timer = setInterval(() => {
       this.nextSlide();
-    }, 4500);
+    }, this.autoplayIntervalMs);
   }
 
   stopAutoplay(): void {
@@ -96,8 +189,18 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
     }
   }
 
+  scrollToActiveThumb(): void {
+    setTimeout(() => {
+      const el = document.getElementById('nw-thumb-' + this.safeCarouselIndex);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, 60);
+  }
+
   // Lightbox Modal
-  openLightbox(asset: AlbumAssetModel): void {
+  openLightbox(asset?: AlbumAssetModel): void {
+    if (!asset) return;
     this.stopAutoplay();
     this.selectedAsset = asset;
     const index = this.approvedAssets.findIndex(a => (a._id || a.id) === (asset._id || asset.id));
@@ -122,9 +225,9 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
     this.selectedAsset = list[this.lightboxIndex];
   }
 
-  downloadPhoto(asset: AlbumAssetModel, event?: Event): void {
+  downloadPhoto(asset?: AlbumAssetModel, event?: Event): void {
     if (event) event.stopPropagation();
-    if (!asset.url) return;
+    if (!asset || !asset.url) return;
     window.open(asset.url, '_blank');
   }
 }

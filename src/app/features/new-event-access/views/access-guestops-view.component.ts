@@ -9,9 +9,43 @@ export class AccessGuestopsViewComponent {
   @Input() session!: EventAccessSession;
   @Input() search = '';
   @Input() guestStatusFilter: 'all' | 'checkedIn' | 'confirmed' | 'pending' | 'declined' = 'all';
+  @Input() checking = false;
+  @Input() code = '';
+  @Input() showScanner = false;
+  @Input() albumUploading = false;
+  @Input() token = '';
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() guestStatusFilterChange = new EventEmitter<'all' | 'checkedIn' | 'confirmed' | 'pending' | 'declined'>();
+  @Output() codeChange = new EventEmitter<string>();
+  @Output() checkInEvent = new EventEmitter<void>();
+  @Output() directCheckInEvent = new EventEmitter<any>();
+  @Output() openScannerEvent = new EventEmitter<void>();
+  @Output() closeScannerEvent = new EventEmitter<void>();
+  @Output() qrScannedEvent = new EventEmitter<string>();
+
+  @Output() playSongEvent = new EventEmitter<any>();
+  @Output() updateSongEvent = new EventEmitter<any>();
+  @Output() moveSongEvent = new EventEmitter<any>();
+  @Output() addSongEvent = new EventEmitter<any>();
+
+  @Output() updateAlbumEvent = new EventEmitter<any>();
+  @Output() bulkUpdateAlbumEvent = new EventEmitter<any>();
+  @Output() uploadBatchEvent = new EventEmitter<any>();
+
+  collapsedSections: Record<string, boolean> = {
+    dj: true,
+    guestsList: false,
+    albumReview: true,
+    albumView: true,
+    integrationApi: true,
+    photographer: true,
+    clientView: true
+  };
+
+  toggleSection(sectionName: string): void {
+    this.collapsedSections[sectionName] = !this.collapsedSections[sectionName];
+  }
 
   onSearchInput(val: string): void {
     this.searchChange.emit(val);
