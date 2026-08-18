@@ -1,0 +1,332 @@
+<!-- PLANTILLA 3: MODERNA & MINIMALISTA CON GLASSMORPHISM -->
+<div class="tpl3-root"
+  [style.--primary]="invitation?.content?.palette?.primary || '#1a2238'"
+  [style.--secondary]="invitation?.content?.palette?.secondary || '#f3f4f6'"
+  [style.--accent]="invitation?.content?.palette?.accent || '#c59b6c'">
+
+  <!-- FLOATING MUSIC PLAYER -->
+  <div *ngIf="invitation?.content?.musicUrl" class="tpl3-floating-music">
+    <button type="button" class="tpl3-music-btn" [class.playing]="isPlayingMusic" (click)="toggleMusic.emit()"
+      [attr.aria-label]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <span class="music-icon">{{ isPlayingMusic ? '🎵' : '🎼' }}</span>
+      <span class="music-label">{{ isPlayingMusic ? 'Pausar Música' : 'Música de Fondo' }}</span>
+      <div *ngIf="isPlayingMusic" class="music-bars">
+        <span></span><span></span><span></span>
+      </div>
+    </button>
+  </div>
+
+  <!-- HERO SECTION -->
+  <section class="tpl3-hero">
+    <div class="tpl3-hero-backdrop" [style.backgroundImage]="'url(' + getCoverImageUrl() + ')'"></div>
+    <div class="tpl3-hero-overlay"></div>
+
+    <div class="tpl3-hero-content">
+      <!-- PLANTILLA 3 BADGE DE COMPROBACIÓN -->
+      <div class="tpl3-switch-indicator">
+        <span class="indicator-badge">✨ Plantilla 3: Glamour Moderno</span>
+        <p class="indicator-subtext">Vista activa de la <strong>Plantilla 3</strong>. ¡El switch de selección funciona correctamente!</p>
+      </div>
+
+      <img *ngIf="invitation?.content?.brandLogoUrl" class="tpl3-brand-logo" [src]="invitation?.content?.brandLogoUrl" alt="Logo">
+
+      <p *ngIf="invitation?.content?.subheadline" class="tpl3-subheadline">{{ invitation?.content?.subheadline }}</p>
+      <h1 class="tpl3-headline">{{ invitation?.content?.headline || event?.title || 'Nuestra Celebración' }}</h1>
+
+      <div *ngIf="event?.date" class="tpl3-date-pill">
+        <span class="date-icon">🗓️</span>
+        <span class="date-text">{{ formatDate(event?.date) }}</span>
+      </div>
+
+      <!-- COUNTDOWN TIMER -->
+      <div *ngIf="event?.date && !countdown.isOver" class="tpl3-countdown">
+        <div class="countdown-card">
+          <span class="countdown-num">{{ countdown.days }}</span>
+          <span class="countdown-lbl">Días</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-num">{{ countdown.hours }}</span>
+          <span class="countdown-lbl">Horas</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-num">{{ countdown.minutes }}</span>
+          <span class="countdown-lbl">Min</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-num">{{ countdown.seconds }}</span>
+          <span class="countdown-lbl">Seg</span>
+        </div>
+      </div>
+
+      <div class="tpl3-hero-actions">
+        <a *ngIf="event?.date" [href]="getCalendarUrl()" target="_blank" rel="noopener noreferrer" class="tpl3-btn tpl3-btn-outline">
+          📅 Agendar en Google Calendar
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUEST ACCESS MODAL / PROMPT (IF PRIVATE ACCESS) -->
+  <section *ngIf="requiresGuestAuth" class="tpl3-container" style="margin-top:24px;">
+    <div class="tpl3-card tpl3-card-accent">
+      <div class="tpl3-card-header">
+        <span class="section-icon">🔒</span>
+        <h2>Acceso Privado a la Invitación</h2>
+      </div>
+      <p style="color:var(--nw-text-2); font-size:14px; margin-bottom:16px;">
+        Esta celebración tiene control de invitados. Por favor ingresa tu correo electrónico o teléfono registrado para confirmar tu asistencia y ver los detalles exclusivos.
+      </p>
+      <div class="tpl3-auth-form">
+        <input type="text" class="tpl3-input" [(ngModel)]="guestAccessInput" placeholder="Ej. correo@ejemplo.com o 5512345678" (keyup.enter)="onVerifyAccess()">
+        <button type="button" class="tpl3-btn tpl3-btn-primary" (click)="onVerifyAccess()" [disabled]="checkingGuest">
+          {{ checkingGuest ? 'Validando...' : 'Verificar mi Pase ✨' }}
+        </button>
+      </div>
+      <p *ngIf="error" class="tpl3-alert-error" style="margin-top:10px;">{{ error }}</p>
+    </div>
+  </section>
+
+  <div class="tpl3-main-container">
+
+    <!-- MENSAJE DE BIENVENIDA / HISTORIA -->
+    <section *ngIf="isSectionActive('story') && (invitation?.content?.message || invitation?.content?.storyBody)" class="tpl3-section">
+      <div class="tpl3-card">
+        <div class="tpl3-card-header">
+          <span class="section-icon">📖</span>
+          <h2>{{ invitation?.content?.storyTitle || 'Nuestra Historia' }}</h2>
+        </div>
+        <p class="tpl3-body-text" style="white-space:pre-line;">
+          {{ invitation?.content?.storyBody || invitation?.content?.message }}
+        </p>
+      </div>
+    </section>
+
+    <!-- ITINERARIO -->
+    <section *ngIf="isSectionActive('itinerary') && (invitation?.content?.itinerary?.length || 0) > 0" class="tpl3-section">
+      <div class="tpl3-card">
+        <div class="tpl3-card-header">
+          <span class="section-icon">⏳</span>
+          <h2>Programa e Itinerario</h2>
+        </div>
+        <div class="tpl3-timeline">
+          <div *ngFor="let item of invitation?.content?.itinerary" class="tpl3-timeline-item">
+            <div class="timeline-time">{{ item.time || '•' }}</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+              <strong class="timeline-title">{{ item.title }}</strong>
+              <p *ngIf="item.description" class="timeline-desc">{{ item.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UBICACIONES / LUGARES -->
+    <section *ngIf="isSectionActive('locations') && (invitation?.content?.locations?.length || 0) > 0" class="tpl3-section">
+      <div class="tpl3-card">
+        <div class="tpl3-card-header">
+          <span class="section-icon">📍</span>
+          <h2>Ubicaciones y Recepción</h2>
+        </div>
+        <div class="tpl3-locations-grid">
+          <div *ngFor="let loc of invitation?.content?.locations" class="tpl3-location-item">
+            <div class="location-type-badge">{{ loc.type || 'Lugar del evento' }}</div>
+            <h3 class="location-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="location-address">{{ loc.address }}</p>
+            <p *ngIf="loc.notes" class="location-notes">💡 {{ loc.notes }}</p>
+            <div class="location-buttons">
+              <a [href]="getDirectionsUrl(loc)" target="_blank" rel="noopener noreferrer" class="tpl3-btn tpl3-btn-sm tpl3-btn-primary">
+                🗺️ Abrir en Google Maps
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="getWazeUrl(loc)" target="_blank" rel="noopener noreferrer" class="tpl3-btn tpl3-btn-sm tpl3-btn-outline">
+                🚗 Abrir en Waze
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CÓDIGO DE VESTIMENTA -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="tpl3-section">
+      <div class="tpl3-card tpl3-card-center">
+        <span class="section-icon-large">👔👗</span>
+        <h2>Código de Vestimenta</h2>
+        <p class="dresscode-text">{{ invitation?.content?.dressCode }}</p>
+      </div>
+    </section>
+
+    <!-- MESA DE REGALOS & SOBRE DIGITAL -->
+    <section *ngIf="(isSectionActive('giftRegistry') && (invitation?.content?.giftRegistry?.length || 0) > 0) || (isSectionActive('digitalEnvelope') && invitation?.content?.digitalEnvelope?.clabe)" class="tpl3-section">
+      <div class="tpl3-card">
+        <div class="tpl3-card-header">
+          <span class="section-icon">🎁</span>
+          <h2>Mesa de Regalos & Presentes</h2>
+        </div>
+
+        <p *ngIf="invitation?.content?.giftSettings?.introText" class="tpl3-body-text" style="margin-bottom:20px;">
+          {{ invitation?.content?.giftSettings?.introText }}
+        </p>
+
+        <!-- SOBRE DIGITAL -->
+        <div *ngIf="isSectionActive('digitalEnvelope') && (invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account)" class="tpl3-envelope-box">
+          <h3 style="margin:0 0 10px; font-size:16px;">✉️ Lluvia de Sobres / Transferencia</h3>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.bank"><strong>Banco:</strong> {{ invitation?.content?.digitalEnvelope?.bank }}</p>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.holder"><strong>Titular:</strong> {{ invitation?.content?.digitalEnvelope?.holder }}</p>
+          <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="tpl3-clabe-row">
+            <span><strong>CLABE:</strong> <code>{{ invitation?.content?.digitalEnvelope?.clabe }}</code></span>
+            <button type="button" class="tpl3-btn tpl3-btn-sm tpl3-btn-outline" (click)="copyClabe(invitation?.content?.digitalEnvelope?.clabe || '')">
+              {{ copiedClabe ? '✓ Copiado' : '📋 Copiar' }}
+            </button>
+          </div>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" style="font-size:13px; color:var(--nw-text-3); margin-top:8px;">
+            {{ invitation?.content?.digitalEnvelope?.note }}
+          </p>
+        </div>
+
+        <!-- LISTA DE TIENDAS -->
+        <div *ngIf="isSectionActive('giftRegistry') && (invitation?.content?.giftRegistry?.length || 0) > 0" class="tpl3-gifts-grid">
+          <a *ngFor="let gift of invitation?.content?.giftRegistry" [href]="gift.url || '#'" target="_blank" rel="noopener noreferrer" class="tpl3-gift-item" [class.no-link]="!gift.url">
+            <span class="gift-store">{{ gift.store || 'Tienda' }}</span>
+            <strong class="gift-title">{{ gift.title || gift.label }}</strong>
+            <span *ngIf="gift.url" class="gift-link-pill">Ver Mesa de Regalos →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORMULARIO DE CONFIRMACIÓN RSVP -->
+    <section *ngIf="isSectionActive('rsvp')" class="tpl3-section">
+      <div class="tpl3-card tpl3-card-accent">
+        <div class="tpl3-card-header">
+          <span class="section-icon">💌</span>
+          <h2>Confirmación de Asistencia (RSVP)</h2>
+        </div>
+
+        <p style="font-size:14px; margin-bottom:16px; color:var(--nw-text-2);">
+          Por favor ayúdanos confirmando tu asistencia con anticipación para contemplar tu lugar en este día tan especial.
+        </p>
+
+        <form (ngSubmit)="submitRsvp.emit()" class="tpl3-rsvp-form">
+          <div class="tpl3-form-group">
+            <label>Nombre Completo *</label>
+            <input type="text" class="tpl3-input" [(ngModel)]="rsvp.name" name="rsvpName" required placeholder="Tu nombre y apellido">
+          </div>
+
+          <div class="tpl3-form-group">
+            <label>Correo Electrónico</label>
+            <input type="email" class="tpl3-input" [(ngModel)]="rsvp.email" name="rsvpEmail" placeholder="correo@ejemplo.com">
+          </div>
+
+          <div class="tpl3-form-group">
+            <label>Teléfono de Contacto</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" class="tpl3-input" style="max-width:80px;" [(ngModel)]="rsvp.phoneCountryCode" name="phoneCountry" placeholder="+52">
+              <input type="tel" class="tpl3-input" [(ngModel)]="rsvp.phoneNationalNumber" name="phoneNum" placeholder="10 dígitos">
+            </div>
+          </div>
+
+          <div class="tpl3-form-group">
+            <label>¿Asistirás al evento? *</label>
+            <div class="tpl3-radio-group">
+              <label class="tpl3-radio-btn" [class.selected]="rsvp.response === 'confirmed'">
+                <input type="radio" [(ngModel)]="rsvp.response" name="rsvpResponse" value="confirmed">
+                <span>🎉 ¡Sí, con gusto asistiré!</span>
+              </label>
+              <label class="tpl3-radio-btn" [class.selected]="rsvp.response === 'declined'">
+                <input type="radio" [(ngModel)]="rsvp.response" name="rsvpResponse" value="declined">
+                <span>🥺 Lamentablemente no podré</span>
+              </label>
+            </div>
+          </div>
+
+          <div *ngIf="rsvp.response === 'confirmed' && (invitation?.rsvpSettings?.defaultAllowedCompanions || 0) > 0" class="tpl3-form-group">
+            <label>Número de Acompañantes Extras</label>
+            <input type="number" class="tpl3-input" [(ngModel)]="rsvp.companions" name="companions" min="0" [max]="invitation?.rsvpSettings?.defaultAllowedCompanions || 5">
+          </div>
+
+          <div *ngIf="rsvp.response === 'confirmed'" class="tpl3-form-group">
+            <label>Restricciones Alimentarias o Alergias</label>
+            <input type="text" class="tpl3-input" [(ngModel)]="rsvp.dietaryRestrictions" name="dietary" placeholder="Vegetariano, celíaco, etc. (opcional)">
+          </div>
+
+          <div class="tpl3-form-group">
+            <label>Mensaje o Felicitación para los anfitriones</label>
+            <textarea class="tpl3-textarea" [(ngModel)]="rsvp.message" name="message" rows="3" placeholder="Escribe unas palabras..."></textarea>
+          </div>
+
+          <button type="submit" class="tpl3-btn tpl3-btn-primary tpl3-btn-block" [disabled]="sending || !rsvp.name">
+            {{ sending ? 'Enviando confirmación...' : '✨ Enviar mi Confirmación' }}
+          </button>
+
+          <p *ngIf="success" class="tpl3-alert-success" style="margin-top:12px;">{{ success }}</p>
+          <p *ngIf="error" class="tpl3-alert-error" style="margin-top:12px;">{{ error }}</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- DEDICATORIAS / LIBRO DE FIRMAS -->
+    <section *ngIf="isSectionActive('dedications')" class="tpl3-section">
+      <div class="tpl3-card">
+        <div class="tpl3-card-header">
+          <span class="section-icon">✍️</span>
+          <h2>Libro de Firmas y Dedicatorias</h2>
+        </div>
+
+        <form (ngSubmit)="submitDedicationForm()" class="tpl3-dedication-form">
+          <div class="tpl3-form-group" *ngIf="!verifiedGuest">
+            <label>Tu Nombre</label>
+            <input type="text" class="tpl3-input" [(ngModel)]="newDedicationName" name="dedAuthor" placeholder="Tu nombre">
+          </div>
+          <div class="tpl3-form-group">
+            <label>Tu Mensaje o Deseo</label>
+            <textarea class="tpl3-textarea" [(ngModel)]="newDedicationMessage" name="dedMessage" rows="3" required placeholder="Comparte una felicitación o anécdota especial..."></textarea>
+          </div>
+          <button type="submit" class="tpl3-btn tpl3-btn-outline" [disabled]="sending || !newDedicationMessage">
+            Enviar Dedicatoria ✍️
+          </button>
+        </form>
+
+        <div *ngIf="dedications.length > 0" class="tpl3-dedications-list">
+          <div *ngFor="let ded of dedications" class="tpl3-dedication-bubble">
+            <p class="dedication-msg">“{{ ded.message }}”</p>
+            <span class="dedication-author">— {{ ded.publicName || 'Invitado' }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÁLBUM COMPARTIDO DE FOTOS -->
+    <section *ngIf="isSectionActive('guestAlbum')" class="tpl3-section">
+      <div class="tpl3-card">
+        <div class="tpl3-card-header">
+          <span class="section-icon">📸</span>
+          <h2>Álbum Compartido del Evento</h2>
+        </div>
+        <p style="font-size:14px; color:var(--nw-text-2); margin-bottom:16px;">
+          ¡Sube tus mejores recuerdos y fotos de la celebración!
+        </p>
+
+        <div class="tpl3-photo-upload-box">
+          <input type="file" #photoInput accept="image/*" (change)="onPhotoSelected($event)" style="display:none;">
+          <button type="button" class="tpl3-btn tpl3-btn-primary" (click)="photoInput.click()" [disabled]="uploadingAlbum">
+            {{ uploadingAlbum ? 'Subiendo fotografía...' : '📷 Subir una Foto al Álbum' }}
+          </button>
+        </div>
+
+        <div *ngIf="publicAlbumAssets.length > 0" class="tpl3-album-grid">
+          <div *ngFor="let photo of publicAlbumAssets" class="tpl3-photo-thumb" (click)="openLightbox.emit(photo.url)">
+            <img [src]="photo.url" alt="Foto del evento" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="tpl3-footer" *ngIf="!invitation?.content?.hideBranding">
+    <p>Invitación Digital Interactiva · <strong>Plantilla 3</strong></p>
+  </footer>
+
+</div>

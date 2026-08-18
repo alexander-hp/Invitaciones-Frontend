@@ -330,6 +330,7 @@
         [currentPlan]="currentPlan"
         [checkoutLoading]="checkoutLoading"
         [payments]="payments"
+        (selectTemplateKey)="onSelectTemplateKey($event)"
         (applyTemplate)="applyTemplate($event)"
         (saveChanges)="save()"
         (checkout)="checkout($event)">

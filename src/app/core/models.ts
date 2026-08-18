@@ -273,6 +273,7 @@ export interface InvitationContent {
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
   storyTitle?: string;
   storyBody?: string;
+  template?: string;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
 }
@@ -523,6 +524,7 @@ export type TemplateTier = 'free' | 'premium';
 export interface TemplateModel {
   _id?: string;
   id?: string;
+  key?: string;
   name: string;
   eventType: EventType;
   tier: TemplateTier;

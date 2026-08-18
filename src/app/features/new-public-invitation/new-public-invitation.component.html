@@ -12,7 +12,7 @@
 </div>
 
 <!-- Floating Audio Player Button -->
-<div *ngIf="hasMusicTrack() && !isEnvelopeCardsTemplate()" class="nw-pub-audio-floating">
+<div *ngIf="hasMusicTrack() && isClassicVerticalTemplate()" class="nw-pub-audio-floating">
   <button type="button" class="nw-pub-audio-btn" [class.playing]="isPlayingMusic" (click)="toggleMusic()"
     [attr.aria-label]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
     <span class="nw-pub-audio-icon">{{ isPlayingMusic ? '🎵' : '🎼' }}</span>
@@ -68,7 +68,7 @@
   </app-new-public-invitation-envelope-cards>
 
   <!-- PLANTILLA CLÁSICA VERTICAL EDITORIAL -->
-  <main *ngIf="!isEnvelopeCardsTemplate()" class="nw-pub-wrapper" [style.--primary]="invitation.content.palette?.primary || '#1c2434'"
+  <main *ngIf="isClassicVerticalTemplate()" class="nw-pub-wrapper" [style.--primary]="invitation.content.palette?.primary || '#1c2434'"
   [style.--secondary]="invitation.content.palette?.secondary || '#f8f5f0'"
   [style.--accent]="invitation.content.palette?.accent || '#c59b6c'">
 
@@ -713,4 +713,34 @@
 
   </div>
 </main>
+
+  <!-- NUEVA PLANTILLA 3 (MODERNA / MINIMALISTA) -->
+  <app-new-public-invitation-template3
+    *ngIf="isTemplate3()"
+    [invitation]="invitation"
+    [event]="event"
+    [countdown]="countdown"
+    [verifiedGuest]="verifiedGuest"
+    [publicAlbumAssets]="allAlbumAssets"
+    [dedications]="dedications"
+    [isPlayingMusic]="isPlayingMusic"
+    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
+    [sending]="sending"
+    [checkingGuest]="checkingGuest"
+    [uploadingAlbum]="uploadingAlbum"
+    [error]="error"
+    [success]="success"
+    [dedicationMessage]="dedicationMessage"
+    [albumMessage]="albumMessage"
+    [rsvp]="rsvp"
+    [companionNamesText]="companionNamesText"
+    [customAnswers]="customAnswers"
+    [declineConfirmed]="declineConfirmed"
+    (toggleMusic)="toggleMusic()"
+    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
+    (submitRsvp)="submitRsvp()"
+    (submitDedication)="submitDedicationFromData($event)"
+    (uploadPhoto)="onFileSelectedDirect($event)"
+    (openLightbox)="openLightbox($event)">
+  </app-new-public-invitation-template3>
 </ng-container>

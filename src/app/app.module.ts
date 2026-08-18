@@ -57,6 +57,7 @@ import { NewExternalEmbedComponent } from './features/new-external-embed/new-ext
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component';
+import { NewPublicInvitationTemplate3Component } from './features/new-public-invitation/templates/template-3/new-public-invitation-template3.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { EditorContentTabComponent } from './features/new-invitation-editor/tabs/content/editor-content-tab.component';
@@ -123,6 +124,7 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
     PublicInvitationComponent,
     NewPublicInvitationComponent,
     NewPublicInvitationEnvelopeCardsComponent,
+    NewPublicInvitationTemplate3Component,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

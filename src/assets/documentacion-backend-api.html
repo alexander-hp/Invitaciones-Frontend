@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KyndraSoft — Documentación Interna API REST Backend (Swagger / OpenAPI 3.0)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --border: #475569;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --get-bg: rgba(97, 175, 254, 0.12);
+      --get-border: #61affe;
+      --post-bg: rgba(73, 204, 144, 0.12);
+      --post-border: #49cc90;
+      --patch-bg: rgba(245, 158, 11, 0.12);
+      --patch-border: #f59e0b;
+      --delete-bg: rgba(248, 113, 113, 0.12);
+      --delete-border: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      padding: 30px 20px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: #ffffff; }
+    p.subtitle { color: var(--text-muted); font-size: 14.5px; }
+
+    /* Controls Bar */
+    .controls {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 240px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Endpoint Box */
+    .ep-card {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+      background: var(--surface);
+      transition: all 0.2s;
+    }
+    .ep-card.method-GET { border-color: var(--get-border); }
+    .ep-card.method-POST { border-color: var(--post-border); }
+    .ep-card.method-PATCH { border-color: var(--patch-border); }
+    .ep-card.method-DELETE { border-color: var(--delete-border); }
+
+    .ep-header {
+      padding: 14px 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      user-select: none;
+    }
+    .ep-header:hover { background: rgba(255,255,255,0.02); }
+    
+    .method-pill {
+      font-weight: 800;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      min-width: 70px;
+      text-align: center;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .method-GET .method-pill { background: #3b82f6; }
+    .method-POST .method-pill { background: #10b981; }
+    .method-PATCH .method-pill { background: #f59e0b; }
+    .method-DELETE .method-pill { background: #ef4444; }
+
+    .ep-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      color: #ffffff;
+    }
+    .ep-summary { font-size: 13px; color: var(--text-muted); margin-left: 8px; }
+
+    .ep-body {
+      border-top: 1px solid var(--border);
+      padding: 20px;
+      background: var(--bg);
+      display: none;
+    }
+    .ep-body.open { display: block; }
+
+    .tag-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+    }
+    pre {
+      background: #090d16;
+      color: #e2e8f0;
+      padding: 14px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      margin-top: 8px;
+      border: 1px solid #1e293b;
+    }
+    h4 { margin-top: 14px; margin-bottom: 6px; font-size: 14px; color: var(--accent); }
+    .btn-copy {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      float: right;
+    }
+    .btn-copy:hover { background: var(--border); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">📡 KyndraSoft REST API Specification v3.0</span>
+      <h1>Documentación Interna Completa del Backend</h1>
+      <p class="subtitle">Especificación exhaustiva de endpoints administrativos, gestión de eventos, invitados, confirmaciones RSVP, mesas y moderación.</p>
+    </header>
+
+    <div class="controls">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar endpoint, path o módulo..." oninput="filterEndpoints()">
+      <select id="methodFilter" onchange="filterEndpoints()">
+        <option value="">Todos los Métodos HTTP</option>
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PATCH">PATCH</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+    </div>
+
+    <div id="endpointsContainer"></div>
+  </div>
+
+  <script>
+    const endpoints = [
+      // 1. Autenticación
+      { method: 'POST', path: '/api/auth/register', summary: 'Registro de nuevo usuario u organizador', tag: 'Autenticación', auth: 'Público', desc: 'Registra un organizador o cliente y devuelve el token JWT.', payload: '{\n  "name": "Sofía Morales",\n  "email": "sofia@ejemplo.com",\n  "password": "Password123!",\n  "role": "organizer"\n}', response: '{\n  "user": { "id": "651f...", "email": "sofia@ejemplo.com" },\n  "token": "eyJhbGci..."\n}' },
+      { method: 'POST', path: '/api/auth/login', summary: 'Inicio de sesión', tag: 'Autenticación', auth: 'Público', desc: 'Valida credenciales y retorna JWT de sesión.', payload: '{\n  "email": "sofia@ejemplo.com",\n  "password": "Password123!"\n}', response: '{\n  "user": { "id": "651f...", "role": "organizer" },\n  "token": "eyJhbGci..."\n}' },
+      { method: 'GET', path: '/api/auth/me', summary: 'Obtener perfil autenticado', tag: 'Autenticación', auth: 'JWT Bearer', desc: 'Devuelve datos del usuario logueado.', response: '{\n  "user": { "id": "651f...", "name": "Sofía", "plan": "pro" }\n}' },
+
+      // 2. Eventos
+      { method: 'GET', path: '/api/events', summary: 'Listar todos los eventos', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Obtiene lista de eventos propios y colaboraciones.', response: '{\n  "events": [{ "_id": "651f...", "title": "Boda Sofía & Ale", "externalPortalSlug": "boda-sofia-y-ale" }]\n}' },
+      { method: 'POST', path: '/api/events', summary: 'Crear un nuevo evento', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Crea un evento con sede, fechas y configuración de portal.', payload: '{\n  "title": "Boda Sofía & Ale",\n  "type": "boda",\n  "date": "2026-12-15T18:00:00Z",\n  "externalPortalSlug": "boda-sofia-y-ale"\n}', response: '{\n  "event": { "_id": "651f...", "title": "Boda Sofía & Ale" }\n}' },
+      { method: 'GET', path: '/api/events/{id}', summary: 'Detalle de evento por ID', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Devuelve la configuración y módulos del evento.' },
+      { method: 'PATCH', path: '/api/events/{id}', summary: 'Actualizar campos de un evento', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Actualiza portal, módulos activados o estilos.' },
+      { method: 'POST', path: '/api/events/{eventId}/send-email', summary: 'Envío masivo de correos', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Envía emails de invitación a la lista seleccionada.' },
+
+      // 3. Invitaciones
+      { method: 'GET', path: '/api/invitations', summary: 'Listar invitaciones digitales', tag: 'Invitaciones', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/invitations', summary: 'Crear invitación vinculada', tag: 'Invitaciones', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/invitations/{id}/publish', summary: 'Publicar invitación digital', tag: 'Invitaciones', auth: 'JWT Bearer' },
+      { method: 'GET', path: '/api/invitations/public/{slug}', summary: 'Obtener invitación pública por slug', tag: 'Invitaciones', auth: 'Público' },
+
+      // 4. Invitados
+      { method: 'GET', path: '/api/guests/event/{eventId}', summary: 'Listar invitados por evento', tag: 'Invitados', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/guests', summary: 'Crear un nuevo invitado', tag: 'Invitados', auth: 'JWT Bearer', payload: '{\n  "name": "Carlos Mendoza",\n  "email": "carlos@ejemplo.com",\n  "allowedCompanions": 2\n}' },
+      { method: 'PATCH', path: '/api/guests/{id}', summary: 'Actualizar invitado', tag: 'Invitados', auth: 'JWT Bearer' },
+      { method: 'DELETE', path: '/api/guests/{id}', summary: 'Eliminar invitado', tag: 'Invitados', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/guests/{id}/whatsapp', summary: 'Enviar WhatsApp individual', tag: 'Invitados', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/guests/event/{eventId}/whatsapp/bulk', summary: 'Envío masivo de WhatsApp', tag: 'Invitados', auth: 'JWT Bearer' },
+
+      // 5. RSVP & Mesas
+      { method: 'GET', path: '/api/rsvps/event/{eventId}', summary: 'Listar confirmaciones RSVP', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
+      { method: 'GET', path: '/api/events/{eventId}/tables', summary: 'Listar mesas y distribución', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/events/{eventId}/tables', summary: 'Crear mesa', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/events/{eventId}/tables/auto-assign', summary: 'Autoasignar invitados a mesas', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
+
+      // 6. Moderación
+      { method: 'GET', path: '/api/events/{eventId}/album', summary: 'Listar fotos del álbum para moderación', tag: 'Moderación', auth: 'JWT Bearer' },
+      { method: 'PATCH', path: '/api/events/{eventId}/album/{assetId}', summary: 'Aprobar o rechazar foto', tag: 'Moderación', auth: 'JWT Bearer' },
+      { method: 'GET', path: '/api/events/{eventId}/song-requests', summary: 'Listar peticiones al DJ', tag: 'Moderación', auth: 'JWT Bearer' },
+      { method: 'PATCH', path: '/api/events/{eventId}/song-requests/{id}', summary: 'Moderar estado de canción', tag: 'Moderación', auth: 'JWT Bearer' },
+      { method: 'GET', path: '/api/events/{eventId}/dedications', summary: 'Listar dedicatorias para moderación', tag: 'Moderación', auth: 'JWT Bearer' },
+
+      // 7. Dashboard & Access Links
+      { method: 'GET', path: '/api/dashboard/summary', summary: 'Métricas globales del organizador', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
+      { method: 'GET', path: '/api/events/{eventId}/access-links', summary: 'Listar enlaces de acceso y tokens', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
+      { method: 'POST', path: '/api/events/{eventId}/access-links', summary: 'Generar token o enlace de acceso', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
+      { method: 'DELETE', path: '/api/events/{eventId}/access-links/{id}', summary: 'Revocar token de acceso', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
+
+      // 8. Health Check
+      { method: 'GET', path: '/health', summary: 'Health Check del backend', tag: 'Sistema', auth: 'Público', response: '{\n  "ok": true,\n  "service": "invitaciones-api"\n}' }
+    ];
+
+    function renderEndpoints(list) {
+      const container = document.getElementById('endpointsContainer');
+      container.innerHTML = '';
+
+      list.forEach((ep, idx) => {
+        const card = document.createElement('div');
+        card.className = `ep-card method-${ep.method}`;
+        card.innerHTML = `
+          <div class="ep-header" onclick="toggleEp(${idx})">
+            <div>
+              <span class="method-pill">${ep.method}</span>
+              <span class="ep-path">${ep.path}</span>
+              <span class="ep-summary">— ${ep.summary}</span>
+            </div>
+            <div>
+              <span class="tag-pill">${ep.tag}</span>
+              <span class="tag-pill" style="color:var(--accent);">${ep.auth}</span>
+            </div>
+          </div>
+          <div class="ep-body" id="ep-body-${idx}">
+            <p style="color:var(--text-muted); font-size:13px;">${ep.desc || ep.summary}</p>
+            ${ep.payload ? `<h4>Request Body (JSON)</h4><pre>${ep.payload}</pre>` : ''}
+            ${ep.response ? `<h4>Response (200/201 OK)</h4><pre>${ep.response}</pre>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleEp(idx) {
+      const el = document.getElementById(`ep-body-${idx}`);
+      el.classList.toggle('open');
+    }
+
+    function filterEndpoints() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const method = document.getElementById('methodFilter').value;
+
+      const filtered = endpoints.filter(ep => {
+        const matchesQuery = ep.path.toLowerCase().includes(query) ||
+                             ep.summary.toLowerCase().includes(query) ||
+                             ep.tag.toLowerCase().includes(query);
+        const matchesMethod = !method || ep.method === method;
+        return matchesQuery && matchesMethod;
+      });
+
+      renderEndpoints(filtered);
+    }
+
+    renderEndpoints(endpoints);
+  </script>
+</body>
+</html>

@@ -35,29 +35,57 @@ export class EditorPlansTabComponent {
       description: 'Formato editorial continuo de scroll vertical. Diseño clásico con tipografía limpia y secciones de lectura secuencial.',
       icon: '📜✨',
       features: ['Scroll vertical continuo', 'Portada hero amplia', 'Lectura secuencial', 'Excelente en Escritorio']
+    },
+    {
+      id: 'modern-minimal',
+      name: 'Plantilla 3: Glamour Moderno & Minimal',
+      badge: '✨ Plantilla 3',
+      description: 'Diseño vanguardista con estética limpia, tarjetas flotantes glassmorphism, hero interactivo, timeline moderno y animación fluida.',
+      icon: '💎✨',
+      features: ['Estilo Glassmorphism', 'Diseño Minimalista & Lujo', 'Hero interactivo', 'Optimizada Móvil & Desktop']
     }
   ];
+
+  get currentTemplateKey(): string {
+    const invId = this.invitation?._id || this.invitation?.id;
+    const slug = this.invitation?.slug;
+    const stored = (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null);
+    return this.invitation?.content?.template || stored || 'envelope-cards';
+  }
+
+  isTemplateActive(key: string): boolean {
+    const current = this.currentTemplateKey;
+    if (key === 'modern-minimal' && (current === 'modern-minimal' || current === 'template-3' || current === 'plantilla-3')) {
+      return true;
+    }
+    return current === key;
+  }
 
   setTemplate(key: string): void {
     if (this.invitation) {
       if (!this.invitation.content) this.invitation.content = {};
-      (this.invitation.content as any).template = key;
-      this.invitation.template = key;
+      this.invitation.content.template = key;
+      const invId = this.invitation._id || this.invitation.id;
+      const slug = this.invitation.slug;
+      if (invId) {
+        localStorage.setItem(`inv_tpl_${invId}`, key);
+      }
+      if (slug) {
+        localStorage.setItem(`inv_tpl_${slug}`, key);
+      }
+      if (/^[0-9a-fA-F]{24}$/.test(key)) {
+        this.invitation.template = key;
+      } else {
+        delete this.invitation.template;
+      }
       this.selectTemplateKey.emit(key);
       this.saveChanges.emit();
     }
   }
 
-  setTemplateAndPreview(key: string): void {
-    if (this.invitation) {
-      if (!this.invitation.content) this.invitation.content = {};
-      (this.invitation.content as any).template = key;
-      this.invitation.template = key;
-      this.selectTemplateKey.emit(key);
-      this.saveChanges.emit();
-      setTimeout(() => {
-        window.open(`/new/i/${this.invitation.slug}`, '_blank');
-      }, 300);
+  previewTemplate(key: string): void {
+    if (this.invitation?.slug) {
+      window.open(`/new/i/${this.invitation.slug}?tpl=${key}`, '_blank');
     }
   }
 

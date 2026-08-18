@@ -526,12 +526,28 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   }
 
   get currentTemplate(): string {
-    return (this.invitation?.content as any)?.template || this.invitation?.template || 'envelope-cards';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (queryTpl) return queryTpl;
+    const invId = this.invitation?._id || this.invitation?.id;
+    const slug = this.invitation?.slug;
+    const storedTpl = (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null);
+    if (storedTpl) return storedTpl;
+    return (this.invitation?.content as any)?.template || (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template) ? this.invitation.template : '') || 'envelope-cards';
   }
 
   isEnvelopeCardsTemplate(): boolean {
     const t = this.currentTemplate;
-    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope';
+    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (!this.isClassicVerticalTemplate() && !this.isTemplate3());
+  }
+
+  isClassicVerticalTemplate(): boolean {
+    const t = this.currentTemplate;
+    return t === 'classic-vertical' || t === 'classic' || t === 'editorial';
+  }
+
+  isTemplate3(): boolean {
+    const t = this.currentTemplate;
+    return t === 'modern-minimal' || t === 'template-3' || t === 'plantilla-3' || t === 'minimal';
   }
 
   get requiresGuestValidation(): boolean {

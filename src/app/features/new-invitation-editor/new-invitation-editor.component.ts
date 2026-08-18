@@ -260,6 +260,10 @@ export class NewInvitationEditorComponent implements OnInit {
         }
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        const storedTplKey = (id ? localStorage.getItem(`inv_tpl_${id}`) : null) || (this.invitation.slug ? localStorage.getItem(`inv_tpl_${this.invitation.slug}`) : null);
+        if (this.invitation.content) {
+          this.invitation.content.template = this.invitation.content.template || storedTplKey || 'envelope-cards';
+        }
         
         const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event?._id || this.invitation.event?.id);
         if (typeof this.invitation.event === 'object' && this.invitation.event) {
@@ -316,13 +320,44 @@ export class NewInvitationEditorComponent implements OnInit {
     return this.payments.some(p => p.package === pack && p.status === 'pending');
   }
 
+  onSelectTemplateKey(key: string): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+    this.invitation.content.template = key;
+    const invId = this.getInvitationId(this.invitation);
+    const slug = this.invitation.slug;
+    if (invId) {
+      localStorage.setItem(`inv_tpl_${invId}`, key);
+    }
+    if (slug) {
+      localStorage.setItem(`inv_tpl_${slug}`, key);
+    }
+    if (key && /^[0-9a-fA-F]{24}$/.test(key)) {
+      this.invitation.template = key;
+    } else {
+      delete this.invitation.template;
+    }
+  }
+
   applyTemplate(template: TemplateModel): void {
     if (!this.invitation) return;
-    if (template.tier === 'premium' && !this.currentPlan?.limits.premiumTemplates) {
+    if (template.tier === 'premium' && !this.currentPlan?.limits?.premiumTemplates) {
       this.error = 'Esta plantilla requiere Evento Individual o Pro.';
       return;
     }
-    this.invitation.template = template._id || template.id;
+    const templateId = template._id || template.id;
+    if (templateId && /^[0-9a-fA-F]{24}$/.test(templateId)) {
+      this.invitation.template = templateId;
+    } else {
+      delete this.invitation.template;
+    }
+    if (!this.invitation.content) this.invitation.content = {};
+    const tplKey = template.key || templateId || 'envelope-cards';
+    this.invitation.content.template = tplKey;
+    const invId = this.getInvitationId(this.invitation);
+    if (invId) {
+      localStorage.setItem(`inv_tpl_${invId}`, tplKey);
+    }
     if (template.config?.palette) {
       this.invitation.content.palette = {
         ...this.invitation.content.palette,
@@ -375,10 +410,19 @@ export class NewInvitationEditorComponent implements OnInit {
     this.message = '';
     this.error = '';
 
-    const isObjectId = Boolean(this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template));
-    const rootTemplate = isObjectId ? this.invitation.template : undefined;
+    const invId = this.getInvitationId(this.invitation);
+    const slug = this.invitation.slug;
+    const activeTemplateKey = this.invitation.content?.template || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : undefined) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : undefined) || 'envelope-cards';
+    if (invId) {
+      localStorage.setItem(`inv_tpl_${invId}`, activeTemplateKey);
+    }
+    if (slug) {
+      localStorage.setItem(`inv_tpl_${slug}`, activeTemplateKey);
+    }
 
-    this.api.updateInvitation(this.getInvitationId(this.invitation), {
+    const rootTemplate = (this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : undefined;
+
+    this.api.updateInvitation(invId, {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
@@ -387,7 +431,11 @@ export class NewInvitationEditorComponent implements OnInit {
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
+        if (rootTemplate) this.invitation.template = rootTemplate;
+        if (!this.invitation.content) this.invitation.content = {};
+        this.invitation.content.template = activeTemplateKey;
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
+        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureContentCollections();
         this.ensureRsvpSettings();
@@ -416,11 +464,13 @@ export class NewInvitationEditorComponent implements OnInit {
     this.message = '';
     this.error = '';
 
+    const rootTemplate = (this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : undefined;
+
     this.api.updateInvitation(invitationId, {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
-      template: this.invitation.template,
+      template: rootTemplate,
       content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: () => {
@@ -853,8 +903,7 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private persistUploadedAsset(): void {
     if (!this.invitation) return;
-    const isObjectId = Boolean(this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template));
-    const rootTemplate = isObjectId ? this.invitation.template : undefined;
+    const rootTemplate = (this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : undefined;
 
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
@@ -865,6 +914,8 @@ export class NewInvitationEditorComponent implements OnInit {
     }).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
+        if (rootTemplate) this.invitation.template = rootTemplate;
+        if (!this.invitation.content) this.invitation.content = {};
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureContentCollections();
@@ -1066,9 +1117,10 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private getContentPayload() {
     if (!this.invitation) return undefined;
+    const rawContent: any = { ...this.invitation.content };
+    delete rawContent.template;
     return {
-      ...this.invitation.content,
-      template: (this.invitation.content as any).template || this.invitation.template,
+      ...rawContent,
       sectionMusic: this.cleanSectionMusic(this.invitation.content.sectionMusic || {}),
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),

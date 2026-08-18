@@ -172,11 +172,12 @@ export class InvitationEditorComponent implements OnInit {
     this.saving = true;
     this.message = '';
     this.error = '';
+    const rootTemplate = (this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : undefined;
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
-      template: this.invitation.template,
+      template: rootTemplate,
       content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: ({ invitation }) => {
@@ -551,11 +552,12 @@ export class InvitationEditorComponent implements OnInit {
 
   private persistUploadedAsset(): void {
     if (!this.invitation) return;
+    const rootTemplate = (this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : undefined;
     this.api.updateInvitation(this.getInvitationId(this.invitation), {
       slug: this.invitation.slug,
       accessMode: this.invitation.accessMode,
       rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
-      template: this.invitation.template,
+      template: rootTemplate,
       content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: ({ invitation }) => {

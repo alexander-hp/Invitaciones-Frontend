@@ -15,14 +15,14 @@
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
       <div *ngFor="let tpl of builtinTemplates" 
            class="nw-card" 
-           [style.border]="(invitation?.template === tpl.id || (!invitation?.template && tpl.id === 'envelope-cards')) ? '2px solid var(--nw-accent)' : '1px solid var(--nw-border)'"
+           [style.border]="isTemplateActive(tpl.id) ? '2px solid var(--nw-accent)' : '1px solid var(--nw-border)'"
            style="padding:16px; display:flex; flex-direction:column; justify-content:space-between; background:var(--nw-surface-2);">
         
         <div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <span style="font-size:24px;">{{ tpl.icon }}</span>
-            <span class="nw-pill" [class.accent]="invitation?.template === tpl.id || (!invitation?.template && tpl.id === 'envelope-cards')">
-              {{ (invitation?.template === tpl.id || (!invitation?.template && tpl.id === 'envelope-cards')) ? '✓ Activa' : tpl.badge }}
+            <span class="nw-pill" [class.accent]="isTemplateActive(tpl.id)">
+              {{ isTemplateActive(tpl.id) ? '✓ Activa' : tpl.badge }}
             </span>
           </div>
 
@@ -37,14 +37,14 @@
         <div style="display:flex; gap:8px;">
           <button type="button" 
                   class="nw-btn nw-btn-sm" 
-                  [class.nw-btn-primary]="invitation?.template === tpl.id || (!invitation?.template && tpl.id === 'envelope-cards')"
-                  [class.nw-btn-ghost]="invitation?.template !== tpl.id && (invitation?.template || tpl.id !== 'envelope-cards')"
+                  [class.nw-btn-primary]="isTemplateActive(tpl.id)"
+                  [class.nw-btn-ghost]="!isTemplateActive(tpl.id)"
                   (click)="setTemplate(tpl.id)"
                   style="flex:1;">
-            {{ (invitation?.template === tpl.id || (!invitation?.template && tpl.id === 'envelope-cards')) ? '✓ Plantilla Seleccionada' : 'Usar esta plantilla' }}
+            {{ isTemplateActive(tpl.id) ? '✓ Plantilla Seleccionada' : 'Usar esta plantilla' }}
           </button>
 
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="setTemplateAndPreview(tpl.id)">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewTemplate(tpl.id)">
             👁️ Ver
           </button>
         </div>

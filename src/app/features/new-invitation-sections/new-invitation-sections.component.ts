@@ -244,6 +244,7 @@ export class NewInvitationSectionsComponent implements OnInit {
       giftSettings: { ...this.giftSettings },
       dedicationSettings: { ...this.dedicationSettings }
     };
+    delete (rawContent as any).template;
 
     const sanitizedContent = this.sanitizePayload(rawContent);
 

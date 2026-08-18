@@ -164,6 +164,7 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
     if (this.invitation) {
       const invId = (this.invitation._id || this.invitation.id)!;
       const updatedContent = { ...(this.invitation.content || {}), coverImageUrl: url };
+      delete (updatedContent as any).template;
       this.apiService.updateInvitation(invId, { content: updatedContent }).subscribe({
         next: res => {
           this.invitation = res.invitation;
