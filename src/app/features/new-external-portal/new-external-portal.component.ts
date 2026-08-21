@@ -37,6 +37,9 @@ export class NewExternalPortalComponent implements OnInit, OnDestroy {
   songPreview?: Partial<SongRequestModel>;
   rsvp = { response: 'confirmed' as RsvpResponse, companions: 0, mealPreference: '', dietaryRestrictions: '', menuSelection: '', message: '' };
   selectedAlbumFile?: File;
+  selectedTagFilter: string = 'all';
+  readonly TAG_SUPER_ENCANTA = 'Me super encanta';
+  readonly TAG_ME_ENCANTA = 'Me encanta';
   loading = false;
   sending = false;
   error = '';
@@ -44,6 +47,34 @@ export class NewExternalPortalComponent implements OnInit, OnDestroy {
   private albumTimer?: ReturnType<typeof setInterval>;
   private statusTimer?: ReturnType<typeof setInterval>;
   private dedicationTimer?: ReturnType<typeof setInterval>;
+
+  get availableTags(): string[] {
+    const tagSet = new Set<string>();
+    for (const asset of this.albumAssets) {
+      if (asset.tags && Array.isArray(asset.tags)) {
+        for (const t of asset.tags) {
+          if (t && t.trim()) tagSet.add(t.trim());
+        }
+      }
+    }
+    const tags = Array.from(tagSet);
+    return tags.sort((a, b) => {
+      if (a === this.TAG_SUPER_ENCANTA) return -1;
+      if (b === this.TAG_SUPER_ENCANTA) return 1;
+      if (a === this.TAG_ME_ENCANTA) return -1;
+      if (b === this.TAG_ME_ENCANTA) return 1;
+      return a.localeCompare(b);
+    });
+  }
+
+  getTagCount(tag: string): number {
+    return this.albumAssets.filter(a => Array.isArray(a.tags) && a.tags.includes(tag)).length;
+  }
+
+  get filteredAlbumAssets(): AlbumAssetModel[] {
+    if (this.selectedTagFilter === 'all') return this.albumAssets;
+    return this.albumAssets.filter(a => Array.isArray(a.tags) && a.tags.includes(this.selectedTagFilter));
+  }
 
   constructor(private route: ActivatedRoute, private api: ApiService, private sanitizer: DomSanitizer) {}
 

@@ -189,13 +189,55 @@
         <!-- PUBLIC PHOTO GALLERY -->
         <section *ngIf="event.externalPortalSettings?.albumEnabled !== false && albumAssets.length"
           class="nw-portal-card">
-          <div class="nw-portal-card-header">
+          <div class="nw-portal-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <h2>📸 Galería del Evento</h2>
+            <span style="font-size: 12px; color: var(--nw-text-2, #6e6157); font-weight: 600;">
+              {{ filteredAlbumAssets.length }} {{ filteredAlbumAssets.length === 1 ? 'foto' : 'fotos' }}
+            </span>
           </div>
+
+          <!-- Pestañas de Álbumes por Tag -->
+          <div *ngIf="availableTags.length > 0" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px;">
+            <button type="button" class="nw-btn nw-btn-sm" (click)="selectedTagFilter = 'all'"
+              [style.background]="selectedTagFilter === 'all' ? 'var(--nw-accent, #c09c78)' : 'var(--nw-surface-2, #f5f1ea)'"
+              [style.color]="selectedTagFilter === 'all' ? '#ffffff' : 'var(--nw-text, #2e2621)'"
+              style="border-radius: 16px; padding: 3px 12px; font-size: 12px; font-weight: 700; border: none;">
+              🖼️ Todos ({{ albumAssets.length }})
+            </button>
+            <button *ngIf="getTagCount(TAG_SUPER_ENCANTA) > 0" type="button" class="nw-btn nw-btn-sm" (click)="selectedTagFilter = TAG_SUPER_ENCANTA"
+              [style.background]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#f59e0b' : '#fffbeb'"
+              [style.color]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#ffffff' : '#b45309'"
+              style="border-radius: 16px; padding: 3px 12px; font-size: 12px; font-weight: 700; border: 1px solid #fde68a;">
+              ⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})
+            </button>
+            <button *ngIf="getTagCount(TAG_ME_ENCANTA) > 0" type="button" class="nw-btn nw-btn-sm" (click)="selectedTagFilter = TAG_ME_ENCANTA"
+              [style.background]="selectedTagFilter === TAG_ME_ENCANTA ? '#ec4899' : '#fdf2f8'"
+              [style.color]="selectedTagFilter === TAG_ME_ENCANTA ? '#ffffff' : '#be185d'"
+              style="border-radius: 16px; padding: 3px 12px; font-size: 12px; font-weight: 700; border: 1px solid #fbcfe8;">
+              ❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})
+            </button>
+            <ng-container *ngFor="let tag of availableTags">
+              <button *ngIf="tag !== TAG_SUPER_ENCANTA && tag !== TAG_ME_ENCANTA" type="button" class="nw-btn nw-btn-sm"
+                (click)="selectedTagFilter = tag"
+                [style.background]="selectedTagFilter === tag ? 'var(--nw-text, #2e2621)' : 'var(--nw-surface-2, #f5f1ea)'"
+                [style.color]="selectedTagFilter === tag ? '#ffffff' : 'var(--nw-text, #2e2621)'"
+                style="border-radius: 16px; padding: 3px 12px; font-size: 12px; font-weight: 600; border: none;">
+                🏷️ {{ tag }} ({{ getTagCount(tag) }})
+              </button>
+            </ng-container>
+          </div>
+
           <div class="nw-portal-gallery-grid">
-            <div class="nw-portal-gallery-item" *ngFor="let asset of albumAssets">
+            <div class="nw-portal-gallery-item" *ngFor="let asset of filteredAlbumAssets">
               <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto del evento'" loading="lazy" decoding="async">
               <span class="uploader-badge" *ngIf="asset.uploaderName">Por: {{ asset.uploaderName }}</span>
+              <div *ngIf="asset.tags && asset.tags.length > 0" style="position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; z-index: 2;">
+                <span *ngFor="let t of asset.tags"
+                  [style.background]="t === TAG_SUPER_ENCANTA ? '#f59e0b' : (t === TAG_ME_ENCANTA ? '#ec4899' : 'rgba(0,0,0,0.65)')"
+                  style="color: #ffffff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px;">
+                  {{ t === TAG_SUPER_ENCANTA ? '⭐' : (t === TAG_ME_ENCANTA ? '❤️' : t) }}
+                </span>
+              </div>
             </div>
           </div>
         </section>
