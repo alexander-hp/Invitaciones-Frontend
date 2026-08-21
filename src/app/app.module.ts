@@ -33,6 +33,7 @@ import { EventCommunicationTabComponent } from './features/new-event-detail/tabs
 import { EventDjTabComponent } from './features/new-event-detail/tabs/dj/event-dj-tab.component';
 import { EventDedicationsTabComponent } from './features/new-event-detail/tabs/dedications/event-dedications-tab.component';
 import { EventIntegrationTabComponent } from './features/new-event-detail/tabs/integration/event-integration-tab.component';
+import { EventLogsTabComponent } from './features/new-event-detail/tabs/logs/event-logs-tab.component';
 
 import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
@@ -60,6 +61,8 @@ import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public
 import { NewPublicInvitationTemplate3Component } from './features/new-public-invitation/templates/template-3/new-public-invitation-template3.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
+import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
+import { DocumentationComponent } from './features/documentation/documentation.component';
 import { EditorContentTabComponent } from './features/new-invitation-editor/tabs/content/editor-content-tab.component';
 import { EditorStyleTabComponent } from './features/new-invitation-editor/tabs/style/editor-style-tab.component';
 import { EditorItineraryTabComponent } from './features/new-invitation-editor/tabs/itinerary/editor-itinerary-tab.component';
@@ -80,6 +83,7 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
     ConfirmDialogComponent,
     QrScannerModalComponent,
     EventHeaderComponent,
+    DocumentationComponent,
     CheckInStaffComponent,
     ContactComponent,
     DashboardComponent,
@@ -101,6 +105,7 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
     EditorPlansTabComponent,
     NewInvitationSectionsComponent,
     NewMemberInviteComponent,
+    NewUserGuideComponent,
     LoginComponent,
     NewLoginComponent,
     NewRegisterComponent,
@@ -116,6 +121,7 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
     EventDjTabComponent,
     EventDedicationsTabComponent,
     EventIntegrationTabComponent,
+    EventLogsTabComponent,
     SeatingChartComponent,
     PasswordResetConfirmComponent,
     PasswordResetComponent,

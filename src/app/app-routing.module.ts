@@ -33,6 +33,8 @@ import { NewInvitationSectionsComponent } from './features/new-invitation-sectio
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { NewPasswordResetComponent } from './features/new-password-reset/new-password-reset.component';
 import { NewPasswordResetConfirmComponent } from './features/new-password-reset-confirm/new-password-reset-confirm.component';
+import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
+import { DocumentationComponent } from './features/documentation/documentation.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
@@ -50,6 +52,8 @@ const routes: Routes = [
   { path: 'i/:slug', component: NewPublicInvitationComponent },
   { path: 'e/:portalSlug', component: ExternalPortalComponent },
   { path: 'embed/:portalSlug/:widget', component: ExternalEmbedComponent },
+  { path: 'documentacion', redirectTo: 'new/documentacion' },
+  { path: 'api-docs', redirectTo: 'new/documentacion' },
   // ── New pages ──
   { path: 'new/login', component: NewLoginComponent },
   { path: 'new/register', component: NewRegisterComponent },
@@ -71,6 +75,8 @@ const routes: Routes = [
   { path: 'new/embed/:portalSlug/:widget', component: NewExternalEmbedComponent },
   { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
   { path: 'new/i/:slug', component: NewPublicInvitationComponent },
+  { path: 'new/guia', component: NewUserGuideComponent, canActivate: [AuthGuard] },
+  { path: 'new/documentacion', component: DocumentationComponent },
   { path: '**', redirectTo: 'new/dashboard' }
 ];
 

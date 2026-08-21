@@ -25,6 +25,8 @@ import {
   EventAccessLinkModel,
   EventAccessRole,
   EventAccessSession,
+  EventLogModel,
+  EventLogResponse,
   EventPayload,
   EventTableModel,
   EventType,
@@ -121,6 +123,25 @@ export class ApiService {
 
   updateEvent(id: string, payload: Partial<EventPayload>): Observable<{ event: EventModel }> {
     return this.http.patch<{ event: EventModel }>(`${this.apiUrl}/events/${id}`, payload);
+  }
+
+  listEventLogs(eventId: string, filters?: { category?: string; search?: string; page?: number; limit?: number }): Observable<EventLogResponse> {
+    let params = new HttpParams();
+    if (filters?.category) params = params.set('category', filters.category);
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.page) params = params.set('page', String(filters.page));
+    if (filters?.limit) params = params.set('limit', String(filters.limit));
+    return this.http.get<EventLogResponse>(`${this.apiUrl}/events/${eventId}/logs`, { params });
+  }
+
+  listAllEventLogs(filters?: { eventId?: string; category?: string; search?: string; page?: number; limit?: number }): Observable<EventLogResponse> {
+    let params = new HttpParams();
+    if (filters?.eventId) params = params.set('eventId', filters.eventId);
+    if (filters?.category) params = params.set('category', filters.category);
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.page) params = params.set('page', String(filters.page));
+    if (filters?.limit) params = params.set('limit', String(filters.limit));
+    return this.http.get<EventLogResponse>(`${this.apiUrl}/events/logs/activity/all`, { params });
   }
 
   getPublicExternalEvent(portalSlug: string): Observable<{ event: EventModel }> {
@@ -354,8 +375,9 @@ export class ApiService {
     return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/events/${eventId}/album`);
   }
 
-  updateAlbumAsset(eventId: string, assetId: string, status: AlbumAssetModel['status']): Observable<{ asset: AlbumAssetModel }> {
-    return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/events/${eventId}/album/${assetId}`, { status });
+  updateAlbumAsset(eventId: string, assetId: string, payload: AlbumAssetModel['status'] | { status?: AlbumAssetModel['status']; tags?: string[] }): Observable<{ asset: AlbumAssetModel }> {
+    const body = typeof payload === 'string' ? { status: payload } : payload;
+    return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/events/${eventId}/album/${assetId}`, body);
   }
 
   listPublicAlbum(slug: string): Observable<{ assets: AlbumAssetModel[] }> {
@@ -460,12 +482,20 @@ export class ApiService {
     return this.http.get<WhatsAppStatusResponse>(`${this.apiUrl}/guests/whatsapp/status`);
   }
 
-  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string; media?: WhatsAppMediaPayload }): Observable<WhatsAppSendResponse> {
+  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string; media?: WhatsAppMediaPayload; attachPass?: boolean }): Observable<WhatsAppSendResponse> {
     return this.http.post<WhatsAppSendResponse>(`${this.apiUrl}/guests/${id}/whatsapp`, payload);
   }
 
-  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; media?: WhatsAppMediaPayload; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
+  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; media?: WhatsAppMediaPayload; attachPass?: boolean; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
     return this.http.post<WhatsAppBulkResponse>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/bulk`, payload);
+  }
+
+  downloadGuestPassImage(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/guests/${id}/pass-image`, { responseType: 'blob' });
+  }
+
+  downloadAllPassesZip(eventId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/guests/event/${eventId}/pass-images/zip`, { responseType: 'blob' });
   }
 
   sendGuestEmail(id: string, payload: { messageType?: GuestMessageType; attachPass?: boolean }): Observable<EmailSendResponse> {
