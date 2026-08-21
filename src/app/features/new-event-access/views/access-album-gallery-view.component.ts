@@ -21,6 +21,10 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
   selectedAsset?: AlbumAssetModel;
   lightboxIndex = 0;
 
+  selectedTagFilter: string = 'all';
+  readonly TAG_SUPER_ENCANTA = 'Me super encanta';
+  readonly TAG_ME_ENCANTA = 'Me encanta';
+
   ngOnInit(): void {
     if (this.approvedAssets.length > 0) {
       this.carouselIndex = 0;
@@ -58,23 +62,60 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
     }
   }
 
+  get allApprovedAssets(): AlbumAssetModel[] {
+    return (this.session?.albumAssets || []).filter(a => a.status === 'approved');
+  }
+
+  get availableTags(): string[] {
+    const tagSet = new Set<string>();
+    for (const asset of this.allApprovedAssets) {
+      if (asset.tags && Array.isArray(asset.tags)) {
+        for (const t of asset.tags) {
+          if (t && t.trim()) tagSet.add(t.trim());
+        }
+      }
+    }
+    const tags = Array.from(tagSet);
+    return tags.sort((a, b) => {
+      if (a === this.TAG_SUPER_ENCANTA) return -1;
+      if (b === this.TAG_SUPER_ENCANTA) return 1;
+      if (a === this.TAG_ME_ENCANTA) return -1;
+      if (b === this.TAG_ME_ENCANTA) return 1;
+      return a.localeCompare(b);
+    });
+  }
+
+  getTagCount(tag: string): number {
+    return this.allApprovedAssets.filter(a => Array.isArray(a.tags) && a.tags.includes(tag)).length;
+  }
+
+  setTagFilter(tag: string): void {
+    this.selectedTagFilter = tag;
+    this.carouselIndex = 0;
+  }
+
   get approvedAssets(): AlbumAssetModel[] {
-    const list = this.session?.albumAssets || [];
+    const list = this.allApprovedAssets;
     const query = this.searchQuery.toLowerCase().trim();
 
     return list.filter(asset => {
-      if (asset.status !== 'approved') return false;
+      if (this.selectedTagFilter !== 'all') {
+        if (!Array.isArray(asset.tags) || !asset.tags.includes(this.selectedTagFilter)) {
+          return false;
+        }
+      }
       if (query) {
         const nameMatch = (asset.uploaderName || '').toLowerCase().includes(query);
         const emailMatch = (asset.uploaderEmail || '').toLowerCase().includes(query);
-        return nameMatch || emailMatch;
+        const tagMatch = Array.isArray(asset.tags) && asset.tags.some(t => t.toLowerCase().includes(query));
+        return nameMatch || emailMatch || tagMatch;
       }
       return true;
     });
   }
 
   get totalApprovedCount(): number {
-    return (this.session?.albumAssets || []).filter(a => a.status === 'approved').length;
+    return this.allApprovedAssets.length;
   }
 
   get safeCarouselIndex(): number {

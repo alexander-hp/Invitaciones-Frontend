@@ -481,6 +481,29 @@
     .nw-fs-nav-btn.next {
       right: 10px;
     }
+
+    .nw-gallery-tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--nw-surface-2, #f5f1ea);
+      color: var(--nw-text, #2e2621);
+      border: 1px solid var(--nw-border, #eadecc);
+    }
+    .nw-gallery-tag-chip.tag-super {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+    .nw-gallery-tag-chip.tag-encanta {
+      background: #fce7f3;
+      color: #9d174d;
+      border-color: #fbcfe8;
+    }
   }
 </style>
 
@@ -490,7 +513,7 @@
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
       <h2
-        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -504,7 +527,7 @@
         </span>
       </h2>
       <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
-        Explora la galería de recuerdos seleccionados y aprobados por los anfitriones.
+        Explora la galería de recuerdos seleccionados y organizados por álbumes temáticos.
       </p>
     </div>
 
@@ -562,6 +585,59 @@
           Lista
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 🏷️ SECCIÓN: ÁLBUMES TEMÁTICOS (POR TAGS) -->
+  <div style="margin-bottom: 18px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <span style="font-size: 13px; font-weight: 700; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px;">
+        📂 Álbumes Temáticos
+      </span>
+      <span *ngIf="selectedTagFilter !== 'all'" style="font-size: 12px; color: var(--nw-accent, #c09c78); cursor: pointer; font-weight: 600;" (click)="setTagFilter('all')">
+        Ver todos los recuerdos ✕
+      </span>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+      <!-- Álbum: Todos -->
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter('all')"
+        [style.background]="selectedTagFilter === 'all' ? 'var(--nw-accent, #c09c78)' : 'var(--nw-surface, #ffffff)'"
+        [style.color]="selectedTagFilter === 'all' ? '#ffffff' : 'var(--nw-text, #2e2621)'"
+        [style.border]="selectedTagFilter === 'all' ? '1px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
+        style="height: 36px; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+        🖼️ Todos los Álbumes ({{ allApprovedAssets.length }})
+      </button>
+
+      <!-- Álbum: Me super encanta -->
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter(TAG_SUPER_ENCANTA)"
+        [style.background]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#f59e0b' : '#fffbeb'"
+        [style.color]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#ffffff' : '#b45309'"
+        [style.border]="selectedTagFilter === TAG_SUPER_ENCANTA ? '1px solid #d97706' : '1px solid #fde68a'"
+        style="height: 36px; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+        ⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})
+      </button>
+
+      <!-- Álbum: Me encanta -->
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter(TAG_ME_ENCANTA)"
+        [style.background]="selectedTagFilter === TAG_ME_ENCANTA ? '#ec4899' : '#fdf2f8'"
+        [style.color]="selectedTagFilter === TAG_ME_ENCANTA ? '#ffffff' : '#be185d'"
+        [style.border]="selectedTagFilter === TAG_ME_ENCANTA ? '1px solid #db2777' : '1px solid #fbcfe8'"
+        style="height: 36px; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+        ❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})
+      </button>
+
+      <!-- Álbumes de Tags Personalizados -->
+      <ng-container *ngFor="let tag of availableTags">
+        <button *ngIf="tag !== TAG_SUPER_ENCANTA && tag !== TAG_ME_ENCANTA" type="button" class="nw-btn nw-btn-sm"
+          (click)="setTagFilter(tag)"
+          [style.background]="selectedTagFilter === tag ? 'var(--nw-text, #2e2621)' : 'var(--nw-surface-2, #f5f1ea)'"
+          [style.color]="selectedTagFilter === tag ? '#ffffff' : 'var(--nw-text, #2e2621)'"
+          [style.border]="selectedTagFilter === tag ? '1px solid var(--nw-text, #2e2621)' : '1px solid var(--nw-border, #eadecc)'"
+          style="height: 36px; font-size: 13px; font-weight: 600; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+          🏷️ {{ tag }} ({{ getTagCount(tag) }})
+        </button>
+      </ng-container>
     </div>
   </div>
 
@@ -751,27 +827,38 @@
       </div>
 
       <div
-        style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; background: var(--nw-surface, #ffffff); gap: 8px;">
-        <strong
-          style="font-size: 13.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          {{ asset.uploaderName || 'Invitado' }}
-        </strong>
+        style="padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; background: var(--nw-surface, #ffffff); gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <strong
+            style="font-size: 13.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            {{ asset.uploaderName || 'Invitado' }}
+          </strong>
 
-        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="downloadPhoto(asset, $event)"
-          style="padding: 4px 8px; height: 28px; font-size: 11px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;"
-          title="Descargar original">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </button>
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="downloadPhoto(asset, $event)"
+            style="padding: 4px 8px; height: 28px; font-size: 11px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;"
+            title="Descargar original">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Chips de Tags asignados -->
+        <div *ngIf="asset.tags && asset.tags.length > 0" style="display: flex; flex-wrap: wrap; gap: 4px;">
+          <span *ngFor="let t of asset.tags" class="nw-gallery-tag-chip"
+            [class.tag-super]="t === TAG_SUPER_ENCANTA"
+            [class.tag-encanta]="t === TAG_ME_ENCANTA">
+            {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : t) }}
+          </span>
+        </div>
       </div>
     </article>
   </div>
@@ -806,14 +893,22 @@
             style="font-size: 12.5px; color: var(--nw-text-3, #9e9083); display: block; margin-top: 2px;">
             {{ asset.uploaderEmail }}
           </span>
-          <span class="nw-pill success"
-            style="font-size: 10.5px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px;">
-            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Foto Aprobada
-          </span>
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap;">
+            <span class="nw-pill success"
+              style="font-size: 10.5px; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Foto Aprobada
+            </span>
+            <!-- Chips de Tags en Lista -->
+            <span *ngFor="let t of asset.tags" class="nw-gallery-tag-chip"
+              [class.tag-super]="t === TAG_SUPER_ENCANTA"
+              [class.tag-encanta]="t === TAG_ME_ENCANTA">
+              {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : t) }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -858,23 +953,30 @@
             <polyline points="21 15 16 10 5 21"></polyline>
           </svg>
           <div>
-            <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #ffffff;">
-              {{ selectedAsset.uploaderName || 'Fotografía del Evento' }}
+            <h3 style="margin: 0; font-size: 15.5px; font-weight: 700; color: #ffffff;">
+              {{ selectedAsset.uploaderName || 'Invitado' }}
             </h3>
-            <span style="font-size: 12px; color: #999;">
+            <p style="margin: 2px 0 0; font-size: 12px; color: #aaaaaa;">
               Foto {{ lightboxIndex + 1 }} de {{ approvedAssets.length }}
-            </span>
+            </p>
           </div>
         </div>
         <button type="button" (click)="closeLightbox()"
-          style="background: none; border: none; font-size: 20px; cursor: pointer; color: #aaa; padding: 4px 8px;">✕</button>
+          style="background: none; border: none; font-size: 20px; cursor: pointer; color: #aaaaaa; padding: 4px 8px; border-radius: 8px;"
+          title="Cerrar">
+          ✕
+        </button>
       </div>
 
-      <!-- Body con Flechas Prev / Next -->
+      <!-- Imagen Central con Flechas -->
       <div
-        style="position: relative; padding: 16px; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; background: #080808;">
-        <button type="button" (click)="prevLightbox()"
-          style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.25); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;"
+        style="position: relative; flex: 1; min-height: 300px; display: flex; align-items: center; justify-content: center; background: #000000; overflow: hidden; padding: 12px;">
+        <img [src]="selectedAsset.url" [alt]="selectedAsset.uploaderName || 'Foto'"
+          style="max-width: 100%; max-height: 60vh; object-fit: contain; border-radius: 8px;">
+
+        <!-- Flecha Anterior Lightbox -->
+        <button *ngIf="approvedAssets.length > 1" type="button" (click)="prevLightbox()"
+          style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"
           title="Foto anterior">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -882,11 +984,9 @@
           </svg>
         </button>
 
-        <img [src]="selectedAsset.url" [alt]="selectedAsset.uploaderName || 'Foto'"
-          style="max-width: 100%; max-height: 68vh; object-fit: contain; border-radius: 8px;">
-
-        <button type="button" (click)="nextLightbox()"
-          style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.25); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;"
+        <!-- Flecha Siguiente Lightbox -->
+        <button *ngIf="approvedAssets.length > 1" type="button" (click)="nextLightbox()"
+          style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"
           title="Foto siguiente">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -898,14 +998,25 @@
       <!-- Footer -->
       <div
         style="padding: 14px 20px; background: #181818; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <span class="nw-pill success"
-          style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          Aprobada para el Álbum Oficial
-        </span>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span class="nw-pill success"
+            style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Aprobada para el Álbum Oficial
+          </span>
+
+          <!-- Chips de Tags en Lightbox -->
+          <div *ngIf="selectedAsset?.tags && selectedAsset!.tags!.length > 0" style="display: flex; flex-wrap: wrap; gap: 4px;">
+            <span *ngFor="let t of selectedAsset?.tags" class="nw-gallery-tag-chip"
+              [class.tag-super]="t === TAG_SUPER_ENCANTA"
+              [class.tag-encanta]="t === TAG_ME_ENCANTA">
+              {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : t) }}
+            </span>
+          </div>
+        </div>
 
         <div style="display: flex; gap: 10px;">
           <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="downloadPhoto(selectedAsset, $event)"
