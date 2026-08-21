@@ -23,6 +23,46 @@ export class EventTablesTabComponent implements OnInit, OnChanges {
   deletingAllTables = false;
   creating = false;
 
+  tablePage = 1;
+  tablePageSize = 12;
+
+  get totalTablePages(): number {
+    return Math.ceil(this.tables.length / this.tablePageSize) || 1;
+  }
+
+  get paginatedTables(): EventTableModel[] {
+    const total = this.totalTablePages;
+    if (this.tablePage > total) {
+      this.tablePage = 1;
+    }
+    const start = (this.tablePage - 1) * this.tablePageSize;
+    return this.tables.slice(start, start + this.tablePageSize);
+  }
+
+  setTablePage(page: number): void {
+    if (page < 1 || page > this.totalTablePages) return;
+    this.tablePage = page;
+  }
+
+  getTablePagesArray(): number[] {
+    const total = this.totalTablePages;
+    const current = this.tablePage;
+    const pages: number[] = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
   // Guest Detail Modal
   showGuestDetailModal = false;
   loadingGuestDetail = false;
@@ -668,6 +708,62 @@ export class EventTablesTabComponent implements OnInit, OnChanges {
         this.autoAssigning = false;
         this.autoAssignError = err?.error?.message || 'Error al ejecutar auto-asignación';
       }
+    });
+  }
+
+  get missingAssignedTables(): string[] {
+    const existingTableNames = new Set((this.tables || []).map(t => t.name.trim().toLowerCase()));
+    const missingNames = new Set<string>();
+    
+    (this.guests || []).forEach(g => {
+      if (g.tableName && g.tableName.trim()) {
+        const nameLower = g.tableName.trim().toLowerCase();
+        if (!existingTableNames.has(nameLower)) {
+          missingNames.add(g.tableName.trim());
+        }
+      }
+    });
+    
+    return Array.from(missingNames).sort();
+  }
+
+  createMissingAssignedTables(): void {
+    const missing = this.missingAssignedTables;
+    if (missing.length === 0) return;
+
+    this.confirmDialogService.confirm({
+      title: 'Crear mesas auto-asignadas',
+      message: `Se detectaron ${missing.length} mesas asignadas a invitados que no existen en el plano: "${missing.join(', ')}". ¿Deseas crearlas automáticamente en el croquis con una capacidad por defecto de 8 personas?`,
+      confirmText: 'Sí, crear mesas',
+      cancelText: 'Cancelar'
+    }).then((accepted: boolean) => {
+      if (!accepted) return;
+      
+      this.tablesLoading = true;
+      const requests = missing.map((tableName, index) => {
+        return this.apiService.createTable(this.eventId, {
+          name: tableName,
+          capacity: 8,
+          shape: 'round',
+          width: 120, // default 1.2m
+          height: 120, // default 1.2m
+          floor: 1,
+          floorName: 'Planta Baja',
+          order: this.tables.length + index + 1
+        });
+      });
+
+      forkJoin(requests).subscribe({
+        next: () => {
+          this.notifySuccess(`✨ Se crearon con éxito las ${missing.length} mesas asignadas.`);
+          this.loadTables();
+          this.tablesUpdated.emit();
+        },
+        error: err => {
+          this.tablesLoading = false;
+          this.notifyError(err?.error?.message || 'Error al crear algunas mesas.');
+        }
+      });
     });
   }
 }
