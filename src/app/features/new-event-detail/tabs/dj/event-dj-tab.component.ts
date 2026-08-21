@@ -378,12 +378,31 @@ export class EventDjTabComponent implements OnInit, OnChanges {
     });
   }
 
+  currentPage = 1;
+  pageSize = 10;
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredSongRequests.length / this.pageSize) || 1;
+  }
+
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.pageSize;
+  }
+
+  get endIndex(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredSongRequests.length);
+  }
+
+  get paginatedSongRequests(): SongRequestModel[] {
+    return this.filteredSongRequests.slice(this.startIndex, this.endIndex);
+  }
+
   updateSongRequest(sr: SongRequestModel, status: SongRequestStatus): void {
     const srId = (sr._id || sr.id)!;
     this.apiService.updateSongRequest(this.eventId, srId, status).subscribe({
       next: res => {
         sr.status = res.songRequest.status;
-        const labels: Record<string, string> = { approved: 'aprobada 👍', played: 'reproducida 🎵', rejected: 'rechazada ✕', pending: 'pendiente ⏳' };
+        const labels: Record<string, string> = { approved: 'aprobada', played: 'reproducida', rejected: 'rechazada', pending: 'pendiente' };
         this.showSuccessToast(`Canción "${sr.title}" marcada como ${labels[status] || status}`);
       },
       error: err => {
