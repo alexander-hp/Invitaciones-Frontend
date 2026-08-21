@@ -5,12 +5,12 @@ import { AuthProvider } from '../../core/models';
 
 @Component({ selector: 'app-login', templateUrl: './login.component.html' })
 export class LoginComponent {
-  form = { email: 'demo@invitaciones.mx', password: 'Password123' };
+  form = { email: 'qqq@invitaciones.mx', password: 'Password123' };
   loading = false;
   socialLoading: AuthProvider | '' = '';
   error = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
 
   submit(): void {
     this.loading = true;

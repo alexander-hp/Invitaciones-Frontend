@@ -1,112 +1,404 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KyndraSoft — Documentación Interna API REST Backend (Swagger / OpenAPI 3.0)</title>
+  <title>KyndraSoft — Documentación REST API Backend & Swagger Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --surface-2: #334155;
-      --border: #475569;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --get-bg: rgba(97, 175, 254, 0.12);
-      --get-border: #61affe;
-      --post-bg: rgba(73, 204, 144, 0.12);
-      --post-border: #49cc90;
-      --patch-bg: rgba(245, 158, 11, 0.12);
-      --patch-border: #f59e0b;
-      --delete-bg: rgba(248, 113, 113, 0.12);
-      --delete-border: #f87171;
+      --nw-bg: #0b0f17;
+      --nw-surface: #131926;
+      --nw-surface-2: #1c2436;
+      --nw-surface-3: #253147;
+      --nw-border: #2a374d;
+      --nw-border-light: rgba(255, 255, 255, 0.08);
+      --nw-text: #f8fafc;
+      --nw-text-2: #94a3b8;
+      --nw-text-3: #64748b;
+      --nw-accent: #d4a373;
+      --nw-accent-hover: #e2c99b;
+      --nw-accent-bg: rgba(212, 163, 115, 0.12);
+      --nw-accent-border: rgba(212, 163, 115, 0.3);
+
+      --method-get: #38bdf8;
+      --method-get-bg: rgba(56, 189, 248, 0.12);
+      --method-get-border: rgba(56, 189, 248, 0.35);
+
+      --method-post: #34d399;
+      --method-post-bg: rgba(52, 211, 153, 0.12);
+      --method-post-border: rgba(52, 211, 153, 0.35);
+
+      --method-patch: #fbbf24;
+      --method-patch-bg: rgba(251, 191, 36, 0.12);
+      --method-patch-border: rgba(251, 191, 36, 0.35);
+
+      --method-put: #f59e0b;
+      --method-put-bg: rgba(245, 158, 11, 0.12);
+      --method-put-border: rgba(245, 158, 11, 0.35);
+
+      --method-delete: #f87171;
+      --method-delete-bg: rgba(248, 113, 113, 0.12);
+      --method-delete-border: rgba(248, 113, 113, 0.35);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+      --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.45);
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-      padding: 30px 20px;
-      line-height: 1.5;
+      background-color: var(--nw-bg);
+      color: var(--nw-text);
+      font-family: var(--font-sans);
+      padding: 32px 20px 60px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(212, 163, 115, 0.07) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 60%);
+      min-height: 100vh;
     }
+
     .container {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
     }
-    header {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
+
+    /* Header Hero Card */
+    .hero-card {
+      background: linear-gradient(135deg, var(--nw-surface) 0%, rgba(19, 25, 38, 0.95) 100%);
+      border: 1px solid var(--nw-border);
+      border-radius: var(--radius-lg);
+      padding: 32px 36px;
       margin-bottom: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
     }
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--nw-accent), #38bdf8, #34d399);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 700;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: var(--nw-accent-bg);
+      color: var(--nw-accent);
+      border: 1px solid var(--nw-accent-border);
       margin-bottom: 12px;
+      letter-spacing: 0.02em;
     }
-    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: #ffffff; }
-    p.subtitle { color: var(--text-muted); font-size: 14.5px; }
 
-    /* Controls Bar */
-    .controls {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
+    h1 {
+      font-family: var(--font-display);
+      font-size: 30px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-subtitle {
+      color: var(--nw-text-2);
+      font-size: 14.5px;
+      max-width: 820px;
+      line-height: 1.55;
+    }
+
+    .hero-stats {
       display: flex;
       gap: 12px;
-      flex-wrap: wrap;
       align-items: center;
-    }
-    .search-input {
-      flex: 1;
-      min-width: 240px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13.5px;
-      outline: none;
-    }
-    .search-input:focus { border-color: var(--accent); }
-    select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13.5px;
-      outline: none;
-      cursor: pointer;
+      flex-wrap: wrap;
     }
 
-    /* Endpoint Box */
-    .ep-card {
+    .stat-pill {
+      background: var(--nw-surface-2);
+      border: 1px solid var(--nw-border);
+      padding: 8px 16px;
+      border-radius: 12px;
+      text-align: right;
+    }
+
+    .stat-num {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--nw-accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--nw-text-3);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Main View Tabs (Pestañas Superiores) */
+    .view-tabs-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--nw-border);
+      padding-bottom: 12px;
+      overflow-x: auto;
+    }
+
+    .view-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--nw-text-2);
+      padding: 10px 18px;
       border-radius: 10px;
-      border: 1px solid var(--border);
+      font-size: 13.5px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .view-tab-btn:hover {
+      background: var(--nw-surface);
+      color: #ffffff;
+    }
+
+    .view-tab-btn.active {
+      background: var(--nw-surface-2);
+      color: var(--nw-accent);
+      border-color: var(--nw-accent-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Controls & Filter Bar */
+    .controls-card {
+      background: var(--nw-surface);
+      border: 1px solid var(--nw-border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .search-wrapper svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--nw-text-3);
+      pointer-events: none;
+    }
+
+    .nw-input {
+      width: 100%;
+      height: 42px;
+      background: var(--nw-bg);
+      border: 1px solid var(--nw-border);
+      color: var(--nw-text);
+      padding: 0 16px 0 42px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .nw-input:focus {
+      border-color: var(--nw-accent);
+      box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.15);
+    }
+
+    .nw-select {
+      height: 42px;
+      background: var(--nw-bg);
+      border: 1px solid var(--nw-border);
+      color: var(--nw-text);
+      padding: 0 34px 0 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 0.2s;
+    }
+
+    .nw-select:focus {
+      border-color: var(--nw-accent);
+    }
+
+    .action-btn {
+      height: 42px;
+      padding: 0 14px;
+      background: var(--nw-surface-2);
+      border: 1px solid var(--nw-border);
+      color: var(--nw-text-2);
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .action-btn:hover {
+      background: var(--nw-surface-3);
+      color: #ffffff;
+      border-color: var(--nw-border-light);
+    }
+
+    /* Category Pills Horizontal Scroll (Pestañas de Categoría) */
+    .category-pills-wrapper {
+      background: var(--nw-surface);
+      border: 1px solid var(--nw-border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 22px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      align-items: center;
+      scrollbar-width: thin;
+      scrollbar-color: var(--nw-border) transparent;
+    }
+
+    .cat-pill {
+      background: var(--nw-surface-2);
+      border: 1px solid var(--nw-border);
+      color: var(--nw-text-2);
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .cat-pill:hover {
+      background: var(--nw-surface-3);
+      color: #ffffff;
+    }
+
+    .cat-pill.active {
+      background: var(--nw-accent);
+      color: #0f141c;
+      font-weight: 700;
+      border-color: var(--nw-accent);
+      box-shadow: 0 2px 10px rgba(212, 163, 115, 0.35);
+    }
+
+    .cat-pill .count {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .cat-pill.active .count {
+      background: rgba(0, 0, 0, 0.3);
+      color: #ffffff;
+    }
+
+    /* Endpoint Card (Swagger Opblock Style) */
+    .ep-card {
+      background: var(--nw-surface);
+      border: 1px solid var(--nw-border);
+      border-radius: var(--radius-md);
       margin-bottom: 12px;
       overflow: hidden;
-      background: var(--surface);
-      transition: all 0.2s;
+      transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
     }
-    .ep-card.method-GET { border-color: var(--get-border); }
-    .ep-card.method-POST { border-color: var(--post-border); }
-    .ep-card.method-PATCH { border-color: var(--patch-border); }
-    .ep-card.method-DELETE { border-color: var(--delete-border); }
+
+    .ep-card:hover {
+      border-color: rgba(212, 163, 115, 0.35);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ep-card.method-GET {
+      border-left: 4px solid var(--method-get);
+    }
+
+    .ep-card.method-POST {
+      border-left: 4px solid var(--method-post);
+    }
+
+    .ep-card.method-PATCH {
+      border-left: 4px solid var(--method-patch);
+    }
+
+    .ep-card.method-PUT {
+      border-left: 4px solid var(--method-put);
+    }
+
+    .ep-card.method-DELETE {
+      border-left: 4px solid var(--method-delete);
+    }
 
     .ep-header {
       padding: 14px 18px;
@@ -114,197 +406,1998 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 16px;
       user-select: none;
+      background: transparent;
+      transition: background 0.15s;
     }
-    .ep-header:hover { background: rgba(255,255,255,0.02); }
-    
+
+    .ep-header:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .ep-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
     .method-pill {
+      font-family: var(--font-mono);
       font-weight: 800;
-      font-size: 12px;
+      font-size: 11.5px;
       padding: 4px 10px;
       border-radius: 6px;
-      min-width: 70px;
+      min-width: 72px;
       text-align: center;
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
     }
-    .method-GET .method-pill { background: #3b82f6; }
-    .method-POST .method-pill { background: #10b981; }
-    .method-PATCH .method-pill { background: #f59e0b; }
-    .method-DELETE .method-pill { background: #ef4444; }
+
+    .method-GET .method-pill {
+      background: var(--method-get-bg);
+      color: var(--method-get);
+      border: 1px solid var(--method-get-border);
+    }
+
+    .method-POST .method-pill {
+      background: var(--method-post-bg);
+      color: var(--method-post);
+      border: 1px solid var(--method-post-border);
+    }
+
+    .method-PATCH .method-pill {
+      background: var(--method-patch-bg);
+      color: var(--method-patch);
+      border: 1px solid var(--method-patch-border);
+    }
+
+    .method-PUT .method-pill {
+      background: var(--method-put-bg);
+      color: var(--method-put);
+      border: 1px solid var(--method-put-border);
+    }
+
+    .method-DELETE .method-pill {
+      background: var(--method-delete-bg);
+      color: var(--method-delete);
+      border: 1px solid var(--method-delete-border);
+    }
 
     .ep-path {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono);
       font-weight: 700;
       font-size: 14px;
       color: #ffffff;
+      white-space: nowrap;
     }
-    .ep-summary { font-size: 13px; color: var(--text-muted); margin-left: 8px; }
+
+    .ep-summary {
+      font-size: 13.5px;
+      color: var(--nw-text-2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ep-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .tag-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--nw-surface-2);
+      color: var(--nw-text-2);
+      border: 1px solid var(--nw-border);
+    }
+
+    .auth-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .auth-badge.jwt {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .auth-badge.token {
+      background: rgba(212, 163, 115, 0.14);
+      color: var(--nw-accent);
+      border: 1px solid rgba(212, 163, 115, 0.3);
+    }
+
+    .auth-badge.public {
+      background: rgba(52, 211, 153, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .auth-badge.multipart {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .ep-chevron {
+      color: var(--nw-text-3);
+      transition: transform 0.2s;
+    }
+
+    .ep-card.open .ep-chevron {
+      transform: rotate(180deg);
+    }
 
     .ep-body {
-      border-top: 1px solid var(--border);
-      padding: 20px;
-      background: var(--bg);
+      border-top: 1px solid var(--nw-border);
+      padding: 22px 24px;
+      background: var(--nw-bg);
       display: none;
     }
-    .ep-body.open { display: block; }
 
-    .tag-pill {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      background: var(--surface-2);
-      color: var(--text-muted);
+    .ep-card.open .ep-body {
+      display: block;
     }
-    pre {
-      background: #090d16;
-      color: #e2e8f0;
-      padding: 14px;
-      border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      overflow-x: auto;
-      margin-top: 8px;
-      border: 1px solid #1e293b;
+
+    .ep-desc-box {
+      background: var(--nw-surface);
+      border: 1px solid var(--nw-border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      font-size: 13.5px;
+      color: var(--nw-text-2);
+      line-height: 1.6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
     }
-    h4 { margin-top: 14px; margin-bottom: 6px; font-size: 14px; color: var(--accent); }
-    .btn-copy {
-      background: var(--surface-2);
-      color: var(--text);
-      border: 1px solid var(--border);
+
+    .ep-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm-action {
+      background: var(--nw-surface-2);
+      color: var(--nw-text-2);
+      border: 1px solid var(--nw-border);
       padding: 4px 10px;
       border-radius: 6px;
-      font-size: 11px;
+      font-size: 11.5px;
+      font-weight: 600;
       cursor: pointer;
-      float: right;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
     }
-    .btn-copy:hover { background: var(--border); }
+
+    .btn-sm-action:hover {
+      background: var(--nw-border);
+      color: #ffffff;
+    }
+
+    .code-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--nw-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    pre {
+      background: #070a0f;
+      color: #e2e8f0;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      overflow-x: auto;
+      border: 1px solid var(--nw-border);
+      line-height: 1.55;
+    }
+
+    /* Documentation Guides & Reference Sections */
+    .doc-section {
+      background: var(--nw-surface);
+      border: 1px solid var(--nw-border);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .doc-section h2 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .doc-section p {
+      color: var(--nw-text-2);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      margin: 16px 0 24px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--nw-border);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: var(--nw-surface-2);
+      color: var(--nw-text);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--nw-border);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--nw-border);
+      color: var(--nw-text-2);
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--nw-accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--nw-surface-2);
+      color: #ffffff;
+      border: 1px solid var(--nw-accent-border);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <header>
-      <span class="badge">📡 KyndraSoft REST API Specification v3.0</span>
-      <h1>Documentación Interna Completa del Backend</h1>
-      <p class="subtitle">Especificación exhaustiva de endpoints administrativos, gestión de eventos, invitados, confirmaciones RSVP, mesas y moderación.</p>
+
+    <!-- Hero Header -->
+    <header class="hero-card">
+      <div>
+        <div class="hero-badge">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>KyndraSoft Event Platform — REST API v3.0</span>
+        </div>
+        <h1>
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+          Documentación Completa del API Backend
+        </h1>
+        <p class="hero-subtitle">
+          Especificación integral de los 110 endpoints REST para la suite de eventos KyndraSoft: autenticación JWT,
+          portales públicos, invitados, confirmaciones RSVP, distribución de mesas, álbum colaborativo, solicitudes DJ,
+          dedicatorias, pagos Stripe, webhooks de WhatsApp, logs de auditoría e integración externa headless.
+        </p>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-pill">
+          <div class="stat-num" id="totalEndpointsCount">110</div>
+          <div class="stat-label">Endpoints</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-num">21</div>
+          <div class="stat-label">Categorías</div>
+        </div>
+      </div>
     </header>
 
-    <div class="controls">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar endpoint, path o módulo..." oninput="filterEndpoints()">
-      <select id="methodFilter" onchange="filterEndpoints()">
-        <option value="">Todos los Métodos HTTP</option>
-        <option value="GET">GET</option>
-        <option value="POST">POST</option>
-        <option value="PATCH">PATCH</option>
-        <option value="DELETE">DELETE</option>
-      </select>
+    <!-- Top View Switcher (Pestañas Principales) -->
+    <div class="view-tabs-container">
+      <button type="button" class="view-tab-btn active" onclick="switchView('endpoints')">
+        <span>📡 Explorador de Endpoints</span>
+      </button>
+      <button type="button" class="view-tab-btn" onclick="switchView('guide')">
+        <span>🗺️ Guía de Integración Rápida</span>
+      </button>
+      <button type="button" class="view-tab-btn" onclick="switchView('reference')">
+        <span>📖 Referencia de Tipos & Permisos</span>
+      </button>
     </div>
 
-    <div id="endpointsContainer"></div>
+    <!-- VIEW 1: ENDPOINTS EXPLORER -->
+    <div id="view-endpoints">
+
+      <!-- Controls & Filter Bar -->
+      <div class="controls-card">
+        <div class="search-wrapper">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" class="nw-input"
+            placeholder="Buscar endpoint por ruta, descripción o método (ej. /rsvps, POST, mesas)..."
+            oninput="applyFilters()">
+        </div>
+
+        <select id="methodFilter" class="nw-select" onchange="applyFilters()">
+          <option value="">Todos los Métodos HTTP</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PATCH">PATCH</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+        </select>
+
+        <select id="authFilter" class="nw-select" onchange="applyFilters()">
+          <option value="">Toda Autorización</option>
+          <option value="JWT Bearer">🔒 JWT Bearer</option>
+          <option value="Token de Acceso">🔑 Token de Acceso</option>
+          <option value="Público">🌐 Público</option>
+          <option value="Multipart / JWT">📎 Multipart</option>
+        </select>
+
+        <button type="button" class="action-btn" onclick="expandAll()">
+          📂 Expandir Todo
+        </button>
+        <button type="button" class="action-btn" onclick="collapseAll()">
+          📁 Colapsar Todo
+        </button>
+        <button type="button" class="action-btn" id="btnClearFilters" onclick="resetFilters()"
+          style="display:none; color:#f87171;">
+          ✕ Limpiar
+        </button>
+      </div>
+
+      <!-- Category Pills Horizontal Scroll (Pestañas de Categoría) -->
+      <div class="category-pills-wrapper" id="categoryPillsContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Endpoints List Container -->
+      <div id="endpointsContainer"></div>
+    </div>
+
+    <!-- VIEW 2: INTEGRATION QUICK GUIDE -->
+    <div id="view-guide" class="hidden">
+      <div class="doc-section">
+        <h2>🗺️ Guía de Integración Rápida con Sitios Web Externos</h2>
+        <p>Aprende cómo conectar tu propia página web (Webflow, WordPress, Next.js, HTML) al backend de KyndraSoft para
+          gestionar RSVP, álbum colaborativo, solicitudes DJ y pases de invitados.</p>
+
+        <h3 style="color:var(--nw-accent); margin: 20px 0 8px; font-size:16px;">1. Crear un Access Link de tipo
+          <code>integration_api</code></h3>
+        <p>Genera un token de API para tu sitio web desde el dashboard de organizador:</p>
+        <pre>curl -X POST https://tu-dominio.com/api/events/{eventId}/access-links \
+  -H "Authorization: Bearer &lt;tu-jwt&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{ "role": "integration_api", "label": "Mi Web Oficial", "days": 90 }'</pre>
+
+        <h3 style="color:var(--nw-accent); margin: 24px 0 8px; font-size:16px;">2. Obtener la Configuración y Contenido
+          del Evento</h3>
+        <p>Consulta datos de novios, fecha, ubicación, música y módulos habilitados usando el slug del portal:</p>
+        <pre>curl https://tu-dominio.com/api/external/{portalSlug}/config</pre>
+
+        <h3 style="color:var(--nw-accent); margin: 24px 0 8px; font-size:16px;">3. Identificar a un Invitado por Email o
+          Teléfono</h3>
+        <pre>curl -X POST https://tu-dominio.com/api/external/{portalSlug}/guest/identify \
+  -H "Content-Type: application/json" \
+  -d '{ "email": "invitado@email.com" }'</pre>
+
+        <h3 style="color:var(--nw-accent); margin: 24px 0 8px; font-size:16px;">4. Enviar Confirmación RSVP</h3>
+        <pre>curl -X POST https://tu-dominio.com/api/external/{portalSlug}/rsvp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "guest": "&lt;guestId&gt;",
+    "name": "Carlos Mendoza",
+    "response": "confirmed",
+    "companions": 1,
+    "companionNames": ["Sofía Pérez"]
+  }'</pre>
+
+        <h3 style="color:var(--nw-accent); margin: 24px 0 8px; font-size:16px;">5. Embeber Widgets con iFrame</h3>
+        <pre>&lt;!-- Widget RSVP Embebido --&gt;
+&lt;iframe src="https://tu-dominio.com/embed/{portalSlug}/rsvp" width="100%" height="720" style="border:0"&gt;&lt;/iframe&gt;
+
+&lt;!-- Widget Álbum Colaborativo --&gt;
+&lt;iframe src="https://tu-dominio.com/embed/{portalSlug}/album" width="100%" height="720" style="border:0"&gt;&lt;/iframe&gt;
+
+&lt;!-- Widget Mapa de Ubicaciones --&gt;
+&lt;iframe src="https://tu-dominio.com/embed/{portalSlug}/map" width="100%" height="480" style="border:0"&gt;&lt;/iframe&gt;</pre>
+      </div>
+    </div>
+
+    <!-- VIEW 3: REFERENCE & PERMISSIONS -->
+    <div id="view-reference" class="hidden">
+      <div class="doc-section">
+        <h2>📖 Referencia de Tipos de Datos y Permisos</h2>
+
+        <h3 style="color:var(--nw-accent); margin: 20px 0 8px; font-size:16px;">Tipos de Evento Soportados</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Valor</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>boda</code></td>
+                <td>Boda / Enlace Nupcial</td>
+              </tr>
+              <tr>
+                <td><code>xv</code></td>
+                <td>Fiesta de XV Años</td>
+              </tr>
+              <tr>
+                <td><code>graduacion</code></td>
+                <td>Graduación Escolar / Universitaria</td>
+              </tr>
+              <tr>
+                <td><code>cumpleanos</code></td>
+                <td>Cumpleaños / Aniversario</td>
+              </tr>
+              <tr>
+                <td><code>bautizo</code></td>
+                <td>Bautizo / Primera Comunión</td>
+              </tr>
+              <tr>
+                <td><code>otro</code></td>
+                <td>Evento Corporativo o Personalizado</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="color:var(--nw-accent); margin: 24px 0 8px; font-size:16px;">Roles de Access Links (Staff /
+          Integración)</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rol</th>
+                <th>Permisos Otorgados</th>
+                <th>Uso Habitual</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>check_in</code></td>
+                <td>Check-in con código QR</td>
+                <td>Personal de puerta / Recepción</td>
+              </tr>
+              <tr>
+                <td><code>album_review</code></td>
+                <td>Revisar y moderar fotos de invitados</td>
+                <td>Organizador / Asistente</td>
+              </tr>
+              <tr>
+                <td><code>photographer</code></td>
+                <td>Subir fotos directamente al álbum</td>
+                <td>Fotógrafo oficial</td>
+              </tr>
+              <tr>
+                <td><code>album_view</code></td>
+                <td>Ver fotos del álbum en tiempo real</td>
+                <td>Pantalla gigante en salón</td>
+              </tr>
+              <tr>
+                <td><code>client_view</code></td>
+                <td>Ver lista de confirmaciones y mesas</td>
+                <td>Anfitriones / Novios</td>
+              </tr>
+              <tr>
+                <td><code>guest_ops</code></td>
+                <td>Check-in + álbum + vista de clientes</td>
+                <td>Coordinador general de evento</td>
+              </tr>
+              <tr>
+                <td><code>dj</code></td>
+                <td>Ver y moderar canciones pedidas</td>
+                <td>DJ / Sonido</td>
+              </tr>
+              <tr>
+                <td><code>integration_api</code></td>
+                <td>Consumir API REST externa</td>
+                <td>Sitio web externo / Webflow</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="color:var(--nw-accent); margin: 24px 0 8px; font-size:16px;">Permisos Granulares de Miembros del
+          Equipo</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Permiso</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>view_event</code></td>
+                <td>Ver información general y configuración del evento</td>
+              </tr>
+              <tr>
+                <td><code>edit_event</code></td>
+                <td>Editar detalles, itinerario, portadas y textos</td>
+              </tr>
+              <tr>
+                <td><code>view_metrics</code></td>
+                <td>Consultar métricas y analíticas de asistencia</td>
+              </tr>
+              <tr>
+                <td><code>manage_guests</code></td>
+                <td>Crear, editar, importar y exportar invitados</td>
+              </tr>
+              <tr>
+                <td><code>manage_tables</code></td>
+                <td>Gestionar croquis de mesas y asignación de asientos</td>
+              </tr>
+              <tr>
+                <td><code>check_in</code></td>
+                <td>Escanear QR y marcar asistencia de invitados</td>
+              </tr>
+              <tr>
+                <td><code>review_album</code></td>
+                <td>Aprobar o rechazar fotos del álbum colaborativo</td>
+              </tr>
+              <tr>
+                <td><code>review_dedications</code></td>
+                <td>Moderar mensajes del libro de visitas</td>
+              </tr>
+              <tr>
+                <td><code>manage_songs</code></td>
+                <td>Aprobar y marcar canciones reproducidas</td>
+              </tr>
+              <tr>
+                <td><code>view_payments</code></td>
+                <td>Ver planes y estados de facturación</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Floating Toast -->
+  <div id="toast" class="toast">
+    <span>✨</span>
+    <span id="toastMsg">Copiado al portapapeles</span>
   </div>
 
   <script>
-    const endpoints = [
-      // 1. Autenticación
-      { method: 'POST', path: '/api/auth/register', summary: 'Registro de nuevo usuario u organizador', tag: 'Autenticación', auth: 'Público', desc: 'Registra un organizador o cliente y devuelve el token JWT.', payload: '{\n  "name": "Sofía Morales",\n  "email": "sofia@ejemplo.com",\n  "password": "Password123!",\n  "role": "organizer"\n}', response: '{\n  "user": { "id": "651f...", "email": "sofia@ejemplo.com" },\n  "token": "eyJhbGci..."\n}' },
-      { method: 'POST', path: '/api/auth/login', summary: 'Inicio de sesión', tag: 'Autenticación', auth: 'Público', desc: 'Valida credenciales y retorna JWT de sesión.', payload: '{\n  "email": "sofia@ejemplo.com",\n  "password": "Password123!"\n}', response: '{\n  "user": { "id": "651f...", "role": "organizer" },\n  "token": "eyJhbGci..."\n}' },
-      { method: 'GET', path: '/api/auth/me', summary: 'Obtener perfil autenticado', tag: 'Autenticación', auth: 'JWT Bearer', desc: 'Devuelve datos del usuario logueado.', response: '{\n  "user": { "id": "651f...", "name": "Sofía", "plan": "pro" }\n}' },
-
-      // 2. Eventos
-      { method: 'GET', path: '/api/events', summary: 'Listar todos los eventos', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Obtiene lista de eventos propios y colaboraciones.', response: '{\n  "events": [{ "_id": "651f...", "title": "Boda Sofía & Ale", "externalPortalSlug": "boda-sofia-y-ale" }]\n}' },
-      { method: 'POST', path: '/api/events', summary: 'Crear un nuevo evento', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Crea un evento con sede, fechas y configuración de portal.', payload: '{\n  "title": "Boda Sofía & Ale",\n  "type": "boda",\n  "date": "2026-12-15T18:00:00Z",\n  "externalPortalSlug": "boda-sofia-y-ale"\n}', response: '{\n  "event": { "_id": "651f...", "title": "Boda Sofía & Ale" }\n}' },
-      { method: 'GET', path: '/api/events/{id}', summary: 'Detalle de evento por ID', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Devuelve la configuración y módulos del evento.' },
-      { method: 'PATCH', path: '/api/events/{id}', summary: 'Actualizar campos de un evento', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Actualiza portal, módulos activados o estilos.' },
-      { method: 'POST', path: '/api/events/{eventId}/send-email', summary: 'Envío masivo de correos', tag: 'Eventos', auth: 'JWT Bearer', desc: 'Envía emails de invitación a la lista seleccionada.' },
-
-      // 3. Invitaciones
-      { method: 'GET', path: '/api/invitations', summary: 'Listar invitaciones digitales', tag: 'Invitaciones', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/invitations', summary: 'Crear invitación vinculada', tag: 'Invitaciones', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/invitations/{id}/publish', summary: 'Publicar invitación digital', tag: 'Invitaciones', auth: 'JWT Bearer' },
-      { method: 'GET', path: '/api/invitations/public/{slug}', summary: 'Obtener invitación pública por slug', tag: 'Invitaciones', auth: 'Público' },
-
-      // 4. Invitados
-      { method: 'GET', path: '/api/guests/event/{eventId}', summary: 'Listar invitados por evento', tag: 'Invitados', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/guests', summary: 'Crear un nuevo invitado', tag: 'Invitados', auth: 'JWT Bearer', payload: '{\n  "name": "Carlos Mendoza",\n  "email": "carlos@ejemplo.com",\n  "allowedCompanions": 2\n}' },
-      { method: 'PATCH', path: '/api/guests/{id}', summary: 'Actualizar invitado', tag: 'Invitados', auth: 'JWT Bearer' },
-      { method: 'DELETE', path: '/api/guests/{id}', summary: 'Eliminar invitado', tag: 'Invitados', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/guests/{id}/whatsapp', summary: 'Enviar WhatsApp individual', tag: 'Invitados', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/guests/event/{eventId}/whatsapp/bulk', summary: 'Envío masivo de WhatsApp', tag: 'Invitados', auth: 'JWT Bearer' },
-
-      // 5. RSVP & Mesas
-      { method: 'GET', path: '/api/rsvps/event/{eventId}', summary: 'Listar confirmaciones RSVP', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
-      { method: 'GET', path: '/api/events/{eventId}/tables', summary: 'Listar mesas y distribución', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/events/{eventId}/tables', summary: 'Crear mesa', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/events/{eventId}/tables/auto-assign', summary: 'Autoasignar invitados a mesas', tag: 'RSVP & Mesas', auth: 'JWT Bearer' },
-
-      // 6. Moderación
-      { method: 'GET', path: '/api/events/{eventId}/album', summary: 'Listar fotos del álbum para moderación', tag: 'Moderación', auth: 'JWT Bearer' },
-      { method: 'PATCH', path: '/api/events/{eventId}/album/{assetId}', summary: 'Aprobar o rechazar foto', tag: 'Moderación', auth: 'JWT Bearer' },
-      { method: 'GET', path: '/api/events/{eventId}/song-requests', summary: 'Listar peticiones al DJ', tag: 'Moderación', auth: 'JWT Bearer' },
-      { method: 'PATCH', path: '/api/events/{eventId}/song-requests/{id}', summary: 'Moderar estado de canción', tag: 'Moderación', auth: 'JWT Bearer' },
-      { method: 'GET', path: '/api/events/{eventId}/dedications', summary: 'Listar dedicatorias para moderación', tag: 'Moderación', auth: 'JWT Bearer' },
-
-      // 7. Dashboard & Access Links
-      { method: 'GET', path: '/api/dashboard/summary', summary: 'Métricas globales del organizador', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
-      { method: 'GET', path: '/api/events/{eventId}/access-links', summary: 'Listar enlaces de acceso y tokens', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
-      { method: 'POST', path: '/api/events/{eventId}/access-links', summary: 'Generar token o enlace de acceso', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
-      { method: 'DELETE', path: '/api/events/{eventId}/access-links/{id}', summary: 'Revocar token de acceso', tag: 'Dashboard & Tokens', auth: 'JWT Bearer' },
-
-      // 8. Health Check
-      { method: 'GET', path: '/health', summary: 'Health Check del backend', tag: 'Sistema', auth: 'Público', response: '{\n  "ok": true,\n  "service": "invitaciones-api"\n}' }
+    // Complete Dataset of 110 Endpoints
+    var endpoints = [
+      {
+        "method": "POST",
+        "path": "/api/auth/register",
+        "summary": "Registra un nuevo usuario",
+        "tag": "Autenticación",
+        "auth": "Público",
+        "desc": "Registra un nuevo usuario.",
+        "payload": "{\n  \"name\": \"string (mín. 2 caracteres)\",\n  \"email\": \"string (email válido)\",\n  \"password\": \"string (mín. 8 caracteres)\",\n  \"role\": \"client | organizer | venue_owner | vendor\",\n  \"accountType\": \"client | organizer | venue_owner | vendor | planner | staff\"\n}",
+        "response": "{\n  \"user\": { \"id\", \"name\", \"email\", \"role\", \"accountType\" },\n  \"token\": \"JWT string\"\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/login",
+        "summary": "Inicia sesión con email y contraseña",
+        "tag": "Autenticación",
+        "auth": "Público",
+        "desc": "Inicia sesión con email y contraseña.",
+        "payload": "{\n  \"email\": \"string\",\n  \"password\": \"string\"\n}",
+        "response": "{\n  \"user\": { \"id\", \"name\", \"email\", \"role\", \"accountType\" },\n  \"token\": \"JWT string\"\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/social",
+        "summary": "Login social con Google, Facebook o Apple",
+        "tag": "Autenticación",
+        "auth": "Público",
+        "desc": "Login social con Google, Facebook o Apple.",
+        "payload": "{\n  \"provider\": \"google | facebook | apple\",\n  \"idToken\": \"string (opcional)\",\n  \"accessToken\": \"string (opcional)\",\n  \"profile\": {\n    \"email\": \"string (requerido)\",\n    \"name\": \"string (opcional)\",\n    \"providerUserId\": \"string (opcional)\",\n    \"avatarUrl\": \"string URL (opcional)\"\n  },\n  \"role\": \"client | organizer | venue_owner | vendor\",\n  \"accountType\": \"client | organizer | venue_owner | vendor | planner | staff\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/password-reset",
+        "summary": "Solicita un reset de contraseña",
+        "tag": "Autenticación",
+        "auth": "Público",
+        "desc": "Solicita un reset de contraseña.",
+        "payload": "{\n  \"email\": \"string\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/password-reset/confirm",
+        "summary": "Confirma el reset de contraseña con el token recibido por email",
+        "tag": "Autenticación",
+        "auth": "Público",
+        "desc": "Confirma el reset de contraseña con el token recibido por email.",
+        "payload": "{\n  \"token\": \"string (mín. 32 caracteres)\",\n  \"password\": \"string (mín. 8 caracteres)\"\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/me",
+        "summary": "Devuelve el perfil del usuario autenticado",
+        "tag": "Autenticación",
+        "auth": "JWT Bearer",
+        "desc": "Devuelve el perfil del usuario autenticado.",
+        "payload": "",
+        "response": "{\n  \"user\": { \"id\", \"name\", \"email\", \"role\", \"accountType\", \"avatarUrl\", \"plan\" }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/events",
+        "summary": "Lista todos los eventos del usuario (propios + donde es miembro)",
+        "tag": "Eventos",
+        "auth": "JWT Bearer",
+        "desc": "Lista todos los eventos del usuario (propios + donde es miembro).",
+        "payload": "",
+        "response": "{\n  \"events\": [\n    {\n      \"_id\": \"string\",\n      \"mode\": \"invitation | external_dashboard\",\n      \"type\": \"boda | xv | graduacion | cumpleanos | bautizo | otro\",\n      \"title\": \"string\",\n      \"hosts\": [\"string\"],\n      \"date\": \"ISO date\",\n      \"venue\": { \"name\", \"address\", \"mapUrl\" },\n      \"agenda\": [{ \"time\", \"title\", \"description\" }],\n      \"status\": \"draft | published | archived\",\n      \"externalPortalSlug\": \"string\",\n      \"externalPortalEnabled\": true,\n      \"externalPortalSettings\": { },\n      \"externalContent\": { },\n      \"access\": {\n        \"owner\": true,\n        \"permissions\": [\"view_event\", \"edit_event\"]\n      }\n    }\n  ]\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events",
+        "summary": "Crea un nuevo evento",
+        "tag": "Eventos",
+        "auth": "JWT Bearer",
+        "desc": "Crea un nuevo evento.",
+        "payload": "{\n  \"type\": \"boda | xv | graduacion | cumpleanos | bautizo | otro\",\n  \"title\": \"string (mín. 2)\",\n  \"mode\": \"invitation | external_dashboard\",\n  \"hosts\": [\"string\"],\n  \"date\": \"ISO date string\",\n  \"venue\": {\n    \"name\": \"string\",\n    \"address\": \"string\",\n    \"mapUrl\": \"string URL\"\n  },\n  \"agenda\": [\n    { \"time\": \"string\", \"title\": \"string\", \"description\": \"string\" }\n  ],\n  \"status\": \"draft | published | archived\",\n  \"externalSiteUrl\": \"string URL\",\n  \"externalSiteLabel\": \"string (máx. 120)\",\n  \"externalPortalSlug\": \"string (3-80, solo a-z 0-9 y guiones)\",\n  \"externalPortalEnabled\": true,\n  \"externalPortalSettings\": {\n    \"rsvpEnabled\": true,\n    \"albumEnabled\": true,\n    \"passEnabled\": true,\n    \"calendarEnabled\": true,\n    \"showLocation\": true,\n    \"brandLabel\": \"string\",\n    \"welcomeMessage\": \"string (máx. 600)\"\n  },\n  \"externalContent\": {\n    \"coverImageUrl\": \"URL\",\n    \"heroImageUrl\": \"URL\",\n    \"gallery\": [\"URL\"],\n    \"carousel\": [\"URL\"],\n    \"spectacularImages\": [\"URL\"],\n    \"musicUrl\": \"URL\",\n    \"audioSections\": [{ \"title\": \"\", \"url\": \"URL\", \"description\": \"\" }],\n    \"sectionMusic\": { \"sectionKey\": \"URL\" },\n    \"locations\": [\n      {\n        \"type\": \"string\",\n        \"name\": \"string\",\n        \"address\": \"string\",\n        \"mapUrl\": \"URL\",\n        \"wazeUrl\": \"URL\",\n        \"notes\": \"string\",\n        \"time\": \"string\"\n      }\n    ],\n    \"sections\": [\n      {\n        \"key\": \"string\",\n        \"type\": \"text | image | video | cta | iframe | timeline | story | dress_code | gift_registry | dedications | lodging | faq | people\",\n        \"title\": \"string\",\n        \"body\": \"string\",\n        \"url\": \"URL\",\n        \"imageUrl\": \"URL\",\n        \"roles\": [\"string\"],\n        \"order\": 0\n      }\n    ],\n    \"rsvpSettings\": {\n      \"deadline\": \"ISO date\",\n      \"allowMaybe\": true,\n      \"allowChangesUntilDeadline\": true,\n      \"declineRequiresConfirmation\": true,\n      \"reminderDaysBeforeDeadline\": 3,\n      \"customQuestions\": [\n        {\n          \"key\": \"string\",\n          \"label\": \"string\",\n          \"type\": \"text | textarea | select | boolean\",\n          \"required\": false,\n          \"options\": [\"string\"]\n        }\n      ]\n    },\n    \"songRequestSettings\": {\n      \"enabled\": true,\n      \"maxRequestsPerGuest\": 3,\n      \"allowDedications\": true,\n      \"requireApproval\": true\n    },\n    \"moderationSettings\": {\n      \"notifyOnReview\": true,\n      \"autoApproveRoles\": [\"string\"],\n      \"autoApproveGroups\": [\"string\"],\n      \"autoApproveEmails\": [\"email\"],\n      \"autoApprovePhones\": [\"string\"],\n      \"autoApproveAlbum\": false,\n      \"autoApproveSongs\": false,\n      \"autoApproveDedications\": false\n    },\n    \"giftRegistry\": [\n      {\n        \"store\": \"string\",\n        \"title\": \"string\",\n        \"label\": \"string\",\n        \"url\": \"URL\",\n        \"imageUrl\": \"URL\",\n        \"note\": \"string\",\n        \"priority\": 0\n      }\n    ],\n    \"digitalEnvelope\": {\n      \"bank\": \"string\",\n      \"account\": \"string\",\n      \"clabe\": \"string\",\n      \"holder\": \"string\",\n      \"note\": \"string\",\n      \"qrImageUrl\": \"URL\"\n    },\n    \"giftSettings\": {\n      \"enabled\": true,\n      \"introText\": \"string (máx. 600)\",\n      \"showRegistry\": true,\n      \"showEnvelope\": true\n    },\n    \"dedicationSettings\": {\n      \"enabled\": true,\n      \"requireApproval\": true,\n      \"introText\": \"string (máx. 600)\"\n    }\n  }\n}",
+        "response": "{ \"event\": { } }"
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:id",
+        "summary": "Obtiene los detalles de un evento (propio o donde es miembro)",
+        "tag": "Eventos",
+        "auth": "JWT Bearer",
+        "desc": "Obtiene los detalles de un evento (propio o donde es miembro).",
+        "payload": "",
+        "response": "{\n  \"event\": { },\n  \"access\": {\n    \"owner\": true,\n    \"permissions\": [\"view_event\", \"edit_event\", \"manage_guests\"]\n  }\n}"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/events/:id",
+        "summary": "Actualiza un evento (solo el owner). Acepta cualquier campo parcial del body de creación",
+        "tag": "Eventos",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza un evento (solo el owner). Acepta cualquier campo parcial del body de creación.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/public/:portalSlug",
+        "summary": "Obtiene la información pública de un evento por su slug de portal externo",
+        "tag": "Eventos",
+        "auth": "Público",
+        "desc": "Obtiene la información pública de un evento por su slug de portal externo.",
+        "payload": "",
+        "response": "{\n  \"event\": {\n    \"id\": \"string\",\n    \"mode\": \"external_dashboard\",\n    \"type\": \"boda\",\n    \"title\": \"string\",\n    \"hosts\": [],\n    \"date\": \"ISO\",\n    \"venue\": {},\n    \"agenda\": [],\n    \"externalSiteUrl\": \"URL\",\n    \"externalSiteLabel\": \"string\",\n    \"externalPortalSlug\": \"string\",\n    \"externalPortalEnabled\": true,\n    \"externalPortalSettings\": { }\n  }\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/public/:portalSlug/guest-access",
+        "summary": "Permite a un invitado identificarse con su email en el portal externo",
+        "tag": "Eventos",
+        "auth": "Público",
+        "desc": "Permite a un invitado identificarse con su email en el portal externo.",
+        "payload": "{ \"email\": \"invitado@email.com\" }",
+        "response": "{\n  \"guest\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"email\": \"string\",\n    \"allowedCompanions\": 2,\n    \"status\": \"pending | confirmed | declined\",\n    \"communicationStatus\": \"string\",\n    \"checkInCode\": \"ABC123\",\n    \"qrCode\": \"string\",\n    \"tableName\": \"Mesa 1\",\n    \"seatLabel\": \"1\",\n    \"companions\": []\n  }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/public/:portalSlug/guest-token/:token",
+        "summary": "Acceso por token personalizado de invitado (link directo)",
+        "tag": "Eventos",
+        "auth": "Público",
+        "desc": "Acceso por token personalizado de invitado (link directo).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/public/:portalSlug/album",
+        "summary": "Obtiene fotos aprobadas del álbum del evento",
+        "tag": "Eventos",
+        "auth": "Público",
+        "desc": "Obtiene fotos aprobadas del álbum del evento.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/public/:portalSlug/album",
+        "summary": "Sube una foto al álbum del evento desde el portal público. `file` multipart (máx 8MB)",
+        "tag": "Eventos",
+        "auth": "Multipart / JWT",
+        "desc": "Sube una foto al álbum del evento desde el portal público. `file` multipart (máx 8MB).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/send-email",
+        "summary": "Envío masivo de emails a invitados de un evento",
+        "tag": "Eventos",
+        "auth": "JWT Bearer",
+        "desc": "Envío masivo de emails a invitados de un evento.",
+        "payload": "{\n  \"confirm\": true,\n  \"messageType\": \"invitation | reminder | event_reminder | location_change | thanks\",\n  \"guestIds\": [\"id1\", \"id2\"]\n}",
+        "response": "{\n  \"requested\": 50,\n  \"sent\": 48,\n  \"skipped\": 0,\n  \"failed\": 2,\n  \"results\": [\n    { \"guest\": \"guestId\", \"status\": \"sent\" },\n    { \"guest\": \"guestId\", \"status\": \"failed\", \"error\": \"...\" }\n  ]\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/invitations",
+        "summary": "Lista todas las invitaciones del usuario",
+        "tag": "Invitaciones",
+        "auth": "JWT Bearer",
+        "desc": "Lista todas las invitaciones del usuario.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/invitations",
+        "summary": "Crea una nueva invitación vinculada a un evento",
+        "tag": "Invitaciones",
+        "auth": "JWT Bearer",
+        "desc": "Crea una nueva invitación vinculada a un evento.",
+        "payload": "{\n  \"event\": \"eventId (requerido)\",\n  \"template\": \"templateId (opcional)\",\n  \"slug\": \"mi-boda-2026 (opcional, se genera automático)\",\n  \"accessMode\": \"open | public | guest_list | specific_users\",\n  \"rsvpSettings\": {\n    \"deadline\": \"ISO date\",\n    \"allowMaybe\": true,\n    \"allowChangesUntilDeadline\": true,\n    \"declineRequiresConfirmation\": true,\n    \"reminderDaysBeforeDeadline\": 3,\n    \"identityMethods\": [\"email\", \"phone\"],\n    \"allowCompanionsDefault\": false,\n    \"defaultAllowedCompanions\": 0,\n    \"maxAttendees\": 200,\n    \"allowedGuestIds\": [\"guestId\"],\n    \"allowedRoles\": [\"familia\"],\n    \"allowedGroups\": [\"grupo-a\"],\n    \"allowedEmails\": [\"email@example.com\"],\n    \"allowedPhones\": [\"+5212345678\"],\n    \"customQuestions\": [\n      {\n        \"key\": \"dietary\",\n        \"label\": \"¿Tienes restricciones alimenticias?\",\n        \"type\": \"text | textarea | select | boolean\",\n        \"required\": false,\n        \"options\": [\"Vegano\", \"Sin gluten\"]\n      }\n    ]\n  },\n  \"content\": {\n    \"headline\": \"string\",\n    \"subheadline\": \"string\",\n    \"message\": \"string\",\n    \"palette\": { \"primary\": \"#hex\", \"secondary\": \"#hex\", \"accent\": \"#hex\" },\n    \"musicUrl\": \"URL\",\n    \"sectionMusic\": { \"hero\": \"URL\", \"gallery\": \"URL\" },\n    \"coverImageUrl\": \"URL\",\n    \"gallery\": [\"URL\"],\n    \"itinerary\": [{ \"time\": \"18:00\", \"title\": \"Ceremonia\", \"description\": \"\" }],\n    \"locations\": [\n      { \"type\": \"ceremonia\", \"name\": \"Iglesia\", \"address\": \"...\", \"mapUrl\": \"URL\", \"wazeUrl\": \"URL\", \"notes\": \"\" }\n    ],\n    \"dressCode\": \"Formal\",\n    \"giftRegistry\": [\n      { \"store\": \"Liverpool\", \"title\": \"Mesa de regalos\", \"label\": \"\", \"url\": \"URL\", \"imageUrl\": \"URL\", \"note\": \"\", \"priority\": 0 }\n    ],\n    \"digitalEnvelope\": { \"bank\": \"\", \"account\": \"\", \"clabe\": \"\", \"holder\": \"\", \"note\": \"\", \"qrImageUrl\": \"URL\" },\n    \"giftSettings\": { \"enabled\": true, \"introText\": \"\", \"showRegistry\": true, \"showEnvelope\": true },\n    \"dedicationSettings\": { \"enabled\": true, \"requireApproval\": true, \"introText\": \"\" },\n    \"moderationSettings\": { \"notifyOnReview\": true, \"autoApproveAlbum\": false, \"autoApproveDedications\": false },\n    \"sectionSettings\": {\n      \"story\": true, \"locations\": true, \"itinerary\": true, \"dressCode\": true,\n      \"rsvp\": true, \"giftRegistry\": true, \"digitalEnvelope\": true,\n      \"lodging\": true, \"gallery\": true, \"guestAlbum\": true, \"dedications\": true\n    },\n    \"lodging\": [{ \"name\": \"Hotel\", \"description\": \"\", \"url\": \"URL\" }],\n    \"brandLogoUrl\": \"URL\",\n    \"hideBranding\": false,\n    \"privateAlbumEnabled\": true\n  }\n}",
+        "response": "{\n  \"invitation\": { },\n  \"publicUrl\": \"https://tu-dominio.com/i/mi-boda-2026\"\n}"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/invitations/:id",
+        "summary": "Actualiza una invitación existente (mismos campos que creación, parcial)",
+        "tag": "Invitaciones",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza una invitación existente (mismos campos que creación, parcial).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/invitations/:id/publish",
+        "summary": "Publica una invitación (la hace accesible públicamente)",
+        "tag": "Invitaciones",
+        "auth": "JWT Bearer",
+        "desc": "Publica una invitación (la hace accesible públicamente).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/invitations/:id/unpublish",
+        "summary": "Despublica una invitación",
+        "tag": "Invitaciones",
+        "auth": "JWT Bearer",
+        "desc": "Despublica una invitación.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/invitations/public/:slug",
+        "summary": "Obtiene la invitación pública por su slug",
+        "tag": "Invitaciones",
+        "auth": "Público",
+        "desc": "Obtiene la invitación pública por su slug.",
+        "payload": "",
+        "response": "{\n  \"invitation\": {\n    \"id\": \"string\",\n    \"slug\": \"mi-boda-2026\",\n    \"status\": \"published\",\n    \"accessMode\": \"open\",\n    \"rsvpSettings\": { },\n    \"content\": { },\n    \"publishedAt\": \"ISO date\",\n    \"event\": { \"id\", \"type\", \"title\", \"hosts\", \"date\", \"venue\", \"agenda\" },\n    \"template\": { \"id\", \"name\", \"eventType\", \"tier\", \"previewImageUrl\", \"config\" }\n  }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/invitations/public/:slug/album",
+        "summary": "Obtiene las fotos aprobadas del álbum de la invitación",
+        "tag": "Invitaciones",
+        "auth": "Público",
+        "desc": "Obtiene las fotos aprobadas del álbum de la invitación.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/invitations/public/:slug/album-upload",
+        "summary": "Sube una foto al álbum de la invitación. `file` multipart",
+        "tag": "Invitaciones",
+        "auth": "Multipart / JWT",
+        "desc": "Sube una foto al álbum de la invitación. `file` multipart.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/invitations/public/:slug/dedications",
+        "summary": "Lista las dedicatorias aprobadas y públicas de la invitación",
+        "tag": "Invitaciones",
+        "auth": "Público",
+        "desc": "Lista las dedicatorias aprobadas y públicas de la invitación.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/invitations/public/:slug/dedications",
+        "summary": "Crea una dedicatoria en la invitación",
+        "tag": "Invitaciones",
+        "auth": "Público",
+        "desc": "Crea una dedicatoria en la invitación.",
+        "payload": "{\n  \"guest\": \"guestId (opcional)\",\n  \"publicName\": \"string (mín. 2, máx. 120)\",\n  \"email\": \"string (opcional)\",\n  \"message\": \"string (2-1000 caracteres, requerido)\",\n  \"type\": \"dedication | wish | memory | toast\",\n  \"visibility\": \"public | hosts_only\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/invitations/public/:slug/guest-access",
+        "summary": "Identifica a un invitado por email o teléfono",
+        "tag": "Invitaciones",
+        "auth": "Público",
+        "desc": "Identifica a un invitado por email o teléfono.",
+        "payload": "{\n  \"email\": \"string (opcional)\",\n  \"phone\": \"string (opcional, mín. 6)\"\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/invitations/public/:slug/guest-token/:token",
+        "summary": "Acceso por token personalizado de invitado (link directo en la invitación)",
+        "tag": "Invitaciones",
+        "auth": "Público",
+        "desc": "Acceso por token personalizado de invitado (link directo en la invitación).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/guests/event/:eventId",
+        "summary": "Lista todos los invitados de un evento",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Lista todos los invitados de un evento.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/guests/event/:eventId/export",
+        "summary": "Exporta la lista de invitados como CSV",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Exporta la lista de invitados como CSV.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/guests",
+        "summary": "Crea un invitado",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Crea un invitado.",
+        "payload": "{\n  \"event\": \"eventId (requerido)\",\n  \"name\": \"string (mín. 2, requerido)\",\n  \"email\": \"string email (opcional)\",\n  \"phone\": \"string (opcional)\",\n  \"group\": \"string (opcional)\",\n  \"roles\": [\"familia\", \"amigos\"],\n  \"tags\": [\"vip\", \"vegetariano\"],\n  \"relationshipLabel\": \"string (opcional)\",\n  \"visibilityGroup\": \"string (opcional)\",\n  \"tableName\": \"string (nombre de mesa, opcional)\",\n  \"seatLabel\": \"string (etiqueta de asiento, opcional)\",\n  \"companions\": [\n    {\n      \"name\": \"string\",\n      \"tableName\": \"string\",\n      \"seatLabel\": \"string\",\n      \"checkedIn\": false\n    }\n  ],\n  \"allowedCompanions\": 2,\n  \"checkedIn\": false\n}",
+        "response": ""
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/guests/:id",
+        "summary": "Actualiza un invitado (todos los campos parciales excepto `event`)",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza un invitado (todos los campos parciales excepto `event`).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/guests/:id",
+        "summary": "Elimina un invitado",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Elimina un invitado.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/guests/:id/communication",
+        "summary": "Actualiza el estado de comunicación del invitado",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza el estado de comunicación del invitado.",
+        "payload": "{\n  \"communicationStatus\": \"pending | sent | delivered | read | opened | failed | confirmed\",\n  \"messageType\": \"invitation | reminder | event_reminder | location_change | thanks\",\n  \"channel\": \"whatsapp | email\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/guests/:id/send-email",
+        "summary": "Envía un email individual a un invitado",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Envía un email individual a un invitado.",
+        "payload": "{\n  \"messageType\": \"invitation | reminder | event_reminder | location_change | thanks\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/guests/:id/whatsapp",
+        "summary": "Envía un mensaje de WhatsApp individual",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Envía un mensaje de WhatsApp individual.",
+        "payload": "{\n  \"messageType\": \"invitation | reminder | event_reminder | location_change | thanks\",\n  \"text\": \"string (máx. 3000, opcional)\",\n  \"media\": {\n    \"type\": \"image | video | audio | document\",\n    \"url\": \"URL (o base64)\",\n    \"base64\": \"string\",\n    \"mimetype\": \"string\",\n    \"filename\": \"string\",\n    \"caption\": \"string (máx. 1024)\"\n  }\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/guests/event/:eventId/whatsapp/bulk",
+        "summary": "Envío masivo de WhatsApp",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Envío masivo de WhatsApp.",
+        "payload": "{\n  \"confirm\": true,\n  \"messageType\": \"invitation | reminder | event_reminder | location_change | thanks\",\n  \"media\": { \"type\": \"\", \"url\": \"\", \"base64\": \"\", \"mimetype\": \"\", \"filename\": \"\", \"caption\": \"\" },\n  \"guestIds\": [\"id1\", \"id2\"],\n  \"filters\": {\n    \"search\": \"string\",\n    \"status\": \"string\",\n    \"communicationStatus\": \"string\",\n    \"group\": \"string\"\n  }\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/guests/event/:eventId/whatsapp/logs",
+        "summary": "Lista los logs de mensajes WhatsApp para un evento",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Lista los logs de mensajes WhatsApp para un evento.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/guests/whatsapp/status",
+        "summary": "Verifica el estado de la sesión de WhatsApp",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Verifica el estado de la sesión de WhatsApp.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/guests/import",
+        "summary": "Importa invitados desde un archivo CSV/Excel",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Importa invitados desde un archivo CSV/Excel. **Form Data**: - `file` — Archivo CSV/Excel - `event` — ID del evento",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/guests/check-in",
+        "summary": "Check-in de un invitado por código",
+        "tag": "Invitados (Guests)",
+        "auth": "JWT Bearer",
+        "desc": "Check-in de un invitado por código.",
+        "payload": "{ \"code\": \"string (mín. 4 caracteres)\" }",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/rsvps/public/:slug",
+        "summary": "Envía una confirmación de asistencia en una invitación pública",
+        "tag": "RSVP (Confirmaciones)",
+        "auth": "Público",
+        "desc": "Envía una confirmación de asistencia en una invitación pública.",
+        "payload": "{\n  \"guest\": \"guestId (opcional, para vincular a invitado existente)\",\n  \"name\": \"string (mín. 2, requerido)\",\n  \"email\": \"string email (opcional)\",\n  \"phone\": \"string (6-30 dígitos, opcional)\",\n  \"phoneCountryCode\": \"+52\",\n  \"phoneNationalNumber\": \"1234567890\",\n  \"response\": \"confirmed | declined | maybe\",\n  \"companions\": 2,\n  \"companionNames\": [\"Ana\", \"Pedro\"],\n  \"dietaryRestrictions\": \"string\",\n  \"mealPreference\": \"string\",\n  \"menuSelection\": \"string\",\n  \"customAnswers\": [\n    { \"key\": \"dietary\", \"label\": \"Restricciones\", \"value\": \"Vegano\" }\n  ],\n  \"message\": \"string (mensaje opcional)\",\n  \"declineConfirmed\": true\n}",
+        "response": "{\n  \"rsvp\": {\n    \"_id\": \"string\",\n    \"invitation\": \"string\",\n    \"event\": \"string\",\n    \"guest\": \"string\",\n    \"name\": \"string\",\n    \"email\": \"string\",\n    \"response\": \"confirmed\",\n    \"companions\": 2,\n    \"companionNames\": [\"Ana\", \"Pedro\"],\n    \"attendingCount\": 3,\n    \"mealPreference\": \"string\",\n    \"dietaryRestrictions\": \"string\",\n    \"menuSelection\": \"string\",\n    \"customAnswers\": [],\n    \"message\": \"string\",\n    \"createdAt\": \"ISO date\",\n    \"updatedAt\": \"ISO date\"\n  },\n  \"updated\": false\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/rsvps/public-event/:portalSlug",
+        "summary": "RSVP para portal externo de evento (mismos campos que arriba)",
+        "tag": "RSVP (Confirmaciones)",
+        "auth": "Público",
+        "desc": "RSVP para portal externo de evento (mismos campos que arriba).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/rsvps/event/:eventId",
+        "summary": "Lista todos los RSVPs de un evento (requiere permiso `manage_guests`)",
+        "tag": "RSVP (Confirmaciones)",
+        "auth": "JWT Bearer",
+        "desc": "Lista todos los RSVPs de un evento (requiere permiso `manage_guests`).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/rsvps/event/:eventId/export",
+        "summary": "Exporta RSVPs como CSV",
+        "tag": "RSVP (Confirmaciones)",
+        "auth": "JWT Bearer",
+        "desc": "Exporta RSVPs como CSV.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:eventId/tables",
+        "summary": "Lista todas las mesas con detalle de ocupación y guests asignados",
+        "tag": "Mesas y Asientos",
+        "auth": "JWT Bearer",
+        "desc": "Lista todas las mesas con detalle de ocupación y guests asignados.",
+        "payload": "",
+        "response": "{\n  \"tables\": [\n    {\n      \"_id\": \"string\",\n      \"name\": \"Mesa 1\",\n      \"capacity\": 10,\n      \"notes\": \"string\",\n      \"order\": 0,\n      \"x\": 100, \"y\": 200,\n      \"floor\": 1,\n      \"floorName\": \"Salón principal\",\n      \"shape\": \"round\",\n      \"width\": 200, \"height\": 200,\n      \"occupied\": 7,\n      \"available\": 3,\n      \"overCapacity\": false,\n      \"guests\": [\n        { \"id\": \"string\", \"name\": \"string\", \"group\": \"string\", \"seatLabel\": \"1\", \"seats\": 3, \"checkedIn\": false }\n      ]\n    }\n  ]\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/tables",
+        "summary": "Crea una mesa",
+        "tag": "Mesas y Asientos",
+        "auth": "JWT Bearer",
+        "desc": "Crea una mesa.",
+        "payload": "{\n  \"name\": \"string (requerido)\",\n  \"capacity\": 10,\n  \"notes\": \"string\",\n  \"order\": 0,\n  \"x\": 100, \"y\": 200,\n  \"floor\": 1,\n  \"floorName\": \"string\",\n  \"shape\": \"round | rectangle | square\",\n  \"width\": 200,\n  \"height\": 200\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/tables/batch",
+        "summary": "Crea múltiples mesas en lote (máx. 100)",
+        "tag": "Mesas y Asientos",
+        "auth": "JWT Bearer",
+        "desc": "Crea múltiples mesas en lote (máx. 100).",
+        "payload": "{\n  \"tables\": [\n    { \"name\": \"Mesa 1\", \"capacity\": 10 },\n    { \"name\": \"Mesa 2\", \"capacity\": 8 }\n  ]\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/tables/auto-assign",
+        "summary": "Asigna invitados automáticamente a las mesas",
+        "tag": "Mesas y Asientos",
+        "auth": "JWT Bearer",
+        "desc": "Asigna invitados automáticamente a las mesas.",
+        "payload": "{\n  \"strategy\": \"fill_order | by_group\",\n  \"includeStatuses\": [\"confirmed\"],\n  \"overwrite\": false\n}",
+        "response": "{\n  \"assigned\": [\n    { \"guest\": { \"id\": \"\", \"name\": \"\", \"group\": \"\", \"seats\": 3 }, \"table\": \"Mesa 1\", \"seatLabel\": \"1\" }\n  ],\n  \"skipped\": [\n    { \"guest\": { \"id\": \"\", \"name\": \"\", \"group\": \"\", \"seats\": 5 }, \"reason\": \"Sin mesa con capacidad suficiente\" }\n  ],\n  \"tables\": []\n}"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/events/:eventId/tables/:tableId",
+        "summary": "Actualiza una mesa",
+        "tag": "Mesas y Asientos",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza una mesa.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/events/:eventId/tables/:tableId",
+        "summary": "Elimina una mesa",
+        "tag": "Mesas y Asientos",
+        "auth": "JWT Bearer",
+        "desc": "Elimina una mesa.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:eventId/album",
+        "summary": "Lista todas las fotos del álbum del evento (requiere permiso `review_album`)",
+        "tag": "Álbum Colaborativo",
+        "auth": "JWT Bearer",
+        "desc": "Lista todas las fotos del álbum del evento (requiere permiso `review_album`).",
+        "payload": "",
+        "response": "{\n  \"assets\": [\n    {\n      \"_id\": \"string\",\n      \"owner\": \"string\",\n      \"event\": \"string\",\n      \"invitation\": \"string\",\n      \"guest\": \"string\",\n      \"uploaderName\": \"string\",\n      \"uploaderEmail\": \"string\",\n      \"key\": \"string\",\n      \"url\": \"string URL\",\n      \"status\": \"pending | approved | rejected\",\n      \"reviewedAt\": \"ISO date\",\n      \"createdAt\": \"ISO date\",\n      \"updatedAt\": \"ISO date\"\n    }\n  ]\n}"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/events/:eventId/album/:assetId",
+        "summary": "Cambia el estado de una foto del álbum (aprobar/rechazar)",
+        "tag": "Álbum Colaborativo",
+        "auth": "JWT Bearer",
+        "desc": "Cambia el estado de una foto del álbum (aprobar/rechazar).",
+        "payload": "{ \"status\": \"pending | approved | rejected\" }",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:eventId/song-requests",
+        "summary": "Lista todas las solicitudes de canciones del evento",
+        "tag": "Solicitudes de Canciones",
+        "auth": "JWT Bearer",
+        "desc": "Lista todas las solicitudes de canciones del evento.",
+        "payload": "",
+        "response": "{\n  \"songRequests\": [\n    {\n      \"_id\": \"string\",\n      \"event\": \"string\",\n      \"guest\": { \"name\": \"\", \"group\": \"\" },\n      \"requesterName\": \"string\",\n      \"requesterEmail\": \"string\",\n      \"title\": \"string\",\n      \"artist\": \"string\",\n      \"dedication\": \"string\",\n      \"sourceProvider\": \"youtube | spotify | url | manual\",\n      \"sourceUrl\": \"URL\",\n      \"externalId\": \"string\",\n      \"thumbnailUrl\": \"URL\",\n      \"previewUrl\": \"URL\",\n      \"durationMs\": 210000,\n      \"status\": \"pending | approved | rejected | played\",\n      \"sortOrder\": 1,\n      \"reviewedAt\": \"ISO date\",\n      \"playedAt\": \"ISO date\",\n      \"createdAt\": \"ISO date\",\n      \"updatedAt\": \"ISO date\"\n    }\n  ]\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/song-requests",
+        "summary": "Crea una solicitud de canción (como organizador)",
+        "tag": "Solicitudes de Canciones",
+        "auth": "JWT Bearer",
+        "desc": "Crea una solicitud de canción (como organizador).",
+        "payload": "{\n  \"title\": \"string\",\n  \"artist\": \"string\",\n  \"query\": \"búsqueda de YouTube\",\n  \"url\": \"URL de YouTube/Spotify\",\n  \"sourceUrl\": \"URL directa\",\n  \"dedication\": \"string (máx. 500)\",\n  \"requesterName\": \"string\",\n  \"requesterEmail\": \"string email\",\n  \"status\": \"pending | approved | played | rejected\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/song-requests/lookup-youtube",
+        "summary": "Busca un video en YouTube por texto",
+        "tag": "Solicitudes de Canciones",
+        "auth": "JWT Bearer",
+        "desc": "Busca un video en YouTube por texto.",
+        "payload": "{ \"query\": \"Cielito Lindo\" }",
+        "response": "{\n  \"video\": {\n    \"videoId\": \"abc123\",\n    \"sourceUrl\": \"https://www.youtube.com/watch?v=abc123\",\n    \"thumbnailUrl\": \"https://img.youtube.com/vi/abc123/hqdefault.jpg\",\n    \"title\": \"Cielito Lindo\",\n    \"artist\": \"Channel Name\"\n  },\n  \"query\": \"Cielito Lindo\"\n}"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/events/:eventId/song-requests/:songRequestId",
+        "summary": "Actualiza estado u orden de una solicitud",
+        "tag": "Solicitudes de Canciones",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza estado u orden de una solicitud.",
+        "payload": "{\n  \"status\": \"pending | approved | rejected | played\",\n  \"sortOrder\": 5\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:eventId/dedications",
+        "summary": "Lista todas las dedicatorias del evento (vista admin, requiere permiso `review_dedications`)",
+        "tag": "Dedicatorias",
+        "auth": "JWT Bearer",
+        "desc": "Lista todas las dedicatorias del evento (vista admin, requiere permiso `review_dedications`).",
+        "payload": "",
+        "response": "{\n  \"dedications\": [\n    {\n      \"id\": \"string\",\n      \"event\": \"string\",\n      \"invitation\": \"string\",\n      \"guest\": { \"name\": \"\", \"group\": \"\" },\n      \"publicName\": \"string\",\n      \"email\": \"string\",\n      \"message\": \"string\",\n      \"type\": \"dedication | wish | memory | toast\",\n      \"status\": \"pending | approved | rejected | hidden\",\n      \"visibility\": \"public | hosts_only\",\n      \"createdAt\": \"ISO date\",\n      \"reviewedAt\": \"ISO date\"\n    }\n  ]\n}"
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/events/:eventId/dedications/:dedicationId",
+        "summary": "Cambia el estado de una dedicatoria",
+        "tag": "Dedicatorias",
+        "auth": "JWT Bearer",
+        "desc": "Cambia el estado de una dedicatoria.",
+        "payload": "{ \"status\": \"pending | approved | rejected | hidden\" }",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/gifts",
+        "summary": "Obtiene la mesa de regalos y datos del sobre digital",
+        "tag": "Regalos y Sobre Digital",
+        "auth": "Público",
+        "desc": "Obtiene la información de mesa de regalos externa y datos bancarios del sobre digital configurados para el portal.",
+        "payload": "",
+        "response": "{\n  \"gifts\": {\n    \"giftRegistry\": [\n      { \"store\": \"\", \"title\": \"\", \"label\": \"\", \"url\": \"\", \"imageUrl\": \"\", \"note\": \"\", \"priority\": 0 }\n    ],\n    \"digitalEnvelope\": {\n      \"bank\": \"\", \"account\": \"\", \"clabe\": \"\", \"holder\": \"\", \"note\": \"\", \"qrImageUrl\": \"\"\n    },\n    \"giftSettings\": {\n      \"enabled\": true, \"introText\": \"\", \"showRegistry\": true, \"showEnvelope\": true\n    }\n  }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/dashboard/summary",
+        "summary": "Métricas globales del usuario",
+        "tag": "Dashboard y Métricas",
+        "auth": "JWT Bearer",
+        "desc": "Métricas globales del usuario.",
+        "payload": "",
+        "response": "{\n  \"metrics\": {\n    \"events\": 3,\n    \"invitations\": 5,\n    \"guests\": 250,\n    \"confirmed\": 180,\n    \"declined\": 20,\n    \"pending\": 50,\n    \"companions\": 120,\n    \"emailSent\": 200,\n    \"whatsappSent\": 150,\n    \"opened\": 180,\n    \"failed\": 5,\n    \"checkedIn\": 100\n  }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/dashboard/event/:eventId",
+        "summary": "Métricas de un evento específico (requiere permiso `view_metrics`)",
+        "tag": "Dashboard y Métricas",
+        "auth": "JWT Bearer",
+        "desc": "Métricas de un evento específico (requiere permiso `view_metrics`).",
+        "payload": "",
+        "response": "{\n  \"metrics\": {\n    \"guests\": 100,\n    \"confirmed\": 80,\n    \"declined\": 10,\n    \"pending\": 10,\n    \"emailSent\": 90,\n    \"whatsappSent\": 60,\n    \"opened\": 85,\n    \"failed\": 2,\n    \"checkedIn\": 50\n  }\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/check-in-link",
+        "summary": "Genera un link de check-in para staff",
+        "tag": "Check-In con QR",
+        "auth": "JWT Bearer",
+        "desc": "Genera un link de check-in para staff.",
+        "payload": "{\n  \"label\": \"string (opcional)\",\n  \"days\": 7\n}",
+        "response": "{\n  \"token\": \"string hex\",\n  \"expiresAt\": \"ISO date\",\n  \"url\": \"https://tu-dominio.com/check-in/<token>\"\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/check-in/:token",
+        "summary": "Obtiene la sesión de check-in (lista de invitados y evento)",
+        "tag": "Check-In con QR",
+        "auth": "Token de Acceso",
+        "desc": "Obtiene la sesión de check-in (lista de invitados y evento).",
+        "payload": "",
+        "response": "{\n  \"event\": { \"title\": \"\", \"date\": \"\", \"venue\": {} },\n  \"guests\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"group\": \"string\",\n      \"tableName\": \"string\",\n      \"seatLabel\": \"string\",\n      \"allowedCompanions\": 2,\n      \"companions\": [],\n      \"checkInCode\": \"ABC123\",\n      \"checkedIn\": false,\n      \"checkedInAt\": null,\n      \"status\": \"confirmed\"\n    }\n  ],\n  \"expiresAt\": \"ISO date\"\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/check-in/:token",
+        "summary": "Realiza el check-in de un invitado por código QR",
+        "tag": "Check-In con QR",
+        "auth": "Token de Acceso",
+        "desc": "Realiza el check-in de un invitado por código QR.",
+        "payload": "{ \"code\": \"ABC123\" }",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:eventId/access-links",
+        "summary": "Lista los links de acceso del evento",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "JWT Bearer",
+        "desc": "Lista los links de acceso del evento.",
+        "payload": "",
+        "response": "{\n  \"links\": [\n    {\n      \"id\": \"string\",\n      \"role\": \"check_in | album_review | photographer | album_view | client_view | guest_ops | dj | integration_api\",\n      \"label\": \"string\",\n      \"tokenPreview\": \"abc123...wxyz\",\n      \"accessToken\": \"solo visible para integration_api\",\n      \"expiresAt\": \"ISO date\",\n      \"revokedAt\": null,\n      \"lastUsedAt\": \"ISO date\",\n      \"createdAt\": \"ISO date\",\n      \"url\": \"https://tu-dominio.com/external-access/<token>\"\n    }\n  ]\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/access-links",
+        "summary": "Crea un access link",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "JWT Bearer",
+        "desc": "Crea un access link.",
+        "payload": "{\n  \"role\": \"check_in | album_review | photographer | album_view | client_view | guest_ops | dj | integration_api\",\n  \"label\": \"string (máx. 120)\",\n  \"days\": 30\n}",
+        "response": ""
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/events/:eventId/access-links/:linkId",
+        "summary": "Revoca un access link",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "JWT Bearer",
+        "desc": "Revoca un access link.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/event-access/:token",
+        "summary": "Obtiene la sesión completa del access link (datos según rol)",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "Token de Acceso",
+        "desc": "Obtiene la sesión completa del access link (datos según rol).",
+        "payload": "",
+        "response": "{\n  \"role\": \"guest_ops\",\n  \"permissions\": [\"check_in\", \"album_review\", \"client_view\", \"guest_ops\", \"song_review\"],\n  \"event\": { \"title\": \"\", \"type\": \"\", \"date\": \"\", \"venue\": {} },\n  \"guests\": [],\n  \"rsvps\": [],\n  \"tables\": [],\n  \"albumAssets\": [],\n  \"songRequests\": [],\n  \"expiresAt\": \"ISO date\"\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/event-access/:token/check-in",
+        "summary": "Check-in vía access link (requiere rol con permiso `check_in`)",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "Token de Acceso",
+        "desc": "Check-in vía access link (requiere rol con permiso `check_in`).",
+        "payload": "{ \"code\": \"ABC123\" }",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/event-access/:token/album",
+        "summary": "Sube foto al álbum vía access link (requiere rol `photographer`)",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "Token de Acceso",
+        "desc": "Sube foto al álbum vía access link (requiere rol `photographer`). **Form Data**: `file`, `uploaderName`, `uploaderEmail`, `status`",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/event-access/:token/album/:assetId",
+        "summary": "Revisa foto del álbum (requiere rol con `album_review`)",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "Token de Acceso",
+        "desc": "Revisa foto del álbum (requiere rol con `album_review`).",
+        "payload": "{ \"status\": \"pending | approved | rejected\" }",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/event-access/:token/song-requests",
+        "summary": "Agrega canción vía access link (requiere rol `dj`)",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "Token de Acceso",
+        "desc": "Agrega canción vía access link (requiere rol `dj`).",
+        "payload": "{\n  \"title\": \"string\",\n  \"artist\": \"string\",\n  \"query\": \"string\",\n  \"sourceUrl\": \"URL\",\n  \"url\": \"URL\",\n  \"dedication\": \"string\",\n  \"requesterName\": \"string\"\n}",
+        "response": ""
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/event-access/:token/song-requests/:songRequestId",
+        "summary": "Actualiza canción vía access link (requiere rol `dj`)",
+        "tag": "Access Links (Staff / Integración)",
+        "auth": "Token de Acceso",
+        "desc": "Actualiza canción vía access link (requiere rol `dj`).",
+        "payload": "{\n  \"status\": \"pending | approved | rejected | played\",\n  \"sortOrder\": 5\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/:eventId/members",
+        "summary": "Lista los miembros del equipo del evento",
+        "tag": "Miembros del Equipo",
+        "auth": "JWT Bearer",
+        "desc": "Lista los miembros del equipo del evento.",
+        "payload": "",
+        "response": "{\n  \"members\": [\n    {\n      \"id\": \"string\",\n      \"user\": \"string\",\n      \"email\": \"string\",\n      \"name\": \"string\",\n      \"role\": \"organizer | client | venue_owner | vendor | staff | dj | photographer\",\n      \"permissions\": [\"view_event\", \"edit_event\", \"manage_guests\"],\n      \"status\": \"invited | active | disabled\",\n      \"invitedAt\": \"ISO date\",\n      \"acceptedAt\": \"ISO date\",\n      \"lastUsedAt\": \"ISO date\",\n      \"createdAt\": \"ISO date\",\n      \"updatedAt\": \"ISO date\"\n    }\n  ],\n  \"permissions\": [\"view_event\", \"edit_event\", \"view_metrics\", \"manage_guests\", \"manage_tables\", \"check_in\", \"review_album\", \"review_dedications\", \"manage_songs\", \"view_payments\"],\n  \"rolePermissions\": {\n    \"organizer\": [\"view_event\", \"edit_event\"],\n    \"client\": []\n  }\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/:eventId/members",
+        "summary": "Invita a un miembro al equipo del evento",
+        "tag": "Miembros del Equipo",
+        "auth": "JWT Bearer",
+        "desc": "Invita a un miembro al equipo del evento.",
+        "payload": "{\n  \"email\": \"miembro@email.com\",\n  \"name\": \"string (opcional)\",\n  \"role\": \"organizer | client | venue_owner | vendor | staff | dj | photographer\",\n  \"permissions\": [\"view_event\", \"edit_event\"]\n}",
+        "response": ""
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/events/:eventId/members/:memberId",
+        "summary": "Actualiza un miembro",
+        "tag": "Miembros del Equipo",
+        "auth": "JWT Bearer",
+        "desc": "Actualiza un miembro.",
+        "payload": "{\n  \"name\": \"string (opcional)\",\n  \"role\": \"organizer | client | venue_owner | vendor | staff | dj | photographer\",\n  \"permissions\": [\"view_event\", \"edit_event\"],\n  \"status\": \"invited | active | disabled\"\n}",
+        "response": ""
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/events/:eventId/members/:memberId",
+        "summary": "Desactiva un miembro",
+        "tag": "Miembros del Equipo",
+        "auth": "JWT Bearer",
+        "desc": "Desactiva un miembro.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/events/member-invites/:token",
+        "summary": "Obtiene información de una invitación de miembro por token",
+        "tag": "Miembros del Equipo",
+        "auth": "Público",
+        "desc": "Obtiene información de una invitación de miembro por token.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/events/member-invites/:token/accept",
+        "summary": "Acepta una invitación de equipo (requiere estar logueado con el email correcto)",
+        "tag": "Miembros del Equipo",
+        "auth": "JWT Bearer",
+        "desc": "Acepta una invitación de equipo (requiere estar logueado con el email correcto).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/assets/upload-url",
+        "summary": "Obtiene una URL firmada para subir archivos a S3",
+        "tag": "Assets y Uploads",
+        "auth": "JWT Bearer",
+        "desc": "Obtiene una URL firmada para subir archivos a S3.",
+        "payload": "{\n  \"fileName\": \"mi-foto.jpg\",\n  \"contentType\": \"image/jpeg | image/png | image/webp | image/gif | audio/mpeg | audio/mp3 | audio/wav | video/mp4 | video/webm | video/quicktime | application/pdf\",\n  \"folder\": \"covers | gallery | music | assets | whatsapp-media\",\n  \"event\": \"eventId (opcional)\",\n  \"size\": 2048576\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/assets/inspect-url",
+        "summary": "Inspecciona una URL pública y devuelve metadata",
+        "tag": "Assets y Uploads",
+        "auth": "JWT Bearer",
+        "desc": "Inspecciona una URL pública y devuelve metadata.",
+        "payload": "{ \"url\": \"https://example.com/image.jpg\" }",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/assets/events/:eventId/whatsapp-media",
+        "summary": "Lista archivos multimedia de WhatsApp del evento",
+        "tag": "Assets y Uploads",
+        "auth": "JWT Bearer",
+        "desc": "Lista archivos multimedia de WhatsApp del evento.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/assets/events/:eventId/whatsapp-media",
+        "summary": "Registra un archivo multimedia de WhatsApp",
+        "tag": "Assets y Uploads",
+        "auth": "JWT Bearer",
+        "desc": "Registra un archivo multimedia de WhatsApp.",
+        "payload": "{\n  \"key\": \"string\",\n  \"url\": \"URL\",\n  \"type\": \"image | video | audio | document\",\n  \"fileName\": \"string\",\n  \"mimetype\": \"string\",\n  \"size\": 1024000,\n  \"caption\": \"string\"\n}",
+        "response": ""
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/assets/events/:eventId/whatsapp-media/:assetId",
+        "summary": "Elimina un archivo multimedia de WhatsApp",
+        "tag": "Assets y Uploads",
+        "auth": "JWT Bearer",
+        "desc": "Elimina un archivo multimedia de WhatsApp.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/payments/plans",
+        "summary": "Lista los planes disponibles",
+        "tag": "Pagos",
+        "auth": "JWT Bearer",
+        "desc": "Lista los planes disponibles.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/payments/status",
+        "summary": "Obtiene el estado de suscripción del usuario",
+        "tag": "Pagos",
+        "auth": "JWT Bearer",
+        "desc": "Obtiene el estado de suscripción del usuario.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/payments/checkout",
+        "summary": "Crea una sesión de checkout (Stripe)",
+        "tag": "Pagos",
+        "auth": "JWT Bearer",
+        "desc": "Crea una sesión de checkout (Stripe).",
+        "payload": "{\n  \"package\": \"event | pro | basic | premium | organizer | event_12m | external_dashboard_12m | planner_pro_monthly | planner_pro_yearly\",\n  \"event\": \"eventId (opcional)\",\n  \"billingCycle\": \"monthly | yearly\",\n  \"invitation\": \"invitationId (opcional)\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/webhook",
+        "summary": "Webhook de Stripe para procesar pagos. Requiere `Content-Type: application/json` raw",
+        "tag": "Pagos",
+        "auth": "Público",
+        "desc": "Webhook de Stripe para procesar pagos. Requiere `Content-Type: application/json` raw.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/templates",
+        "summary": "Lista las plantillas disponibles",
+        "tag": "Templates",
+        "auth": "Público",
+        "desc": "Lista las plantillas disponibles.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/templates",
+        "summary": "Crea una nueva plantilla",
+        "tag": "Templates",
+        "auth": "JWT Bearer",
+        "desc": "Crea una nueva plantilla.",
+        "payload": "{\n  \"name\": \"string (mín. 2)\",\n  \"eventType\": \"boda | xv | graduacion | cumpleanos | bautizo | otro\",\n  \"tier\": \"free | premium\",\n  \"previewImageUrl\": \"URL\",\n  \"config\": {},\n  \"active\": true\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/contact",
+        "summary": "Envía un mensaje de contacto",
+        "tag": "Contacto",
+        "auth": "Público",
+        "desc": "Envía un mensaje de contacto.",
+        "payload": "{\n  \"name\": \"string (2-120)\",\n  \"email\": \"string email\",\n  \"message\": \"string (10-3000)\"\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/webhooks/whatsapp/meta",
+        "summary": "Verificación de webhook de Meta (WhatsApp Business API)",
+        "tag": "Webhooks WhatsApp",
+        "auth": "Público",
+        "desc": "Verificación de webhook de Meta (WhatsApp Business API).",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/webhooks/whatsapp/meta",
+        "summary": "Recibe eventos de Meta",
+        "tag": "Webhooks WhatsApp",
+        "auth": "Público",
+        "desc": "Recibe eventos de Meta.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/webhooks/whatsapp/openwa",
+        "summary": "Recibe eventos de OpenWA",
+        "tag": "Webhooks WhatsApp",
+        "auth": "Público",
+        "desc": "Recibe eventos de OpenWA.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/config",
+        "summary": "Configuración completa del portal: evento, content, secciones, features, dedicatorias aprobadas",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Configuración completa del portal: evento, content, secciones, features, dedicatorias aprobadas.",
+        "payload": "",
+        "response": "{\n  \"event\": {\n    \"id\": \"string\",\n    \"portalSlug\": \"mi-boda\",\n    \"mode\": \"external_dashboard\",\n    \"type\": \"boda\",\n    \"title\": \"Boda de Ana y Carlos\",\n    \"hosts\": [\"Ana\", \"Carlos\"],\n    \"date\": \"2026-12-15T18:00:00.000Z\",\n    \"venue\": { \"name\": \"Hacienda\", \"address\": \"...\" },\n    \"agenda\": [],\n    \"externalSiteUrl\": \"URL\",\n    \"externalSiteLabel\": \"string\",\n    \"settings\": { \"rsvpEnabled\": true, \"albumEnabled\": true },\n    \"content\": {\n      \"coverImageUrl\": \"URL\",\n      \"heroImageUrl\": \"URL\",\n      \"gallery\": [],\n      \"carousel\": [],\n      \"spectacularImages\": [],\n      \"musicUrl\": \"URL\",\n      \"audioSections\": [],\n      \"sectionMusic\": {},\n      \"locations\": [],\n      \"sections\": [],\n      \"rsvpSettings\": {},\n      \"songRequestSettings\": {},\n      \"moderationSettings\": {},\n      \"giftRegistry\": [],\n      \"digitalEnvelope\": {},\n      \"giftSettings\": {},\n      \"dedicationSettings\": {}\n    },\n    \"features\": {\n      \"rsvp\": true,\n      \"album\": true,\n      \"pass\": true,\n      \"calendar\": true,\n      \"songRequests\": true,\n      \"gifts\": true,\n      \"dedications\": true\n    },\n    \"dedications\": [\n      { \"id\": \"\", \"publicName\": \"\", \"message\": \"\", \"type\": \"\", \"status\": \"approved\", \"createdAt\": \"\" }\n    ]\n  }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/assets?type=all",
+        "summary": "Obtiene assets del portal. `type`: `cover`, `carousel`, `gallery`, `audio`, `map`, `gifts`, `all`",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Obtiene assets del portal. `type`: `cover`, `carousel`, `gallery`, `audio`, `map`, `gifts`, `all`.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/external/:portalSlug/guest/identify",
+        "summary": "Identifica a un invitado y genera un token de sesión",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Identifica a un invitado y genera un token de sesión.",
+        "payload": "{\n  \"email\": \"string (opcional)\",\n  \"phone\": \"string (opcional)\",\n  \"token\": \"string (opcional, invitationToken del guest)\"\n}",
+        "response": "{\n  \"guest\": {\n    \"id\": \"string\",\n    \"name\": \"string\",\n    \"group\": \"string\",\n    \"roles\": [],\n    \"tags\": [],\n    \"relationshipLabel\": \"string\",\n    \"visibilityGroup\": \"string\",\n    \"allowedCompanions\": 2,\n    \"status\": \"pending\",\n    \"communicationStatus\": \"string\",\n    \"checkInCode\": \"ABC123\",\n    \"qrCode\": \"string\",\n    \"tableName\": \"string\",\n    \"seatLabel\": \"string\",\n    \"companions\": []\n  },\n  \"guestSessionToken\": \"JWT string para endpoints que requieren sesión de invitado\"\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/my-status",
+        "summary": "Estado completo del invitado autenticado: RSVP, álbum, canciones, dedicatorias",
+        "tag": "API de Integración Externa",
+        "auth": "Token de Acceso",
+        "desc": "Estado completo del invitado autenticado: RSVP, álbum, canciones, dedicatorias.",
+        "payload": "",
+        "response": "{\n  \"guest\": {},\n  \"rsvp\": { \"id\": \"\", \"response\": \"confirmed\", \"companions\": 1, \"attendingCount\": 2 },\n  \"albumUploads\": [],\n  \"songRequests\": [],\n  \"dedications\": []\n}"
+      },
+      {
+        "method": "POST",
+        "path": "/api/external/:portalSlug/rsvp",
+        "summary": "Envía RSVP por portal externo (el invitado debe existir en el evento)",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Envía RSVP por portal externo (el invitado debe existir en el evento).",
+        "payload": "{\n  \"guest\": \"guestId (requerido)\",\n  \"name\": \"string (opcional)\",\n  \"email\": \"string (opcional)\",\n  \"response\": \"confirmed | declined | maybe\",\n  \"companions\": 2,\n  \"companionNames\": [\"Ana\"],\n  \"dietaryRestrictions\": \"string\",\n  \"mealPreference\": \"string\",\n  \"menuSelection\": \"string\",\n  \"customAnswers\": [{ \"key\": \"\", \"label\": \"\", \"value\": \"\" }],\n  \"message\": \"string\"\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/album",
+        "summary": "Lista fotos aprobadas del álbum",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Lista fotos aprobadas del álbum.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/external/:portalSlug/album",
+        "summary": "Sube foto al álbum del portal externo. `file` multipart",
+        "tag": "API de Integración Externa",
+        "auth": "Multipart / JWT",
+        "desc": "Sube foto al álbum del portal externo. `file` multipart.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/dedications",
+        "summary": "Lista dedicatorias aprobadas y públicas",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Lista dedicatorias aprobadas y públicas.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/external/:portalSlug/dedications",
+        "summary": "Crea una dedicatoria",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Crea una dedicatoria.",
+        "payload": "{\n  \"guest\": \"guestId (opcional)\",\n  \"publicName\": \"string (mín. 2, máx. 120)\",\n  \"email\": \"string (opcional)\",\n  \"message\": \"string (2-1000 caracteres, requerido)\",\n  \"type\": \"dedication | wish | memory | toast\",\n  \"visibility\": \"public | hosts_only\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/external/:portalSlug/song-lookup",
+        "summary": "Busca información de una canción (YouTube/Spotify/manual)",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Busca información de una canción (YouTube/Spotify/manual).",
+        "payload": "{\n  \"query\": \"string\",\n  \"url\": \"URL\",\n  \"title\": \"string\",\n  \"artist\": \"string\"\n}",
+        "response": ""
+      },
+      {
+        "method": "POST",
+        "path": "/api/external/:portalSlug/song-requests",
+        "summary": "Crea una solicitud de canción",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Crea una solicitud de canción.",
+        "payload": "{\n  \"guest\": \"guestId (opcional)\",\n  \"requesterName\": \"string\",\n  \"requesterEmail\": \"string email\",\n  \"title\": \"string (máx. 180)\",\n  \"artist\": \"string (máx. 180)\",\n  \"dedication\": \"string (máx. 500)\",\n  \"query\": \"string (máx. 300)\",\n  \"url\": \"URL\",\n  \"sourceUrl\": \"URL\",\n  \"status\": \"pending | approved | played | rejected\"\n}",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/gifts",
+        "summary": "Obtiene mesa de regalos y sobre digital",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Obtiene la información de mesa de regalos externa y datos bancarios del sobre digital configurados para el portal.",
+        "payload": "",
+        "response": ""
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/embed-manifest",
+        "summary": "Obtiene el manifiesto de widgets embebibles y snippets de integración",
+        "tag": "API de Integración Externa",
+        "auth": "Público",
+        "desc": "Obtiene el manifiesto de widgets embebibles y snippets de integración.",
+        "payload": "",
+        "response": "{\n  \"portalSlug\": \"mi-boda\",\n  \"widgets\": {\n    \"rsvp\": \"https://tu-dominio.com/embed/mi-boda/rsvp\",\n    \"guestPass\": \"https://tu-dominio.com/embed/mi-boda/guest-pass\",\n    \"album\": \"https://tu-dominio.com/embed/mi-boda/album\",\n    \"gallery\": \"https://tu-dominio.com/embed/mi-boda/gallery\",\n    \"map\": \"https://tu-dominio.com/embed/mi-boda/map\",\n    \"songRequests\": \"https://tu-dominio.com/embed/mi-boda/song-requests\",\n    \"gifts\": \"https://tu-dominio.com/embed/mi-boda/gifts\",\n    \"dedications\": \"https://tu-dominio.com/embed/mi-boda/dedications\",\n    \"fullDetails\": \"https://tu-dominio.com/embed/mi-boda/full-details\",\n    \"fullPortal\": \"https://tu-dominio.com/embed/mi-boda/full-portal\"\n  },\n  \"apiAuth\": {\n    \"header\": \"Authorization: Bearer <integration_api_token>\",\n    \"alternateHeader\": \"X-Kyndra-Access-Token: <integration_api_token>\",\n    \"verifyEndpoint\": \"/api/external/mi-boda/integration-token/status\",\n    \"note\": \"El token integration_api identifica a la pagina externa cliente; los datos publicos siguen sanitizados.\"\n  },\n  \"snippets\": {\n    \"rsvp\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"720\\\" style=\\\"border:0\\\"></iframe>\",\n    \"album\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"720\\\" style=\\\"border:0\\\"></iframe>\",\n    \"map\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"480\\\" style=\\\"border:0\\\"></iframe>\",\n    \"songRequests\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"520\\\" style=\\\"border:0\\\"></iframe>\",\n    \"gifts\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"520\\\" style=\\\"border:0\\\"></iframe>\",\n    \"dedications\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"640\\\" style=\\\"border:0\\\"></iframe>\",\n    \"fullDetails\": \"<iframe src=\\\"...\\\" width=\\\"100%\\\" height=\\\"760\\\" style=\\\"border:0\\\"></iframe>\",\n    \"script\": \"<div data-kyndra-widget=\\\"rsvp\\\" data-portal=\\\"mi-boda\\\"></div><script src=\\\".../kyndra-embed.js\\\"><\/script>\"\n  }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/api/external/:portalSlug/integration-token/status",
+        "summary": "Verifica que un token de integración sea válido",
+        "tag": "API de Integración Externa",
+        "auth": "Token de Acceso",
+        "desc": "Verifica que un token de integración sea válido.",
+        "payload": "",
+        "response": "{\n  \"ok\": true,\n  \"portalSlug\": \"mi-boda\",\n  \"event\": { \"id\": \"string\", \"title\": \"string\", \"mode\": \"external_dashboard\" },\n  \"access\": { \"role\": \"integration_api\", \"label\": \"Mi Web\", \"expiresAt\": \"ISO date\", \"lastUsedAt\": \"ISO date\" }\n}"
+      },
+      {
+        "method": "GET",
+        "path": "/health",
+        "summary": "Verifica que el servicio está activo",
+        "tag": "Health Check",
+        "auth": "Público",
+        "desc": "Verifica que el servicio está activo. { \"ok\": true, \"service\": \"invitaciones-api\" } ## Referencia de Tipos ### Tipos de Evento | Valor | Descripción | |-------|-------------| | `boda` | Boda | | `xv` | XV Años | | `graduacion` | Graduación | | `cumpleanos` | Cumpleaños | | `bautizo` | Bautizo | | `otro` | Otro tipo de evento | ### Tipos de Sección (`externalContent.sections`) | Valor | Descripción | |-------|-------------| | `text` | Bloque de texto libre | | `image` | Imagen destacada | | `video` | Video embebido | | `cta` | Botón de llamada a la acción | | `iframe` | Contenido embebido (iframe) | | `timeline` | Línea de tiempo | | `story` | Historia de la pareja | | `dress_code` | Código de vestimenta | | `gift_registry` | Mesa de regalos | | `dedications` | Dedicatorias | | `lodging` | Hospedaje | | `faq` | Preguntas frecuentes | | `people` | Corte de honor / personas especiales | ### Roles de Access Links | Rol | Permisos | |-----|----------| | `check_in` | Check-in de invitados | | `album_review` | Revisar/aprobar fotos | | `photographer` | Subir fotos al álbum | | `album_view` | Ver álbum | | `client_view` | Vista completa de invitados, RSVPs, mesas | | `guest_ops` | Check-in + álbum + vista cliente + gestión canciones | | `dj` | Gestión de canciones | | `integration_api` | Acceso a API externa desde tu propia página | ### Permisos de Miembros | Permiso | Descripción | |---------|-------------| | `view_event` | Ver información del evento | | `edit_event` | Editar evento | | `view_metrics` | Ver métricas/dashboard | | `manage_guests` | Gestionar invitados | | `manage_tables` | Gestionar mesas y asientos | | `check_in` | Hacer check-in de invitados | | `review_album` | Revisar fotos del álbum | | `review_dedications` | Revisar dedicatorias | | `manage_songs` | Gestionar solicitudes de canciones | | `view_payments` | Ver información de pagos | ## Guía Rápida: Integración con tu Propia Página Web ### 1. Crear un Access Link de tipo `integration_api` curl -X POST https://tu-dominio.com/api/events/{eventId}/access-links \\ -H \"Authorization: Bearer <tu-jwt>\" \\ -H \"Content-Type: application/json\" \\ -d '{ \"role\": \"integration_api\", \"label\": \"Mi Web\", \"days\": 90 }' ### 2. Obtener la configuración del evento curl https://tu-dominio.com/api/external/{portalSlug}/config ### 3. Identificar a un invitado curl -X POST https://tu-dominio.com/api/external/{portalSlug}/guest/identify \\ -H \"Content-Type: application/json\" \\ -d '{ \"email\": \"invitado@email.com\" }' ### 4. Enviar RSVP curl -X POST https://tu-dominio.com/api/external/{portalSlug}/rsvp \\ -H \"Content-Type: application/json\" \\ -d '{ \"guest\": \"<guestId>\", \"name\": \"Juan Pérez\", \"response\": \"confirmed\", \"companions\": 1, \"companionNames\": [\"María López\"] }' ### 5. Embeber widgets con iframe <!-- RSVP Widget --> <iframe src=\"https://tu-dominio.com/embed/{portalSlug}/rsvp\" width=\"100%\" height=\"720\" style=\"border:0\"> </iframe> <!-- Album Widget --> <iframe src=\"https://tu-dominio.com/embed/{portalSlug}/album\" width=\"100%\" height=\"720\" style=\"border:0\"> </iframe> <!-- Map Widget --> <iframe src=\"https://tu-dominio.com/embed/{portalSlug}/map\" width=\"100%\" height=\"480\" style=\"border:0\"> </iframe> <!-- Song Requests Widget --> <iframe src=\"https://tu-dominio.com/embed/{portalSlug}/song-requests\" width=\"100%\" height=\"520\" style=\"border:0\"> </iframe> <!-- Full Portal Widget --> <iframe src=\"https://tu-dominio.com/embed/{portalSlug}/full-portal\" width=\"100%\" height=\"100vh\" style=\"border:0\"> </iframe> ### 6. Embeber con script (alternativa a iframe) <div data-kyndra-widget=\"rsvp\" data-portal=\"{portalSlug}\"></div> <script src=\"https://tu-dominio.com/assets/kyndra-embed.js\"><\/script> ### 7. Verificar tu token de integración curl https://tu-dominio.com/api/external/{portalSlug}/integration-token/status \\ -H \"Authorization: Bearer <integration_api_token>\"",
+        "payload": "",
+        "response": ""
+      }
     ];
 
+    var currentCategory = 'all';
+
+    var categoryIcons = {
+      "Autenticación": "🔐",
+      "Eventos": "🌟",
+      "Invitaciones": "💌",
+      "Invitados (Guests)": "👥",
+      "RSVP (Confirmaciones)": "✉️",
+      "Mesas y Asientos": "🪑",
+      "Álbum Colaborativo": "📸",
+      "Solicitudes de Canciones": "🎵",
+      "Dedicatorias": "✍️",
+      "Regalos y Sobre Digital": "🎁",
+      "Dashboard y Métricas": "📊",
+      "Check-In con QR": "🎟️",
+      "Access Links (Staff / Integración)": "🗝️",
+      "Miembros del Equipo": "👥",
+      "Assets y Uploads": "📁",
+      "Pagos": "💳",
+      "Templates": "🎨",
+      "Contacto": "💬",
+      "Webhooks WhatsApp": "💬",
+      "API de Integración Externa": "⚡",
+      "Health Check": "🩺"
+    };
+
+    function init() {
+      renderCategoryPills();
+      applyFilters();
+    }
+
+    function switchView(viewName) {
+      var buttons = document.querySelectorAll('.view-tab-btn');
+      buttons.forEach(function (btn) { btn.classList.remove('active'); });
+      document.getElementById('view-endpoints').classList.add('hidden');
+      document.getElementById('view-guide').classList.add('hidden');
+      document.getElementById('view-reference').classList.add('hidden');
+
+      if (viewName === 'endpoints') {
+        buttons[0].classList.add('active');
+        document.getElementById('view-endpoints').classList.remove('hidden');
+      } else if (viewName === 'guide') {
+        buttons[1].classList.add('active');
+        document.getElementById('view-guide').classList.remove('hidden');
+      } else if (viewName === 'reference') {
+        buttons[2].classList.add('active');
+        document.getElementById('view-reference').classList.remove('hidden');
+      }
+    }
+
+    function renderCategoryPills() {
+      var counts = {};
+      endpoints.forEach(function (ep) {
+        counts[ep.tag] = (counts[ep.tag] || 0) + 1;
+      });
+
+      var container = document.getElementById('categoryPillsContainer');
+      var html = '<div class="cat-pill ' + (currentCategory === 'all' ? 'active' : '') + '" onclick="setCategory(\'all\')">⚡ Todas (' + endpoints.length + ')</div>';
+
+      Object.keys(counts).forEach(function (cat) {
+        var icon = categoryIcons[cat] || '📁';
+        var isActive = currentCategory === cat ? 'active' : '';
+        html += '<div class="cat-pill ' + isActive + '" onclick="setCategory(\'' + escapeJs(cat) + '\')">' + icon + ' ' + escapeHtml(cat) + ' <span class="count">' + counts[cat] + '</span></div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderCategoryPills();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      var query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      var method = document.getElementById('methodFilter').value;
+      var auth = document.getElementById('authFilter').value;
+
+      var hasFilters = query !== '' || method !== '' || auth !== '' || currentCategory !== 'all';
+      document.getElementById('btnClearFilters').style.display = hasFilters ? 'inline-flex' : 'none';
+
+      var filtered = endpoints.filter(function (ep) {
+        var matchCategory = (currentCategory === 'all') || (ep.tag === currentCategory);
+        var matchMethod = (!method) || (ep.method === method);
+        var matchAuth = (!auth) || (ep.auth === auth);
+
+        var matchQuery = true;
+        if (query) {
+          matchQuery = ep.path.toLowerCase().indexOf(query) !== -1 ||
+            ep.summary.toLowerCase().indexOf(query) !== -1 ||
+            ep.desc.toLowerCase().indexOf(query) !== -1 ||
+            ep.tag.toLowerCase().indexOf(query) !== -1 ||
+            ep.method.toLowerCase().indexOf(query) !== -1;
+        }
+
+        return matchCategory && matchMethod && matchAuth && matchQuery;
+      });
+
+      document.getElementById('totalEndpointsCount').innerText = filtered.length;
+      renderEndpoints(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('methodFilter').value = '';
+      document.getElementById('authFilter').value = '';
+      currentCategory = 'all';
+      renderCategoryPills();
+      applyFilters();
+    }
+
     function renderEndpoints(list) {
-      const container = document.getElementById('endpointsContainer');
+      var container = document.getElementById('endpointsContainer');
       container.innerHTML = '';
 
-      list.forEach((ep, idx) => {
-        const card = document.createElement('div');
-        card.className = `ep-card method-${ep.method}`;
-        card.innerHTML = `
-          <div class="ep-header" onclick="toggleEp(${idx})">
-            <div>
-              <span class="method-pill">${ep.method}</span>
-              <span class="ep-path">${ep.path}</span>
-              <span class="ep-summary">— ${ep.summary}</span>
-            </div>
-            <div>
-              <span class="tag-pill">${ep.tag}</span>
-              <span class="tag-pill" style="color:var(--accent);">${ep.auth}</span>
-            </div>
-          </div>
-          <div class="ep-body" id="ep-body-${idx}">
-            <p style="color:var(--text-muted); font-size:13px;">${ep.desc || ep.summary}</p>
-            ${ep.payload ? `<h4>Request Body (JSON)</h4><pre>${ep.payload}</pre>` : ''}
-            ${ep.response ? `<h4>Response (200/201 OK)</h4><pre>${ep.response}</pre>` : ''}
-          </div>
-        `;
+      if (list.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 48px 20px; color: var(--nw-text-3); background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--radius-md);"><svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 12px; opacity: 0.6;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><h3 style="font-size: 16px; color: var(--nw-text); font-weight: 700; margin-bottom: 4px;">Sin coincidencia de endpoints</h3><p style="font-size: 13.5px;">Intenta ajustar el texto de búsqueda o restablecer los filtros de método HTTP y categoría.</p><button type="button" class="action-btn" onclick="resetFilters()" style="margin-top: 14px;">Restablecer Filtros</button></div>';
+        return;
+      }
+
+      list.forEach(function (ep, idx) {
+        var card = document.createElement('div');
+        card.className = 'ep-card method-' + ep.method;
+        card.id = 'card-' + idx;
+
+        var authClass = 'public';
+        var authIcon = '🌐';
+        if (ep.auth.indexOf('JWT') !== -1) { authClass = 'jwt'; authIcon = '🔒'; }
+        else if (ep.auth.indexOf('Token') !== -1) { authClass = 'token'; authIcon = '🔑'; }
+        else if (ep.auth.indexOf('Multipart') !== -1) { authClass = 'multipart'; authIcon = '📎'; }
+
+        var bodyHtml = '<div class="ep-desc-box"><span>' + escapeHtml(ep.desc || ep.summary) + '</span><div class="ep-actions"><button type="button" class="btn-sm-action" onclick="copyPath(event, \'' + escapeJs(ep.path) + '\')">📋 Copiar Ruta</button><button type="button" class="btn-sm-action" onclick="copyCurl(event, \'' + escapeJs(ep.method) + '\', \'' + escapeJs(ep.path) + '\', \'' + escapeJs(ep.auth) + '\')">⚡ Copiar cURL</button></div></div>';
+
+        if (ep.payload) {
+          bodyHtml += '<div class="code-section-header"><div class="section-title"><span>📥</span> Request Body / Parámetros</div><button class="btn-sm-action" onclick="copyCode(event, \'payload-' + idx + '\')">📋 Copiar JSON</button></div><pre id="payload-' + idx + '">' + escapeHtml(ep.payload) + '</pre>';
+        }
+
+        if (ep.response) {
+          bodyHtml += '<div class="code-section-header"><div class="section-title"><span>📤</span> Respuesta Esperada</div><button class="btn-sm-action" onclick="copyCode(event, \'response-' + idx + '\')">📋 Copiar JSON</button></div><pre id="response-' + idx + '">' + escapeHtml(ep.response) + '</pre>';
+        }
+
+        card.innerHTML =
+          '<div class="ep-header" onclick="toggleEp(' + idx + ')">' +
+          '<div class="ep-header-left">' +
+          '<span class="method-pill">' + escapeHtml(ep.method) + '</span>' +
+          '<span class="ep-path">' + escapeHtml(ep.path) + '</span>' +
+          '<span class="ep-summary">— ' + escapeHtml(ep.summary) + '</span>' +
+          '</div>' +
+          '<div class="ep-header-right">' +
+          '<span class="tag-badge">' + (categoryIcons[ep.tag] || '📁') + ' ' + escapeHtml(ep.tag) + '</span>' +
+          '<span class="auth-badge ' + authClass + '">' + authIcon + ' ' + escapeHtml(ep.auth) + '</span>' +
+          '<svg class="ep-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<polyline points="6 9 12 15 18 9"></polyline>' +
+          '</svg>' +
+          '</div>' +
+          '</div>' +
+          '<div class="ep-body" id="ep-body-' + idx + '">' + bodyHtml + '</div>';
+
         container.appendChild(card);
       });
     }
 
     function toggleEp(idx) {
-      const el = document.getElementById(`ep-body-${idx}`);
-      el.classList.toggle('open');
+      var card = document.getElementById('card-' + idx);
+      if (card) card.classList.toggle('open');
     }
 
-    function filterEndpoints() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const method = document.getElementById('methodFilter').value;
-
-      const filtered = endpoints.filter(ep => {
-        const matchesQuery = ep.path.toLowerCase().includes(query) ||
-                             ep.summary.toLowerCase().includes(query) ||
-                             ep.tag.toLowerCase().includes(query);
-        const matchesMethod = !method || ep.method === method;
-        return matchesQuery && matchesMethod;
+    function expandAll() {
+      document.querySelectorAll('.ep-card').forEach(function (card) {
+        card.classList.add('open');
       });
-
-      renderEndpoints(filtered);
     }
 
-    renderEndpoints(endpoints);
+    function collapseAll() {
+      document.querySelectorAll('.ep-card').forEach(function (card) {
+        card.classList.remove('open');
+      });
+    }
+
+    function copyPath(event, path) {
+      event.stopPropagation();
+      navigator.clipboard.writeText(path).then(function () {
+        showToast('Ruta copiada: ' + path);
+      });
+    }
+
+    function copyCurl(event, method, path, auth) {
+      event.stopPropagation();
+      var curl = 'curl -X ' + method + ' https://tu-dominio.com' + path;
+      if (auth.indexOf('JWT') !== -1) {
+        curl += ' \
+  -H "Authorization: Bearer <tu-jwt>"';
+      } else if (auth.indexOf('Token') !== -1) {
+        curl += ' \
+  -H "X-Kyndra-Access-Token: <tu-token>"';
+      }
+      curl += ' \
+  -H "Content-Type: application/json"';
+
+      navigator.clipboard.writeText(curl).then(function () {
+        showToast('Comando cURL copiado');
+      });
+    }
+
+    function copyCode(event, elementId) {
+      event.stopPropagation();
+      var text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(function () {
+        showToast('JSON copiado al portapapeles');
+      });
+    }
+
+    function showToast(msg) {
+      var toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(function () {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeJs(str) {
+      if (!str) return '';
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    // Initialize on load
+    window.onload = init;
   </script>
 </body>
+
 </html>

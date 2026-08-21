@@ -528,11 +528,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   get currentTemplate(): string {
     const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
     if (queryTpl) return queryTpl;
+    const invContentTpl = (this.invitation?.content as any)?.template;
+    if (invContentTpl) return invContentTpl;
+    const invRootTpl = (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : null;
+    if (invRootTpl) return invRootTpl;
     const invId = this.invitation?._id || this.invitation?.id;
     const slug = this.invitation?.slug;
     const storedTpl = (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null);
     if (storedTpl) return storedTpl;
-    return (this.invitation?.content as any)?.template || (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template) ? this.invitation.template : '') || 'envelope-cards';
+    return 'envelope-cards';
   }
 
   isEnvelopeCardsTemplate(): boolean {
