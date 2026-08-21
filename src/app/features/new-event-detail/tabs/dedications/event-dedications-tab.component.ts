@@ -116,10 +116,52 @@ export class EventDedicationsTabComponent implements OnInit, OnChanges {
     });
   }
 
+  dedicationPage = 1;
+  dedicationPageSize = 25;
+  Math = Math;
+
+  get totalDedicationPages(): number {
+    return Math.ceil(this.filteredDedications.length / this.dedicationPageSize) || 1;
+  }
+
+  get paginatedDedications(): DedicationModel[] {
+    const total = this.totalDedicationPages;
+    if (this.dedicationPage > total) {
+      this.dedicationPage = 1;
+    }
+    const start = (this.dedicationPage - 1) * this.dedicationPageSize;
+    return this.filteredDedications.slice(start, start + this.dedicationPageSize);
+  }
+
+  setDedicationPage(page: number): void {
+    if (page < 1 || page > this.totalDedicationPages) return;
+    this.dedicationPage = page;
+  }
+
+  getDedicationPagesArray(): number[] {
+    const total = this.totalDedicationPages;
+    const current = this.dedicationPage;
+    const pages: number[] = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
   clearFilters(): void {
     this.searchQuery = '';
     this.filterStatus = 'all';
     this.filterType = '';
+    this.dedicationPage = 1;
   }
 
   get filteredDedications(): DedicationModel[] {
@@ -162,25 +204,25 @@ export class EventDedicationsTabComponent implements OnInit, OnChanges {
   }
 
   getStatusLabel(status: string): string {
-    if (status === 'approved') return 'Aprobado ✅';
-    if (status === 'pending') return 'Pendiente ⏳';
-    if (status === 'rejected') return 'Rechazado ❌';
-    if (status === 'hidden') return 'Oculto 🙈';
+    if (status === 'approved') return 'Aprobado';
+    if (status === 'pending') return 'Pendiente';
+    if (status === 'rejected') return 'Rechazado';
+    if (status === 'hidden') return 'Oculto';
     return status;
   }
 
   getTypeLabel(type?: string): string {
-    if (type === 'wish') return 'Deseo 🌟';
-    if (type === 'memory') return 'Recuerdo 📸';
-    if (type === 'toast') return 'Brindis 🥂';
-    return 'Dedicatoria 💌';
+    if (type === 'wish') return 'Deseo';
+    if (type === 'memory') return 'Recuerdo';
+    if (type === 'toast') return 'Brindis';
+    return 'Dedicatoria';
   }
 
   getTypeIcon(type?: string): string {
-    if (type === 'wish') return '🌟';
-    if (type === 'memory') return '📸';
-    if (type === 'toast') return '🥂';
-    return '💬';
+    if (type === 'wish') return 'wish';
+    if (type === 'memory') return 'memory';
+    if (type === 'toast') return 'toast';
+    return 'dedication';
   }
 
   formatDate(dateStr?: string): string {
