@@ -1,5 +1,15 @@
 <div class="nw-shell">
-  <button class="nw-hamburger" (click)="sidebarOpen = !sidebarOpen">☰</button>
+  <button class="nw-hamburger" [class.open]="sidebarOpen" (click)="sidebarOpen = !sidebarOpen">
+    <svg *ngIf="!sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+    <svg *ngIf="sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
   <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
 
   <!-- Sidebar -->
@@ -128,90 +138,119 @@
     <p *ngIf="error" class="nw-alert error">{{ error }}</p>
 
     <ng-container *ngIf="event">
-      <!-- Reusable Event Header Widget -->
-      <app-event-header [event]="event"></app-event-header>
+      <!-- Standard Page Header when viewing Historial de cambios or Guía de usuario -->
+      <div *ngIf="activeTab === 'logs' || activeTab === 'guide'" class="nw-page-header">
+        <div *ngIf="activeTab === 'logs'">
+          <h1 style="display: flex; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <polyline points="12 8 12 12 14 14"></polyline>
+              <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+            </svg>
+            Historial de Cambios
+          </h1>
+          <p>Consulta en tiempo real la actividad y modificaciones realizadas en <strong>{{ event.title }}</strong>.</p>
+        </div>
 
-      <!-- Navigation Tabs -->
-      <div class="nw-tabs">
-        <button class="nw-tab" [class.active]="activeTab === 'info'" (click)="selectTab('info')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-          <span>Información</span>
-        </button>
-
-        <button *ngIf="canOpenTab('guests')" class="nw-tab" [class.active]="activeTab === 'guests'" (click)="selectTab('guests')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>Invitados</span>
-          <span class="nw-tab-badge" *ngIf="guests.length > 0">{{ guests.length }}</span>
-        </button>
-
-        <button *ngIf="canOpenTab('tables')" class="nw-tab" [class.active]="activeTab === 'tables'" (click)="selectTab('tables')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
-          </svg>
-          <span>Mesas</span>
-          <span class="nw-tab-badge" *ngIf="tables.length > 0">{{ tables.length }}</span>
-        </button>
-
-        <button *ngIf="canOpenTab('rsvps')" class="nw-tab" [class.active]="activeTab === 'rsvps'" (click)="selectTab('rsvps')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <span>RSVPs</span>
-          <span class="nw-tab-badge" *ngIf="rsvpsCount > 0">{{ rsvpsCount }}</span>
-        </button>
-
-        <button *ngIf="canOpenTab('album')" class="nw-tab" [class.active]="activeTab === 'album'" (click)="selectTab('album')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-          <span>Álbum</span>
-        </button>
-
-        <button *ngIf="canOpenTab('communication')" class="nw-tab" [class.active]="activeTab === 'communication'" (click)="selectTab('communication')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-          </svg>
-          <span>Comunicación</span>
-        </button>
-
-        <button *ngIf="canOpenTab('dj')" class="nw-tab" [class.active]="activeTab === 'dj'" (click)="selectTab('dj')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18V5l12-2v13"/>
-            <circle cx="6" cy="18" r="3"/>
-            <circle cx="18" cy="16" r="3"/>
-          </svg>
-          <span>DJ</span>
-          <span class="nw-tab-badge" *ngIf="songRequestsCount > 0">{{ songRequestsCount }}</span>
-        </button>
-
-        <button *ngIf="canOpenTab('dedications')" class="nw-tab" [class.active]="activeTab === 'dedications'" (click)="selectTab('dedications')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span>Dedicatorias</span>
-          <span class="nw-tab-badge" *ngIf="dedicationsCount > 0">{{ dedicationsCount }}</span>
-        </button>
-
-        <button *ngIf="event.mode === 'external_dashboard' && canOpenTab('integration')" class="nw-tab" [class.active]="activeTab === 'integration'" (click)="selectTab('integration')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
-            <line x1="12" y1="2" x2="12" y2="12"/>
-          </svg>
-          <span>Integración</span>
-        </button>
+        <div *ngIf="activeTab === 'guide'">
+          <h1 style="display: flex; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <line x1="9" y1="7" x2="15" y2="7"/>
+              <line x1="9" y1="11" x2="15" y2="11"/>
+            </svg>
+            Guía de Usuario
+          </h1>
+          <p>Consulta las guías interactivas paso a paso para sacarle el máximo provecho a tu evento <strong>{{ event.title }}</strong>.</p>
+        </div>
       </div>
+
+      <!-- Reusable Event Header Widget & Navigation Tabs (Hidden when in Historial de cambios or Guía de usuario) -->
+      <ng-container *ngIf="activeTab !== 'logs' && activeTab !== 'guide'">
+        <app-event-header [event]="event"></app-event-header>
+
+        <!-- Navigation Tabs -->
+        <div class="nw-tabs">
+          <button class="nw-tab" [class.active]="activeTab === 'info'" (click)="selectTab('info')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>Información</span>
+          </button>
+
+          <button *ngIf="canOpenTab('guests')" class="nw-tab" [class.active]="activeTab === 'guests'" (click)="selectTab('guests')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Invitados</span>
+            <span class="nw-tab-badge" *ngIf="guests.length > 0">{{ guests.length }}</span>
+          </button>
+
+          <button *ngIf="canOpenTab('tables')" class="nw-tab" [class.active]="activeTab === 'tables'" (click)="selectTab('tables')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>
+            </svg>
+            <span>Mesas</span>
+            <span class="nw-tab-badge" *ngIf="tables.length > 0">{{ tables.length }}</span>
+          </button>
+
+          <button *ngIf="canOpenTab('rsvps')" class="nw-tab" [class.active]="activeTab === 'rsvps'" (click)="selectTab('rsvps')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span>RSVPs</span>
+            <span class="nw-tab-badge" *ngIf="rsvpsCount > 0">{{ rsvpsCount }}</span>
+          </button>
+
+          <button *ngIf="canOpenTab('album')" class="nw-tab" [class.active]="activeTab === 'album'" (click)="selectTab('album')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span>Álbum</span>
+          </button>
+
+          <button *ngIf="canOpenTab('communication')" class="nw-tab" [class.active]="activeTab === 'communication'" (click)="selectTab('communication')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>Comunicación</span>
+          </button>
+
+          <button *ngIf="canOpenTab('dj')" class="nw-tab" [class.active]="activeTab === 'dj'" (click)="selectTab('dj')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+            <span>DJ</span>
+            <span class="nw-tab-badge" *ngIf="songRequestsCount > 0">{{ songRequestsCount }}</span>
+          </button>
+
+          <button *ngIf="canOpenTab('dedications')" class="nw-tab" [class.active]="activeTab === 'dedications'" (click)="selectTab('dedications')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Dedicatorias</span>
+            <span class="nw-tab-badge" *ngIf="dedicationsCount > 0">{{ dedicationsCount }}</span>
+          </button>
+
+          <button *ngIf="event.mode === 'external_dashboard' && canOpenTab('integration')" class="nw-tab" [class.active]="activeTab === 'integration'" (click)="selectTab('integration')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+              <line x1="12" y1="2" x2="12" y2="12"/>
+            </svg>
+            <span>Integración</span>
+          </button>
+        </div>
+      </ng-container>
 
       <!-- Tab Content Components -->
       <app-event-info-tab *ngIf="activeTab === 'info'" [event]="event" [metrics]="eventMetrics" (eventUpdated)="onEventUpdated()" (openInvitationWizard)="openCreateInvitationWizard()"></app-event-info-tab>
@@ -231,6 +270,10 @@
       <app-event-dedications-tab *ngIf="activeTab === 'dedications'" [eventId]="eventId"></app-event-dedications-tab>
 
       <app-event-integration-tab *ngIf="activeTab === 'integration' && event.mode === 'external_dashboard'" [event]="event"></app-event-integration-tab>
+
+      <app-event-logs-tab *ngIf="activeTab === 'logs'" [eventId]="eventId"></app-event-logs-tab>
+
+      <app-new-user-guide *ngIf="activeTab === 'guide'" [embedded]="true"></app-new-user-guide>
 
     </ng-container>
   </main>

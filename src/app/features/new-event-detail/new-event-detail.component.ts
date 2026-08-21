@@ -5,7 +5,7 @@ import {
   EventModel, DashboardMetrics, GuestModel, EventTableModel, InvitationModel, EventPermission
 } from '../../core/models';
 
-type Tab = 'info' | 'guests' | 'tables' | 'rsvps' | 'album' | 'communication' | 'dedications' | 'dj' | 'integration';
+type Tab = 'info' | 'guests' | 'tables' | 'rsvps' | 'album' | 'communication' | 'dedications' | 'dj' | 'integration' | 'logs' | 'guide';
 
 interface WizardSectionDef {
   key: string;
@@ -93,7 +93,7 @@ export class NewEventDetailComponent implements OnInit {
   }
 
   private isValidTab(tab: string): tab is Tab {
-    return ['info', 'guests', 'tables', 'rsvps', 'album', 'communication', 'dedications', 'dj', 'integration'].includes(tab);
+    return ['info', 'guests', 'tables', 'rsvps', 'album', 'communication', 'dedications', 'dj', 'integration', 'logs', 'guide'].includes(tab);
   }
 
   private restoreActiveTab(): void {
@@ -197,6 +197,7 @@ export class NewEventDetailComponent implements OnInit {
     if (tab === 'dedications') return this.can('review_dedications');
     if (tab === 'dj') return this.can('manage_songs');
     if (tab === 'integration') return this.isOwner() && this.event?.mode === 'external_dashboard';
+    if (tab === 'logs') return true;
     return false;
   }
 
