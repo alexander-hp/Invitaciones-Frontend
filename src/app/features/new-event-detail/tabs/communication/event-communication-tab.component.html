@@ -1,199 +1,744 @@
-<section>
-  <h3 style="margin:0 0 16px;">📱 Centro de comunicación</h3>
-  
+<section class="nw-card">
+  <!-- Encabezado de la Sección -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Centro de Comunicación
+        <span class="nw-badge"
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ guests.length }} invitados
+        </span>
+        <span *ngIf="pendingCommunicationGuests > 0" class="nw-pill warning"
+          style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          {{ pendingCommunicationGuests }} por enviar
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Envía invitaciones, confirmaciones y recordatorios por Correo Electrónico o WhatsApp de forma masiva o
+        individual.
+      </p>
+    </div>
+  </div>
+
   <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
   <div class="nw-toast-container" *ngIf="guestMessage || guestError">
     <div *ngIf="guestMessage" class="nw-toast success">
-      <span>✨ {{ guestMessage }}</span>
+      <span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"
+          style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+          <path
+            d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z">
+          </path>
+        </svg>
+        {{ guestMessage }}
+      </span>
       <button type="button" class="nw-toast-close" (click)="guestMessage=''">✕</button>
     </div>
     <div *ngIf="guestError" class="nw-toast error">
-      <span>⚠️ {{ guestError }}</span>
+      <span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"
+          style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        {{ guestError }}
+      </span>
       <button type="button" class="nw-toast-close" (click)="guestError=''">✕</button>
     </div>
   </div>
 
-  <!-- Metrics -->
+  <!-- Metrics Row 1 -->
   <div class="nw-metrics" style="margin-bottom:16px;">
-    <div class="nw-metric"><span class="metric-label">Email enviados</span><span class="metric-value">{{ eventMetrics.emailSent || 0 }}</span></div>
-    <div class="nw-metric"><span class="metric-label">WhatsApp enviados</span><span class="metric-value">{{ eventMetrics.whatsappSent || 0 }}</span></div>
-    <div class="nw-metric"><span class="metric-label">Abiertas</span><span class="metric-value">{{ eventMetrics.opened || 0 }}</span></div>
-    <div class="nw-metric danger"><span class="metric-label">Fallidas</span><span class="metric-value">{{ eventMetrics.failed || 0 }}</span></div>
-    <div class="nw-metric success"><span class="metric-label">Check-in</span><span class="metric-value">{{ eventMetrics.checkedIn || 0 }}</span></div>
+    <div class="nw-metric info">
+      <span class="metric-label">Email enviados</span>
+      <span class="metric-value">{{ eventMetrics.emailSent || 0 }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric success">
+      <span class="metric-label">WhatsApp enviados</span>
+      <span class="metric-value">{{ eventMetrics.whatsappSent || 0 }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+          </path>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric accent">
+      <span class="metric-label">Abiertas</span>
+      <span class="metric-value">{{ eventMetrics.opened || 0 }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric danger">
+      <span class="metric-label">Fallidas</span>
+      <span class="metric-value">{{ eventMetrics.failed || 0 }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric success">
+      <span class="metric-label">Check-in</span>
+      <span class="metric-value">{{ eventMetrics.checkedIn || 0 }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+    </div>
   </div>
 
+  <!-- Metrics Row 2 -->
   <div class="nw-metrics" style="margin-bottom:16px;">
-    <div class="nw-metric"><span class="metric-label">Por enviar</span><span class="metric-value">{{ pendingCommunicationGuests }}</span></div>
-    <div class="nw-metric"><span class="metric-label">Enviados</span><span class="metric-value">{{ sentCommunicationGuests }}</span></div>
-    <div class="nw-metric"><span class="metric-label">Entregados</span><span class="metric-value">{{ deliveredCommunicationGuests }}</span></div>
-    <div class="nw-metric"><span class="metric-label">Leídos</span><span class="metric-value">{{ readCommunicationGuests }}</span></div>
-    <div class="nw-metric"><span class="metric-label">Abiertos</span><span class="metric-value">{{ openedCommunicationGuests }}</span></div>
-    <div class="nw-metric danger"><span class="metric-label">Fallidos</span><span class="metric-value">{{ failedCommunicationGuests }}</span></div>
-    <div class="nw-metric success"><span class="metric-label">Confirmados</span><span class="metric-value">{{ confirmedCommunicationGuests }}</span></div>
+    <div class="nw-metric warning">
+      <span class="metric-label">Por enviar</span>
+      <span class="metric-value">{{ pendingCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric accent">
+      <span class="metric-label">Enviados</span>
+      <span class="metric-value">{{ sentCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric info">
+      <span class="metric-label">Entregados</span>
+      <span class="metric-value">{{ deliveredCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric success">
+      <span class="metric-label">Leídos</span>
+      <span class="metric-value">{{ readCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric accent">
+      <span class="metric-label">Abiertos</span>
+      <span class="metric-value">{{ openedCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric danger">
+      <span class="metric-label">Fallidos</span>
+      <span class="metric-value">{{ failedCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+    </div>
+    <div class="nw-metric success">
+      <span class="metric-label">Confirmados</span>
+      <span class="metric-value">{{ confirmedCommunicationGuests }}</span>
+      <div class="metric-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+    </div>
   </div>
 
-  <!-- WhatsApp status -->
-  <div class="nw-card" style="margin-bottom:16px;">
+  <!-- Configuración de envío -->
+  <div id="comms-config-card" class="nw-card" style="margin-bottom:16px;">
     <div class="nw-card-header">
-      <h3>Configuración de envío</h3>
+      <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <path
+            d="M12.22 2h-.44a9.93 9.93 0 0 0-7.7 3.8A10 10 0 0 0 3 13a9.88 9.88 0 0 0 2.24 6.27L3 21l2-.68A10.12 10.12 0 0 0 12 22a10 10 0 0 0 10-10 10 10 0 0 0-9.78-10z">
+          </path>
+        </svg>
+        Configuración de envío
+      </h3>
     </div>
-    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
-      <span class="nw-pill">WhatsApp: {{ whatsappProvider }}</span>
-      <span class="nw-pill" *ngIf="whatsappProvider === 'openwa'">{{ openWaReady ? '🟢 Listo' : ('🔴 ' + openWaStatus) }}</span>
-      <span class="nw-pill" *ngIf="whatsappFallbackProvider">Fallback: {{ whatsappFallbackProvider }}</span>
+
+    <!-- Indicador de alerta solo en caso de falla de WhatsApp -->
+    <div *ngIf="whatsappEnabled && !openWaReady" style="margin-bottom:14px;">
+      <span class="nw-pill danger" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+        <span
+          style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--nw-danger);"></span>
+        WhatsApp desconectado: {{ openWaStatus || 'Servicio no disponible' }}
+      </span>
     </div>
+
     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
       <label class="nw-label" style="flex:1; min-width:260px;">Plantilla de mensaje activa
-        <select class="nw-select" [(ngModel)]="selectedMessageType">
+        <select class="nw-select" [(ngModel)]="selectedMessageType" (ngModelChange)="onMessageTypeChange()">
           <option *ngFor="let t of messageTemplates" [value]="t.value">{{ t.label }}</option>
         </select>
       </label>
       <button class="nw-btn nw-btn-ghost" (click)="showPendingReminders()">Filtrar por enviar</button>
     </div>
-    <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--nw-border-subtle); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-        <span class="nw-switch">
-          <input type="checkbox" [(ngModel)]="includePassInMessage">
-          <span class="nw-slider"></span>
-        </span>
-        <span style="font-size:14px; font-weight:500;">🎫 Adjuntar Pase VIP como tarjeta/archivo en los mensajes (Email y WhatsApp)</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; background:rgba(245, 158, 11, 0.08); padding:6px 12px; border-radius:20px; border:1px solid rgba(245, 158, 11, 0.25);">
-        <span class="nw-switch">
-          <input type="checkbox" [(ngModel)]="simulationMode">
-          <span class="nw-slider"></span>
-        </span>
-        <span style="font-size:13px; font-weight:600; color:var(--nw-accent);">🧪 Modo Simulación (Probar sin SMTP / WA real)</span>
-      </label>
-    </div>
-  </div>
 
-  <div class="nw-card" style="margin-bottom:16px;">
-    <div class="nw-card-header">
-      <h3>Modo de entrega</h3>
-    </div>
-    <div style="display:grid; gap:12px;">
-      <p style="margin:0; color:var(--nw-text-2); font-size:13px;">
-        La invitación completa se verá en la página digital. Para proteger el número de WhatsApp, la imagen solo aplica para grupos especiales y máximo {{ whatsappPremiumMediaLimit }} invitados.
-      </p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <label style="display:flex; align-items:flex-start; gap:8px; border:1px solid var(--nw-border); border-radius:10px; padding:10px; flex:1; min-width:220px; cursor:pointer;">
-          <input type="radio" name="whatsappBulkDeliveryMode" value="safe" [(ngModel)]="whatsappBulkDeliveryMode">
-          <span>
-            <strong style="display:block;">Mensaje seguro con link</strong>
-            <small style="color:var(--nw-text-3);">Para todos los destinatarios activos. Recomendado para listas grandes.</small>
-          </span>
-        </label>
-        <label style="display:flex; align-items:flex-start; gap:8px; border:1px solid var(--nw-border); border-radius:10px; padding:10px; flex:1; min-width:220px; cursor:pointer;">
-          <input type="radio" name="whatsappBulkDeliveryMode" value="premium" [(ngModel)]="whatsappBulkDeliveryMode">
-          <span>
-            <strong style="display:block;">Imagen para invitados especiales</strong>
-            <small style="color:var(--nw-text-3);">VIP, familia, padrinos, damas, anfitriones u otros grupos seleccionados.</small>
-          </span>
-        </label>
+    <!-- Sección de Mensaje Vista Previa en 3 Bloques (Ver mensaje / Editar / Preview) -->
+    <div
+      style="margin-top:16px; padding-top:14px; border-top:1px solid var(--nw-border-subtle); display:grid; gap:12px;">
+
+      <!-- Selector de Pestañas de Vista Previa (3 Modos) -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div
+          style="display:inline-flex; background:var(--nw-surface-2, #f5f1ea); padding:3px; border-radius:8px; border:1px solid var(--nw-border, #eadecc); gap:3px;">
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewTabMode === 'view'"
+            [class.nw-btn-ghost]="previewTabMode !== 'view'" (click)="previewTabMode = 'view'"
+            style="font-size:12px; padding:4px 12px; height:28px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Ver mensaje
+          </button>
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewTabMode === 'edit'"
+            [class.nw-btn-ghost]="previewTabMode !== 'edit'" (click)="previewTabMode = 'edit'"
+            style="font-size:12px; padding:4px 12px; height:28px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Editar mensaje
+          </button>
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewTabMode === 'preview'"
+            [class.nw-btn-ghost]="previewTabMode !== 'preview'" (click)="previewTabMode = 'preview'"
+            style="font-size:12px; padding:4px 12px; height:28px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            Preview interactivo
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <!-- Selector unificado de invitado con buscador y dropdown integrado -->
+          <div *ngIf="guests.length > 0" style="position:relative; display:inline-flex; align-items:center; gap:6px;">
+            <span style="font-size:11.5px; color:var(--nw-text-3); font-weight:600;">Ejemplo:</span>
+            
+            <!-- Backdrop para cerrar al hacer click fuera -->
+            <div *ngIf="isGuestDropdownOpen" (click)="isGuestDropdownOpen = false"
+              style="position:fixed; inset:0; z-index:100;"></div>
+
+            <div style="position:relative; width:200px; z-index:101;">
+              <!-- Botón principal del dropdown -->
+              <div (click)="toggleGuestDropdown()"
+                style="display:flex; align-items:center; justify-content:space-between; background:var(--nw-surface, #ffffff); border:1px solid var(--nw-border, #eadecc); border-radius:6px; height:28px; padding:0 8px; cursor:pointer; font-size:11.5px; color:var(--nw-text); transition:border-color 0.2s;"
+                [style.borderColor]="isGuestDropdownOpen ? 'var(--nw-accent, #c09c78)' : 'var(--nw-border)'">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; max-width:160px;">
+                  {{ previewGuest?.name || guests[0]?.name || 'Seleccionar invitado...' }}
+                </span>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-text-3); flex-shrink:0; transition:transform 0.2s;"
+                  [style.transform]="isGuestDropdownOpen ? 'rotate(180deg)' : 'none'">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+
+              <!-- Menú desplegable con buscador integrado -->
+              <div *ngIf="isGuestDropdownOpen"
+                style="position:absolute; top:calc(100% + 4px); right:0; width:250px; background:var(--nw-surface, #ffffff); border:1px solid var(--nw-border, #eadecc); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:110; padding:6px; box-sizing:border-box;">
+                
+                <!-- Buscador interno -->
+                <div style="position:relative; margin-bottom:6px;">
+                  <input type="text"
+                    class="nw-input"
+                    [(ngModel)]="previewGuestSearch"
+                    placeholder="Buscar invitado..."
+                    autofocus
+                    (click)="$event.stopPropagation()"
+                    style="height:26px; font-size:11.5px; padding:0 8px 0 24px; width:100%; border-radius:5px; box-sizing:border-box;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style="position:absolute; left:7px; top:50%; transform:translateY(-50%); color:var(--nw-text-3); pointer-events:none;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+
+                <!-- Lista de resultados -->
+                <div style="max-height:170px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
+                  <div *ngIf="previewGuestFilteredList.length === 0" style="padding:8px; font-size:11.5px; color:var(--nw-text-3); text-align:center;">
+                    Sin resultados
+                  </div>
+                  <div *ngFor="let g of previewGuestFilteredList"
+                    (click)="selectPreviewGuest(g); $event.stopPropagation()"
+                    style="padding:5px 8px; font-size:11.5px; border-radius:5px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:background 0.15s;"
+                    [style.background]="(previewGuest === g || (!previewGuest && g === guests[0])) ? 'var(--nw-surface-2, #f5f1ea)' : 'transparent'"
+                    [style.fontWeight]="(previewGuest === g || (!previewGuest && g === guests[0])) ? '700' : '500'">
+                    <span style="color:var(--nw-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px;">{{ g.name }}</span>
+                    <span *ngIf="g.group" class="nw-pill" style="font-size:9px; padding:1px 4px; flex-shrink:0;">{{ g.group }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button *ngIf="previewTabMode === 'edit' && isMessageEdited" type="button"
+            class="nw-btn nw-btn-ghost nw-btn-sm" (click)="resetMessagePreview()"
+            style="font-size:11px; padding:2px 8px; height:28px;">
+            Restablecer original
+          </button>
+        </div>
       </div>
 
-      <div *ngIf="whatsappBulkDeliveryMode === 'premium'"
-        style="display:grid; gap:10px; background:var(--nw-surface-2); border-radius:10px; padding:12px;">
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <span class="nw-pill">Con imagen: {{ whatsappPremiumMediaGuests.length }}/{{ whatsappPremiumMediaLimit }}</span>
-          <span class="nw-pill">Con link seguro: {{ whatsappSafeMessageGuests.length }}</span>
-          <span class="nw-pill" [class.danger]="whatsappPremiumMediaOverLimit > 0">Exceso: {{ whatsappPremiumMediaOverLimit }}</span>
+      <!-- BLOQUE 1: Ver mensaje (Sólo lectura limpio) -->
+      <div *ngIf="previewTabMode === 'view'"
+        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 10px); padding: 14px 16px;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid var(--nw-border); padding-bottom:6px;">
+          <span style="font-size:12px; font-weight:700; color:var(--nw-text-2);">
+            Mensaje para: <strong style="color:var(--nw-text);">{{ previewGuest?.name || sampleGuest.name }}</strong>
+          </span>
+          <span class="nw-pill" style="font-size:10px;">Modo lectura</span>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <label *ngFor="let segment of whatsappPremiumSegmentOptions"
-            style="display:flex; align-items:center; gap:6px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:999px; padding:6px 10px; cursor:pointer;">
-            <input type="checkbox" [checked]="isWhatsappPremiumSegmentSelected(segment.key)"
-              (change)="toggleWhatsappPremiumSegment(segment.key, $any($event.target).checked)">
-            <span>{{ segment.label }} <small style="color:var(--nw-text-3);">({{ segment.count }})</small></span>
+        <p style="margin:0; font-size:13.5px; line-height:1.6; color:var(--nw-text); white-space:pre-wrap;">{{
+          buildMessage(previewGuest || sampleGuest, selectedMessageType) }}</p>
+      </div>
+
+      <!-- BLOQUE 2: Editar (Estructura de bloques fijos imborrables) -->
+      <div *ngIf="previewTabMode === 'edit'"
+        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 10px); padding: 12px; display: grid; gap: 8px;">
+
+        <!-- Bloque Fijo: Saludo con Nombre (Imborrable) -->
+        <div
+          style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nw-text); background: var(--nw-surface); padding: 6px 10px; border-radius: 6px; border: 1px dashed var(--nw-border);">
+          <span style="color: var(--nw-text-3); font-weight: 500;">Saludo fijo:</span>
+          <span class="nw-pill accent"
+            style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display:inline-flex; align-items:center; gap:4px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Hola [Nombre del invitado],
+          </span>
+          <span style="font-size: 11px; color: var(--nw-text-3); margin-left: auto;">(Se inserta automáticamente)</span>
+        </div>
+
+        <!-- Bloque Editable: Cuerpo del Mensaje -->
+        <div>
+          <label
+            style="font-size: 12px; font-weight: 600; color: var(--nw-text-2); display: block; margin-bottom: 4px;">
+            Texto del mensaje (editable):
           </label>
+          <textarea class="nw-input" rows="3" [(ngModel)]="customMessageBody" (ngModelChange)="onCustomBodyChange()"
+            placeholder="Escribe el cuerpo de tu mensaje..."
+            style="font-family: inherit; font-size: 13px; line-height: 1.5; resize: vertical; width: 100%; box-sizing: border-box; background: #ffffff;"></textarea>
+        </div>
+
+        <!-- Bloque Fijo: Link de Invitación (Imborrable) -->
+        <div
+          style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nw-text); background: var(--nw-surface); padding: 6px 10px; border-radius: 6px; border: 1px dashed var(--nw-border);">
+          <span style="color: var(--nw-text-3); font-weight: 500;">Enlace fijo:</span>
+          <span class="nw-pill info"
+            style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            [Link personalizado a la invitación]
+          </span>
+          <span style="font-size: 11px; color: var(--nw-text-3); margin-left: auto;">(Token individual por
+            invitado)</span>
         </div>
       </div>
 
-      <!-- Envío a Grupos Especiales: VIP, Familia, Padrinos -->
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--nw-border-subtle); display: grid; gap: 16px;">
-        <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--nw-text); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--nw-font-display);">Envío a Grupos Especiales</h4>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
-          
-          <!-- VIP Group -->
-          <div style="background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--nw-border); padding-bottom: 6px;">
-              <span style="font-weight: 700; font-size: 13px; color: var(--nw-text);">⭐ VIPs</span>
-              <span class="nw-pill accent" style="font-size: 10px; padding: 2px 6px;">{{ getGuestsByRole('vip').length }}</span>
-            </div>
-            <div *ngIf="getGuestsByRole('vip').length === 0" style="font-size: 12px; color: var(--nw-text-3); text-align: center; padding: 8px 0;">
-              Ningún invitado VIP
-            </div>
-            <div style="max-height: 180px; overflow-y: auto; display: grid; gap: 6px;">
-              <div *ngFor="let g of getGuestsByRole('vip')" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                <div style="display: grid; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; padding-right: 8px;">
-                  <strong style="color: var(--nw-text);">{{ g.name }}</strong>
-                  <span style="font-size: 10px; color: var(--nw-text-3);">{{ g.email || g.phone || 'Sin contacto' }}</span>
+      <!-- BLOQUE 3: Preview Interactivo Integrado (Email / WhatsApp) -->
+      <div *ngIf="previewTabMode === 'preview'" style="display:grid; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'email'"
+              [class.nw-btn-ghost]="previewModalKind !== 'email'" (click)="previewModalKind = 'email'"
+              style="font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Vista Email
+            </button>
+            <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'whatsapp'"
+              [class.nw-btn-ghost]="previewModalKind !== 'whatsapp'" (click)="previewModalKind = 'whatsapp'"
+              style="font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                </path>
+              </svg>
+              Vista WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <!-- Render Preview EMAIL Integrado -->
+        <div *ngIf="previewModalKind === 'email'"
+          style="background:#ffffff; border:1px solid #e8dfd5; border-radius:14px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.03);">
+          <div
+            style="background:#191c21; color:#ffffff; padding:12px 16px; font-size:12.5px; display:grid; gap:4px; border-bottom:1px solid #333842;">
+            <div><strong style="color:#a8825c;">De:</strong> {{ event?.title || 'Invitaciones.mx' }}
+              &lt;notificaciones@invitaciones.mx&gt;</div>
+            <div><strong style="color:#a8825c;">Para:</strong> {{ previewGuest?.name || sampleGuest.name }} &lt;{{
+              previewGuest?.email || sampleGuest.email }}&gt;</div>
+            <div><strong style="color:#a8825c;">Asunto:</strong> {{ getMessageSubject(selectedMessageType) }}</div>
+          </div>
+          <div style="background-color:#f8f6f2; padding:24px 16px;">
+            <div
+              style="max-width:520px; margin:0 auto; background-color:#ffffff; border-radius:14px; border:1px solid #e8dfd5; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+              <div
+                style="background:linear-gradient(135deg, #1e1b18 0%, #2d2620 100%); padding:20px 24px; text-align:center; border-bottom:3px solid #c09c78;">
+                <div style="display:inline-flex; align-items:center; gap:8px;">
+                  <span
+                    style="background:linear-gradient(135deg, #c09c78, #a8825c); width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; color:#ffffff; font-weight:bold; font-size:14px;">✨</span>
+                  <span
+                    style="font-family:'Georgia', serif; font-size:18px; font-weight:bold; color:#ffffff;">Invitaciones.mx</span>
                 </div>
-                <div style="display: flex; gap: 3px; flex-shrink: 0;">
-                  <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" style="padding: 2px 6px; font-size: 10px; min-height: 24px;" (click)="sendRealEmail(g)" *ngIf="canEmailGuest(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email">📧</button>
-                  <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" style="padding: 2px 6px; font-size: 10px; min-height: 24px;" (click)="sendRealWhatsapp(g)" *ngIf="canSendRealWhatsapp(g) || simulationMode" [disabled]="whatsappSending === getGuestId(g)" title="Enviar WhatsApp">💬</button>
+              </div>
+              <div style="padding:22px 24px 20px; color:#2d2926;">
+                <div
+                  style="display:inline-block; padding:3px 10px; background-color:#f4ebe1; color:#a8825c; font-size:10.5px; font-weight:700; border-radius:16px; margin-bottom:12px;">
+                  {{ getEmailPreviewBadge(selectedMessageType) }}
+                </div>
+                <h3
+                  style="margin:0 0 8px; font-size:20px; font-weight:700; color:#1e1b18; font-family:'Georgia', serif;">
+                  {{ event?.title || 'Nuestro Evento Especial' }}
+                </h3>
+                <p style="margin:0 0 12px; font-size:14px; color:#1e1b18; font-weight:600;">
+                  Hola {{ (previewGuest?.name || sampleGuest.name) }},
+                </p>
+                <p style="margin:0 0 16px; font-size:13.5px; line-height:1.6; color:#524c46; white-space:pre-wrap;">{{
+                  buildMessage(previewGuest || sampleGuest, selectedMessageType) }}</p>
+                <div
+                  *ngIf="getEventDateText() || getEventLocationText() || (previewGuest?.tableName || sampleGuest.tableName)"
+                  style="margin:16px 0; background-color:#fcfaf7; border:1px solid #efe4d8; border-radius:10px; padding:12px; font-size:13px; display:grid; gap:6px;">
+                  <div *ngIf="getEventDateText()"><strong style="color:#1e1b18;">📅 Fecha:</strong> {{
+                    getEventDateText() }}</div>
+                  <div *ngIf="getEventLocationText()"><strong style="color:#1e1b18;">📍 Lugar:</strong> {{
+                    getEventLocationText() }}</div>
+                  <div *ngIf="previewGuest?.tableName || sampleGuest.tableName"><strong style="color:#1e1b18;">🪑
+                      Mesa:</strong> {{ previewGuest?.tableName || sampleGuest.tableName }}</div>
+                </div>
+                <div style="text-align:center; margin:20px 0 12px;">
+                  <button type="button"
+                    style="display:inline-block; padding:11px 28px; background:linear-gradient(135deg, #c09c78 0%, #a8825c 100%); color:#ffffff; font-weight:700; font-size:14px; border:none; border-radius:8px; cursor:pointer;">
+                    {{ getEmailPreviewCta(selectedMessageType) }}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Familia Group -->
-          <div style="background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--nw-border); padding-bottom: 6px;">
-              <span style="font-weight: 700; font-size: 13px; color: var(--nw-text);">👨‍👩‍👧‍👦 Familia</span>
-              <span class="nw-pill accent" style="font-size: 10px; padding: 2px 6px;">{{ getGuestsByRole('familia').length }}</span>
+        <!-- Render Preview WHATSAPP Integrado -->
+        <div *ngIf="previewModalKind === 'whatsapp'"
+          style="background:#efeae2; border-radius:14px; padding:18px; border:1px solid #ded5c8;">
+          <div style="background:#075e54; color:#ffffff; padding:10px 14px; border-radius:8px 8px 0 0; font-size:13px;">
+            <strong>{{ previewGuest?.name || sampleGuest.name }}</strong>
+          </div>
+          <div
+            style="background:#ffffff; border-radius:0 10px 10px 10px; padding:14px; margin-top:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
+            <p style="margin:0; white-space:pre-wrap; font-size:13.5px; line-height:1.5; color:#111;">{{
+              buildMessage(previewGuest || sampleGuest, selectedMessageType) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <small style="color:var(--nw-text-3); font-size:11.5px; display:inline-flex; align-items:center; gap:5px;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent); flex-shrink:0;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        El nombre del invitado y su enlace personalizado se adjuntan automáticamente en cada mensaje sin riesgo de
+        borrarse.
+      </small>
+    </div>
+  </div>
+
+  <!-- Sección Independiente: Descarga Masiva de Pases VIP -->
+  <div class="nw-card" style="margin-bottom:16px; box-sizing:border-box; max-width:100%;">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div>
+        <h3 style="display: flex; align-items: center; gap: 8px; margin: 0 0 3px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Descarga de Pases en Lote (.ZIP)
+        </h3>
+        <p style="margin: 0; font-size: 12.5px; color: var(--nw-text-2);">
+          Genera un archivo comprimido con las tarjetas oficiales de pase VIP en formato PNG para todos los invitados registrados.
+        </p>
+      </div>
+      <button type="button" class="nw-btn nw-btn-primary" (click)="downloadAllPassesZip()"
+        [disabled]="downloadingZip || guests.length === 0"
+        style="display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13px; height:38px; padding:0 18px;">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Descargar Todos los Pases (.ZIP)
+      </button>
+    </div>
+  </div>
+
+  <!-- Pases de Acceso e Invitados Especiales -->
+  <div class="nw-card" style="margin-bottom:16px; box-sizing:border-box; max-width:100%;">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+        Pases de Acceso e Invitados Especiales
+      </h3>
+    </div>
+
+    <div style="display:grid; gap:14px;">
+      <!-- Selector de Modo de Entrega con Tarjetas Visuales -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+        <!-- Opción 1: Enlace Normal -->
+        <div (click)="deliveryModeWithImage = false"
+          [style.borderColor]="!deliveryModeWithImage ? 'var(--nw-accent)' : 'var(--nw-border)'"
+          [style.background]="!deliveryModeWithImage ? 'var(--nw-surface-2)' : 'var(--nw-surface)'"
+          style="border:1.5px solid; border-radius:10px; padding:12px 14px; cursor:pointer; display:flex; gap:12px; align-items:flex-start; transition:all 0.2s;">
+          <input type="radio" name="deliveryModeOption" [checked]="!deliveryModeWithImage"
+            style="width:16px; height:16px; margin:2px 0 0 0; flex-shrink:0; cursor:pointer;">
+          <div style="flex:1; min-width:0;">
+            <div
+              style="font-weight:700; font-size:13.5px; color:var(--nw-text); display:flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent); flex-shrink:0;">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              Modo Enlace (Predeterminado)
             </div>
-            <div *ngIf="getGuestsByRole('familia').length === 0" style="font-size: 12px; color: var(--nw-text-3); text-align: center; padding: 8px 0;">
-              Ningún invitado Familia
+            <div style="font-size:12px; color:var(--nw-text-3); margin-top:2px; line-height:1.4;">
+              Mensaje estándar con enlace directo. Los invitados descargan su pase digital al confirmar asistencia.
             </div>
-            <div style="max-height: 180px; overflow-y: auto; display: grid; gap: 6px;">
-              <div *ngFor="let g of getGuestsByRole('familia')" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                <div style="display: grid; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; padding-right: 8px;">
-                  <strong style="color: var(--nw-text);">{{ g.name }}</strong>
-                  <span style="font-size: 10px; color: var(--nw-text-3);">{{ g.email || g.phone || 'Sin contacto' }}</span>
-                </div>
-                <div style="display: flex; gap: 3px; flex-shrink: 0;">
-                  <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" style="padding: 2px 6px; font-size: 10px; min-height: 24px;" (click)="sendRealEmail(g)" *ngIf="canEmailGuest(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email">📧</button>
-                  <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" style="padding: 2px 6px; font-size: 10px; min-height: 24px;" (click)="sendRealWhatsapp(g)" *ngIf="canSendRealWhatsapp(g) || simulationMode" [disabled]="whatsappSending === getGuestId(g)" title="Enviar WhatsApp">💬</button>
-                </div>
+          </div>
+        </div>
+
+        <!-- Opción 2: Imagen para Invitados Especiales -->
+        <div (click)="deliveryModeWithImage = true"
+          [style.borderColor]="deliveryModeWithImage ? 'var(--nw-accent)' : 'var(--nw-border)'"
+          [style.background]="deliveryModeWithImage ? 'var(--nw-surface-2)' : 'var(--nw-surface)'"
+          style="border:1.5px solid; border-radius:10px; padding:12px 14px; cursor:pointer; display:flex; gap:12px; align-items:flex-start; transition:all 0.2s;">
+          <input type="radio" name="deliveryModeOption" [checked]="deliveryModeWithImage"
+            style="width:16px; height:16px; margin:2px 0 0 0; flex-shrink:0; cursor:pointer;">
+          <div style="flex:1; min-width:0;">
+            <div
+              style="font-weight:700; font-size:13.5px; color:var(--nw-text); display:flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent); flex-shrink:0;">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              Imagen Adjunta para Especiales
+              <span class="nw-pill" style="font-size:10px; padding:1px 6px;">Máx. 30</span>
+            </div>
+            <div style="font-size:12px; color:var(--nw-text-3); margin-top:2px; line-height:1.4;">
+              Seleccionar roles (VIPs, Familia, Padrinos) para enviarles directamente el pase en formato de imagen.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel con imagen para invitados especiales -->
+      <div *ngIf="deliveryModeWithImage"
+        style="display:grid; gap:14px; background:var(--nw-surface-2); border-radius:12px; padding:14px; border:1px solid var(--nw-border); box-sizing:border-box;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--nw-text);">
+              Selección de Invitados Especiales por Roles
+            </h4>
+            <p style="margin:2px 0 0; color:var(--nw-text-3); font-size:12px;">
+              A estos invitados se les enviará la imagen con su pase de acceso. Máximo 30 invitados permitidos.
+            </p>
+          </div>
+          <span class="nw-pill"
+            [class.success]="selectedSpecialGuestCount > 0 && selectedSpecialGuestCount <= maxSpecialGuests"
+            [class.danger]="selectedSpecialGuestCount >= maxSpecialGuests" style="font-weight:700; font-size:12px;">
+            {{ selectedSpecialGuestCount }} / {{ maxSpecialGuests }} invitados seleccionados
+          </span>
+        </div>
+
+        <!-- Alerta de Bloqueo tras Envío -->
+        <div *ngIf="specialPassesAlreadySent"
+          style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; padding: 10px 14px; color: #b45309; font-size: 12.5px; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <div>
+            <strong>Límite de Pases Especiales alcanzado:</strong> Ya se enviaron los pases especiales para este evento.
+            Esta acción ha sido completada y el cupo se encuentra bloqueado.
+          </div>
+        </div>
+
+        <!-- Botones rápidos por roles dinámicos -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button *ngFor="let role of dynamicSpecialRoles" type="button" class="nw-btn nw-btn-sm"
+            [class.nw-btn-primary]="isRoleFullySelectedForSpecialGuests(role.key)"
+            [class.nw-btn-ghost]="!isRoleFullySelectedForSpecialGuests(role.key)"
+            (click)="toggleRoleForSpecialGuests(role.key)"
+            [disabled]="specialPassesAlreadySent || (!isRoleFullySelectedForSpecialGuests(role.key) && selectedSpecialGuestCount >= maxSpecialGuests)"
+            style="font-size:12px; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;">
+            <span>{{ role.label }}</span>
+            <span class="nw-pill" style="font-size:10px; padding:1px 5px; background:rgba(0,0,0,0.06);">
+              {{ getGuestsByRole(role.key).length }}
+            </span>
+          </button>
+        </div>
+
+        <!-- Grid de Grupos Especiales (Nombres completos sin recorte) -->
+        <div
+          style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; margin-top:4px;">
+          <div *ngFor="let role of dynamicSpecialRoles"
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:12px; display:flex; flex-direction:column; gap:8px; box-sizing:border-box;">
+            <div
+              style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--nw-border); padding-bottom:6px;">
+              <span style="font-weight:700; font-size:13px; color:var(--nw-text);">
+                {{ role.label }}
+              </span>
+              <span class="nw-pill accent" style="font-size:10px; padding:2px 6px;">
+                {{ getGuestsByRole(role.key).length }}
+              </span>
+            </div>
+            <div *ngIf="getGuestsByRole(role.key).length === 0"
+              style="font-size:12px; color:var(--nw-text-3); text-align:center; padding:8px 0;">
+              Ningún invitado con este rol
+            </div>
+            <div style="max-height:180px; overflow-y:auto; display:grid; gap:6px;">
+              <div *ngFor="let g of getGuestsByRole(role.key)"
+                style="display:flex; align-items:center; gap:8px; font-size:13px; padding:3px 2px;">
+                <input type="checkbox" [checked]="isSpecialGuestSelected(g)" (change)="toggleSpecialGuest(g)"
+                  [disabled]="specialPassesAlreadySent || (!isSpecialGuestSelected(g) && selectedSpecialGuestCount >= maxSpecialGuests)"
+                  style="flex-shrink:0; width:15px; height:15px; cursor:pointer;">
+                <span
+                  style="flex:1; min-width:0; word-break:break-word; line-height:1.3; color:var(--nw-text); font-weight:600;">
+                  {{ g.name }}
+                  <span *ngIf="g.group && g.group.toLowerCase() !== role.key.toLowerCase()" class="nw-pill"
+                    style="font-size:10px; margin-left:4px; font-weight:normal;">{{ g.group }}</span>
+                </span>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Padrinos Group -->
-          <div style="background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--nw-border); padding-bottom: 6px;">
-              <span style="font-weight: 700; font-size: 13px; color: var(--nw-text);">💒 Padrinos</span>
-              <span class="nw-pill accent" style="font-size: 10px; padding: 2px 6px;">{{ getGuestsByRole('padrino').length }}</span>
-            </div>
-            <div *ngIf="getGuestsByRole('padrino').length === 0" style="font-size: 12px; color: var(--nw-text-3); text-align: center; padding: 8px 0;">
-              Ningún invitado Padrinos
-            </div>
-            <div style="max-height: 180px; overflow-y: auto; display: grid; gap: 6px;">
-              <div *ngFor="let g of getGuestsByRole('padrino')" style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                <div style="display: grid; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; padding-right: 8px;">
-                  <strong style="color: var(--nw-text);">{{ g.name }}</strong>
-                  <span style="font-size: 10px; color: var(--nw-text-3);">{{ g.email || g.phone || 'Sin contacto' }}</span>
-                </div>
-                <div style="display: flex; gap: 3px; flex-shrink: 0;">
-                  <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" style="padding: 2px 6px; font-size: 10px; min-height: 24px;" (click)="sendRealEmail(g)" *ngIf="canEmailGuest(g)" [disabled]="emailSending === getGuestId(g)" title="Enviar Email">📧</button>
-                  <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" style="padding: 2px 6px; font-size: 10px; min-height: 24px;" (click)="sendRealWhatsapp(g)" *ngIf="canSendRealWhatsapp(g) || simulationMode" [disabled]="whatsappSending === getGuestId(g)" title="Enviar WhatsApp">💬</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <!-- Botón de Envío Global para Especiales (Máximo 30) -->
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--nw-border); padding-top:12px; margin-top:6px;">
+          <span style="font-size:12px; color:var(--nw-text-3);">
+            {{ specialPassesAlreadySent ? 'Cupo cerrado para este evento.' : 'Se enviará el mensaje con pase VIP adjunto
+            a los ' + selectedSpecialGuestCount + ' invitados seleccionados.' }}
+          </span>
+          <button type="button" class="nw-btn nw-btn-primary" (click)="sendSpecialGuestsPasses()"
+            [disabled]="specialGuestsSending || specialPassesAlreadySent || selectedSpecialGuestCount === 0 || selectedSpecialGuestCount > maxSpecialGuests"
+            style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; padding:8px 18px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            {{ specialGuestsSending ? 'Enviando Pases...' : (specialPassesAlreadySent ? 'Pases Enviados (Bloqueado)' :
+            'Enviar Pases con Imagen (' + selectedSpecialGuestCount + ')') }}
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- WhatsApp Media -->
+  <!-- WhatsApp Media (Comentado temporalmente) -->
+  <!--
   <div class="nw-card" style="margin-bottom:16px;">
     <div class="nw-card-header">
-      <h3>Media para WhatsApp</h3>
+      <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        Media para WhatsApp
+      </h3>
     </div>
     <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
       <span class="nw-switch">
@@ -207,57 +752,93 @@
         <label class="nw-label">Media guardada
           <select class="nw-select" [(ngModel)]="whatsappMedia.assetId">
             <option value="">URL manual</option>
-            <option *ngFor="let asset of whatsappMediaAssets" [value]="getWhatsAppMediaAssetId(asset)">{{ asset.fileName }} · {{ asset.type }}</option>
+            <option *ngFor="let asset of whatsappMediaAssets" [value]="getWhatsAppMediaAssetId(asset)">{{ asset.fileName
+              }} · {{ asset.type }}</option>
           </select>
         </label>
         <label class="nw-label">Subir archivo <input type="file"
             accept="image/*,video/mp4,video/webm,video/quicktime,audio/*,application/pdf"
             (change)="onWhatsappMediaSelected($event)"></label>
         <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="uploadWhatsappMedia()"
-          [disabled]="whatsappMediaUploading || !selectedWhatsappMediaFile">{{ whatsappMediaUploading ? 'Subiendo...' : 'Subir a S3' }}</button>
+          [disabled]="whatsappMediaUploading || !selectedWhatsappMediaFile">{{ whatsappMediaUploading ? 'Subiendo...' :
+          'Subir a S3' }}</button>
       </div>
       <div *ngIf="!whatsappMedia.assetId" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-        <label class="nw-label" style="flex:1; min-width:250px;">URL <input class="nw-input" [(ngModel)]="whatsappMedia.url" placeholder="https://..."></label>
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="inspectWhatsappMediaUrl()" [disabled]="mediaInspecting || !whatsappMedia.url">
+        <label class="nw-label" style="flex:1; min-width:250px;">URL <input class="nw-input"
+            [(ngModel)]="whatsappMedia.url" placeholder="https://..."></label>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="inspectWhatsappMediaUrl()"
+          [disabled]="mediaInspecting || !whatsappMedia.url">
           {{ mediaInspecting ? 'Analizando...' : 'Analizar' }}
         </button>
       </div>
-      <label class="nw-label">Caption <textarea class="nw-input" rows="2" [(ngModel)]="whatsappMedia.caption" placeholder="Texto que acompaña la media"></textarea></label>
+      <label class="nw-label">Caption <textarea class="nw-input" rows="2" [(ngModel)]="whatsappMedia.caption"
+          placeholder="Texto que acompaña la media"></textarea></label>
     </div>
   </div>
-
-  <!-- Preview -->
-  <div class="nw-card" style="margin-bottom:16px;">
-    <div class="nw-card-header">
-      <h3>Preview WhatsApp</h3>
-    </div>
-    <p style="font-size:14px; color:var(--nw-text-2);">Destinatarios activos: {{ whatsappRecipientCount }}. Excepciones: {{ exceptionCount }}. Sin teléfono: {{ whatsappMissingPhoneCount }}.</p>
-    <pre style="background:var(--nw-surface-2); padding:12px; border-radius:var(--nw-radius-sm); white-space:pre-wrap; font-size:13px; color:var(--nw-text-2);">{{ bulkWhatsappPreview }}</pre>
-  </div>
+  -->
 
   <!-- Lista de Destinatarios y Excepciones -->
   <div class="nw-card" style="margin-bottom:16px;">
-    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div>
-        <h3 style="margin:0;">📋 Lista de Destinatarios y Excepciones</h3>
-        <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3)">Desmarca los invitados que desees excluir de los envíos masivos.</p>
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Lista de Destinatarios y Excepciones
+        </h3>
+        <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-3)">Desmarca los invitados que desees excluir de
+          los envíos masivos.</p>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
-        <span class="nw-pill warning" *ngIf="exceptionCount > 0">🚫 {{ exceptionCount }} Excepción(es)</span>
+        <span class="nw-pill danger" *ngIf="exceptionCount > 0"
+          style="display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+          </svg>
+          {{ exceptionCount }} Excepción(es)
+        </span>
         <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="selectAllRecipients()">Seleccionar todos</button>
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" *ngIf="exceptionCount > 0" (click)="clearExceptions()">Limpiar excepciones</button>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" *ngIf="exceptionCount > 0" (click)="clearExceptions()">Limpiar
+          excepciones</button>
       </div>
     </div>
+    <div
+      style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto; width: 100%;">
 
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
-      <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar destinatario..." style="max-width:240px;">
-      <select class="nw-select" [(ngModel)]="guestStatusFilter" style="width:auto;">
+      <!-- Buscador Destinatario -->
+      <div style="position: relative; flex: 1; min-width: 220px;">
+        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--nw-text-3);">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input class="nw-input" [(ngModel)]="guestSearch" (ngModelChange)="guestPage = 1"
+          placeholder="Buscar destinatario..."
+          style="height: 42px; padding: 0 14px 0 36px; width: 100%; font-size: 13px; box-sizing: border-box;">
+      </div>
+
+      <!-- Select Filtro 1 (Estado) -->
+      <select class="nw-select" [(ngModel)]="guestStatusFilter" (ngModelChange)="guestPage = 1"
+        style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
         <option value="">Todos los estados</option>
         <option value="pending">Pendientes</option>
         <option value="confirmed">Confirmados</option>
         <option value="declined">Rechazados</option>
       </select>
-      <select class="nw-select" [(ngModel)]="guestCommunicationFilter" style="width:auto;">
+
+      <!-- Select Filtro 2 (Seguimiento) -->
+      <select class="nw-select" [(ngModel)]="guestCommunicationFilter" (ngModelChange)="guestPage = 1"
+        style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
         <option value="">Seguimiento</option>
         <option value="pending">Por enviar</option>
         <option value="sent">Enviados</option>
@@ -267,28 +848,67 @@
         <option value="failed">Fallidos</option>
         <option value="confirmed">Confirmados</option>
       </select>
-      <select class="nw-select" [(ngModel)]="guestGroupFilter" style="width:auto;">
+
+      <!-- Select Filtro 3 (Grupos) -->
+      <select class="nw-select" [(ngModel)]="guestGroupFilter" (ngModelChange)="guestPage = 1"
+        style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
         <option value="">Todos los grupos</option>
         <option *ngFor="let group of guestGroups" [value]="group">{{ group }}</option>
       </select>
-      <span class="nw-pill" style="margin-left:auto;">{{ activeRecipients.length }} activos / {{ filteredGuests.length }} filtrados</span>
+
+      <!-- Botón Limpiar Filtros -->
+      <button *ngIf="guestSearch || guestStatusFilter || guestCommunicationFilter || guestGroupFilter" type="button"
+        class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearAllFilters()"
+        style="white-space: nowrap; height: 42px; font-size: 12px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Limpiar
+      </button>
+
+      <span class="nw-pill" style="margin-left:auto; flex-shrink: 0;">{{ activeRecipients.length }} activos / {{
+        filteredGuests.length }} filtrados</span>
     </div>
 
     <!-- BARRA DESTACADA DE ACCIONES DE ENVÍO JUNTO A LA TABLA -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:rgba(192, 156, 120, 0.08); border:1px solid rgba(192, 156, 120, 0.3); border-radius:10px; margin-bottom:14px;">
+    <div
+      style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:rgba(192, 156, 120, 0.08); border:1px solid rgba(192, 156, 120, 0.3); border-radius:10px; margin-bottom:14px;">
       <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:14px; font-weight:700; color:var(--nw-text);">
-          🚀 Acciones de Envío Masivo:
+        <span
+          style="font-size:14px; font-weight:700; color:var(--nw-text); display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          Acciones de Envío Masivo:
         </span>
-        <span class="nw-pill success" style="font-weight:700;">{{ activeRecipients.length }} activos seleccionados</span>
+        <span class="nw-pill success" style="font-weight:700;">{{ activeRecipients.length }} activos
+          seleccionados</span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <button class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !activeRecipients.length">
-          {{ emailBulkSending ? 'Enviando Email...' : '📧 Enviar Email Masivo (' + activeRecipients.length + ')' }}
+        <button class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()"
+          [disabled]="emailBulkSending || !activeEmailRecipientsCount"
+          style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          {{ emailBulkSending ? 'Enviando Email...' : 'Enviar Email Masivo (' + activeEmailRecipientsCount + ')' }}
         </button>
         <button class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
-          [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeRecipients.length">
-          {{ whatsappBulkSending ? 'Enviando WhatsApp...' : '📱 Enviar WhatsApp Masivo (' + activeRecipients.length + ')' }}
+          [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeWhatsappRecipientsCount"
+          style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+            </path>
+          </svg>
+          {{ whatsappBulkSending ? 'Enviando WhatsApp...' : 'Enviar WhatsApp Masivo (' + activeWhatsappRecipientsCount +
+          ')' }}
         </button>
       </div>
     </div>
@@ -298,116 +918,323 @@
     </div>
 
     <div class="nw-table-wrap" *ngIf="filteredGuests.length > 0">
-      <table class="nw-table">
-        <thead>
-          <tr>
-            <th style="width:40px; text-align:center;">Enviar</th>
-            <th>Invitado</th>
-            <th>Contacto</th>
-            <th>Mesa</th>
-            <th>Pase VIP</th>
-            <th>Seguimiento</th>
-            <th style="text-align:right;">Acciones Individuales</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let g of filteredGuests" [style.opacity]="isExcluded(g) ? '0.5' : '1'"
-            [style.background]="isExcluded(g) ? 'rgba(239, 68, 68, 0.04)' : 'transparent'">
-            <td style="text-align:center; white-space:nowrap;">
-              <input type="checkbox" [checked]="!isExcluded(g)" (change)="toggleException(g)" title="Desmarcar para excluir">
-            </td>
-            <td style="white-space:nowrap;">
-              <strong>{{ g.name }}</strong>
-              <span class="nw-pill danger" *ngIf="isExcluded(g)" style="margin-left:6px; font-size:10px;">Excepción</span>
-              <span class="nw-pill" *ngIf="g.group" style="margin-left:4px; font-size:11px;">{{ g.group }}</span>
-            </td>
-            <td style="font-size:12px; color:var(--nw-text-2); white-space:nowrap;">
-              <span *ngIf="g.email">📧 {{ g.email }}</span>
-              <span *ngIf="g.phone" style="margin-left:6px;">📱 {{ g.phone }}</span>
-              <span *ngIf="!g.email && !g.phone" style="color:var(--nw-text-3)">Sin contacto</span>
-            </td>
-            <td style="font-size:13px; white-space:nowrap;">
-              <span *ngIf="g.tableName" class="nw-pill accent">{{ g.tableName }} <small *ngIf="g.seatLabel">/ {{ g.seatLabel }}</small></span>
-              <span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span>
-            </td>
-            <td style="white-space:nowrap;">
-              <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="downloadGuestPass(g)">📄 Pase VIP</button>
-            </td>
-            <td style="white-space:nowrap;">
-              <span class="nw-pill" [class.success]="getCommunicationStatus(g) === 'confirmed'">{{ communicationLabel(getCommunicationStatus(g)) }}</span>
-            </td>
-            <td style="text-align:right; white-space:nowrap;">
-              <div style="display:flex; align-items:center; justify-content:flex-end; gap:3px; white-space:nowrap;">
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 8px; font-size:12px;" (click)="openPreviewModal(g, 'email')">👁️ Preview</button>
-                <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)">📧 Email</button>
-                <button *ngIf="canSendRealWhatsapp(g) || simulationMode" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)">📱 WA</button>
-                <a *ngIf="canEmailGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')">✉️</a>
-                <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" [href]="getWhatsappLink(g)" target="_blank" (click)="markMessageSent(g, 'whatsapp')">💬</a>
-                <button class="nw-btn nw-btn-ghost nw-btn-sm" style="min-height:28px; padding:2px 6px; font-size:12px;" (click)="setCommunicationStatus(g, 'pending')">⏳</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="nw-table-responsive"
+        style="overflow-x: auto; max-width: 100%; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+        <table class="nw-table" style="width: 100%; min-width: 760px; margin: 0;">
+          <thead>
+            <tr>
+              <th style="width:40px; text-align:center; padding: 12px 14px;">Enviar</th>
+              <th style="padding: 12px 14px;">Invitado</th>
+              <th style="padding: 12px 14px;">Contacto</th>
+              <th style="padding: 12px 14px;">Mesa</th>
+              <th style="padding: 12px 14px;">Pase VIP</th>
+              <th style="padding: 12px 14px;">Seguimiento</th>
+              <th style="text-align:right; padding: 12px 14px;">Acciones Individuales</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let g of paginatedGuests" [style.opacity]="isExcluded(g) ? '0.5' : '1'"
+              [style.background]="isExcluded(g) ? 'rgba(239, 68, 68, 0.04)' : 'transparent'">
+              <td style="text-align:center; white-space:nowrap; padding: 12px 14px;">
+                <input type="checkbox" [checked]="!isExcluded(g)" (change)="toggleException(g)"
+                  title="Desmarcar para excluir">
+              </td>
+              <td style="white-space:nowrap; padding: 12px 14px;">
+                <strong>{{ g.name }}</strong>
+                <span class="nw-pill danger" *ngIf="isExcluded(g)"
+                  style="margin-left:6px; font-size:10px;">Excepción</span>
+                <span class="nw-pill" *ngIf="g.group" style="margin-left:4px; font-size:11px;">{{ g.group }}</span>
+              </td>
+              <td style="font-size:12.5px; color:var(--nw-text-2); padding:10px 14px; white-space:nowrap;">
+                <div style="display:flex; flex-direction:column; gap:3px;">
+                  <div *ngIf="g.email" style="display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3);">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    {{ g.email }}
+                  </div>
+                  <div *ngIf="g.phone" style="display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3);">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                      <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                    {{ g.phone }}
+                  </div>
+                  <span *ngIf="!g.email && !g.phone" style="color:var(--nw-text-3)">Sin contacto</span>
+                </div>
+              </td>
+              <td style="font-size:13px; white-space:nowrap; padding: 12px 14px;">
+                <span *ngIf="g.tableName" class="nw-pill accent">{{ g.tableName }} <small *ngIf="g.seatLabel">/ {{
+                    g.seatLabel }}</small></span>
+                <span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span>
+              </td>
+              <td style="white-space:nowrap; padding: 12px 14px;">
+                <button class="nw-btn nw-btn-ghost nw-btn-sm"
+                  style="min-height:28px; padding:2px 8px; font-size:11.5px; display: inline-flex; align-items: center; gap: 4px;"
+                  (click)="downloadGuestPass(g)" [disabled]="downloadingPass === getGuestId(g)"
+                  title="Descargar Pase VIP en imagen PNG">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  {{ downloadingPass === getGuestId(g) ? 'Generando' : 'Pase' }}
+                </button>
+              </td>
+              <td style="white-space:nowrap; padding: 12px 14px;">
+                <span class="nw-pill" [class.success]="getCommunicationStatus(g) === 'confirmed'"
+                  [class.danger]="getCommunicationStatus(g) === 'failed'"
+                  [class.warning]="getCommunicationStatus(g) === 'pending'"
+                  [class.accent]="getCommunicationStatus(g) === 'sent' || getCommunicationStatus(g) === 'opened'"
+                  [class.info]="getCommunicationStatus(g) === 'delivered' || getCommunicationStatus(g) === 'read'">
+                  {{ communicationLabel(getCommunicationStatus(g)) }}
+                </span>
+              </td>
+              <td style="text-align:right; white-space:nowrap; padding: 12px 14px;">
+                <div style="display:flex; align-items:center; justify-content:flex-end; gap:3px; white-space:nowrap;">
+                  <button *ngIf="canEmailGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; gap: 4px;"
+                    (click)="sendRealEmail(g)" [disabled]="emailSending === getGuestId(g)">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Email
+                  </button>
+                  <button *ngIf="canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; gap: 4px;"
+                    (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                      </path>
+                    </svg>
+                    WA
+                  </button>
+                  <a *ngIf="canEmailGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
+                    [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')" title="Abrir en gestor local">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                  </a>
+                  <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
+                    [href]="getWhatsappLink(g)" target="_blank" (click)="markMessageSent(g, 'whatsapp')"
+                    title="Abrir WhatsApp Web">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                      </path>
+                    </svg>
+                  </a>
+                  <button class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
+                    (click)="setCommunicationStatus(g, 'pending')" title="Restablecer estado">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- FOOTER DE ACCIONES AL PIE DE LA TABLA -->
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:var(--nw-surface-2); border-top:1px solid var(--nw-border);">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-top:none; border-radius: 0 0 var(--nw-radius-sm, 12px) var(--nw-radius-sm, 12px);">
         <span style="font-size:13px; color:var(--nw-text-2);">
-          Mostrando {{ filteredGuests.length }} invitados (<strong>{{ activeRecipients.length }} activos listos para envío</strong>).
+          Mostrando {{ paginatedGuests.length }} de {{ filteredGuests.length }} invitados (<strong>{{
+            activeRecipients.length }} activos listos para envío</strong>).
         </span>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendBulkEmail()" [disabled]="emailBulkSending || !activeRecipients.length">
-            {{ emailBulkSending ? 'Enviando...' : '📧 Enviar Email (' + activeRecipients.length + ')' }}
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="sendBulkEmail()"
+            [disabled]="emailBulkSending || !activeEmailRecipientsCount"
+            style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            {{ emailBulkSending ? 'Enviando...' : 'Enviar Email (' + activeEmailRecipientsCount + ')' }}
           </button>
           <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="sendBulkWhatsapp()"
-            [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeRecipients.length">
-            {{ whatsappBulkSending ? 'Enviando...' : '📱 Enviar WhatsApp (' + activeRecipients.length + ')' }}
+            [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeWhatsappRecipientsCount"
+            style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+              </path>
+            </svg>
+            {{ whatsappBulkSending ? 'Enviando...' : 'Enviar WhatsApp (' + activeWhatsappRecipientsCount + ')' }}
           </button>
         </div>
       </div>
     </div>
+
+    <!-- 🎛️ Paginación de Destinatarios -->
+    <div *ngIf="filteredGuests.length > guestPageSize"
+      style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 16px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); flex-wrap: wrap; gap: 10px;">
+      <span style="font-size: 13px; color: var(--nw-text-2, #6e6157); font-weight: 500;">
+        Mostrando <strong>{{ (guestPage - 1) * guestPageSize + 1 }}</strong> a <strong>{{ Math.min(guestPage *
+          guestPageSize, filteredGuests.length) }}</strong> de <strong>{{ filteredGuests.length }}</strong> invitados
+      </span>
+
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <!-- Botón Anterior -->
+        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="guestPage === 1"
+          (click)="setPage(guestPage - 1)"
+          style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Anterior
+        </button>
+
+        <!-- Números de Página -->
+        <button type="button" *ngFor="let p of getPagesArray()" class="nw-btn nw-btn-sm" (click)="setPage(p)"
+          [class.nw-btn-primary]="guestPage === p" [class.nw-btn-ghost]="guestPage !== p"
+          style="height: 32px; min-width: 32px; padding: 0 8px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">
+          {{ p }}
+        </button>
+
+        <!-- Botón Siguiente -->
+        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="guestPage === totalPages"
+          (click)="setPage(guestPage + 1)"
+          style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+          Siguiente
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎟️ Sección: Adjuntar Pase VIP (Al final de la página, desactivado por defecto) -->
+  <div class="nw-card" style="margin-bottom:16px;">
+    <div class="nw-card-header">
+      <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <path
+            d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z">
+          </path>
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+        </svg>
+        Adjuntar Pase VIP
+      </h3>
+    </div>
+    <p style="margin: 0 0 12px 0; color: var(--nw-text-2); font-size: 13px;">
+      Permite adjuntar el pase de acceso personalizado con código QR como tarjeta interactiva / archivo dentro de las
+      comunicaciones de correo electrónico y WhatsApp.
+    </p>
+    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+      <span class="nw-switch">
+        <input type="checkbox" [(ngModel)]="includePassInMessage">
+        <span class="nw-slider"></span>
+      </span>
+      <span style="font-size:14px; font-weight:600; color: var(--nw-text);">
+        Adjuntar Pase VIP como tarjeta/archivo en los mensajes (Email y WhatsApp)
+      </span>
+    </label>
   </div>
 
   <!-- Modal de Previsualización Email / WhatsApp -->
   <div class="nw-modal-backdrop" *ngIf="showPreviewModal" (click)="closePreviewModal()">
-    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width:680px; width:95%; max-height:90vh; overflow-y:auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--nw-border); padding-bottom:12px;">
+    <div class="nw-modal" (click)="$event.stopPropagation()"
+      style="max-width:680px; width:95%; max-height:90vh; overflow-y:auto;">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--nw-border); padding-bottom:12px;">
         <div style="display:flex; gap:8px; align-items:center;">
-          <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'email'" [class.nw-btn-ghost]="previewModalKind !== 'email'" (click)="previewModalKind = 'email'">📧 Vista Email</button>
-          <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'whatsapp'" [class.nw-btn-ghost]="previewModalKind !== 'whatsapp'" (click)="previewModalKind = 'whatsapp'">📱 Vista WhatsApp</button>
+          <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'email'"
+            [class.nw-btn-ghost]="previewModalKind !== 'email'" (click)="previewModalKind = 'email'"
+            style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            Vista Email
+          </button>
+          <button class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewModalKind === 'whatsapp'"
+            [class.nw-btn-ghost]="previewModalKind !== 'whatsapp'" (click)="previewModalKind = 'whatsapp'"
+            style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+              </path>
+            </svg>
+            Vista WhatsApp
+          </button>
         </div>
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="closePreviewModal()">✕ Cerrar</button>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="closePreviewModal()"
+          style="display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Cerrar
+        </button>
       </div>
 
       <!-- Preview EMAIL -->
-      <div *ngIf="previewModalKind === 'email'" style="background:#ffffff; border:1px solid #e8dfd5; border-radius:16px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.04);">
+      <div *ngIf="previewModalKind === 'email'"
+        style="background:#ffffff; border:1px solid #e8dfd5; border-radius:16px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.04);">
         <!-- Email Metadata Header -->
-        <div style="background:#191c21; color:#ffffff; padding:16px 20px; font-size:13px; display:grid; gap:6px; border-bottom:1px solid #333842;">
-          <div><strong style="color:#a8825c;">De:</strong> {{ event?.title || 'Invitaciones.mx' }} &lt;notificaciones@invitaciones.mx&gt;</div>
-          <div><strong style="color:#a8825c;">Para:</strong> {{ previewGuest?.name || 'Nombre del Invitado' }} &lt;{{ previewGuest?.email || 'invitado@ejemplo.com' }}&gt;</div>
+        <div
+          style="background:#191c21; color:#ffffff; padding:16px 20px; font-size:13px; display:grid; gap:6px; border-bottom:1px solid #333842;">
+          <div><strong style="color:#a8825c;">De:</strong> {{ event?.title || 'Invitaciones.mx' }}
+            &lt;notificaciones@invitaciones.mx&gt;</div>
+          <div><strong style="color:#a8825c;">Para:</strong> {{ previewGuest?.name || 'Nombre del Invitado' }} &lt;{{
+            previewGuest?.email || 'invitado@ejemplo.com' }}&gt;</div>
           <div><strong style="color:#a8825c;">Asunto:</strong> {{ getMessageSubject(selectedMessageType) }}</div>
         </div>
 
         <!-- Rendered Email Body -->
         <div style="background-color:#f8f6f2; padding:32px 16px;">
-          <div style="max-width:540px; margin:0 auto; background-color:#ffffff; border-radius:16px; border:1px solid #e8dfd5; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.03);">
-            
+          <div
+            style="max-width:540px; margin:0 auto; background-color:#ffffff; border-radius:16px; border:1px solid #e8dfd5; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.03);">
+
             <!-- Email Top Banner -->
-            <div style="background:linear-gradient(135deg, #1e1b18 0%, #2d2620 100%); padding:24px 28px; text-align:center; border-bottom:3px solid #c09c78;">
+            <div
+              style="background:linear-gradient(135deg, #1e1b18 0%, #2d2620 100%); padding:24px 28px; text-align:center; border-bottom:3px solid #c09c78;">
               <div style="display:inline-flex; align-items:center; gap:10px;">
-                <span style="background:linear-gradient(135deg, #c09c78, #a8825c); width:32px; height:32px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#ffffff; font-weight:bold; font-size:16px;">✨</span>
-                <span style="font-family:'Georgia', serif; font-size:20px; font-weight:bold; color:#ffffff; letter-spacing:0.5px;">Invitaciones.mx</span>
+                <span
+                  style="background:linear-gradient(135deg, #c09c78, #a8825c); width:32px; height:32px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#ffffff; font-weight:bold; font-size:16px;">✨</span>
+                <span
+                  style="font-family:'Georgia', serif; font-size:20px; font-weight:bold; color:#ffffff; letter-spacing:0.5px;">Invitaciones.mx</span>
               </div>
             </div>
 
             <!-- Email Main Content Card -->
             <div style="padding:28px 28px 24px; color:#2d2926;">
               <!-- Badge -->
-              <div style="display:inline-block; padding:4px 12px; background-color:#f4ebe1; color:#a8825c; font-size:11px; font-weight:700; border-radius:20px; letter-spacing:0.8px; margin-bottom:14px;">
+              <div
+                style="display:inline-block; padding:4px 12px; background-color:#f4ebe1; color:#a8825c; font-size:11px; font-weight:700; border-radius:20px; letter-spacing:0.8px; margin-bottom:14px;">
                 {{ getEmailPreviewBadge(selectedMessageType) }}
               </div>
 
-              <h2 style="margin:0 0 10px; font-size:22px; font-weight:700; color:#1e1b18; line-height:1.3; font-family:'Georgia', serif;">
+              <h2
+                style="margin:0 0 10px; font-size:22px; font-weight:700; color:#1e1b18; line-height:1.3; font-family:'Georgia', serif;">
                 {{ event?.title || 'Nuestro Evento Especial' }}
               </h2>
 
@@ -415,29 +1242,37 @@
                 Hola {{ previewGuest?.name || 'Invitado' }},
               </p>
 
-              <p style="margin:0 0 18px; font-size:14px; line-height:1.6; color:#524c46; white-space:pre-wrap;">{{ buildMessage(previewGuest || guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
+              <p style="margin:0 0 18px; font-size:14px; line-height:1.6; color:#524c46; white-space:pre-wrap;">{{
+                buildMessage(previewGuest || guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
 
               <!-- Details Box -->
-              <div *ngIf="getEventDateText() || getEventLocationText() || previewGuest?.tableName" style="margin:20px 0; background-color:#fcfaf7; border:1px solid #efe4d8; border-radius:12px; padding:14px; font-size:13.5px; display:grid; gap:8px;">
-                <div *ngIf="getEventDateText()"><strong style="color:#1e1b18;">📅 Fecha:</strong> {{ getEventDateText() }}</div>
-                <div *ngIf="getEventLocationText()"><strong style="color:#1e1b18;">📍 Lugar:</strong> {{ getEventLocationText() }}</div>
-                <div *ngIf="previewGuest?.tableName"><strong style="color:#1e1b18;">🪑 Mesa:</strong> {{ previewGuest?.tableName }}</div>
+              <div *ngIf="getEventDateText() || getEventLocationText() || previewGuest?.tableName"
+                style="margin:20px 0; background-color:#fcfaf7; border:1px solid #efe4d8; border-radius:12px; padding:14px; font-size:13.5px; display:grid; gap:8px;">
+                <div *ngIf="getEventDateText()"><strong style="color:#1e1b18;">📅 Fecha:</strong> {{ getEventDateText()
+                  }}</div>
+                <div *ngIf="getEventLocationText()"><strong style="color:#1e1b18;">📍 Lugar:</strong> {{
+                  getEventLocationText() }}</div>
+                <div *ngIf="previewGuest?.tableName"><strong style="color:#1e1b18;">🪑 Mesa:</strong> {{
+                  previewGuest?.tableName }}</div>
               </div>
 
               <!-- CTA Button -->
               <div style="text-align:center; margin:24px 0 16px;">
-                <button type="button" style="display:inline-block; padding:13px 32px; background:linear-gradient(135deg, #c09c78 0%, #a8825c 100%); color:#ffffff; font-weight:700; font-size:14.5px; border:none; border-radius:10px; cursor:pointer; box-shadow:0 4px 12px rgba(192, 156, 120, 0.4);">
+                <button type="button"
+                  style="display:inline-block; padding:13px 32px; background:linear-gradient(135deg, #c09c78 0%, #a8825c 100%); color:#ffffff; font-weight:700; font-size:14.5px; border:none; border-radius:10px; cursor:pointer; box-shadow:0 4px 12px rgba(192, 156, 120, 0.4);">
                   {{ getEmailPreviewCta(selectedMessageType) }}
                 </button>
               </div>
 
-              <div style="font-size:12px; color:#888077; border-top:1px solid #f0e9e1; padding-top:16px; margin-top:20px; text-align:center;">
+              <div
+                style="font-size:12px; color:#888077; border-top:1px solid #f0e9e1; padding-top:16px; margin-top:20px; text-align:center;">
                 Si el botón no funciona, podrás ingresar directamente desde el enlace incluido en tu correo.
               </div>
             </div>
 
             <!-- Email Footer -->
-            <div style="background-color:#faf7f2; padding:16px 28px; text-align:center; border-top:1px solid #e8dfd5; font-size:11.5px; color:#999085;">
+            <div
+              style="background-color:#faf7f2; padding:16px 28px; text-align:center; border-top:1px solid #e8dfd5; font-size:11.5px; color:#999085;">
               © Invitaciones.mx — Todos los derechos reservados.
             </div>
           </div>
@@ -450,14 +1285,131 @@
           <strong>{{ previewGuest?.name || 'Invitado' }}</strong>
         </div>
         <div style="background:#ffffff; border-radius:0 12px 12px 12px; padding:14px; margin-top:12px;">
-          <p style="margin:0; white-space:pre-wrap; font-size:14px; line-height:1.5;">{{ buildMessage(previewGuest || guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
+          <p style="margin:0; white-space:pre-wrap; font-size:14px; line-height:1.5;">{{ buildMessage(previewGuest ||
+            guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
         </div>
       </div>
 
-      <div class="nw-modal-actions" style="margin-top:16px;">
+      <div class="nw-modal-actions" style="margin-top:16px; display: flex; justify-content: flex-end;">
         <button class="nw-btn nw-btn-ghost" (click)="closePreviewModal()">Cerrar</button>
-        <button *ngIf="previewGuest" class="nw-btn nw-btn-primary" (click)="simulateSendGuest(previewGuest, previewModalKind)">
-          🧪 Simular como enviado a {{ previewGuest.name }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Popup de Progreso (Enviando / Descargando) -->
+  <div class="nw-modal-overlay" *ngIf="progressModal.visible"
+    style="position: fixed; inset: 0; z-index: 1200; background: rgba(15, 12, 10, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
+    
+    <style>
+      @keyframes spinProgressIcon {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes shimmerBarGradient {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+      }
+      .nw-progress-spin {
+        animation: spinProgressIcon 3s linear infinite;
+      }
+      .nw-progress-shimmer {
+        background: linear-gradient(90deg, #c09c78 0%, #ecd9c6 50%, #c09c78 100%);
+        background-size: 200% 100%;
+        animation: shimmerBarGradient 2s infinite linear;
+      }
+    </style>
+
+    <div class="nw-modal"
+      style="background: var(--nw-surface, #ffffff); border-radius: 16px; border: 1px solid var(--nw-border, #eadecc); box-shadow: 0 20px 40px rgba(0,0,0,0.2); width: 100%; max-width: 460px; padding: 24px; position: relative;">
+      
+      <!-- Icono y Título del Modal -->
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+          [style.background]="progressModal.completed ? 'rgba(34, 197, 94, 0.12)' : 'rgba(192, 156, 120, 0.15)'"
+          [style.color]="progressModal.completed ? '#16a34a' : 'var(--nw-accent, #c09c78)'">
+          <!-- Icono de completado -->
+          <svg *ngIf="progressModal.completed" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <!-- Icono de proceso activo con rotación suave -->
+          <svg *ngIf="!progressModal.completed" class="nw-progress-spin" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="6"></line>
+            <line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+          </svg>
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <h3 style="margin: 0 0 2px; font-size: 17px; font-weight: 700; color: var(--nw-text, #1e1b18);">
+            {{ progressModal.title }}
+          </h3>
+          <p style="margin: 0; font-size: 12.5px; color: var(--nw-text-2, #6b645b);">
+            {{ progressModal.subtitle }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Barra y Contadores de Progreso -->
+      <div style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <!-- Header de la Barra: Estado Numérico y Porcentaje -->
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+          <span style="font-size: 15px; font-weight: 800; color: var(--nw-text, #1e1b18); letter-spacing: -0.2px;">
+            {{ progressModal.current }} / {{ progressModal.total }}
+            <span style="font-size: 12px; font-weight: 500; color: var(--nw-text-3, #999085); margin-left: 4px;">
+              {{ progressModal.kind === 'zip' ? 'pases' : 'destinatarios' }}
+            </span>
+          </span>
+          <span style="font-size: 14px; font-weight: 700; color: var(--nw-accent, #c09c78);">
+            {{ progressModal.percent }}%
+          </span>
+        </div>
+
+        <!-- Barra Visual de Progreso con Animación Shimmer -->
+        <div style="height: 8px; width: 100%; background: var(--nw-surface, #ffffff); border-radius: 999px; overflow: hidden; border: 1px solid var(--nw-border, #eadecc); margin-bottom: 10px;">
+          <div style="height: 100%; transition: width 0.4s ease-out; border-radius: 999px;"
+            [class.nw-progress-shimmer]="!progressModal.completed"
+            [style.width.%]="progressModal.percent"
+            [style.background]="progressModal.completed ? 'linear-gradient(90deg, #22c55e, #16a34a)' : null">
+          </div>
+        </div>
+
+        <!-- Estado actual en texto dinámico y cambiante -->
+        <div style="font-size: 12px; color: var(--nw-text-2, #6b645b); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          <svg *ngIf="!progressModal.completed" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; color: var(--nw-accent, #c09c78);">
+            <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+          </svg>
+          <span style="overflow: hidden; text-overflow: ellipsis; transition: all 0.3s;">{{ progressModal.statusText }}</span>
+        </div>
+      </div>
+
+      <!-- Resumen al finalizar -->
+      <div *ngIf="progressModal.completed" style="margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="nw-pill success" style="font-size: 12px; padding: 4px 10px; font-weight: 600;">
+          ✓ {{ progressModal.successCount }} completados exitosamente
+        </span>
+        <span *ngIf="progressModal.errorCount > 0" class="nw-pill danger" style="font-size: 12px; padding: 4px 10px; font-weight: 600;">
+          ⚠ {{ progressModal.errorCount }} no enviados
+        </span>
+      </div>
+
+      <!-- Botón de Acción -->
+      <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+        <button *ngIf="progressModal.completed" type="button" class="nw-btn nw-btn-primary" (click)="closeProgressModal()" style="min-width: 110px;">
+          Entendido
+        </button>
+        <button *ngIf="!progressModal.completed" type="button" class="nw-btn nw-btn-ghost" disabled style="opacity: 0.7; cursor: not-allowed; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+          <svg class="nw-progress-spin" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="6"></line>
+            <line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+          </svg>
+          Procesando lote masivo...
         </button>
       </div>
     </div>
