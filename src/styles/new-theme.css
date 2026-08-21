@@ -1468,6 +1468,10 @@
     display: flex;
   }
 
+  .nw-hamburger.open {
+    left: 296px;
+  }
+
   .nw-sidebar {
     position: fixed;
     left: -300px;
@@ -1518,6 +1522,10 @@
     width: 40px;
     height: 40px;
     font-size: 18px;
+  }
+
+  .nw-hamburger.open {
+    left: 292px;
   }
 
   .nw-metrics {

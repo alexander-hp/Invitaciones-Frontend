@@ -873,6 +873,7 @@ export interface AlbumAssetModel {
   uploaderEmail?: string;
   url: string;
   status: 'pending' | 'approved' | 'rejected';
+  tags?: string[];
   reviewedAt?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -892,3 +893,45 @@ export interface SongLookupResponse {
     artist?: string;
   };
 }
+
+export type EventLogCategory = 'guest' | 'table' | 'rsvp' | 'album' | 'music' | 'dedication' | 'event' | 'access' | 'communication' | 'all';
+
+export interface EventLogActor {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+}
+
+export interface EventLogModel {
+  _id?: string;
+  id?: string;
+  event: string | { _id?: string; id?: string; title?: string; date?: string; venue?: string; type?: string };
+  actorType: 'user' | 'guest' | 'staff' | 'system';
+  actor?: EventLogActor;
+  category: 'guest' | 'table' | 'rsvp' | 'album' | 'music' | 'dedication' | 'event' | 'access' | 'communication';
+  action: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface EventLogSummary {
+  total: number;
+  today: number;
+  byCategory: Record<string, number>;
+}
+
+export interface EventLogResponse {
+  logs: EventLogModel[];
+  events?: Array<{ _id?: string; id?: string; title?: string; date?: string; venue?: string; type?: string }>;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  summary: EventLogSummary;
+}
+
