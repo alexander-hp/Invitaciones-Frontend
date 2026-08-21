@@ -1,22 +1,48 @@
 <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
 <div class="nw-toast-container" *ngIf="guestMessage || guestError">
   <div *ngIf="guestMessage" class="nw-toast success">
-    <span>✨ {{ guestMessage }}</span>
+    <span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+        <path
+          d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z">
+        </path>
+      </svg>
+      {{ guestMessage }}
+    </span>
     <button type="button" class="nw-toast-close" (click)="guestMessage=''">✕</button>
   </div>
   <div *ngIf="guestError" class="nw-toast error">
-    <span>⚠️ {{ guestError }}</span>
+    <span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      {{ guestError }}
+    </span>
     <button type="button" class="nw-toast-close" (click)="guestError=''">✕</button>
   </div>
 </div>
 
 <section class="nw-card" (click)="showImpExpMenu = false">
   <!-- Encabezado de la Sección -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
-      <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
-        📋 Lista de Invitados
-        <span class="nw-badge" style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+      <h2
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        </svg>
+        Lista de Invitados
+        <span class="nw-badge"
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
           {{ guests.length }} {{ guests.length === 1 ? 'invitado' : 'invitados' }}
         </span>
       </h2>
@@ -28,62 +54,212 @@
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <!-- Desplegable Unificado Importar / Exportar -->
       <div style="position: relative;">
-        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="toggleImpExpMenu($event)" style="display: flex; align-items: center; gap: 6px; font-size: 13px; height: 38px;">
-          📁 Importar / Exportar CSV <span style="font-size: 10px;">▼</span>
+        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="toggleImpExpMenu($event)"
+          style="display: flex; align-items: center; gap: 6px; font-size: 13px; height: 38px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Importar / Exportar CSV <span style="font-size: 10px;">▼</span>
         </button>
 
         <div *ngIf="showImpExpMenu" (click)="$event.stopPropagation()"
           style="position: absolute; top: calc(100% + 6px); right: 0; min-width: 190px; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); box-shadow: var(--nw-shadow-lg); z-index: 100; overflow: hidden; padding: 4px 0;">
-          
-          <label style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 13px; color: var(--nw-text, #2e2621); cursor: pointer; transition: background 0.15s; margin: 0;">
-            📥 Importar CSV
-            <input type="file" accept=".csv" (change)="selectImportFile($event); showImpExpMenu = false;" style="display:none;">
+
+          <label
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 13px; color: var(--nw-text, #2e2621); cursor: pointer; transition: background 0.15s; margin: 0;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-2, #6e6157);">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Importar CSV
+            <input type="file" accept=".csv" (change)="selectImportFile($event); showImpExpMenu = false;"
+              style="display:none;">
           </label>
 
           <button type="button" (click)="exportGuests(); showImpExpMenu = false;" [disabled]="exportingGuests"
             style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; font-size: 13px; color: var(--nw-text, #2e2621); background: none; border: none; cursor: pointer; transition: background 0.15s;">
-            📤 Exportar CSV
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-2, #6e6157);">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Exportar CSV
           </button>
         </div>
       </div>
 
-      <button class="nw-btn nw-btn-primary" (click)="openGuestForm()" style="display: flex; align-items: center; gap: 6px; height: 38px;">
-        ➕ Nuevo Invitado
+      <button class="nw-btn nw-btn-primary" (click)="openGuestForm()"
+        style="display: flex; align-items: center; gap: 6px; height: 38px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nuevo Invitado
       </button>
     </div>
   </div>
 
   <!-- Barra de Filtros -->
-  <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
-    <div style="flex: 1; min-width: 200px;">
-      <input class="nw-input" [(ngModel)]="guestSearch" placeholder="🔍 Buscar por nombre, email, teléfono o grupo..." style="height: 42px; padding: 0 14px; width: 100%; font-size: 13px; box-sizing: border-box;">
+  <div
+    style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+    <div style="flex: 1; min-width: 220px; position: relative;">
+      <input class="nw-input" [(ngModel)]="guestSearch" (ngModelChange)="guestPage = 1"
+        placeholder="Buscar por nombre, email, teléfono o grupo..."
+        style="height: 42px; padding: 0 14px 0 36px; width: 100%; font-size: 13px; box-sizing: border-box;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="position: absolute; left: 12px; top: 13px; color: var(--nw-text-3, #9e9083);">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
     </div>
-    
-    <select class="nw-select" [(ngModel)]="guestStatusFilter" style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+
+    <select class="nw-select" [(ngModel)]="guestStatusFilter" (ngModelChange)="guestPage = 1"
+      style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
       <option value="">Todos los RSVPs</option>
-      <option value="confirmed">Confirmados ✅</option>
-      <option value="pending">Pendientes ⏳</option>
-      <option value="declined">Rechazados ❌</option>
+      <option value="confirmed">Confirmados</option>
+      <option value="pending">Pendientes</option>
+      <option value="declined">Rechazados</option>
     </select>
 
-    <select class="nw-select" [(ngModel)]="guestGroupFilter" style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+    <select class="nw-select" [(ngModel)]="guestGroupFilter" (ngModelChange)="guestPage = 1"
+      style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
       <option value="">Todos los grupos</option>
       <option *ngFor="let grp of guestGroups" [value]="grp">{{ grp }}</option>
     </select>
 
-    <button *ngIf="guestSearch || guestStatusFilter || guestGroupFilter" type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearFilters()" style="white-space: nowrap; height: 42px; font-size: 12px; flex-shrink: 0;">
-      ✕ Limpiar
+    <button *ngIf="guestSearch || guestStatusFilter || guestGroupFilter" type="button"
+      class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearFilters()"
+      style="white-space: nowrap; height: 42px; font-size: 12px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      Limpiar
     </button>
   </div>
 
   <div *ngIf="guestsLoading" class="nw-alert info nw-loading" style="margin-bottom:16px;">Cargando invitados...</div>
 
+  <!-- Estado vacío cuando no hay ningún invitado registrado -->
+  <div *ngIf="!guestsLoading && guests.length === 0"
+    style="padding: 40px 24px; text-align: center; background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 12px); border: 1px dashed var(--nw-border, #eadecc); margin-bottom: 20px;">
+    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round"
+      style="color: var(--nw-accent, #c09c78); margin-bottom: 16px; display: inline-block;">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+    <h3
+      style="margin: 0 0 8px; font-size: 18px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+      Aún no tienes invitados en este evento
+    </h3>
+    <p
+      style="font-size: 14px; color: var(--nw-text-2, #6e6157); max-width: 600px; margin: 0 auto 32px; line-height: 1.5;">
+      Comienza a armar tu lista para enviar invitaciones, gestionar asistencias y organizar tus mesas. Tienes dos formas
+      fáciles de agregar invitados:
+    </p>
+
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto; text-align: left;">
+      <!-- Opción 1: Manual -->
+      <div
+        style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <div>
+          <h4
+            style="margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+            <span
+              style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-accent); font-size: 12px; font-weight: bold;">1</span>
+            Agregar manualmente
+          </h4>
+          <p style="margin: 0 0 16px; font-size: 13px; color: var(--nw-text-2); line-height: 1.4;">
+            Ideal para agregar invitados uno por uno. Podrás especificar su nombre, teléfono, grupo y pases
+            individuales.
+          </p>
+        </div>
+        <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openGuestForm()"
+          style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Invitado
+        </button>
+      </div>
+
+      <!-- Opción 2: CSV Import -->
+      <div
+        style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <div>
+          <h4
+            style="margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+            <span
+              style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-accent); font-size: 12px; font-weight: bold;">2</span>
+            Importar desde Excel / CSV
+          </h4>
+          <p style="margin: 0 0 12px; font-size: 13px; color: var(--nw-text-2); line-height: 1.4;">
+            Sube tu lista de invitados rápidamente. Los nombres de las columnas en la primera fila pueden estar en
+            español o inglés:
+          </p>
+          <div
+            style="font-size: 12px; color: var(--nw-text-2); background: var(--nw-surface-2, #f5f1ea); padding: 12px 14px; border-radius: var(--nw-radius-sm, 8px); margin-bottom: 16px; border: 1px solid var(--nw-border, #eadecc); line-height: 1.5; max-height: 165px; overflow-y: auto;">
+            <strong style="color: var(--nw-text); font-size: 12px; display: block; margin-bottom: 6px;">Nombres de
+              columnas aceptados:</strong>
+            <ul style="margin: 0; padding-left: 16px; list-style-type: disc;">
+              <li><strong>nombre</strong> <span
+                  style="color:var(--nw-accent); font-size:11px; font-weight:600;">(requerido)</span>: Nombre completo
+                del invitado.</li>
+              <li><strong>telefono</strong>: WhatsApp con código de país (ej: <code>+525512345678</code>).</li>
+              <li><strong>correo</strong>: Correo electrónico del invitado.</li>
+              <li><strong>grupo</strong>: Categoría o grupo (ej: <code>Familia</code>, <code>Amigos</code>).</li>
+              <li><strong>acompanantes</strong>: Número de pases extra (ej: <code>0</code>, <code>1</code>,
+                <code>2</code>).
+              </li>
+              <li><strong>mesa</strong>: Nombre de la mesa asignada (ej: <code>Mesa 1</code>).</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-direction: column;">
+          <input #csvInput type="file" accept=".csv" (change)="selectImportFile($event)" style="display:none;">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="downloadTemplate()"
+            style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; font-size: 12px; color: var(--nw-accent);">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 5 17 10"></polyline>
+              <line x1="12" y1="5" x2="12" y2="17"></line>
+            </svg>
+            Descargar plantilla (.csv)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Tabla de Invitados (Responsive & No Overflow) -->
-  <div class="nw-table-responsive" *ngIf="!guestsLoading" style="overflow-x: auto; max-width: 100%; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+  <div class="nw-table-responsive" *ngIf="!guestsLoading && guests.length > 0"
+    style="overflow-x: auto; max-width: 100%; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
     <div *ngIf="filteredGuests.length === 0" style="padding:40px; text-align:center; color:var(--nw-text-3)">
-      <p style="font-size:32px; margin-bottom:8px;">👥</p>
-      <p style="margin:0; font-size:15px; font-weight:600;">No se encontraron invitados.</p>
-      <p style="font-size:13px; margin-top:4px;">Prueba ajustando los filtros o agrega tu primer invitado.</p>
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="color: var(--nw-text-3, #9e9083); margin-bottom: 8px; display: inline-block;">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <p style="margin:0; font-size:15px; font-weight:600; color: var(--nw-text);">No se encontraron invitados.</p>
+      <p style="font-size:13px; margin-top:4px; color: var(--nw-text-2);">Prueba ajustando los filtros o agrega tu
+        primer invitado.</p>
     </div>
 
     <table class="nw-table" *ngIf="filteredGuests.length > 0" style="width: 100%; min-width: 760px; margin: 0;">
@@ -99,10 +275,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let g of filteredGuests">
+        <tr *ngFor="let g of paginatedGuests">
           <td style="white-space:nowrap; padding: 12px 14px;">
             <strong>{{ g.name }}</strong>
-            <span *ngIf="g.checkedIn || g.checkedInAt" class="nw-pill success" style="margin-left:6px; font-size:10px;">Check-in</span>
+            <span *ngIf="g.checkedIn || g.checkedInAt" class="nw-pill success"
+              style="margin-left:6px; font-size:10px;">Check-in</span>
           </td>
           <td style="white-space:nowrap; padding: 12px 14px;">
             <span *ngIf="g.group" class="nw-pill">{{ g.group }}</span>
@@ -113,33 +290,102 @@
             <span *ngIf="!g.tableName" style="color:var(--nw-text-3)">—</span>
           </td>
           <td style="white-space:nowrap; padding: 12px 14px;">
-            <span class="nw-pill" [class.success]="g.status === 'confirmed'"
-              [class.warning]="g.status === 'pending'" [class.danger]="g.status === 'declined'">
+            <span class="nw-pill" [class.success]="g.status === 'confirmed'" [class.warning]="g.status === 'pending'"
+              [class.danger]="g.status === 'declined'">
               {{ g.status === 'confirmed' ? 'Confirmado' : (g.status === 'declined' ? 'Rechazado' : 'Pendiente') }}
             </span>
           </td>
           <td style="white-space:nowrap; padding: 12px 14px;">{{ (g.allowedCompanions || 0) + 1 }} personas</td>
-          
+
           <!-- Contacto Dividido en 2 Líneas (Teléfono arriba, Email abajo) -->
           <td style="font-size:12.5px; color:var(--nw-text-2); padding: 10px 14px; white-space:nowrap;">
             <div style="display:flex; flex-direction:column; gap:3px;">
-              <div *ngIf="g.phone" style="display:flex; align-items:center; gap:4px; font-weight:500;">
-                <span style="font-size:11px;">📱</span> {{ g.phone }}
+              <div *ngIf="g.phone" style="display:flex; align-items:center; gap:6px; font-weight:500;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"
+                  style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+                {{ g.phone }}
               </div>
-              <div *ngIf="g.email" style="display:flex; align-items:center; gap:4px; color:var(--nw-text-3); font-size:12px;">
-                <span style="font-size:11px;">📧</span> {{ g.email }}
+              <div *ngIf="g.email"
+                style="display:flex; align-items:center; gap:6px; color:var(--nw-text-3); font-size:12px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"
+                  style="color: var(--nw-text-3, #9e9083); flex-shrink: 0;">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                {{ g.email }}
               </div>
               <div *ngIf="!g.phone && !g.email" style="color:var(--nw-text-3);">—</div>
             </div>
           </td>
 
           <td style="text-align:right; white-space:nowrap; padding: 12px 14px;">
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openGuestForm(g)">✏️ Editar</button>
-            <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteGuest(g)">🗑️</button>
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openGuestForm(g)"
+              style="display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Editar
+            </button>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteGuest(g)"
+              style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; height: 32px;"
+              title="Eliminar">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- 🎛️ Paginación de Invitados -->
+  <div *ngIf="filteredGuests.length > guestPageSize"
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 16px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); flex-wrap: wrap; gap: 10px;">
+    <span style="font-size: 13px; color: var(--nw-text-2, #6e6157); font-weight: 500;">
+      Mostrando <strong>{{ (guestPage - 1) * guestPageSize + 1 }}</strong> a <strong>{{ Math.min(guestPage *
+        guestPageSize, filteredGuests.length) }}</strong> de <strong>{{ filteredGuests.length }}</strong> invitados
+    </span>
+
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <!-- Botón Anterior -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="guestPage === 1"
+        (click)="setPage(guestPage - 1)"
+        style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Anterior
+      </button>
+
+      <!-- Números de Página -->
+      <button type="button" *ngFor="let p of getPagesArray()" class="nw-btn nw-btn-sm" (click)="setPage(p)"
+        [class.nw-btn-primary]="guestPage === p" [class.nw-btn-ghost]="guestPage !== p"
+        style="height: 32px; min-width: 32px; padding: 0 8px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">
+        {{ p }}
+      </button>
+
+      <!-- Botón Siguiente -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="guestPage === totalPages"
+        (click)="setPage(guestPage + 1)"
+        style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+        Siguiente
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- Modal Formulario Invitado (Rediseñado con Secciones y LADA) -->
@@ -148,13 +394,27 @@
       style="max-width: 680px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); box-shadow: var(--nw-shadow-lg);">
 
       <!-- Modal Header -->
-      <div style="padding: 18px 24px; border-bottom: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; background: var(--nw-surface, #ffffff); flex-shrink: 0;">
+      <div
+        style="padding: 18px 24px; border-bottom: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; background: var(--nw-surface, #ffffff); flex-shrink: 0;">
         <div>
-          <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
-            {{ editingGuest ? '✏️ Editar invitado' : '➕ Agregar nuevo invitado' }}
+          <h2
+            style="margin: 0; font-size: 20px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 8px;">
+            <svg *ngIf="editingGuest" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <svg *ngIf="!editingGuest" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              style="color: var(--nw-accent, #c09c78);">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            {{ editingGuest ? 'Editar invitado' : 'Agregar nuevo invitado' }}
           </h2>
           <p style="margin: 4px 0 0; font-size: 12.5px; color: var(--nw-text-2, #6e6157);">
-            Completa los datos del invitado. <span style="color: var(--nw-danger, #b75959); font-weight: 600;">* Nombre y al menos un contacto son requeridos.</span>
+            Completa los datos del invitado. <span style="color: var(--nw-danger, #b75959); font-weight: 600;">* Nombre
+              y al menos un contacto son requeridos.</span>
           </p>
         </div>
         <button type="button" (click)="showGuestForm = false"
@@ -163,50 +423,66 @@
       </div>
 
       <!-- Modal Body Scrollable -->
-      <div style="padding: 20px 24px 36px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; background: var(--nw-bg, #faf7f2);">
+      <div
+        style="padding: 20px 24px 36px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px; background: var(--nw-bg, #faf7f2);">
 
         <!-- Alerts -->
-        <p *ngIf="guestError" class="nw-alert error" style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-radius: var(--nw-radius-sm, 12px);">
+        <p *ngIf="guestError" class="nw-alert error"
+          style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-radius: var(--nw-radius-sm, 12px);">
           <span>{{ guestError }}</span>
-          <button type="button" (click)="guestError=''" style="background: none; border: none; color: inherit; cursor: pointer;">✕</button>
+          <button type="button" (click)="guestError=''"
+            style="background: none; border: none; color: inherit; cursor: pointer;">✕</button>
         </p>
-        <p *ngIf="guestMessage" class="nw-alert success" style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-radius: var(--nw-radius-sm, 12px);">
+        <p *ngIf="guestMessage" class="nw-alert success"
+          style="margin: 0; display: flex; justify-content: space-between; align-items: center; border-radius: var(--nw-radius-sm, 12px);">
           <span>{{ guestMessage }}</span>
-          <button type="button" (click)="guestMessage=''" style="background: none; border: none; color: inherit; cursor: pointer;">✕</button>
+          <button type="button" (click)="guestMessage=''"
+            style="background: none; border: none; color: inherit; cursor: pointer;">✕</button>
         </p>
 
         <!-- BLOQUE PRINCIPAL: INFORMACIÓN DE CONTACTO -->
-        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 18px; box-shadow: var(--nw-shadow-sm); overflow: visible;">
+        <div
+          style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 18px; box-shadow: var(--nw-shadow-sm); overflow: visible;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <span style="font-size: 14px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px; font-family: var(--nw-font-display);">
-              📌 Información Principal <span style="color: var(--nw-danger, #b75959); font-size: 12px; font-weight: 600;">(Obligatoria)</span>
+            <span
+              style="font-size: 14px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px; font-family: var(--nw-font-display);">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              Información Principal <span
+                style="color: var(--nw-danger, #b75959); font-size: 12px; font-weight: 600;">(Obligatoria)</span>
             </span>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 14px;">
             <!-- Nombre del invitado -->
             <label class="nw-label" style="margin: 0;">
-              Nombre del invitado <span style="color: var(--nw-danger, #b75959); font-weight: bold;">*</span>
+              <span>Nombre del invitado <span
+                  style="color: var(--nw-danger, #b75959); font-weight: bold;">*</span></span>
               <input id="guestNameInput" class="nw-input" [(ngModel)]="guestForm.name"
                 placeholder="Ej. Juan Pérez García" (keyup.enter)="saveGuest(false)"
                 style="height: 42px; margin-top: 2px;">
             </label>
 
             <!-- Teléfono y Correo -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-items: start;">
+            <div
+              style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-items: start;">
 
               <!-- Teléfono con Buscador de LADA -->
               <div>
                 <label class="nw-label" style="margin: 0;">
-                  Teléfono <span style="color: var(--nw-danger, #b75959); font-weight: bold;">* (o correo)</span>
+                  <span>Teléfono <span style="color: var(--nw-danger, #b75959); font-weight: bold;">* (o
+                      correo)</span></span>
                 </label>
 
-                <div style="display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(0, 2fr); gap: 6px; margin-top: 2px; position: relative;">
+                <div
+                  style="display: grid; grid-template-columns: minmax(130px, 1.2fr) minmax(0, 2fr); gap: 6px; margin-top: 2px; position: relative;">
 
                   <!-- Searchable Country Dropdown Trigger -->
                   <div style="position: relative;">
-                    <button type="button"
-                      (click)="$event.stopPropagation(); showCountryDropdown = !showCountryDropdown"
+                    <button type="button" (click)="$event.stopPropagation(); showCountryDropdown = !showCountryDropdown"
                       class="nw-input"
                       style="display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; background: var(--nw-surface, #fff); cursor: pointer; padding: 0 12px; height: 42px; font-size: 13.5px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
                       title="Seleccionar Código de País / LADA">
@@ -221,11 +497,11 @@
                       style="position: absolute; top: calc(100% + 4px); left: 0; width: 270px; z-index: 1050; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); box-shadow: var(--nw-shadow-lg); max-height: 240px; display: flex; flex-direction: column; overflow: hidden;">
 
                       <!-- Search box -->
-                      <div style="padding: 8px; background: var(--nw-surface-2, #f5f1ea); border-bottom: 1px solid var(--nw-border, #eadecc);">
+                      <div
+                        style="padding: 8px; background: var(--nw-surface-2, #f5f1ea); border-bottom: 1px solid var(--nw-border, #eadecc);">
                         <input type="text" class="nw-input" [(ngModel)]="countrySearchQuery"
                           placeholder="🔍 Buscar país o LADA (ej. mex, +34)..."
-                          style="font-size: 12.5px; padding: 0 10px; height: 34px;"
-                          (click)="$event.stopPropagation()">
+                          style="font-size: 12.5px; padding: 0 10px; height: 34px;" (click)="$event.stopPropagation()">
                       </div>
 
                       <!-- List -->
@@ -247,73 +523,105 @@
                   </div>
 
                   <!-- Local Phone Input -->
-                  <input class="nw-input" type="tel" [(ngModel)]="guestForm.phoneLocal" placeholder="10 dígitos"
-                    (keyup.enter)="saveGuest(false)" style="height: 42px; font-size: 13.5px;">
+                  <input class="nw-input" type="tel" [(ngModel)]="guestForm.phoneLocal" (input)="onPhoneInput()"
+                    placeholder="10 dígitos" maxlength="10" (keyup.enter)="saveGuest(false)"
+                    style="height: 42px; font-size: 13.5px;">
                 </div>
               </div>
 
               <!-- Correo electrónico -->
               <div>
                 <label class="nw-label" style="margin: 0;">
-                  Correo electrónico <span style="color: var(--nw-danger, #b75959); font-weight: bold;">* (o teléfono)</span>
-                  <input class="nw-input" type="email" [(ngModel)]="guestForm.email"
-                    placeholder="invitado@ejemplo.com" (keyup.enter)="saveGuest(false)"
-                    style="height: 42px; margin-top: 2px;">
+                  <span>Correo electrónico <span style="color: var(--nw-danger, #b75959); font-weight: bold;">* (o
+                      teléfono)</span></span>
+                  <input class="nw-input" type="email" [(ngModel)]="guestForm.email" placeholder="invitado@ejemplo.com"
+                    (keyup.enter)="saveGuest(false)" style="height: 42px; margin-top: 2px;">
                 </label>
               </div>
 
             </div>
 
             <!-- Check-in Manual -->
-            <div style="margin-top: 4px; padding: 12px 14px; background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 10px); border: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div
+              style="margin-top: 4px; padding: 12px 14px; background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 10px); border: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
               <div>
-                <span style="font-weight: 600; font-size: 13.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
-                  🎟️ Estado de Check-in
+                <span
+                  style="font-weight: 600; font-size: 13.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <line x1="8" y1="14" x2="8.01" y2="14"></line>
+                    <line x1="16" y1="14" x2="16.01" y2="14"></line>
+                  </svg>
+                  Estado de Check-in
                 </span>
                 <p style="margin: 2px 0 0; font-size: 12px; color: var(--nw-text-2, #6e6157);">
-                  {{ guestForm.checkedIn ? 'Check-in registrado para este invitado' : 'Pendiente de registrar ingreso al evento' }}
+                  {{ guestForm.checkedIn ? 'Check-in registrado para este invitado' : 'Pendiente de registrar ingreso al
+                  evento' }}
                 </p>
               </div>
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--nw-text, #2e2621); margin: 0;">
-                <input type="checkbox" [(ngModel)]="guestForm.checkedIn" style="width: 18px; height: 18px; accent-color: var(--nw-primary, #a87954);">
-                {{ guestForm.checkedIn ? 'Check-in Realizado ✅' : 'Marcar Check-in' }}
+              <label
+                style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--nw-text, #2e2621); margin: 0;">
+                <input type="checkbox" [(ngModel)]="guestForm.checkedIn"
+                  style="width: 18px; height: 18px; accent-color: var(--nw-primary, #a87954);">
+                {{ guestForm.checkedIn ? 'Check-in Realizado' : 'Marcar Check-in' }}
               </label>
             </div>
           </div>
         </div>
 
         <!-- Action Bar to Expand / Collapse All -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px; padding: 0 4px;">
-          <span style="font-size: 11.5px; font-weight: 700; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.06em;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; margin-bottom: 2px; padding: 0 4px;">
+          <span
+            style="font-size: 11.5px; font-weight: 700; color: var(--nw-text-3); text-transform: uppercase; letter-spacing: 0.06em;">
             Opciones secundarias agrupadas
           </span>
           <div style="display: flex; gap: 12px;">
             <button type="button" (click)="expandAllGuestFormSections(true)"
-              style="background: none; border: none; color: var(--nw-accent, #c09c78); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0;">
-              📂 Desplegar todas
+              style="background: none; border: none; color: var(--nw-accent, #c09c78); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Desplegar todas
             </button>
             <span style="color: var(--nw-border-2);">|</span>
             <button type="button" (click)="expandAllGuestFormSections(false)"
-              style="background: none; border: none; color: var(--nw-text-2); font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 0;">
-              📁 Colapsar todas
+              style="background: none; border: none; color: var(--nw-text-2); font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Colapsar todas
             </button>
           </div>
         </div>
 
         <!-- SECCIÓN 1: ORGANIZACIÓN & UBICACIÓN (COLAPSABLE) -->
-        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
+        <div
+          style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
           <button type="button" (click)="toggleGuestFormSection('organization')"
             style="width: 100%; height: 48px; padding: 0 16px; background: var(--nw-surface, #ffffff); border: none; border-radius: var(--nw-radius-sm, 12px); display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: left; outline: none;"
             [style.border-bottom-left-radius]="guestFormSections.organization ? '0px' : '12px'"
             [style.border-bottom-right-radius]="guestFormSections.organization ? '0px' : '12px'">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 16px;">🍷</span>
-              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+                <path d="M12 3v18"></path>
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <path d="M3 9h18"></path>
+                <path d="M3 15h18"></path>
+              </svg>
+              <span
+                style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
                 Organización & Mesa
               </span>
               <span *ngIf="guestForm.group || guestForm.tableName"
                 style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2); padding: 2px 8px; border-radius: 10px; margin-left: 4px;">
-                {{ guestForm.group || 'Sin grupo' }} • {{ guestForm.tableName ? ('Mesa: ' + guestForm.tableName) : 'Sin mesa' }}
+                {{ guestForm.group || 'Sin grupo' }} • {{ guestForm.tableName ? ('Mesa: ' + guestForm.tableName) : 'Sin
+                mesa' }}
               </span>
             </div>
             <span style="font-size: 12px; color: var(--nw-text-2); font-weight: 600;">
@@ -330,11 +638,10 @@
                 style="height: 42px; margin-top: 2px;">
                 <option value="">-- Seleccionar grupo --</option>
                 <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
-                <option value="otro">✨ Otro (Personalizado)...</option>
+                <option value="otro">Otro (Personalizado)...</option>
               </select>
-              <input *ngIf="guestForm.groupSelect === 'otro'" class="nw-input"
-                style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.group"
-                placeholder="Nombre del grupo...">
+              <input *ngIf="guestForm.groupSelect === 'otro'" class="nw-input" style="height: 42px; margin-top: 6px;"
+                [(ngModel)]="guestForm.group" placeholder="Nombre del grupo...">
             </label>
 
             <!-- Mesa asignada -->
@@ -354,14 +661,21 @@
         </div>
 
         <!-- SECCIÓN 2: ROLES & VISIBILIDAD (COLAPSABLE WITH AUTO-FILL) -->
-        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
+        <div
+          style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
           <button type="button" (click)="toggleGuestFormSection('roles')"
             style="width: 100%; height: 48px; padding: 0 16px; background: var(--nw-surface, #ffffff); border: none; border-radius: var(--nw-radius-sm, 12px); display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: left; outline: none;"
             [style.border-bottom-left-radius]="guestFormSections.roles ? '0px' : '12px'"
             [style.border-bottom-right-radius]="guestFormSections.roles ? '0px' : '12px'">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 16px;">🎭</span>
-              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <polyline points="17 11 19 13 23 9"></polyline>
+              </svg>
+              <span
+                style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
                 Roles & Visibilidad
               </span>
               <span *ngIf="guestForm.relationshipLabel || guestForm.rolesText"
@@ -376,11 +690,23 @@
 
           <div *ngIf="guestFormSections.roles"
             style="padding: 16px; border-top: 1px solid var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: flex; flex-direction: column; gap: 14px;">
-            <div style="font-size: 12px; color: var(--nw-text-2); background: var(--nw-surface-2); padding: 8px 12px; border-radius: var(--nw-radius-sm); border-left: 3px solid var(--nw-accent);">
-              💡 <strong>Auto-llenado inteligente:</strong> Al elegir una opción (en Grupo, Rol o Visibilidad), los campos vacíos se completarán automáticamente sin sobreescribir los que ya hayas personalizado.
+            <div
+              style="font-size: 12px; color: var(--nw-text-2); background: var(--nw-surface-2); padding: 8px 12px; border-radius: var(--nw-radius-sm); border-left: 3px solid var(--nw-accent); display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+                <path
+                  d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .6 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5">
+                </path>
+                <line x1="9" y1="18" x2="15" y2="18"></line>
+                <line x1="10" y1="22" x2="14" y2="22"></line>
+              </svg>
+              <span><strong>Auto-llenado inteligente:</strong> Al elegir una opción (en Grupo, Rol o Visibilidad), los
+                campos vacíos se completarán automáticamente sin sobreescribir los que ya hayas personalizado.</span>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start;">
+            <div
+              style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start;">
               <!-- Rol Visible -->
               <label class="nw-label" style="margin: 0;">
                 Rol visible
@@ -388,7 +714,7 @@
                   (change)="onRelationshipSelectChange()" style="height: 42px; margin-top: 2px;">
                   <option value="">-- Seleccionar rol --</option>
                   <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
-                  <option value="otro">✨ Otro (Personalizado)...</option>
+                  <option value="otro">Otro (Personalizado)...</option>
                 </select>
                 <input *ngIf="guestForm.relationshipSelect === 'otro'" class="nw-input"
                   style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.relationshipLabel"
@@ -398,11 +724,11 @@
               <!-- Visibilidad -->
               <label class="nw-label" style="margin: 0;">
                 Visibilidad
-                <select class="nw-select" [(ngModel)]="guestForm.visibilitySelect"
-                  (change)="onVisibilitySelectChange()" style="height: 42px; margin-top: 2px;">
+                <select class="nw-select" [(ngModel)]="guestForm.visibilitySelect" (change)="onVisibilitySelectChange()"
+                  style="height: 42px; margin-top: 2px;">
                   <option value="">-- Seleccionar visibilidad --</option>
                   <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
-                  <option value="otro">✨ Otro (Personalizado)...</option>
+                  <option value="otro">Otro (Personalizado)...</option>
                 </select>
                 <input *ngIf="guestForm.visibilitySelect === 'otro'" class="nw-input"
                   style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.visibilityGroup"
@@ -416,25 +742,32 @@
                   style="height: 42px; margin-top: 2px;">
                   <option value="">-- Seleccionar rol principal --</option>
                   <option *ngFor="let opt of roleOptions" [value]="opt.value">{{ opt.label }}</option>
-                  <option value="otro">✨ Otro (Personalizado / Múltiples)...</option>
+                  <option value="otro">Otro (Personalizado / Múltiples)...</option>
                 </select>
-                <input *ngIf="guestForm.roleSelect === 'otro'" class="nw-input"
-                  style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.rolesText"
-                  placeholder="anfitrion, padrino, dama_honor...">
+                <input *ngIf="guestForm.roleSelect === 'otro'" class="nw-input" style="height: 42px; margin-top: 6px;"
+                  [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor...">
               </label>
             </div>
           </div>
         </div>
 
         <!-- SECCIÓN 3: ACOMPAÑANTES & ETIQUETAS (COLAPSABLE) -->
-        <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
+        <div
+          style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); transition: all 0.2s;">
           <button type="button" (click)="toggleGuestFormSection('companions')"
             style="width: 100%; height: 48px; padding: 0 16px; background: var(--nw-surface, #ffffff); border: none; border-radius: var(--nw-radius-sm, 12px); display: flex; justify-content: space-between; align-items: center; cursor: pointer; text-align: left; outline: none;"
             [style.border-bottom-left-radius]="guestFormSections.companions ? '0px' : '12px'"
             [style.border-bottom-right-radius]="guestFormSections.companions ? '0px' : '12px'">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 16px;">👥</span>
-              <span style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span
+                style="font-size: 14px; font-weight: 600; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
                 Acompañantes & Extras
               </span>
               <span *ngIf="guestForm.allowedCompanions > 0"
@@ -461,28 +794,42 @@
             </div>
 
             <!-- Tabla Dinámica de Nombres de Acompañantes (1 fila por pase) -->
-            <div *ngIf="companionList.length > 0" style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <div *ngIf="companionList.length > 0"
+              style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <label class="nw-label" style="margin: 0; font-weight: 600;">
                   Nombres de los acompañantes ({{ companionList.length }}):
                 </label>
                 <button type="button" (click)="addCompanionRow()" class="nw-btn nw-btn-ghost"
-                  style="font-size: 12px; min-height: 32px; padding: 0 12px;">
-                  ➕ Añadir fila
+                  style="font-size: 12px; min-height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Añadir fila
                 </button>
               </div>
 
-              <div style="border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); overflow: hidden; background: var(--nw-surface, #ffffff);">
+              <div
+                style="border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); overflow: hidden; background: var(--nw-surface, #ffffff);">
                 <table class="nw-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
                   <thead>
-                    <tr style="background: var(--nw-surface-2, #f5f1ea); border-bottom: 1px solid var(--nw-border, #eadecc);">
-                      <th style="padding: 10px 14px; text-align: left; font-weight: 700; color: var(--nw-text-2); width: 44px;">#</th>
-                      <th style="padding: 10px 14px; text-align: left; font-weight: 700; color: var(--nw-text-2);">Nombre del acompañante</th>
-                      <th style="padding: 10px 14px; text-align: center; font-weight: 700; color: var(--nw-text-2); width: 50px;">Quitar</th>
+                    <tr
+                      style="background: var(--nw-surface-2, #f5f1ea); border-bottom: 1px solid var(--nw-border, #eadecc);">
+                      <th
+                        style="padding: 10px 14px; text-align: left; font-weight: 700; color: var(--nw-text-2); width: 44px;">
+                        #</th>
+                      <th style="padding: 10px 14px; text-align: left; font-weight: 700; color: var(--nw-text-2);">
+                        Nombre del acompañante</th>
+                      <th
+                        style="padding: 10px 14px; text-align: center; font-weight: 700; color: var(--nw-text-2); width: 50px;">
+                        Quitar</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let item of companionList; let i = index" style="border-bottom: 1px solid var(--nw-surface-2);">
+                    <tr *ngFor="let item of companionList; let i = index"
+                      style="border-bottom: 1px solid var(--nw-surface-2);">
                       <td style="padding: 8px 14px; font-weight: 700; color: var(--nw-text-2); vertical-align: middle;">
                         {{ i + 1 }}
                       </td>
@@ -495,7 +842,12 @@
                         <button type="button" (click)="removeCompanionRow(i)"
                           style="background: none; border: none; cursor: pointer; color: var(--nw-danger, #b75959); font-size: 15px; padding: 4px;"
                           title="Quitar acompañante">
-                          🗑️
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
+                          </svg>
                         </button>
                       </td>
                     </tr>
@@ -517,22 +869,31 @@
       </div>
 
       <!-- Modal Footer Actions -->
-      <div style="padding: 16px 24px; background: var(--nw-surface, #ffffff); border-top: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
-        <button class="nw-btn nw-btn-ghost" type="button" (click)="showGuestForm = false"
-          style="font-size: 14px; min-height: 42px;">
-          Cancelar
-        </button>
+      <div
+        style="padding: 16px 24px; background: var(--nw-surface, #ffffff); border-top: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
 
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <button *ngIf="!editingGuest" class="nw-btn nw-btn-secondary" type="button" [disabled]="guestSaving"
-            (click)="saveGuest(true)" style="min-height: 42px; font-size: 14px; font-weight: 600;"
+            (click)="saveGuest(true)"
+            style="min-height: 42px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;"
             title="Conserva el Grupo, Mesa, Rol y LADA para agregar el siguiente invitado al instante">
-            ➕ Guardar y agregar otro (Mismo grupo/rol)
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Guardar y agregar otro (Mismo grupo/rol)
           </button>
 
           <button class="nw-btn nw-btn-primary" type="button" [disabled]="guestSaving" (click)="saveGuest(false)"
-            style="min-height: 42px; font-size: 14px; font-weight: 600; padding: 0 24px;">
-            {{ guestSaving ? 'Guardando...' : editingGuest ? 'Actualizar invitado' : '💾 Guardar invitado' }}
+            style="min-height: 42px; font-size: 14px; font-weight: 600; padding: 0 24px; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            {{ guestSaving ? 'Guardando...' : editingGuest ? 'Actualizar invitado' : 'Guardar invitado' }}
           </button>
         </div>
       </div>
@@ -541,5 +902,6 @@
   </div>
 
   <!-- QR Scanner Modal Component -->
-  <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()" (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
+  <app-qr-scanner-modal [isOpen]="showScanner" (close)="closeScanner()"
+    (codeScanned)="onQrScanned($event)"></app-qr-scanner-modal>
 </section>

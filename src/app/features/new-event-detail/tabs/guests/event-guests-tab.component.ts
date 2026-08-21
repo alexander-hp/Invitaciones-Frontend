@@ -31,6 +31,47 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   guestCommunicationFilter = '';
   guestGroupFilter = '';
 
+  guestPage = 1;
+  guestPageSize = 25;
+  Math = Math;
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredGuests.length / this.guestPageSize) || 1;
+  }
+
+  get paginatedGuests(): GuestModel[] {
+    const total = this.totalPages;
+    if (this.guestPage > total) {
+      this.guestPage = 1;
+    }
+    const start = (this.guestPage - 1) * this.guestPageSize;
+    return this.filteredGuests.slice(start, start + this.guestPageSize);
+  }
+
+  setPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.guestPage = page;
+  }
+
+  getPagesArray(): number[] {
+    const total = this.totalPages;
+    const current = this.guestPage;
+    const pages: number[] = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
   showImpExpMenu = false;
 
   // Guest Form
@@ -411,6 +452,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     this.guestStatusFilter = '';
     this.guestGroupFilter = '';
     this.guestCommunicationFilter = '';
+    this.guestPage = 1;
   }
 
   toggleImpExpMenu(event: Event): void {
@@ -494,6 +536,12 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     }, 100);
   }
 
+  onPhoneInput(): void {
+    if (this.guestForm.phoneLocal) {
+      this.guestForm.phoneLocal = this.guestForm.phoneLocal.replace(/\D/g, '').slice(0, 10);
+    }
+  }
+
   saveGuest(keepOpen = false): void {
     const nameClean = (this.guestForm.name || '').trim();
     if (!nameClean) {
@@ -506,6 +554,11 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
 
     if (!cleanLocal && !emailClean) {
       this.showError('Por favor ingresa al menos un medio de contacto (Teléfono o Correo electrónico).');
+      return;
+    }
+
+    if (cleanLocal && cleanLocal.length !== 10) {
+      this.showError('El número de teléfono celular debe tener exactamente 10 dígitos.');
       return;
     }
 
@@ -685,6 +738,20 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
         this.showError('Error al exportar la lista de invitados.');
       }
     });
+  }
+
+  downloadTemplate(): void {
+    const headers = ['nombre', 'telefono', 'correo', 'grupo', 'acompanantes', 'mesa'];
+    const csvContent = "\uFEFF" + headers.join(',') + '\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'plantilla_invitados.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   openScanner(): void { this.showScanner = true; }
