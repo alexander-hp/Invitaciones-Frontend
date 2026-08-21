@@ -1,0 +1,430 @@
+<ng-container *ngIf="!embedded">
+  <div class="nw-shell">
+    <!-- Mobile Hamburger -->
+    <button class="nw-hamburger" [class.open]="sidebarOpen" (click)="sidebarOpen = !sidebarOpen">
+      <svg *ngIf="!sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+      <svg *ngIf="sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+    <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+    <!-- Sidebar -->
+    <aside class="nw-sidebar" [class.open]="sidebarOpen" app-new-sidebar></aside>
+
+    <!-- Main Content -->
+    <main class="nw-main">
+      <ng-container *ngTemplateOutlet="guideBody"></ng-container>
+    </main>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="embedded">
+  <ng-container *ngTemplateOutlet="guideBody"></ng-container>
+</ng-container>
+
+<ng-template #guideBody>
+  <div *ngIf="!embedded" class="nw-page-header">
+    <div>
+      <h1 style="display: flex; align-items: center; gap: 10px;">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <line x1="9" y1="7" x2="15" y2="7"/>
+          <line x1="9" y1="11" x2="15" y2="11"/>
+        </svg>
+        Guía de Usuario
+      </h1>
+      <p>Todo lo que necesitas saber para sacarle el máximo provecho a Invitaciones Digital Suite.</p>
+    </div>
+  </div>
+
+  <!-- Hero Banner -->
+  <div class="ug-hero">
+    <div class="ug-hero-content">
+      <div class="ug-hero-icon">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="ug-hero-title">¡Bienvenido a tu suite de invitaciones!</h2>
+        <p class="ug-hero-subtitle">Selecciona cualquier sección del menú izquierdo para aprender cómo usar cada parte de la plataforma. Cada guía incluye pasos detallados y explicaciones claras.</p>
+      </div>
+    </div>
+    <div class="ug-hero-badges">
+      <span class="ug-badge">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Fácil de seguir
+      </span>
+      <span class="ug-badge">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Paso a paso
+      </span>
+      <span class="ug-badge">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Siempre actualizado
+      </span>
+    </div>
+  </div>
+
+  <!-- Layout: sidebar nav + content -->
+  <div class="ug-layout">
+    <!-- Left navigation -->
+    <nav class="ug-nav">
+      <div class="ug-nav-label">Secciones principales</div>
+      <button
+        *ngFor="let section of sections"
+        class="ug-nav-item"
+        [class.active]="activeSection === section.id"
+        (click)="setActive(section.id)"
+      >
+        <span class="ug-nav-icon" [innerHTML]="section.icon"></span>
+        <span class="ug-nav-text">{{ section.title }}</span>
+        <svg class="ug-nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </nav>
+
+    <!-- Content area -->
+    <div class="ug-content" *ngIf="activeGuide as guide">
+      <!-- Guide header -->
+      <div class="ug-content-header">
+        <div class="ug-content-icon" [innerHTML]="guide.icon"></div>
+        <div>
+          <h2 class="ug-content-title">{{ guide.title }}</h2>
+          <p class="ug-content-desc">{{ guide.description }}</p>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="ug-steps">
+        <div class="ug-step" *ngFor="let step of guide.steps; let i = index">
+          <div class="ug-step-number">{{ i + 1 }}</div>
+          <div class="ug-step-body">
+            <h3 class="ug-step-title">{{ step.title }}</h3>
+            <p class="ug-step-text">{{ step.text }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tip card -->
+      <div class="ug-tip-card">
+        <div class="ug-tip-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div>
+          <strong>¿Necesitas más ayuda?</strong>
+          <p style="margin: 4px 0 0; font-size: 13px; opacity: 0.85;">Si tienes alguna duda adicional sobre esta sección, puedes contactar a nuestro equipo de soporte desde la sección <strong>Contacto</strong> en el menú lateral.</p>
+        </div>
+      </div>
+
+      <!-- Section navigation -->
+      <div class="ug-section-nav">
+        <button
+          class="ug-section-btn ug-section-btn-prev"
+          *ngIf="sections.indexOf(activeGuide) > 0"
+          (click)="setActive(sections[sections.indexOf(activeGuide) - 1].id)"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Sección anterior
+        </button>
+        <span></span>
+        <button
+          class="ug-section-btn ug-section-btn-next"
+          *ngIf="sections.indexOf(activeGuide) < sections.length - 1"
+          (click)="setActive(sections[sections.indexOf(activeGuide) + 1].id)"
+        >
+          Siguiente sección
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<style>
+.ug-hero {
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  box-shadow: var(--nw-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.ug-hero-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.ug-hero-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: var(--nw-accent-bg);
+  color: var(--nw-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ug-hero-title {
+  font-family: var(--nw-font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--nw-text);
+  margin: 0 0 6px;
+}
+.ug-hero-subtitle {
+  font-size: 13.5px;
+  color: var(--nw-text-2);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 720px;
+}
+.ug-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--nw-border);
+}
+.ug-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--nw-surface-2);
+  color: var(--nw-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--nw-border);
+}
+.ug-badge svg {
+  color: var(--nw-accent);
+}
+.ug-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .ug-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.ug-nav {
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 24px;
+  box-shadow: var(--nw-shadow);
+}
+.ug-nav-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--nw-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 12px 6px;
+}
+.ug-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: var(--nw-text-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.ug-nav-item:hover {
+  background: var(--nw-hover);
+  color: var(--nw-text);
+}
+.ug-nav-item.active {
+  background: var(--nw-accent-bg);
+  color: var(--nw-accent);
+}
+.ug-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+.ug-nav-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ug-nav-arrow {
+  opacity: 0.4;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.ug-nav-item.active .ug-nav-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+.ug-content {
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius);
+  padding: 28px;
+  box-shadow: var(--nw-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.ug-content-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--nw-border);
+}
+.ug-content-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--nw-accent-bg);
+  color: var(--nw-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ug-content-title {
+  font-family: var(--nw-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--nw-text);
+  margin: 0 0 4px;
+}
+.ug-content-desc {
+  font-size: 14px;
+  color: var(--nw-text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+.ug-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ug-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 18px;
+  background: var(--nw-bg);
+  border: 1px solid var(--nw-border);
+  border-radius: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ug-step:hover {
+  border-color: var(--nw-accent-light);
+  box-shadow: var(--nw-shadow-sm);
+}
+.ug-step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--nw-accent-bg);
+  color: var(--nw-accent);
+  font-weight: 700;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ug-step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--nw-text);
+  margin: 0 0 4px;
+}
+.ug-step-text {
+  font-size: 13.5px;
+  color: var(--nw-text-2);
+  margin: 0;
+  line-height: 1.5;
+}
+.ug-tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--nw-accent-bg);
+  border: 1px solid var(--nw-border);
+  border-radius: 12px;
+  color: var(--nw-text);
+}
+.ug-tip-icon {
+  color: var(--nw-accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ug-section-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--nw-border);
+}
+.ug-section-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--nw-surface);
+  border: 1px solid var(--nw-border);
+  color: var(--nw-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.ug-section-btn:hover {
+  background: var(--nw-hover);
+  border-color: var(--nw-accent);
+  color: var(--nw-accent);
+}
+.ug-section-btn-next {
+  margin-left: auto;
+}
+</style>
