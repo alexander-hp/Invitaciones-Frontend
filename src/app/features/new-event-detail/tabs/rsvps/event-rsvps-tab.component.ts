@@ -84,10 +84,52 @@ export class EventRsvpsTabComponent implements OnInit, OnChanges {
     });
   }
 
+  rsvpPage = 1;
+  rsvpPageSize = 25;
+  Math = Math;
+
+  get totalRsvpPages(): number {
+    return Math.ceil(this.filteredRsvps.length / this.rsvpPageSize) || 1;
+  }
+
+  get paginatedRsvps(): RsvpModel[] {
+    const total = this.totalRsvpPages;
+    if (this.rsvpPage > total) {
+      this.rsvpPage = 1;
+    }
+    const start = (this.rsvpPage - 1) * this.rsvpPageSize;
+    return this.filteredRsvps.slice(start, start + this.rsvpPageSize);
+  }
+
+  setRsvpPage(page: number): void {
+    if (page < 1 || page > this.totalRsvpPages) return;
+    this.rsvpPage = page;
+  }
+
+  getRsvpPagesArray(): number[] {
+    const total = this.totalRsvpPages;
+    const current = this.rsvpPage;
+    const pages: number[] = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
   clearFilters(): void {
     this.searchQuery = '';
     this.statusFilter = '';
     this.companionsFilter = '';
+    this.rsvpPage = 1;
   }
 
   get filteredRsvps(): RsvpModel[] {
