@@ -258,12 +258,14 @@ export class NewInvitationEditorComponent implements OnInit {
           this.loading = false;
           return;
         }
-        if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
-        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+        const backendTpl = this.invitation.content?.template || (this.invitation.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template) ? this.invitation.template : undefined);
         const storedTplKey = (id ? localStorage.getItem(`inv_tpl_${id}`) : null) || (this.invitation.slug ? localStorage.getItem(`inv_tpl_${this.invitation.slug}`) : null);
+        const effectiveTemplate = backendTpl || storedTplKey || 'envelope-cards';
         if (this.invitation.content) {
-          this.invitation.content.template = this.invitation.content.template || storedTplKey || 'envelope-cards';
+          this.invitation.content.template = effectiveTemplate;
         }
+        if (id) localStorage.setItem(`inv_tpl_${id}`, effectiveTemplate);
+        if (this.invitation.slug) localStorage.setItem(`inv_tpl_${this.invitation.slug}`, effectiveTemplate);
         
         const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event?._id || this.invitation.event?.id);
         if (typeof this.invitation.event === 'object' && this.invitation.event) {
@@ -1117,10 +1119,13 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private getContentPayload() {
     if (!this.invitation) return undefined;
-    const rawContent: any = { ...this.invitation.content };
-    delete rawContent.template;
+    const invId = this.getInvitationId(this.invitation);
+    const slug = this.invitation.slug;
+    const activeTemplateKey = this.invitation.content?.template || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : undefined) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : undefined) || 'envelope-cards';
+    const rawContent: any = { ...this.invitation.content, template: activeTemplateKey };
     return {
       ...rawContent,
+      template: activeTemplateKey,
       sectionMusic: this.cleanSectionMusic(this.invitation.content.sectionMusic || {}),
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),
