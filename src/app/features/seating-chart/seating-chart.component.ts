@@ -1705,4 +1705,48 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     if (!t.guests || t.guests.length === 0) return 'Sin invitados asignados';
     return t.guests.map(g => `• ${g.name}${g.group ? ' (' + g.group + ')' : ''} [${g.seats} lug.]`).join('\n');
   }
+
+  createMissingAssignedTables(): void {
+    const missing = this.missingTables;
+    if (missing.length === 0) return;
+
+    const missingNames = missing.map(m => m.name);
+
+    this.confirmDialogService.confirm({
+      title: 'Crear mesas auto-asignadas',
+      message: `Se detectaron ${missing.length} mesas asignadas a invitados que no existen en el croquis: "${missingNames.join(', ')}". ¿Deseas crearlas automáticamente en el croquis con una capacidad por defecto de 8 personas?`,
+      confirmText: 'Sí, crear mesas',
+      cancelText: 'Cancelar'
+    }).then((accepted: boolean) => {
+      if (!accepted) return;
+      
+      this.loading = true;
+      const requests = missingNames.map((tableName, index) => {
+        return this.api.createTable(this.eventId, {
+          name: tableName,
+          capacity: 8,
+          shape: 'round',
+          width: 120, // default 1.2m
+          height: 120, // default 1.2m
+          floor: this.activeFloor,
+          floorName: this.activeFloorObject.name,
+          order: this.tables.length + index + 1
+        });
+      });
+
+      forkJoin(requests).subscribe({
+        next: () => {
+          this.message = `✨ Se crearon con éxito las ${missing.length} mesas asignadas.`;
+          setTimeout(() => this.message = '', 3000);
+          this.loadTables(this.eventId);
+          this.loadGuests(this.eventId);
+        },
+        error: err => {
+          this.loading = false;
+          this.error = err?.error?.message || 'Error al crear algunas mesas.';
+          setTimeout(() => this.error = '', 3000);
+        }
+      });
+    });
+  }
 }
