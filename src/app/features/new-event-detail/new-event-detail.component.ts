@@ -31,6 +31,7 @@ export class NewEventDetailComponent implements OnInit {
 
   guests: GuestModel[] = [];
   tables: EventTableModel[] = [];
+  invitation?: InvitationModel;
   songRequestsCount = 0;
   dedicationsCount = 0;
   rsvpsCount = 0;
@@ -53,18 +54,18 @@ export class NewEventDetailComponent implements OnInit {
   };
 
   wizardSectionDefinitions: WizardSectionDef[] = [
-    { key: 'cover', icon: '🖼️', label: 'Portada / Bienvenida', description: 'Imagen principal y título de la invitación.' },
-    { key: 'countdown', icon: '⏳', label: 'Cuenta Regresiva', description: 'Temporizador en vivo hacia el día del evento.' },
-    { key: 'details', icon: 'ℹ️', label: 'Detalles y Horarios', description: 'Fecha, hora y mensaje de los novios/anfitriones.' },
-    { key: 'location', icon: '📍', label: 'Ubicación y Mapa', description: 'Dirección del lugar con enlace a Google Maps / Waze.' },
-    { key: 'rsvp', icon: '💌', label: 'Confirmación RSVP', description: 'Formulario para que los invitados confirmen asistencia.' },
-    { key: 'gift', icon: '🎁', label: 'Mesa de Regalos / Sobre', description: 'Datos bancarios o enlaces a mesas de regalos.' },
-    { key: 'dressCode', icon: '👔', label: 'Código de Vestimenta', description: 'Sugerencias de vestuario y paleta de colores.' },
-    { key: 'schedule', icon: '📅', label: 'Itinerario / Programa', description: 'Cronograma de actividades durante el evento.' },
-    { key: 'gallery', icon: '📸', label: 'Galería de Fotos', description: 'Álbum de fotos oficial y fotos de invitados.' },
-    { key: 'dedications', icon: '💬', label: 'Muro de Dedicatorias', description: 'Libro de visitas para que dejen sus mensajes.' },
-    { key: 'music', icon: '🎵', label: 'Peticiones de Canciones', description: 'Los invitados pueden proponer canciones al DJ.' },
-    { key: 'passes', icon: '🎫', label: 'Pases VIP / QR', description: 'Pase digital individual con código QR para entrada.' }
+    { key: 'cover', icon: '', label: 'Portada / Bienvenida', description: 'Imagen principal y título de la invitación.' },
+    { key: 'countdown', icon: '', label: 'Cuenta Regresiva', description: 'Temporizador en vivo hacia el día del evento.' },
+    { key: 'details', icon: '', label: 'Detalles y Horarios', description: 'Fecha, hora y mensaje de los novios/anfitriones.' },
+    { key: 'location', icon: '', label: 'Ubicación y Mapa', description: 'Dirección del lugar con enlace a Google Maps / Waze.' },
+    { key: 'rsvp', icon: '', label: 'Confirmación RSVP', description: 'Formulario para que los invitados confirmen asistencia.' },
+    { key: 'gift', icon: '', label: 'Mesa de Regalos / Sobre', description: 'Datos bancarios o enlaces a mesas de regalos.' },
+    { key: 'dressCode', icon: '', label: 'Código de Vestimenta', description: 'Sugerencias de vestuario y paleta de colores.' },
+    { key: 'schedule', icon: '', label: 'Itinerario / Programa', description: 'Cronograma de actividades durante el evento.' },
+    { key: 'gallery', icon: '', label: 'Galería de Fotos', description: 'Álbum de fotos oficial y fotos de invitados.' },
+    { key: 'dedications', icon: '', label: 'Muro de Dedicatorias', description: 'Libro de visitas para que dejen sus mensajes.' },
+    { key: 'music', icon: '', label: 'Peticiones de Canciones', description: 'Los invitados pueden proponer canciones al DJ.' },
+    { key: 'passes', icon: '', label: 'Pases VIP / QR', description: 'Pase digital individual con código QR para entrada.' }
   ];
 
   constructor(
@@ -155,6 +156,16 @@ export class NewEventDetailComponent implements OnInit {
 
     if (this.can('manage_guests')) this.apiService.listRsvps(this.eventId).subscribe({
       next: res => { this.rsvpsCount = (res.rsvps || []).length; },
+      error: () => {}
+    });
+
+    this.apiService.listInvitations().subscribe({
+      next: res => {
+        this.invitation = (res.invitations || []).find(inv => {
+          const invEvId = typeof inv.event === 'string' ? inv.event : (inv.event?._id || inv.event?.id);
+          return invEvId === this.eventId;
+        });
+      },
       error: () => {}
     });
 

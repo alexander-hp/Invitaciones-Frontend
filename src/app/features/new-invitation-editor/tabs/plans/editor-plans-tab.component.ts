@@ -18,30 +18,31 @@ export class EditorPlansTabComponent {
   @Output() checkout = new EventEmitter<PaymentPackage>();
   @Output() selectTemplateKey = new EventEmitter<string>();
   @Output() saveChanges = new EventEmitter<void>();
+  @Output() openAiWizard = new EventEmitter<void>();
 
   builtinTemplates = [
     {
       id: 'envelope-cards',
       name: 'Sobre Interactivo & Cards Deslizables',
-      badge: '📱 Recomendado Móvil',
+      badge: 'Recomendado Móvil',
       description: 'Apertura animada de sobrecito digital con sello, verificación opcional de acceso (correo/teléfono), fondo de boda elegante y tarjetas independientes deslizables a izquierda/derecha.',
-      icon: '✉️📲',
+      iconKey: 'envelope',
       features: ['Sobre 3D animado', 'Navegación por Swipe (Tarjetas)', 'Autenticación en sobre', 'Optimizado Celulares']
     },
     {
       id: 'classic-vertical',
       name: 'Clásica Editorial Vertical',
-      badge: '📜 Estándar',
+      badge: 'Estándar',
       description: 'Formato editorial continuo de scroll vertical. Diseño clásico con tipografía limpia y secciones de lectura secuencial.',
-      icon: '📜✨',
+      iconKey: 'classic',
       features: ['Scroll vertical continuo', 'Portada hero amplia', 'Lectura secuencial', 'Excelente en Escritorio']
     },
     {
       id: 'modern-minimal',
       name: 'Plantilla 3: Glamour Moderno & Minimal',
-      badge: '✨ Plantilla 3',
+      badge: 'Plantilla 3',
       description: 'Diseño vanguardista con estética limpia, tarjetas flotantes glassmorphism, hero interactivo, timeline moderno y animación fluida.',
-      icon: '💎✨',
+      iconKey: 'modern',
       features: ['Estilo Glassmorphism', 'Diseño Minimalista & Lujo', 'Hero interactivo', 'Optimizada Móvil & Desktop']
     }
   ];
@@ -59,6 +60,16 @@ export class EditorPlansTabComponent {
       return true;
     }
     return current === key;
+  }
+
+  hasCustomTemplate(): boolean {
+    const slug = this.invitation?.slug;
+    return !!(this.invitation?.content?.customHtml || (slug && localStorage.getItem(`inv_custom_html_${slug}`)));
+  }
+
+  isCustomTemplateActive(): boolean {
+    const current = this.currentTemplateKey;
+    return current === 'custom-html' || current === 'html-css';
   }
 
   setTemplate(key: string): void {

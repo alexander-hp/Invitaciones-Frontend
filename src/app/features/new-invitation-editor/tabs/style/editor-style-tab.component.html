@@ -1,40 +1,47 @@
 <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
-  <div class="nw-card-header">
-    <h3 style="margin:0;">🎨 Estilo y Paletas de Colores</h3>
+  <div class="nw-card-header" style="display:flex; align-items:center; gap:10px;">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+    </svg>
+    <h3 style="margin:0;">Estilo y Paletas de Colores</h3>
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
     <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.content.palette as palette">
       <label class="nw-label">Color principal
         <div style="display:flex; gap:8px; align-items:center;">
           <input class="nw-input" [(ngModel)]="palette.primary" style="flex:1;">
-          <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);"
+          <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border); flex-shrink:0;"
             [style.background]="palette.primary"></span>
         </div>
       </label>
-      <label class="nw-label">Color fondo
+      <label class="nw-label">Color de fondo
         <div style="display:flex; gap:8px; align-items:center;">
           <input class="nw-input" [(ngModel)]="palette.secondary" style="flex:1;">
-          <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);"
+          <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border); flex-shrink:0;"
             [style.background]="palette.secondary"></span>
         </div>
       </label>
-      <label class="nw-label">Color acento
+      <label class="nw-label">Color de acento
         <div style="display:flex; gap:8px; align-items:center;">
           <input class="nw-input" [(ngModel)]="palette.accent" style="flex:1;">
-          <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border);"
+          <span style="width:32px; height:32px; border-radius:8px; border:1px solid var(--nw-border); flex-shrink:0;"
             [style.background]="palette.accent"></span>
         </div>
       </label>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
       <button *ngFor="let preset of palettePresets" class="nw-btn nw-btn-ghost nw-btn-sm" type="button"
-        (click)="onApplyPalette(preset)" style="display:flex; align-items:center; gap:6px;">
-        <span style="display:flex; gap:2px;">
-          <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.primary"></span>
-          <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.secondary"></span>
-          <span style="width:14px; height:14px; border-radius:50%;" [style.background]="preset.accent"></span>
+        (click)="onApplyPalette(preset)" style="display:inline-flex; align-items:center; gap:8px;">
+        <span style="display:flex; gap:3px;">
+          <span style="width:13px; height:13px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.2);" [style.background]="preset.primary"></span>
+          <span style="width:13px; height:13px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.2);" [style.background]="preset.secondary"></span>
+          <span style="width:13px; height:13px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.2);" [style.background]="preset.accent"></span>
         </span>
-        {{ preset.name }}
+        <span>{{ preset.name }}</span>
       </button>
     </div>
   </div>

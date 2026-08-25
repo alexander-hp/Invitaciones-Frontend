@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../core/api.service';
 import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
@@ -69,7 +70,17 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     phoneNationalNumber: ''
   };
 
-  constructor(private route: ActivatedRoute, private api: ApiService) {}
+  songRequest = { title: '', artist: '', dedication: '' };
+  songRequestSending = false;
+  songRequestMessage = '';
+
+  customHtmlSafeSrcdoc?: SafeHtml;
+
+  constructor(
+    private route: ActivatedRoute,
+    private api: ApiService,
+    private sanitizer: DomSanitizer
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -102,6 +113,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
         console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
         console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
 
+        this.updateCustomHtmlSafeSrcdoc();
         this.loadGuestToken();
         this.loadPublicAlbum();
         this.loadDedications();
@@ -111,10 +123,59 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'Invitación no disponible.';
+        // Fallback: Verificar si existe una plantilla personalizada aprobada para este slug
+        const localCustomHtml = localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
+        const localCustomCss = localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
+        
+        if (localCustomHtml) {
+          this.invitation = {
+            id: 'custom-' + slug,
+            slug: slug,
+            status: 'published',
+            accessMode: 'open',
+            content: {
+              template: 'custom-html',
+              customHtml: localCustomHtml,
+              customCss: localCustomCss,
+              customPageApproved: true,
+              headline: 'Invitación Especial'
+            }
+          } as any;
+          this.updateCustomHtmlSafeSrcdoc();
+          this.loading = false;
+          return;
+        }
+
+        this.error = error.error?.message || 'Invitación no encontrada o no publicada';
         this.loading = false;
       }
     });
+  }
+
+  updateCustomHtmlSafeSrcdoc(): void {
+    if (!this.isCustomHtmlTemplate()) {
+      this.customHtmlSafeSrcdoc = undefined;
+      return;
+    }
+    const html = this.customHtmlContent;
+    const css = this.customCssContent;
+    const combined = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            html, body { margin: 0; padding: 0; min-height: 100%; }
+            ${css}
+          </style>
+        </head>
+        <body>
+          ${html}
+        </body>
+      </html>
+    `;
+    this.customHtmlSafeSrcdoc = this.sanitizer.bypassSecurityTrustHtml(combined);
   }
 
   private startCountdown(): void {
@@ -539,17 +600,57 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     return 'envelope-cards';
   }
 
+  isCustomHtmlTemplate(): boolean {
+    const t = this.currentTemplate;
+    return t === 'custom-html' || t === 'html-css' || t === 'custom';
+  }
+
+  get customHtmlContent(): string {
+    const slug = this.invitation?.slug;
+    return this.invitation?.content?.customHtml || (slug ? localStorage.getItem(`inv_custom_html_${slug}`) : '') || '';
+  }
+
+  get customCssContent(): string {
+    const slug = this.invitation?.slug;
+    return this.invitation?.content?.customCss || (slug ? localStorage.getItem(`inv_custom_css_${slug}`) : '') || '';
+  }
+
+  getCustomHtmlSafeSrcdoc(): SafeHtml {
+    const html = this.customHtmlContent;
+    const css = this.customCssContent;
+    const combined = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            html, body { margin: 0; padding: 0; min-height: 100%; }
+            ${css}
+          </style>
+        </head>
+        <body>
+          ${html}
+        </body>
+      </html>
+    `;
+    return this.sanitizer.bypassSecurityTrustHtml(combined);
+  }
+
   isEnvelopeCardsTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (!this.isClassicVerticalTemplate() && !this.isTemplate3());
   }
 
   isClassicVerticalTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'classic-vertical' || t === 'classic' || t === 'editorial';
   }
 
   isTemplate3(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'modern-minimal' || t === 'template-3' || t === 'plantilla-3' || t === 'minimal';
   }
@@ -654,14 +755,55 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     return [{ type: 'principal', name: venue.name || 'Lugar del evento', address: venue.address || '', mapUrl: venue.mapUrl || '' }];
   }
 
-  getItineraryIcon(title?: string): string {
+  isSectionActive(key: string): boolean {
+    if (!this.invitation) return false;
+    const settings = this.invitation.content?.sectionSettings;
+    if (key === 'songRequests' || key === 'dj') {
+      if (settings && (settings as any).songRequests === false) return false;
+      return Boolean(this.event?.externalContent?.songRequestSettings?.enabled !== false);
+    }
+    if (!settings) return true;
+    return (settings as any)[key] !== false;
+  }
+
+  getItineraryIconKey(title?: string): string {
     const t = (title || '').toLowerCase();
-    if (t.includes('misa') || t.includes('ceremonia') || t.includes('religios')) return '💒';
-    if (t.includes('recep') || t.includes('cóctel') || t.includes('coctel') || t.includes('bienvenida')) return '🍸';
-    if (t.includes('cena') || t.includes('comida') || t.includes('banquete')) return '🍽️';
-    if (t.includes('baile') || t.includes('fiesta') || t.includes('party') || t.includes('vals')) return '💃';
-    if (t.includes('pastel') || t.includes('brindis')) return '🥂';
-    return '✨';
+    if (t.includes('misa') || t.includes('ceremonia') || t.includes('religios')) return 'church';
+    if (t.includes('recep') || t.includes('cóctel') || t.includes('coctel') || t.includes('bienvenida')) return 'cocktail';
+    if (t.includes('cena') || t.includes('comida') || t.includes('banquete')) return 'dinner';
+    if (t.includes('baile') || t.includes('fiesta') || t.includes('party') || t.includes('vals')) return 'party';
+    if (t.includes('pastel') || t.includes('brindis')) return 'toast';
+    return 'clock';
+  }
+
+  getItineraryIcon(title?: string): string {
+    return this.getItineraryIconKey(title);
+  }
+
+  submitSongRequest(): void {
+    if (!this.songRequest.title.trim()) return;
+    const eventId = (this.event?._id || this.event?.id || (typeof this.invitation?.event === 'string' ? this.invitation?.event : this.invitation?.event?.id) || this.invitation?.slug) as string;
+    if (!eventId) return;
+
+    this.songRequestSending = true;
+    this.songRequestMessage = '';
+    this.api.createSongRequest(eventId, {
+      title: this.songRequest.title.trim(),
+      artist: this.songRequest.artist.trim() || undefined,
+      dedication: this.songRequest.dedication.trim() || undefined,
+      requesterName: this.verifiedGuest?.name || this.rsvp.name || undefined
+    }).subscribe({
+      next: () => {
+        this.songRequestMessage = '¡Canción sugerida con éxito al DJ!';
+        this.songRequest = { title: '', artist: '', dedication: '' };
+        this.songRequestSending = false;
+        this.showToast('Canción enviada al DJ');
+      },
+      error: (err: any) => {
+        this.songRequestMessage = err?.error?.message || 'No se pudo enviar la canción.';
+        this.songRequestSending = false;
+      }
+    });
   }
 
   private loadGuestToken(): void {

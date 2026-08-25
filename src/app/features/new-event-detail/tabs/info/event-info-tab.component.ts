@@ -70,6 +70,11 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
 
   editingMemberId: string | null = null;
 
+  // Foto Principal / Imagen de Portada del Evento
+  coverImageUrl = '';
+  uploadingCover = false;
+  previewCoverModal = false;
+
   showSuccess(text: string): void {
     this.message = text;
     setTimeout(() => { this.message = ''; }, 3500);
@@ -119,12 +124,20 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     const id = (this.event._id || this.event.id)!;
     this.loadingData = true;
 
+    if (this.event?.externalContent?.coverImageUrl) {
+      this.coverImageUrl = this.event.externalContent.coverImageUrl;
+    }
+
     if (this.isOwner()) this.apiService.listInvitations().subscribe({
       next: res => {
         this.invitations = (res.invitations || []).filter(i => {
           const invEvId = typeof i.event === 'string' ? i.event : (i.event?._id || i.event?.id);
           return invEvId === id;
         });
+        const invWithCover = this.invitations.find(i => !!i.content?.coverImageUrl);
+        if (invWithCover?.content?.coverImageUrl) {
+          this.coverImageUrl = invWithCover.content.coverImageUrl;
+        }
       },
       error: () => {}
     });
@@ -554,5 +567,116 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   isTokenVisible(linkId?: string): boolean {
     if (!linkId) return false;
     return !!this.visibleTokens[linkId];
+  }
+
+  // --- GESTIÓN DE FOTO PRINCIPAL / PORTADA ---
+
+  uploadCoverImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const targetEventId = this.event?._id || this.event?.id;
+    if (!file || !targetEventId) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      this.showError('Formato no válido. Sube una imagen (JPG, PNG, WEBP).');
+      input.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.showError('La imagen no debe sobrepasar 5MB.');
+      input.value = '';
+      return;
+    }
+
+    this.uploadingCover = true;
+    this.apiService.createUploadUrl({
+      fileName: file.name,
+      contentType: file.type,
+      folder: 'covers',
+      event: targetEventId,
+      size: file.size
+    }).subscribe({
+      next: upload => {
+        this.apiService.uploadAsset(upload.uploadUrl, file).subscribe({
+          next: () => {
+            const publicUrl = upload.publicUrl;
+            this.coverImageUrl = publicUrl;
+            this.saveCoverImage(publicUrl, input);
+          },
+          error: () => {
+            this.showError('Error al subir el archivo de imagen.');
+            this.uploadingCover = false;
+            input.value = '';
+          }
+        });
+      },
+      error: err => {
+        this.showError(err?.error?.message || 'No se pudo preparar la URL de subida.');
+        this.uploadingCover = false;
+        input.value = '';
+      }
+    });
+  }
+
+  saveCoverImage(url: string, input?: HTMLInputElement): void {
+    const targetEventId = (this.event?._id || this.event?.id)!;
+    if (!targetEventId) return;
+
+    const extContent = { ...(this.event.externalContent || {}), coverImageUrl: url };
+    this.event.externalContent = extContent;
+
+    if (this.invitations.length > 0) {
+      const inv = this.invitations[0];
+      const invId = (inv._id || inv.id)!;
+      const updatedContent = { ...(inv.content || {}), coverImageUrl: url };
+      delete (updatedContent as any).template;
+      this.apiService.updateInvitation(invId, { content: updatedContent }).subscribe({
+        next: res => {
+          inv.content = res.invitation.content;
+          this.coverImageUrl = url;
+          this.uploadingCover = false;
+          if (input) input.value = '';
+          this.showSuccess(url ? '✨ ¡Foto principal guardada con éxito!' : '🗑️ Foto principal eliminada.');
+          this.eventUpdated.emit();
+        },
+        error: () => {
+          this.updateEventCover(targetEventId, extContent, url, input);
+        }
+      });
+    } else {
+      this.updateEventCover(targetEventId, extContent, url, input);
+    }
+  }
+
+  private updateEventCover(eventId: string, extContent: any, url: string, input?: HTMLInputElement): void {
+    this.apiService.updateEvent(eventId, { externalContent: extContent }).subscribe({
+      next: () => {
+        this.coverImageUrl = url;
+        this.uploadingCover = false;
+        if (input) input.value = '';
+        this.showSuccess(url ? '✨ ¡Foto principal guardada con éxito!' : '🗑️ Foto principal eliminada.');
+        this.eventUpdated.emit();
+      },
+      error: () => {
+        this.uploadingCover = false;
+        if (input) input.value = '';
+        this.showError('No se pudo guardar la foto principal.');
+      }
+    });
+  }
+
+  removeCoverImage(): void {
+    this.confirmDialogService.confirm({
+      title: 'Eliminar Foto Principal',
+      message: '¿Estás seguro de que deseas eliminar la foto principal del evento?',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.saveCoverImage('');
+      }
+    });
   }
 }

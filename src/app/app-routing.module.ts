@@ -35,6 +35,7 @@ import { NewPasswordResetComponent } from './features/new-password-reset/new-pas
 import { NewPasswordResetConfirmComponent } from './features/new-password-reset-confirm/new-password-reset-confirm.component';
 import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
 import { DocumentationComponent } from './features/documentation/documentation.component';
+import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
@@ -66,6 +67,8 @@ const routes: Routes = [
   { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
+  { path: 'new/custom-templates', component: NewCustomTemplatesComponent, canActivate: [AuthGuard] },
+  { path: 'new/admin/templates', redirectTo: 'new/custom-templates' },
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
   { path: 'new/invitations/:id/sections', component: NewInvitationSectionsComponent, canActivate: [AuthGuard] },
   { path: 'new/external-access/:token', component: NewEventAccessComponent },
@@ -84,4 +87,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }

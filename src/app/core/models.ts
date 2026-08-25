@@ -274,8 +274,74 @@ export interface InvitationContent {
   storyTitle?: string;
   storyBody?: string;
   template?: string;
+  customHtml?: string;
+  customCss?: string;
+  customPageApproved?: boolean;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
+}
+
+export interface CustomTemplateSubmission {
+  id: string;
+  _id?: string;
+  eventId?: string;
+  eventTitle?: string;
+  eventSlug?: string;
+  eventType?: EventType;
+  invitationId?: string;
+  name: string;
+  description?: string;
+  htmlCode: string;
+  cssCode: string;
+  authorName?: string;
+  authorEmail?: string;
+  notes?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  score?: number;
+  submittedAt: string;
+  reviewedAt?: string;
+  adminFeedback?: string;
+  publicUrl?: string;
+}
+
+export interface AiTemplateGenerateRequest {
+  eventId?: string;
+  style: string;
+  palette?: { primary?: string; secondary?: string; accent?: string };
+  vibe?: string;
+  sections?: string[];
+  customPrompt?: string;
+}
+
+export interface AiTemplateRefineRequest {
+  currentHtml: string;
+  currentCss?: string;
+  userFeedback: string;
+  eventId?: string;
+}
+
+export interface AiTemplateResult {
+  name: string;
+  description: string;
+  html: string;
+  css: string;
+  features?: string[];
+}
+
+export interface AiTemplateResponse {
+  success: boolean;
+  template: AiTemplateResult;
+  message?: string;
+}
+
+export interface AiTemplatePromptPreviewResponse {
+  success: boolean;
+  isPreview: boolean;
+  promptPreview: {
+    systemInstruction: string;
+    userPrompt: string;
+  };
+  message?: string;
 }
 
 export interface RsvpSettings {

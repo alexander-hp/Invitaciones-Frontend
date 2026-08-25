@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { ApiService } from '../../../../core/api.service';
-import { AlbumAssetModel, EventModel, InvitationModel } from '../../../../core/models';
+import { AlbumAssetModel, EventModel, EventAccessLinkModel, EventAccessRole } from '../../../../core/models';
 
 export const TAG_SUPER_ENCANTA = 'Me super encanta';
 export const TAG_ME_ENCANTA = 'Me encanta';
@@ -21,15 +21,181 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
   private messageTimeout?: any;
   private errorTimeout?: any;
 
-  albumQrUrl = '';
-  albumPublicUrl = '';
+  // Accesos Externos y QR del Álbum
+  albumAccessLinks: EventAccessLinkModel[] = [];
+  loadingAccessLinks = false;
+  creatingAccessLink = false;
+  isAccessLinksCollapsed = true;
+  selectedQrLink?: EventAccessLinkModel;
+
+  // Filtros de Estado y Etiquetas
   filterStatus: 'all' | 'pending' | 'approved' | 'rejected' = 'all';
   selectedTagFilter: string = 'all';
   selectedAsset?: AlbumAssetModel;
 
+  // Paginación Local
+  currentPage = 1;
+  pageSize = 12;
+  pageSizeOptions = [12, 24, 48, 96];
+
   // Tags Presets
   readonly TAG_SUPER_ENCANTA = TAG_SUPER_ENCANTA;
   readonly TAG_ME_ENCANTA = TAG_ME_ENCANTA;
+
+  get publicAlbumAccessUrl(): string {
+    const albumViewLink = this.albumAccessLinks.find(l => l.role === 'album_view') || this.albumAccessLinks[0];
+    if (albumViewLink) {
+      return this.getAccessLinkFullUrl(albumViewLink);
+    }
+    const targetEventId = this.eventId || this.event?._id || this.event?.id;
+    if (targetEventId) {
+      return `${window.location.origin}/new/external-access/${targetEventId}`;
+    }
+    return window.location.href;
+  }
+
+  private async convertUrlToPngBlob(url: string): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 800;
+        canvas.height = img.naturalHeight || img.height || 600;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Error al convertir la imagen.'));
+            }
+          }, 'image/png');
+        } else {
+          reject(new Error('Error al obtener contexto de Canvas.'));
+        }
+      };
+      img.onerror = () => {
+        fetch(url)
+          .then(res => res.blob())
+          .then(blob => resolve(blob))
+          .catch(err => reject(err));
+      };
+      img.src = url;
+    });
+  }
+
+  async sharePhotoAsset(asset: AlbumAssetModel, e?: Event): Promise<void> {
+    if (e) e.stopPropagation();
+    if (!asset || !asset.url) return;
+
+    const albumUrl = this.publicAlbumAccessUrl;
+    const title = `${this.event?.title || 'Evento'} - Fotografía`;
+
+    try {
+      this.showSuccess('Preparando imagen para compartir...');
+      const pngBlob = await this.convertUrlToPngBlob(asset.url);
+      const file = new File([pngBlob], 'fotografia-evento.png', { type: pngBlob.type || 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title,
+          text: `📸 Fotografía del Evento.\n\n📲 Ver Álbum Completo: ${albumUrl}`,
+          files: [file]
+        });
+        this.showSuccess('¡Fotografía compartida como elemento!');
+        return;
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return;
+    }
+
+    await this.copyPhotoBlobToClipboard(asset.url, albumUrl);
+  }
+
+  // Descarga directa de la fotografía en alta calidad
+  async downloadPhotoAsset(asset?: AlbumAssetModel, e?: Event): Promise<void> {
+    if (e) e.stopPropagation();
+    const targetAsset = asset || this.selectedAsset;
+    if (!targetAsset || !targetAsset.url) {
+      this.showError('No hay fotografía para descargar.');
+      return;
+    }
+
+    try {
+      this.showSuccess('Iniciando descarga de la fotografía...');
+      const response = await fetch(targetAsset.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const ext = targetAsset.url.split('.').pop()?.split('?')[0] || 'jpg';
+      a.download = `fotografia-evento-${Date.now()}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      this.showSuccess('¡Fotografía descargada con éxito!');
+    } catch (err) {
+      window.open(targetAsset.url, '_blank');
+      this.showSuccess('Fotografía abierta en pestaña nueva para guardar.');
+    }
+  }
+
+  // Compartir enlace público del Álbum (Galería de Fotos)
+  sharePublicAlbumUrl(e?: Event): void {
+    if (e) e.stopPropagation();
+    const albumUrl = this.publicAlbumAccessUrl;
+    const title = `${this.event?.title || 'Evento'} - Galería de Fotos del Evento`;
+    const text = `📸 Galería de Fotos del Evento:\n${albumUrl}`;
+
+    if (navigator.share) {
+      navigator.share({ title, text, url: albumUrl }).then(() => {
+        this.showSuccess('¡Enlace del álbum compartido!');
+      }).catch(() => {
+        this.copyAlbumAccessUrl();
+      });
+    } else {
+      this.copyAlbumAccessUrl();
+    }
+  }
+
+  copyAlbumAccessUrl(): void {
+    const albumUrl = this.publicAlbumAccessUrl;
+    navigator.clipboard.writeText(albumUrl).then(() => {
+      this.showSuccess('¡Enlace público del álbum copiado al portapapeles!');
+    }).catch(() => {
+      this.showError('No se pudo copiar el enlace.');
+    });
+  }
+
+  async copyPhotoBlobToClipboard(photoUrl: string, albumUrl: string): Promise<void> {
+    try {
+      this.showSuccess('Copiando imagen al portapapeles...');
+      const pngBlob = await this.convertUrlToPngBlob(photoUrl);
+
+      if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        const itemType = pngBlob.type.includes('png') ? 'image/png' : pngBlob.type;
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            [itemType]: pngBlob
+          })
+        ]);
+        this.showSuccess('¡Imagen copiada al portapapeles! Ya puedes pegarla (Ctrl+V) como foto en tu chat.');
+        return;
+      }
+    } catch (err) {
+      console.warn('Fallo al copiar Blob de imagen:', err);
+    }
+
+    try {
+      await navigator.clipboard.writeText(`📲 Álbum del Evento: ${albumUrl}`);
+      this.showSuccess('¡Enlace público del álbum copiado al portapapeles!');
+    } catch (e) {
+      this.showError('No se pudo copiar la imagen al portapapeles.');
+    }
+  }
 
   // Revisión Rápida (Swipe / Modal Deck)
   quickReviewOpen = false;
@@ -50,18 +216,12 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
   quickReviewCustomTag = '';
   lightboxCustomTag = '';
 
-  // Imagen de Portada del Evento / Invitación
-  invitation?: InvitationModel;
-  coverImageUrl = '';
-  uploadingCover = false;
-  previewCoverModal = false;
-
   constructor(private apiService: ApiService) {}
 
   ngOnInit(): void {
     if (this.eventId || this.event) {
       this.loadAlbum();
-      this.loadInvitation();
+      this.loadAlbumAccessLinks();
     }
   }
 
@@ -69,33 +229,34 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
     const id = this.eventId || this.event?._id || this.event?.id;
     if (id) {
       this.loadAlbum();
-      this.loadInvitation();
+      this.loadAlbumAccessLinks();
     }
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcuts(event: KeyboardEvent): void {
-    if (!this.quickReviewOpen) return;
     const target = event.target as HTMLElement;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-      return; // No interceptar cuando se escribe en un input
+      return;
     }
 
-    const currentAsset = this.currentReviewAsset;
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      if (currentAsset) this.triggerQuickAction(currentAsset, 'rejected');
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      if (currentAsset) this.triggerQuickAction(currentAsset, 'approved');
-    } else if (event.key === '1' && currentAsset) {
-      event.preventDefault();
-      this.toggleTag(currentAsset, this.TAG_SUPER_ENCANTA);
-    } else if (event.key === '2' && currentAsset) {
-      event.preventDefault();
-      this.toggleTag(currentAsset, this.TAG_ME_ENCANTA);
-    } else if (event.key === 'Escape') {
-      this.closeQuickReview();
+    if (this.quickReviewOpen) {
+      const currentAsset = this.currentReviewAsset;
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        if (currentAsset) this.triggerQuickAction(currentAsset, 'rejected');
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        if (currentAsset) this.triggerQuickAction(currentAsset, 'approved');
+      } else if (event.key === '1' && currentAsset) {
+        event.preventDefault();
+        this.toggleTag(currentAsset, this.TAG_SUPER_ENCANTA);
+      } else if (event.key === '2' && currentAsset) {
+        event.preventDefault();
+        this.toggleTag(currentAsset, this.TAG_ME_ENCANTA);
+      } else if (event.key === 'Escape') {
+        this.closeQuickReview();
+      }
     }
   }
 
@@ -126,7 +287,6 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
           tags: Array.isArray(asset.tags) ? asset.tags : []
         }));
         this.loadingAlbum = false;
-        this.generateQrUrl();
       },
       error: err => {
         this.showError(err?.error?.message || 'Error al cargar fotos del álbum');
@@ -135,142 +295,106 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
     });
   }
 
-  loadInvitation(): void {
-    const targetEventId = String(this.eventId || this.event?._id || this.event?.id || '').trim();
+  // --- ESCANEO DE ACCESOS EXTERNOS VIGENTES DEL ÁLBUM ---
+
+  loadAlbumAccessLinks(): void {
+    const targetEventId = this.eventId || this.event?._id || this.event?.id;
     if (!targetEventId) return;
 
-    this.apiService.listInvitations().subscribe({
+    this.loadingAccessLinks = true;
+    this.apiService.listEventAccessLinks(targetEventId).subscribe({
       next: res => {
-        const matches = (res.invitations || []).filter(i => {
-          const invEvId = typeof i.event === 'string' ? i.event : (i.event?._id || i.event?.id || '');
-          return String(invEvId).trim() === targetEventId;
+        const albumRoles: EventAccessRole[] = ['album_view', 'photographer', 'album_review'];
+        const now = Date.now();
+        this.albumAccessLinks = (res.links || []).filter(link => {
+          const isAlbumRole = albumRoles.includes(link.role);
+          const isNotRevoked = !link.revokedAt;
+          const isNotExpired = !link.expiresAt || new Date(link.expiresAt).getTime() > now;
+          return isAlbumRole && isNotRevoked && isNotExpired;
         });
-
-        this.invitation = matches.find(i => !!i.content?.coverImageUrl) || matches[0];
-
-        if (this.invitation?.content?.coverImageUrl) {
-          this.coverImageUrl = this.invitation.content.coverImageUrl;
-        } else {
-          this.syncCoverFromEvent();
-        }
+        this.loadingAccessLinks = false;
       },
       error: () => {
-        this.syncCoverFromEvent();
+        this.loadingAccessLinks = false;
       }
     });
   }
 
-  private syncCoverFromEvent(): void {
-    if (this.event?.externalContent?.coverImageUrl) {
-      this.coverImageUrl = this.event.externalContent.coverImageUrl;
+  getAccessLinkFullUrl(link: EventAccessLinkModel): string {
+    if (!link) return '';
+    let url = link.url || `/new/external-access/${link._id || link.id}`;
+    if (url.includes('/external-access/') && !url.includes('/new/external-access/')) {
+      url = url.replace('/external-access/', '/new/external-access/');
     }
+    if (url.startsWith('/')) {
+      url = `${window.location.origin}${url}`;
+    }
+    return url;
   }
 
-  uploadCoverImage(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+  toggleAccessLinks(): void {
+    this.isAccessLinksCollapsed = !this.isAccessLinksCollapsed;
+  }
+
+  openQrModal(link: EventAccessLinkModel, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.selectedQrLink = link;
+  }
+
+  closeQrModal(): void {
+    this.selectedQrLink = undefined;
+  }
+
+  getAccessLinkQrUrl(link: EventAccessLinkModel, size: string = '250x250'): string {
+    const fullUrl = this.getAccessLinkFullUrl(link);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=&data=${encodeURIComponent(fullUrl)}`;
+  }
+
+  copyAccessLinkUrl(link: EventAccessLinkModel): void {
+    const url = this.getAccessLinkFullUrl(link);
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      this.showSuccess('¡Enlace copiado al portapapeles!');
+    }).catch(() => {
+      this.showError('No se pudo copiar el enlace.');
+    });
+  }
+
+  createQuickAlbumLink(role: 'album_view' | 'photographer'): void {
     const targetEventId = this.eventId || this.event?._id || this.event?.id;
-    if (!file || !targetEventId) return;
+    if (!targetEventId) return;
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-      this.showError('Formato no válido. Sube una imagen (JPG, PNG, WEBP).');
-      input.value = '';
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      this.showError('La imagen de portada no debe sobrepasar 5MB.');
-      input.value = '';
-      return;
-    }
-
-    this.uploadingCover = true;
-    this.apiService.createUploadUrl({
-      fileName: file.name,
-      contentType: file.type,
-      folder: 'covers',
-      event: targetEventId,
-      size: file.size
-    }).subscribe({
-      next: upload => {
-        this.apiService.uploadAsset(upload.uploadUrl, file).subscribe({
-          next: () => {
-            const publicUrl = upload.publicUrl;
-            this.coverImageUrl = publicUrl;
-            this.saveCoverImage(publicUrl, input);
-          },
-          error: () => {
-            this.showError('Error al subir el archivo de portada.');
-            this.uploadingCover = false;
-            input.value = '';
-          }
-        });
+    const label = role === 'album_view' ? 'Ver Álbum Oficial' : 'Subir Fotos del Evento';
+    this.creatingAccessLink = true;
+    this.apiService.createEventAccessLink(targetEventId, { role, label, days: 30 }).subscribe({
+      next: () => {
+        this.creatingAccessLink = false;
+        this.showSuccess(`✨ ¡Acceso para ${role === 'album_view' ? 'Ver Álbum' : 'Subir Fotos'} generado con éxito!`);
+        this.loadAlbumAccessLinks();
       },
       error: err => {
-        this.showError(err?.error?.message || 'No se pudo preparar la URL de subida.');
-        this.uploadingCover = false;
-        input.value = '';
+        this.creatingAccessLink = false;
+        this.showError(err?.error?.message || 'No se pudo generar el enlace de acceso.');
       }
     });
   }
 
-  saveCoverImage(url: string, input?: HTMLInputElement): void {
-    const targetEventId = this.eventId || this.event?._id || this.event?.id;
-    if (this.invitation) {
-      const invId = (this.invitation._id || this.invitation.id)!;
-      const updatedContent = { ...(this.invitation.content || {}), coverImageUrl: url };
-      delete (updatedContent as any).template;
-      this.apiService.updateInvitation(invId, { content: updatedContent }).subscribe({
-        next: res => {
-          this.invitation = res.invitation;
-          this.coverImageUrl = url;
-          this.uploadingCover = false;
-          if (input) input.value = '';
-          this.showSuccess(url ? '✨ ¡Imagen de portada guardada con éxito!' : '🗑️ Imagen de portada eliminada.');
-        },
-        error: () => {
-          this.showError('Error al guardar la portada en la invitación.');
-          this.uploadingCover = false;
-          if (input) input.value = '';
-        }
-      });
-    } else if (targetEventId) {
-      this.apiService.createInvitation({ event: targetEventId, content: { coverImageUrl: url } }).subscribe({
-        next: res => {
-          this.invitation = res.invitation;
-          this.coverImageUrl = url;
-          this.uploadingCover = false;
-          if (input) input.value = '';
-          this.showSuccess(url ? '✨ ¡Imagen de portada asignada!' : '🗑️ Imagen de portada eliminada.');
-        },
-        error: () => {
-          if (this.event) {
-            const extContent = { ...(this.event.externalContent || {}), coverImageUrl: url };
-            this.apiService.updateEvent(targetEventId, { externalContent: extContent }).subscribe({
-              next: () => {
-                this.coverImageUrl = url;
-                this.uploadingCover = false;
-                if (input) input.value = '';
-                this.showSuccess(url ? '✨ ¡Imagen de portada actualizada!' : '🗑️ Imagen de portada eliminada.');
-              },
-              error: () => {
-                this.uploadingCover = false;
-                if (input) input.value = '';
-                this.showError('No se pudo guardar la imagen de portada.');
-              }
-            });
-          } else {
-            this.uploadingCover = false;
-            if (input) input.value = '';
-          }
-        }
-      });
+  getRoleTitle(role: EventAccessRole): string {
+    switch (role) {
+      case 'album_view': return '🖼️ Ver Álbum (Galería de Fotos)';
+      case 'photographer': return '📸 Subir Fotos (Fotógrafo / Invitados)';
+      case 'album_review': return '⚡ Revisión Rápida Externa';
+      default: return '🔗 Acceso al Álbum';
     }
   }
 
-  removeCoverImage(): void {
-    if (!confirm('¿Estás seguro de que deseas eliminar la imagen de portada?')) return;
-    this.saveCoverImage('');
+  getRoleDescription(role: EventAccessRole): string {
+    switch (role) {
+      case 'album_view': return 'Permite a los invitados o pantallas gigantes ver la galería de fotografías aprobadas en tiempo real.';
+      case 'photographer': return 'Permite a los invitados o fotógrafos subir fotografías directamente al álbum sin inicio de sesión.';
+      case 'album_review': return 'Permite a moderadores externos revisar y aprobar fotos desde un panel simplificado.';
+      default: return 'Enlace externo para interactuar con las fotos del evento.';
+    }
   }
 
   // --- GETTERS DE CONTADORES Y FILTROS ---
@@ -317,7 +441,6 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
       }
     }
     const tags = Array.from(tagSet);
-    // Ordenar de modo que 'Me super encanta' y 'Me encanta' aparezcan primero si existen
     return tags.sort((a, b) => {
       if (a === this.TAG_SUPER_ENCANTA) return -1;
       if (b === this.TAG_SUPER_ENCANTA) return 1;
@@ -342,18 +465,67 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
     return result;
   }
 
-  generateQrUrl(): void {
-    this.albumPublicUrl = `${window.location.origin}/new/e/${this.eventId}`;
-    this.albumQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(this.albumPublicUrl)}`;
+  // --- PAGINACIÓN LOCAL ---
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredAlbumAssets.length / this.pageSize));
   }
 
-  copyPublicLink(): void {
-    if (!this.albumPublicUrl) return;
-    navigator.clipboard.writeText(this.albumPublicUrl).then(() => {
-      this.showSuccess('¡Enlace del álbum copiado al portapapeles!');
-    }).catch(() => {
-      this.showError('No se pudo copiar el enlace.');
-    });
+  get startIndex(): number {
+    return (this.currentPage - 1) * this.pageSize;
+  }
+
+  get endIndex(): number {
+    return Math.min(this.startIndex + this.pageSize, this.filteredAlbumAssets.length);
+  }
+
+  get paginatedAlbumAssets(): AlbumAssetModel[] {
+    const total = this.filteredAlbumAssets.length;
+    const maxPage = Math.max(1, Math.ceil(total / this.pageSize));
+    if (this.currentPage > maxPage) {
+      this.currentPage = maxPage;
+    }
+    return this.filteredAlbumAssets.slice(this.startIndex, this.endIndex);
+  }
+
+  get pagesList(): number[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages = new Set<number>();
+    pages.add(1);
+    pages.add(total);
+    for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) {
+      pages.add(i);
+    }
+    return Array.from(pages).sort((a, b) => a - b);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  changePageSize(newSize: number): void {
+    this.pageSize = newSize;
+    this.currentPage = 1;
+  }
+
+  setFilterStatus(status: 'all' | 'pending' | 'approved' | 'rejected'): void {
+    this.filterStatus = status;
+    this.currentPage = 1;
+  }
+
+  setSelectedTag(tag: string): void {
+    this.selectedTagFilter = tag;
+    this.currentPage = 1;
+  }
+
+  trackByAssetId(index: number, item: AlbumAssetModel): string {
+    return (item._id || item.id || String(index));
   }
 
   // --- REVISIÓN RÁPIDA (SWIPE & BUTTONS) ---
@@ -380,7 +552,6 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
     }, 280);
   }
 
-  // Gestos táctiles y mouse drag para deslizar tarjetas
   onDragStart(event: MouseEvent | TouchEvent): void {
     if (this.swipeCardAnimation !== 'none') return;
     const touch = 'touches' in event ? event.touches[0] : (event as MouseEvent);
@@ -544,4 +715,3 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
     this.lightboxCustomTag = '';
   }
 }
-

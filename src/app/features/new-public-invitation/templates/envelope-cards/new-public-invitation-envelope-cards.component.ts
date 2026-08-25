@@ -89,35 +89,35 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
 
   get activeCards(): CardSection[] {
     const cards: CardSection[] = [
-      { key: 'hero', title: 'Portada', icon: '💍' }
+      { key: 'hero', title: 'Portada', icon: '' }
     ];
 
     if (this.isSectionActive('rsvp')) {
-      cards.push({ key: 'rsvp', title: 'Confirmar RSVP', icon: '💌' });
+      cards.push({ key: 'rsvp', title: 'Confirmar RSVP', icon: '' });
     }
     if (this.isSectionActive('story')) {
-      cards.push({ key: 'story', title: 'Nuestra Historia', icon: '📖' });
+      cards.push({ key: 'story', title: 'Nuestra Historia', icon: '' });
     }
     if (this.isSectionActive('locations')) {
-      cards.push({ key: 'locations', title: 'Ubicaciones', icon: '📍' });
+      cards.push({ key: 'locations', title: 'Ubicaciones', icon: '' });
     }
     if (this.isSectionActive('itinerary')) {
-      cards.push({ key: 'itinerary', title: 'Itinerario', icon: '📅' });
+      cards.push({ key: 'itinerary', title: 'Itinerario', icon: '' });
     }
     if (this.isSectionActive('dressCode')) {
-      cards.push({ key: 'dressCode', title: 'Vestimenta', icon: '👔' });
+      cards.push({ key: 'dressCode', title: 'Vestimenta', icon: '' });
     }
     if (this.isSectionActive('giftRegistry') || this.isSectionActive('digitalEnvelope')) {
-      cards.push({ key: 'gifts', title: 'Regalos', icon: '🎁' });
+      cards.push({ key: 'gifts', title: 'Regalos', icon: '' });
     }
     if (this.isSectionActive('guestAlbum') || this.isSectionActive('gallery')) {
-      cards.push({ key: 'album', title: 'Fotos y Álbum', icon: '📸' });
+      cards.push({ key: 'album', title: 'Fotos y Álbum', icon: '' });
     }
     if (this.isSectionActive('dedications')) {
-      cards.push({ key: 'dedications', title: 'Dedicatorias', icon: '💬' });
+      cards.push({ key: 'dedications', title: 'Dedicatorias', icon: '' });
     }
     if (this.isSectionActive('songRequests')) {
-      cards.push({ key: 'dj', title: 'Música DJ', icon: '🎵' });
+      cards.push({ key: 'dj', title: 'Música DJ', icon: '' });
     }
 
     return cards;
@@ -196,6 +196,68 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
     if (index >= 0 && index < this.activeCards.length) {
       this.currentCardIndex = index;
     }
+  }
+
+  copiedClabe = false;
+
+  get guestQrUrl(): string {
+    if (!this.verifiedGuest || !this.invitation) return '';
+    const code = this.verifiedGuest.id;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(window.location.origin + '/i/' + this.invitation.slug + '?guest=' + code)}`;
+  }
+
+  get allDisplayPhotos(): string[] {
+    const hostPhotos = this.invitation?.content?.gallery || [];
+    const guestPhotos = (this.publicAlbumAssets || []).map(a => a.url);
+    return [...hostPhotos, ...guestPhotos];
+  }
+
+  getCalendarUrl(): string {
+    if (!this.event?.date) return '';
+    const d = new Date(this.event.date);
+    const start = d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+    const end = new Date(d.getTime() + 4 * 3600000).toISOString().replace(/-|:|\.\d\d\d/g, '');
+    const title = encodeURIComponent(this.invitation?.content?.headline || this.event.title || 'Boda / Evento');
+    const details = encodeURIComponent(this.invitation?.content?.subheadline || 'Invitación Digital');
+    const location = encodeURIComponent(this.event.venue?.address || this.event.venue?.name || '');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+  }
+
+  shareWhatsApp(): void {
+    const text = encodeURIComponent(`¡Te invito a mi evento! Abre nuestra invitación digital aquí: ${window.location.href}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  }
+
+  downloadPass(): void {
+    window.print();
+  }
+
+  getDirectionsUrl(loc: any): string {
+    if (loc.mapUrl) return loc.mapUrl;
+    if (loc.address) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.name || '')}`;
+  }
+
+  getWazeUrl(loc: any): string {
+    if (loc.wazeUrl) return loc.wazeUrl;
+    if (loc.address) return `https://waze.com/ul?q=${encodeURIComponent(loc.address)}`;
+    return `https://waze.com/ul?q=${encodeURIComponent(loc.name || '')}`;
+  }
+
+  copyClabe(clabe: string): void {
+    if (!clabe) return;
+    navigator.clipboard.writeText(clabe).then(() => {
+      this.copiedClabe = true;
+      setTimeout(() => { this.copiedClabe = false; }, 2500);
+    });
+  }
+
+  onPhotoSelected(evt: any): void {
+    this.onFileSelected(evt);
+  }
+
+  submitDedicationForm(): void {
+    this.onDedicationSubmit();
   }
 
   // Swipe Gestures

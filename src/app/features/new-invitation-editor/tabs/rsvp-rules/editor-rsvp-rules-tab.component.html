@@ -1,7 +1,11 @@
 <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
-      <h3 style="margin:0;">💌 Reglas RSVP y Preguntas</h3>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <h3 style="margin:0;">Reglas RSVP y Preguntas</h3>
       <span class="nw-pill" [class.success]="isSectionActive('rsvp_rules')" [class.warning]="!isSectionActive('rsvp_rules')">
         {{ isSectionActive('rsvp_rules') ? 'Activo' : 'Inactivo' }}
       </span>
@@ -79,7 +83,7 @@
 
       <div class="nw-toggle-row">
         <div class="nw-toggle-info">
-          <strong>Permitir acompañantes por default</strong>
+          <strong>Permitir acompañantes por defecto</strong>
           <span>Los invitados podrán especificar cuántas personas asisten.</span>
         </div>
         <label class="nw-switch">
@@ -87,10 +91,10 @@
           <span class="nw-slider"></span>
         </label>
       </div>
-      <label class="nw-label">Máximo acompañantes default
+      <label class="nw-label">Máximo acompañantes por defecto
         <input class="nw-input" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions">
       </label>
-      <label class="nw-label">Máximo asistentes total
+      <label class="nw-label">Máximo asistentes en total
         <input class="nw-input" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150">
       </label>
 
@@ -115,23 +119,54 @@
 
       <!-- Preguntas Personalizadas Visual Editor -->
       <div class="nw-form-wide" style="margin-top:16px; border-top:1px solid var(--nw-border); padding-top:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
           <strong style="font-size:15px; color:var(--nw-text);">Preguntas personalizadas para tus invitados</strong>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addCustomQuestion.emit()">+ Agregar
-            pregunta</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addCustomQuestion.emit()" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Agregar pregunta</span>
+          </button>
         </div>
 
         <!-- Quick Presets -->
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
           <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Sugeridas:</span>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('song')">+ 🎵
-            Canción preferida</button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('diet')">+ 🥗
-            Restricciones alimenticias</button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('menu')">+ 🍽️
-            Selección de menú</button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('transport')">+ 🚌
-            Transporte</button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('song')" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <span>Canción preferida</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('diet')" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+            </svg>
+            <span>Restricciones alimenticias</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('menu')" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+            <span>Selección de menú</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('transport')" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <path d="M7 17v2"></path>
+              <path d="M17 17v2"></path>
+              <circle cx="7.5" cy="14.5" r="1.5"></circle>
+              <circle cx="16.5" cy="14.5" r="1.5"></circle>
+            </svg>
+            <span>Transporte</span>
+          </button>
         </div>
 
         <p *ngIf="!customQuestionsList.length" style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
@@ -166,9 +201,13 @@
               <!-- Tabla de Opciones para tipo 'select' -->
               <div class="nw-form-wide" *ngIf="q.type === 'select'" style="margin-top:8px; padding:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                  <strong style="font-size:13px; color:var(--nw-text-2);">📋 Tabla de Opciones Seleccionables</strong>
-                  <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="addQuestionOption(q)" style="font-size:12px;">
-                    + Agregar opción
+                  <strong style="font-size:13px; color:var(--nw-text-2);">Opciones Seleccionables</strong>
+                  <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="addQuestionOption(q)" style="font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Agregar opción</span>
                   </button>
                 </div>
 
@@ -177,13 +216,16 @@
                     <span style="font-size:12px; font-weight:700; color:var(--nw-text-3); width:20px;">#{{ optIdx + 1 }}</span>
                     <input class="nw-input" [ngModel]="getOptionValue(q, optIdx)" (ngModelChange)="setOptionValue(q, optIdx, $event)" placeholder="Texto de la opción (ej. Menú Vegetariano)" style="flex:1;">
                     <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="removeQuestionOption(q, optIdx)" style="padding:4px 8px;" title="Eliminar esta opción">
-                      🗑️
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
                     </button>
                   </div>
                 </div>
 
                 <p *ngIf="!q.options?.length" style="margin:6px 0 0; font-size:12px; color:var(--nw-text-3);">
-                  Sin opciones aún. Haz clic en <strong>+ Agregar opción</strong> para definir las respuestas elegibles.
+                  Sin opciones aún. Haz clic en <strong>Agregar opción</strong> para definir las respuestas elegibles.
                 </p>
 
                 <!-- Vista rápida / fallback de texto -->
@@ -196,7 +238,13 @@
               </div>
             </div>
             <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCustomQuestion.emit(i)"
-              style="margin-top:10px;">✕ Quitar pregunta</button>
+              style="margin-top:10px; display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>Quitar pregunta</span>
+            </button>
           </div>
         </div>
       </div>

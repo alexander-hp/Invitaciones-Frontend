@@ -1,7 +1,12 @@
 <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'gallery' || activeTab === 'backgroundMusic' || activeTab === 'assets' || activeTab === 'all')">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
-      <h3 style="margin:0;">🖼️ Archivos Multimedia (Portada, Música, Galería)</h3>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      <h3 style="margin:0;">Archivos Multimedia (Portada, Música, Galería)</h3>
       <span class="nw-pill" [class.success]="isSectionActive('gallery')" [class.warning]="!isSectionActive('gallery')">
         {{ isSectionActive('gallery') ? 'Galería Activa' : 'Galería Inactiva' }}
       </span>
@@ -16,10 +21,22 @@
   <div class="nw-card-body" style="padding-top:16px;">
     <!-- Portada -->
     <div *ngIf="activeTab === 'assets' || activeTab === 'all'" style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--nw-border);">
-      <strong style="font-size:15px; display:block; margin-bottom:8px;">🖼️ Imagen de Portada</strong>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        <strong style="font-size:15px;">Imagen de Portada</strong>
+      </div>
       <div style="display:flex; gap:10px; align-items:center;">
-        <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-          📁 Subir portada
+        <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Subir portada</span>
           <input type="file" accept="image/*" (change)="selectAsset.emit({ event: $event, folder: 'covers' })" [disabled]="assetUploading"
             style="display:none;">
         </label>
@@ -32,8 +49,20 @@
             style="width:100%; height:100%; object-fit:cover; display:block;">
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-          <span style="font-size:12.5px; font-weight:600; color:var(--nw-text-2);">🖼️ Imagen de portada activa</span>
-          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover.emit()">🗑️ Quitar portada</button>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--nw-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span style="font-size:12.5px; font-weight:600; color:var(--nw-text-2);">Imagen de portada activa</span>
+          </div>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover.emit()" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Quitar portada</span>
+          </button>
         </div>
       </div>
     </div>
@@ -43,7 +72,14 @@
       style="margin-bottom:20px; background:var(--nw-surface-2); padding:16px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div>
-          <strong style="font-size:15px; display:block;">🎵 Configuración de Música y Audio</strong>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--nw-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <strong style="font-size:15px;">Configuración de Música y Audio</strong>
+          </div>
           <span style="font-size:12.5px; color:var(--nw-text-3);">Asigna una canción global o reproduce canciones
             específicas automáticamente cuando el invitado llega a cada sección (Focus).</span>
         </div>
@@ -52,10 +88,15 @@
       <!-- Música Global -->
       <div
         style="margin-bottom:16px; padding:14px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-        <strong style="font-size:13.5px; display:block; margin-bottom:6px; color:var(--nw-accent);">🎼 Música Global (Fondo principal)</strong>
+        <strong style="font-size:13.5px; display:block; margin-bottom:6px; color:var(--nw-accent);">Música Global (Fondo principal)</strong>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-          <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-            📁 Subir audio global
+          <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span>Subir audio global</span>
             <input type="file" accept="audio/*" (change)="selectAsset.emit({ event: $event, folder: 'music' })" [disabled]="assetUploading"
               style="display:none;">
           </label>
@@ -67,14 +108,23 @@
         <div *ngIf="invitation.content.musicUrl && !musicError"
           style="margin-top:10px; padding:10px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:16px;">🎵</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#166534" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
             <span style="font-size:13px; color:#166534; font-weight:600;">Estado: Audio configurado y activo para reproducción de fondo en la invitación (HTTP 200).</span>
           </div>
           <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="removeMusic.emit()" style="color:#991b1b; border-color:#fca5a5;">✕ Quitar</button>
         </div>
         <div *ngIf="musicError"
           style="margin-top:10px; padding:10px 14px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; color:#991b1b; font-size:13px; display:flex; align-items:center; gap:8px;">
-          <span>⚠️ Aviso de estado: El archivo o URL asignado presenta problema de reproducción. Se recomienda subir un archivo de audio directo en formato MP3 o AAC.</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>Aviso de estado: El archivo o URL asignado presenta problema de reproducción. Se recomienda subir un archivo directo en formato MP3 o AAC.</span>
         </div>
 
         <div *ngIf="invitation.content.musicUrl"
@@ -87,7 +137,7 @@
       <!-- Música Específica por Sección (Focus) -->
       <div
         style="padding:12px; background:var(--nw-surface); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
-        <strong style="font-size:13.5px; display:block; margin-bottom:4px; color:var(--nw-accent);">🎯 Música por Sección (Al hacer Focus / Scroll)</strong>
+        <strong style="font-size:13.5px; display:block; margin-bottom:4px; color:var(--nw-accent);">Música por Sección (Al hacer Focus / Scroll)</strong>
         <p style="font-size:12px; color:var(--nw-text-3); margin:0 0 12px 0;">Cuando el invitado se desplace a una
           sección con canción asignada, la música cambiará automáticamente a este audio.</p>
 
@@ -96,8 +146,13 @@
             style="background:var(--nw-surface-2); padding:10px 12px; border-radius:6px; border:1px solid var(--nw-border); display:flex; flex-direction:column; gap:6px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="font-size:12.5px;">{{ sec.label }}</strong>
-              <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:11px; padding:2px 8px;">
-                📂 Subir
+              <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; font-size:11px; padding:2px 8px; display:inline-flex; align-items:center; gap:4px;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Subir</span>
                 <input type="file" accept="audio/*" (change)="uploadSectionMusic.emit({ event: $event, sectionKey: sec.key })"
                   [disabled]="assetUploading" style="display:none;">
               </label>
@@ -117,15 +172,25 @@
 
     <!-- Galería -->
     <div *ngIf="activeTab === 'gallery' || activeTab === 'assets' || activeTab === 'all'">
-      <strong style="font-size:15px; display:block; margin-bottom:8px;">📸 Galería de Fotos</strong>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        <strong style="font-size:15px;">Galería de Fotos Oficial</strong>
+      </div>
       <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-        <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer;">
-          📁 Agregar imagen
+        <label class="nw-btn nw-btn-ghost nw-btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Agregar imagen</span>
           <input type="file" accept="image/*" (change)="selectAsset.emit({ event: $event, folder: 'gallery' })" [disabled]="assetUploading"
             style="display:none;">
         </label>
-        <span style="font-size:13px; color:var(--nw-text-3);">{{ invitation.content.gallery?.length || 0 }}
-          imágenes</span>
+        <span style="font-size:13px; color:var(--nw-text-3);">{{ invitation.content.gallery?.length || 0 }} imágenes</span>
       </div>
       <div *ngIf="invitation.content.gallery?.length"
         style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:14px; margin-top:12px;">
@@ -138,7 +203,12 @@
           <div style="padding:8px 10px; display:flex; justify-content:space-between; align-items:center; background:var(--nw-surface-2); border-top:1px solid var(--nw-border);">
             <span style="font-size:11.5px; font-weight:600; color:var(--nw-text-3);">Foto #{{ i + 1 }}</span>
             <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeGalleryImage.emit(i)"
-              style="padding:3px 8px; font-size:11px;">🗑️</button>
+              style="padding:3px 8px; font-size:11px;" title="Eliminar foto">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -150,7 +220,11 @@
 <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation && (activeTab === 'lodging' || activeTab === 'assets' || activeTab === 'all')">
   <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; align-items:center; gap:10px;">
-      <h3 style="margin:0;">🏨 Hospedaje Recomendado</h3>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <h3 style="margin:0;">Hospedaje Recomendado</h3>
       <span class="nw-pill" [class.success]="isSectionActive('lodging')" [class.warning]="!isSectionActive('lodging')">
         {{ isSectionActive('lodging') ? 'Activo' : 'Inactivo' }}
       </span>
@@ -160,7 +234,13 @@
         <input type="checkbox" [checked]="isSectionActive('lodging')" (change)="toggleSectionActive.emit({ key: 'lodging', active: $any($event.target).checked })">
         <span class="nw-slider"></span>
       </label>
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingItem.emit()">+ Agregar hotel</button>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingItem.emit()" style="display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Agregar hotel</span>
+      </button>
     </div>
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
@@ -177,12 +257,19 @@
           <label class="nw-label">Descripción / Tarifa preferente
             <input class="nw-input" [(ngModel)]="item.description" placeholder="15% desc. con código BODA2026">
           </label>
-          <label class="nw-label nw-form-wide">Link / Mapa del hotel (URL)
+          <label class="nw-label nw-form-wide">Enlace / Mapa del hotel (URL)
             <input class="nw-input" [(ngModel)]="item.url" placeholder="https://maps.google.com/...">
           </label>
         </div>
-        <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLodgingItem.emit(i)"
-          style="margin-top:10px;">✕ Quitar hotel</button>
+        <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLodgingItem.emit(i)" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Quitar hotel</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

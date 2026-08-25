@@ -8,7 +8,7 @@ import { AlbumAssetModel, EventAccessSession } from '../../../core/models';
 export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
   @Input() session!: EventAccessSession;
 
-  viewMode: 'carousel' | 'grid' | 'list' = 'carousel';
+  viewMode: 'carousel' | 'grid' | 'list' | 'book' = 'carousel';
   searchQuery = '';
   carouselIndex = 0;
   isPlaying = false;
@@ -24,6 +24,43 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
   selectedTagFilter: string = 'all';
   readonly TAG_SUPER_ENCANTA = 'Me super encanta';
   readonly TAG_ME_ENCANTA = 'Me encanta';
+
+  // Paginación Local para Cuadrícula y Lista en Acceso Público
+  currentPage = 1;
+  pageSize = 12;
+  pageSizeOptions = [12, 24, 48, 96];
+
+  get totalPages(): number {
+    return Math.ceil(this.approvedAssets.length / this.pageSize) || 1;
+  }
+
+  get paginatedApprovedAssets(): AlbumAssetModel[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.approvedAssets.slice(start, start + this.pageSize);
+  }
+
+  setPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  onPageSizeChange(newSize: any): void {
+    this.pageSize = Number(newSize?.target?.value || newSize);
+    this.currentPage = 1;
+  }
 
   ngOnInit(): void {
     if (this.approvedAssets.length > 0) {
@@ -92,6 +129,7 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
   setTagFilter(tag: string): void {
     this.selectedTagFilter = tag;
     this.carouselIndex = 0;
+    this.currentPage = 1;
   }
 
   get approvedAssets(): AlbumAssetModel[] {
@@ -132,7 +170,7 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
     return list[this.safeCarouselIndex];
   }
 
-  setViewMode(mode: 'carousel' | 'grid' | 'list'): void {
+  setViewMode(mode: 'carousel' | 'grid' | 'list' | 'book'): void {
     this.viewMode = mode;
     if (mode !== 'carousel') {
       this.stopAutoplay();
@@ -266,9 +304,33 @@ export class AccessAlbumGalleryViewComponent implements OnInit, OnDestroy {
     this.selectedAsset = list[this.lightboxIndex];
   }
 
-  downloadPhoto(asset?: AlbumAssetModel, event?: Event): void {
+  async downloadPhoto(asset?: AlbumAssetModel, event?: Event): Promise<void> {
     if (event) event.stopPropagation();
-    if (!asset || !asset.url) return;
-    window.open(asset.url, '_blank');
+    const target = asset || this.selectedAsset || this.currentCarouselAsset;
+    if (!target || !target.url) return;
+
+    try {
+      const response = await fetch(target.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanName = (target.uploaderName || 'recuerdo-evento').toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const ext = target.url.split('.').pop()?.split('?')[0] || 'jpg';
+      a.download = `foto-${cleanName}-${Date.now()}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      // Fallback en caso de bloqueo por origen cruzado
+      const a = document.createElement('a');
+      a.href = target.url;
+      a.target = '_blank';
+      a.download = `foto-evento-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }
 }

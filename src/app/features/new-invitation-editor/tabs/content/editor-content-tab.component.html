@@ -1,6 +1,10 @@
 <div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
-  <div class="nw-card-header">
-    <h3 style="margin:0;">📝 Contenido Principal</h3>
+  <div class="nw-card-header" style="display:flex; align-items:center; gap:10px;">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+    </svg>
+    <h3 style="margin:0;">Contenido Principal</h3>
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
     <div class="nw-form-grid" style="gap:16px;">
@@ -9,10 +13,10 @@
       </label>
       <label class="nw-label">Acceso RSVP
         <select class="nw-select" [(ngModel)]="invitation.accessMode">
-          <option value="public">Publica: todos pueden verla y confirmar</option>
+          <option value="public">Pública: todos pueden verla y confirmar</option>
           <option value="guest_list">Lista cerrada: solo invitados registrados</option>
-          <option value="specific_users">Usuarios especificos: roles, grupos, correos o telefonos</option>
-          <option value="open">Abierta: cualquiera con el link</option>
+          <option value="specific_users">Usuarios específicos: roles, grupos, correos o teléfonos</option>
+          <option value="open">Abierta: cualquiera con el enlace</option>
         </select>
       </label>
       <label class="nw-label">Titular
@@ -26,10 +30,10 @@
         <textarea class="nw-input" [(ngModel)]="invitation.content.message" rows="3"
           placeholder="Confirma tu asistencia..."></textarea>
       </label>
-      <label class="nw-label">Dress code
+      <label class="nw-label">Código de vestimenta
         <input class="nw-input" [(ngModel)]="invitation.content.dressCode" placeholder="Formal / Casual elegante">
       </label>
-      <label class="nw-label">Logo anfitrión
+      <label class="nw-label">Logo de anfitrión
         <input class="nw-input" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png">
       </label>
       <div *ngIf="invitation.content.brandLogoUrl" class="nw-form-wide"
@@ -38,10 +42,20 @@
           <img [src]="invitation.content.brandLogoUrl" alt="Logo Anfitrión" style="max-width:100%; max-height:100%; object-fit:contain;">
         </div>
         <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
-          <strong style="font-size:13.5px; color:var(--nw-text);">✅ Logo de Anfitrión Configurado</strong>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--nw-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <strong style="font-size:13.5px; color:var(--nw-text);">Logo de Anfitrión Configurado</strong>
+          </div>
           <span style="font-size:12px; color:var(--nw-text-3);">Esta imagen se mostrará en el encabezado o pie de la invitación digital.</span>
-          <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="invitation.content.brandLogoUrl=''" style="width:fit-content; margin-top:4px;">
-            🗑️ Eliminar Logo
+          <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="invitation.content.brandLogoUrl=''" style="width:fit-content; margin-top:4px; display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Eliminar Logo</span>
           </button>
         </div>
       </div>
@@ -58,25 +72,22 @@
     </div>
     <p *ngIf="invitation.accessMode === 'guest_list'"
       style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En lista cerrada, la persona debe validar su
-      correo o telefono antes de confirmar asistencia.</p>
+      correo o teléfono antes de confirmar asistencia.</p>
     <p *ngIf="invitation.accessMode === 'specific_users'"
-      style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">Usa roles, grupos, correos o telefonos para
-      una invitacion segmentada: padrinos, damas, VIP o familia.</p>
+      style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">Usa roles, grupos, correos o teléfonos para
+      una invitación segmentada: padrinos, damas, VIP o familia.</p>
     <p *ngIf="invitation.accessMode === 'open' || invitation.accessMode === 'public'"
-      style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo publico, cualquiera con el link puede
-      ver la invitacion y enviar RSVP.</p>
+      style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo público, cualquiera con el enlace puede
+      ver la invitación y enviar RSVP.</p>
     <p *ngIf="!canUseWhiteLabel" style="font-size:13px; color:var(--nw-warning); margin:8px 0 0;">Marca blanca
       requiere plan Pro.</p>
 
     <!-- Variantes de texto -->
-    <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
-      <span style="font-size:13px; color:var(--nw-text-3); align-self:center;">Variantes rápidas:</span>
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="onApplyVariant('formal')">Texto
-        formal</button>
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="onApplyVariant('warm')">Texto
-        cálido</button>
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="onApplyVariant('brief')">Texto
-        breve</button>
+    <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; align-items:center;">
+      <span style="font-size:13px; color:var(--nw-text-3); font-weight:600;">Variantes rápidas:</span>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="onApplyVariant('formal')">Texto formal</button>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="onApplyVariant('warm')">Texto cálido</button>
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="onApplyVariant('brief')">Texto breve</button>
     </div>
   </div>
 </div>

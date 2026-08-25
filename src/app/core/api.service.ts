@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   AlbumAssetModel,
@@ -11,6 +11,12 @@ import {
   AutoAssignTablesResponse,
   CheckoutResponse,
   ContactPayload,
+  CustomTemplateSubmission,
+  AiTemplateGenerateRequest,
+  AiTemplateRefineRequest,
+  AiTemplateResponse,
+  AiTemplatePromptPreviewResponse,
+  AiTemplateResult,
   DashboardMetrics,
   DedicationModel,
   DedicationStatus,
@@ -530,7 +536,221 @@ export class ApiService {
     let params = new HttpParams();
     if (eventType) params = params.set('eventType', eventType);
     if (tier) params = params.set('tier', tier);
-    return this.http.get<{ templates: TemplateModel[] }>(`${this.apiUrl}/templates`, { params });
+    return this.http.get<{ templates: TemplateModel[] }>(`${this.apiUrl}/templates`, { params }).pipe(
+      catchError(() => of({ templates: [] }))
+    );
+  }
+
+  createTemplate(payload: Partial<TemplateModel>): Observable<{ template: TemplateModel }> {
+    return this.http.post<{ template: TemplateModel }>(`${this.apiUrl}/templates`, payload);
+  }
+
+  updateTemplate(id: string, payload: Partial<TemplateModel>): Observable<{ template: TemplateModel }> {
+    return this.http.patch<{ template: TemplateModel }>(`${this.apiUrl}/templates/${id}`, payload);
+  }
+
+  deleteTemplate(id: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/templates/${id}`);
+  }
+
+  // -------------------------------------------------------------
+  // CUSTOM HTML/CSS TEMPLATES & HOSTING MANAGEMENT
+  // -------------------------------------------------------------
+  private getLocalCustomSubmissions(): CustomTemplateSubmission[] {
+    try {
+      const raw = localStorage.getItem('kyndra_custom_template_submissions');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveLocalCustomSubmissions(list: CustomTemplateSubmission[]): void {
+    try {
+      localStorage.setItem('kyndra_custom_template_submissions', JSON.stringify(list));
+    } catch {}
+  }
+
+  listCustomTemplateSubmissions(status?: string): Observable<{ submissions: CustomTemplateSubmission[] }> {
+    return this.http.get<{ submissions: CustomTemplateSubmission[] }>(`${this.apiUrl}/templates/custom-submissions`, {
+      params: status && status !== 'all' ? new HttpParams().set('status', status) : undefined
+    }).pipe(
+      catchError(() => {
+        let subs = this.getLocalCustomSubmissions();
+        if (status && status !== 'all') {
+          subs = subs.filter(s => s.status === status);
+        }
+        return of({ submissions: subs });
+      })
+    );
+  }
+
+  getCustomTemplateSubmission(id: string): Observable<{ submission: CustomTemplateSubmission }> {
+    return this.http.get<{ submission: CustomTemplateSubmission }>(`${this.apiUrl}/templates/custom-submissions/${id}`).pipe(
+      catchError(() => {
+        const subs = this.getLocalCustomSubmissions();
+        const found = subs.find(s => s.id === id || s._id === id);
+        if (found) return of({ submission: found });
+        throw new Error('Plantilla personalizada no encontrada');
+      })
+    );
+  }
+
+  submitCustomTemplate(payload: Partial<CustomTemplateSubmission>): Observable<{ submission: CustomTemplateSubmission }> {
+    const cleanPayload = { ...payload };
+    if (cleanPayload.id && cleanPayload.id.startsWith('custom_tpl_')) {
+      delete cleanPayload.id;
+    }
+
+    return this.http.post<{ submission: CustomTemplateSubmission }>(`${this.apiUrl}/templates/custom-submissions`, cleanPayload).pipe(
+      tap(res => {
+        if (res.submission) {
+          const list = this.getLocalCustomSubmissions();
+          const subId = res.submission._id || res.submission.id;
+          const idx = list.findIndex(s => (s.id && s.id === subId) || (s._id && s._id === subId) || (s.eventId && s.eventId === res.submission.eventId));
+          if (idx >= 0) {
+            list[idx] = { ...list[idx], ...res.submission, id: subId };
+          } else {
+            list.unshift({ ...res.submission, id: subId });
+          }
+          this.saveLocalCustomSubmissions(list);
+        }
+      }),
+      catchError(() => {
+        const fallbackSub: CustomTemplateSubmission = {
+          id: payload.id || `custom_tpl_${Date.now()}`,
+          eventId: payload.eventId,
+          eventTitle: payload.eventTitle || 'Evento Especial',
+          eventSlug: payload.eventSlug || 'invitacion-especial',
+          eventType: payload.eventType || 'otro',
+          invitationId: payload.invitationId,
+          name: payload.name || 'Plantilla HTML / CSS Personalizada',
+          description: payload.description,
+          htmlCode: payload.htmlCode || '',
+          cssCode: payload.cssCode || '',
+          authorName: payload.authorName || 'Anfitrión',
+          authorEmail: payload.authorEmail || '',
+          notes: payload.notes || '',
+          status: 'pending',
+          score: payload.score || 90,
+          submittedAt: new Date().toISOString()
+        };
+        const existing = this.getLocalCustomSubmissions();
+        existing.unshift(fallbackSub);
+        this.saveLocalCustomSubmissions(existing);
+        return of({ submission: fallbackSub });
+      })
+    );
+  }
+
+  approveCustomTemplateSubmission(id: string, feedback?: string): Observable<{ submission: CustomTemplateSubmission; publicUrl: string; invitation?: InvitationModel }> {
+    const list = this.getLocalCustomSubmissions();
+    const sub = list.find(s => s.id === id || s._id === id);
+
+    if (sub) {
+      sub.status = 'approved';
+      sub.reviewedAt = new Date().toISOString();
+      if (feedback) sub.adminFeedback = feedback;
+      const slug = sub.eventSlug || 'invitacion-especial';
+      sub.publicUrl = `${window.location.origin}/new/i/${slug}`;
+      this.saveLocalCustomSubmissions(list);
+
+      // Persist custom HTML/CSS template to the event invitation if slug/event exists
+      localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode);
+      localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
+      localStorage.setItem(`custom_template_html_${slug}`, sub.htmlCode);
+      localStorage.setItem(`custom_template_css_${slug}`, sub.cssCode || '');
+      localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
+      if (sub.eventId) {
+        localStorage.setItem(`inv_tpl_${sub.eventId}`, 'custom-html');
+        localStorage.setItem(`custom_template_html_${sub.eventId}`, sub.htmlCode);
+        localStorage.setItem(`custom_template_css_${sub.eventId}`, sub.cssCode || '');
+      }
+    }
+
+    return this.http.post<{ submission: CustomTemplateSubmission; publicUrl: string; invitation?: InvitationModel }>(
+      `${this.apiUrl}/templates/custom-submissions/${id}/approve`,
+      { feedback }
+    ).pipe(
+      tap(res => {
+        if (res.submission) {
+          const resSlug = res.submission.eventSlug || sub?.eventSlug;
+          if (resSlug) {
+            localStorage.setItem(`inv_custom_html_${resSlug}`, res.submission.htmlCode || sub?.htmlCode || '');
+            localStorage.setItem(`inv_custom_css_${resSlug}`, res.submission.cssCode || sub?.cssCode || '');
+            localStorage.setItem(`custom_template_html_${resSlug}`, res.submission.htmlCode || sub?.htmlCode || '');
+            localStorage.setItem(`custom_template_css_${resSlug}`, res.submission.cssCode || sub?.cssCode || '');
+            localStorage.setItem(`inv_tpl_${resSlug}`, 'custom-html');
+          }
+        }
+      }),
+      catchError(() => {
+        if (!sub) throw new Error('Plantilla no encontrada');
+        return of({
+          submission: sub,
+          publicUrl: sub.publicUrl || `${window.location.origin}/new/i/${sub.eventSlug || 'invitacion-especial'}`
+        });
+      })
+    );
+  }
+
+  rejectCustomTemplateSubmission(id: string, feedback?: string): Observable<{ submission: CustomTemplateSubmission }> {
+    const list = this.getLocalCustomSubmissions();
+    const sub = list.find(s => s.id === id || s._id === id);
+
+    if (sub) {
+      sub.status = 'rejected';
+      sub.reviewedAt = new Date().toISOString();
+      sub.adminFeedback = feedback || 'Se requieren ajustes en la estructura del código HTML/CSS.';
+      this.saveLocalCustomSubmissions(list);
+    }
+
+    return this.http.post<{ submission: CustomTemplateSubmission }>(`${this.apiUrl}/templates/custom-submissions/${id}/reject`, { feedback }).pipe(
+      catchError(() => {
+        if (!sub) throw new Error('Plantilla no encontrada');
+        return of({ submission: sub });
+      })
+    );
+  }
+
+  deleteCustomTemplateSubmission(id: string): Observable<MessageResponse> {
+    const list = this.getLocalCustomSubmissions().filter(s => s.id !== id && s._id !== id);
+    this.saveLocalCustomSubmissions(list);
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/templates/custom-submissions/${id}`).pipe(
+      catchError(() => of({ message: 'Plantilla eliminada correctamente' }))
+    );
+  }
+
+  // ── AI Template Generation (Gemini / OpenAI / ChatGPT) ──
+
+  previewAiTemplatePrompt(payload: AiTemplateGenerateRequest): Observable<AiTemplatePromptPreviewResponse> {
+    return this.http.post<AiTemplatePromptPreviewResponse>(`${this.apiUrl}/templates/ai/preview-prompt`, payload);
+  }
+
+  generateAiTemplate(payload: AiTemplateGenerateRequest): Observable<AiTemplateResponse> {
+    return this.http.post<AiTemplateResponse>(`${this.apiUrl}/templates/ai/generate`, payload);
+  }
+
+  refineAiTemplate(payload: AiTemplateRefineRequest): Observable<AiTemplateResponse> {
+    return this.http.post<AiTemplateResponse>(`${this.apiUrl}/templates/ai/refine`, payload);
+  }
+
+  saveAiTemplate(payload: { invitationId?: string; eventId?: string; name: string; htmlCode: string; cssCode: string; description?: string }): Observable<{ success: boolean; message: string; publicUrl: string; invitation?: InvitationModel }> {
+    return this.http.post<{ success: boolean; message: string; publicUrl: string; invitation?: InvitationModel }>(
+      `${this.apiUrl}/templates/ai/save`,
+      payload
+    ).pipe(
+      tap(res => {
+        if (res.invitation?.slug) {
+          const slug = res.invitation.slug;
+          localStorage.setItem(`inv_custom_html_${slug}`, payload.htmlCode);
+          localStorage.setItem(`inv_custom_css_${slug}`, payload.cssCode || '');
+          localStorage.setItem(`custom_template_html_${slug}`, payload.htmlCode);
+          localStorage.setItem(`custom_template_css_${slug}`, payload.cssCode || '');
+          localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
+        }
+      })
+    );
   }
 
   createUploadUrl(payload: { fileName: string; contentType: string; folder: AssetFolder; event?: string; size?: number }): Observable<UploadUrlResponse> {

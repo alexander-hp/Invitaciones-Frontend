@@ -12,11 +12,14 @@
 
 <section class="nw-card">
   <!-- Encabezado de la Sección -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
-      <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <h2
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         📸 Álbum Colaborativo
-        <span class="nw-badge" style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+        <span class="nw-badge"
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
           {{ albumAssets.length }} {{ albumAssets.length === 1 ? 'fotografía' : 'fotografías' }}
         </span>
         <span *ngIf="pendingAlbumAssets > 0" class="nw-pill warning" style="font-size: 12px; font-weight: 700;">
@@ -24,7 +27,8 @@
         </span>
       </h2>
       <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
-        Revisa, aprueba o rechaza las fotografías de tus invitados, organízalas por etiquetas (álbumes temáticos) y gestiona la portada.
+        Revisa, aprueba o rechaza las fotografías de tus invitados, organízalas por etiquetas (álbumes temáticos) y
+        comparte accesos con QR.
       </p>
     </div>
 
@@ -34,133 +38,182 @@
       <button type="button" class="nw-btn nw-btn-primary" (click)="openQuickReview()"
         style="display: flex; align-items: center; gap: 8px; font-size: 13px; height: 38px; font-weight: 700; box-shadow: 0 4px 12px rgba(192, 156, 120, 0.25);">
         ⚡ Revisión Rápida
-        <span *ngIf="pendingAlbumAssets > 0" class="nw-badge" style="background: #ffffff; color: var(--nw-accent, #c09c78); font-size: 11px; padding: 1px 7px; border-radius: 12px; font-weight: 800;">
+        <span *ngIf="pendingAlbumAssets > 0" class="nw-badge"
+          style="background: #ffffff; color: var(--nw-accent, #c09c78); font-size: 11px; padding: 1px 7px; border-radius: 12px; font-weight: 800;">
           {{ pendingAlbumAssets }}
         </span>
       </button>
 
-      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="copyPublicLink()" style="display: flex; align-items: center; gap: 6px; font-size: 13px; height: 38px;">
-        📋 Copiar enlace
-      </button>
-
-      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="loadAlbum(); loadInvitation();" style="display: flex; align-items: center; gap: 6px; font-size: 13px; height: 38px;">
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="loadAlbum(); loadAlbumAccessLinks();"
+        style="display: flex; align-items: center; gap: 6px; font-size: 13px; height: 38px;">
         🔄 Actualizar
       </button>
     </div>
   </div>
 
-  <!-- 🖼️ SECCIÓN: IMAGEN DE PORTADA DEL EVENTO -->
-  <div style="margin-bottom: 24px; background: var(--nw-surface-2, #f9f6f0); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 18px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 10px;">
+  <!-- 📲 SECCIÓN: CÓDIGOS QR Y ENLACES DE ACCESO AL ÁLBUM (COLAPSABLE) -->
+  <div
+    style="margin-bottom: 24px; background: var(--nw-surface-2, #f9f6f0); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 18px;">
+
+    <!-- Encabezado con Toggle para desplegar/colapsar -->
+    <div (click)="toggleAccessLinks()"
+      style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
       <div>
-        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 8px;">
-          🖼️ Imagen de Portada del Evento
-          <span *ngIf="coverImageUrl" class="nw-pill success" style="font-size: 11px; font-weight: 700;">
-            ✓ Portada Activa
+        <h3
+          style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 8px;">
+          📲 Códigos QR y Enlaces del Álbum
+          <span *ngIf="albumAccessLinks.length > 0" class="nw-pill success" style="font-size: 11px; font-weight: 700;">
+            {{ albumAccessLinks.length }} {{ albumAccessLinks.length === 1 ? 'acceso activo' : 'accesos activos' }}
           </span>
-          <span *ngIf="!coverImageUrl" class="nw-pill warning" style="font-size: 11px; font-weight: 700;">
-            Sin Portada
+          <span *ngIf="albumAccessLinks.length === 0 && !loadingAccessLinks" class="nw-pill warning"
+            style="font-size: 11px; font-weight: 700;">
+            Sin accesos activos
           </span>
         </h3>
         <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
-          Configura desde el inicio la imagen principal de bienvenida que tus invitados verán en la portada de tu invitación digital.
+          Enlaces y códigos QR externos para que los invitados o fotógrafos suban fotos y para proyectar la galería en
+          pantallas en vivo.
         </p>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <label class="nw-btn nw-btn-primary nw-btn-sm" style="cursor: pointer; height: 38px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;">
-          <input type="file" accept="image/*" (change)="uploadCoverImage($event)" [disabled]="uploadingCover" style="display: none;">
-          📁 {{ coverImageUrl ? 'Cambiar Portada' : 'Subir Imagen de Portada' }}
-        </label>
-        <button *ngIf="coverImageUrl" type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="removeCoverImage()" [disabled]="uploadingCover" style="height: 38px; font-size: 13px;">
-          🗑️ Quitar
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+        style="font-size: 12px; font-weight: 700; pointer-events: none;">
+        {{ isAccessLinksCollapsed ? '▼ Desplegar' : '▲ Ocultar' }}
+      </button>
+    </div>
+
+    <!-- Contenido Desplegable (envuelve todo lo demás) -->
+    <div *ngIf="!isAccessLinksCollapsed"
+      style="margin-top: 16px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 16px;">
+
+      <!-- Botones de generación rápida de accesos -->
+      <div
+        style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; margin-bottom: 14px;">
+        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="createQuickAlbumLink('photographer')"
+          [disabled]="creatingAccessLink"
+          style="font-size: 12px; height: 34px; display: inline-flex; align-items: center; gap: 5px;">
+          📸 + Link Subir Fotos
+        </button>
+        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="createQuickAlbumLink('album_view')"
+          [disabled]="creatingAccessLink"
+          style="font-size: 12px; height: 34px; display: inline-flex; align-items: center; gap: 5px;">
+          🖼️ + Link Ver Álbum
         </button>
       </div>
-    </div>
 
-    <!-- Indicador de Carga Portada -->
-    <div *ngIf="uploadingCover" class="nw-alert info nw-loading" style="margin-top: 10px;">
-      Subiendo e integrando imagen de portada...
-    </div>
+      <!-- Indicador de Carga de Enlaces -->
+      <div *ngIf="loadingAccessLinks" class="nw-alert info nw-loading" style="margin-top: 8px;">
+        Verificando accesos externos del álbum...
+      </div>
 
-    <!-- Vista de Portada Configurada -->
-    <div *ngIf="!uploadingCover && coverImageUrl" style="margin-top: 12px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); padding: 14px; border-radius: 10px; box-shadow: var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04));">
-      <div style="position: relative; width: 200px; height: 120px; border-radius: 8px; overflow: hidden; background: #222; flex-shrink: 0; cursor: pointer;" (click)="previewCoverModal = true">
-        <img [src]="coverImageUrl" alt="Imagen de portada del evento" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.65); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
-          🔍 Clic para ampliar
+      <!-- Grid de Enlaces de Acceso Activos con Códigos QR -->
+      <div *ngIf="!loadingAccessLinks && albumAccessLinks.length > 0"
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 10px;">
+
+        <div *ngFor="let link of albumAccessLinks"
+          style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04));">
+
+          <div style="display: flex; gap: 14px; align-items: flex-start;">
+            <!-- Código QR Generado (Clic para abrir modal grande) -->
+            <div (click)="openQrModal(link, $event)" title="Haz clic para ver el QR en grande"
+              style="background: #ffffff; padding: 6px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); flex-shrink: 0; text-align: center; cursor: pointer; transition: transform 0.15s ease;"
+              onmouseover="this.style.transform='scale(1.04)';" onmouseout="this.style.transform='scale(1)';">
+              <img [src]="getAccessLinkQrUrl(link)" alt="QR de Acceso"
+                style="width: 84px; height: 84px; display: block; border-radius: 4px;">
+              <span
+                style="font-size: 10px; color: var(--nw-accent, #c09c78); font-weight: 700; display: block; margin-top: 4px;">🔍
+                Ver Grande</span>
+            </div>
+
+            <!-- Información del Acceso (Sin token) -->
+            <div style="flex: 1; min-width: 0;">
+              <div
+                style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;">
+                <strong
+                  style="font-size: 13.5px; color: var(--nw-text, #2e2621); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  {{ link.label || getRoleTitle(link.role) }}
+                </strong>
+                <span class="nw-pill success" style="font-size: 10px; font-weight: 700; padding: 2px 6px;">
+                  Activo
+                </span>
+              </div>
+
+              <p style="margin: 4px 0 6px; font-size: 12px; color: var(--nw-text-2, #6e6157); line-height: 1.35;">
+                {{ getRoleDescription(link.role) }}
+              </p>
+
+              <div
+                style="font-size: 11px; color: var(--nw-text-3, #9e9083); display: flex; flex-direction: column; gap: 2px;">
+                <span *ngIf="link.expiresAt">⏰ Vence: <strong>{{ link.expiresAt | date:'mediumDate' }}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- URL y Botones de Acción -->
+          <div
+            style="border-top: 1px solid var(--nw-surface-2, #f5f1ea); padding-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <span
+              style="font-size: 11px; color: var(--nw-accent, #c09c78); word-break: break-all; font-family: monospace; background: var(--nw-surface-2, #f9f6f0); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--nw-border, #eadecc);">
+              {{ getAccessLinkFullUrl(link) }}
+            </span>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="copyAccessLinkUrl(link)"
+                style="font-size: 12px; height: 32px; display: inline-flex; align-items: center; gap: 4px;">
+                📋 Copiar Enlace
+              </button>
+              <a [href]="getAccessLinkFullUrl(link)" target="_blank" rel="noopener noreferrer"
+                class="nw-btn nw-btn-ghost nw-btn-sm"
+                style="font-size: 12px; height: 32px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                ↗️ Abrir
+              </a>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div style="flex: 1; min-width: 220px;">
-        <strong style="font-size: 14px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
-          🖼️ Portada asignada y visible en la invitación
-        </strong>
-        <p style="margin: 4px 0 10px; font-size: 12.5px; color: var(--nw-text-3, #9e9083); word-break: break-all;">
-          {{ coverImageUrl }}
+      <!-- Estado Vacío: Sin enlaces de álbum -->
+      <div *ngIf="!loadingAccessLinks && albumAccessLinks.length === 0"
+        style="margin-top: 8px; border: 2px dashed var(--nw-border, #eadecc); border-radius: 10px; padding: 20px 16px; text-align: center; background: var(--nw-surface, #ffffff);">
+        <span style="font-size: 28px; display: block; margin-bottom: 4px;">📲</span>
+        <strong style="font-size: 14px; color: var(--nw-text, #2e2621);">No hay accesos externos de álbum
+          activos</strong>
+        <p style="margin: 4px 0 14px; font-size: 12.5px; color: var(--nw-text-2, #6e6157);">
+          Genera enlaces directos con código QR para que los invitados o el fotógrafo suban fotos, o para proyectar la
+          galería en pantallas.
         </p>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewCoverModal = true" style="font-size: 12px; height: 34px;">
-            👁️ Ver en tamaño completo
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="createQuickAlbumLink('photographer')"
+            [disabled]="creatingAccessLink" style="font-weight: 600; font-size: 12.5px;">
+            📸 Generar Acceso para Subir Fotos
+          </button>
+          <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="createQuickAlbumLink('album_view')"
+            [disabled]="creatingAccessLink" style="font-weight: 600; font-size: 12.5px;">
+            🖼️ Generar Acceso para Ver Álbum
           </button>
         </div>
       </div>
-    </div>
-
-    <!-- Estado Vacío para Portada -->
-    <div *ngIf="!uploadingCover && !coverImageUrl" style="margin-top: 10px; border: 2px dashed var(--nw-border, #eadecc); border-radius: 10px; padding: 22px 16px; text-align: center; background: var(--nw-surface, #ffffff);">
-      <span style="font-size: 32px; display: block; margin-bottom: 4px;">🖼️</span>
-      <strong style="font-size: 14px; color: var(--nw-text, #2e2621);">No se ha asignado una imagen de portada</strong>
-      <p style="margin: 4px 0 12px; font-size: 12.5px; color: var(--nw-text-3, #9e9083);">
-        Agrega una foto representativa para personalizar la portada de tu evento desde el inicio.
-      </p>
-      <label class="nw-btn nw-btn-secondary nw-btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-        <input type="file" accept="image/*" (change)="uploadCoverImage($event)" style="display: none;">
-        📁 Elegir foto de portada
-      </label>
-    </div>
-  </div>
-
-  <!-- Tarjeta QR y Enlace -->
-  <div *ngIf="albumQrUrl" style="margin-bottom: 20px; background: var(--nw-surface-2, #f9f6f0); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-    <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 260px;">
-      <div style="background: #ffffff; padding: 6px; border-radius: 10px; border: 1px solid var(--nw-border, #eadecc); flex-shrink: 0;">
-        <img [src]="albumQrUrl" alt="QR Álbum" style="width: 80px; height: 80px; display: block; border-radius: 6px;">
-      </div>
-      <div>
-        <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--nw-text, #2e2621);">
-          📲 Código QR y Enlace del Álbum
-        </h4>
-        <p style="margin: 3px 0 6px; font-size: 12.5px; color: var(--nw-text-2, #6e6157);">
-          Los invitados escanean el QR desde la invitación o ingresan al enlace para subir fotografías del evento.
-        </p>
-        <span style="font-size: 12px; font-weight: 600; color: var(--nw-accent, #c09c78); word-break: break-all;">
-          {{ albumPublicUrl }}
-        </span>
-      </div>
-    </div>
-
-    <div style="display: flex; gap: 8px;">
-      <a [href]="albumPublicUrl" target="_blank" rel="noopener noreferrer" class="nw-btn nw-btn-ghost nw-btn-sm" style="height: 36px; font-size: 12.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-        ↗️ Abrir vista previa
-      </a>
     </div>
   </div>
 
   <!-- 🏷️ SECCIÓN: ÁLBUMES POR ETIQUETAS (TAGS) Y TODOS -->
   <div style="margin-bottom: 16px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-      <span style="font-size: 13px; font-weight: 700; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px;">
+      <span
+        style="font-size: 13px; font-weight: 700; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px;">
         📂 Álbumes Temáticos
       </span>
-      <span *ngIf="selectedTagFilter !== 'all'" style="font-size: 12px; color: var(--nw-accent, #c09c78); cursor: pointer; font-weight: 600;" (click)="selectedTagFilter = 'all'">
+      <span *ngIf="selectedTagFilter !== 'all'"
+        style="font-size: 12px; color: var(--nw-accent, #c09c78); cursor: pointer; font-weight: 600;"
+        (click)="setSelectedTag('all')">
         Mostrar todos los álbumes ✕
       </span>
     </div>
 
     <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
       <!-- Álbum: Todos -->
-      <button type="button" class="nw-btn nw-btn-sm" (click)="selectedTagFilter = 'all'"
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setSelectedTag('all')"
         [style.background]="selectedTagFilter === 'all' ? 'var(--nw-accent, #c09c78)' : 'var(--nw-surface, #ffffff)'"
         [style.color]="selectedTagFilter === 'all' ? '#ffffff' : 'var(--nw-text, #2e2621)'"
         [style.border]="selectedTagFilter === 'all' ? '1px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
@@ -169,7 +222,7 @@
       </button>
 
       <!-- Álbum: Me super encanta -->
-      <button type="button" class="nw-btn nw-btn-sm" (click)="selectedTagFilter = TAG_SUPER_ENCANTA"
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setSelectedTag(TAG_SUPER_ENCANTA)"
         [style.background]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#f59e0b' : '#fffbeb'"
         [style.color]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#ffffff' : '#b45309'"
         [style.border]="selectedTagFilter === TAG_SUPER_ENCANTA ? '1px solid #d97706' : '1px solid #fde68a'"
@@ -178,7 +231,7 @@
       </button>
 
       <!-- Álbum: Me encanta -->
-      <button type="button" class="nw-btn nw-btn-sm" (click)="selectedTagFilter = TAG_ME_ENCANTA"
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setSelectedTag(TAG_ME_ENCANTA)"
         [style.background]="selectedTagFilter === TAG_ME_ENCANTA ? '#ec4899' : '#fdf2f8'"
         [style.color]="selectedTagFilter === TAG_ME_ENCANTA ? '#ffffff' : '#be185d'"
         [style.border]="selectedTagFilter === TAG_ME_ENCANTA ? '1px solid #db2777' : '1px solid #fbcfe8'"
@@ -189,7 +242,7 @@
       <!-- Álbumes de Tags Personalizados -->
       <ng-container *ngFor="let tag of availableTags">
         <button *ngIf="tag !== TAG_SUPER_ENCANTA && tag !== TAG_ME_ENCANTA" type="button" class="nw-btn nw-btn-sm"
-          (click)="selectedTagFilter = tag"
+          (click)="setSelectedTag(tag)"
           [style.background]="selectedTagFilter === tag ? 'var(--nw-text, #2e2621)' : 'var(--nw-surface-2, #f5f1ea)'"
           [style.color]="selectedTagFilter === tag ? '#ffffff' : 'var(--nw-text, #2e2621)'"
           [style.border]="selectedTagFilter === tag ? '1px solid var(--nw-text, #2e2621)' : '1px solid var(--nw-border, #eadecc)'"
@@ -201,26 +254,27 @@
   </div>
 
   <!-- Barra de Filtros Segmentados por Estado -->
-  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
-    <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'all'"
+  <div
+    style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('all')"
       [class.nw-btn-primary]="filterStatus === 'all'" [class.nw-btn-ghost]="filterStatus !== 'all'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
       🖼️ Todas ({{ albumAssets.length }})
     </button>
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'pending'"
+    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('pending')"
       [class.nw-btn-warning]="filterStatus === 'pending'" [class.nw-btn-ghost]="filterStatus !== 'pending'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
       ⏳ Pendientes ({{ pendingAlbumAssets }})
     </button>
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'approved'"
+    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('approved')"
       [class.nw-btn-success]="filterStatus === 'approved'" [class.nw-btn-ghost]="filterStatus !== 'approved'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
       ✅ Aprobadas ({{ approvedCount }})
     </button>
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'rejected'"
+    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('rejected')"
       [class.nw-btn-danger]="filterStatus === 'rejected'" [class.nw-btn-ghost]="filterStatus !== 'rejected'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
       ❌ Rechazadas ({{ rejectedCount }})
@@ -232,24 +286,85 @@
   </div>
 
   <!-- Estado Vacío -->
-  <div *ngIf="!loadingAlbum && filteredAlbumAssets.length === 0" class="nw-empty" style="padding: 40px 20px; text-align: center; color: var(--nw-text-3, #9e9083);">
+  <div *ngIf="!loadingAlbum && filteredAlbumAssets.length === 0" class="nw-empty"
+    style="padding: 40px 20px; text-align: center; color: var(--nw-text-3, #9e9083);">
     <span class="empty-icon" style="font-size: 40px; display: block; margin-bottom: 8px;">📸</span>
     <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
-      {{ selectedTagFilter !== 'all' ? 'Sin fotos en el álbum "' + selectedTagFilter + '"' : (filterStatus === 'all' ? 'Sin fotos aún' : 'No se encontraron fotos en esta categoría') }}
+      {{ selectedTagFilter !== 'all' ? 'Sin fotos en el álbum "' + selectedTagFilter + '"' : (filterStatus === 'all' ?
+      'Sin fotos aún' : 'No se encontraron fotos en esta categoría') }}
     </h3>
     <p style="font-size: 13px; margin-top: 4px; color: var(--nw-text-2, #6e6157);">
-      {{ selectedTagFilter !== 'all' ? 'Etiqueta fotografías con este tag para agregarlas a este álbum.' : (filterStatus === 'all' ? 'Las fotos aparecerán aquí cuando los invitados las suban desde su invitación.' : 'Selecciona otro filtro para ver más fotografías del evento.') }}
+      {{ selectedTagFilter !== 'all' ? 'Etiqueta fotografías con este tag para agregarlas a este álbum.' : (filterStatus
+      === 'all' ? 'Las fotos aparecerán aquí cuando los invitados las suban desde su invitación o mediante el enlace de
+      acceso.' : 'Selecciona otro filtro para ver más fotografías del evento.') }}
     </p>
   </div>
 
   <style>
+    .nw-collage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      grid-auto-flow: dense;
+      gap: 16px;
+    }
+
     .nw-album-card {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
     .nw-album-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08) !important;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
     }
+
+    @media (min-width: 768px) {
+      .nw-album-card.collage-hero {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+
+      .nw-album-card.collage-wide {
+        grid-column: span 2;
+      }
+
+      .nw-album-card.collage-tall {
+        grid-row: span 2;
+      }
+    }
+
+    .nw-album-card.collage-hero .nw-img-container {
+      height: 380px !important;
+    }
+
+    .nw-album-card.collage-tall .nw-img-container {
+      height: 340px !important;
+    }
+
+    .nw-album-card.collage-wide .nw-img-container {
+      height: 240px !important;
+    }
+
+    .nw-album-card.collage-standard .nw-img-container {
+      height: 200px !important;
+    }
+
+    .book-collage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      align-items: start;
+      gap: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .book-collage-card.book-hero {
+        grid-column: span 2;
+      }
+
+      .book-collage-card.book-wide {
+        grid-column: span 2;
+      }
+    }
+
     .nw-tag-chip {
       display: inline-flex;
       align-items: center;
@@ -262,16 +377,19 @@
       color: var(--nw-text, #2e2621);
       border: 1px solid var(--nw-border, #eadecc);
     }
+
     .nw-tag-chip.tag-super {
       background: #fef3c7;
       color: #92400e;
       border-color: #fde68a;
     }
+
     .nw-tag-chip.tag-encanta {
       background: #fce7f3;
       color: #9d174d;
       border-color: #fbcfe8;
     }
+
     .nw-swipe-modal-backdrop {
       position: fixed;
       inset: 0;
@@ -283,42 +401,76 @@
       justify-content: center;
       padding: 16px;
     }
+
+    .nw-page-btn {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid var(--nw-border, #eadecc);
+      background: var(--nw-surface, #ffffff);
+      color: var(--nw-text, #2e2621);
+      transition: all 0.15s ease;
+    }
+
+    .nw-page-btn:hover:not(:disabled) {
+      background: var(--nw-surface-2, #f5f1ea);
+      border-color: var(--nw-accent, #c09c78);
+    }
+
+    .nw-page-btn.active {
+      background: var(--nw-accent, #c09c78);
+      color: #ffffff;
+      border-color: var(--nw-accent, #c09c78);
+      font-weight: 700;
+    }
+
+    .nw-page-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
   </style>
 
-  <!-- Grid de Fotografías del Álbum -->
+  <!-- Grid de Fotografías del Álbum Paginadas -->
   <div *ngIf="!loadingAlbum && filteredAlbumAssets.length > 0"
     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;">
-    
-    <div *ngFor="let asset of filteredAlbumAssets" class="nw-album-card"
+
+    <div *ngFor="let asset of paginatedAlbumAssets; trackBy: trackByAssetId" class="nw-album-card"
       style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04));">
-      
+
       <!-- Contenedor de la Imagen con Badges y Tag Presets flotantes -->
-      <div style="position: relative; width: 100%; height: 200px; background: #222222; cursor: pointer; overflow: hidden;"
+      <div
+        style="position: relative; width: 100%; height: 200px; background: #222222; cursor: pointer; overflow: hidden;"
         (click)="openPreviewModal(asset)">
-        
+
         <img [src]="asset.url" alt="Fotografía del evento" loading="lazy" decoding="async"
           style="width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s;">
 
         <!-- Badge Estado Flotante -->
         <span class="nw-pill"
           style="position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.25);"
-          [class.warning]="asset.status === 'pending'"
-          [class.success]="asset.status === 'approved'"
+          [class.warning]="asset.status === 'pending'" [class.success]="asset.status === 'approved'"
           [class.danger]="asset.status === 'rejected'">
-          {{ asset.status === 'approved' ? '✅ Aprobada' : (asset.status === 'rejected' ? '❌ Rechazada' : '⏳ Pendiente') }}
+          {{ asset.status === 'approved' ? '✅ Aprobada' : (asset.status === 'rejected' ? '❌ Rechazada' : '⏳ Pendiente')
+          }}
         </span>
 
         <!-- Botones Flotantes de Tags Rápidos (⭐ / ❤️) -->
-        <div style="position: absolute; top: 10px; left: 10px; display: flex; gap: 6px;" (click)="$event.stopPropagation()">
-          <button type="button" (click)="toggleTag(asset, TAG_SUPER_ENCANTA, $event)"
-            title="Me super encanta"
+        <div style="position: absolute; top: 10px; left: 10px; display: flex; gap: 6px;"
+          (click)="$event.stopPropagation()">
+          <button type="button" (click)="toggleTag(asset, TAG_SUPER_ENCANTA, $event)" title="Me super encanta"
             [style.background]="hasTag(asset, TAG_SUPER_ENCANTA) ? '#f59e0b' : 'rgba(0,0,0,0.55)'"
             [style.color]="hasTag(asset, TAG_SUPER_ENCANTA) ? '#ffffff' : '#ffffff'"
             style="border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: transform 0.15s ease;">
             ⭐
           </button>
-          <button type="button" (click)="toggleTag(asset, TAG_ME_ENCANTA, $event)"
-            title="Me encanta"
+          <button type="button" (click)="toggleTag(asset, TAG_ME_ENCANTA, $event)" title="Me encanta"
             [style.background]="hasTag(asset, TAG_ME_ENCANTA) ? '#ec4899' : 'rgba(0,0,0,0.55)'"
             [style.color]="hasTag(asset, TAG_ME_ENCANTA) ? '#ffffff' : '#ffffff'"
             style="border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: transform 0.15s ease;">
@@ -327,48 +479,50 @@
         </div>
 
         <!-- Botón Ver Ampliada -->
-        <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;">
+        <div
+          style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;">
           🔍 Ampliar
         </div>
       </div>
 
       <!-- Detalles del Autor e Información de Tags -->
-      <div style="padding: 14px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; gap: 10px; background: var(--nw-surface, #ffffff);">
+      <div
+        style="padding: 14px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; gap: 10px; background: var(--nw-surface, #ffffff);">
         <div>
-          <strong style="font-size: 14px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
+          <strong
+            style="font-size: 14px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
             👤 {{ asset.uploaderName || 'Invitado' }}
           </strong>
-          <p style="font-size: 12px; color: var(--nw-text-3, #9e9083); margin: 3px 0 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+          <p
+            style="font-size: 12px; color: var(--nw-text-3, #9e9083); margin: 3px 0 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
             📧 {{ asset.uploaderEmail || 'Sin correo' }}
           </p>
 
           <!-- Chips de Tags asignados -->
-          <div *ngIf="asset.tags && asset.tags.length > 0" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
-            <span *ngFor="let t of asset.tags" class="nw-tag-chip"
-              [class.tag-super]="t === TAG_SUPER_ENCANTA"
+          <div *ngIf="asset.tags && asset.tags.length > 0"
+            style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+            <span *ngFor="let t of asset.tags" class="nw-tag-chip" [class.tag-super]="t === TAG_SUPER_ENCANTA"
               [class.tag-encanta]="t === TAG_ME_ENCANTA">
               {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : t) }}
-              <button type="button" (click)="removeTag(asset, t, $event)" style="background: none; border: none; font-size: 10px; cursor: pointer; color: inherit; padding: 0 2px;">✕</button>
+              <button type="button" (click)="removeTag(asset, t, $event)"
+                style="background: none; border: none; font-size: 10px; cursor: pointer; color: inherit; padding: 0 2px;">✕</button>
             </span>
           </div>
         </div>
 
         <!-- Botones de Moderación -->
-        <div style="display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--nw-surface-2, #f5f1ea); padding-top: 10px;">
-          <button type="button" class="nw-btn nw-btn-sm"
-            [class.nw-btn-success]="asset.status !== 'approved'"
-            [class.nw-btn-ghost]="asset.status === 'approved'"
-            [disabled]="asset.status === 'approved'"
+        <div
+          style="display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--nw-surface-2, #f5f1ea); padding-top: 10px;">
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-success]="asset.status !== 'approved'"
+            [class.nw-btn-ghost]="asset.status === 'approved'" [disabled]="asset.status === 'approved'"
             (click)="updateAlbumAsset(asset, 'approved', $event)"
             style="flex: 1; height: 34px; font-size: 12px; font-weight: 600; justify-content: center;"
             title="Aprobar para mostrar en la galería pública del evento">
             {{ asset.status === 'approved' ? '✓ Aprobada' : '✅ Aprobar' }}
           </button>
 
-          <button type="button" class="nw-btn nw-btn-sm"
-            [class.nw-btn-danger]="asset.status !== 'rejected'"
-            [class.nw-btn-ghost]="asset.status === 'rejected'"
-            [disabled]="asset.status === 'rejected'"
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-danger]="asset.status !== 'rejected'"
+            [class.nw-btn-ghost]="asset.status === 'rejected'" [disabled]="asset.status === 'rejected'"
             (click)="updateAlbumAsset(asset, 'rejected', $event)"
             style="flex: 1; height: 34px; font-size: 12px; font-weight: 600; justify-content: center;"
             title="Rechazar esta fotografía">
@@ -380,19 +534,73 @@
     </div>
   </div>
 
+  <!-- 📄 BARRA DE CONTROLES DE PAGINACIÓN LOCAL -->
+  <div *ngIf="!loadingAlbum && filteredAlbumAssets.length > 0"
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding: 14px 16px; background: var(--nw-surface-2, #f9f6f0); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); flex-wrap: wrap; gap: 14px;">
+
+    <!-- Info de rango visible -->
+    <div style="font-size: 13px; color: var(--nw-text-2, #6e6157); display: flex; align-items: center; gap: 8px;">
+      <span>Mostrando <strong>{{ startIndex + 1 }}</strong> - <strong>{{ endIndex }}</strong> de <strong>{{
+          filteredAlbumAssets.length }}</strong> fotos</span>
+      <span *ngIf="totalPages > 1" class="nw-badge" style="font-size: 11px; padding: 2px 8px;">Pág. {{ currentPage }} /
+        {{ totalPages }}</span>
+    </div>
+
+    <!-- Controles de navegación y selector de tamaño de página -->
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <!-- Selector de fotos por página -->
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--nw-text-2, #6e6157);">
+        <span>Por página:</span>
+        <select [ngModel]="pageSize" (ngModelChange)="changePageSize($event)"
+          style="height: 30px; border-radius: 6px; border: 1px solid var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); color: var(--nw-text, #2e2621); font-size: 12px; font-weight: 600; padding: 0 6px;">
+          <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+        </select>
+      </div>
+
+      <!-- Botones de Navegación de Páginas -->
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <button type="button" class="nw-page-btn" (click)="goToPage(1)" [disabled]="currentPage === 1"
+          title="Primera página">
+          «
+        </button>
+        <button type="button" class="nw-page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+          title="Página anterior">
+          ‹
+        </button>
+
+        <ng-container *ngFor="let p of pagesList">
+          <button type="button" class="nw-page-btn" [class.active]="p === currentPage" (click)="goToPage(p)">
+            {{ p }}
+          </button>
+        </ng-container>
+
+        <button type="button" class="nw-page-btn" (click)="goToPage(currentPage + 1)"
+          [disabled]="currentPage === totalPages" title="Página siguiente">
+          ›
+        </button>
+        <button type="button" class="nw-page-btn" (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages"
+          title="Última página">
+          »
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 🌟 MODAL DE REVISIÓN RÁPIDA (SWIPE DECK / TARJETA INTERACTIVA CON BOTONES LATERALES) 🌟 -->
   <div class="nw-swipe-modal-backdrop" *ngIf="quickReviewOpen" (click)="closeQuickReview()">
     <div (click)="$event.stopPropagation()"
       style="max-width: 620px; width: 100%; display: flex; flex-direction: column; gap: 14px; position: relative;">
-      
+
       <!-- Barra Superior de Control del Modo Revisión Rápida -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 25, 22, 0.9); padding: 12px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); color: #ffffff;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 25, 22, 0.9); padding: 12px 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); color: #ffffff;">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 20px;">⚡</span>
           <div>
             <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #ffffff;">Revisión Rápida de Fotos</h3>
             <p style="margin: 2px 0 0; font-size: 12px; color: #bcaaa4;" *ngIf="pendingAssetsList.length > 0">
-              Fotografía <strong>{{ quickReviewIndex + 1 }}</strong> de <strong>{{ pendingAssetsList.length }}</strong> pendientes
+              Fotografía <strong>{{ quickReviewIndex + 1 }}</strong> de <strong>{{ pendingAssetsList.length }}</strong>
+              pendientes
             </p>
           </div>
         </div>
@@ -410,14 +618,16 @@
         <p style="margin: 8px 0 20px; font-size: 14px; color: #bcaaa4;">
           No hay fotografías pendientes de revisión en este momento.
         </p>
-        <button type="button" class="nw-btn nw-btn-primary" (click)="closeQuickReview()" style="height: 40px; font-weight: 700;">
+        <button type="button" class="nw-btn nw-btn-primary" (click)="closeQuickReview()"
+          style="height: 40px; font-weight: 700;">
           Volver a la Galería
         </button>
       </div>
 
       <!-- Contenedor de la Tarjeta Swipe con Botones a los Lados -->
-      <div *ngIf="pendingAssetsList.length > 0 && currentReviewAsset" style="display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%;">
-        
+      <div *ngIf="pendingAssetsList.length > 0 && currentReviewAsset"
+        style="display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%;">
+
         <!-- Botón Lateral Izquierdo: RECHAZAR (❌) -->
         <button type="button" (click)="triggerQuickAction(currentReviewAsset, 'rejected')"
           title="Rechazar (Flecha Izquierda ←)"
@@ -427,18 +637,18 @@
 
         <!-- Tarjeta Central Interactiva Swipeable -->
         <div style="flex: 1; max-width: 440px; position: relative; height: 490px; user-select: none;">
-          
+
           <!-- Tarjeta de fondo (siguiente foto en el mazo) -->
           <div *ngIf="nextReviewAsset"
             style="position: absolute; inset: 0; background: #26211d; border-radius: 18px; transform: scale(0.95) translateY(12px); opacity: 0.5; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-            <img [src]="nextReviewAsset.url" alt="Próxima foto" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6);">
+            <img [src]="nextReviewAsset.url" alt="Próxima foto"
+              style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6);">
           </div>
 
           <!-- Tarjeta Activa Superior (Arrastrable / Swipeable) -->
           <div (mousedown)="onDragStart($event)" (touchstart)="onDragStart($event)"
             (document:mousemove)="onDragMove($event)" (document:touchmove)="onDragMove($event)"
-            (document:mouseup)="onDragEnd()" (document:touchend)="onDragEnd()"
-            [style.transform]="cardTransformStyle"
+            (document:mouseup)="onDragEnd()" (document:touchend)="onDragEnd()" [style.transform]="cardTransformStyle"
             style="position: absolute; inset: 0; background: #1c1917; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 16px 36px rgba(0,0,0,0.5); display: flex; flex-direction: column; cursor: grab; transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);">
 
             <!-- Sello Flotante de APROBADO (Verde - Derecha) -->
@@ -460,11 +670,14 @@
             </div>
 
             <!-- Barra de Tags y Acciones en la Tarjeta -->
-            <div style="padding: 14px 16px; background: #26211d; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 10px;" (mousedown)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()">
-              
+            <div
+              style="padding: 14px 16px; background: #26211d; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 10px;"
+              (mousedown)="$event.stopPropagation()" (touchstart)="$event.stopPropagation()">
+
               <!-- Autor de la Fotografía -->
               <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 13px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+                <span
+                  style="font-size: 13px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px;">
                   👤 {{ currentReviewAsset.uploaderName || 'Invitado' }}
                 </span>
                 <span style="font-size: 11px; color: #a89f97;">
@@ -493,10 +706,12 @@
 
               <!-- Input para Añadir Tags Personalizados -->
               <div style="display: flex; gap: 6px;">
-                <input type="text" [(ngModel)]="quickReviewCustomTag" (keyup.enter)="addCustomTagFromQuickReview(currentReviewAsset)"
+                <input type="text" [(ngModel)]="quickReviewCustomTag"
+                  (keyup.enter)="addCustomTagFromQuickReview(currentReviewAsset)"
                   placeholder="+ Añadir tag (ej. Familia, Fiesta...)"
                   style="flex: 1; height: 32px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0 10px; font-size: 12px; color: #ffffff;">
-                <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="addCustomTagFromQuickReview(currentReviewAsset)"
+                <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm"
+                  (click)="addCustomTagFromQuickReview(currentReviewAsset)"
                   style="height: 32px; font-size: 11px; padding: 0 10px;">
                   + Añadir
                 </button>
@@ -506,11 +721,11 @@
               <div *ngIf="currentReviewAsset.tags && currentReviewAsset.tags.length > 0"
                 style="display: flex; flex-wrap: wrap; gap: 4px; max-height: 50px; overflow-y: auto;">
                 <span *ngFor="let t of currentReviewAsset.tags" class="nw-tag-chip"
-                  [class.tag-super]="t === TAG_SUPER_ENCANTA"
-                  [class.tag-encanta]="t === TAG_ME_ENCANTA"
+                  [class.tag-super]="t === TAG_SUPER_ENCANTA" [class.tag-encanta]="t === TAG_ME_ENCANTA"
                   style="font-size: 10.5px;">
                   {{ t }}
-                  <button type="button" (click)="removeTag(currentReviewAsset, t, $event)" style="background: none; border: none; font-size: 10px; cursor: pointer; color: inherit; padding: 0 2px;">✕</button>
+                  <button type="button" (click)="removeTag(currentReviewAsset, t, $event)"
+                    style="background: none; border: none; font-size: 10px; cursor: pointer; color: inherit; padding: 0 2px;">✕</button>
                 </span>
               </div>
             </div>
@@ -521,18 +736,19 @@
         <!-- Botón Lateral Derecho: APROBAR (✅) -->
         <button type="button" (click)="triggerQuickAction(currentReviewAsset, 'approved')"
           title="Aprobar (Flecha Derecha →)"
-          style="background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; color: #22c55e; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s ease, background 0.15s ease; box-shadow: 0 4px 14px rgba(34,197,94,0.25);"
-          onmouseover="this.style.transform='scale(1.1)'; this.style.background='#22c55e'; this.style.color='#ffffff';"
-          onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(34, 197, 94, 0.15)'; this.style.color='#22c55e';">
+          style="background: rgba(34, 197, 94, 0.15); border: 2px solid #22c55e; color: #22c55e; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s ease, background 0.15s ease; box-shadow: 0 4px 14px rgba(34,197,94,0.25);">
           ✓
         </button>
 
       </div>
 
       <!-- Ayuda de Atajos de Teclado -->
-      <div *ngIf="pendingAssetsList.length > 0"
-        style="text-align: center; font-size: 12px; color: #a89f97;">
-        ⌨️ <strong>Atajos:</strong> Desliza la tarjeta o usa <kbd style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">←</kbd> Rechazar | <kbd style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">→</kbd> Aprobar | <kbd style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">1</kbd> ⭐ Super | <kbd style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">2</kbd> ❤️ Encanta
+      <div *ngIf="pendingAssetsList.length > 0" style="text-align: center; font-size: 12px; color: #a89f97;">
+        ⌨️ <strong>Atajos:</strong> Desliza la tarjeta o usa <kbd
+          style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">←</kbd> Rechazar | <kbd
+          style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">→</kbd> Aprobar | <kbd
+          style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">1</kbd> ⭐ Super | <kbd
+          style="background: #333; padding: 2px 6px; border-radius: 4px; color: #fff;">2</kbd> ❤️ Encanta
       </div>
     </div>
   </div>
@@ -541,15 +757,17 @@
   <div class="nw-modal-backdrop" *ngIf="selectedAsset" (click)="closePreviewModal()">
     <div class="nw-modal" (click)="$event.stopPropagation()"
       style="max-width: 760px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: #111111; color: #ffffff; border: 1px solid var(--nw-border-2, #444);">
-      
+
       <!-- Modal Header -->
-      <div style="padding: 14px 20px; border-bottom: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a;">
+      <div
+        style="padding: 14px 20px; border-bottom: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a;">
         <div>
           <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff;">
             📷 Vista Previa de Fotografía
           </h3>
           <p style="margin: 2px 0 0; font-size: 12px; color: #aaaaaa;">
-            Subida por: <strong>{{ selectedAsset.uploaderName || 'Invitado' }}</strong> ({{ selectedAsset.uploaderEmail || 'Sin email' }})
+            Subida por: <strong>{{ selectedAsset.uploaderName || 'Invitado' }}</strong> ({{ selectedAsset.uploaderEmail
+            || 'Sin email' }})
           </p>
         </div>
         <button type="button" (click)="closePreviewModal()"
@@ -558,16 +776,18 @@
       </div>
 
       <!-- Modal Body (Imagen Ampliada) -->
-      <div style="padding: 16px; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; background: #000000;">
+      <div
+        style="padding: 16px; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; background: #000000;">
         <img [src]="selectedAsset.url" alt="Vista previa de foto"
           style="max-width: 100%; max-height: 52vh; object-fit: contain; border-radius: 8px;">
       </div>
 
       <!-- Sección de Gestión de Tags en el Lightbox -->
-      <div style="padding: 12px 20px; background: #181513; border-top: 1px solid #2a2522; display: flex; flex-direction: column; gap: 8px;">
+      <div
+        style="padding: 12px 20px; background: #181513; border-top: 1px solid #2a2522; display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <span style="font-size: 12px; font-weight: 700; color: #bcaaa4;">🏷️ Etiquetas del Álbum:</span>
-          
+
           <!-- Botones Rápidos de Tags -->
           <div style="display: flex; gap: 6px;">
             <button type="button" (click)="toggleTag(selectedAsset, TAG_SUPER_ENCANTA)"
@@ -590,40 +810,45 @@
           <input type="text" [(ngModel)]="lightboxCustomTag" (keyup.enter)="addCustomTagFromLightbox(selectedAsset)"
             placeholder="Añadir otra etiqueta..."
             style="flex: 1; height: 32px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 0 10px; font-size: 12px; color: #ffffff;">
-          <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="addCustomTagFromLightbox(selectedAsset)"
-            style="height: 32px; font-size: 12px;">+ Guardar Tag</button>
+          <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm"
+            (click)="addCustomTagFromLightbox(selectedAsset)" style="height: 32px; font-size: 12px;">+ Guardar
+            Tag</button>
         </div>
 
         <!-- Chips de Tags -->
-        <div *ngIf="selectedAsset.tags && selectedAsset.tags.length > 0" style="display: flex; flex-wrap: wrap; gap: 6px;">
-          <span *ngFor="let t of selectedAsset.tags" class="nw-tag-chip"
-            [class.tag-super]="t === TAG_SUPER_ENCANTA"
+        <div *ngIf="selectedAsset.tags && selectedAsset.tags.length > 0"
+          style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <span *ngFor="let t of selectedAsset.tags" class="nw-tag-chip" [class.tag-super]="t === TAG_SUPER_ENCANTA"
             [class.tag-encanta]="t === TAG_ME_ENCANTA">
             {{ t }}
-            <button type="button" (click)="removeTag(selectedAsset, t, $event)" style="background: none; border: none; font-size: 10px; cursor: pointer; color: inherit; padding: 0 2px;">✕</button>
+            <button type="button" (click)="removeTag(selectedAsset, t, $event)"
+              style="background: none; border: none; font-size: 10px; cursor: pointer; color: inherit; padding: 0 2px;">✕</button>
           </span>
         </div>
       </div>
 
       <!-- Modal Footer (Acciones de Moderación) -->
-      <div style="padding: 14px 20px; background: #1a1a1a; border-top: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <span class="nw-pill"
-          [class.warning]="selectedAsset.status === 'pending'"
-          [class.success]="selectedAsset.status === 'approved'"
-          [class.danger]="selectedAsset.status === 'rejected'">
-          Estado: {{ selectedAsset.status === 'approved' ? 'Aprobada ✅' : (selectedAsset.status === 'rejected' ? 'Rechazada ❌' : 'Pendiente ⏳') }}
+      <div
+        style="padding: 14px 20px; background: #1a1a1a; border-top: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span class="nw-pill" [class.warning]="selectedAsset.status === 'pending'"
+          [class.success]="selectedAsset.status === 'approved'" [class.danger]="selectedAsset.status === 'rejected'">
+          Estado: {{ selectedAsset.status === 'approved' ? 'Aprobada ✅' : (selectedAsset.status === 'rejected' ?
+          'Rechazada ❌' : 'Pendiente ⏳') }}
         </span>
 
-        <div style="display: flex; gap: 10px;">
-          <button type="button" class="nw-btn nw-btn-danger"
-            [disabled]="selectedAsset.status === 'rejected'"
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" class="nw-btn nw-btn-secondary" (click)="downloadPhotoAsset(selectedAsset, $event)"
+            style="height: 38px; font-size: 13px; font-weight: 600;">
+            📥 Descargar Foto
+          </button>
+
+          <button type="button" class="nw-btn nw-btn-danger" [disabled]="selectedAsset.status === 'rejected'"
             (click)="updateAlbumAsset(selectedAsset, 'rejected'); closePreviewModal();"
             style="height: 38px; font-size: 13px; font-weight: 600;">
             {{ selectedAsset.status === 'rejected' ? '✓ Rechazada' : '❌ Rechazar foto' }}
           </button>
-          
-          <button type="button" class="nw-btn nw-btn-primary"
-            [disabled]="selectedAsset.status === 'approved'"
+
+          <button type="button" class="nw-btn nw-btn-primary" [disabled]="selectedAsset.status === 'approved'"
             (click)="updateAlbumAsset(selectedAsset, 'approved'); closePreviewModal();"
             style="height: 38px; font-size: 13px; font-weight: 600;">
             {{ selectedAsset.status === 'approved' ? '✓ Aprobada' : '✅ Aprobar foto' }}
@@ -633,23 +858,56 @@
     </div>
   </div>
 
-  <!-- Modal Lightbox de Portada -->
-  <div class="nw-modal-backdrop" *ngIf="previewCoverModal" (click)="previewCoverModal = false">
-    <div class="nw-modal" (click)="$event.stopPropagation()"
-      style="max-width: 720px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: #111111; color: #ffffff; border: 1px solid var(--nw-border-2, #444);">
-      <div style="padding: 14px 20px; border-bottom: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a;">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff;">
-          🖼️ Imagen de Portada del Evento
-        </h3>
-        <button type="button" (click)="previewCoverModal = false" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #aaaaaa; padding: 4px 8px; border-radius: 8px;">✕</button>
+  <!-- 🔍 MODAL DE CÓDIGO QR EN GRANDE (LIGHTBOX) -->
+  <div class="nw-swipe-modal-backdrop" *ngIf="selectedQrLink" (click)="closeQrModal()">
+    <div (click)="$event.stopPropagation()"
+      style="max-width: 420px; width: 90vw; background: var(--nw-surface, #ffffff); border-radius: 18px; padding: 24px; text-align: center; color: var(--nw-text, #2e2621); box-shadow: 0 20px 40px rgba(0,0,0,0.35); position: relative; border: 1px solid var(--nw-border, #eadecc);">
+
+      <button type="button" (click)="closeQrModal()"
+        style="position: absolute; top: 14px; right: 14px; background: var(--nw-surface-2, #f5f1ea); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; color: var(--nw-text, #2e2621); display: flex; align-items: center; justify-content: center;">
+        ✕
+      </button>
+
+      <h3 style="margin: 0 0 6px; font-size: 18px; font-weight: 700; color: var(--nw-text, #2e2621);">
+        📲 {{ selectedQrLink.label || getRoleTitle(selectedQrLink.role) }}
+      </h3>
+      <p style="margin: 0 0 16px; font-size: 13px; color: var(--nw-text-2, #6e6157); line-height: 1.4;">
+        {{ getRoleDescription(selectedQrLink.role) }}
+      </p>
+
+      <div
+        style="background: #ffffff; padding: 14px; border-radius: 16px; border: 2px solid var(--nw-border, #eadecc); display: inline-block; box-shadow: var(--nw-shadow-sm, 0 4px 12px rgba(0,0,0,0.08)); margin-bottom: 16px;">
+        <img [src]="getAccessLinkQrUrl(selectedQrLink, '350x350')" alt="Código QR en Grande"
+          style="width: 260px; height: 260px; display: block; border-radius: 8px;">
       </div>
-      <div style="padding: 16px; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; background: #000000;">
-        <img [src]="coverImageUrl" alt="Vista previa de portada" style="max-width: 100%; max-height: 65vh; object-fit: contain; border-radius: 8px;">
+
+      <div
+        style="background: var(--nw-surface-2, #f9f6f0); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-family: monospace; font-size: 11px; word-break: break-all; color: var(--nw-accent, #c09c78); margin-bottom: 18px;">
+        {{ getAccessLinkFullUrl(selectedQrLink) }}
       </div>
-      <div style="padding: 14px 20px; background: #1a1a1a; border-top: 1px solid #333333; display: flex; justify-content: flex-end;">
-        <button type="button" class="nw-btn nw-btn-secondary" (click)="previewCoverModal = false">Cerrar</button>
+
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="copyAccessLinkUrl(selectedQrLink)"
+          style="font-weight: 700; height: 36px; padding: 0 14px;">
+          📋 Copiar Enlace
+        </button>
+        <a [href]="getAccessLinkFullUrl(selectedQrLink)" target="_blank" rel="noopener noreferrer"
+          class="nw-btn nw-btn-secondary nw-btn-sm"
+          style="text-decoration: none; font-weight: 600; height: 36px; display: inline-flex; align-items: center; padding: 0 14px;">
+          ↗️ Abrir Enlace
+        </a>
       </div>
+
     </div>
   </div>
-</section>
 
+  <!-- 📖 WIDGET: ÁLBUM DE RECUERDOS DIGITAL INTERACTIVO (COMENTADO TEMPORALMENTE)
+  <app-event-book-widget
+    [assets]="albumAssets"
+    [eventTitle]="event?.title || 'Nuestro Evento Especial'"
+    [publicAccessUrl]="publicAlbumAccessUrl"
+    [qrCodeUrl]="albumAccessLinks.length > 0 ? getAccessLinkQrUrl(albumAccessLinks[0], '150x150') : ''">
+  </app-event-book-widget>
+  -->
+
+</section>

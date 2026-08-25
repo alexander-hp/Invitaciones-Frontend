@@ -107,6 +107,121 @@
     </div>
   </div>
 
+  <!-- SECCIÓN: FOTO PRINCIPAL / PORTADA DEL EVENTO -->
+  <div *ngIf="isOwner()" class="nw-card" style="margin-top:16px; padding: 20px 20px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 12px;">
+      <div>
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto Principal / Portada del Evento
+          <span *ngIf="coverImageUrl" class="nw-pill success" style="font-size: 11px; font-weight: 700; display: inline-flex; align-items: center;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px;">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Portada Activa
+          </span>
+          <span *ngIf="!coverImageUrl" class="nw-pill warning" style="font-size: 11px; font-weight: 700;">
+            Sin Foto Principal
+          </span>
+        </h3>
+        <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2);">
+          Configura la imagen principal de bienvenida que tus invitados verán en la portada de tu invitación digital y en la ficha del evento.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <label class="nw-btn nw-btn-primary nw-btn-sm" style="cursor: pointer; height: 36px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;">
+          <input type="file" accept="image/*" (change)="uploadCoverImage($event)" [disabled]="uploadingCover" style="display: none;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>{{ coverImageUrl ? 'Cambiar Foto Principal' : 'Subir Foto Principal' }}</span>
+        </label>
+        <button *ngIf="coverImageUrl" type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="removeCoverImage()" [disabled]="uploadingCover" style="height: 36px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+          <span>Quitar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Indicador de Carga -->
+    <div *ngIf="uploadingCover" class="nw-alert info nw-loading" style="margin-top: 10px;">
+      Subiendo e integrando foto principal...
+    </div>
+
+    <!-- Vista de Foto Configurada -->
+    <div *ngIf="!uploadingCover && coverImageUrl" style="margin-top: 12px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: var(--nw-surface-2); border: 1px solid var(--nw-border); padding: 14px; border-radius: var(--nw-radius-sm); box-shadow: var(--nw-shadow-sm);">
+      <div style="position: relative; width: 220px; height: 130px; border-radius: 8px; overflow: hidden; background: #222; flex-shrink: 0; cursor: pointer; border: 1px solid var(--nw-border);" (click)="previewCoverModal = true">
+        <img [src]="coverImageUrl" alt="Foto principal del evento" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.65); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+          Clic para ampliar
+        </div>
+      </div>
+
+      <div style="flex: 1; min-width: 220px;">
+        <strong style="font-size: 14px; color: var(--nw-text); display: flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto asignada y activa
+        </strong>
+        <p style="margin: 4px 0 10px; font-size: 12.5px; color: var(--nw-text-3); word-break: break-all;">
+          {{ coverImageUrl }}
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewCoverModal = true" style="font-size: 12px; height: 34px; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Ver en tamaño completo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado Vacío -->
+    <div *ngIf="!uploadingCover && !coverImageUrl" style="margin-top: 10px; border: 2px dashed var(--nw-border); border-radius: var(--nw-radius-sm); padding: 24px 16px; text-align: center; background: var(--nw-surface-2);">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); margin-bottom: 8px; display: inline-block;">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      <strong style="font-size: 14px; color: var(--nw-text); display: block;">No se ha configurado una foto principal</strong>
+      <p style="margin: 4px 0 12px; font-size: 12.5px; color: var(--nw-text-2);">
+        Agrega una foto representativa para personalizar la portada de tu evento y la invitación digital.
+      </p>
+      <label class="nw-btn nw-btn-secondary nw-btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+        <input type="file" accept="image/*" (change)="uploadCoverImage($event)" style="display: none;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Elegir foto principal</span>
+      </label>
+    </div>
+  </div>
+
   <!-- Invitaciones -->
   <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['invitations']"
     style="margin-top:16px; padding: 20px 20px 24px;">
@@ -830,6 +945,30 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Lightbox de Foto Principal -->
+  <div class="nw-modal-backdrop" *ngIf="previewCoverModal" (click)="previewCoverModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()"
+      style="max-width: 760px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: #111111; color: #ffffff; border: 1px solid var(--nw-border-2, #444);">
+      <div style="padding: 14px 20px; border-bottom: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto Principal / Portada del Evento
+        </h3>
+        <button type="button" (click)="previewCoverModal = false" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #aaaaaa; padding: 4px 8px; border-radius: 8px;">✕</button>
+      </div>
+      <div style="padding: 16px; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; background: #000000;">
+        <img [src]="coverImageUrl" alt="Foto principal" style="max-width: 100%; max-height: 65vh; object-fit: contain; border-radius: 8px;">
+      </div>
+      <div style="padding: 14px 20px; background: #1a1a1a; border-top: 1px solid #333333; display: flex; justify-content: flex-end;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="previewCoverModal = false">Cerrar</button>
       </div>
     </div>
   </div>

@@ -51,6 +51,34 @@ export class NewInvitationEditorComponent implements OnInit {
   activeTab: string = 'content';
   collapsedSections: Record<string, boolean> = {};
 
+  showAiWizardModal = false;
+
+  openAiWizard(): void {
+    this.showAiWizardModal = true;
+  }
+
+  onAiTemplateApplied(result: { htmlCode: string; cssCode: string; name: string }): void {
+    if (this.invitation) {
+      if (!this.invitation.content) this.invitation.content = {};
+      this.invitation.content.template = 'custom-html';
+      this.invitation.content.customHtml = result.htmlCode;
+      this.invitation.content.customCss = result.cssCode;
+      this.invitation.content.customPageApproved = true;
+      const invId = this.invitation._id || this.invitation.id;
+      const slug = this.invitation.slug;
+      if (slug) {
+        localStorage.setItem(`inv_custom_html_${slug}`, result.htmlCode);
+        localStorage.setItem(`inv_custom_css_${slug}`, result.cssCode || '');
+        localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
+      }
+      if (invId) {
+        localStorage.setItem(`inv_tpl_${invId}`, 'custom-html');
+      }
+    }
+    this.message = `¡Plantilla "${result.name}" aplicada exitosamente a tu evento!`;
+    this.save();
+  }
+
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
@@ -73,29 +101,29 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   readonly configurableSectionsList = [
-    { key: 'guestAlbum', icon: '📸', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real.' },
-    { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica Oficial', description: 'Galería oficial con fotos del evento o novios.' },
-    { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones (DJ)', description: 'Permite a los invitados sugerir temas para el DJ.' },
-    { key: 'dedications', icon: '💬', title: 'Dedicatorias y Libro de Firmas', description: 'Muro de firmas, felicitaciones y mensajes.' },
-    { key: 'rsvp', icon: '💌', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario, reglas y preguntas personalizadas de RSVP.' },
-    { key: 'story', icon: '📖', title: 'Nuestra Historia', description: 'Reseña o historia de los novios / festejados.' },
-    { key: 'locations', icon: '📍', title: 'Mapas y Ubicaciones', description: 'Direcciones con enlaces directos a Google Maps o Waze.' },
-    { key: 'itinerary', icon: '📅', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades del evento.' },
-    { key: 'dressCode', icon: '👔', title: 'Código de Vestimenta', description: 'Instrucciones de etiqueta y vestuario sugerido.' },
-    { key: 'giftRegistry', icon: '🎁', title: 'Mesa de Regalos', description: 'Catálogo y enlaces a tiendas externas (Amazon, Liverpool, etc.).' },
-    { key: 'digitalEnvelope', icon: '✉️', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios, CLABE y QR para obsequios en efectivo.' },
-    { key: 'lodging', icon: '🏨', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
-    { key: 'backgroundMusic', icon: '🎼', title: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
+    { key: 'guestAlbum', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real.' },
+    { key: 'gallery', title: 'Galería Fotográfica Oficial', description: 'Galería oficial con fotos del evento o novios.' },
+    { key: 'songRequests', title: 'Música / Pedir Canciones (DJ)', description: 'Permite a los invitados sugerir temas para el DJ.' },
+    { key: 'dedications', title: 'Dedicatorias y Libro de Firmas', description: 'Muro de firmas, felicitaciones y mensajes.' },
+    { key: 'rsvp', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario, reglas y preguntas personalizadas de RSVP.' },
+    { key: 'story', title: 'Nuestra Historia', description: 'Reseña o historia de los novios / festejados.' },
+    { key: 'locations', title: 'Mapas y Ubicaciones', description: 'Direcciones con enlaces directos a Google Maps o Waze.' },
+    { key: 'itinerary', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades del evento.' },
+    { key: 'dressCode', title: 'Código de Vestimenta', description: 'Instrucciones de etiqueta y vestuario sugerido.' },
+    { key: 'giftRegistry', title: 'Mesa de Regalos', description: 'Catálogo y enlaces a tiendas externas (Amazon, Liverpool, etc.).' },
+    { key: 'digitalEnvelope', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios, CLABE y QR para obsequios en efectivo.' },
+    { key: 'lodging', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
+    { key: 'backgroundMusic', title: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
   ];
 
   readonly dressCodePresets = [
-    'Formal / Etiqueta Rigurosa 🤵‍♀️💃',
-    'Formal / Traje Oscuro 🤵‍♂️👗',
-    'Semiformal / Coctel 🥂✨',
-    'Guayabera Elegante / Lino 🌴👔',
-    'Playa / Casual Elegante 🏖️👗',
-    'Blanco / All White 🤍✨',
-    'Casual / Libre 👟👕',
+    'Formal / Etiqueta Rigurosa',
+    'Formal / Traje Oscuro',
+    'Semiformal / Coctel',
+    'Guayabera Elegante / Lino',
+    'Playa / Casual Elegante',
+    'Blanco / All White',
+    'Casual / Libre',
     'Otro (Especificar personalizado...)'
   ];
 

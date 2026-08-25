@@ -59,6 +59,7 @@ import { NewExternalPortalComponent } from './features/new-external-portal/new-e
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
 import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component';
 import { NewPublicInvitationTemplate3Component } from './features/new-public-invitation/templates/template-3/new-public-invitation-template3.component';
+import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
@@ -72,10 +73,12 @@ import { EditorGiftsTabComponent } from './features/new-invitation-editor/tabs/g
 import { EditorDedicationsTabComponent } from './features/new-invitation-editor/tabs/dedications/editor-dedications-tab.component';
 import { EditorAssetsTabComponent } from './features/new-invitation-editor/tabs/assets/editor-assets-tab.component';
 import { EditorPlansTabComponent } from './features/new-invitation-editor/tabs/plans/editor-plans-tab.component';
+import { AiTemplateWizardModalComponent } from './features/new-invitation-editor/modals/ai-template-wizard-modal/ai-template-wizard-modal.component';
 
 import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
 import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
 import { EventHeaderComponent } from './core/event-header/event-header.component';
+import { EventBookWidgetComponent } from './shared/components/event-book-widget/event-book-widget.component';
 
 @NgModule({
   declarations: [
@@ -83,6 +86,7 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
     ConfirmDialogComponent,
     QrScannerModalComponent,
     EventHeaderComponent,
+    EventBookWidgetComponent,
     DocumentationComponent,
     CheckInStaffComponent,
     ContactComponent,
@@ -103,9 +107,11 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
     EditorDedicationsTabComponent,
     EditorAssetsTabComponent,
     EditorPlansTabComponent,
+    AiTemplateWizardModalComponent,
     NewInvitationSectionsComponent,
     NewMemberInviteComponent,
     NewUserGuideComponent,
+    NewCustomTemplatesComponent,
     LoginComponent,
     NewLoginComponent,
     NewRegisterComponent,
@@ -151,4 +157,4 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true }],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }

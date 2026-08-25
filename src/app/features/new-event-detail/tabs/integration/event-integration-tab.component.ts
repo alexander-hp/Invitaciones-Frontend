@@ -3,7 +3,7 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
-import { EventModel, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole } from '../../../../core/models';
+import { EventModel, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, CustomTemplateSubmission, InvitationModel } from '../../../../core/models';
 import { environment } from '../../../../../environments/environment';
 
 export interface ApiParameter {
@@ -55,6 +55,7 @@ export interface ApiEndpoint {
 })
 export class EventIntegrationTabComponent implements OnInit, OnChanges {
   @Input() event?: EventModel;
+  @Input() invitation?: InvitationModel;
 
   embedManifest?: EmbedManifestResponse;
   externalSaving = false;
@@ -105,6 +106,11 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
 
   customHtmlCode = '';
   customCssCode = '';
+  customTemplateName = '';
+  customTemplateAuthor = '';
+  customTemplateNotes = '';
+  currentCustomSubmission?: CustomTemplateSubmission;
+  submittingCustomTemplate = false;
   validatingCustomCode = false;
   customValidationResult: any = null;
   customPublishSubmitted = false;
@@ -695,6 +701,7 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
 
     if (eventId) {
       this.loadAccessLinks(eventId);
+      this.loadCustomTemplateSubmission(eventId);
     }
 
     const c = this.event.externalContent || {};
@@ -714,6 +721,24 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
       dedicationsEnabled: true,
       giftEnabled: true,
       giftShowEnvelope: true
+    });
+  }
+
+  loadCustomTemplateSubmission(eventId: string): void {
+    this.apiService.listCustomTemplateSubmissions().subscribe({
+      next: res => {
+        const found = (res.submissions || []).find(s => s.eventId === eventId);
+        if (found) {
+          this.currentCustomSubmission = found;
+          this.customPublishSubmitted = true;
+          if (!this.customHtmlCode && found.htmlCode) this.customHtmlCode = found.htmlCode;
+          if (!this.customCssCode && found.cssCode) this.customCssCode = found.cssCode;
+          if (!this.customTemplateName && found.name) this.customTemplateName = found.name;
+          if (!this.customTemplateAuthor && found.authorName) this.customTemplateAuthor = found.authorName;
+          if (!this.customTemplateNotes && found.notes) this.customTemplateNotes = found.notes;
+        }
+      },
+      error: () => {}
     });
   }
 
@@ -815,13 +840,13 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
 
   getRoleLabel(role: EventAccessRole): string {
     const labels: Record<string, string> = {
-      check_in: '🎟️ Recepción / Check-in QR',
-      dj: '🎧 Cabina DJ / Música',
-      album_review: '🖼️ Moderador de Álbum',
-      photographer: '📸 Fotógrafo Oficial',
-      client_view: '👥 Vista Anfitrión / Novios',
-      guest_ops: '⚡ Operaciones Generales',
-      integration_api: '🔌 Token de API Headless'
+      check_in: 'Recepción / Check-in QR',
+      dj: 'Cabina DJ / Música',
+      album_review: 'Moderador de Álbum',
+      photographer: 'Fotógrafo Oficial',
+      client_view: 'Vista Anfitrión / Novios',
+      guest_ops: 'Operaciones Generales',
+      integration_api: 'Token de API Headless'
     };
     return labels[role] || role;
   }
@@ -829,7 +854,7 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
   copyToClipboard(text: string, label: string): void {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
-      this.showSuccess(`✨ ${label} copiado al portapapeles.`);
+      this.showSuccess(`${label} copiado al portapapeles.`);
     }).catch(() => {
       this.showError('No se pudo copiar automáticamente.');
     });
@@ -850,24 +875,7 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
   }
 
   // Swagger UI Filtering & Category Methods
-  get tagCategories(): Array<{ name: string; count: number; icon: string }> {
-    const iconMap: Record<string, string> = {
-      'Inicialización & Config': '⚡',
-      'Álbum Interactivo (guestAlbum)': '📸',
-      'Galería Oficial (gallery)': '🖼️',
-      'Música DJ (songRequests)': '🎵',
-      'Dedicatorias (dedications)': '💬',
-      'RSVP & Pases (rsvp)': '💌',
-      'Nuestra Historia (story)': '📖',
-      'Ubicaciones & Mapas (locations)': '📍',
-      'Itinerario & Agenda (itinerary)': '📅',
-      'Código de Vestimenta (dressCode)': '👔',
-      'Mesa de Regalos (giftRegistry)': '🎁',
-      'Sobre Digital (digitalEnvelope)': '✉️',
-      'Hospedaje & Hoteles (lodging)': '🏨',
-      'Widgets Embebibles (/new/embed)': '🧩'
-    };
-
+  get tagCategories(): Array<{ name: string; count: number }> {
     const counts: Record<string, number> = {};
     this.apiEndpoints.forEach(ep => {
       counts[ep.tag] = (counts[ep.tag] || 0) + 1;
@@ -875,8 +883,7 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
 
     return Object.keys(counts).map(tag => ({
       name: tag,
-      count: counts[tag],
-      icon: iconMap[tag] || '📁'
+      count: counts[tag]
     }));
   }
 
@@ -1231,8 +1238,62 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
   }
 
   requestCustomPagePublish(): void {
-    this.customPublishSubmitted = true;
-    this.showSuccess('¡Solicitud de publicación enviada con éxito!');
+    if (!this.customHtmlCode.trim()) {
+      this.showError('Por favor ingresa o carga el código HTML de tu página.');
+      return;
+    }
+
+    const eventId = (this.event?._id || this.event?.id);
+    const eventSlug = this.invitation?.slug || this.event?.externalPortalSlug || 'invitacion-especial';
+    const eventTitle = this.event?.title || 'Mi Evento';
+    const invitationId = (this.invitation?._id || this.invitation?.id);
+
+    this.submittingCustomTemplate = true;
+
+    const hasDoctype = this.customHtmlCode.toLowerCase().includes('<!doctype html>');
+    const hasBody = this.customHtmlCode.toLowerCase().includes('<body');
+    const cssRules = (this.customCssCode.match(/\{/g) || []).length;
+    const score = (hasDoctype ? 30 : 15) + (hasBody ? 40 : 20) + (cssRules > 0 ? 30 : 10);
+
+    const submissionPayload: Partial<CustomTemplateSubmission> = {
+      id: this.currentCustomSubmission?.id,
+      eventId: eventId,
+      eventTitle: eventTitle,
+      eventSlug: eventSlug,
+      eventType: this.event?.type || 'otro',
+      invitationId: invitationId,
+      name: this.customTemplateName.trim() || `Plantilla HTML/CSS - ${eventTitle}`,
+      htmlCode: this.customHtmlCode,
+      cssCode: this.customCssCode,
+      authorName: this.customTemplateAuthor.trim() || (this.event?.hosts?.[0] || 'Anfitrión'),
+      notes: this.customTemplateNotes.trim(),
+      score: score,
+      status: 'pending'
+    };
+
+    this.apiService.submitCustomTemplate(submissionPayload).subscribe({
+      next: res => {
+        this.submittingCustomTemplate = false;
+        this.currentCustomSubmission = res.submission;
+        this.customPublishSubmitted = true;
+        this.showSuccess('¡Solicitud de publicación registrada y enviada al equipo de administración!');
+      },
+      error: err => {
+        this.submittingCustomTemplate = false;
+        this.showError(err?.error?.message || 'Error al enviar la solicitud de publicación.');
+      }
+    });
+  }
+
+  get approvedInvitationUrl(): string {
+    if (!this.currentCustomSubmission || this.currentCustomSubmission.status !== 'approved') return '';
+    const slug = this.currentCustomSubmission.eventSlug || this.event?.externalPortalSlug || '';
+    return `${window.location.origin}/new/i/${slug}`;
+  }
+
+  copyPublicUrl(url: string): void {
+    if (!url) return;
+    this.copyToClipboard(url, 'Enlace de la invitación');
   }
 
   getCustomPageSafeSrcdoc(): SafeHtml {
@@ -1240,6 +1301,8 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>${this.customCssCode}</style>
         </head>
         <body>
