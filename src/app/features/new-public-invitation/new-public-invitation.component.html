@@ -704,7 +704,7 @@
         <!-- Gift Store Links -->
         <div *ngIf="isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length" class="nw-pub-gifts-grid">
           <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
-            <img *ngIf="registry.imageUrl" [src]="registry.imageUrl" (click)="openLightbox(registry.imageUrl)"
+            <img *ngIf="getStoreLogo(registry)" [src]="getStoreLogo(registry)" (click)="openLightbox(getStoreLogo(registry))"
               alt="Mesa de regalos" class="nw-pub-gift-img">
             <h3>{{ registry.title || registry.label || registry.store || 'Mesa de Regalos' }}</h3>
             <p *ngIf="registry.note">{{ registry.note }}</p>

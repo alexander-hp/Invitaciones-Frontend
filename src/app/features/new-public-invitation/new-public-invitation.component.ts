@@ -204,7 +204,33 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     };
   }
 
+  getStoreLogo(registry: any): string {
+    if (!registry) return '';
+    const img = registry.imageUrl || '';
+    const storeLower = (registry.store || registry.title || '').toLowerCase();
+    if (storeLower.includes('liverpool')) {
+      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23E20074" rx="10"/><text x="50%" y="64%" font-family="Georgia, serif" font-weight="bold" font-style="italic" font-size="36" fill="%23FFFFFF" text-anchor="middle">Liverpool</text></svg>';
+    }
+    if (storeLower.includes('palacio')) {
+      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23000000" rx="10"/><text x="50%" y="60%" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="%23D4AF37" text-anchor="middle" letter-spacing="2">EL PALACIO DE HIERRO</text></svg>';
+    }
+    if (storeLower.includes('sears')) {
+      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23B80000" rx="10"/><text x="50%" y="65%" font-family="Arial, sans-serif" font-weight="900" font-size="38" fill="%23FFFFFF" text-anchor="middle" letter-spacing="3">SEARS</text></svg>';
+    }
+    if (storeLower.includes('uniko') || storeLower.includes('efectivo')) {
+      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%231E293B" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="32" fill="%23F43F5E" text-anchor="middle" letter-spacing="4">UNIKO</text></svg>';
+    }
+    if (storeLower.includes('amazon')) {
+      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23232F3E" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="%23FF9900" text-anchor="middle">amazon</text></svg>';
+    }
+    if (storeLower.includes('mercado')) {
+      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23FFE600" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="%232D3277" text-anchor="middle">mercado libre</text></svg>';
+    }
+    return img;
+  }
+
   hasMusicTrack(): boolean {
+    if (this.invitation?.content?.sectionSettings?.backgroundMusic === false) return false;
     if (this.invitation?.content?.musicUrl) return true;
     const secMusic = this.invitation?.content?.sectionMusic;
     if (!secMusic) return false;
@@ -260,6 +286,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   }
 
   private initAudio(): void {
+    if (this.invitation?.content?.sectionSettings?.backgroundMusic === false) return;
     const initialUrl = this.getAudioUrlForSection('hero') || this.invitation?.content.musicUrl;
     if (!initialUrl) return;
     this.currentPlayingTrackUrl = initialUrl;

@@ -90,6 +90,14 @@ export class NewPublicInvitationTemplate3Component implements OnInit {
     if (key === 'digitalEnvelope') {
       return this.invitation.content.giftSettings?.showEnvelope !== false && settings.digitalEnvelope !== false;
     }
+    if (key === 'songRequests' || key === 'dj') {
+      if (settings.songRequests === false) return false;
+      if (this.event?.externalContent?.songRequestSettings?.enabled === false) return false;
+      return true;
+    }
+    if (key === 'backgroundMusic') {
+      return settings.backgroundMusic !== false;
+    }
     if (key === 'rsvp') {
       return settings.rsvp !== false;
     }

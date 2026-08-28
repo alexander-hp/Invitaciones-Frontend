@@ -127,8 +127,13 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
     if (!this.invitation?.content) return true;
     const settings = this.invitation.content.sectionSettings || {};
 
-    if (key === 'songRequests') {
-      return Boolean(this.event?.externalContent?.songRequestSettings?.enabled !== false);
+    if (key === 'songRequests' || key === 'dj') {
+      if (settings.songRequests === false) return false;
+      if (this.event?.externalContent?.songRequestSettings?.enabled === false) return false;
+      return true;
+    }
+    if (key === 'backgroundMusic') {
+      return settings.backgroundMusic !== false;
     }
     if (key === 'guestAlbum') {
       return Boolean(settings.guestAlbum !== false && this.invitation.content.privateAlbumEnabled !== false);
