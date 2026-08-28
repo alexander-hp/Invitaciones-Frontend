@@ -188,6 +188,7 @@ export interface SectionSettings {
   guestAlbum?: boolean;
   dedications?: boolean;
   backgroundMusic?: boolean;
+  songRequests?: boolean;
 }
 
 export interface SongRequestSettings {

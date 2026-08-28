@@ -64,6 +64,7 @@ import { NewInvitationSectionsComponent } from './features/new-invitation-sectio
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
 import { DocumentationComponent } from './features/documentation/documentation.component';
+import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { EditorContentTabComponent } from './features/new-invitation-editor/tabs/content/editor-content-tab.component';
 import { EditorStyleTabComponent } from './features/new-invitation-editor/tabs/style/editor-style-tab.component';
 import { EditorItineraryTabComponent } from './features/new-invitation-editor/tabs/itinerary/editor-itinerary-tab.component';
@@ -88,6 +89,7 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     EventHeaderComponent,
     EventBookWidgetComponent,
     DocumentationComponent,
+    UnauthorizedComponent,
     CheckInStaffComponent,
     ContactComponent,
     DashboardComponent,

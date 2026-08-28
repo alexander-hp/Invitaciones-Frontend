@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard';
+import { AdminGuard } from './core/admin.guard';
 import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
@@ -35,6 +36,7 @@ import { NewPasswordResetComponent } from './features/new-password-reset/new-pas
 import { NewPasswordResetConfirmComponent } from './features/new-password-reset-confirm/new-password-reset-confirm.component';
 import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
 import { DocumentationComponent } from './features/documentation/documentation.component';
+import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 
 const routes: Routes = [
@@ -67,7 +69,7 @@ const routes: Routes = [
   { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
-  { path: 'new/custom-templates', component: NewCustomTemplatesComponent, canActivate: [AuthGuard] },
+  { path: 'new/custom-templates', component: NewCustomTemplatesComponent, canActivate: [AdminGuard] },
   { path: 'new/admin/templates', redirectTo: 'new/custom-templates' },
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
   { path: 'new/invitations/:id/sections', component: NewInvitationSectionsComponent, canActivate: [AuthGuard] },
@@ -79,7 +81,9 @@ const routes: Routes = [
   { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
   { path: 'new/i/:slug', component: NewPublicInvitationComponent },
   { path: 'new/guia', component: NewUserGuideComponent, canActivate: [AuthGuard] },
-  { path: 'new/documentacion', component: DocumentationComponent },
+  { path: 'new/documentacion', component: DocumentationComponent, canActivate: [AdminGuard] },
+  { path: 'new/unauthorized', component: UnauthorizedComponent },
+  { path: 'unauthorized', redirectTo: 'new/unauthorized' },
   { path: '**', redirectTo: 'new/dashboard' }
 ];
 
