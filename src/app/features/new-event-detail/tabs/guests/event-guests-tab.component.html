@@ -641,7 +641,7 @@
                 <option value="otro">Otro (Personalizado)...</option>
               </select>
               <input *ngIf="guestForm.groupSelect === 'otro'" class="nw-input" style="height: 42px; margin-top: 6px;"
-                [(ngModel)]="guestForm.group" placeholder="Nombre del grupo...">
+                [(ngModel)]="guestForm.group" (input)="onGroupInput()" placeholder="Nombre del grupo...">
             </label>
 
             <!-- Mesa asignada -->
@@ -718,7 +718,7 @@
                 </select>
                 <input *ngIf="guestForm.relationshipSelect === 'otro'" class="nw-input"
                   style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.relationshipLabel"
-                  placeholder="Ej. Dama de honor, Padrino...">
+                  (input)="onRelationshipInput()" placeholder="Ej. Dama de honor, Padrino...">
               </label>
 
               <!-- Visibilidad -->
@@ -732,7 +732,7 @@
                 </select>
                 <input *ngIf="guestForm.visibilitySelect === 'otro'" class="nw-input"
                   style="height: 42px; margin-top: 6px;" [(ngModel)]="guestForm.visibilityGroup"
-                  placeholder="familia, vip, staff...">
+                  (input)="onVisibilityInput()" placeholder="familia, vip, staff...">
               </label>
 
               <!-- Roles principales del sistema -->
@@ -741,11 +741,11 @@
                 <select class="nw-select" [(ngModel)]="guestForm.roleSelect" (change)="onRoleSelectChange()"
                   style="height: 42px; margin-top: 2px;">
                   <option value="">-- Seleccionar rol principal --</option>
-                  <option *ngFor="let opt of roleOptions" [value]="opt.value">{{ opt.label }}</option>
-                  <option value="otro">Otro (Personalizado / Múltiples)...</option>
+                  <option *ngFor="let opt of availableUnifiedOptions" [value]="opt">{{ opt }}</option>
+                  <option value="otro">Otro (Personalizado)...</option>
                 </select>
                 <input *ngIf="guestForm.roleSelect === 'otro'" class="nw-input" style="height: 42px; margin-top: 6px;"
-                  [(ngModel)]="guestForm.rolesText" placeholder="anfitrion, padrino, dama_honor...">
+                  [(ngModel)]="guestForm.rolesText" (input)="onRoleInput()" placeholder="anfitrion, padrino, dama_honor...">
               </label>
             </div>
           </div>

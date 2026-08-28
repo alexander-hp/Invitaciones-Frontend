@@ -255,30 +255,45 @@
 
   <!-- Barra de Filtros Segmentados por Estado -->
   <div
-    style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
-    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('all')"
-      [class.nw-btn-primary]="filterStatus === 'all'" [class.nw-btn-ghost]="filterStatus !== 'all'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      🖼️ Todas ({{ albumAssets.length }})
-    </button>
+    style="display: flex; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('pending')"
-      [class.nw-btn-warning]="filterStatus === 'pending'" [class.nw-btn-ghost]="filterStatus !== 'pending'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      ⏳ Pendientes ({{ pendingAlbumAssets }})
-    </button>
+    <!-- Selector DROPDOWN solo en Mobile (<=640px) -->
+    <div class="nw-mobile-status-select" style="flex: 1; min-width: 0;">
+      <select class="nw-select" [ngModel]="filterStatus" (ngModelChange)="setFilterStatus($event)"
+        style="height: 38px; font-size: 13px; font-weight: 600; padding: 0 10px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+        <option value="all">Todas ({{ albumAssets.length }})</option>
+        <option value="pending">Pendientes ({{ pendingAlbumAssets }})</option>
+        <option value="approved">Aprobadas ({{ approvedCount }})</option>
+        <option value="rejected">Rechazadas ({{ rejectedCount }})</option>
+      </select>
+    </div>
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('approved')"
-      [class.nw-btn-success]="filterStatus === 'approved'" [class.nw-btn-ghost]="filterStatus !== 'approved'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      ✅ Aprobadas ({{ approvedCount }})
-    </button>
+    <!-- Botones tipo PILLS para Desktop (>640px) -->
+    <div class="nw-desktop-status-pills" style="gap: 6px; align-items: center; flex: 1; min-width: 0;">
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('all')"
+        [class.nw-btn-primary]="filterStatus === 'all'" [class.nw-btn-ghost]="filterStatus !== 'all'"
+        style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+        🖼️ Todas ({{ albumAssets.length }})
+      </button>
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('rejected')"
-      [class.nw-btn-danger]="filterStatus === 'rejected'" [class.nw-btn-ghost]="filterStatus !== 'rejected'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      ❌ Rechazadas ({{ rejectedCount }})
-    </button>
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('pending')"
+        [class.nw-btn-warning]="filterStatus === 'pending'" [class.nw-btn-ghost]="filterStatus !== 'pending'"
+        style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+        ⏳ Pendientes ({{ pendingAlbumAssets }})
+      </button>
+
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('approved')"
+        [class.nw-btn-success]="filterStatus === 'approved'" [class.nw-btn-ghost]="filterStatus !== 'approved'"
+        style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+        ✅ Aprobadas ({{ approvedCount }})
+      </button>
+
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setFilterStatus('rejected')"
+        [class.nw-btn-danger]="filterStatus === 'rejected'" [class.nw-btn-ghost]="filterStatus !== 'rejected'"
+        style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+        ❌ Rechazadas ({{ rejectedCount }})
+      </button>
+    </div>
   </div>
 
   <div *ngIf="loadingAlbum" class="nw-alert info nw-loading" style="margin-bottom:16px;">

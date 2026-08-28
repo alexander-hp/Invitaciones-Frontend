@@ -327,10 +327,22 @@
 
   <!-- BARRA DE GESTIÓN Y FILTROS POR ESTADO -->
   <div class="nw-card" style="padding: 12px 16px; margin-bottom: 16px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
 
-      <!-- Pestañas de Filtro de Estado -->
-      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+      <!-- Selector DROPDOWN solo en Mobile (<=640px) -->
+      <div class="nw-mobile-status-select" style="flex: 1; min-width: 150px; position: relative;">
+        <select class="nw-select" [ngModel]="songFilter" (ngModelChange)="setFilter($event); currentPage = 1;"
+          style="height: 38px; font-size: 13px; font-weight: 600; padding: 0 10px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+          <option value="all">Todas ({{ songRequests.length }})</option>
+          <option value="approved">Aprobadas ({{ songApprovedCount }})</option>
+          <option value="played">Reproducidas ({{ songPlayedCount }})</option>
+          <option value="pending">Pendientes ({{ songPendingCount }})</option>
+          <option value="rejected">Rechazadas ({{ songRejectedCount }})</option>
+        </select>
+      </div>
+
+      <!-- Pestañas de Filtro de Estado en Desktop (>640px) -->
+      <div class="nw-desktop-status-pills" style="gap: 8px; flex-wrap: wrap; align-items: center;">
         <button class="nw-btn nw-btn-sm" type="button" (click)="setFilter('all'); currentPage = 1;"
           [class.nw-btn-primary]="songFilter === 'all'" [class.nw-btn-ghost]="songFilter !== 'all'"
           style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12.5px;">
@@ -391,14 +403,14 @@
       </div>
 
       <!-- Buscador por texto en la lista con icono SVG -->
-      <div style="position: relative; min-width: 220px; flex: 1; max-width: 300px;">
+      <div style="position: relative; min-width: 180px; flex: 1; max-width: 300px;">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round"
           style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--nw-text-3); pointer-events: none;">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input class="nw-input" style="padding-left: 34px; font-size: 13px; height: 36px;" name="songSearch"
+        <input class="nw-input" style="padding-left: 34px; font-size: 13px; height: 36px; width: 100%; box-sizing: border-box;" name="songSearch"
           [(ngModel)]="songSearch" (ngModelChange)="currentPage = 1" placeholder="Filtrar en playlist...">
       </div>
     </div>
@@ -427,151 +439,148 @@
 
   <!-- LISTA DE CANCIONES (Fondo blanco global con tarjetas compactas encima) -->
   <div
-    style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius, 16px); padding: 12px; display: grid; gap: 8px;"
+    style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius, 16px); padding: 10px; display: grid; gap: 8px; width: 100%; box-sizing: border-box; overflow: hidden;"
     *ngIf="!loadingDj && filteredSongRequests.length">
     <div *ngFor="let song of paginatedSongRequests"
-      style="background: var(--nw-bg, #faf7f2); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 10px 14px; margin: 0; transition: transform 0.15s, box-shadow 0.15s; display: flex; flex-direction: column;">
+      style="background: var(--nw-bg, #faf7f2); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 10px; margin: 0; transition: transform 0.15s, box-shadow 0.15s; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; overflow: hidden;">
 
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <!-- Fila 1: Detalles de la Canción (Portada + Título + Artista) -->
+      <div style="display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; min-width: 0; overflow: hidden;">
 
-        <!-- Bloque Principal: Reordenar + Portada + Detalles -->
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 260px;">
+        <!-- Reordenar botones (Compacto) -->
+        <div style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;">
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveSongRequest(song, -1)"
+            title="Subir en playlist"
+            style="padding: 1px 4px; min-height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; width: 22px;">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveSongRequest(song, 1)"
+            title="Bajar en playlist"
+            style="padding: 1px 4px; min-height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; width: 22px;">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
 
-          <!-- Reordenar botones (Compacto) -->
-          <div style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;">
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveSongRequest(song, -1)"
-              title="Subir en playlist"
-              style="padding: 1px 4px; min-height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; width: 22px;">
-              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="18 15 12 9 6 15"></polyline>
-              </svg>
-            </button>
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="moveSongRequest(song, 1)"
-              title="Bajar en playlist"
-              style="padding: 1px 4px; min-height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; width: 22px;">
-              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
+        <!-- Portada (Más compacta) -->
+        <div (click)="playSong(song)"
+          style="cursor: pointer; flex-shrink: 0; position: relative; width: 44px; height: 44px; border-radius: 8px; overflow: hidden; background: #000; box-shadow: var(--nw-shadow-sm);"
+          title="Escuchar en reproductor">
+          <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Cover"
+            style="width: 100%; height: 100%; object-fit: cover;">
+          <div *ngIf="!song.thumbnailUrl"
+            style="display: flex; justify-content: center; align-items: center; height: 100%; color: var(--nw-text-3);">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
           </div>
+          <div
+            style="position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </div>
+        </div>
 
-          <!-- Portada (Más compacta) -->
-          <div (click)="playSong(song)"
-            style="cursor: pointer; flex-shrink: 0; position: relative; width: 50px; height: 50px; border-radius: 8px; overflow: hidden; background: #000; box-shadow: var(--nw-shadow-sm);"
+        <!-- Detalles de Canción -->
+        <div style="min-width: 0; flex: 1; overflow: hidden;">
+          <h3 (click)="playSong(song)"
+            style="margin: 0 0 2px; font-family: var(--nw-font-display); font-size: 13.5px; font-weight: 700; color: var(--nw-text); cursor: pointer; display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
             title="Escuchar en reproductor">
-            <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Cover"
-              style="width: 100%; height: 100%; object-fit: cover;">
-            <div *ngIf="!song.thumbnailUrl"
-              style="display: flex; justify-content: center; align-items: center; height: 100%; color: var(--nw-text-3);">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </div>
-            <div
-              style="position: absolute; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Detalles de Canción -->
-          <div style="min-width: 0; flex: 1;">
-            <h3 (click)="playSong(song)"
-              style="margin: 0 0 2px; font-family: var(--nw-font-display); font-size: 14.5px; font-weight: 700; color: var(--nw-text); cursor: pointer; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"
-              title="Escuchar en reproductor">
-              {{ song.title }}
-            </h3>
-            <p
-              style="margin: 0 0 2px; font-size: 12.5px; font-weight: 600; color: var(--nw-text-2); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round"
-                style="margin-right: 4px; color: var(--nw-text-3); flex-shrink:0;">
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                <line x1="12" y1="19" x2="12" y2="22" />
-              </svg>
-              {{ song.artist || 'Artista no especificado' }}
-            </p>
-            <p style="margin: 0; font-size: 11.5px; color: var(--nw-text-3); display: flex; align-items: center;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round"
-                style="margin-right: 4px; color: var(--nw-text-3); flex-shrink:0;">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Pedida por:&nbsp;<strong style="color: var(--nw-text);">{{ song.requesterName || 'Invitado' }}</strong>
-            </p>
-          </div>
+            {{ song.title }}
+          </h3>
+          <p
+            style="margin: 0 0 2px; font-size: 11.5px; font-weight: 600; color: var(--nw-text-2); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              style="margin-right: 4px; color: var(--nw-text-3); flex-shrink:0;">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+              <line x1="12" y1="19" x2="12" y2="22" />
+            </svg>
+            {{ song.artist || 'Artista no especificado' }}
+          </p>
+          <p style="margin: 0; font-size: 10.5px; color: var(--nw-text-3); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"
+              style="margin-right: 4px; color: var(--nw-text-3); flex-shrink:0;">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Pedida por:&nbsp;<strong style="color: var(--nw-text); text-overflow: ellipsis; overflow: hidden;">{{ song.requesterName || 'Invitado' }}</strong>
+          </p>
         </div>
+      </div>
 
-        <!-- Control de Estado por Dropdown con Badge SVG -->
-        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-          <span class="nw-pill" [class.warning]="song.status === 'pending'" [class.success]="song.status === 'approved'"
-            [class.accent]="song.status === 'played'" [class.danger]="song.status === 'rejected'"
-            style="padding: 3px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700;">
-            <ng-container [ngSwitch]="song.status">
-              <svg *ngSwitchCase="'pending'" viewBox="0 0 24 24" width="12" height="12" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <svg *ngSwitchCase="'approved'" viewBox="0 0 24 24" width="12" height="12" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <svg *ngSwitchCase="'played'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-              <svg *ngSwitchCase="'rejected'" viewBox="0 0 24 24" width="12" height="12" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-            </ng-container>
-            {{ song.status === 'pending' ? 'Pendiente' : (song.status === 'approved' ? 'Aprobada' : (song.status ===
-            'played' ? 'Reproducida' : 'Rechazada')) }}
-          </span>
+      <!-- Fila 2: Control de Estado por Dropdown con Badge SVG (Ocupa el 100% de la tarjeta) -->
+      <div style="display: flex; align-items: center; gap: 6px; width: 100%; justify-content: space-between; margin-top: 8px; box-sizing: border-box; overflow: hidden;">
+        <span class="nw-pill" [class.warning]="song.status === 'pending'" [class.success]="song.status === 'approved'"
+          [class.accent]="song.status === 'played'" [class.danger]="song.status === 'rejected'"
+          style="padding: 3px 6px; font-size: 10.5px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; flex-shrink: 0;">
+          <ng-container [ngSwitch]="song.status">
+            <svg *ngSwitchCase="'pending'" viewBox="0 0 24 24" width="11" height="11" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <svg *ngSwitchCase="'approved'" viewBox="0 0 24 24" width="11" height="11" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <svg *ngSwitchCase="'played'" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <svg *ngSwitchCase="'rejected'" viewBox="0 0 24 24" width="11" height="11" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </ng-container>
+          {{ song.status === 'pending' ? 'Pendiente' : (song.status === 'approved' ? 'Aprobada' : (song.status ===
+          'played' ? 'Reproducida' : 'Rechazada')) }}
+        </span>
 
-          <select class="nw-select"
-            style="padding: 2px 24px 2px 8px; font-size: 12px; height: 30px; width: auto; font-weight: 600; cursor: pointer; box-sizing: border-box;"
-            [ngModel]="song.status" (ngModelChange)="updateSongRequest(song, $event)">
-            <option value="pending">Marcar Pendiente</option>
-            <option value="approved">Aprobar Canción</option>
-            <option value="played">Marcar Reproducida</option>
-            <option value="rejected">Rechazar Canción</option>
-          </select>
-        </div>
+        <select class="nw-select"
+          style="padding: 2px 18px 2px 6px; font-size: 11.5px; height: 30px; flex: 1; min-width: 0; width: 100%; font-weight: 600; cursor: pointer; box-sizing: border-box;"
+          [ngModel]="song.status" (ngModelChange)="updateSongRequest(song, $event)">
+          <option value="pending">Marcar Pendiente</option>
+          <option value="approved">Aprobar Canción</option>
+          <option value="played">Marcar Reproducida</option>
+          <option value="rejected">Rechazar Canción</option>
+        </select>
       </div>
 
       <!-- Dedicatoria si existe -->
       <div *ngIf="song.dedication"
-        style="margin-top: 8px; padding: 6px 10px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border-left: 3px solid var(--nw-accent); font-size: 12px; color: var(--nw-text); font-style: italic; display: flex; align-items: center;">
+        style="margin-top: 8px; padding: 6px 10px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border-left: 3px solid var(--nw-accent); font-size: 11.5px; color: var(--nw-text); font-style: italic; display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round"
           style="margin-right: 6px; color: var(--nw-accent); flex-shrink: 0;">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span>"{{ song.dedication }}"</span>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">"{{ song.dedication }}"</span>
       </div>
 
       <!-- BARRA DE ACCIONES CON BOTONES ARMONIOSOS (Más compacta) -->
       <div
-        style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--nw-border); display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center;">
+        style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--nw-border); display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box; overflow: hidden;">
 
         <!-- Botón Escuchar -->
         <button *ngIf="song.sourceUrl || song.previewUrl" type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
           (click)="playSong(song)"
-          style="font-size: 11.5px; height: 26px; padding: 0 8px; display: inline-flex; align-items: center; gap: 4px;">
+          style="font-size: 11px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1 1 90px; box-sizing: border-box;">
           <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
@@ -581,14 +590,14 @@
         <!-- Botón Marcar como reproducida -->
         <button *ngIf="song.status !== 'played'" type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
           (click)="updateSongRequest(song, 'played')"
-          style="font-size: 11.5px; height: 26px; padding: 0 8px; display: inline-flex; align-items: center; gap: 4px;">
+          style="font-size: 11px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1 1 130px; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
           <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 18V5l12-2v13"></path>
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
           </svg>
-          Marcar como reproducida
+          <span>Marcar reproducida</span>
         </button>
       </div>
     </div>

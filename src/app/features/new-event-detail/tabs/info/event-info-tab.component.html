@@ -29,9 +29,11 @@
 
   <!-- Detalles del evento -->
   <div class="nw-card" [class.is-collapsed]="collapsedCards['details']" style="margin-top:20px;" *ngIf="event">
-    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
       (click)="toggleCard('details')">
-      <h3>Detalles del evento</h3>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; min-width:0;">
+        <h3>Detalles del evento</h3>
+      </div>
       <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('details')">
         {{ collapsedCards['details'] ? '▼ Expandir' : '▲ Colapsar' }}
       </button>
@@ -225,10 +227,9 @@
   <!-- Invitaciones -->
   <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['invitations']"
     style="margin-top:16px; padding: 20px 20px 24px;">
-    <div class="nw-card-header"
-      style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; margin-bottom: 16px;"
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom: 16px; cursor:pointer;"
       (click)="toggleCard('invitations')">
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap: wrap;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap; flex:1; min-width:0;">
         <h3 style="margin:0;">Invitaciones</h3>
         <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="$event.stopPropagation(); createInvitation()"
           [disabled]="saving || event.mode === 'external_dashboard' || invitations.length >= 1"
@@ -381,9 +382,9 @@
   <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['team']"
     style="margin-top:20px; border-top: 4px solid var(--nw-accent); padding: 24px;">
     <div class="nw-card-header"
-      style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor:pointer;"
+      style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom: 12px; cursor:pointer;"
       (click)="toggleCard('team')">
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; min-width:0;">
         <span style="color: var(--nw-accent); display: inline-flex; align-items: center; margin-right: 2px;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -419,10 +420,10 @@
       <!-- Formulario Agregar Miembro (Colapsable) -->
       <div
         style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px 20px; margin-bottom:20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
           (click)="toggleTeamInvite()">
           <h4
-            style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 8px;">
+            style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 8px; flex:1; min-width:0; flex-wrap:wrap;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -488,10 +489,10 @@
       <!-- Lista de Miembros (Colapsable) -->
       <div
         style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
           (click)="toggleTeamList()">
           <h4
-            style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 8px;">
+            style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 8px; flex:1; min-width:0; flex-wrap:wrap;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
               <path d="M9 11l3 3L22 4"></path>
@@ -637,9 +638,9 @@
   <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['external']"
     style="margin-top:20px; border-top: 4px solid var(--nw-accent-2); padding: 24px;">
     <div class="nw-card-header"
-      style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor:pointer;"
+      style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor:pointer; flex-wrap: wrap; gap: 10px;"
       (click)="toggleCard('external')">
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap: wrap;">
         <span style="color: var(--nw-accent-2); display: inline-flex; align-items: center; margin-right: 2px;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -696,7 +697,7 @@
           <input class="nw-input" [(ngModel)]="accessLinkForm.label" placeholder="Ej: Staff de Entrada"
             style="height:40px; padding:8px 12px; font-size:13px;">
         </div>
-        <div style="max-width:120px;">
+        <div>
           <span
             style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Días de
             validez</span>
@@ -712,11 +713,10 @@
       <!-- Lista de Links -->
       <div style="display:grid; gap:10px;">
         <ng-container *ngFor="let link of eventAccessLinks">
-          <div *ngIf="!link.revokedAt"
-            style="display:flex; align-items:center; justify-content:space-between; padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); gap:12px; font-size:13px; box-shadow: var(--nw-shadow-sm); transition: border-color var(--nw-duration) var(--nw-ease);">
-            <div style="min-width:0; display:grid; gap:4px; flex: 1;">
+          <div *ngIf="!link.revokedAt" class="nw-access-link-item">
+            <div style="min-width:0; display:grid; gap:4px; flex: 1; max-width: 100%;">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <strong style="font-size:14px; color:var(--nw-text);">{{ link.label || link.role }}</strong>
+                <strong style="font-size:14px; color:var(--nw-text); word-break: break-all; overflow-wrap: anywhere;">{{ link.label || link.role }}</strong>
                 <span class="nw-pill info"
                   style="font-size:10px; padding:2px 8px; text-transform:uppercase; font-weight: 700;">{{ link.role
                   }}</span>
@@ -724,33 +724,33 @@
                   style="font-size:10px; padding:2px 8px; background:rgba(74,127,98,0.08); color:var(--nw-success); font-weight: 700;">Activo</span>
               </div>
               <div
-                style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--nw-text-3); word-break:break-all; flex-wrap: wrap;">
-                <span (click)="copyAccessLinkUrl(link)"
-                  style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: var(--nw-accent);"
+                style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--nw-text-3); flex-wrap: wrap; min-width:0; max-width:100%;">
+                <div (click)="copyAccessLinkUrl(link)"
+                  style="cursor: pointer; display: flex; align-items: flex-start; gap: 4px; color: var(--nw-accent); word-break: break-all; overflow-wrap: anywhere; min-width: 0; max-width: 100%;"
                   title="Copiar enlace">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+                    stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px;">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                   </svg>
-                  <span style="text-decoration: underline; font-weight: 500;">{{ getNewAccessUrl(link) }}</span>
-                </span>
+                  <span style="text-decoration: underline; font-weight: 500; word-break: break-all; overflow-wrap: anywhere;">{{ getNewAccessUrl(link) }}</span>
+                </div>
                 <span>•</span>
-                <span>Expira: {{ formatShortDate(link.expiresAt) }}</span>
+                <span style="white-space: nowrap;">Expira: {{ formatShortDate(link.expiresAt) }}</span>
               </div>
               <div *ngIf="link.role === 'integration_api'"
-                style="display:grid; gap:6px; padding:10px 14px; background:var(--nw-surface-2); border-radius:8px; border:1px solid var(--nw-border); margin-top:6px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:12px; color:var(--nw-text-2);">
+                style="display:grid; gap:6px; padding:10px 14px; background:var(--nw-surface-2); border-radius:8px; border:1px solid var(--nw-border); margin-top:6px; min-width:0; max-width:100%; box-sizing: border-box;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 6px;">
+                  <span style="font-size:12px; color:var(--nw-text-2); word-break: break-all; overflow-wrap: anywhere;">
                     Token API:
-                    <strong>
+                    <strong style="word-break: break-all; overflow-wrap: anywhere;">
                       {{ isTokenVisible(link._id || link.id) ? (link.accessToken || link.tokenPreview || 'Disponible al
                       crear el enlace') : '••••••••••••••••••••••••••••••••••••••••' }}
                     </strong>
                   </span>
                   <button type="button" (click)="toggleTokenVisibility(link._id || link.id)"
                     class="nw-btn nw-btn-ghost nw-btn-sm"
-                    style="padding:2px 6px; height:24px; font-size:11px; display:inline-flex; align-items:center; gap:4px;">
+                    style="padding:2px 6px; height:24px; font-size:11px; display:inline-flex; align-items:center; gap:4px; flex-shrink: 0;">
                     <svg *ngIf="!isTokenVisible(link._id || link.id)" viewBox="0 0 24 24" width="13" height="13"
                       fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                       stroke-linejoin="round">
@@ -769,12 +769,12 @@
                   </button>
                 </div>
                 <code
-                  style="font-size:11px; color:var(--nw-text-3); word-break:break-all; font-family:monospace; background:var(--nw-surface); padding:4px 8px; border-radius:4px; border:1px solid var(--nw-border);">
+                  style="font-size:11px; color:var(--nw-text-3); word-break:break-all; overflow-wrap: anywhere; font-family:monospace; background:var(--nw-surface); padding:4px 8px; border-radius:4px; border:1px solid var(--nw-border); max-width: 100%; box-sizing: border-box;">
                   Authorization: Bearer {{ isTokenVisible(link._id || link.id) ? (link.accessToken || '[token]') : '••••••••••••••••••••••••••••••••••••••••' }}
                 </code>
               </div>
             </div>
-            <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+            <div class="nw-access-link-actions">
               <a class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getNewAccessUrl(link)" target="_blank"
                 style="height:32px; padding: 0 12px; font-size:12px;">Abrir</a>
               <button *ngIf="link.role === 'integration_api' && link.accessToken" class="nw-btn nw-btn-ghost nw-btn-sm"
@@ -810,18 +810,18 @@
           </div>
           <div *ngIf="!collapsedRevokedAccess" style="margin-top:10px; display:grid; gap:10px;">
             <ng-container *ngFor="let link of eventAccessLinks">
-              <div *ngIf="link.revokedAt"
-                style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); gap:12px; font-size:12.5px; opacity: 0.65;">
-                <div style="min-width:0; display:grid; gap:4px; flex: 1;">
+              <div *ngIf="link.revokedAt" class="nw-access-link-item"
+                style="padding:12px 14px; background:var(--nw-surface-2); opacity: 0.65;">
+                <div style="min-width:0; display:grid; gap:4px; flex: 1; max-width: 100%;">
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <strong style="font-size:13.5px; color:var(--nw-text-2);">{{ link.label || link.role }}</strong>
+                    <strong style="font-size:13.5px; color:var(--nw-text-2); word-break: break-all; overflow-wrap: anywhere;">{{ link.label || link.role }}</strong>
                     <span class="nw-pill"
                       style="font-size:9.5px; padding:2px 6px; text-transform:uppercase; font-weight: 700; background: var(--nw-border); color: var(--nw-text-3);">{{
                       link.role }}</span>
                     <span class="nw-pill danger"
                       style="font-size:9.5px; padding:2px 6px; font-weight: 700;">Revocado</span>
                   </div>
-                  <div style="font-size:11.5px; color:var(--nw-text-3);">
+                  <div style="font-size:11.5px; color:var(--nw-text-3); word-break: break-all; overflow-wrap: anywhere;">
                     Expira: {{ formatShortDate(link.expiresAt) }}
                   </div>
                 </div>
@@ -833,11 +833,12 @@
     </div>
   </div>
 
+
   <!-- Planes y Pagos -->
   <div class="nw-card" [class.is-collapsed]="collapsedCards['plans']" style="margin-top:16px;">
-    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
       (click)="toggleCard('plans')">
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1; min-width:0;">
         <h3>Planes y Pagos</h3>
         <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
         <span class="nw-pill warning" *ngIf="!currentPlan && !premiumActive">Plan Gratuito</span>

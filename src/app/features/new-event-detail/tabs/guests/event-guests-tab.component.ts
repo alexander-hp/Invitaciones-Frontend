@@ -291,7 +291,34 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     this.syncCrossFields('visibility', this.guestForm.visibilityGroup);
   }
 
-  syncCrossFields(source: 'group' | 'relationship' | 'visibility', val: string): void {
+  onRoleSelectChange(): void {
+    if (this.guestForm.roleSelect !== 'otro') {
+      this.guestForm.rolesText = this.guestForm.roleSelect;
+    } else {
+      if (this.availableUnifiedOptions.includes(this.guestForm.rolesText)) {
+        this.guestForm.rolesText = '';
+      }
+    }
+    this.syncCrossFields('role', this.guestForm.rolesText);
+  }
+
+  onGroupInput(): void {
+    this.syncCustomInput('group', this.guestForm.group);
+  }
+
+  onRelationshipInput(): void {
+    this.syncCustomInput('relationship', this.guestForm.relationshipLabel);
+  }
+
+  onVisibilityInput(): void {
+    this.syncCustomInput('visibility', this.guestForm.visibilityGroup);
+  }
+
+  onRoleInput(): void {
+    this.syncCustomInput('role', this.guestForm.rolesText);
+  }
+
+  syncCrossFields(source: 'group' | 'relationship' | 'visibility' | 'role', val: string): void {
     if (!val || val === 'otro') return;
 
     const selectVal = this.availableUnifiedOptions.includes(val) ? val : 'otro';
@@ -311,74 +338,33 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       this.guestForm.visibilitySelect = selectVal;
     }
 
-    if (!this.guestForm.roleSelect || this.guestForm.roleSelect === 'invitado') {
-      const lower = val.toLowerCase();
-      if (lower.includes('padrino') || lower.includes('madrina')) {
-        this.guestForm.roleSelect = 'padrino';
-        this.guestForm.rolesText = 'padrino';
-      } else if (lower.includes('dama') || lower.includes('best men')) {
-        this.guestForm.roleSelect = 'dama_honor';
-        this.guestForm.rolesText = 'dama_honor';
-      } else if (lower.includes('anfitrión') || lower.includes('novio') || lower.includes('festejado')) {
-        this.guestForm.roleSelect = 'anfitrion';
-        this.guestForm.rolesText = 'anfitrion';
-      } else if (lower.includes('staff') || lower.includes('proveedor')) {
-        this.guestForm.roleSelect = 'staff';
-        this.guestForm.rolesText = 'staff';
-      } else if (lower.includes('vip')) {
-        this.guestForm.roleSelect = 'vip';
-        this.guestForm.rolesText = 'vip';
-      } else if (lower.includes('familia')) {
-        this.guestForm.roleSelect = 'familia';
-        this.guestForm.rolesText = 'familia';
-      }
+    if (source !== 'role' && (!this.guestForm.rolesText || !this.guestForm.roleSelect)) {
+      this.guestForm.rolesText = val;
+      this.guestForm.roleSelect = selectVal;
     }
   }
 
-  onRoleSelectChange(): void {
-    if (this.guestForm.roleSelect !== 'otro') {
-      this.guestForm.rolesText = this.guestForm.roleSelect;
-    } else {
-      if (this.roleOptions.some(o => o.value === this.guestForm.rolesText)) {
-        this.guestForm.rolesText = '';
-      }
+  syncCustomInput(source: 'group' | 'relationship' | 'visibility' | 'role', val: string): void {
+    if (!val) return;
+
+    if (source !== 'group' && (!this.guestForm.group || this.guestForm.groupSelect === 'otro')) {
+      this.guestForm.group = val;
+      this.guestForm.groupSelect = 'otro';
     }
 
-    const roleVal = this.guestForm.roleSelect;
-    if (!roleVal || roleVal === 'otro') return;
-
-    if (!this.guestForm.relationshipSelect) {
-      const match = this.relationshipOptions.find(opt => {
-        const lowerOpt = opt.toLowerCase();
-        if (roleVal === 'padrino') return lowerOpt.includes('padrino') || lowerOpt.includes('madrina');
-        if (roleVal === 'dama_honor') return lowerOpt.includes('dama');
-        if (roleVal === 'anfitrion') return lowerOpt.includes('anfitrión') || lowerOpt.includes('anfitriona');
-        if (roleVal === 'staff') return lowerOpt.includes('staff');
-        if (roleVal === 'vip') return lowerOpt.includes('vip');
-        if (roleVal === 'familia') return lowerOpt.includes('familia') || lowerOpt.includes('padres');
-        if (roleVal === 'graduado') return lowerOpt.includes('graduado');
-        return false;
-      });
-      if (match) {
-        this.guestForm.relationshipSelect = match;
-        this.guestForm.relationshipLabel = match;
-      }
+    if (source !== 'relationship' && (!this.guestForm.relationshipLabel || this.guestForm.relationshipSelect === 'otro')) {
+      this.guestForm.relationshipLabel = val;
+      this.guestForm.relationshipSelect = 'otro';
     }
 
-    if (!this.guestForm.visibilitySelect) {
-      if (['padrino', 'vip'].includes(roleVal)) {
-        this.guestForm.visibilitySelect = 'vip';
-        this.guestForm.visibilityGroup = 'vip';
-      } else if (roleVal === 'staff') {
-        this.guestForm.visibilitySelect = 'staff';
-        this.guestForm.visibilityGroup = 'staff';
-      } else if (roleVal === 'anfitrion') {
-        this.guestForm.visibilitySelect = 'anfitriones';
-        this.guestForm.visibilityGroup = 'anfitriones';
-      } else if (roleVal === 'familia') {
-        this.guestForm.visibilitySelect = 'familia';
-        this.guestForm.visibilityGroup = 'familia';
-      }
+    if (source !== 'visibility' && (!this.guestForm.visibilityGroup || this.guestForm.visibilitySelect === 'otro')) {
+      this.guestForm.visibilityGroup = val;
+      this.guestForm.visibilitySelect = 'otro';
+    }
+
+    if (source !== 'role' && (!this.guestForm.rolesText || this.guestForm.roleSelect === 'otro')) {
+      this.guestForm.rolesText = val;
+      this.guestForm.roleSelect = 'otro';
     }
   }
 
@@ -479,7 +465,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       const visSel = !visVal ? '' : (this.availableUnifiedOptions.includes(visVal) ? visVal : 'otro');
 
       const rolesVal = (guest.roles || []).join(', ');
-      const roleSel = !rolesVal ? '' : (this.roleOptions.some(o => o.value === rolesVal) ? rolesVal : 'otro');
+      const roleSel = !rolesVal ? '' : (this.availableUnifiedOptions.includes(rolesVal) ? rolesVal : 'otro');
 
       this.guestForm = {
         name: guest.name || '',
