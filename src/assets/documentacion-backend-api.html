@@ -2398,6 +2398,170 @@
     // Initialize on load
     window.onload = init;
   </script>
+
+  <!-- 🛡️ ADMIN GUARD OVERLAY & SCRIPT 🛡️ -->
+  <style>
+    #unauthOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #faf7f2;
+      color: #2e2621;
+      font-family: 'Inter', system-ui, sans-serif;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #unauthOverlay.visible {
+      display: flex;
+    }
+    .unauth-box {
+      max-width: 480px;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #eadecc;
+      border-radius: 24px;
+      padding: 38px 30px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(46, 37, 33, 0.08);
+    }
+    .unauth-box-code {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #dc2626;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .unauth-box-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #1e1b18;
+      margin: 0 0 10px;
+    }
+    .unauth-box-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #5c5248;
+      margin-bottom: 24px;
+    }
+    .unauth-box-text strong {
+      color: #dc2626;
+    }
+    .unauth-box-text code {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-weight: 700;
+    }
+    .unauth-box-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .unauth-box-btn {
+      padding: 11px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .unauth-box-btn.primary {
+      background: #c09c78;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(192, 156, 120, 0.28);
+    }
+    .unauth-box-btn.primary:hover {
+      background: #ad8a66;
+    }
+    .unauth-box-btn.secondary {
+      background: #ffffff;
+      color: #2e2621;
+      border: 1.5px solid #dcd2c4;
+    }
+    .unauth-box-btn.secondary:hover {
+      background: #f5f1ea;
+    }
+  </style>
+
+  <div id="unauthOverlay">
+    <div class="unauth-box">
+      <div class="unauth-box-code">403 · Acceso No Autorizado</div>
+      <div class="unauth-box-title">Documentación Restringida</div>
+      <p class="unauth-box-text" id="unauthMessage">
+        Esta sección es de uso exclusivo para usuarios con rol de <strong>Administrador</strong> (<code>admin</code>). Debes iniciar sesión con una cuenta autorizada.
+      </p>
+      <div class="unauth-box-btns">
+        <a href="/new/dashboard" class="unauth-box-btn primary">Ir al Dashboard</a>
+        <a href="/new/login" class="unauth-box-btn secondary">Iniciar Sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async function verifyAdminAccess() {
+      const overlay = document.getElementById('unauthOverlay');
+      const msgEl = document.getElementById('unauthMessage');
+      const token = localStorage.getItem('invitaciones_token');
+
+      function blockAccess(reason) {
+        if (msgEl && reason) msgEl.innerHTML = reason;
+        if (overlay) overlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+      }
+
+      if (!token) {
+        blockAccess('No se detectó una sesión activa. Debes iniciar sesión con una cuenta de <strong>Administrador</strong>.');
+        return;
+      }
+
+      try {
+        const endpoints = ['/api/auth/me', 'http://localhost:3000/api/auth/me'];
+        let user = null;
+        for (const url of endpoints) {
+          try {
+            const res = await fetch(url, {
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              user = data.user;
+              break;
+            }
+          } catch (e) {
+            // try next url
+          }
+        }
+
+        if (!user) {
+          blockAccess('Tu sesión ha expirado o no es válida. Por favor, inicia sesión nuevamente.');
+          return;
+        }
+
+        if (user.role !== 'admin') {
+          blockAccess('Tu cuenta actual (<strong>' + (user.email || 'usuario') + '</strong>) tiene el rol <code>' + (user.role || 'client') + '</code>. Esta documentación requiere rol de <strong>Administrador</strong> (<code>admin</code>).');
+          return;
+        }
+
+        // Access granted - keep normal flow
+        if (overlay) overlay.classList.remove('visible');
+        document.body.style.overflow = '';
+      } catch (err) {
+        blockAccess('Error al verificar permisos de administrador. Por favor, vuelve a iniciar sesión.');
+      }
+    })();
+  </script>
+
 </body>
 
 </html>

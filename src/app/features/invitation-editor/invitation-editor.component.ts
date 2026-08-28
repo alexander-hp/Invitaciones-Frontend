@@ -192,10 +192,14 @@ export class InvitationEditorComponent implements OnInit {
         this.saving = false;
       },
       error: (error) => {
-        const statusCode = error.status ? ` (HTTP ${error.status})` : '';
-        if (error.error?.details?.fieldErrors?.body) {
+        const raw = error.error?.message || error.message || '';
+        if (raw.includes('E11000') || raw.includes('duplicate key') || raw.includes('slug_1') || raw.includes('findAndModify')) {
+          this.error = '❌ Esta URL (slug) ya está ocupada por otra invitación. Por favor elige un enlace o nombre diferente.';
+        } else if (error.error?.details?.fieldErrors?.body) {
+          const statusCode = error.status ? ` (HTTP ${error.status})` : '';
           this.error = `❌ Error de validacion${statusCode}: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
         } else {
+          const statusCode = error.status ? ` (HTTP ${error.status})` : '';
           this.error = `❌ Error al guardar${statusCode}: ${error.error?.message || 'No se pudo guardar.'}`;
         }
         this.saving = false;
@@ -583,11 +587,27 @@ export class InvitationEditorComponent implements OnInit {
     });
   }
 
+  private formatDateForDateTimeLocalInput(dateVal: any): string {
+    if (!dateVal) return '';
+    if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateVal)) {
+      return dateVal;
+    }
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return typeof dateVal === 'string' ? dateVal : '';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
   private ensureRsvpSettings(): void {
     if (!this.invitation) return;
     this.invitation.rsvpSettings = {
       ...this.invitation.rsvpSettings,
-      deadline: this.invitation.rsvpSettings?.deadline,
+      deadline: this.formatDateForDateTimeLocalInput(this.invitation.rsvpSettings?.deadline),
       allowMaybe: this.invitation.rsvpSettings?.allowMaybe !== false,
       allowChangesUntilDeadline: this.invitation.rsvpSettings?.allowChangesUntilDeadline !== false,
       declineRequiresConfirmation: this.invitation.rsvpSettings?.declineRequiresConfirmation !== false,

@@ -163,6 +163,14 @@
     overflow: hidden;
   }
 
+  @media (max-width: 640px) {
+    .book-spread-canvas {
+      padding: 16px 10px !important;
+      border-width: 4px !important;
+      border-radius: 14px !important;
+    }
+  }
+
   .book-spine-crease {
     position: absolute;
     top: 0;
@@ -224,13 +232,22 @@
     <div>
       <h2
         style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        📖 Libro de Recuerdos del Evento
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        Libro de Recuerdos del Evento
         <span class="nw-badge"
           style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
           {{ availableAssets.length }} fotos
         </span>
-        <span class="nw-pill success" style="font-size: 12px; font-weight: 700;">
-          ✨ {{ bookPages.length }} páginas
+        <span class="nw-pill success" style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          {{ bookPages.length }} páginas
         </span>
       </h2>
       <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
@@ -239,37 +256,58 @@
       </p>
     </div>
 
-    <!-- Botones de Acción Principales Mejor Ubicados a la Derecha -->
-    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <!-- Botones de Acción Principales Responsivos -->
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
       <!-- Botón Descargar Hoja (Verde) -->
       <button type="button" (click)="downloadBookPageImage('widgetBookPageToExport')" [disabled]="isExportingBookPage"
-        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; border-radius: 20px; padding: 0 16px; height: 38px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">
+        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; border-radius: 20px; padding: 0 16px; height: 38px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); flex: 1 1 auto; min-width: 160px; box-sizing: border-box;">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span>📥 Descargar Hoja "{{ currentBookPage.title }}"</span>
+        <span>Descargar Hoja "{{ currentBookPage.title }}"</span>
       </button>
 
       <!-- Botón Pantalla Completa -->
       <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openFullscreenBookPage()"
-        style="height: 38px; font-size: 13px; font-weight: 600; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-        <span>📖 Libro Completo</span>
+        style="height: 38px; font-size: 12.5px; font-weight: 600; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; min-width: 130px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Libro Completo</span>
       </button>
 
       <!-- Botón Slideshow -->
       <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openFullscreenBook(0)"
-        style="height: 38px; font-size: 13px; font-weight: 600; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-        <span>📺 Slideshow</span>
+        style="height: 38px; font-size: 12.5px; font-weight: 600; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; min-width: 110px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>Slideshow</span>
       </button>
     </div>
   </div>
 
-  <!-- Pestañas de Hojas / Categorías del Libro (Barra de Pills Segmentadas en 1 Fila Horizontal) -->
-  <div
-    style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+  <!-- Selector de Hojas solo en Mobile (<=640px) -->
+  <div class="nw-mobile-status-select" style="width: 100%; margin-bottom: 20px;">
+    <select class="nw-select" [ngModel]="bookPageIndex" (ngModelChange)="goToBookPage($event)"
+      style="height: 40px; font-size: 13px; font-weight: 600; padding: 0 12px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+      <option *ngFor="let page of bookPages; let idx = index" [value]="idx">
+        {{ page.icon }} {{ page.title }} ({{ page.assets.length }})
+      </option>
+    </select>
+  </div>
+
+  <!-- Pestañas de Hojas en Desktop (>640px) -->
+  <div class="nw-desktop-status-pills"
+    style="gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
     <button *ngFor="let page of bookPages; let idx = index" type="button" class="nw-btn nw-btn-sm"
       (click)="goToBookPage(idx)" [class.nw-btn-primary]="bookPageIndex === idx"
       [class.nw-btn-ghost]="bookPageIndex !== idx"
@@ -463,43 +501,46 @@
 
   <!-- Barra Superior de Control Pantalla Completa -->
   <div
-    style="position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%); color: #ffffff;">
-    <div style="display: flex; align-items: center; gap: 14px;">
-      <span style="font-size: 26px;">📖</span>
-      <div>
+    style="position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%); color: #ffffff; flex-wrap: wrap; gap: 10px; width: 100%; box-sizing: border-box;">
+    
+    <!-- Título e Info -->
+    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 180px;">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+      <div style="min-width: 0;">
         <h3
-          style="margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; font-family: var(--nw-font-display);">
+          style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; font-family: var(--nw-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
           Libro de Recuerdos del Evento
         </h3>
-        <p style="margin: 2px 0 0; font-size: 12.5px; color: #d6c7b9;" *ngIf="fullscreenAssets.length > 0">
-          Fotografía <strong>{{ fullscreenIndex + 1 }}</strong> de <strong>{{ fullscreenAssets.length }}</strong> • {{
-          eventTitle }}
+        <p style="margin: 2px 0 0; font-size: 12px; color: #d6c7b9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" *ngIf="fullscreenAssets.length > 0">
+          Foto {{ fullscreenIndex + 1 }} de {{ fullscreenAssets.length }} • {{ eventTitle }}
         </p>
       </div>
     </div>
 
-    <!-- Filtro por Álbum en Pantalla Completa + Acciones en 1 Fila -->
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; flex-shrink: 0;">
+    <!-- Filtro y Acciones -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 220px; justify-content: flex-end;">
       <select [ngModel]="fullscreenFilter" (ngModelChange)="setFullscreenFilter($event)"
-        style="height: 38px; border-radius: 20px; background: rgba(255,255,255,0.12); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); padding: 0 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; max-width: 220px; text-overflow: ellipsis; white-space: nowrap;">
-        <option value="all" style="background: #111; color: #fff;">🖼️ Todas las fotos ({{ availableAssets.length }})
-        </option>
-        <option [value]="TAG_SUPER_ENCANTA" style="background: #111; color: #fff;">⭐ Me super encanta ({{
-          getTagCount(TAG_SUPER_ENCANTA) }})</option>
-        <option [value]="TAG_ME_ENCANTA" style="background: #111; color: #fff;">❤️ Me encanta ({{
-          getTagCount(TAG_ME_ENCANTA) }})</option>
-        <option *ngFor="let tag of availableTags" [value]="tag" style="background: #111; color: #fff;">🏷️ {{ tag }}
-        </option>
+        style="height: 36px; border-radius: 20px; background: rgba(255,255,255,0.12); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); padding: 0 10px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; min-width: 130px; box-sizing: border-box; text-overflow: ellipsis; white-space: nowrap;">
+        <option value="all" style="background: #111; color: #fff;">🖼️ Todas las fotos ({{ availableAssets.length }})</option>
+        <option [value]="TAG_SUPER_ENCANTA" style="background: #111; color: #fff;">⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})</option>
+        <option [value]="TAG_ME_ENCANTA" style="background: #111; color: #fff;">❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})</option>
+        <option *ngFor="let tag of availableTags" [value]="tag" style="background: #111; color: #fff;">🏷️ {{ tag }}</option>
       </select>
 
       <button type="button" (click)="toggleSlideshow()"
         [style.background]="isPlayingSlideshow ? '#f59e0b' : 'rgba(255,255,255,0.15)'"
-        style="height: 38px; border-radius: 20px; padding: 0 16px; font-size: 12.5px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; flex-shrink: 0;">
-        {{ isPlayingSlideshow ? '⏸️ Pausar Slideshow' : '▶️ Reproducción Automática' }}
+        style="height: 36px; border-radius: 20px; padding: 0 14px; font-size: 12px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; flex-shrink: 0;">
+        <svg *ngIf="isPlayingSlideshow" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        <svg *ngIf="!isPlayingSlideshow" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span>{{ isPlayingSlideshow ? 'Pausar' : 'Reproducir' }}</span>
       </button>
 
       <button type="button" (click)="closeFullscreenBook()" title="Cerrar Pantalla Completa (ESC)"
-        style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         ✕
       </button>
     </div>
@@ -582,63 +623,85 @@
 
 <!-- 📖 MODAL PANTALLA COMPLETA - HOJA COMPLETA DEL LIBRO DE RECUERDOS -->
 <div *ngIf="fullscreenBookPageOpen"
-  style="position: fixed; inset: 0; z-index: 99999; background: #0f0d0b; color: #ffffff; display: flex; flex-direction: column; overflow-y: auto; padding: 20px; user-select: none;">
+  style="position: fixed; inset: 0; z-index: 99999; background: #0f0d0b; color: #ffffff; display: flex; flex-direction: column; overflow-y: auto; padding: 16px; user-select: none;">
 
   <!-- Barra Superior de Control Pantalla Completa -->
   <div
-    style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.15); margin-bottom: 20px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <span style="font-size: 28px;">📖</span>
-      <div>
-        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; font-family: var(--nw-font-display);">
-          Libro de Recuerdos del Evento
-        </h3>
-        <p style="margin: 2px 0 0; font-size: 12.5px; color: #a89f97;">
-          {{ eventTitle }} • Página <strong>{{ bookPageIndex + 1 }}</strong> de
-          <strong>{{ bookPages.length }}</strong>
-        </p>
+    style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.15); margin-bottom: 16px; width: 100%; box-sizing: border-box;">
+    
+    <!-- Fila 1: Título a la Izquierda + Botón CERRAR (✕) Arriba a la Derecha -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <div style="min-width: 0;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; font-family: var(--nw-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            Libro de Recuerdos del Evento
+          </h3>
+          <p style="margin: 2px 0 0; font-size: 12px; color: #a89f97; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ eventTitle }} • Página {{ bookPageIndex + 1 }} de {{ bookPages.length }}
+          </p>
+        </div>
       </div>
+
+      <!-- Botón CERRAR (✕) arriba a la derecha -->
+      <button type="button" (click)="closeFullscreenBookPage()" title="Cerrar Pantalla Completa (ESC)"
+        style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        ✕
+      </button>
     </div>
 
-    <!-- Botones de Navegación de Hojas y Salir -->
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <!-- Fila 2: Botón Descargar Hoja + Botones Anterior y Siguiente abajo -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
       <button type="button" (click)="downloadBookPageImage('fullscreenWidgetBookPageToExport')"
         [disabled]="isExportingBookPage"
-        style="height: 38px; border-radius: 20px; padding: 0 16px; font-size: 13px; font-weight: 700; color: #ffffff; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.35); display: inline-flex; align-items: center; gap: 6px;">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"
+        style="height: 38px; border-radius: 20px; padding: 0 16px; font-size: 12.5px; font-weight: 700; color: #ffffff; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.35); display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 180px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span>📥 Descargar Hoja "{{ currentBookPage.title }}"</span>
+        <span>Descargar Hoja "{{ currentBookPage.title }}"</span>
       </button>
 
-      <button type="button" class="nw-btn nw-btn-secondary" (click)="prevBookPage()"
-        style="height: 38px; border-radius: 20px; padding: 0 16px; font-size: 13px; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer;">
-        ◄ Hoja Anterior
-      </button>
+      <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 180px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="prevBookPage()"
+          style="height: 38px; border-radius: 20px; padding: 0 12px; font-size: 12.5px; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <span>Anterior</span>
+        </button>
 
-      <button type="button" class="nw-btn nw-btn-secondary" (click)="nextBookPage()"
-        style="height: 38px; border-radius: 20px; padding: 0 16px; font-size: 13px; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer;">
-        Hoja Siguiente ►
-      </button>
-
-      <button type="button" (click)="closeFullscreenBookPage()" title="Cerrar Pantalla Completa (ESC)"
-        style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-        ✕
-      </button>
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="nextBookPage()"
+          style="height: 38px; border-radius: 20px; padding: 0 12px; font-size: 12.5px; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1;">
+          <span>Siguiente</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Pestañas de Hojas / Categorías del Libro en Pantalla Completa -->
-  <div
-    style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 14px; margin-bottom: 20px; scrollbar-width: thin; justify-content: center;">
+  <!-- Selector de Hojas solo en Mobile (<=640px) -->
+  <div class="nw-mobile-status-select" style="width: 100%; margin-bottom: 16px;">
+    <select class="nw-select" [ngModel]="bookPageIndex" (ngModelChange)="goToBookPage($event)"
+      style="height: 38px; font-size: 13px; font-weight: 600; padding: 0 12px; width: 100%; border-color: rgba(255,255,255,0.25); background: #1c1917; color: #ffffff; cursor: pointer;">
+      <option *ngFor="let page of bookPages; let idx = index" [value]="idx" style="background: #111; color: #fff;">
+        {{ page.icon }} {{ page.title }} ({{ page.assets.length }})
+      </option>
+    </select>
+  </div>
+
+  <!-- Pestañas de Hojas en Desktop (>640px) -->
+  <div class="nw-desktop-status-pills"
+    style="gap: 8px; overflow-x: auto; padding-bottom: 14px; margin-bottom: 20px; scrollbar-width: thin; justify-content: center;">
     <button *ngFor="let page of bookPages; let idx = index" type="button" (click)="goToBookPage(idx)"
       [style.background]="bookPageIndex === idx ? 'var(--nw-accent, #c09c78)' : 'rgba(255,255,255,0.08)'"
       [style.color]="bookPageIndex === idx ? '#ffffff' : '#d7ccc8'"
       [style.border]="bookPageIndex === idx ? '1px solid #d97706' : '1px solid rgba(255,255,255,0.15)'"
-      style="height: 40px; padding: 0 20px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
+      style="height: 38px; padding: 0 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
       {{ page.icon }} {{ page.title }} ({{ page.assets.length }})
     </button>
   </div>
