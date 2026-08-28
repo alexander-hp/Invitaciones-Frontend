@@ -574,9 +574,20 @@
         Presentación Completa
       </button>
 
-      <!-- Selector de Modos (Carrusel / Cuadrícula / Lista) -->
-      <div
-        style="display: flex; gap: 4px; background: var(--nw-surface-2, #f5f1ea); padding: 4px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); align-items: center;">
+      <!-- Selector de Vista en Mobile (<=640px) -->
+      <div class="nw-mobile-status-select" style="flex: 1; min-width: 150px;">
+        <select class="nw-select" [ngModel]="viewMode" (ngModelChange)="setViewMode($event)"
+          style="height: 36px; font-size: 12.5px; font-weight: 600; padding: 0 10px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+          <option value="carousel">Vista Carrusel</option>
+          <option value="grid">Vista Cuadrícula</option>
+          <option value="list">Vista Lista</option>
+          <option value="book">Libro de Recuerdos</option>
+        </select>
+      </div>
+
+      <!-- Selector de Modos en Desktop (>640px) -->
+      <div class="nw-desktop-status-pills"
+        style="gap: 4px; background: var(--nw-surface-2, #f5f1ea); padding: 4px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); align-items: center;">
         <button type="button" class="nw-btn nw-btn-sm" (click)="setViewMode('carousel')"
           [class.nw-btn-primary]="viewMode === 'carousel'" [class.nw-btn-ghost]="viewMode !== 'carousel'"
           style="height: 34px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;">
@@ -619,7 +630,11 @@
         <button type="button" class="nw-btn nw-btn-sm" (click)="setViewMode('book')"
           [class.nw-btn-primary]="viewMode === 'book'" [class.nw-btn-ghost]="viewMode !== 'book'"
           style="height: 34px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;">
-          <span>📖</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
           Libro de Recuerdos
         </button>
       </div>
@@ -640,7 +655,23 @@
       </span>
     </div>
 
-    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+    <!-- Dropdown de Álbumes Temáticos solo en Mobile (<=640px) -->
+    <div class="nw-mobile-status-select" style="width: 100%;">
+      <select class="nw-select" [ngModel]="selectedTagFilter" (ngModelChange)="setTagFilter($event)"
+        style="height: 40px; font-size: 13px; font-weight: 600; padding: 0 12px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+        <option value="all">🖼️ Todos los Álbumes ({{ allApprovedAssets.length }})</option>
+        <option [value]="TAG_SUPER_ENCANTA">⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})</option>
+        <option [value]="TAG_ME_ENCANTA">❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})</option>
+        <ng-container *ngFor="let tag of availableTags">
+          <option *ngIf="tag !== TAG_SUPER_ENCANTA && tag !== TAG_ME_ENCANTA" [value]="tag">
+            🏷️ {{ tag }} ({{ getTagCount(tag) }})
+          </option>
+        </ng-container>
+      </select>
+    </div>
+
+    <!-- Botones Pills de Álbumes Temáticos en Desktop (>640px) -->
+    <div class="nw-desktop-status-pills" style="gap: 8px; align-items: center;">
       <!-- Álbum: Todos -->
       <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter('all')"
         [style.background]="selectedTagFilter === 'all' ? 'var(--nw-accent, #c09c78)' : 'var(--nw-surface, #ffffff)'"
