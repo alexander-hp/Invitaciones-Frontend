@@ -24,6 +24,31 @@ export class NewInvitationSectionsComponent implements OnInit {
   saving = false;
   error = '';
   message = '';
+  private messageTimeout?: any;
+  private errorTimeout?: any;
+
+  showSuccess(msg: string): void {
+    this.message = msg;
+    if (this.messageTimeout) clearTimeout(this.messageTimeout);
+    this.messageTimeout = setTimeout(() => { this.message = ''; }, 3500);
+  }
+
+  getFriendlyErrorMessage(err: any): string {
+    const raw = err.error?.message || err.message || '';
+    if (raw.includes('E11000') || raw.includes('duplicate key') || raw.includes('slug_1') || raw.includes('findAndModify')) {
+      return '❌ Esta URL (slug) ya está ocupada por otra invitación. Por favor elige una dirección o enlace diferente.';
+    }
+    if (err.error?.details?.fieldErrors?.body) {
+      return `Error de validación: ${JSON.stringify(err.error.details.fieldErrors.body)}`;
+    }
+    return raw || 'Error al actualizar la invitación.';
+  }
+
+  showError(msg: string): void {
+    this.error = msg;
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+    this.errorTimeout = setTimeout(() => { this.error = ''; }, 5000);
+  }
 
   sectionSettings: SectionSettings = {
     story: true,
@@ -36,7 +61,9 @@ export class NewInvitationSectionsComponent implements OnInit {
     lodging: false,
     gallery: true,
     guestAlbum: true,
-    dedications: true
+    dedications: true,
+    backgroundMusic: true,
+    songRequests: true
   };
 
   giftSettings: GiftSettings = {
@@ -87,7 +114,9 @@ export class NewInvitationSectionsComponent implements OnInit {
 
   toggleSection(key: string): void {
     if (key === 'songRequests') {
-      this.songRequestSettings.enabled = !this.songRequestSettings.enabled;
+      const nextVal = !this.songRequestSettings.enabled;
+      this.songRequestSettings.enabled = nextVal;
+      this.sectionSettings.songRequests = nextVal;
       return;
     }
     const current = Boolean((this.sectionSettings as any)[key]);
@@ -163,6 +192,9 @@ export class NewInvitationSectionsComponent implements OnInit {
         // Hydrate Section Settings
         if (this.invitation.content?.sectionSettings) {
           this.sectionSettings = { ...this.sectionSettings, ...this.invitation.content.sectionSettings };
+          if (this.invitation.content.sectionSettings.songRequests !== undefined) {
+            this.songRequestSettings.enabled = Boolean(this.invitation.content.sectionSettings.songRequests);
+          }
         }
 
         // Hydrate Gift Settings
@@ -183,8 +215,9 @@ export class NewInvitationSectionsComponent implements OnInit {
           this.api.getEvent(eventId).subscribe({
             next: ({ event }) => {
               this.event = event;
-              if (event.externalContent?.songRequestSettings) {
+              if (event.externalContent?.songRequestSettings?.enabled !== undefined) {
                 this.songRequestSettings = { ...this.songRequestSettings, ...event.externalContent.songRequestSettings };
+                this.sectionSettings.songRequests = Boolean(event.externalContent.songRequestSettings.enabled);
               }
               this.loading = false;
             },
@@ -238,12 +271,25 @@ export class NewInvitationSectionsComponent implements OnInit {
     this.error = '';
     this.message = '';
 
-    const rawContent: InvitationContent = {
+    const rawContent: any = {
       ...this.invitation.content,
-      sectionSettings: { ...this.sectionSettings },
+      sectionSettings: {
+        ...this.sectionSettings,
+        songRequests: Boolean(this.songRequestSettings.enabled)
+      },
       giftSettings: { ...this.giftSettings },
       dedicationSettings: { ...this.dedicationSettings }
     };
+
+    if (rawContent.storyTitle !== undefined) {
+      rawContent.subheadline = rawContent.storyTitle;
+    }
+    if (rawContent.storyBody !== undefined) {
+      rawContent.message = rawContent.storyBody;
+    }
+
+    delete rawContent.storyTitle;
+    delete rawContent.storyBody;
 
     const sanitizedContent = this.sanitizePayload(rawContent);
 
@@ -264,25 +310,21 @@ export class NewInvitationSectionsComponent implements OnInit {
             next: ({ event }) => {
               this.event = event;
               this.saving = false;
-              this.message = 'Secciones y configuraciones guardadas con éxito.';
+              this.showSuccess('Secciones y configuraciones guardadas con éxito.');
             },
             error: err => {
               this.saving = false;
-              this.error = err.error?.message || 'Error al actualizar la configuración del evento.';
+              this.showError(err.error?.message || 'Error al actualizar la configuración del evento.');
             }
           });
         } else {
           this.saving = false;
-          this.message = 'Secciones guardadas con éxito.';
+          this.showSuccess('Secciones guardadas con éxito.');
         }
       },
       error: err => {
         this.saving = false;
-        if (err.error?.details?.fieldErrors?.body) {
-          this.error = `Error de validación: ${JSON.stringify(err.error.details.fieldErrors.body)}`;
-        } else {
-          this.error = err.error?.message || 'Error al actualizar la invitación.';
-        }
+        this.showError(this.getFriendlyErrorMessage(err));
       }
     });
   }

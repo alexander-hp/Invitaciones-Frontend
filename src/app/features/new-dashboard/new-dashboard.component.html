@@ -186,7 +186,7 @@
     </section>
 
     <!-- Additional Stats & Utilities Section -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;" *ngIf="!loading && metrics.guests > 0">
+    <div class="nw-stats-grid" *ngIf="!loading && metrics.guests > 0">
       
       <!-- Confirmation Rate -->
       <section class="nw-card" style="display: flex; flex-direction: column;">
@@ -257,8 +257,7 @@
         <p>Crea tu primer evento para comenzar a gestionar invitados y mesas.</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;"
-        *ngIf="events.length > 0">
+      <div class="nw-events-grid" *ngIf="events.length > 0">
         <div class="nw-event-card" *ngFor="let event of events" (click)="goToEvent(event)" style="cursor: pointer;" [attr.data-type]="getNormalizedEventType(event)">
           <div class="card-banner">
             <div class="card-banner-bg" *ngIf="!getCoverImage(event)"></div>

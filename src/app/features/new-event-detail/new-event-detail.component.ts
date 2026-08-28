@@ -39,33 +39,35 @@ export class NewEventDetailComponent implements OnInit {
 
   showCreateWizardModal = false;
   wizardSections: Record<string, boolean> = {
-    cover: true,
-    countdown: true,
-    details: true,
-    location: true,
-    rsvp: true,
-    gift: true,
-    dressCode: true,
-    schedule: true,
+    guestAlbum: true,
     gallery: true,
+    songRequests: true,
     dedications: true,
-    music: true,
-    passes: true
+    rsvp: true,
+    story: true,
+    locations: true,
+    itinerary: true,
+    dressCode: true,
+    giftRegistry: true,
+    digitalEnvelope: false,
+    lodging: false,
+    backgroundMusic: false
   };
 
   wizardSectionDefinitions: WizardSectionDef[] = [
-    { key: 'cover', icon: '', label: 'Portada / Bienvenida', description: 'Imagen principal y título de la invitación.' },
-    { key: 'countdown', icon: '', label: 'Cuenta Regresiva', description: 'Temporizador en vivo hacia el día del evento.' },
-    { key: 'details', icon: '', label: 'Detalles y Horarios', description: 'Fecha, hora y mensaje de los novios/anfitriones.' },
-    { key: 'location', icon: '', label: 'Ubicación y Mapa', description: 'Dirección del lugar con enlace a Google Maps / Waze.' },
-    { key: 'rsvp', icon: '', label: 'Confirmación RSVP', description: 'Formulario para que los invitados confirmen asistencia.' },
-    { key: 'gift', icon: '', label: 'Mesa de Regalos / Sobre', description: 'Datos bancarios o enlaces a mesas de regalos.' },
-    { key: 'dressCode', icon: '', label: 'Código de Vestimenta', description: 'Sugerencias de vestuario y paleta de colores.' },
-    { key: 'schedule', icon: '', label: 'Itinerario / Programa', description: 'Cronograma de actividades durante el evento.' },
-    { key: 'gallery', icon: '', label: 'Galería de Fotos', description: 'Álbum de fotos oficial y fotos de invitados.' },
-    { key: 'dedications', icon: '', label: 'Muro de Dedicatorias', description: 'Libro de visitas para que dejen sus mensajes.' },
-    { key: 'music', icon: '', label: 'Peticiones de Canciones', description: 'Los invitados pueden proponer canciones al DJ.' },
-    { key: 'passes', icon: '', label: 'Pases VIP / QR', description: 'Pase digital individual con código QR para entrada.' }
+    { key: 'guestAlbum', icon: '', label: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real durante el evento.' },
+    { key: 'gallery', icon: '', label: 'Galería Fotográfica Oficial', description: 'Muestra la galería con fotos del evento o sesión de los novios/festejados.' },
+    { key: 'songRequests', icon: '', label: 'Música / Pedir Canciones (DJ)', description: 'Módulo interactivo para que los invitados sugieran canciones al DJ.' },
+    { key: 'dedications', icon: '', label: 'Dedicatorias y Libro de Firmas', description: 'Muro de mensajes, felicitaciones y buenos deseos para los festejados.' },
+    { key: 'rsvp', icon: '', label: 'Confirmación de Asistencia (RSVP)', description: 'Formulario de confirmación de asistencia, pases y acompañantes.' },
+    { key: 'story', icon: '', label: 'Nuestra Historia', description: 'Reseña o historia de la pareja / festejado(a).' },
+    { key: 'locations', icon: '', label: 'Mapas y Ubicaciones', description: 'Direcciones de misa/recepción con enlaces directos a Google Maps o Waze.' },
+    { key: 'itinerary', icon: '', label: 'Itinerario / Cronograma', description: 'Agenda con horarios y actividades del evento.' },
+    { key: 'dressCode', icon: '', label: 'Código de Vestimenta', description: 'Indicaciones de etiqueta y vestuario sugerido para los asistentes.' },
+    { key: 'giftRegistry', icon: '', label: 'Mesa de Regalos', description: 'Catálogo y enlaces externos a tiendas (Amazon, Liverpool, etc.).' },
+    { key: 'digitalEnvelope', icon: '', label: 'Sobre Digital / Transferencias', description: 'Datos bancarios, CLABE y código QR para obsequios en efectivo.' },
+    { key: 'lodging', icon: '', label: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos al evento.' },
+    { key: 'backgroundMusic', icon: '', label: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
   ];
 
   constructor(
@@ -289,7 +291,7 @@ export class NewEventDetailComponent implements OnInit {
       } else if (preset === 'none') {
         this.wizardSections[sec.key] = false;
       } else if (preset === 'essential') {
-        this.wizardSections[sec.key] = ['cover', 'details', 'location', 'rsvp', 'passes'].includes(sec.key);
+        this.wizardSections[sec.key] = ['rsvp', 'locations', 'itinerary', 'dressCode', 'story'].includes(sec.key);
       }
     }
   }
@@ -302,12 +304,67 @@ export class NewEventDetailComponent implements OnInit {
     if (!this.event) return;
     const evId = (this.event._id || this.event.id)!;
     this.saving = true;
-    this.apiService.createInvitation({ event: evId }).subscribe({
+
+    const sectionSettings = {
+      story: Boolean(this.wizardSections['story']),
+      locations: Boolean(this.wizardSections['locations']),
+      itinerary: Boolean(this.wizardSections['itinerary']),
+      dressCode: Boolean(this.wizardSections['dressCode']),
+      rsvp: Boolean(this.wizardSections['rsvp']),
+      giftRegistry: Boolean(this.wizardSections['giftRegistry']),
+      digitalEnvelope: Boolean(this.wizardSections['digitalEnvelope']),
+      lodging: Boolean(this.wizardSections['lodging']),
+      gallery: Boolean(this.wizardSections['gallery']),
+      guestAlbum: Boolean(this.wizardSections['guestAlbum']),
+      dedications: Boolean(this.wizardSections['dedications']),
+      backgroundMusic: Boolean(this.wizardSections['backgroundMusic']),
+      songRequests: Boolean(this.wizardSections['songRequests'])
+    };
+
+    const giftSettings = {
+      enabled: Boolean(this.wizardSections['giftRegistry'] || this.wizardSections['digitalEnvelope']),
+      showRegistry: Boolean(this.wizardSections['giftRegistry']),
+      showEnvelope: Boolean(this.wizardSections['digitalEnvelope'])
+    };
+
+    const dedicationSettings = {
+      enabled: Boolean(this.wizardSections['dedications']),
+      requireApproval: true
+    };
+
+    const payload: any = {
+      event: evId,
+      content: {
+        sectionSettings,
+        giftSettings,
+        dedicationSettings,
+        privateAlbumEnabled: Boolean(this.wizardSections['guestAlbum'])
+      }
+    };
+
+    this.apiService.createInvitation(payload).subscribe({
       next: invRes => {
-        this.saving = false;
-        this.showCreateWizardModal = false;
         const invId = invRes.invitation._id || invRes.invitation.id;
-        this.router.navigate(['/new/invitations', invId, 'sections']);
+
+        const songRequestSettings = {
+          enabled: Boolean(this.wizardSections['songRequests']),
+          maxRequestsPerGuest: 3,
+          allowDedications: true,
+          requireApproval: true
+        };
+
+        this.apiService.updateEvent(evId, { externalContent: { ...(this.event?.externalContent || {}), songRequestSettings } }).subscribe({
+          next: () => {
+            this.saving = false;
+            this.showCreateWizardModal = false;
+            this.router.navigate(['/new/invitations', invId, 'sections']);
+          },
+          error: () => {
+            this.saving = false;
+            this.showCreateWizardModal = false;
+            this.router.navigate(['/new/invitations', invId, 'sections']);
+          }
+        });
       },
       error: err => {
         this.error = err?.error?.message || 'Error al crear invitación';

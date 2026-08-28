@@ -42,8 +42,8 @@
 
     <!-- Filters -->
     <!-- Filters -->
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;" *ngIf="events.length > 0">
-      <div style="position: relative; display: flex; align-items: center; max-width: 250px; width: 100%;">
+    <div class="nw-events-filters" *ngIf="events.length > 0">
+      <div style="position: relative; display: flex; align-items: center; flex: 1; min-width: 200px; max-width: 250px;">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round"
           style="position: absolute; left: 12px; color: var(--nw-text-3); pointer-events: none;">
@@ -88,8 +88,7 @@
       <p>No hay eventos que coincidan con los filtros seleccionados.</p>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;"
-      *ngIf="filteredEvents.length > 0">
+    <div class="nw-events-grid" *ngIf="filteredEvents.length > 0">
       <div class="nw-event-card" *ngFor="let ev of paginatedEvents" (click)="goToEvent(ev)" style="cursor: pointer;"
         [attr.data-type]="getNormalizedEventType(ev)">
         <div class="card-banner">
@@ -180,11 +179,9 @@
     </div>
 
     <!-- Barra de Paginación -->
-    <div
-      style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding: 14px 18px; background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); flex-wrap: wrap; gap: 14px;"
-      *ngIf="filteredEvents.length > 0">
+    <div class="nw-pagination-bar" *ngIf="filteredEvents.length > 0">
 
-      <div style="display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--nw-text-2);">
+      <div class="nw-pagination-info">
         <span>Mostrando <strong>{{ paginationStartIndex }} - {{ paginationEndIndex }}</strong> de <strong>{{
             filteredEvents.length }}</strong> eventos</span>
         <div style="display: flex; align-items: center; gap: 6px; margin-left: 10px;">
@@ -196,7 +193,7 @@
         </div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 6px;" *ngIf="totalPages > 1">
+      <div class="nw-pagination-pages" *ngIf="totalPages > 1">
         <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" [disabled]="currentPage === 1"
           (click)="goToPage(currentPage - 1)">
           ← Anterior

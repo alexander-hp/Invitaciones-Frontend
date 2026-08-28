@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AssetFolder, EventAgendaItem, EventModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel } from '../../core/models';
 
 @Component({ selector: 'app-new-invitation-editor', templateUrl: './new-invitation-editor.component.html' })
 export class NewInvitationEditorComponent implements OnInit {
@@ -13,6 +13,7 @@ export class NewInvitationEditorComponent implements OnInit {
   sidebarOpen = false;
   invitation?: InvitationModel;
   event?: EventModel;
+  loadedGuests: GuestModel[] = [];
   templates: TemplateModel[] = [];
   plans: PlanDefinition[] = [];
   currentPlan?: PlanDefinition;
@@ -79,6 +80,17 @@ export class NewInvitationEditorComponent implements OnInit {
     this.save();
   }
 
+  activeSectionsCollapsed = false;
+  inactiveSectionsCollapsed = true;
+
+  toggleActiveSections(): void {
+    this.activeSectionsCollapsed = !this.activeSectionsCollapsed;
+  }
+
+  toggleInactiveSections(): void {
+    this.inactiveSectionsCollapsed = !this.inactiveSectionsCollapsed;
+  }
+
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
@@ -115,6 +127,62 @@ export class NewInvitationEditorComponent implements OnInit {
     { key: 'lodging', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
     { key: 'backgroundMusic', title: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
   ];
+
+  readonly categorizedSections: Array<{
+    category: string;
+    description: string;
+    items: Array<{ key: string; title: string; description: string; isMandatory?: boolean }>;
+  }> = [
+      {
+        category: 'Esenciales y Estilo',
+        description: 'Información principal y diseño visual de la invitación',
+        items: [
+          { key: 'content', title: 'Contenido Principal', description: 'Nombres, fecha, mensaje principal e imagen de portada.', isMandatory: true },
+          { key: 'style', title: 'Estilo y Colores', description: 'Paleta de colores, tipografía y estética visual.', isMandatory: true }
+        ]
+      },
+      {
+        category: 'Interacción y Confirmación',
+        description: 'Módulos interactivos y gestión de invitados',
+        items: [
+          { key: 'rsvp', title: 'Confirmación RSVP', description: 'Formulario de pases, asistencia y preguntas personalizadas.', isMandatory: false },
+          { key: 'guestAlbum', title: 'Álbum Interactivo', description: 'Permite a los invitados subir fotos en vivo durante el evento.', isMandatory: false },
+          { key: 'songRequests', title: 'Música / DJ', description: 'Sugerencias de canciones de los invitados para la fiesta.', isMandatory: false },
+          { key: 'dedications', title: 'Libro de Firmas', description: 'Muro de mensajes, felicidades y buenos deseos.', isMandatory: false },
+          { key: 'backgroundMusic', title: 'Música de Fondo', description: 'Audio ambiental que suena al recorrer la invitación.', isMandatory: false }
+        ]
+      },
+      {
+        category: 'Detalles del Evento',
+        description: 'Ubicaciones, tiempos e información para los asistentes',
+        items: [
+          { key: 'story', title: 'Mensaje & Nuestra Historia', description: 'Mensaje especial de bienvenida, historia o reseña para los invitados.', isMandatory: false },
+          { key: 'locations', title: 'Mapas y Ubicaciones', description: 'Direcciones directas con Waze y Google Maps.', isMandatory: false },
+          { key: 'itinerary', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades del evento.', isMandatory: false },
+          { key: 'dressCode', title: 'Código de Vestimenta', description: 'Instrucciones de etiqueta y estilo recomendado.', isMandatory: false },
+          { key: 'lodging', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de hoteles cercanos y hospedaje.', isMandatory: false }
+        ]
+      },
+      {
+        category: 'Regalos y Galería',
+        description: 'Mesa de regalos, datos de obsequios y fotos oficiales',
+        items: [
+          { key: 'giftRegistry', title: 'Mesa de Regalos', description: 'Enlaces a mesas de regalos externas (Amazon, Liverpool, etc.).', isMandatory: false },
+          { key: 'digitalEnvelope', title: 'Sobre Digital', description: 'Datos bancarios y CLABE para obsequios en efectivo.', isMandatory: false },
+          { key: 'gallery', title: 'Galería Oficial', description: 'Fotografías oficiales de los festejados o del evento.', isMandatory: false }
+        ]
+      }
+    ];
+
+  getActiveCountForCategory(cat: any): number {
+    if (!cat?.items) return 0;
+    return cat.items.filter((item: any) => this.isSectionActive(item.key)).length;
+  }
+
+  onToggleSectionClick(key: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.toggleSectionActive(key, Boolean(target?.checked));
+  }
 
   readonly dressCodePresets = [
     'Formal / Etiqueta Rigurosa',
@@ -157,6 +225,9 @@ export class NewInvitationEditorComponent implements OnInit {
 
     if (key === 'content' || key === 'style') return true;
     if (key === 'songRequests') {
+      if (settings.songRequests !== undefined) {
+        return Boolean(settings.songRequests);
+      }
       return Boolean(this.event?.externalContent?.songRequestSettings?.enabled !== false);
     }
     if (key === 'guestAlbum' || key === 'guest_album') {
@@ -191,6 +262,7 @@ export class NewInvitationEditorComponent implements OnInit {
     const settings = this.invitation.content.sectionSettings as any;
 
     if (key === 'songRequests') {
+      settings.songRequests = active;
       if (this.event) {
         if (!this.event.externalContent) this.event.externalContent = {};
         if (!this.event.externalContent.songRequestSettings) {
@@ -238,17 +310,21 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   palettePresets = [
-    { name: 'Clásico editorial', primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' },
-    { name: 'Jardín elegante', primary: '#244034', secondary: '#f4f7f0', accent: '#9f6f46' },
-    { name: 'Noche formal', primary: '#121826', secondary: '#f7f7fb', accent: '#c9a85d' },
-    { name: 'Celebración viva', primary: '#7f1d1d', secondary: '#fff7ed', accent: '#2563eb' },
-    { name: 'Rosa empolvado', primary: '#3d2c2e', secondary: '#fdf2f4', accent: '#d4a0a0' },
-    { name: 'Azul cielo', primary: '#1e3a5f', secondary: '#f0f4fa', accent: '#6fa3d4' },
-    { name: 'Dorado cálido', primary: '#2a1f14', secondary: '#faf5ed', accent: '#c49a3c' },
-    { name: 'Verde salvia', primary: '#2d3b2d', secondary: '#f4f7f2', accent: '#8fac8f' }
+    { name: 'Imperial & Oro', primary: '#1a1612', secondary: '#fdfbf7', accent: '#d4af37' },
+    { name: 'Jardín Esmeralda', primary: '#0d3b2e', secondary: '#f4f9f6', accent: '#c8963e' },
+    { name: 'Zafiro & Noche', primary: '#0a192f', secondary: '#f0f4f8', accent: '#3b82f6' },
+    { name: 'Borgoña Elegante', primary: '#4a0e17', secondary: '#fdf4f5', accent: '#e0a96d' },
+    { name: 'Terracota & Eucalipto', primary: '#a0522d', secondary: '#f8f6f0', accent: '#5f8575' },
+    { name: 'Lavanda & Menta', primary: '#4a3b6b', secondary: '#f7f4fb', accent: '#88d49e' },
+    { name: 'Negro & Oro Minimalista', primary: '#111111', secondary: '#f9f9f9', accent: '#e5c158' },
+    { name: 'Coral Romántico', primary: '#8b263e', secondary: '#fff5f2', accent: '#ff7e67' },
+    { name: 'Verde Olivo & Arena', primary: '#3b4d32', secondary: '#f6f5ef', accent: '#d4b26f' },
+    { name: 'Orquídea & Plata', primary: '#5c1d42', secondary: '#fcf5fa', accent: '#9eabc0' },
+    { name: 'Azul Marino & Cobre', primary: '#1b263b', secondary: '#f4f6f8', accent: '#e07a5f' },
+    { name: 'Malva & Perla Nácar', primary: '#4a3a4b', secondary: '#faf6fa', accent: '#c7a4b5' }
   ];
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) { }
 
   ngOnInit(): void {
     this.load();
@@ -294,16 +370,23 @@ export class NewInvitationEditorComponent implements OnInit {
         }
         if (id) localStorage.setItem(`inv_tpl_${id}`, effectiveTemplate);
         if (this.invitation.slug) localStorage.setItem(`inv_tpl_${this.invitation.slug}`, effectiveTemplate);
-        
+
         const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event?._id || this.invitation.event?.id);
         if (typeof this.invitation.event === 'object' && this.invitation.event) {
           this.event = this.invitation.event;
         }
 
-        if (eventId && !this.event?.date) {
+        if (eventId) {
           this.api.getEvent(eventId).subscribe({
-            next: ({ event }) => this.event = event,
-            error: () => {}
+            next: ({ event }) => {
+              this.event = event;
+              if (this.invitation?.content?.sectionSettings && event.externalContent?.songRequestSettings?.enabled !== undefined) {
+                if (this.invitation.content.sectionSettings.songRequests === undefined) {
+                  this.invitation.content.sectionSettings.songRequests = Boolean(event.externalContent.songRequestSettings.enabled);
+                }
+              }
+            },
+            error: () => { }
           });
         }
 
@@ -313,12 +396,22 @@ export class NewInvitationEditorComponent implements OnInit {
         this.publicUrl = `${window.location.origin}/new/i/${this.invitation.slug}`;
         this.loadTemplates();
         this.loadPlans();
+        this.loadGuestsForEvent();
         this.loading = false;
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar la invitación.';
         this.loading = false;
       }
+    });
+  }
+
+  loadGuestsForEvent(): void {
+    const eventId = this.getEventId();
+    if (!eventId) return;
+    this.api.listGuests(eventId).subscribe({
+      next: ({ guests }) => this.loadedGuests = guests || [],
+      error: () => this.loadedGuests = []
     });
   }
 
@@ -410,6 +503,23 @@ export class NewInvitationEditorComponent implements OnInit {
     this.clearMessageAfterDelay();
   }
 
+  applyStoryPreset(type: 'story' | 'welcome' | 'thanks'): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+    if (type === 'story') {
+      this.invitation.content.storyTitle = 'Nuestra Historia';
+      this.invitation.content.storyBody = 'Hace unos años nuestros caminos se cruzaron por casualidad y desde ese momento supimos que queríamos caminar juntos para siempre. Hoy comenzamos un nuevo capítulo y nos encantaría compartirlo contigo.';
+    } else if (type === 'welcome') {
+      this.invitation.content.storyTitle = 'Mensaje de Invitación';
+      this.invitation.content.storyBody = 'Con gran alegría y emoción te invitamos a celebrar con nosotros este día tan especial. Tu presencia es el mejor regalo que podemos recibir y significará todo para nosotros.';
+    } else if (type === 'thanks') {
+      this.invitation.content.storyTitle = 'Reflexión & Agradecimiento';
+      this.invitation.content.storyBody = 'Acompañados del amor de nuestras familias y amigos, iniciamos esta hermosa etapa. Gracias por ser parte de nuestras vidas y por acompañarnos a celebrar el amor y la felicidad.';
+    }
+    this.message = 'Ejemplo aplicado a la sección.';
+    this.clearMessageAfterDelay();
+  }
+
   applyTextVariant(style: 'formal' | 'warm' | 'brief'): void {
     if (!this.invitation || !this.event) return;
     const title = this.event.title;
@@ -471,20 +581,66 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/new/i/${invitation.slug}`;
-        this.message = '✅ Cambios guardados correctamente en el servidor (HTTP 200).';
-        this.saving = false;
-        this.clearMessageAfterDelay();
+
+        const eventId = this.getEventId();
+        if (eventId && this.event) {
+          const songEnabled = this.invitation.content?.sectionSettings?.songRequests !== false;
+          if (!this.event.externalContent) this.event.externalContent = {};
+          if (!this.event.externalContent.songRequestSettings) {
+            this.event.externalContent.songRequestSettings = { enabled: songEnabled, maxRequestsPerGuest: 3, allowDedications: true, requireApproval: true };
+          } else {
+            this.event.externalContent.songRequestSettings.enabled = songEnabled;
+          }
+
+          const rawExternalContent: ExternalContent = {
+            ...(this.event.externalContent || {})
+          };
+
+          this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
+            next: ({ event }) => {
+              this.event = event;
+              this.message = '✅ Cambios guardados correctamente en el servidor (HTTP 200).';
+              this.saving = false;
+              this.clearMessageAfterDelay();
+            },
+            error: () => {
+              this.message = '✅ Cambios guardados en la invitación.';
+              this.saving = false;
+              this.clearMessageAfterDelay();
+            }
+          });
+        } else {
+          this.message = '✅ Cambios guardados correctamente en el servidor (HTTP 200).';
+          this.saving = false;
+          this.clearMessageAfterDelay();
+        }
       },
       error: (error) => {
-        const statusCode = error.status ? ` (HTTP ${error.status})` : '';
-        if (error.error?.details?.fieldErrors?.body) {
-          this.error = `❌ Error de validación${statusCode}: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
+        const friendly = this.getFriendlyErrorMessage(error);
+        if (friendly.includes('ya está ocupada')) {
+          this.error = friendly;
         } else {
-          this.error = `❌ Error al guardar${statusCode}: ${error.error?.message || 'No se pudo guardar.'}`;
+          const statusCode = error.status ? ` (HTTP ${error.status})` : '';
+          this.error = `❌ Error al guardar${statusCode}: ${friendly}`;
         }
         this.saving = false;
       }
     });
+  }
+
+  syncSongRequestActive(active: boolean): void {
+    if (!this.invitation) return;
+    this.ensureContentCollections();
+    if (this.invitation.content?.sectionSettings) {
+      this.invitation.content.sectionSettings.songRequests = active;
+    }
+    if (this.event) {
+      if (!this.event.externalContent) this.event.externalContent = {};
+      if (!this.event.externalContent.songRequestSettings) {
+        this.event.externalContent.songRequestSettings = {};
+      }
+      this.event.externalContent.songRequestSettings.enabled = active;
+    }
   }
 
   publish(): void {
@@ -504,6 +660,26 @@ export class NewInvitationEditorComponent implements OnInit {
       content: this.sanitizePayload(this.getContentPayload())
     }).subscribe({
       next: () => {
+        const eventId = this.getEventId();
+        if (eventId && this.event) {
+          const songEnabled = this.invitation?.content?.sectionSettings?.songRequests !== false;
+          if (!this.event.externalContent) this.event.externalContent = {};
+          if (!this.event.externalContent.songRequestSettings) {
+            this.event.externalContent.songRequestSettings = { enabled: songEnabled, maxRequestsPerGuest: 3, allowDedications: true, requireApproval: true };
+          } else {
+            this.event.externalContent.songRequestSettings.enabled = songEnabled;
+          }
+
+          const rawExternalContent: ExternalContent = {
+            ...(this.event.externalContent || {})
+          };
+
+          this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
+            next: ({ event }) => this.event = event,
+            error: () => { }
+          });
+        }
+
         this.api.publishInvitation(invitationId).subscribe({
           next: (res) => {
             const { invitation, publicUrl, message, warning } = res as any;
@@ -527,18 +703,24 @@ export class NewInvitationEditorComponent implements OnInit {
             this.clearMessageAfterDelay();
           },
           error: (error) => {
-            const statusCode = error.status ? ` (HTTP ${error.status})` : '';
-            this.error = `❌ Error al publicar la invitación${statusCode}: ${error.error?.message || 'No se pudo publicar.'}`;
+            const friendly = this.getFriendlyErrorMessage(error);
+            if (friendly.includes('ya está ocupada')) {
+              this.error = friendly;
+            } else {
+              const statusCode = error.status ? ` (HTTP ${error.status})` : '';
+              this.error = `❌ Error al publicar la invitación${statusCode}: ${friendly}`;
+            }
             this.publishing = false;
           }
         });
       },
       error: (error) => {
-        const statusCode = error.status ? ` (HTTP ${error.status})` : '';
-        if (error.error?.details?.fieldErrors?.body) {
-          this.error = `❌ Error de validación al guardar previa a publicar${statusCode}: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
+        const friendly = this.getFriendlyErrorMessage(error);
+        if (friendly.includes('ya está ocupada')) {
+          this.error = friendly;
         } else {
-          this.error = `❌ Error al guardar antes de publicar${statusCode}: ${error.error?.message || 'No se pudo guardar la invitación.'}`;
+          const statusCode = error.status ? ` (HTTP ${error.status})` : '';
+          this.error = `❌ Error al guardar antes de publicar${statusCode}: ${friendly}`;
         }
         this.publishing = false;
       }
@@ -924,6 +1106,28 @@ export class NewInvitationEditorComponent implements OnInit {
     return obj;
   }
 
+  private getFriendlyErrorMessage(err: any): string {
+    const raw = err.error?.message || err.message || (typeof err === 'string' ? err : '');
+    const strError = JSON.stringify(err || {});
+
+    if (
+      raw.includes('E11000') ||
+      raw.includes('duplicate key') ||
+      raw.includes('slug_1') ||
+      raw.includes('findAndModify') ||
+      strError.includes('E11000') ||
+      strError.includes('slug_1')
+    ) {
+      return '❌ Esta URL (slug) ya está ocupada por otra invitación. Por favor elige una dirección o enlace diferente.';
+    }
+
+    if (err.error?.details?.fieldErrors?.body) {
+      return `Error de validación: ${JSON.stringify(err.error.details.fieldErrors.body)}`;
+    }
+
+    return raw || 'Error al procesar la solicitud.';
+  }
+
   private clearMessageAfterDelay(): void {
     setTimeout(() => {
       this.message = '';
@@ -957,21 +1161,33 @@ export class NewInvitationEditorComponent implements OnInit {
         this.clearMessageAfterDelay();
       },
       error: (error) => {
-        if (error.error?.details?.fieldErrors?.body) {
-          this.error = `Error de validación: ${JSON.stringify(error.error.details.fieldErrors.body)}`;
-        } else {
-          this.error = error.error?.message || 'El asset subió a S3, pero no se pudo guardar en la invitación.';
-        }
+        this.error = this.getFriendlyErrorMessage(error);
         this.assetUploading = false;
       }
     });
+  }
+
+  private formatDateForDateTimeLocalInput(dateVal: any): string {
+    if (!dateVal) return '';
+    if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateVal)) {
+      return dateVal;
+    }
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return typeof dateVal === 'string' ? dateVal : '';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   private ensureRsvpSettings(): void {
     if (!this.invitation) return;
     this.invitation.rsvpSettings = {
       ...this.invitation.rsvpSettings,
-      deadline: this.invitation.rsvpSettings?.deadline,
+      deadline: this.formatDateForDateTimeLocalInput(this.invitation.rsvpSettings?.deadline),
       allowMaybe: this.invitation.rsvpSettings?.allowMaybe !== false,
       allowChangesUntilDeadline: this.invitation.rsvpSettings?.allowChangesUntilDeadline !== false,
       declineRequiresConfirmation: this.invitation.rsvpSettings?.declineRequiresConfirmation !== false,
@@ -1094,7 +1310,9 @@ export class NewInvitationEditorComponent implements OnInit {
       lodging: this.invitation.content.sectionSettings?.lodging !== false,
       gallery: this.invitation.content.sectionSettings?.gallery !== false,
       guestAlbum: this.invitation.content.sectionSettings?.guestAlbum !== false,
-      dedications: this.invitation.content.sectionSettings?.dedications !== false
+      dedications: this.invitation.content.sectionSettings?.dedications !== false,
+      backgroundMusic: this.invitation.content.sectionSettings?.backgroundMusic !== false,
+      songRequests: this.invitation.content.sectionSettings?.songRequests !== false
     };
     if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
     if (!this.invitation.content.itinerary) this.invitation.content.itinerary = [];
@@ -1151,6 +1369,17 @@ export class NewInvitationEditorComponent implements OnInit {
     const slug = this.invitation.slug;
     const activeTemplateKey = this.invitation.content?.template || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : undefined) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : undefined) || 'envelope-cards';
     const rawContent: any = { ...this.invitation.content, template: activeTemplateKey };
+
+    if (rawContent.storyTitle !== undefined) {
+      rawContent.subheadline = rawContent.storyTitle;
+    }
+    if (rawContent.storyBody !== undefined) {
+      rawContent.message = rawContent.storyBody;
+    }
+
+    delete rawContent.storyTitle;
+    delete rawContent.storyBody;
+
     return {
       ...rawContent,
       template: activeTemplateKey,
@@ -1164,6 +1393,9 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private syncEditorTextFields(): void {
     if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+    this.invitation.content.storyTitle = this.invitation.content.storyTitle || this.invitation.content.subheadline || '';
+    this.invitation.content.storyBody = this.invitation.content.storyBody || this.invitation.content.message || '';
     if (!this.invitation.content.lodging) this.invitation.content.lodging = [];
     this.lodgingText = (this.invitation.content.lodging || [])
       .map((item) => [item.name, item.description, item.url].filter(Boolean).join(' | '))
@@ -1235,13 +1467,13 @@ export class NewInvitationEditorComponent implements OnInit {
 
   addQuestionPreset(presetKey: string): void {
     if (presetKey === 'song') {
-      this.addCustomQuestion('🎵 Canción preferida para la fiesta', 'text', '', false);
+      this.addCustomQuestion('Canción preferida para la fiesta', 'text', '', false);
     } else if (presetKey === 'diet') {
-      this.addCustomQuestion('🥗 Restricciones o alergias alimenticias', 'textarea', '', false);
+      this.addCustomQuestion('Restricciones o alergias alimenticias', 'textarea', '', false);
     } else if (presetKey === 'menu') {
-      this.addCustomQuestion('🍽️ Opción de platillo preferido', 'select', 'Pollo supremo; Filete de res; Opción vegetariana; Menú infantil', true);
+      this.addCustomQuestion('Opción de platillo preferido', 'select', 'Pollo supremo; Filete de res; Opción vegetariana; Menú infantil', true);
     } else if (presetKey === 'transport') {
-      this.addCustomQuestion('🚌 ¿Requieres transporte del hotel a la recepción?', 'boolean', '', false);
+      this.addCustomQuestion('¿Requieres transporte del hotel a la recepción?', 'boolean', '', false);
     }
   }
 
