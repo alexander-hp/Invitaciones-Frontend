@@ -43,6 +43,7 @@ export class EditorAssetsTabComponent {
     if (!this.invitation?.content.sectionSettings) return true;
     const settings = this.invitation.content.sectionSettings as any;
     if (key === 'gallery') return settings.gallery !== false;
+    if (key === 'backgroundMusic') return settings.backgroundMusic !== false;
     return settings[key] !== false;
   }
 
