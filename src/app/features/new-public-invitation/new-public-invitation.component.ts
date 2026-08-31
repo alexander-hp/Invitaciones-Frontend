@@ -30,6 +30,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   currentActiveSection = 'hero';
   currentPlayingTrackUrl = '';
   private audioRef?: HTMLAudioElement;
+  private ytPlayer?: any;
+  private isYtApiLoaded = false;
+  private isYtReady = false;
+  private pendingYtVideoId?: string;
   private observer?: IntersectionObserver;
   private timerInterval?: any;
   private editedTextsApplied = false;
@@ -129,6 +133,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
     if (this.audioRef) {
       this.audioRef.pause();
+    }
+    if (this.ytPlayer && typeof this.ytPlayer.destroy === 'function') {
+      try {
+        this.ytPlayer.destroy();
+      } catch { }
     }
     if (this.observer) {
       this.observer.disconnect();
@@ -396,10 +405,124 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return Boolean(this.getSectionSpecificMusicUrl(sectionKey));
   }
 
+  extractYouTubeVideoId(url?: string): string | null {
+    if (!url) return null;
+    const trimmed = url.trim();
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = trimmed.match(regExp);
+    return (match && match[2] && match[2].length === 11) ? match[2] : null;
+  }
+
+  isYouTubeUrl(url?: string): boolean {
+    return Boolean(this.extractYouTubeVideoId(url));
+  }
+
+  private hasAnyYouTubeTrack(): boolean {
+    if (this.extractYouTubeVideoId(this.invitation?.content?.musicUrl)) return true;
+    const secMusic = this.invitation?.content?.sectionMusic;
+    if (!secMusic) return false;
+    const values = typeof (secMusic as any).values === 'function' ? Array.from((secMusic as any).values()) : Object.values(secMusic);
+    return values.some((v: any) => typeof v === 'string' && Boolean(this.extractYouTubeVideoId(v)));
+  }
+
+  private initYouTubeApi(): void {
+    if (typeof window === 'undefined') return;
+    if ((window as any).YT && (window as any).YT.Player) {
+      this.isYtApiLoaded = true;
+      this.createYouTubePlayer();
+      return;
+    }
+
+    if (!this.isYtApiLoaded) {
+      const existingScript = document.getElementById('youtube-iframe-api');
+      if (!existingScript) {
+        const tag = document.createElement('script');
+        tag.id = 'youtube-iframe-api';
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
+      }
+      this.isYtApiLoaded = true;
+    }
+
+    const prevOnReady = (window as any).onYouTubeIframeAPIReady;
+    (window as any).onYouTubeIframeAPIReady = () => {
+      if (typeof prevOnReady === 'function') prevOnReady();
+      this.createYouTubePlayer();
+    };
+  }
+
+  private createYouTubePlayer(): void {
+    if (typeof window === 'undefined' || !(window as any).YT || !(window as any).YT.Player) return;
+    const container = document.getElementById('nw-pub-yt-player');
+    if (!container) return;
+
+    try {
+      this.ytPlayer = new (window as any).YT.Player('nw-pub-yt-player', {
+        height: '1',
+        width: '1',
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          playsinline: 1,
+          rel: 0
+        },
+        events: {
+          onReady: () => {
+            this.isYtReady = true;
+            if (this.pendingYtVideoId) {
+              const vid = this.pendingYtVideoId;
+              this.pendingYtVideoId = undefined;
+              this.playYouTubeVideo(vid, true);
+            }
+          },
+          onStateChange: (event: any) => {
+            if (event.data === 1) {
+              this.isPlayingMusic = true;
+            } else if (event.data === 2) {
+              this.isPlayingMusic = false;
+            } else if (event.data === 0) {
+              if (this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+                this.ytPlayer.playVideo();
+              }
+            }
+          },
+          onError: () => {
+            this.isPlayingMusic = false;
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('YouTube Player initialization warning:', err);
+    }
+  }
+
+  private playYouTubeVideo(videoId: string, forcePlay: boolean = false): void {
+    if (!this.isYtReady || !this.ytPlayer || typeof this.ytPlayer.loadVideoById !== 'function') {
+      this.pendingYtVideoId = videoId;
+      if (!this.isYtApiLoaded) {
+        this.initYouTubeApi();
+      }
+      return;
+    }
+
+    try {
+      this.ytPlayer.loadVideoById({ videoId, startSeconds: 0 });
+      if (forcePlay || this.isPlayingMusic) {
+        this.ytPlayer.playVideo();
+        this.isPlayingMusic = true;
+      }
+    } catch (err) {
+      console.warn('Error playing YouTube video:', err);
+    }
+  }
+
   isSectionMusicPlaying(sectionKey: string): boolean {
-    if (!this.isPlayingMusic || !this.audioRef) return false;
+    if (!this.isPlayingMusic) return false;
     const targetUrl = this.getSectionSpecificMusicUrl(sectionKey) || this.getAudioUrlForSection(sectionKey);
-    return Boolean(targetUrl && this.currentPlayingTrackUrl === targetUrl && !this.audioRef.paused);
+    return Boolean(targetUrl && this.currentPlayingTrackUrl === targetUrl);
   }
 
   toggleSectionMusic(sectionKey: string): void {
@@ -408,8 +531,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
     this.currentActiveSection = sectionKey;
 
-    if (this.isPlayingMusic && this.currentPlayingTrackUrl === targetUrl && this.audioRef && !this.audioRef.paused) {
-      this.audioRef.pause();
+    if (this.isPlayingMusic && this.currentPlayingTrackUrl === targetUrl) {
+      const ytId = this.extractYouTubeVideoId(targetUrl);
+      if (ytId && this.ytPlayer && this.isYtReady && typeof this.ytPlayer.pauseVideo === 'function') {
+        this.ytPlayer.pauseVideo();
+      } else if (this.audioRef) {
+        this.audioRef.pause();
+      }
       this.isPlayingMusic = false;
       return;
     }
@@ -427,6 +555,17 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.invitation?.content?.sectionSettings?.backgroundMusic === false) return;
     const initialUrl = this.getAudioUrlForSection('hero') || this.invitation?.content.musicUrl;
     if (!initialUrl) return;
+
+    if (this.hasAnyYouTubeTrack()) {
+      this.initYouTubeApi();
+    }
+
+    const ytId = this.extractYouTubeVideoId(initialUrl);
+    if (ytId) {
+      this.currentPlayingTrackUrl = initialUrl;
+      return;
+    }
+
     this.currentPlayingTrackUrl = initialUrl;
     this.audioRef = new Audio(initialUrl);
     this.audioRef.loop = true;
@@ -467,6 +606,20 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   playTrackUrl(url: string, forcePlay: boolean = false): void {
     if (!url) return;
     this.currentPlayingTrackUrl = url;
+
+    const ytId = this.extractYouTubeVideoId(url);
+    if (ytId) {
+      if (this.audioRef) {
+        this.audioRef.pause();
+      }
+      this.playYouTubeVideo(ytId, forcePlay);
+      return;
+    }
+
+    if (this.ytPlayer && this.isYtReady && typeof this.ytPlayer.pauseVideo === 'function') {
+      this.ytPlayer.pauseVideo();
+    }
+
     if (!this.audioRef) {
       this.audioRef = new Audio(url);
       this.audioRef.loop = true;
@@ -490,6 +643,24 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   toggleMusic(): void {
     const targetUrl = this.getAudioUrlForSection(this.currentActiveSection) || this.invitation?.content.musicUrl || '';
+    if (!targetUrl) return;
+
+    const ytId = this.extractYouTubeVideoId(targetUrl);
+    if (ytId) {
+      if (!this.isYtReady || !this.ytPlayer) {
+        this.playTrackUrl(targetUrl, true);
+        return;
+      }
+      if (this.isPlayingMusic) {
+        this.ytPlayer.pauseVideo();
+        this.isPlayingMusic = false;
+      } else {
+        this.ytPlayer.playVideo();
+        this.isPlayingMusic = true;
+      }
+      return;
+    }
+
     if (!this.audioRef && targetUrl) {
       this.playTrackUrl(targetUrl, true);
       return;

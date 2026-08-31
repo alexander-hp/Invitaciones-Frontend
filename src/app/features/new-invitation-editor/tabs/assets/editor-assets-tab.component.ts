@@ -36,11 +36,39 @@ export class EditorAssetsTabComponent {
   @Output() removeLodgingItem = new EventEmitter<number>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
 
+  activeUrlInputKey: string | null = null;
+  tempInputUrl: string = '';
+
   isSectionActive(key: string): boolean {
     if (!this.invitation?.content.sectionSettings) return true;
     const settings = this.invitation.content.sectionSettings as any;
     if (key === 'gallery') return settings.gallery !== false;
     return settings[key] !== false;
+  }
+
+  openUrlInput(target: string): void {
+    this.activeUrlInputKey = target;
+    if (target === 'global') {
+      this.tempInputUrl = this.invitation.content.musicUrl || '';
+    } else {
+      this.tempInputUrl = this.invitation.content.sectionMusic?.[target] || '';
+    }
+  }
+
+  saveUrlInput(): void {
+    const val = this.tempInputUrl.trim();
+    if (this.activeUrlInputKey === 'global') {
+      this.invitation.content.musicUrl = val || undefined;
+    } else if (this.activeUrlInputKey) {
+      this.setSectionMusicUrl(this.activeUrlInputKey, val);
+    }
+    this.activeUrlInputKey = null;
+    this.tempInputUrl = '';
+  }
+
+  cancelUrlInput(): void {
+    this.activeUrlInputKey = null;
+    this.tempInputUrl = '';
   }
 
   setSectionMusicUrl(sectionKey: string, url: string): void {
@@ -54,8 +82,24 @@ export class EditorAssetsTabComponent {
     }
   }
 
+  isYouTubeUrl(url?: string): boolean {
+    return Boolean(this.getYouTubeVideoId(url));
+  }
+
+  getYouTubeVideoId(url?: string): string | null {
+    if (!url) return null;
+    const trimmed = url.trim();
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = trimmed.match(regExp);
+    return (match && match[2] && match[2].length === 11) ? match[2] : null;
+  }
+
   getCleanSongName(url?: string): string {
     if (!url) return '';
+    const ytId = this.getYouTubeVideoId(url);
+    if (ytId) {
+      return `YouTube: https://youtu.be/${ytId}`;
+    }
     try {
       const clean = url.split('?')[0].split('#')[0];
       const parts = clean.split('/');
