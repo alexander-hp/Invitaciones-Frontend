@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { InvitationModel, EventModel, TemplateModel, PlanDefinition, PaymentPackage, CustomTemplateSubmission } from '../../../../core/models';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
@@ -27,6 +28,12 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   customSubmissions: CustomTemplateSubmission[] = [];
   loadingSubmissions = false;
   activeFilterTab: 'all' | 'builtin' | 'custom' = 'all';
+
+  // Live preview & Plan collapse states
+  planCollapsed = true; // Section starts collapsed as requested
+  previewViewport: 'mobile' | 'desktop' = 'mobile';
+  previewRefreshKey = Date.now();
+  iframeLoading = true;
 
   // Toasts
   message = '';
@@ -63,16 +70,19 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private apiService: ApiService,
-    private confirmDialog: ConfirmDialogService
+    private confirmDialog: ConfirmDialogService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
     this.loadCustomSubmissions();
+    this.updateLivePreviewUrl();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['invitation'] || changes['event']) {
       this.loadCustomSubmissions();
+      this.updateLivePreviewUrl();
     }
   }
 
@@ -104,13 +114,39 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     this.apiService.listCustomTemplateSubmissions().subscribe({
       next: res => {
         const all = res.submissions || [];
-        this.customSubmissions = all.filter(s => {
+        const remoteFiltered = all.filter(s => {
           if (slug && s.eventSlug === slug) return true;
           if (eventId && s.eventId === eventId) return true;
           if (invId && s.invitationId === invId) return true;
           return false;
         });
+
+        const local = this.apiService.getLocalCustomSubmissions();
+        const localFiltered = local.filter(s => {
+          if (slug && s.eventSlug === slug) return true;
+          if (eventId && s.eventId === eventId) return true;
+          if (invId && s.invitationId === invId) return true;
+          return false;
+        });
+
+        const mergedMap = new Map<string, CustomTemplateSubmission>();
+        remoteFiltered.forEach(s => {
+          const id = s.id || s._id;
+          if (id) mergedMap.set(id, s);
+        });
+        localFiltered.forEach(s => {
+          const id = s.id || s._id;
+          if (id) {
+            const existing = mergedMap.get(id);
+            if (!existing || (s.editedTexts && Object.keys(s.editedTexts).length > 0)) {
+              mergedMap.set(id, s);
+            }
+          }
+        });
+
+        this.customSubmissions = Array.from(mergedMap.values());
         this.loadingSubmissions = false;
+        this.updateLivePreviewUrl();
       },
       error: () => {
         const local = this.apiService.getLocalCustomSubmissions();
@@ -121,6 +157,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
           return false;
         });
         this.loadingSubmissions = false;
+        this.updateLivePreviewUrl();
       }
     });
   }
@@ -240,6 +277,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     this.selectTemplateKey.emit(key);
     this.saveChanges.emit();
     this.showSuccess(`Plantilla base "${this.getBuiltinName(key)}" activada.`);
+    this.refreshPreview();
   }
 
   /**
@@ -293,6 +331,74 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     this.selectTemplateKey.emit(targetTpl);
     this.saveChanges.emit();
     this.showSuccess(`Versión personalizada "${sub.name}" seleccionada.`);
+    this.refreshPreview();
+  }
+
+  togglePlanCollapsed(): void {
+    this.planCollapsed = !this.planCollapsed;
+  }
+
+  get activeTemplateDisplayName(): string {
+    const activeSubId = this.activeCustomSubmissionId;
+    if (activeSubId) {
+      const foundSub = this.customSubmissions.find(s => (s.id || s._id) === activeSubId);
+      if (foundSub) return foundSub.name;
+    }
+    const currentKey = this.currentTemplateKey;
+    return this.getBuiltinName(currentKey);
+  }
+
+  livePreviewUrl: SafeResourceUrl | null = null;
+  private lastPreviewUrlString = '';
+
+  updateLivePreviewUrl(forceRefresh = false): void {
+    if (!this.invitation?.slug) {
+      this.livePreviewUrl = null;
+      this.lastPreviewUrlString = '';
+      return;
+    }
+    const slug = this.invitation.slug;
+    const currentKey = this.currentTemplateKey;
+    const activeSubId = this.activeCustomSubmissionId;
+
+    if (forceRefresh) {
+      this.previewRefreshKey = Date.now();
+    }
+
+    let rawUrl = `${window.location.origin}/new/i/${slug}?tpl=${encodeURIComponent(currentKey)}&preview=true`;
+    if (activeSubId) {
+      rawUrl += `&subId=${encodeURIComponent(activeSubId)}`;
+    } else {
+      rawUrl += `&clean=1`;
+    }
+    rawUrl += `&_v=${this.previewRefreshKey}`;
+
+    if (rawUrl !== this.lastPreviewUrlString) {
+      this.lastPreviewUrlString = rawUrl;
+      this.livePreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+    }
+  }
+
+  refreshPreview(): void {
+    this.iframeLoading = true;
+    this.updateLivePreviewUrl(true);
+  }
+
+  onIframeLoad(): void {
+    this.iframeLoading = false;
+  }
+
+  openLivePreviewWindow(): void {
+    if (!this.invitation?.slug) return;
+    const currentKey = this.currentTemplateKey;
+    const activeSubId = this.activeCustomSubmissionId;
+    let url = `/new/i/${this.invitation.slug}?tpl=${encodeURIComponent(currentKey)}&preview=true`;
+    if (activeSubId) {
+      url += `&subId=${encodeURIComponent(activeSubId)}`;
+    } else {
+      url += `&clean=1`;
+    }
+    window.open(url, '_blank');
   }
 
   getBuiltinName(key: string): string {

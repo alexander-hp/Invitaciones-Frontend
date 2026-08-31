@@ -1,10 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel, CustomTemplateSubmission } from '../../core/models';
+import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
 
 @Component({ selector: 'app-new-invitation-editor', templateUrl: './new-invitation-editor.component.html' })
 export class NewInvitationEditorComponent implements OnInit {
+  @ViewChild(EditorPlansTabComponent) plansTab?: EditorPlansTabComponent;
+
   private readonly imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
   private readonly audioTypes = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav']);
   private readonly maxImageSize = 5 * 1024 * 1024;
@@ -48,8 +51,8 @@ export class NewInvitationEditorComponent implements OnInit {
   locationExtractLoading: Record<number, boolean> = {};
   private searchTimeouts: Record<number, any> = {};
 
-  activeSection = 'content';
-  activeTab: string = 'content';
+  activeSection = 'plans';
+  activeTab: string = 'plans';
   collapsedSections: Record<string, boolean> = {};
 
   showAiWizardModal = false;
@@ -74,6 +77,9 @@ export class NewInvitationEditorComponent implements OnInit {
   onTextEditSubmitted(): void {
     this.showTextEditorModal = false;
     this.message = '¡Edición de textos enviada a revisión exitosamente!';
+    if (this.plansTab) {
+      this.plansTab.loadCustomSubmissions();
+    }
   }
 
   openAiWizard(): void {
@@ -100,6 +106,9 @@ export class NewInvitationEditorComponent implements OnInit {
     }
     this.message = `¡Plantilla "${result.name}" aplicada exitosamente a tu evento!`;
     this.save();
+    if (this.plansTab) {
+      this.plansTab.loadCustomSubmissions();
+    }
   }
 
   activeSectionsCollapsed = false;
@@ -115,6 +124,11 @@ export class NewInvitationEditorComponent implements OnInit {
 
   setActiveTab(tab: string): void {
     this.activeTab = tab;
+    if (tab === 'plans') {
+      setTimeout(() => {
+        this.plansTab?.loadCustomSubmissions();
+      }, 50);
+    }
   }
 
   toggleSection(sectionKey: string): void {
