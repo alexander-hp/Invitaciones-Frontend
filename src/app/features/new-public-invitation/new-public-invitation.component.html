@@ -679,7 +679,7 @@
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
             </svg>
           </span>
-          <h2>Mesa de Regalos & Sobre Digital</h2>
+          <h2>{{ (isSectionActive('giftRegistry') && isSectionActive('digitalEnvelope')) ? 'Mesa de Regalos & Sobre Digital' : (isSectionActive('digitalEnvelope') ? 'Sobre Digital & Transferencias' : 'Mesa de Regalos') }}</h2>
           <button *ngIf="hasSectionMusic('giftRegistry')" type="button" class="nw-pub-section-music-btn"
             [class.playing]="isSectionMusicPlaying('giftRegistry')" (click)="toggleSectionMusic('giftRegistry')"
             [title]="isSectionMusicPlaying('giftRegistry') ? 'Pausar música' : 'Reproducir música de esta sección'">
@@ -701,11 +701,17 @@
           </button>
         </div>
 
+        <!-- Gift Intro Text -->
+        <p *ngIf="invitation.content.giftSettings?.introText && isSectionActive('giftRegistry')" class="muted" style="margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">
+          {{ invitation.content.giftSettings?.introText }}
+        </p>
+
         <!-- Gift Store Links -->
         <div *ngIf="isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length" class="nw-pub-gifts-grid">
           <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
-            <img *ngIf="getStoreLogo(registry)" [src]="getStoreLogo(registry)" (click)="openLightbox(getStoreLogo(registry))"
-              alt="Mesa de regalos" class="nw-pub-gift-img">
+            <div *ngIf="getStoreLogo(registry)" class="nw-pub-gift-logo-box" (click)="openLightbox(getStoreLogo(registry))">
+              <img [src]="getStoreLogo(registry)" alt="Mesa de regalos" class="nw-pub-gift-img">
+            </div>
             <h3>{{ registry.title || registry.label || registry.store || 'Mesa de Regalos' }}</h3>
             <p *ngIf="registry.note">{{ registry.note }}</p>
             <a *ngIf="registry.url" [href]="registry.url" target="_blank" rel="noreferrer"
@@ -733,8 +739,6 @@
             </span>
             <div>
               <h3>Sobre Digital & Datos de Transferencia</h3>
-              <p *ngIf="invitation.content.giftSettings?.introText" class="muted">{{
-                invitation.content.giftSettings?.introText }}</p>
             </div>
           </div>
 

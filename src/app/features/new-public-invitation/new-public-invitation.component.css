@@ -649,13 +649,40 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.nw-pub-gift-logo-box {
+  width: 100%;
+  max-width: 190px;
+  height: 75px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nw-pub-gift-logo-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .nw-pub-gift-img {
-  max-height: 120px;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
-  border-radius: 8px;
-  cursor: pointer;
+  border-radius: 4px;
+  display: block;
 }
 
 .nw-pub-envelope-card {

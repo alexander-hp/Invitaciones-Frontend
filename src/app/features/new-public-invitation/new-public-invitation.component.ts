@@ -101,7 +101,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     private textOverlay: TemplateTextOverlayService,
     private elRef: ElementRef,
     private http: HttpClient
-  ) {}
+  ) { }
   private iframeBridgeListener?: (e: MessageEvent) => void;
 
   ngOnInit(): void {
@@ -341,25 +341,28 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   getStoreLogo(registry: any): string {
     if (!registry) return '';
-    const img = registry.imageUrl || '';
-    const storeLower = (registry.store || registry.title || '').toLowerCase();
+    const img = (registry.imageUrl || '').trim();
+    if (img && !img.startsWith('data:image/svg') && !img.includes('assets/giftTable/')) {
+      return img;
+    }
+    const storeLower = (registry.store || registry.title || '').toLowerCase().trim();
     if (storeLower.includes('liverpool')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#E20074" rx="10"/><text x="50%" y="64%" font-family="Georgia, serif" font-weight="bold" font-style="italic" font-size="36" fill="#FFFFFF" text-anchor="middle">Liverpool</text></svg>');
+      return '/assets/giftTable/liverpool-logo.jpg';
     }
     if (storeLower.includes('palacio')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#000000" rx="10"/><text x="50%" y="60%" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="#D4AF37" text-anchor="middle" letter-spacing="2">EL PALACIO DE HIERRO</text></svg>');
+      return '/assets/giftTable/palacio-logo.png';
     }
     if (storeLower.includes('sears')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#B80000" rx="10"/><text x="50%" y="65%" font-family="Arial, sans-serif" font-weight="900" font-size="38" fill="#FFFFFF" text-anchor="middle" letter-spacing="3">SEARS</text></svg>');
+      return '/assets/giftTable/sears_logo.jpg';
     }
     if (storeLower.includes('uniko') || storeLower.includes('efectivo')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#1E293B" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="32" fill="#F43F5E" text-anchor="middle" letter-spacing="4">UNIKO</text></svg>');
+      return '/assets/giftTable/logo_uniko.webp';
     }
     if (storeLower.includes('amazon')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#232F3E" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#FF9900" text-anchor="middle">amazon</text></svg>');
+      return '/assets/giftTable/logo-amazon.png';
     }
     if (storeLower.includes('mercado')) {
-      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#FFE600" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#2D3277" text-anchor="middle">mercado libre</text></svg>');
+      return '/assets/giftTable/mercado-libre-logo.png';
     }
     return img;
   }
@@ -1014,7 +1017,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) return Math.max(parsed.length, this.guestSubmittedSongsCount);
       }
-    } catch (e) {}
+    } catch (e) { }
     return this.guestSubmittedSongsCount;
   }
 
@@ -1033,7 +1036,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       const list: string[] = stored ? JSON.parse(stored) : [];
       list.push(songTitle);
       localStorage.setItem(key, JSON.stringify(list));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   loadGuestSongRequests(): void {
@@ -1048,7 +1051,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           this.guestSubmittedSongsCount = res.songRequests.length;
         }
       },
-      error: () => {}
+      error: () => { }
     });
   }
 
@@ -1165,7 +1168,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           }
         }
       },
-      error: () => {}
+      error: () => { }
     });
   }
 
@@ -1283,9 +1286,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
     const invId = this.invitation?._id || this.invitation?.id;
     const subId = this.route.snapshot.queryParamMap.get('subId') ||
-                  (slug ? localStorage.getItem(`inv_active_sub_${slug}`) : null) ||
-                  (invId ? localStorage.getItem(`inv_active_sub_${invId}`) : null) ||
-                  cookieSubId;
+      (slug ? localStorage.getItem(`inv_active_sub_${slug}`) : null) ||
+      (invId ? localStorage.getItem(`inv_active_sub_${invId}`) : null) ||
+      cookieSubId;
     let editedTexts: Record<string, string> | undefined;
 
     if (subId) {
@@ -1294,7 +1297,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       if (rawSubTexts) {
         try {
           editedTexts = JSON.parse(rawSubTexts);
-        } catch {}
+        } catch { }
       }
       if (!editedTexts) {
         const subs = this.api.getLocalCustomSubmissions();
