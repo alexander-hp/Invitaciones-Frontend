@@ -996,6 +996,10 @@
           </button>
         </div>
 
+        <p *ngIf="dedicationIntroText" class="muted" style="margin-bottom:20px; font-size:0.95rem; line-height:1.5;">
+          {{ dedicationIntroText }}
+        </p>
+
         <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
         <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
           <div class="nw-pub-locked-icon">

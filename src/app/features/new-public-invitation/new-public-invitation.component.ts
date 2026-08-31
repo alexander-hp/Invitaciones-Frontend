@@ -996,6 +996,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return setting !== undefined ? Boolean(setting) : true;
   }
 
+  get dedicationSettings() {
+    return this.invitation?.content?.dedicationSettings || this.event?.externalContent?.dedicationSettings;
+  }
+
+  get dedicationIntroText(): string {
+    return this.dedicationSettings?.introText || '';
+  }
+
   getGuestSubmittedSongCount(): number {
     const slug = this.invitation?.slug;
     if (!slug || typeof localStorage === 'undefined') return this.guestSubmittedSongsCount;

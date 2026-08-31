@@ -370,6 +370,10 @@
           <h2>Libro de Firmas y Dedicatorias</h2>
         </div>
 
+        <p *ngIf="invitation?.content?.dedicationSettings?.introText" class="tpl3-body-text" style="margin-bottom:16px;">
+          {{ invitation?.content?.dedicationSettings?.introText }}
+        </p>
+
         <form (ngSubmit)="submitDedicationForm()" class="tpl3-dedication-form">
           <div class="tpl3-form-group" *ngIf="!verifiedGuest">
             <label>Tu Nombre</label>

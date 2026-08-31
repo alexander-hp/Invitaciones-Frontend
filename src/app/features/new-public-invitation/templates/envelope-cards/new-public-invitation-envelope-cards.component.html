@@ -503,6 +503,9 @@
               <span>LIBRO DE FIRMAS</span>
             </div>
             <h3 class="card-title">Dedicatorias</h3>
+            <p class="gift-intro-p" *ngIf="invitation?.content?.dedicationSettings?.introText">
+              {{ invitation?.content?.dedicationSettings?.introText }}
+            </p>
 
             <div class="card-body-scroll">
               <!-- DEDICATION FORM -->
