@@ -132,14 +132,18 @@ export class NewCustomTemplatesComponent implements OnInit {
     this.approving = true;
     const subId = this.selectedSubmission.id || this.selectedSubmission._id || '';
 
+    console.log('test edit: [AdminCustomTemplates] confirmApprove called for sub ID:', subId, ', submission:', this.selectedSubmission);
+
     this.apiService.approveCustomTemplateSubmission(subId, this.approveFeedback).subscribe({
       next: res => {
+        console.log('test edit: [AdminCustomTemplates] approveCustomTemplateSubmission success:', res);
         this.approving = false;
         this.showApproveModal = false;
         this.showToast(`¡Plantilla "${res.submission.name}" aprobada y publicada con éxito!`);
         this.loadSubmissions();
       },
       error: err => {
+        console.error('test edit: [AdminCustomTemplates] approveCustomTemplateSubmission error:', err);
         this.approving = false;
         this.showToast(err?.message || 'Error al aprobar la plantilla.', 'error');
       }

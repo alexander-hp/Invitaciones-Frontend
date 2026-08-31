@@ -280,6 +280,8 @@ export interface InvitationContent {
   customPageApproved?: boolean;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
+  editedTexts?: Record<string, string>;
+  sourceTemplateKey?: string;
 }
 
 export interface CustomTemplateSubmission {

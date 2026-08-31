@@ -1,7 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../core/api.service';
+import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
+import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
 import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
@@ -10,7 +12,7 @@ import { generateGuestPassHtml } from './guest-pass-template';
   templateUrl: './new-public-invitation.component.html',
   styleUrls: ['./new-public-invitation.component.css']
 })
-export class NewPublicInvitationComponent implements OnInit, OnDestroy {
+export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterViewChecked {
   invitation?: InvitationModel;
   event?: EventModel;
   loading = false;
@@ -29,6 +31,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   private audioRef?: HTMLAudioElement;
   private observer?: IntersectionObserver;
   private timerInterval?: any;
+  private editedTextsApplied = false;
+  private pendingEditedTexts?: Record<string, string>;
+  private textOverlayMutationObserver?: MutationObserver;
+  private detectedSourceTemplate?: string;
 
   countdown = {
     days: 0,
@@ -79,11 +85,29 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private api: ApiService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private textOverlay: TemplateTextOverlayService,
+    private elRef: ElementRef
   ) {}
+  private iframeBridgeListener?: (e: MessageEvent) => void;
 
   ngOnInit(): void {
+    this.iframeBridgeListener = this.handleIframeBridgeMessage.bind(this);
+    window.addEventListener('message', this.iframeBridgeListener);
     this.load();
+  }
+
+  ngAfterViewChecked(): void {
+    // Apply edited texts after Angular has rendered the template
+    if (this.pendingEditedTexts && Object.keys(this.pendingEditedTexts).length > 0 && !this.loading) {
+      const rootEl = this.elRef.nativeElement as HTMLElement;
+      const foundEl = rootEl?.querySelector('[data-section-key], .nw-pub-headline, .nw-pub-subheadline, h1, h2, .env-title');
+      if (rootEl && foundEl && !this.editedTextsApplied) {
+        console.log('test edit: [PublicInv] ngAfterViewChecked - first full render detected, applying texts now!');
+        this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
+        this.editedTextsApplied = true;
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -95,6 +119,41 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     }
     if (this.observer) {
       this.observer.disconnect();
+    }
+    if (this.textOverlayMutationObserver) {
+      this.textOverlayMutationObserver.disconnect();
+    }
+    if (this.iframeBridgeListener) {
+      window.removeEventListener('message', this.iframeBridgeListener);
+    }
+  }
+
+  handleIframeBridgeMessage(event: MessageEvent): void {
+    if (!event.data || typeof event.data !== 'object') return;
+    const { type, slug, payload, email, phone, publicName, message } = event.data;
+    if (slug && this.invitation && this.invitation.slug !== slug) return;
+
+    console.log('test edit: [PublicInv] Received bridge message from iframe:', type, event.data);
+
+    switch (type) {
+      case 'INV_TOGGLE_MUSIC':
+        this.toggleMusic();
+        break;
+      case 'INV_SUBMIT_RSVP':
+        if (payload) {
+          this.rsvp = { ...this.rsvp, ...payload };
+          this.submit();
+        }
+        break;
+      case 'INV_CHECK_GUEST':
+        this.checkGuestAccessByCredentials(email, phone);
+        break;
+      case 'INV_SUBMIT_DEDICATION':
+        this.submitDedicationFromData({ publicName: publicName || '', message: message || '' });
+        break;
+      case 'INV_OPEN_LIGHTBOX':
+        if (event.data.url) this.openLightbox(event.data.url);
+        break;
     }
   }
 
@@ -113,6 +172,33 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
         console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
         console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
 
+        // Auto-detect if customHtml is an edited snapshot of a standard Angular template
+        const customHtml = invitation.content?.customHtml || localStorage.getItem(`inv_custom_html_${slug}`) || '';
+        const savedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
+
+        if (customHtml) {
+          const detected = this.detectSourceTemplateFromHtml(customHtml);
+          if (detected) {
+            console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
+            this.detectedSourceTemplate = detected.templateKey;
+            if (this.invitation.content) {
+              this.invitation.content.template = detected.templateKey;
+              this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
+            }
+            this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
+          } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
+            this.detectedSourceTemplate = savedSourceTpl;
+            if (this.invitation.content) {
+              this.invitation.content.template = savedSourceTpl;
+            }
+          }
+        } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
+          this.detectedSourceTemplate = savedSourceTpl;
+          if (this.invitation.content) {
+            this.invitation.content.template = savedSourceTpl;
+          }
+        }
+
         this.updateCustomHtmlSafeSrcdoc();
         this.loadGuestToken();
         this.loadPublicAlbum();
@@ -120,28 +206,41 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
         this.startCountdown();
         this.initAudio();
         this.setupSectionObserver();
+        this.loadEditedTexts(slug);
         this.loading = false;
       },
       error: (error) => {
         // Fallback: Verificar si existe una plantilla personalizada aprobada para este slug
         const localCustomHtml = localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
         const localCustomCss = localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
-        
+        const localSourceTpl = localStorage.getItem(`inv_source_tpl_${slug}`);
+
         if (localCustomHtml) {
+          const detected = this.detectSourceTemplateFromHtml(localCustomHtml);
+          const tplKey = detected ? detected.templateKey : (localSourceTpl || 'custom-html');
+
           this.invitation = {
             id: 'custom-' + slug,
             slug: slug,
             status: 'published',
             accessMode: 'open',
             content: {
-              template: 'custom-html',
+              template: tplKey,
               customHtml: localCustomHtml,
               customCss: localCustomCss,
               customPageApproved: true,
-              headline: 'Invitación Especial'
+              headline: 'Invitación Especial',
+              editedTexts: detected ? detected.editedTexts : undefined
             }
           } as any;
+
+          if (detected) {
+            this.detectedSourceTemplate = detected.templateKey;
+            this.pendingEditedTexts = detected.editedTexts;
+          }
+
           this.updateCustomHtmlSafeSrcdoc();
+          this.loadEditedTexts(slug);
           this.loading = false;
           return;
         }
@@ -159,6 +258,21 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     }
     const html = this.customHtmlContent;
     const css = this.customCssContent;
+
+    // Clean cloned webpack/zone scripts and unsafe data URIs
+    const cleanHtml = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/unsafe:data:image\/svg\+xml/gi, 'data:image/svg+xml');
+
+    const runtimeScript = generateInteractiveRuntimeScript({
+      slug: this.invitation?.slug || '',
+      musicUrl: this.invitation?.content?.musicUrl || this.getAudioUrlForSection('hero'),
+      eventDate: this.event?.date ? new Date(this.event.date).toISOString() : undefined,
+      headline: this.invitation?.content?.headline,
+      subheadline: this.invitation?.content?.subheadline,
+      palette: this.invitation?.content?.palette
+    });
+
     const combined = `
       <!DOCTYPE html>
       <html>
@@ -171,7 +285,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
           </style>
         </head>
         <body>
-          ${html}
+          ${cleanHtml}
+          ${runtimeScript}
         </body>
       </html>
     `;
@@ -209,22 +324,22 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
     const img = registry.imageUrl || '';
     const storeLower = (registry.store || registry.title || '').toLowerCase();
     if (storeLower.includes('liverpool')) {
-      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23E20074" rx="10"/><text x="50%" y="64%" font-family="Georgia, serif" font-weight="bold" font-style="italic" font-size="36" fill="%23FFFFFF" text-anchor="middle">Liverpool</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#E20074" rx="10"/><text x="50%" y="64%" font-family="Georgia, serif" font-weight="bold" font-style="italic" font-size="36" fill="#FFFFFF" text-anchor="middle">Liverpool</text></svg>');
     }
     if (storeLower.includes('palacio')) {
-      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23000000" rx="10"/><text x="50%" y="60%" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="%23D4AF37" text-anchor="middle" letter-spacing="2">EL PALACIO DE HIERRO</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#000000" rx="10"/><text x="50%" y="60%" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="#D4AF37" text-anchor="middle" letter-spacing="2">EL PALACIO DE HIERRO</text></svg>');
     }
     if (storeLower.includes('sears')) {
-      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23B80000" rx="10"/><text x="50%" y="65%" font-family="Arial, sans-serif" font-weight="900" font-size="38" fill="%23FFFFFF" text-anchor="middle" letter-spacing="3">SEARS</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#B80000" rx="10"/><text x="50%" y="65%" font-family="Arial, sans-serif" font-weight="900" font-size="38" fill="#FFFFFF" text-anchor="middle" letter-spacing="3">SEARS</text></svg>');
     }
     if (storeLower.includes('uniko') || storeLower.includes('efectivo')) {
-      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%231E293B" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="32" fill="%23F43F5E" text-anchor="middle" letter-spacing="4">UNIKO</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#1E293B" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="32" fill="#F43F5E" text-anchor="middle" letter-spacing="4">UNIKO</text></svg>');
     }
     if (storeLower.includes('amazon')) {
-      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23232F3E" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="%23FF9900" text-anchor="middle">amazon</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#232F3E" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#FF9900" text-anchor="middle">amazon</text></svg>');
     }
     if (storeLower.includes('mercado')) {
-      return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="%23FFE600" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="%232D3277" text-anchor="middle">mercado libre</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 70"><rect width="100%" height="100%" fill="#FFE600" rx="10"/><text x="50%" y="64%" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#2D3277" text-anchor="middle">mercado libre</text></svg>');
     }
     return img;
   }
@@ -616,18 +731,50 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
   get currentTemplate(): string {
     const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
     if (queryTpl) return queryTpl;
-    const invContentTpl = (this.invitation?.content as any)?.template;
-    if (invContentTpl) return invContentTpl;
-    const invRootTpl = (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : null;
-    if (invRootTpl) return invRootTpl;
-    const invId = this.invitation?._id || this.invitation?.id;
+
+    if (this.detectedSourceTemplate) {
+      return this.detectedSourceTemplate;
+    }
+
     const slug = this.invitation?.slug;
+    const invId = this.invitation?._id || this.invitation?.id;
+    const sourceTpl =
+      this.invitation?.content?.sourceTemplateKey ||
+      (slug ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
+      (invId ? localStorage.getItem(`inv_source_tpl_${invId}`) : null);
+
+    if (sourceTpl && sourceTpl !== 'custom-html') {
+      return sourceTpl;
+    }
+
+    const invContentTpl = (this.invitation?.content as any)?.template;
+    if (invContentTpl && invContentTpl !== 'custom-html') return invContentTpl;
+
+    const invRootTpl = (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : null;
+    if (invRootTpl && invRootTpl !== 'custom-html') return invRootTpl;
+
     const storedTpl = (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null);
-    if (storedTpl) return storedTpl;
-    return 'envelope-cards';
+    if (storedTpl && storedTpl !== 'custom-html') return storedTpl;
+
+    return 'classic-vertical';
   }
 
   isCustomHtmlTemplate(): boolean {
+    if (this.detectedSourceTemplate) {
+      return false;
+    }
+
+    const slug = this.invitation?.slug;
+    const invId = this.invitation?._id || this.invitation?.id;
+    const sourceTpl =
+      this.invitation?.content?.sourceTemplateKey ||
+      (slug ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
+      (invId ? localStorage.getItem(`inv_source_tpl_${invId}`) : null);
+
+    if (sourceTpl && sourceTpl !== 'custom-html') {
+      return false;
+    }
+
     const t = this.currentTemplate;
     return t === 'custom-html' || t === 'html-css' || t === 'custom';
   }
@@ -850,4 +997,113 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  /**
+   * Loads edited text overlays from invitation content or localStorage.
+   * These are applied post-render via ngAfterViewChecked to preserve
+   * all Angular template interactivity (buttons, RSVP, music, etc.).
+   */
+  private loadEditedTexts(slug: string): void {
+    console.log('test edit: [PublicInv] loadEditedTexts() called, slug:', slug);
+    console.log('test edit: [PublicInv] isCustomHtmlTemplate:', this.isCustomHtmlTemplate());
+    console.log('test edit: [PublicInv] currentTemplate:', this.currentTemplate);
+    // Skip if this is a custom-html template (those use full HTML replacement)
+    if (this.isCustomHtmlTemplate()) {
+      console.log('test edit: [PublicInv] loadEditedTexts() SKIPPED - isCustomHtmlTemplate is true');
+      return;
+    }
+
+    // Priority: invitation content > localStorage
+    const fromContent = this.invitation?.content?.editedTexts;
+    const fromLocal = this.textOverlay.loadEditedTexts(slug);
+    const editedTexts = fromContent || fromLocal;
+
+    console.log('test edit: [PublicInv] loadEditedTexts - fromContent:', fromContent ? Object.keys(fromContent).length + ' keys' : 'undefined');
+    console.log('test edit: [PublicInv] loadEditedTexts - fromLocal:', fromLocal ? Object.keys(fromLocal).length + ' keys' : 'null');
+    console.log('test edit: [PublicInv] loadEditedTexts - final editedTexts:', editedTexts ? Object.keys(editedTexts).length + ' keys' : 'null');
+
+    if (editedTexts && Object.keys(editedTexts).length > 0) {
+      this.pendingEditedTexts = editedTexts;
+      this.editedTextsApplied = false;
+      console.log('test edit: [PublicInv] loadEditedTexts - SET pendingEditedTexts with', Object.keys(editedTexts).length, 'changes');
+      this.setupTextOverlayObserver();
+    } else {
+      console.log('test edit: [PublicInv] loadEditedTexts - NO edited texts found');
+    }
+  }
+
+  /**
+   * Sets up a MutationObserver on the container to dynamically apply edited texts
+   * whenever cards open, tabs change, or child components render.
+   */
+  private setupTextOverlayObserver(): void {
+    if (typeof window === 'undefined' || !('MutationObserver' in window)) return;
+    if (this.textOverlayMutationObserver) {
+      this.textOverlayMutationObserver.disconnect();
+    }
+
+    setTimeout(() => {
+      const rootEl = this.elRef.nativeElement as HTMLElement;
+      if (!rootEl) return;
+
+      let isApplying = false;
+      this.textOverlayMutationObserver = new MutationObserver(() => {
+        if (isApplying) return;
+        if (this.pendingEditedTexts && Object.keys(this.pendingEditedTexts).length > 0) {
+          isApplying = true;
+          this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
+          setTimeout(() => { isApplying = false; }, 100);
+        }
+      });
+
+      this.textOverlayMutationObserver.observe(rootEl, { childList: true, subtree: true });
+      console.log('test edit: [PublicInv] setupTextOverlayObserver successfully attached to root DOM');
+
+      // Initial apply
+      if (this.pendingEditedTexts) {
+        this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
+      }
+    }, 150);
+  }
+
+  /**
+   * Examines customHtml to see if it was originally an edited snapshot of a standard
+   * Angular template (classic-vertical, envelope-cards, template-3).
+   * If so, extracts all edited texts from data-text-key attributes and returns the template key.
+   */
+  private detectSourceTemplateFromHtml(customHtml: string): { templateKey: string; editedTexts: Record<string, string> } | null {
+    if (!customHtml || typeof customHtml !== 'string') return null;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(customHtml, 'text/html');
+
+      // Check for known template structure markers
+      let templateKey = '';
+      if (doc.querySelector('.nw-pub-wrapper, .nw-pub-hero-card, .nw-pub-card, .nw-pub-headline, .nw-pub-subheadline')) {
+        templateKey = 'classic-vertical';
+      } else if (doc.querySelector('.env-envelope, .env-card, .nw-env-wrapper, .env-seal')) {
+        templateKey = 'envelope-cards';
+      } else if (doc.querySelector('.tpl3-container, .modern-minimal, .tpl3-hero')) {
+        templateKey = 'template-3';
+      }
+
+      if (!templateKey) return null;
+
+      // Extract all texts that were saved with data-text-key
+      const editedTexts: Record<string, string> = {};
+      const taggedEls = doc.querySelectorAll('[data-text-key]');
+      taggedEls.forEach(el => {
+        const key = el.getAttribute('data-text-key');
+        if (key) {
+          editedTexts[key] = (el as HTMLElement).innerHTML.trim();
+        }
+      });
+
+      return { templateKey, editedTexts };
+    } catch (e) {
+      console.warn('test edit: [PublicInv] detectSourceTemplateFromHtml error:', e);
+      return null;
+    }
+  }
 }
+

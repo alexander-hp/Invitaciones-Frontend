@@ -602,21 +602,44 @@ export class ApiService {
       delete cleanPayload.id;
     }
 
+    console.log('test edit: [API] submitCustomTemplate called with payload:', {
+      eventSlug: payload.eventSlug,
+      sourceTemplateKey: payload.sourceTemplateKey,
+      editedTextsCount: payload.editedTexts ? Object.keys(payload.editedTexts).length : 0,
+      name: payload.name
+    });
+
+    // Also persist immediately in localStorage as working copy
+    if (payload.eventSlug && payload.editedTexts && payload.sourceTemplateKey) {
+      localStorage.setItem(`inv_edited_texts_${payload.eventSlug}`, JSON.stringify(payload.editedTexts));
+      localStorage.setItem(`inv_source_tpl_${payload.eventSlug}`, payload.sourceTemplateKey);
+      localStorage.setItem(`inv_tpl_${payload.eventSlug}`, payload.sourceTemplateKey);
+      console.log('test edit: [API] submitCustomTemplate: immediately cached working copy in localStorage for slug:', payload.eventSlug);
+    }
+
     return this.http.post<{ submission: CustomTemplateSubmission }>(`${this.apiUrl}/templates/custom-submissions`, cleanPayload).pipe(
       tap(res => {
-        if (res.submission) {
-          const list = this.getLocalCustomSubmissions();
-          const subId = res.submission._id || res.submission.id;
-          const idx = list.findIndex(s => (s.id && s.id === subId) || (s._id && s._id === subId) || (s.eventId && s.eventId === res.submission.eventId));
-          if (idx >= 0) {
-            list[idx] = { ...list[idx], ...res.submission, id: subId };
-          } else {
-            list.unshift({ ...res.submission, id: subId });
-          }
-          this.saveLocalCustomSubmissions(list);
+        const list = this.getLocalCustomSubmissions();
+        const subId = res.submission?._id || res.submission?.id || payload.id || `custom_tpl_${Date.now()}`;
+        const mergedSub: CustomTemplateSubmission = {
+          ...cleanPayload,
+          ...(res.submission || {}),
+          id: subId,
+          sourceTemplateKey: payload.sourceTemplateKey,
+          editedTexts: payload.editedTexts
+        } as CustomTemplateSubmission;
+
+        const idx = list.findIndex(s => (s.id && s.id === subId) || (s._id && s._id === subId) || (s.eventId && s.eventId === mergedSub.eventId));
+        if (idx >= 0) {
+          list[idx] = { ...list[idx], ...mergedSub };
+        } else {
+          list.unshift(mergedSub);
         }
+        this.saveLocalCustomSubmissions(list);
+        console.log('test edit: [API] submitCustomTemplate tap: saved merged submission to localStorage list, ID:', subId);
       }),
-      catchError(() => {
+      catchError(err => {
+        console.warn('test edit: [API] submitCustomTemplate HTTP error, using local fallback:', err);
         const fallbackSub: CustomTemplateSubmission = {
           id: payload.id || `custom_tpl_${Date.now()}`,
           eventId: payload.eventId,
@@ -631,6 +654,8 @@ export class ApiService {
           authorName: payload.authorName || 'Anfitrión',
           authorEmail: payload.authorEmail || '',
           notes: payload.notes || '',
+          sourceTemplateKey: payload.sourceTemplateKey,
+          editedTexts: payload.editedTexts,
           status: 'pending',
           score: payload.score || 90,
           submittedAt: new Date().toISOString()
@@ -638,6 +663,7 @@ export class ApiService {
         const existing = this.getLocalCustomSubmissions();
         existing.unshift(fallbackSub);
         this.saveLocalCustomSubmissions(existing);
+        console.log('test edit: [API] submitCustomTemplate fallback: saved to localStorage list:', fallbackSub);
         return of({ submission: fallbackSub });
       })
     );
@@ -647,6 +673,8 @@ export class ApiService {
     const list = this.getLocalCustomSubmissions();
     const sub = list.find(s => s.id === id || s._id === id);
 
+    console.log('test edit: [API] approveCustomTemplateSubmission called for ID:', id, ', sub found:', sub);
+
     if (sub) {
       sub.status = 'approved';
       sub.reviewedAt = new Date().toISOString();
@@ -655,16 +683,44 @@ export class ApiService {
       sub.publicUrl = `${window.location.origin}/new/i/${slug}`;
       this.saveLocalCustomSubmissions(list);
 
-      // Persist custom HTML/CSS template to the event invitation if slug/event exists
-      localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode);
-      localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
-      localStorage.setItem(`custom_template_html_${slug}`, sub.htmlCode);
-      localStorage.setItem(`custom_template_css_${slug}`, sub.cssCode || '');
-      localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
-      if (sub.eventId) {
-        localStorage.setItem(`inv_tpl_${sub.eventId}`, 'custom-html');
-        localStorage.setItem(`custom_template_html_${sub.eventId}`, sub.htmlCode);
-        localStorage.setItem(`custom_template_css_${sub.eventId}`, sub.cssCode || '');
+      const isTextOverlay = Boolean(sub.editedTexts && Object.keys(sub.editedTexts).length > 0 && sub.sourceTemplateKey);
+      console.log('test edit: [API] approveCustomTemplateSubmission - isTextOverlay:', isTextOverlay);
+      console.log('test edit: [API] approveCustomTemplateSubmission - sub.sourceTemplateKey:', sub.sourceTemplateKey);
+      console.log('test edit: [API] approveCustomTemplateSubmission - sub.editedTexts:', sub.editedTexts);
+      console.log('test edit: [API] approveCustomTemplateSubmission - slug:', slug);
+
+      if (isTextOverlay) {
+        // TEXT OVERLAY MODE: Keep the original Angular template, just persist the edited texts
+        localStorage.setItem(`inv_edited_texts_${slug}`, JSON.stringify(sub.editedTexts));
+        localStorage.setItem(`inv_source_tpl_${slug}`, sub.sourceTemplateKey!);
+        localStorage.setItem(`inv_tpl_${slug}`, sub.sourceTemplateKey!);
+        console.log('test edit: [API] TEXT OVERLAY APPROVED - set inv_edited_texts_' + slug, 'and inv_tpl_' + slug + ' =', sub.sourceTemplateKey);
+
+        // Clean up any previous custom-html override for this slug
+        localStorage.removeItem(`inv_custom_html_${slug}`);
+        localStorage.removeItem(`inv_custom_css_${slug}`);
+        localStorage.removeItem(`custom_template_html_${slug}`);
+        localStorage.removeItem(`custom_template_css_${slug}`);
+        if (sub.eventId) {
+          localStorage.setItem(`inv_tpl_${sub.eventId}`, sub.sourceTemplateKey!);
+          localStorage.setItem(`inv_edited_texts_${sub.eventId}`, JSON.stringify(sub.editedTexts));
+          localStorage.setItem(`inv_source_tpl_${sub.eventId}`, sub.sourceTemplateKey!);
+          localStorage.removeItem(`custom_template_html_${sub.eventId}`);
+          localStorage.removeItem(`custom_template_css_${sub.eventId}`);
+        }
+      } else {
+        // FULL CUSTOM-HTML MODE: Replace entire template (legacy behavior)
+        console.log('test edit: [API] FULL CUSTOM-HTML APPROVED - set inv_tpl_' + slug + ' = custom-html');
+        localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode);
+        localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
+        localStorage.setItem(`custom_template_html_${slug}`, sub.htmlCode);
+        localStorage.setItem(`custom_template_css_${slug}`, sub.cssCode || '');
+        localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
+        if (sub.eventId) {
+          localStorage.setItem(`inv_tpl_${sub.eventId}`, 'custom-html');
+          localStorage.setItem(`custom_template_html_${sub.eventId}`, sub.htmlCode);
+          localStorage.setItem(`custom_template_css_${sub.eventId}`, sub.cssCode || '');
+        }
       }
     }
 
@@ -673,18 +729,36 @@ export class ApiService {
       { feedback }
     ).pipe(
       tap(res => {
+        console.log('test edit: [API] approveCustomTemplateSubmission HTTP success response:', res);
         if (res.submission) {
           const resSlug = res.submission.eventSlug || sub?.eventSlug;
+          const resSub = res.submission;
+          const isResTextOverlay = Boolean(
+            (resSub.editedTexts && Object.keys(resSub.editedTexts).length > 0) ||
+            (sub?.editedTexts && Object.keys(sub.editedTexts).length > 0)
+          ) && (resSub.sourceTemplateKey || sub?.sourceTemplateKey);
+
           if (resSlug) {
-            localStorage.setItem(`inv_custom_html_${resSlug}`, res.submission.htmlCode || sub?.htmlCode || '');
-            localStorage.setItem(`inv_custom_css_${resSlug}`, res.submission.cssCode || sub?.cssCode || '');
-            localStorage.setItem(`custom_template_html_${resSlug}`, res.submission.htmlCode || sub?.htmlCode || '');
-            localStorage.setItem(`custom_template_css_${resSlug}`, res.submission.cssCode || sub?.cssCode || '');
-            localStorage.setItem(`inv_tpl_${resSlug}`, 'custom-html');
+            if (isResTextOverlay) {
+              const texts = resSub.editedTexts || sub?.editedTexts || {};
+              const srcTpl = resSub.sourceTemplateKey || sub?.sourceTemplateKey || 'envelope-cards';
+              localStorage.setItem(`inv_edited_texts_${resSlug}`, JSON.stringify(texts));
+              localStorage.setItem(`inv_source_tpl_${resSlug}`, srcTpl);
+              localStorage.setItem(`inv_tpl_${resSlug}`, srcTpl);
+              console.log('test edit: [API] HTTP tap: persisted text overlay for slug:', resSlug, 'tpl:', srcTpl);
+            } else {
+              localStorage.setItem(`inv_custom_html_${resSlug}`, resSub.htmlCode || sub?.htmlCode || '');
+              localStorage.setItem(`inv_custom_css_${resSlug}`, resSub.cssCode || sub?.cssCode || '');
+              localStorage.setItem(`custom_template_html_${resSlug}`, resSub.htmlCode || sub?.htmlCode || '');
+              localStorage.setItem(`custom_template_css_${resSlug}`, resSub.cssCode || sub?.cssCode || '');
+              localStorage.setItem(`inv_tpl_${resSlug}`, 'custom-html');
+              console.log('test edit: [API] HTTP tap: persisted custom-html for slug:', resSlug);
+            }
           }
         }
       }),
-      catchError(() => {
+      catchError(err => {
+        console.warn('test edit: [API] approveCustomTemplateSubmission HTTP error, using local fallback:', err);
         if (!sub) throw new Error('Plantilla no encontrada');
         return of({
           submission: sub,
@@ -693,6 +767,7 @@ export class ApiService {
       })
     );
   }
+
 
   rejectCustomTemplateSubmission(id: string, feedback?: string): Observable<{ submission: CustomTemplateSubmission }> {
     const list = this.getLocalCustomSubmissions();

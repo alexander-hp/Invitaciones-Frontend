@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ApiService } from '../../../../core/api.service';
+import { TemplateTextOverlayService } from '../../../../core/template-text-overlay.service';
 import { InvitationModel, EventModel, CustomTemplateSubmission } from '../../../../core/models';
 
 @Component({
@@ -28,10 +29,12 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
   toastType: 'success' | 'error' = 'success';
   private toastTimeout?: any;
   private mutationObserver?: any;
+  private originalTexts: Record<string, string> = {};
 
   constructor(
     private sanitizer: DomSanitizer,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private textOverlay: TemplateTextOverlayService
   ) {}
 
   ngOnInit(): void {
@@ -72,6 +75,7 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
   /**
    * When iframe loads, inject contenteditable styling and enable inline editing
    * on all text elements so the user can click and write directly like in Word.
+   * Also tags elements with data-text-key for tracking changes.
    */
   onIframeLoad(iframe: HTMLIFrameElement): void {
     this.iframeLoaded = true;
@@ -105,8 +109,11 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
         doc.head.appendChild(style);
       }
 
-      // 2. Function to make text elements editable
+      // 2. Tag elements with data-text-key and make them editable
       const makeTextsEditable = () => {
+        // First tag elements with stable keys using the overlay service
+        this.textOverlay.tagEditableElements(doc);
+
         const selectors = [
           'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
           'p', 'span:not(.nw-dot):not(.nw-pill)', 'li',
@@ -141,6 +148,13 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
       // Run once immediately
       makeTextsEditable();
 
+      // Capture original texts after tagging (for diffing later)
+      setTimeout(() => {
+        this.originalTexts = this.textOverlay.extractTexts(doc);
+        console.log('test edit: [Customizer] captured originalTexts:', Object.keys(this.originalTexts).length, 'keys');
+        console.log('test edit: [Customizer] sample keys:', Object.keys(this.originalTexts).slice(0, 5));
+      }, 200);
+
       // Prevent link navigation on editable text click
       doc.addEventListener('click', (e: MouseEvent) => {
         const target = e.target as HTMLElement;
@@ -170,12 +184,14 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
   }
 
   /**
-   * Captures the full edited HTML from the iframe and sends it for review.
+   * Extracts only the edited texts (not the full HTML) and sends for review.
+   * This preserves the original Angular template with all its interactivity.
    */
   submitForReview(): void {
     if (!this.invitation) return;
     this.saving = true;
 
+    let editedTexts: Record<string, string> = {};
     let htmlCode = '';
     let cssCode = '';
 
@@ -183,17 +199,30 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
       const iframe = document.querySelector('.vte-iframe') as HTMLIFrameElement;
       const doc = iframe?.contentDocument || iframe?.contentWindow?.document;
       if (doc) {
-        // Clone doc to sanitize before snapshot
-        const clone = doc.documentElement.cloneNode(true) as HTMLElement;
+        // Extract current texts from tagged elements
+        const currentTexts = this.textOverlay.extractTexts(doc);
+        console.log('test edit: [Customizer] submitForReview - currentTexts:', Object.keys(currentTexts).length);
+        console.log('test edit: [Customizer] submitForReview - originalTexts:', Object.keys(this.originalTexts).length);
 
-        // Remove temporary editor styles and contenteditable tags
+        // Diff against original to get only changes
+        editedTexts = this.textOverlay.diffTexts(this.originalTexts, currentTexts);
+        console.log('test edit: [Customizer] submitForReview - editedTexts diff:', Object.keys(editedTexts).length, editedTexts);
+
+        // Also capture full HTML as fallback (for preview in admin panel)
+        const clone = doc.documentElement.cloneNode(true) as HTMLElement;
         const editStyle = clone.querySelector('#vte-inline-edit-styles');
         if (editStyle) editStyle.remove();
-
         clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
         clone.querySelectorAll('[spellcheck]').forEach(el => el.removeAttribute('spellcheck'));
-
-        htmlCode = clone.outerHTML || '';
+        clone.querySelectorAll('script').forEach(s => s.remove());
+        clone.querySelectorAll('[src]').forEach(el => {
+          const src = el.getAttribute('src');
+          if (src && src.startsWith('unsafe:')) {
+            el.setAttribute('src', src.replace(/^unsafe:/, ''));
+          }
+        });
+        htmlCode = (clone.outerHTML || '')
+          .replace(/unsafe:data:image\/svg\+xml/gi, 'data:image/svg+xml');
       }
     } catch (e) {
       console.warn('Could not extract iframe snapshot:', e);
@@ -218,8 +247,16 @@ export class VisualTemplateCustomizerModalComponent implements OnInit, OnChanges
       cssCode,
       notes: `Plantilla base: ${this.templateKey}. Editada en modo Word interactivo.`,
       sourceTemplateKey: this.templateKey,
+      editedTexts: Object.keys(editedTexts).length > 0 ? editedTexts : undefined,
       status: 'pending'
     };
+
+    console.log('test edit: [Customizer] submitForReview - FULL PAYLOAD:', JSON.stringify({
+      sourceTemplateKey: payload.sourceTemplateKey,
+      editedTextsCount: payload.editedTexts ? Object.keys(payload.editedTexts).length : 0,
+      editedTexts: payload.editedTexts,
+      htmlCodeLength: payload.htmlCode?.length
+    }, null, 2));
 
     this.apiService.submitCustomTemplate(payload).subscribe({
       next: () => {
