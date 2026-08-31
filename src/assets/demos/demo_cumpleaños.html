@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invitación de Cumpleaños | Kyndra</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gold: #d4af37; --gold-light: #f0e08b; --dark: #1e1e1e;
+            --light: #faf8f5; --gray: #7a7a7a;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.12); --radius: 12px; --transition: all 0.3s ease;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; background-color: var(--light); color: var(--dark); line-height: 1.6; }
+        h1, h2, h3 { font-family: 'Georgia', 'Times New Roman', serif; font-weight: 400; letter-spacing: 1px; }
+        h2 { font-size: 2.4rem; margin-bottom: 1.5rem; position: relative; display: inline-block; }
+        h2::after { content: ''; position: absolute; bottom: -8px; left: 0; width: 60px; height: 3px; background: var(--gold); }
+        .section-title { text-align: center; margin-bottom: 3rem; }
+        .section-title h2::after { left: 50%; transform: translateX(-50%); width: 80px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* ===== NAVBAR ===== */
+        nav { position: fixed; top: 0; left: 0; width: 100%; background: rgba(30, 30, 30, 0.92); backdrop-filter: blur(6px); z-index: 1000; padding: 12px 0; border-bottom: 1px solid rgba(212, 175, 55, 0.3); transition: var(--transition); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        nav .logo { color: var(--gold); font-size: 1.8rem; font-family: 'Georgia', serif; letter-spacing: 2px; text-decoration: none; font-weight: bold; }
+        nav .logo i { margin-right: 6px; }
+        .nav-links { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; }
+        .nav-links a { color: #eee; text-decoration: none; font-size: 0.95rem; padding: 4px 0; border-bottom: 2px solid transparent; transition: var(--transition); }
+        .nav-links a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+        .nav-toggle { display: none; font-size: 1.6rem; color: var(--gold); background: none; border: none; cursor: pointer; }
+
+        /* ===== HERO ===== */
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); position: relative; padding-top: 80px; overflow: hidden; }
+        .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; z-index: 0; transition: opacity 0.8s ease; }
+        .hero-content { position: relative; z-index: 1; color: #fff; padding: 20px; }
+        .hero-content .subtitle { font-size: 1.2rem; letter-spacing: 6px; color: var(--gold-light); text-transform: uppercase; margin-bottom: 12px; }
+        .hero-content h1 { font-size: 4.5rem; font-weight: 700; color: #fff; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); margin-bottom: 12px; }
+        .hero-content h1 span { color: var(--gold); }
+        .hero-content > p { font-size: 1.3rem; max-width: 600px; margin: 0 auto 24px; opacity: 0.9; }
+        .countdown { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 30px 0; }
+        .countdown-item { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(4px); padding: 16px 24px; border-radius: var(--radius); border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px; }
+        .countdown-item .number { font-size: 2.8rem; font-weight: 700; color: var(--gold); display: block; line-height: 1; }
+        .countdown-item .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #ccc; }
+        .btn-gold { display: inline-block; background: var(--gold); color: #1e1e1e; padding: 14px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; letter-spacing: 1px; transition: var(--transition); border: none; cursor: pointer; font-size: 1rem; }
+        .btn-gold:hover { background: #c5a02e; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
+
+        /* ===== SECTIONS ===== */
+        section { padding: 80px 0; }
+        section:nth-child(even) { background-color: #fff; }
+        section:nth-child(odd) { background-color: var(--light); }
+        .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 30px; transition: var(--transition); }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15); }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+
+        /* ===== WIDGET FRAME ===== */
+        .widget-frame { max-width: 700px; margin: 0 auto; background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+        .widget-frame-header { padding: 14px 20px; background: #faf8f5; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        .widget-frame-header .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
+        .widget-frame-header h4 { font-family: 'Georgia', serif; font-size: 1rem; color: var(--dark); }
+        .widget-frame iframe { width: 100%; border: none; display: block; }
+
+        /* ===== DRESS CODE CARD ===== */
+        .dress-code-card { max-width: 600px; margin: 0 auto; background: #fff; border-radius: var(--radius); padding: 40px; text-align: center; box-shadow: var(--shadow); border-top: 4px solid var(--gold); }
+        .dress-code-card .icons { font-size: 2.8rem; color: var(--gold); margin-bottom: 1rem; }
+        .dress-code-card h3 { font-size: 1.6rem; margin-bottom: 0.8rem; }
+        .dress-code-card p { color: var(--gray); line-height: 1.7; }
+
+        /* ===== GIFTS ===== */
+        .gifts-layout { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+        .gift-store-item { background: #fff; border-radius: var(--radius); padding: 20px 24px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow); }
+        .gift-store-item .icon { font-size: 2rem; color: var(--gold); }
+        .gift-store-item .info { flex: 1; }
+        .gift-store-item .name { font-weight: 600; }
+        .gift-store-item .note { font-size: 0.85rem; color: var(--gray); }
+        .gift-store-item .link { color: var(--gold); font-weight: 600; font-size: 0.85rem; white-space: nowrap; text-decoration: none; }
+        .bank-envelope-box { background: #fff; border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); text-align: center; }
+        .bank-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .bank-row:last-child { border: none; }
+        .bank-copy-btn { padding: 2px 10px; border: 1px solid var(--gold); background: transparent; color: var(--gold); border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; transition: var(--transition); }
+        .bank-copy-btn:hover { background: var(--gold); color: #fff; }
+
+        /* ===== GALERÍA ===== */
+        .galeria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .galeria-grid img { width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius); transition: var(--transition); cursor: pointer; }
+        .galeria-grid img:hover { transform: scale(1.03); box-shadow: var(--shadow); }
+
+        /* ===== FAQ ===== */
+        .faq-item { background: #fff; padding: 18px 24px; border-radius: var(--radius); margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .faq-item h4 { font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .faq-item .faq-body { color: var(--gray); font-size: 0.95rem; line-height: 1.5; display: none; margin-top: 8px; }
+        .faq-item .faq-body.open { display: block; }
+
+        /* ===== FOOTER ===== */
+        footer { background: var(--dark); color: #ccc; text-align: center; padding: 40px 0; }
+        footer p { font-size: 0.9rem; }
+
+        /* ===== ENVELOPE OVERLAY ===== */
+        .envelope-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1e1e1e; z-index: 99999; display: flex; align-items: center; justify-content: center; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1), opacity 0.6s ease; }
+        .envelope-overlay.opened { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+        .envelope-cover { background: #ffffff; width: 90%; max-width: 440px; padding: 3.5rem 2rem; border-radius: 24px; box-shadow: 0 15px 45px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.08); text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; transition: transform 0.3s ease; }
+        .envelope-cover:hover { transform: translateY(-6px); }
+        .wax-seal { font-size: 3rem; background: rgba(0,0,0,0.03); width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px double var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.08); animation: sealFloat 3s ease-in-out infinite; }
+        @keyframes sealFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .envelope-title { font-family: 'Georgia', serif; font-size: 2rem; color: #2c2c2c; }
+        .envelope-text { font-size: 0.9rem; font-weight: 600; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+        .envelope-btn { padding: 0.8rem 2.2rem; border-radius: 30px; border: 2px solid var(--gold); background: transparent; color: var(--gold); font-weight: 600; font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
+        .envelope-cover:hover .envelope-btn { background: var(--gold); color: #ffffff; }
+
+        /* ===== MUSIC PLAYER ===== */
+        .music-player-btn { position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 2px solid var(--gold); border-radius: 50%; width: 56px; height: 56px; display: none; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.3s ease; }
+        .music-player-btn:hover { transform: scale(1.1); }
+        .music-playing { animation: pulseMusic 2s infinite; }
+        @keyframes pulseMusic { 0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.4); } 70% { box-shadow: 0 0 0 14px rgba(212,175,55,0); } 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); } }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .hero-content h1 { font-size: 3.2rem; }
+            .countdown-item .number { font-size: 2.2rem; }
+            .nav-links { display: none; width: 100%; flex-direction: column; align-items: center; padding-top: 16px; gap: 12px; }
+            .nav-links.open { display: flex; }
+            .nav-toggle { display: block; }
+        }
+        @media (max-width: 576px) {
+            .hero-content h1 { font-size: 2.4rem; }
+            .countdown-item { min-width: 60px; padding: 12px 16px; }
+            .countdown-item .number { font-size: 1.8rem; }
+            section { padding: 50px 0; }
+            h2 { font-size: 2rem; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+  <!-- ===== ENVELOPE OVERLAY ===== -->
+  <div class="envelope-overlay" id="envelopeOverlay">
+    <div class="envelope-cover" onclick="openEnvelope()">
+      <div class="wax-seal">🎂</div>
+      <div class="envelope-text">Te invitamos a celebrar</div>
+      <h2 class="envelope-title" id="envelopeHostsTitle">Celebración de Cumpleaños</h2>
+      <button class="envelope-btn">Abrir Invitación</button>
+    </div>
+  </div>
+
+  <!-- ===== FLOATING MUSIC PLAYER ===== -->
+  <button class="music-player-btn" id="musicBtn" onclick="toggleMusic()">
+    <i class="fas fa-music" id="musicIcon" style="color: var(--gold); font-size: 1.2rem;"></i>
+  </button>
+  <audio id="bgAudio" loop></audio>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav>
+    <div class="container">
+      <a href="#" class="logo" id="navLogoText"><i class="fas fa-crown"></i> Cumpleaños</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menú"><i class="fas fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#sec-ubicaciones">Ubicaciones</a></li>
+        <li><a href="#sec-rsvp">RSVP</a></li>
+        <li><a href="#sec-regalos">Regalos</a></li>
+        <li><a href="#sec-galeria">Galería</a></li>
+        <li><a href="#sec-dj">DJ</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header class="hero" id="inicio">
+    <div class="hero-bg" id="heroBg"></div>
+    <div class="hero-content">
+      <div class="subtitle">Celebremos juntos</div>
+      <h1 id="heroTitle">¡Feliz <span>Cumpleaños</span>!</h1>
+      <p>Te invitamos a compartir un día especial lleno de alegría y momentos inolvidables.</p>
+      <div class="countdown" id="countdown">
+        <div class="countdown-item"><span class="number" id="days">00</span><span class="label">Días</span></div>
+        <div class="countdown-item"><span class="number" id="hours">00</span><span class="label">Horas</span></div>
+        <div class="countdown-item"><span class="number" id="minutes">00</span><span class="label">Minutos</span></div>
+        <div class="countdown-item"><span class="number" id="seconds">00</span><span class="label">Segundos</span></div>
+      </div>
+      <div style="margin-top:8px; font-size:1.1rem; opacity:0.85;">
+        <i class="fas fa-calendar-alt" style="color:var(--gold);"></i> <span id="heroDate"></span>
+        &nbsp;·&nbsp;
+        <i class="fas fa-map-marker-alt" style="color:var(--gold);"></i> <span id="heroVenue"></span>
+      </div>
+      <a href="#sec-rsvp" class="btn-gold" style="margin-top:24px;">Confirmar asistencia</a>
+    </div>
+  </header>
+
+  <!-- ===== UBICACIONES ===== -->
+  <section id="sec-ubicaciones" style="display:none;">
+    <div class="container">
+      <div class="section-title"><h2>Ubicaciones</h2></div>
+      <div class="grid-2" id="ubicacionesGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== RSVP (Widget) ===== -->
+  <section id="sec-rsvp">
+    <div class="container">
+      <div class="section-title"><h2>Confirmar Asistencia</h2></div>
+      <div class="widget-frame">
+        <div class="widget-frame-header"><span class="dot"></span><h4>Pase RSVP Digital</h4></div>
+        <iframe id="iframeRsvp" height="600" src="" title="RSVP Form"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PASE DE ACCESO (Widget) ===== -->
+  <section id="sec-pass">
+    <div class="container">
+      <div class="section-title"><h2>Pase de Entrada</h2></div>
+      <div class="widget-frame">
+        <div class="widget-frame-header"><span class="dot"></span><h4>Boleto de Acceso QR</h4></div>
+        <iframe id="iframePass" height="420" src="" title="QR Ticket"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DRESS CODE ===== -->
+  <section id="sec-dress-code" style="display:none;">
+    <div class="container">
+      <div class="section-title"><h2>Código de Vestimenta</h2></div>
+      <div class="dress-code-card">
+        <div class="icons">👗👔</div>
+        <h3 id="dressCodeTitle">Código de Vestimenta</h3>
+        <p id="dressCodeDesc"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MESA DE REGALOS ===== -->
+  <section id="sec-regalos" style="display:none;">
+    <div class="container">
+      <div class="section-title"><h2>Mesa de Regalos</h2></div>
+      <p style="text-align:center; color:var(--gray); margin-bottom:2rem;" id="giftIntroText">Si deseas hacernos un obsequio, estas son algunas opciones.</p>
+      <div class="gifts-layout">
+        <div id="storesContainer"></div>
+        <div id="bankContainer" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DJ / SONG REQUESTS (Widget) ===== -->
+  <section id="sec-dj">
+    <div class="container">
+      <div class="section-title"><h2>Sugerencias Musicales</h2></div>
+      <div class="widget-frame">
+        <div class="widget-frame-header"><span class="dot"></span><h4>Pedir Canción al DJ</h4></div>
+        <iframe id="iframeDj" height="440" src="" title="DJ Request Widget"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOSPEDAJE ===== -->
+  <section id="sec-hospedaje" style="display:none;">
+    <div class="container">
+      <div class="section-title"><h2>Hospedaje</h2></div>
+      <div id="hospedajeGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== GALERÍA ===== -->
+  <section id="sec-galeria">
+    <div class="container">
+      <div class="section-title"><h2>Galería</h2></div>
+      <div class="galeria-grid" id="galeriaGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== ÁLBUM COLECTIVO (Widget) ===== -->
+  <section id="sec-album">
+    <div class="container">
+      <div class="section-title"><h2>Álbum Colectivo</h2></div>
+      <div class="widget-frame">
+        <div class="widget-frame-header"><span class="dot"></span><h4>Subir fotos del evento</h4></div>
+        <iframe id="iframeAlbum" height="450" src="" title="Album Upload Widget"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQs ===== -->
+  <section id="sec-faqs" style="display:none;">
+    <div class="container">
+      <div class="section-title"><h2>Preguntas Frecuentes</h2></div>
+      <div id="faqsContainer" style="max-width:700px; margin:0 auto;"></div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container">
+      <p id="footerTitle" style="font-family:'Georgia',serif; font-size:1.4rem; margin-bottom:8px;">Cumpleaños · Kyndra</p>
+      <p>Kyndra · Invitación Digital Premium · © 2026</p>
+    </div>
+  </footer>
+
+  <!-- ===== KYNDRA DYNAMIC ENGINE ===== -->
+  <script>
+    (function() {
+      'use strict';
+
+      function formatSpanishDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+          const p = dateStr.split('-');
+          if (p.length === 3) {
+            const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            return p[2] + ' · ' + months[parseInt(p[1],10)-1] + ' · ' + p[0];
+          }
+        } catch(e) {}
+        return dateStr;
+      }
+
+      function startCountdown(dateStr) {
+        if (!dateStr) return;
+        const target = new Date(dateStr + 'T00:00:00').getTime();
+        function update() {
+          const diff = target - Date.now();
+          if (diff <= 0) { ['days','hours','minutes','seconds'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '00'; }); return; }
+          const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+          const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = String(v).padStart(2,'0'); };
+          set('days', d); set('hours', h); set('minutes', m); set('seconds', s);
+        }
+        update(); setInterval(update, 1000);
+      }
+
+      window.copyText = function(text, btnEl) {
+        if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => { const o = btnEl.textContent; btnEl.textContent = '¡Copiado!'; setTimeout(() => { btnEl.textContent = o; }, 2000); }); }
+      };
+      window.openEnvelope = function() {
+        const o = document.getElementById('envelopeOverlay'); if (o) o.classList.add('opened');
+        const a = document.getElementById('bgAudio');
+        if (a && a.src) { a.play().then(() => { const b = document.getElementById('musicBtn'); if(b) b.classList.add('music-playing'); }).catch(() => {}); }
+      };
+      window.toggleMusic = function() {
+        const a = document.getElementById('bgAudio'), b = document.getElementById('musicBtn'), i = document.getElementById('musicIcon');
+        if (!a) return;
+        if (a.paused) { a.play(); if(b) b.classList.add('music-playing'); if(i) i.className = 'fas fa-pause'; }
+        else { a.pause(); if(b) b.classList.remove('music-playing'); if(i) i.className = 'fas fa-music'; }
+      };
+      window.toggleFaq = function(el) {
+        const body = el.nextElementSibling, arrow = el.querySelector('.faq-arrow');
+        if (body.classList.contains('open')) { body.classList.remove('open'); if(arrow) arrow.textContent = '▼'; }
+        else { body.classList.add('open'); if(arrow) arrow.textContent = '▲'; }
+      };
+
+      // Menu toggle
+      const navToggle = document.getElementById('navToggle'), navLinks = document.getElementById('navLinks');
+      if (navToggle && navLinks) {
+        navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+        document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click', () => navLinks.classList.remove('open')));
+      }
+
+      function loadEventInvitation(event, portalSlug, apiBaseUrl) {
+        const content = event.externalContent || {};
+        const formattedDate = formatSpanishDate(event.date);
+        const titleText = event.title || 'Cumpleaños';
+        const hostsText = (event.hosts && event.hosts.length > 0) ? event.hosts.join(' & ') : titleText;
+        const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+        document.title = titleText + ' | Invitación Digital';
+        setText('envelopeHostsTitle', titleText);
+        setText('heroTitle', '¡Feliz ' + titleText + '!');
+        setText('heroDate', formattedDate);
+        setText('heroVenue', event.venue?.name || '');
+        setText('footerTitle', titleText);
+
+        // Cover image
+        const coverUrl = content.heroImageUrl || content.coverImageUrl;
+        if (coverUrl) {
+          const bg = document.getElementById('heroBg');
+          if (bg) { bg.style.backgroundImage = "url('" + coverUrl + "')"; bg.style.opacity = '0.25'; }
+        }
+
+        if (event.date) startCountdown(event.date);
+
+        if (content.musicUrl) {
+          const audio = document.getElementById('bgAudio'); if (audio) audio.src = content.musicUrl;
+          const mb = document.getElementById('musicBtn'); if (mb) mb.style.display = 'flex';
+        }
+
+        // Locations
+        const locations = content.locations || [];
+        const hasVenue = event.venue && event.venue.name;
+        if (hasVenue || locations.length > 0) {
+          document.getElementById('sec-ubicaciones').style.display = 'block';
+          const grid = document.getElementById('ubicacionesGrid');
+          let html = '';
+          if (hasVenue) {
+            html += '<div class="card" style="display:flex; gap:20px; align-items:flex-start;"><i class="fas fa-map-marker-alt" style="font-size:2rem; color:var(--gold); margin-top:4px;"></i><div><h4 style="font-size:1.2rem; margin-bottom:4px;">' + event.venue.name + '</h4><p>' + (event.venue.address || '') + '</p>' + (event.venue.mapUrl ? '<a href="' + event.venue.mapUrl + '" target="_blank" class="btn-gold" style="padding:6px 18px; font-size:0.85rem; margin-top:8px;">Ver en mapa</a>' : '') + '</div></div>';
+          }
+          locations.forEach(loc => {
+            html += '<div class="card" style="display:flex; gap:20px; align-items:flex-start;"><i class="fas fa-clock" style="font-size:2rem; color:var(--gold); margin-top:4px;"></i><div><h4 style="font-size:1.2rem; margin-bottom:4px;">' + (loc.name || loc.title || 'Ubicación') + '</h4><p>' + (loc.address || '') + '</p>' + (loc.time ? '<p><strong>' + loc.time + '</strong></p>' : '') + (loc.notes ? '<p><em>' + loc.notes + '</em></p>' : '') + '<div style="display:flex; gap:8px; margin-top:8px;">' + (loc.mapUrl ? '<a href="' + loc.mapUrl + '" target="_blank" class="btn-gold" style="padding:6px 16px; font-size:0.85rem;">Maps</a>' : '') + (loc.wazeUrl ? '<a href="' + loc.wazeUrl + '" target="_blank" class="btn-gold" style="padding:6px 16px; font-size:0.85rem; background:#33ccff;">Waze</a>' : '') + '</div></div></div>';
+          });
+          grid.innerHTML = html;
+        }
+
+        // Dress Code
+        const dressSec = (content.sections || []).find(s => s.type === 'dress_code');
+        if (dressSec) {
+          document.getElementById('sec-dress-code').style.display = 'block';
+          setText('dressCodeTitle', dressSec.title || 'Código de Vestimenta');
+          setText('dressCodeDesc', dressSec.body || '');
+        }
+
+        // Gifts
+        const gs = content.giftSettings || {};
+        if (gs.enabled !== false) {
+          const reg = content.giftRegistry || [], env = content.digitalEnvelope || {};
+          const hasReg = gs.showRegistry !== false && reg.length > 0;
+          const hasEnv = gs.showEnvelope !== false && (env.bank || env.clabe || env.account);
+          if (hasReg || hasEnv) {
+            document.getElementById('sec-regalos').style.display = 'block';
+            if (gs.introText) setText('giftIntroText', gs.introText);
+            if (hasReg) {
+              let sh = ''; reg.forEach(st => { sh += '<div class="gift-store-item"><div class="icon"><i class="fas fa-gift"></i></div><div class="info"><div class="name">' + (st.store || st.title || 'Mesa de Regalos') + '</div>' + (st.note ? '<div class="note">' + st.note + '</div>' : '') + '</div>' + (st.url ? '<a class="link" href="' + st.url + '" target="_blank">Ver Mesa →</a>' : '') + '</div>'; });
+              document.getElementById('storesContainer').innerHTML = sh;
+            }
+            if (hasEnv) {
+              let bh = '<div class="bank-envelope-box"><i class="fas fa-envelope-open-text" style="font-size:2.5rem; color:var(--gold); margin-bottom:10px;"></i><h3 style="font-size:1.5rem; margin-bottom:6px;">Sobre Digital</h3><p style="color:var(--gray); margin-bottom:16px;">' + (env.note || 'Si deseas realizarnos un obsequio en efectivo:') + '</p><div style="text-align:left; background:#faf8f5; padding:16px; border-radius:8px;">';
+              if (env.bank) bh += '<div class="bank-row"><span>Banco</span><span>' + env.bank + '</span></div>';
+              if (env.holder) bh += '<div class="bank-row"><span>Titular</span><span>' + env.holder + '</span></div>';
+              if (env.account) bh += '<div class="bank-row"><span>Cuenta</span><span><code>' + env.account + '</code> <button class="bank-copy-btn" onclick="copyText(\'' + env.account + '\', this)">Copiar</button></span></div>';
+              if (env.clabe) bh += '<div class="bank-row"><span>CLABE</span><span><code>' + env.clabe + '</code> <button class="bank-copy-btn" onclick="copyText(\'' + env.clabe + '\', this)">Copiar</button></span></div>';
+              bh += '</div>';
+              if (env.qrImageUrl) bh += '<div style="margin-top:16px;"><img src="' + env.qrImageUrl + '" alt="QR" style="max-width:160px; border-radius:12px; margin:0 auto;"></div>';
+              bh += '</div>';
+              document.getElementById('bankContainer').innerHTML = bh;
+              document.getElementById('bankContainer').style.display = 'block';
+            }
+          }
+        }
+
+        // Hospedaje
+        const lodging = (content.sections || []).find(s => s.type === 'lodging');
+        if (lodging) {
+          document.getElementById('sec-hospedaje').style.display = 'block';
+          document.getElementById('hospedajeGrid').innerHTML = '<div class="card"><h4 style="font-size:1.2rem; margin-bottom:8px;">' + (lodging.title || 'Hospedaje Recomendado') + '</h4><p style="color:var(--gray); margin-bottom:12px;">' + (lodging.body || '') + '</p>' + (lodging.url ? '<a href="' + lodging.url + '" target="_blank" class="btn-gold" style="padding:8px 20px; font-size:0.9rem;">Ver Información</a>' : '') + '</div>';
+        }
+
+        // FAQs
+        const faqs = (content.sections || []).filter(s => s.type === 'faq');
+        if (faqs.length > 0) {
+          document.getElementById('sec-faqs').style.display = 'block';
+          let fh = ''; faqs.forEach(f => { fh += '<div class="faq-item"><h4 onclick="toggleFaq(this)"><span>❓ ' + (f.title || f.key) + '</span> <span class="faq-arrow">▼</span></h4><div class="faq-body">' + (f.body || '') + '</div></div>'; });
+          document.getElementById('faqsContainer').innerHTML = fh;
+        }
+
+        // Iframes
+        if (portalSlug) {
+          const origin = window.location.origin;
+          const setIframe = (id, w) => { const el = document.getElementById(id); if (el) el.src = origin + '/new/embed/' + portalSlug + '/' + w; };
+          setIframe('iframeRsvp', 'rsvp'); setIframe('iframePass', 'guest-pass'); setIframe('iframeDj', 'song-requests'); setIframe('iframeAlbum', 'album');
+        }
+      }
+
+      function loadPublicGallery(portalSlug, apiBaseUrl) {
+        fetch(apiBaseUrl + '/external/' + portalSlug + '/assets?type=all')
+          .then(r => r.ok ? r.json() : fetch(apiBaseUrl + '/external/' + portalSlug + '/album').then(r2 => r2.json()))
+          .then(data => {
+            const assets = data.assets || [];
+            if (assets.length > 0) {
+              const grid = document.getElementById('galeriaGrid');
+              if (grid) { let h = ''; assets.forEach(a => { const u = a.url || a.imageUrl; if (u) h += '<img src="' + u + '" alt="' + (a.title || 'Foto') + '" loading="lazy">'; }); if (h) grid.innerHTML = h; }
+            }
+          }).catch(e => console.log('Gallery:', e));
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const portal = new URLSearchParams(window.location.search).get('portal');
+        if (!portal) return;
+        const api = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:4000/api' : '/api';
+        fetch(api + '/external/' + portal + '/config')
+          .then(r => { if (!r.ok) throw new Error('Not found'); return r.json(); })
+          .then(d => { if (d && d.event) { loadEventInvitation(d.event, portal, api); loadPublicGallery(portal, api); } })
+          .catch(e => console.log('Preview mode:', e));
+      });
+    })();
+  </script>
+</body>
+</html>

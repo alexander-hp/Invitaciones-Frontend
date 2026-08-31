@@ -1,0 +1,353 @@
+<style>
+  :host {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .nw-guestops-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .nw-guestops-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 14px 18px;
+    background: var(--nw-surface-2, #f5f1ea);
+    border: 1px solid var(--nw-border, #eadecc);
+    border-radius: var(--nw-radius-sm, 12px);
+    box-shadow: var(--nw-shadow-sm);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .nw-guestops-accordion-header:hover {
+    background: var(--nw-surface-3, #eee8dc);
+  }
+
+  .nw-guestops-accordion-body {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Flatten nested cards inside GuestOps to avoid double padding/shadows and prevent overflowing */
+  :host ::ng-deep .nw-guestops-accordion-body .nw-card {
+    box-shadow: none !important;
+    border: 1px solid var(--nw-border, #eadecc) !important;
+    padding: 18px 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    border-radius: var(--nw-radius-sm, 12px) !important;
+    background: var(--nw-surface, #ffffff) !important;
+    overflow: hidden !important;
+  }
+
+  :host ::ng-deep app-access-checkin-view,
+  :host ::ng-deep app-access-photographer-view,
+  :host ::ng-deep app-access-album-view,
+  :host ::ng-deep app-access-album-gallery-view,
+  :host ::ng-deep app-access-client-view,
+  :host ::ng-deep app-access-dj-view {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  @media (max-width: 600px) {
+    .nw-guestops-accordion-header {
+      padding: 12px 14px;
+    }
+    :host ::ng-deep .nw-guestops-accordion-body .nw-card {
+      padding: 14px 10px !important;
+    }
+  }
+</style>
+
+<section class="nw-card nw-guestops-card">
+  <div class="nw-card-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <span class="nw-pill accent" style="text-transform: uppercase; font-size: 11px; font-weight: 700;">Operación</span>
+      <h2 style="margin: 4px 0 0; font-family: var(--nw-font-display); font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        Operación de Invitados
+      </h2>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <span class="nw-pill success" style="font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        {{ guestConfirmedCount + checkedInCount }} Confirmados
+      </span>
+      <span class="nw-pill warning" style="font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        {{ guestPendingCount }} Pendientes
+      </span>
+      <span class="nw-pill danger" style="font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        {{ guestDeclinedCount }} Rechazados
+      </span>
+    </div>
+  </div>
+
+  <p style="color: var(--nw-text-2); font-size: 13.5px; margin-bottom: 20px;">
+    Gestión operativa de pases, control de acceso (check-in), asignación de mesas y seguimiento en tiempo real de los invitados del evento.
+  </p>
+
+  <!-- 1. Sección: Control de Check-in e Invitados -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('guestsList')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        Control de Check-in e Invitados
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['guestsList'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['guestsList']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['guestsList']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['guestsList']" class="nw-guestops-accordion-body">
+      <app-access-checkin-view
+        [session]="session"
+        [checking]="checking"
+        [(code)]="code"
+        [(search)]="search"
+        [(guestStatusFilter)]="guestStatusFilter"
+        [showScanner]="showScanner"
+        (codeChange)="codeChange.emit($event)"
+        (searchChange)="searchChange.emit($event)"
+        (guestStatusFilterChange)="guestStatusFilterChange.emit($event)"
+        (checkInEvent)="checkInEvent.emit()"
+        (directCheckInEvent)="directCheckInEvent.emit($event)"
+        (openScannerEvent)="openScannerEvent.emit()"
+        (closeScannerEvent)="closeScannerEvent.emit()"
+        (qrScannedEvent)="qrScannedEvent.emit($event)">
+      </app-access-checkin-view>
+    </div>
+  </div>
+
+  <!-- 2. Sección: Subir Fotos y Momentos -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('photographer')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+        Subir Fotos y Momentos
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['photographer'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['photographer']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['photographer']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['photographer']" class="nw-guestops-accordion-body">
+      <app-access-photographer-view
+        [session]="session"
+        [uploading]="albumUploading"
+        (uploadBatchEvent)="uploadBatchEvent.emit($event)">
+      </app-access-photographer-view>
+    </div>
+  </div>
+
+  <!-- 3. Sección: Revisión y Moderación de Fotos -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('albumReview')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        Revisión y Moderación de Fotos
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['albumReview'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['albumReview']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['albumReview']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['albumReview']" class="nw-guestops-accordion-body">
+      <app-access-album-view
+        [session]="session"
+        (updateAlbumEvent)="updateAlbumEvent.emit($event)"
+        (bulkUpdateAlbumEvent)="bulkUpdateAlbumEvent.emit($event)">
+      </app-access-album-view>
+    </div>
+  </div>
+
+  <!-- 4. Sección: Álbum del Evento (Fotos Aprobadas) -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('albumView')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        Álbum del Evento (Fotos Aprobadas)
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['albumView'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['albumView']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['albumView']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['albumView']" class="nw-guestops-accordion-body">
+      <app-access-album-gallery-view
+        [session]="session">
+      </app-access-album-gallery-view>
+    </div>
+  </div>
+
+  <!-- 5. Sección: Resumen del Anfitrión -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('clientView')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        Resumen del Anfitrión
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['clientView'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['clientView']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['clientView']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['clientView']" class="nw-guestops-accordion-body">
+      <app-access-client-view
+        [session]="session">
+      </app-access-client-view>
+    </div>
+  </div>
+
+  <!-- 6. Sección: Cabina de DJ / Música -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('dj')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+        </svg>
+        Cabina de DJ / Música
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['dj'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['dj']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['dj']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['dj']" class="nw-guestops-accordion-body">
+      <app-access-dj-view
+        [session]="session"
+        (playSongEvent)="playSongEvent.emit($event)"
+        (updateSongEvent)="updateSongEvent.emit($event)"
+        (moveSongEvent)="moveSongEvent.emit($event)"
+        (addSongEvent)="addSongEvent.emit($event)">
+      </app-access-dj-view>
+    </div>
+  </div>
+
+  <!-- 7. Sección: API Integración Externa -->
+  <div style="margin-bottom: 20px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div class="nw-guestops-accordion-header" (click)="toggleSection('integrationApi')">
+      <h3 style="margin: 0; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        API Integración Externa
+      </h3>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" style="height: 28px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>{{ collapsedSections['integrationApi'] ? 'Expandir' : 'Colapsar' }}</span>
+        <svg *ngIf="collapsedSections['integrationApi']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <svg *ngIf="!collapsedSections['integrationApi']" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="!collapsedSections['integrationApi']" class="nw-guestops-accordion-body">
+      <div class="nw-card" style="padding: 24px;">
+        <p style="margin: 0 0 16px; font-size: 13.5px; color: var(--nw-text-2);">
+          Utiliza este token temporal para integrar los datos de este evento con tus sistemas externos de forma programática.
+        </p>
+        <div style="display: grid; gap: 12px; background: var(--nw-surface-2, #f5f1ea); padding: 16px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+          <div style="font-size: 13px; color: var(--nw-text-2);">
+            <strong>Token de Autorización:</strong>
+          </div>
+          <code style="font-family: monospace; font-size: 12px; word-break: break-all; background: var(--nw-surface, #ffffff); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--nw-border, #cbd5e1); color: var(--nw-text, #0f172a); display: block;">
+            Authorization: Bearer {{ token }}
+          </code>
+          <p style="margin: 6px 0 0; font-size: 12.5px; color: var(--nw-text-3);">
+            Este enlace y token expiran el {{ session.expiresAt | date:'medium' }}.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

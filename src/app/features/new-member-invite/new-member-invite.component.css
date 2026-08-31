@@ -1,0 +1,194 @@
+.member-invite-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  background:
+    linear-gradient(135deg, rgba(45, 38, 32, 0.92), rgba(120, 93, 70, 0.78)),
+    url('/assets/login-wedding-bg.svg') center/cover no-repeat;
+}
+
+.member-invite-card {
+  width: min(100%, 520px);
+  background: rgba(255, 252, 247, 0.97);
+  border: 1px solid rgba(207, 184, 159, 0.75);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+  padding: 32px;
+  color: #2d2926;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #c09c78;
+  color: #fff;
+  font-weight: 800;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #9a7658;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 0 0 18px;
+  font-size: 30px;
+}
+
+.state,
+.note {
+  color: #75695f;
+  line-height: 1.5;
+}
+
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.alert.error {
+  color: #8f2f2f;
+  background: #fff1f0;
+  border: 1px solid #f0b7af;
+}
+
+.alert.success {
+  color: #236044;
+  background: #effaf3;
+  border: 1px solid #a9d8ba;
+}
+
+.event-summary,
+.permissions-summary,
+.mode-tabs,
+.invite-form {
+  display: grid;
+  gap: 12px;
+}
+
+.event-summary {
+  background: #f5efe7;
+  border: 1px solid #e4d5c5;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.event-summary span,
+.permissions-summary span {
+  color: #8a7a6c;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.event-summary strong {
+  font-size: 19px;
+}
+
+.event-summary small {
+  color: #75695f;
+}
+
+.permissions-summary {
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 16px;
+}
+
+.permissions-summary > div {
+  background: #fff;
+  border: 1px solid #eadfd4;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.mode-tabs {
+  grid-template-columns: 1fr 1fr;
+  background: #f5efe7;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.mode-tabs button {
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  padding: 11px 10px;
+  font-weight: 750;
+  color: #6d6259;
+  cursor: pointer;
+}
+
+.mode-tabs button.active {
+  background: #fff;
+  color: #2d2926;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.invite-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  color: #4b4038;
+}
+
+.invite-form input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dac7b4;
+  border-radius: 10px;
+  padding: 12px 13px;
+  font: inherit;
+  background: #fff;
+}
+
+.invite-form input[readonly] {
+  background: #f5efe7;
+  color: #75695f;
+}
+
+.invite-form button {
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #c09c78, #a77f5b);
+  color: #fff;
+  font-weight: 800;
+  padding: 13px 16px;
+  cursor: pointer;
+}
+
+.invite-form button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.show-password {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 14px 0;
+  color: #6d6259;
+  font-weight: 650;
+}
+
+@media (max-width: 560px) {
+  .member-invite-card {
+    padding: 24px;
+  }
+
+  .permissions-summary {
+    grid-template-columns: 1fr;
+  }
+}

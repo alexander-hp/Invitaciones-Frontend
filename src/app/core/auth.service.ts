@@ -1,8 +1,8 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
-import { AuthResponse, User } from './models';
+import { AuthResponse, SocialLoginPayload, User } from './models';
 
 const TOKEN_KEY = 'invitaciones_token';
 
@@ -29,8 +29,12 @@ export class AuthService {
     return this.api.login(payload).pipe(tap((response) => this.saveSession(response)));
   }
 
-  register(payload: { name: string; email: string; password: string; role?: 'client' | 'organizer' }): Observable<AuthResponse> {
+  register(payload: { name: string; email: string; password: string; role?: User['role']; accountType?: User['accountType'] }): Observable<AuthResponse> {
     return this.api.register(payload).pipe(tap((response) => this.saveSession(response)));
+  }
+
+  socialLogin(payload: SocialLoginPayload): Observable<AuthResponse> {
+    return this.api.socialLogin(payload).pipe(tap((response) => this.saveSession(response)));
   }
 
   loadCurrentUser(): void {
@@ -44,7 +48,7 @@ export class AuthService {
   logout(redirect = true): void {
     localStorage.removeItem(TOKEN_KEY);
     this.userSubject.next(null);
-    if (redirect) this.router.navigate(['/login']);
+    if (redirect) this.router.navigate(['/new/login']);
   }
 
   private saveSession(response: AuthResponse): void {

@@ -1,0 +1,791 @@
+<!-- 🌟 NOTIFICACIONES INTERNAS DEL WIDGET (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="widgetMessage || widgetError"
+  style="position: fixed; bottom: 24px; right: 24px; z-index: 100000; display: flex; flex-direction: column; gap: 8px;">
+  <div *ngIf="widgetMessage" class="nw-toast success"
+    style="background: #1c1917; border: 1px solid rgba(255,255,255,0.15); color: #22c55e; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px;">
+    <span>✨ {{ widgetMessage }}</span>
+    <button type="button" (click)="widgetMessage=''"
+      style="background: none; border: none; color: inherit; cursor: pointer; font-size: 14px; margin-left: 8px;">✕</button>
+  </div>
+  <div *ngIf="widgetError" class="nw-toast error"
+    style="background: #1c1917; border: 1px solid rgba(255,255,255,0.15); color: #ef4444; padding: 12px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px;">
+    <span>⚠️ {{ widgetError }}</span>
+    <button type="button" (click)="widgetError=''"
+      style="background: none; border: none; color: inherit; cursor: pointer; font-size: 14px; margin-left: 8px;">✕</button>
+  </div>
+</div>
+
+<style>
+  .book-collage-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 22px 26px;
+    padding: 12px 6px;
+  }
+
+  .book-polaroid-frame {
+    background: #ffffff;
+    border: 1px solid #e2d7c9;
+    padding: 10px 10px 14px 10px;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* Variaciones orgánicas de escala para sensación de álbum artesanal */
+  .book-polaroid-frame.book-single-hero {
+    max-width: 480px;
+  }
+  .book-polaroid-frame.book-single-hero .book-img-wrapper img {
+    max-height: 380px;
+    max-width: 460px;
+  }
+
+  .book-polaroid-frame.book-size-large {
+    max-width: 360px;
+  }
+  .book-polaroid-frame.book-size-large .book-img-wrapper img {
+    max-height: 310px;
+    max-width: 340px;
+  }
+
+  .book-polaroid-frame.book-size-medium {
+    max-width: 280px;
+  }
+  .book-polaroid-frame.book-size-medium .book-img-wrapper img {
+    max-height: 240px;
+    max-width: 260px;
+  }
+
+  .book-polaroid-frame.book-size-compact {
+    max-width: 220px;
+  }
+  .book-polaroid-frame.book-size-compact .book-img-wrapper img {
+    max-height: 185px;
+    max-width: 200px;
+  }
+
+  .book-img-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background: #181818;
+    max-width: 100%;
+  }
+
+  .book-img-wrapper img {
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 4px;
+  }
+
+  .book-polaroid-tape {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 14px;
+    background: rgba(240, 230, 215, 0.85);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .nw-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: var(--nw-surface-2, #f5f1ea);
+    color: var(--nw-text, #2e2621);
+    border: 1px solid var(--nw-border, #eadecc);
+  }
+
+  .nw-tag-chip.tag-super {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+  }
+
+  .nw-tag-chip.tag-encanta {
+    background: #fdf2f8 !important;
+    color: #be185d !important;
+    border: 1px solid #fbcfe8 !important;
+  }
+
+  .nw-swipe-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 12, 10, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  /* 📖 LIENZO DEL LIBRO DE RECUERDOS TIPO ÁLBUM FÍSICO REAL */
+  .book-spread-canvas {
+    background-color: #faf6ef;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.92) 0%, rgba(246,240,230,0.85) 100%),
+      radial-gradient(#dfd4c5 0.75px, transparent 0.75px);
+    background-size: auto, 22px 22px;
+    border-radius: 20px;
+    border: 8px solid #ede1d1;
+    outline: 1.5px solid #d4c1ad;
+    box-shadow: 
+      inset 28px 0 40px -16px rgba(0,0,0,0.05),
+      inset -28px 0 40px -16px rgba(0,0,0,0.05),
+      inset 0 0 60px rgba(180,150,110,0.07),
+      0 18px 45px rgba(0,0,0,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (max-width: 640px) {
+    .book-spread-canvas {
+      padding: 16px 10px !important;
+      border-width: 4px !important;
+      border-radius: 14px !important;
+    }
+  }
+
+  .book-spine-crease {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 32px;
+    transform: translateX(-50%);
+    background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.14) 0%,
+      rgba(0, 0, 0, 0.03) 25%,
+      rgba(255, 255, 255, 0.9) 47%,
+      rgba(168, 140, 108, 0.5) 50%,
+      rgba(255, 255, 255, 0.9) 53%,
+      rgba(0, 0, 0, 0.03) 75%,
+      rgba(0, 0, 0, 0.14) 100%
+    );
+    box-shadow: 0 0 12px rgba(0,0,0,0.06);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .book-corner-decor {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-color: #cbbaa5;
+    border-style: solid;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0.85;
+  }
+
+  .book-corner-tl { top: 12px; left: 12px; border-width: 2.5px 0 0 2.5px; border-top-left-radius: 4px; }
+  .book-corner-tr { top: 12px; right: 12px; border-width: 2.5px 2.5px 0 0; border-top-right-radius: 4px; }
+  .book-corner-bl { bottom: 12px; left: 12px; border-width: 0 0 2.5px 2.5px; border-bottom-left-radius: 4px; }
+  .book-corner-br { bottom: 12px; right: 12px; border-width: 0 2.5px 2.5px 0; border-bottom-right-radius: 4px; }
+
+  .book-ribbon-bookmark {
+    position: absolute;
+    top: -2px;
+    right: 80px;
+    width: 22px;
+    height: 56px;
+    background: linear-gradient(135deg, #c09c78 0%, #a47b52 100%);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    z-index: 4;
+    pointer-events: none;
+  }
+</style>
+
+<!-- 📖 SECCIÓN: ÁLBUM DE RECUERDOS DIGITAL INTERACTIVO (PATRÓN DE DISEÑO CLARO UNIVERSAL) -->
+<section class="nw-card"
+  style="width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; margin-top: 16px;">
+
+  <!-- Encabezado Estándar de Sección -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        Libro de Recuerdos del Evento
+        <span class="nw-badge"
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ availableAssets.length }} fotos
+        </span>
+        <span class="nw-pill success" style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          {{ bookPages.length }} páginas
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Pasa las hojas de tu libro de recuerdos organizado por experiencias: Me encanta, Me super encanta y momentos del
+        evento.
+      </p>
+    </div>
+
+    <!-- Botones de Acción Principales Responsivos -->
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
+      <!-- Botón Descargar Hoja (Verde) -->
+      <button type="button" (click)="downloadBookPageImage('widgetBookPageToExport')" [disabled]="isExportingBookPage"
+        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; border-radius: 20px; padding: 0 16px; height: 38px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); flex: 1 1 auto; min-width: 160px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Descargar Hoja "{{ currentBookPage.title }}"</span>
+      </button>
+
+      <!-- Botón Pantalla Completa -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openFullscreenBookPage()"
+        style="height: 38px; font-size: 12.5px; font-weight: 600; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; min-width: 130px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Libro Completo</span>
+      </button>
+
+      <!-- Botón Slideshow -->
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openFullscreenBook(0)"
+        style="height: 38px; font-size: 12.5px; font-weight: 600; padding: 0 14px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; min-width: 110px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>Slideshow</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Selector de Hojas solo en Mobile (<=640px) -->
+  <div class="nw-mobile-status-select" style="width: 100%; margin-bottom: 20px;">
+    <select class="nw-select" [ngModel]="bookPageIndex" (ngModelChange)="goToBookPage($event)"
+      style="height: 40px; font-size: 13px; font-weight: 600; padding: 0 12px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+      <option *ngFor="let page of bookPages; let idx = index" [value]="idx">
+        {{ page.icon }} {{ page.title }} ({{ page.assets.length }})
+      </option>
+    </select>
+  </div>
+
+  <!-- Pestañas de Hojas en Desktop (>640px) -->
+  <div class="nw-desktop-status-pills"
+    style="gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+    <button *ngFor="let page of bookPages; let idx = index" type="button" class="nw-btn nw-btn-sm"
+      (click)="goToBookPage(idx)" [class.nw-btn-primary]="bookPageIndex === idx"
+      [class.nw-btn-ghost]="bookPageIndex !== idx"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px;">
+      <span>{{ page.icon }}</span>
+      <span>{{ page.title }}</span>
+      <span class="nw-badge" [style.background]="bookPageIndex === idx ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.06)'"
+        [style.color]="bookPageIndex === idx ? '#ffffff' : 'var(--nw-text-2, #6e6157)'"
+        style="font-size: 11px; padding: 1px 6px; border-radius: 10px; margin-left: 2px;">
+        {{ page.assets.length }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Contenedor del Libro Abierto (Hojas de Collage con Estilo Polaroid y Fondo de Álbum Real) -->
+  <div id="widgetBookPageToExport" class="book-page-container book-spread-canvas"
+    style="padding: 28px; color: var(--nw-text, #2e2621); min-height: 440px; max-height: 750px; overflow-y: auto; display: flex; flex-direction: column; justify-content: space-between;">
+
+    <!-- Elementos Decorativos del Libro Físico -->
+    <div class="book-spine-crease"></div>
+    <div class="book-ribbon-bookmark"></div>
+    <div class="book-corner-decor book-corner-tl"></div>
+    <div class="book-corner-decor book-corner-tr"></div>
+    <div class="book-corner-decor book-corner-bl"></div>
+    <div class="book-corner-decor book-corner-br"></div>
+
+    <!-- Cabecera de la Hoja del Libro -->
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; border-bottom: 2px dashed #dfd2c0; padding-bottom: 14px; position: relative; z-index: 5;">
+      <span
+        style="font-family: var(--nw-font-display); font-size: 20px; font-weight: 800; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 8px;">
+        {{ currentBookPage.icon }} {{ currentBookPage.title }}
+      </span>
+      <span style="font-size: 13px; color: var(--nw-text-3, #9e9083); font-weight: 700; background: rgba(255,255,255,0.7); padding: 4px 12px; border-radius: 20px; border: 1px solid #e8dec8;">
+        Página {{ bookPageIndex + 1 }} de {{ bookPages.length }}
+      </span>
+    </div>
+
+    <!-- Estado sin fotografías en esta Hoja -->
+    <div *ngIf="currentBookPage.assets.length === 0"
+      style="padding: 70px 20px; text-align: center; color: var(--nw-text-3, #9e9083); position: relative; z-index: 5;">
+      <span style="font-size: 50px; display: block; margin-bottom: 10px;">📷</span>
+      <h4 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--nw-text, #2e2621);">
+        Aún no hay fotos en "{{ currentBookPage.title }}"
+      </h4>
+      <p style="margin: 6px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Etiqueta o reacciona a fotos en la galería para agregarlas automáticamente a esta hoja de tu libro.
+      </p>
+    </div>
+
+    <!-- Grid de Collage estilo Polaroid con Proporción Completa de Imagen -->
+    <div *ngIf="currentBookPage.assets.length > 0" class="book-collage-grid"
+      style="margin-bottom: 20px; position: relative; z-index: 5;">
+
+      <div *ngFor="let asset of currentBookPage.assets.slice(0, 8); let i = index"
+        (click)="openStoryModal(asset, currentBookPage.title)"
+        [class]="'book-collage-card book-polaroid-frame ' + getBookCollageClass(asset, i)"
+        [style.transform]="getPolaroidRotation(i)"
+        onmouseover="this.style.transform='scale(1.06) rotate(0deg)'; this.style.zIndex='20'; this.style.boxShadow='0 14px 34px rgba(0,0,0,0.2)';"
+        onmouseout="this.style.transform=this.getAttribute('data-rotate'); this.style.zIndex='1'; this.style.boxShadow='0 6px 18px rgba(0,0,0,0.08)';"
+        [attr.data-rotate]="getPolaroidRotation(i)">
+
+        <!-- Cinta Adhesiva Decorativa (Washi Tape) -->
+        <div class="book-polaroid-tape"></div>
+
+        <div class="book-img-wrapper">
+          <img [src]="asset.url" alt="Foto del libro">
+        </div>
+
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--nw-text-2, #6e6157); padding-top: 2px;">
+          <strong style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px;">
+            👤 {{ asset.uploaderName || 'Invitado' }}
+          </strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Pie de Navegación de Hojas -->
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e8dec8; padding-top: 16px; flex-wrap: wrap; gap: 10px; position: relative; z-index: 5;">
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="prevBookPage()"
+        style="font-size: 13px; font-weight: 700; height: 36px; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.7); border: 1px solid #dfd2c0;">
+        ◄ Hoja Anterior
+      </button>
+
+      <div style="display: flex; gap: 6px;">
+        <button *ngFor="let p of bookPages; let idx = index" type="button" (click)="goToBookPage(idx)"
+          [style.background]="bookPageIndex === idx ? 'var(--nw-accent, #c09c78)' : '#dfd2c0'"
+          style="border: none; border-radius: 50%; width: 10px; height: 10px; cursor: pointer; padding: 0;">
+        </button>
+      </div>
+
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="nextBookPage()"
+        style="font-size: 13px; font-weight: 700; height: 36px; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.7); border: 1px solid #dfd2c0;">
+        Hoja Siguiente ►
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- 📱 MODAL LIGHTBOX DE VISTA PREVIA PARA HISTORIAS (INSTAGRAM / FACEBOOK / TIKTOK) -->
+<div class="nw-swipe-modal-backdrop" *ngIf="storyModalOpen" (click)="closeStoryModal()">
+  <div (click)="$event.stopPropagation()"
+    style="max-width: 360px; width: 90vw; background: #000000; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 48px rgba(0,0,0,0.8); border: 2px solid rgba(255,255,255,0.2); position: relative; color: #ffffff; display: flex; flex-direction: column;">
+
+    <!-- Botón Cerrar -->
+    <button type="button" (click)="closeStoryModal()"
+      style="position: absolute; top: 16px; right: 16px; z-index: 20; background: rgba(0,0,0,0.6); border: none; color: #ffffff; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+      ✕
+    </button>
+
+    <!-- Tarjeta 9:16 Aspect Ratio de Historia -->
+    <div
+      style="position: relative; width: 100%; height: 500px; background: linear-gradient(180deg, #18181b 0%, #09090b 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 18px; user-select: none;">
+
+      <!-- Header de la Historia -->
+      <div
+        style="z-index: 10; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 30px; backdrop-filter: blur(8px); width: max-content;">
+        <span style="font-size: 16px;">📸</span>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 12.5px; font-weight: 800; color: #ffffff; line-height: 1.2;">
+            {{ eventTitle }}
+          </span>
+          <span style="font-size: 10.5px; color: #d4d4d8;">
+            {{ storyPageTitle }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Imagen de la Fotografía -->
+      <div
+        style="flex: 1; margin: 14px 0 0 0; position: relative; border-radius: 16px; overflow: hidden; border: 2px solid rgba(255,255,255,0.15); box-shadow: 0 12px 28px rgba(0,0,0,0.5); background: #111;">
+        <img *ngIf="storyAsset" [src]="storyAsset.url" alt="Foto para historia"
+          style="width: 100%; height: 100%; object-fit: cover;">
+        <div *ngIf="!storyAsset && currentBookPage.assets.length > 0" style="width: 100%; height: 100%;">
+          <img [src]="currentBookPage.assets[0].url" alt="Foto portada historia"
+            style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+
+        <!-- Stamp / Insignia flotante en la foto -->
+        <div style="position: absolute; bottom: 12px; left: 12px; z-index: 10;">
+          <span class="nw-tag-chip" [class.tag-super]="storyPageTitle === TAG_SUPER_ENCANTA"
+            [class.tag-encanta]="storyPageTitle === TAG_ME_ENCANTA"
+            style="font-size: 12px; padding: 4px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+            {{ storyPageTitle === TAG_SUPER_ENCANTA ? '⭐ Me super encanta' : (storyPageTitle === TAG_ME_ENCANTA ? '❤️ Me encanta' : '🏷️ ' + storyPageTitle) }}
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botones de Acción para Compartir y Descargar -->
+    <div
+      style="padding: 14px 16px; background: #18181b; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <button type="button" (click)="copyAlbumAccessUrl()"
+        style="flex: 1; min-width: 130px; height: 38px; font-size: 12px; font-weight: 600; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: rgba(255, 255, 255, 0.12); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25); cursor: pointer; transition: background 0.15s ease;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+        <span> Link del Álbum</span>
+      </button>
+
+      <button type="button" (click)="downloadPhotoAsset(storyAsset)"
+        style="flex: 1; min-width: 120px; height: 38px; font-size: 12px; font-weight: 700; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span> Descargar</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 📺 MODAL PRESENTACIÓN PANTALLA COMPLETA - LIBRO DE RECUERDOS (SLIDESHOW) -->
+<div *ngIf="fullscreenBookOpen"
+  style="position: fixed; inset: 0; z-index: 99999; background: #0a0806; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; user-select: none;">
+
+  <!-- Fondo con Blur Ambiental de la foto activa -->
+  <div *ngIf="currentFullscreenAsset" [style.background-image]="'url(' + currentFullscreenAsset.url + ')'"
+    style="position: absolute; inset: -20px; background-size: cover; background-position: center; filter: blur(50px) brightness(0.35); opacity: 0.85; transition: background-image 0.5s ease-in-out; pointer-events: none;">
+  </div>
+
+  <!-- Barra Superior de Control Pantalla Completa -->
+  <div
+    style="position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%); color: #ffffff; flex-wrap: wrap; gap: 10px; width: 100%; box-sizing: border-box;">
+    
+    <!-- Título e Info -->
+    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 180px;">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+      <div style="min-width: 0;">
+        <h3
+          style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; font-family: var(--nw-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          Libro de Recuerdos del Evento
+        </h3>
+        <p style="margin: 2px 0 0; font-size: 12px; color: #d6c7b9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" *ngIf="fullscreenAssets.length > 0">
+          Foto {{ fullscreenIndex + 1 }} de {{ fullscreenAssets.length }} • {{ eventTitle }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Filtro y Acciones -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 220px; justify-content: flex-end;">
+      <select [ngModel]="fullscreenFilter" (ngModelChange)="setFullscreenFilter($event)"
+        style="height: 36px; border-radius: 20px; background: rgba(255,255,255,0.12); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); padding: 0 10px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; min-width: 130px; box-sizing: border-box; text-overflow: ellipsis; white-space: nowrap;">
+        <option value="all" style="background: #111; color: #fff;">🖼️ Todas las fotos ({{ availableAssets.length }})</option>
+        <option [value]="TAG_SUPER_ENCANTA" style="background: #111; color: #fff;">⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})</option>
+        <option [value]="TAG_ME_ENCANTA" style="background: #111; color: #fff;">❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})</option>
+        <option *ngFor="let tag of availableTags" [value]="tag" style="background: #111; color: #fff;">🏷️ {{ tag }}</option>
+      </select>
+
+      <button type="button" (click)="toggleSlideshow()"
+        [style.background]="isPlayingSlideshow ? '#f59e0b' : 'rgba(255,255,255,0.15)'"
+        style="height: 36px; border-radius: 20px; padding: 0 14px; font-size: 12px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; flex-shrink: 0;">
+        <svg *ngIf="isPlayingSlideshow" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        <svg *ngIf="!isPlayingSlideshow" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span>{{ isPlayingSlideshow ? 'Pausar' : 'Reproducir' }}</span>
+      </button>
+
+      <button type="button" (click)="closeFullscreenBook()" title="Cerrar Pantalla Completa (ESC)"
+        style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <!-- Zona Central: Visor de Foto Activa con Botones Laterales -->
+  <div
+    style="position: relative; z-index: 10; flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; gap: 16px; overflow: hidden;">
+
+    <!-- Flecha Izquierda -->
+    <button type="button" (click)="prevFullscreenSlide()" title="Anterior (Flecha Izquierda ←)"
+      style="width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s ease, background 0.15s ease;"
+      onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(255,255,255,0.25)';"
+      onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(0,0,0,0.5)';">
+      ‹
+    </button>
+
+    <!-- Foto Activa con Tarjeta de Información Ampliada -->
+    <div *ngIf="currentFullscreenAsset"
+      style="flex: 1; height: 100%; max-height: calc(100vh - 190px); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 6px 0; box-sizing: border-box;">
+
+      <div
+        style="position: relative; max-width: 100%; max-height: calc(100vh - 275px); display: flex; align-items: center; justify-content: center;">
+        <img [src]="currentFullscreenAsset.url" alt="Recuerdo del Evento"
+          style="max-width: 100%; max-height: calc(100vh - 275px); object-fit: contain; border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transition: transform 0.3s ease;">
+      </div>
+
+      <!-- Detalle del Autor y Tags abajo de la Foto (Siempre Visible y con Espaciado Seguro) -->
+      <div
+        style="margin-top: 10px; background: rgba(24, 20, 17, 0.92); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.22); padding: 8px 18px; border-radius: 30px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 5;">
+        <span style="font-size: 13px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+          👤 {{ currentFullscreenAsset.uploaderName || 'Invitado' }}
+        </span>
+
+        <!-- Tags presentes en la presentación con chip visual claro -->
+        <div *ngIf="currentFullscreenAsset.tags && currentFullscreenAsset.tags.length > 0"
+          style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+          <span *ngFor="let t of currentFullscreenAsset.tags" class="nw-tag-chip"
+            [class.tag-super]="t === TAG_SUPER_ENCANTA" [class.tag-encanta]="t === TAG_ME_ENCANTA"
+            style="font-size: 11.5px; padding: 2px 10px;">
+            {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : '🏷️ ' + t) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flecha Derecha -->
+    <button type="button" (click)="nextFullscreenSlide()" title="Siguiente (Flecha Derecha →)"
+      style="width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s ease, background 0.15s ease;"
+      onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(255,255,255,0.25)';"
+      onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(0,0,0,0.5)';">
+      ›
+    </button>
+  </div>
+
+  <!-- Barra Inferior de Navegación por Miniaturas y Teclado -->
+  <div
+    style="position: relative; z-index: 10; padding: 12px 24px 18px; background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+
+    <!-- Miniaturas de navegación rápida -->
+    <div *ngIf="fullscreenAssets.length > 1"
+      style="display: flex; gap: 8px; overflow-x: auto; max-width: 80vw; padding: 4px 8px; scrollbar-width: thin;">
+      <div *ngFor="let ast of fullscreenAssets; let idx = index" (click)="fullscreenIndex = idx"
+        [style.border]="idx === fullscreenIndex ? '2px solid #f59e0b' : '2px solid transparent'"
+        [style.opacity]="idx === fullscreenIndex ? '1' : '0.45'"
+        style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex-shrink: 0; cursor: pointer; transition: all 0.2s ease;">
+        <img [src]="ast.url" alt="Miniatura" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+    </div>
+
+    <span style="font-size: 11.5px; color: #a89f97;">
+      ⌨️ <strong>Atajos:</strong> <kbd
+        style="background: #333; padding: 1px 5px; border-radius: 3px; color: #fff;">←</kbd> Anterior | <kbd
+        style="background: #333; padding: 1px 5px; border-radius: 3px; color: #fff;">→</kbd> Siguiente | <kbd
+        style="background: #333; padding: 1px 5px; border-radius: 3px; color: #fff;">Espacio</kbd> Play/Pausa | <kbd
+        style="background: #333; padding: 1px 5px; border-radius: 3px; color: #fff;">ESC</kbd> Salir
+    </span>
+  </div>
+</div>
+
+<!-- 📖 MODAL PANTALLA COMPLETA - HOJA COMPLETA DEL LIBRO DE RECUERDOS -->
+<div *ngIf="fullscreenBookPageOpen"
+  style="position: fixed; inset: 0; z-index: 99999; background: #0f0d0b; color: #ffffff; display: flex; flex-direction: column; overflow-y: auto; padding: 16px; user-select: none;">
+
+  <!-- Barra Superior de Control Pantalla Completa -->
+  <div
+    style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.15); margin-bottom: 16px; width: 100%; box-sizing: border-box;">
+    
+    <!-- Fila 1: Título a la Izquierda + Botón CERRAR (✕) Arriba a la Derecha -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <div style="min-width: 0;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; font-family: var(--nw-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            Libro de Recuerdos del Evento
+          </h3>
+          <p style="margin: 2px 0 0; font-size: 12px; color: #a89f97; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ eventTitle }} • Página {{ bookPageIndex + 1 }} de {{ bookPages.length }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Botón CERRAR (✕) arriba a la derecha -->
+      <button type="button" (click)="closeFullscreenBookPage()" title="Cerrar Pantalla Completa (ESC)"
+        style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        ✕
+      </button>
+    </div>
+
+    <!-- Fila 2: Botón Descargar Hoja + Botones Anterior y Siguiente abajo -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
+      <button type="button" (click)="downloadBookPageImage('fullscreenWidgetBookPageToExport')"
+        [disabled]="isExportingBookPage"
+        style="height: 38px; border-radius: 20px; padding: 0 16px; font-size: 12.5px; font-weight: 700; color: #ffffff; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.35); display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 180px; box-sizing: border-box;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Descargar Hoja "{{ currentBookPage.title }}"</span>
+      </button>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 180px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="prevBookPage()"
+          style="height: 38px; border-radius: 20px; padding: 0 12px; font-size: 12.5px; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <span>Anterior</span>
+        </button>
+
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="nextBookPage()"
+          style="height: 38px; border-radius: 20px; padding: 0 12px; font-size: 12.5px; font-weight: 700; color: #ffffff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1;">
+          <span>Siguiente</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector de Hojas solo en Mobile (<=640px) -->
+  <div class="nw-mobile-status-select" style="width: 100%; margin-bottom: 16px;">
+    <select class="nw-select" [ngModel]="bookPageIndex" (ngModelChange)="goToBookPage($event)"
+      style="height: 38px; font-size: 13px; font-weight: 600; padding: 0 12px; width: 100%; border-color: rgba(255,255,255,0.25); background: #1c1917; color: #ffffff; cursor: pointer;">
+      <option *ngFor="let page of bookPages; let idx = index" [value]="idx" style="background: #111; color: #fff;">
+        {{ page.icon }} {{ page.title }} ({{ page.assets.length }})
+      </option>
+    </select>
+  </div>
+
+  <!-- Pestañas de Hojas en Desktop (>640px) -->
+  <div class="nw-desktop-status-pills"
+    style="gap: 8px; overflow-x: auto; padding-bottom: 14px; margin-bottom: 20px; scrollbar-width: thin; justify-content: center;">
+    <button *ngFor="let page of bookPages; let idx = index" type="button" (click)="goToBookPage(idx)"
+      [style.background]="bookPageIndex === idx ? 'var(--nw-accent, #c09c78)' : 'rgba(255,255,255,0.08)'"
+      [style.color]="bookPageIndex === idx ? '#ffffff' : '#d7ccc8'"
+      [style.border]="bookPageIndex === idx ? '1px solid #d97706' : '1px solid rgba(255,255,255,0.15)'"
+      style="height: 38px; padding: 0 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+      {{ page.icon }} {{ page.title }} ({{ page.assets.length }})
+    </button>
+  </div>
+
+  <!-- Contenedor del Libro Abierto Gigante de Pantalla Completa (Fondo de Álbum Físico Real) -->
+  <div id="fullscreenWidgetBookPageToExport" class="book-spread-canvas"
+    style="flex: 1; padding: 36px 36px 28px 36px; color: var(--nw-text, #2e2621); display: flex; flex-direction: column; justify-content: space-between; max-height: calc(100vh - 160px); overflow-y: auto;">
+
+    <!-- Elementos Decorativos del Libro Físico -->
+    <div class="book-spine-crease"></div>
+    <div class="book-ribbon-bookmark"></div>
+    <div class="book-corner-decor book-corner-tl"></div>
+    <div class="book-corner-decor book-corner-tr"></div>
+    <div class="book-corner-decor book-corner-bl"></div>
+    <div class="book-corner-decor book-corner-br"></div>
+
+    <!-- Cabecera de la Hoja del Libro -->
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; border-bottom: 2px dashed #dfd2c0; padding-bottom: 16px; position: relative; z-index: 5;">
+      <span
+        style="font-family: var(--nw-font-display); font-size: 22px; font-weight: 800; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 10px;">
+        {{ currentBookPage.icon }} {{ currentBookPage.title }}
+      </span>
+      <span style="font-size: 13.5px; color: var(--nw-text-3, #9e9083); font-weight: 700; background: rgba(255,255,255,0.7); padding: 4px 14px; border-radius: 20px; border: 1px solid #e8dec8;">
+        Página {{ bookPageIndex + 1 }} de {{ bookPages.length }}
+      </span>
+    </div>
+
+    <!-- Estado sin fotos -->
+    <div *ngIf="currentBookPage.assets.length === 0"
+      style="padding: 90px 20px; text-align: center; color: var(--nw-text-3, #9e9083); position: relative; z-index: 5;">
+      <span style="font-size: 56px; display: block; margin-bottom: 12px;">📷</span>
+      <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--nw-text, #2e2621);">
+        Aún no hay fotos en "{{ currentBookPage.title }}"
+      </h3>
+    </div>
+
+    <!-- Grid Mosaico de Pantalla Completa con Proporción Completa de Imagen Preservada -->
+    <div *ngIf="currentBookPage.assets.length > 0" class="book-collage-grid"
+      style="margin-bottom: 26px; position: relative; z-index: 5;">
+
+      <div *ngFor="let asset of currentBookPage.assets; let i = index"
+        (click)="openStoryModal(asset, currentBookPage.title)"
+        [class]="'book-collage-card book-polaroid-frame ' + getBookCollageClass(asset, i)"
+        style="padding: 12px 12px 16px 12px;"
+        [style.transform]="getPolaroidRotation(i)"
+        onmouseover="this.style.transform='scale(1.06) rotate(0deg)'; this.style.zIndex='20'; this.style.boxShadow='0 16px 36px rgba(0,0,0,0.22)';"
+        onmouseout="this.style.transform=this.getAttribute('data-rotate'); this.style.zIndex='1'; this.style.boxShadow='0 6px 18px rgba(0,0,0,0.08)';"
+        [attr.data-rotate]="getPolaroidRotation(i)">
+
+        <!-- Cinta Adhesiva Decorativa (Washi Tape) -->
+        <div class="book-polaroid-tape" style="width: 54px; height: 16px;"></div>
+
+        <div class="book-img-wrapper">
+          <img [src]="asset.url" alt="Foto del libro">
+        </div>
+
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--nw-text-2, #6e6157); padding-top: 2px;">
+          <strong style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;">
+            👤 {{ asset.uploaderName || 'Invitado' }}
+          </strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer de navegación -->
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e8dec8; padding-top: 18px; flex-wrap: wrap; gap: 10px; position: relative; z-index: 5;">
+      <button type="button" class="nw-btn nw-btn-ghost" (click)="prevBookPage()" style="font-weight: 700; background: rgba(255,255,255,0.7); border: 1px solid #dfd2c0;">
+        ◄ Hoja Anterior
+      </button>
+
+      <span style="font-size: 12px; color: var(--nw-text-3, #9e9083);">
+        ⌨️ Usa las flechas <kbd style="background: #eee; padding: 2px 6px; border-radius: 4px; color: #333;">←</kbd> y
+        <kbd style="background: #eee; padding: 2px 6px; border-radius: 4px; color: #333;">→</kbd> para pasar de hoja |
+        <kbd style="background: #eee; padding: 2px 6px; border-radius: 4px; color: #333;">ESC</kbd> Salir
+      </span>
+
+      <button type="button" class="nw-btn nw-btn-ghost" (click)="nextBookPage()" style="font-weight: 700; background: rgba(255,255,255,0.7); border: 1px solid #dfd2c0;">
+        Hoja Siguiente ►
+      </button>
+    </div>
+
+  </div>
+</div>

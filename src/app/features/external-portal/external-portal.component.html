@@ -1,15 +1,26 @@
 <p *ngIf="loading" class="notice">Cargando portal...</p>
-<p *ngIf="error" class="error">{{ error }}</p>
+<p *ngIf="error && event" class="error">{{ error }}</p>
+
+<div *ngIf="error && !event && !loading" class="legacy-portal-error-card" style="max-width: 500px; margin: 60px auto; text-align: center; padding: 44px 28px; background: #ffffff; border-radius: 20px; border: 1px solid #e8e0d5; box-shadow: 0 12px 40px rgba(0,0,0,0.08);">
+  <div style="width: 72px; height: 72px; border-radius: 50%; background: #fdf2f2; border: 1px solid rgba(217, 83, 79, 0.2); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px;">🏛️</div>
+  <h2 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; margin: 0 0 8px; color: #2c2c2c; font-weight: 700;">Portal No Disponible</h2>
+  <div style="display: inline-block; background: #fdf2f2; color: #d9534f; border: 1px solid rgba(217, 83, 79, 0.2); padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 14px;">⚠️ {{ error }}</div>
+  <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">El portal al que intentas acceder no se encuentra activo o no existe en este momento.</p>
+  <button (click)="load()" type="button" style="padding: 10px 24px; background: #c9a96e; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">🔄 Reintentar Carga</button>
+</div>
 
 <section *ngIf="event" class="public-page">
   <div class="public-hero">
     <p>{{ event.externalPortalSettings?.brandLabel || 'KyndraSoft' }}</p>
     <h1>{{ event.title }}</h1>
     <span>{{ event.date | date:'fullDate' }}</span>
-    <p>{{ event.externalPortalSettings?.welcomeMessage || 'Confirma tu asistencia, consulta tu pase y comparte fotos del evento.' }}</p>
+    <p>{{ event.externalPortalSettings?.welcomeMessage || 'Confirma tu asistencia, consulta tu pase y comparte fotos del
+      evento.' }}</p>
     <div class="inline-actions public-actions">
-      <a *ngIf="event.externalSiteUrl" class="primary" [href]="event.externalSiteUrl" target="_blank" rel="noreferrer">{{ event.externalSiteLabel || 'Abrir pagina del evento' }}</a>
-      <a *ngIf="calendarUrl && event.externalPortalSettings?.calendarEnabled !== false" class="ghost" [href]="calendarUrl" target="_blank" rel="noreferrer">Agregar al calendario</a>
+      <a *ngIf="event.externalSiteUrl" class="primary" [href]="event.externalSiteUrl" target="_blank"
+        rel="noreferrer">{{ event.externalSiteLabel || 'Abrir pagina del evento' }}</a>
+      <a *ngIf="calendarUrl && event.externalPortalSettings?.calendarEnabled !== false" class="ghost"
+        [href]="calendarUrl" target="_blank" rel="noreferrer">Agregar al calendario</a>
     </div>
   </div>
 
@@ -18,24 +29,29 @@
       <h2>Ubicacion</h2>
       <p>{{ event.venue?.name }}</p>
       <p>{{ event.venue?.address }}</p>
-      <a *ngIf="event.venue?.mapUrl" class="ghost small" [href]="event.venue?.mapUrl" target="_blank" rel="noreferrer">Abrir mapa</a>
+      <a *ngIf="event.venue?.mapUrl" class="ghost small" [href]="event.venue?.mapUrl" target="_blank"
+        rel="noreferrer">Abrir mapa</a>
     </section>
 
     <form class="rsvp-panel" (ngSubmit)="submit()" *ngIf="event.externalPortalSettings?.rsvpEnabled !== false">
       <h2>RSVP y pase</h2>
       <div *ngIf="!verifiedGuest" class="guest-access-box">
         <p class="muted">Ingresa el email registrado en la lista de invitados.</p>
-        <label>Email invitado<input name="guestAccessEmail" type="email" [(ngModel)]="guestAccessEmail" required></label>
-        <button class="ghost" type="button" (click)="checkGuestAccess()" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : 'Validar invitado' }}</button>
+        <label>Email invitado<input name="guestAccessEmail" type="email" [(ngModel)]="guestAccessEmail"
+            required></label>
+        <button class="ghost" type="button" (click)="checkGuestAccess()" [disabled]="checkingGuest">{{ checkingGuest ?
+          'Validando...' : 'Validar invitado' }}</button>
       </div>
 
       <ng-container *ngIf="verifiedGuest">
-        <p class="notice">Invitado validado: {{ verifiedGuest.name }}. Acompanantes permitidos: {{ verifiedGuest.allowedCompanions }}.</p>
+        <p class="notice">Invitado validado: {{ verifiedGuest.name }}. Acompanantes permitidos: {{
+          verifiedGuest.allowedCompanions }}.</p>
         <div class="guest-pass" *ngIf="event.externalPortalSettings?.passEnabled !== false">
           <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de entrada">
           <div>
             <strong>Codigo de entrada: {{ verifiedGuest.checkInCode || verifiedGuest.qrCode || 'Pendiente' }}</strong>
-            <p>{{ verifiedGuest.tableName || 'Mesa pendiente' }} <span *ngIf="verifiedGuest.seatLabel">/ {{ verifiedGuest.seatLabel }}</span></p>
+            <p>{{ verifiedGuest.tableName || 'Mesa pendiente' }} <span *ngIf="verifiedGuest.seatLabel">/ {{
+                verifiedGuest.seatLabel }}</span></p>
           </div>
         </div>
         <label>Respuesta
@@ -45,20 +61,25 @@
             <option value="maybe">No estoy seguro</option>
           </select>
         </label>
-        <label>Acompanantes<input name="companions" type="number" min="0" [max]="verifiedGuest.allowedCompanions" [(ngModel)]="rsvp.companions"></label>
-        <label class="wide">Nombres de acompanantes<textarea name="companionNamesText" [(ngModel)]="companionNamesText" placeholder="Un nombre por linea"></textarea></label>
+        <label>Acompanantes<input name="companions" type="number" min="0" [max]="verifiedGuest.allowedCompanions"
+            [(ngModel)]="rsvp.companions"></label>
+        <label class="wide">Nombres de acompanantes<textarea name="companionNamesText" [(ngModel)]="companionNamesText"
+            placeholder="Un nombre por linea"></textarea></label>
         <label>Preferencia de comida<input name="mealPreference" [(ngModel)]="rsvp.mealPreference"></label>
         <label class="wide">Mensaje<textarea name="message" [(ngModel)]="rsvp.message"></textarea></label>
       </ng-container>
 
       <p *ngIf="success" class="success">{{ success }}</p>
-      <button class="primary" type="submit" [disabled]="sending || !verifiedGuest">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
+      <button class="primary" type="submit" [disabled]="sending || !verifiedGuest">{{ sending ? 'Enviando...' : 'Enviar
+        RSVP' }}</button>
     </form>
 
     <section *ngIf="event.externalContent?.giftSettings?.enabled !== false">
       <h2>Mesa de regalos</h2>
-      <p>{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un detalle, estas son las opciones disponibles.' }}</p>
-      <div class="gift-grid" *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
+      <p>{{ event.externalContent?.giftSettings?.introText || 'Tu presencia es el mejor regalo. Si deseas tener un
+        detalle, estas son las opciones disponibles.' }}</p>
+      <div class="gift-grid"
+        *ngIf="event.externalContent?.giftSettings?.showRegistry !== false && event.externalContent?.giftRegistry?.length">
         <article *ngFor="let gift of event.externalContent?.giftRegistry" class="gift-card">
           <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" alt="Mesa de regalos">
           <strong>{{ gift.title || gift.label || gift.store || 'Mesa de regalos' }}</strong>
@@ -66,13 +87,19 @@
           <a *ngIf="gift.url" class="ghost small" [href]="gift.url" target="_blank" rel="noreferrer">Abrir mesa</a>
         </article>
       </div>
-      <article class="gift-card" *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)">
-        <img *ngIf="event.externalContent?.digitalEnvelope?.qrImageUrl" [src]="event.externalContent?.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
+      <article class="gift-card"
+        *ngIf="event.externalContent?.giftSettings?.showEnvelope !== false && (event.externalContent?.digitalEnvelope?.bank || event.externalContent?.digitalEnvelope?.clabe || event.externalContent?.digitalEnvelope?.account)">
+        <img *ngIf="event.externalContent?.digitalEnvelope?.qrImageUrl"
+          [src]="event.externalContent?.digitalEnvelope?.qrImageUrl" alt="QR sobre digital">
         <strong>Sobre digital</strong>
-        <p *ngIf="event.externalContent?.digitalEnvelope?.bank">Banco: {{ event.externalContent?.digitalEnvelope?.bank }}</p>
-        <p *ngIf="event.externalContent?.digitalEnvelope?.holder">Titular: {{ event.externalContent?.digitalEnvelope?.holder }}</p>
-        <p *ngIf="event.externalContent?.digitalEnvelope?.account">Cuenta: {{ event.externalContent?.digitalEnvelope?.account }}</p>
-        <p *ngIf="event.externalContent?.digitalEnvelope?.clabe">CLABE: {{ event.externalContent?.digitalEnvelope?.clabe }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.bank">Banco: {{ event.externalContent?.digitalEnvelope?.bank
+          }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.holder">Titular: {{
+          event.externalContent?.digitalEnvelope?.holder }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.account">Cuenta: {{
+          event.externalContent?.digitalEnvelope?.account }}</p>
+        <p *ngIf="event.externalContent?.digitalEnvelope?.clabe">CLABE: {{ event.externalContent?.digitalEnvelope?.clabe
+          }}</p>
       </article>
     </section>
   </div>
@@ -82,19 +109,24 @@
     <p class="muted">Comparte fotos con los anfitriones. Se publicaran cuando sean aprobadas.</p>
     <div class="import-row">
       <label>Subir foto<input type="file" accept="image/*" (change)="selectAlbumFile($event)"></label>
-      <button class="ghost" type="button" (click)="uploadAlbumPhoto()" [disabled]="!selectedAlbumFile || uploadingAlbum">{{ uploadingAlbum ? 'Subiendo...' : 'Enviar foto' }}</button>
+      <button class="ghost" type="button" (click)="uploadAlbumPhoto()"
+        [disabled]="!selectedAlbumFile || uploadingAlbum">{{ uploadingAlbum ? 'Subiendo...' : 'Enviar foto' }}</button>
     </div>
     <p *ngIf="albumMessage" class="success">{{ albumMessage }}</p>
     <div class="gallery-grid" *ngIf="albumAssets.length">
-      <img *ngFor="let asset of albumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'" loading="lazy" decoding="async">
+      <img *ngFor="let asset of albumAssets" [src]="asset.url" [alt]="asset.uploaderName || 'Foto aprobada'"
+        loading="lazy" decoding="async">
     </div>
   </section>
   <section class="public-media" *ngIf="event.externalContent?.dedicationSettings?.enabled !== false">
     <h2>Dedicatorias</h2>
-    <p class="muted">{{ event.externalContent?.dedicationSettings?.introText || 'Deja un mensaje para los anfitriones.' }}</p>
+    <p class="muted">{{ event.externalContent?.dedicationSettings?.introText || 'Deja un mensaje para los anfitriones.'
+      }}</p>
     <form class="rsvp-panel" (ngSubmit)="submitDedication()">
-      <label>Nombre publico<input name="dedicationName" [(ngModel)]="dedication.publicName" [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'"></label>
-      <label class="wide">Mensaje<textarea name="dedicationMessage" [(ngModel)]="dedication.message" required></textarea></label>
+      <label>Nombre publico<input name="dedicationName" [(ngModel)]="dedication.publicName"
+          [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'"></label>
+      <label class="wide">Mensaje<textarea name="dedicationMessage" [(ngModel)]="dedication.message"
+          required></textarea></label>
       <button class="primary" type="submit" [disabled]="sending || !dedication.message">Enviar dedicatoria</button>
       <p *ngIf="dedicationMessage" class="success">{{ dedicationMessage }}</p>
     </form>

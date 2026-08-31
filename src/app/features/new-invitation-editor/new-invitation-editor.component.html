@@ -1,0 +1,828 @@
+<div class="nw-shell">
+  <button class="nw-hamburger" [class.open]="sidebarOpen" (click)="sidebarOpen = !sidebarOpen">
+    <svg *ngIf="!sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+    <svg *ngIf="sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+  <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+  <aside class="nw-sidebar" [class.open]="sidebarOpen" app-new-sidebar></aside>
+
+  <main class="nw-main">
+    <!-- Floating Toast Notifications (Top Right, non-blocking) -->
+    <div class="nw-toast-container" *ngIf="loading || error || message || assetMessage">
+      <div *ngIf="loading" class="nw-toast info">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Cargando invitación...</span>
+      </div>
+      <div *ngIf="error" class="nw-toast error">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span style="flex:1;">{{ error }}</span>
+        <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+      </div>
+      <div *ngIf="message" class="nw-toast success">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span style="flex:1;">{{ message }}</span>
+        <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
+      </div>
+      <div *ngIf="assetMessage" class="nw-toast success">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span style="flex:1;">{{ assetMessage }}</span>
+        <button type="button" class="nw-toast-close" (click)="assetMessage=''">✕</button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="invitation">
+      <!-- Reusable Event Header Widget -->
+      <app-event-header [event]="event" [backUrl]="'/new/events/' + getEventId()"
+        [backLabel]="event?.title || 'Detalle del Evento'"></app-event-header>
+
+      <!-- Sub-Menú de Secciones Organizado en Grid -->
+      <div class="nw-cat-grid-wrapper" style="margin-bottom: 36px;">
+        <div class="nw-cat-grid-header">
+          <div>
+            <h3 class="nw-cat-title">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--nw-accent)" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+              Secciones de la Invitación
+            </h3>
+            <p class="nw-cat-subtitle">Haz clic en cualquier tarjeta para editar sus campos, o usa el interruptor para
+              activarla/desactivarla.</p>
+          </div>
+
+          <div class="nw-cat-header-stats">
+            <span class="nw-pill success" style="font-size: 12px; padding: 4px 12px; font-weight: 700;">
+              <span class="nw-dot green" style="margin-right: 4px;"></span>
+              {{ activeConfigurableSections.length + 2 }} / 15 Activas
+            </span>
+          </div>
+        </div>
+
+        <div class="nw-categories-list" style="margin-top: 16px;">
+
+          <!-- SECCIÓN 1: SECCIONES ACTIVAS (COLAPSABLE) -->
+          <div class="nw-category-block">
+            <div class="nw-category-header" (click)="toggleActiveSections()"
+              style="cursor: pointer; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button"
+                  style="background: none; border: none; padding: 0; cursor: pointer; color: var(--nw-text); display: flex; align-items: center;">
+                  <svg *ngIf="activeSectionsCollapsed" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                  <svg *ngIf="!activeSectionsCollapsed" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <span class="nw-category-name">
+                  <span class="nw-dot green"></span>
+                  Secciones Activas en la Invitación
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="nw-category-count">{{ activeConfigurableSections.length + 2 }} activas</span>
+                <span class="nw-pill"
+                  style="font-size: 10px; padding: 2px 8px; background: var(--nw-surface); border: 1px solid var(--nw-border); color: var(--nw-text-2); font-weight: 700;">
+                  {{ activeSectionsCollapsed ? 'Mostrar ▼' : 'Ocultar ▲' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Grid de Tarjetas Activas (Desplegable) -->
+            <div *ngIf="!activeSectionsCollapsed" class="nw-category-cards-grid" style="margin-top: 14px;">
+              <!-- Obligatoria 1: Contenido -->
+              <div class="nw-section-card" [class.is-selected]="activeTab === 'content'"
+                (click)="setActiveTab('content')">
+                <div class="nw-sec-card-top">
+                  <div class="nw-sec-icon-box">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="nw-pill warning" style="font-size:10px; padding:2px 8px;">Fija</span>
+                    <span *ngIf="activeTab === 'content'" class="nw-pill accent"
+                      style="font-size:10px; padding:2px 8px;">Editando</span>
+                  </div>
+                </div>
+                <div class="nw-sec-card-body">
+                  <div class="nw-sec-card-title">Contenido Principal</div>
+                  <div class="nw-sec-card-desc">Nombres, fecha, mensaje principal e imagen de portada.</div>
+                </div>
+                <div class="nw-sec-card-footer">
+                  <span class="nw-sec-status-text on">
+                    <span class="nw-dot green"></span>
+                    Sección Activa
+                  </span>
+                  <span class="nw-sec-action-link">Editar &rarr;</span>
+                </div>
+              </div>
+
+              <!-- Obligatoria 2: Estilo -->
+              <div class="nw-section-card" [class.is-selected]="activeTab === 'style'" (click)="setActiveTab('style')">
+                <div class="nw-sec-card-top">
+                  <div class="nw-sec-icon-box">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+                      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+                      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+                      <path
+                        d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z">
+                      </path>
+                    </svg>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="nw-pill warning" style="font-size:10px; padding:2px 8px;">Fija</span>
+                    <span *ngIf="activeTab === 'style'" class="nw-pill accent"
+                      style="font-size:10px; padding:2px 8px;">Editando</span>
+                  </div>
+                </div>
+                <div class="nw-sec-card-body">
+                  <div class="nw-sec-card-title">Estilo y Colores</div>
+                  <div class="nw-sec-card-desc">Paleta de colores, tipografía y estética visual.</div>
+                </div>
+                <div class="nw-sec-card-footer">
+                  <span class="nw-sec-status-text on">
+                    <span class="nw-dot green"></span>
+                    Sección Activa
+                  </span>
+                  <span class="nw-sec-action-link">Editar &rarr;</span>
+                </div>
+              </div>
+
+              <!-- Secciones Configurables Activas -->
+              <div *ngFor="let sec of activeConfigurableSections" class="nw-section-card"
+                [class.is-selected]="activeTab === sec.key" (click)="setActiveTab(sec.key)">
+                <div class="nw-sec-card-top">
+                  <div class="nw-sec-icon-box">
+                    <ng-container [ngSwitch]="sec.key">
+                      <svg *ngSwitchCase="'guestAlbum'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                        </path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                      </svg>
+                      <svg *ngSwitchCase="'gallery'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'songRequests'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                      </svg>
+                      <svg *ngSwitchCase="'dedications'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                        </path>
+                      </svg>
+                      <svg *ngSwitchCase="'rsvp'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'story'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'locations'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      <svg *ngSwitchCase="'itinerary'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'dressCode'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                          d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z">
+                        </path>
+                      </svg>
+                      <svg *ngSwitchCase="'giftRegistry'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                        <rect x="2" y="7" width="20" height="5"></rect>
+                        <line x1="12" y1="22" x2="12" y2="7"></line>
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'digitalEnvelope'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                      </svg>
+                      <svg *ngSwitchCase="'lodging'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'backgroundMusic'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                      </svg>
+                      <svg *ngSwitchDefault viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                    </ng-container>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span *ngIf="activeTab === sec.key" class="nw-pill accent"
+                      style="font-size:10px; padding:2px 8px;">Editando</span>
+                    <label class="nw-switch" (click)="$event.stopPropagation()" style="transform: scale(0.85);">
+                      <input type="checkbox" [checked]="true" (change)="toggleSectionActive(sec.key, false)">
+                      <span class="nw-slider"></span>
+                    </label>
+                  </div>
+                </div>
+                <div class="nw-sec-card-body">
+                  <div class="nw-sec-card-title">{{ sec.title }}</div>
+                  <div class="nw-sec-card-desc">{{ sec.description }}</div>
+                </div>
+                <div class="nw-sec-card-footer">
+                  <span class="nw-sec-status-text on">
+                    <span class="nw-dot green"></span>
+                    Sección Activa
+                  </span>
+                  <span class="nw-sec-action-link">Editar &rarr;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: SECCIONES DESACTIVADAS (COLAPSABLE POR DEFECTO) -->
+          <div *ngIf="inactiveConfigurableSections.length" class="nw-category-block" style="border-style: dashed;">
+            <div class="nw-category-header" (click)="toggleInactiveSections()"
+              style="cursor: pointer; user-select: none; margin-bottom: 0;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button"
+                  style="background: none; border: none; padding: 0; cursor: pointer; color: var(--nw-text-2); display: flex; align-items: center;">
+                  <svg *ngIf="inactiveSectionsCollapsed" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                  <svg *ngIf="!inactiveSectionsCollapsed" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <span class="nw-category-name" style="color: var(--nw-text-2);">
+                  <span class="nw-dot gray"></span>
+                  Secciones Desactivadas (Ocultas)
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="nw-category-count">{{ inactiveConfigurableSections.length }} inactivas</span>
+                <span class="nw-pill"
+                  style="font-size: 10px; padding: 2px 8px; background: var(--nw-surface); border: 1px solid var(--nw-border); color: var(--nw-text-2); font-weight: 700;">
+                  {{ inactiveSectionsCollapsed ? 'Mostrar ▼' : 'Ocultar ▲' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Grid de Tarjetas Inactivas (Se despliega solo si !inactiveSectionsCollapsed) -->
+            <div *ngIf="!inactiveSectionsCollapsed" class="nw-category-cards-grid" style="margin-top: 14px;">
+              <div *ngFor="let sec of inactiveConfigurableSections" class="nw-section-card is-inactive"
+                [class.is-selected]="activeTab === sec.key" (click)="setActiveTab(sec.key)">
+                <div class="nw-sec-card-top">
+                  <div class="nw-sec-icon-box">
+                    <ng-container [ngSwitch]="sec.key">
+                      <svg *ngSwitchCase="'guestAlbum'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                        </path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                      </svg>
+                      <svg *ngSwitchCase="'gallery'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'songRequests'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                      </svg>
+                      <svg *ngSwitchCase="'dedications'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path
+                          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                        </path>
+                      </svg>
+                      <svg *ngSwitchCase="'rsvp'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'story'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'locations'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      <svg *ngSwitchCase="'itinerary'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'dressCode'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path
+                          d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z">
+                        </path>
+                      </svg>
+                      <svg *ngSwitchCase="'giftRegistry'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                        <rect x="2" y="7" width="20" height="5"></rect>
+                        <line x1="12" y1="22" x2="12" y2="7"></line>
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'digitalEnvelope'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                      </svg>
+                      <svg *ngSwitchCase="'lodging'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                      <svg *ngSwitchCase="'backgroundMusic'" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="opacity:0.75;">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                      </svg>
+                      <svg *ngSwitchDefault viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.75;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                    </ng-container>
+                  </div>
+                  <button type="button" class="nw-btn-activate-chip"
+                    (click)="toggleSectionActive(sec.key, true); setActiveTab(sec.key); $event.stopPropagation();">
+                    + Activar
+                  </button>
+                </div>
+                <div class="nw-sec-card-body">
+                  <div class="nw-sec-card-title">{{ sec.title }}</div>
+                  <div class="nw-sec-card-desc">{{ sec.description }}</div>
+                </div>
+                <div class="nw-sec-card-footer">
+                  <span class="nw-sec-status-text">
+                    <span class="nw-dot gray"></span>
+                    Desactivada
+                  </span>
+                  <span class="nw-sec-action-link">Activar &rarr;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Utilidad Global -->
+        <div
+          style="display:flex; gap:8px; border-top: 1px solid var(--nw-border); padding-top: 16px; margin-top: 20px; align-items:center; flex-wrap: wrap;">
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'plans'"
+            (click)="setActiveTab('plans')" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+            <span>Plantillas / Plan</span>
+          </button>
+
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'all'"
+            (click)="setActiveTab('all')" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Ver todo</span>
+          </button>
+
+          <a class="nw-btn nw-btn-ghost nw-btn-sm"
+            [routerLink]="['/new/invitations', invitation._id || invitation.id, 'sections']"
+            style="font-weight:700; margin-left: auto; display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+            <span>Configurar Secciones</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- CARDS DE CONTENIDO -->
+
+      <!-- 1. Contenido Principal (Mandatorio) -->
+      <app-editor-content-tab *ngIf="activeTab === 'content' || activeTab === 'all'" [invitation]="invitation"
+        [loadedGuests]="loadedGuests" [canUseWhiteLabel]="canUseWhiteLabel()" [allowedRolesText]="allowedRolesText"
+        [allowedGroupsText]="allowedGroupsText" [allowedEmailsText]="allowedEmailsText"
+        [allowedPhonesText]="allowedPhonesText" (allowedRolesTextChange)="allowedRolesText = $event"
+        (allowedGroupsTextChange)="allowedGroupsText = $event" (allowedEmailsTextChange)="allowedEmailsText = $event"
+        (allowedPhonesTextChange)="allowedPhonesText = $event" (applyTextVariant)="applyTextVariant($event)">
+      </app-editor-content-tab>
+
+      <!-- 2. Estilo y Paleta (Mandatorio) -->
+      <app-editor-style-tab *ngIf="activeTab === 'style' || activeTab === 'all'" [invitation]="invitation"
+        [palettePresets]="palettePresets" (applyPalette)="applyPalette($event)">
+      </app-editor-style-tab>
+
+      <!-- 3. Mensaje & Nuestra Historia (story) -->
+      <div class="nw-card" style="margin-bottom:16px;"
+        *ngIf="invitation && (activeTab === 'story' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <h3 style="margin:0;">Mensaje & Nuestra Historia</h3>
+            <span class="nw-pill" [class.success]="isSectionActive('story')"
+              [class.warning]="!isSectionActive('story')">
+              {{ isSectionActive('story') ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="nw-switch" title="Activar / Desactivar Mensaje & Nuestra Historia">
+              <input type="checkbox" [checked]="isSectionActive('story')"
+                (change)="toggleSectionActive('story', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="nw-card-body" style="padding-top:16px;">
+          <p style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
+            Redacta un mensaje especial de bienvenida, la historia del evento o palabras de agradecimiento para tus
+            invitados.
+          </p>
+
+          <!-- Botones de Autollenar / Ejemplos -->
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+            <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Ejemplos para autollenar:</span>
+
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyStoryPreset('story')"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                </path>
+              </svg>
+              <span>Nuestra Historia</span>
+            </button>
+
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyStoryPreset('welcome')"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Mensaje de Invitación</span>
+            </button>
+
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="applyStoryPreset('thanks')"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                </polygon>
+              </svg>
+              <span>Reflexión & Agradecimiento</span>
+            </button>
+          </div>
+
+          <div class="nw-form-grid" style="gap:14px;">
+            <label class="nw-label nw-form-wide">Título de la sección
+              <input class="nw-input" [(ngModel)]="invitation.content.storyTitle"
+                placeholder="Nuestra Historia / Mensaje de Bienvenida">
+            </label>
+            <label class="nw-label nw-form-wide">Texto del mensaje / historia
+              <textarea class="nw-input" [(ngModel)]="invitation.content.storyBody" rows="4"
+                placeholder="Escribe aquí tu mensaje o historia..."></textarea>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Código de Vestimenta (dressCode) -->
+      <div class="nw-card" style="margin-bottom:16px;"
+        *ngIf="invitation && (activeTab === 'dressCode' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+              <path
+                d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z">
+              </path>
+            </svg>
+            <h3 style="margin:0;">Código de Vestimenta</h3>
+            <span class="nw-pill" [class.success]="isSectionActive('dressCode')"
+              [class.warning]="!isSectionActive('dressCode')">
+              {{ isSectionActive('dressCode') ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="nw-switch" title="Activar / Desactivar Código de Vestimenta">
+              <input type="checkbox" [checked]="isSectionActive('dressCode')"
+                (change)="toggleSectionActive('dressCode', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="nw-card-body" style="padding-top:16px;">
+          <div class="nw-form-grid" style="gap:14px;">
+            <label class="nw-label">Seleccionar opción de Etiqueta / Vestimenta
+              <select class="nw-select"
+                [ngModel]="isCustomDressCode() ? 'Otro (Especificar personalizado...)' : invitation.content.dressCode"
+                (ngModelChange)="onDressCodePresetChange($event)">
+                <option value="">-- Seleccionar código de vestimenta --</option>
+                <option *ngFor="let option of dressCodePresets" [value]="option">
+                  {{ option }}
+                </option>
+              </select>
+            </label>
+            <label class="nw-label nw-form-wide" *ngIf="isCustomDressCode() || !invitation.content.dressCode">
+              Especificar código de vestimenta personalizado
+              <input class="nw-input" [(ngModel)]="invitation.content.dressCode"
+                placeholder="Ej. Marilyn Monroe / Temática Años 50 / Guayabera de Lino">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Música / Pedir Canciones al DJ (songRequests) -->
+      <div class="nw-card" style="margin-bottom:16px;"
+        *ngIf="invitation && (activeTab === 'songRequests' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <h3 style="margin:0;">Música y Peticiones de Canciones (DJ)</h3>
+            <span class="nw-pill" [class.success]="isSectionActive('songRequests')"
+              [class.warning]="!isSectionActive('songRequests')">
+              {{ isSectionActive('songRequests') ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="nw-switch" title="Activar / Desactivar peticiones de DJ">
+              <input type="checkbox" [checked]="isSectionActive('songRequests')"
+                (change)="toggleSectionActive('songRequests', $any($event.target).checked)">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="nw-card-body" style="padding-top:16px;" *ngIf="event">
+          <div class="nw-form-grid" style="gap:14px;" *ngIf="event.externalContent?.songRequestSettings as dj">
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Habilitar peticiones de canciones</strong>
+                <span>Permite que los invitados sugieran temas para el DJ desde la invitación.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dj.enabled" (ngModelChange)="syncSongRequestActive($event)">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Permitir dedicatorias</strong>
+                <span>Los invitados pueden adjuntar un mensaje al sugerir su canción.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dj.allowDedications">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+            <div class="nw-toggle-row">
+              <div class="nw-toggle-info">
+                <strong>Requerir aprobación</strong>
+                <span>La canción requiere validación previa antes de aparecer en el playlist.</span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="dj.requireApproval">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+            <label class="nw-label" style="max-width:240px;">Límite de canciones por invitado
+              <input type="number" class="nw-input" min="1" max="20" [(ngModel)]="dj.maxRequestsPerGuest">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Itinerario -->
+      <app-editor-itinerary-tab *ngIf="activeTab === 'itinerary' || activeTab === 'all'" [invitation]="invitation"
+        [event]="event" (addItineraryItem)="addItineraryItem()" (removeItineraryItem)="removeItineraryItem($event)"
+        (moveItineraryItem)="moveItineraryItem($event.index, $event.dir)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-itinerary-tab>
+
+      <!-- 7. Ubicaciones -->
+      <app-editor-locations-tab *ngIf="activeTab === 'locations' || activeTab === 'all'" [invitation]="invitation"
+        [event]="event" [locationSearchResults]="locationSearchResults" [locationSearchLoading]="locationSearchLoading"
+        [locationExtractLoading]="locationExtractLoading" (addLocation)="addLocation()"
+        (removeLocation)="removeLocation($event)" (searchLocation)="onLocationNameInput($event.index, $event.query)"
+        (selectSearchResult)="selectLocationSearchResult($event.index, $event.result)"
+        (extractMapInfo)="extractInfoFromMapUrl($event)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-locations-tab>
+
+      <!-- 8. RSVP y Reglas -->
+      <app-editor-rsvp-rules-tab *ngIf="activeTab === 'rsvp' || activeTab === 'all'" [invitation]="invitation"
+        [loadedGuests]="loadedGuests" [customQuestionsList]="customQuestionsList"
+        [(allowedRolesText)]="allowedRolesText" [(allowedGroupsText)]="allowedGroupsText"
+        [(allowedEmailsText)]="allowedEmailsText" [(allowedPhonesText)]="allowedPhonesText"
+        (toggleIdentityMethod)="toggleIdentityMethod($event.method, $event.checked)"
+        (addCustomQuestion)="addCustomQuestion()" (removeCustomQuestion)="removeCustomQuestion($event)"
+        (addQuestionPreset)="addQuestionPreset($event)" (syncQuestions)="syncCustomQuestionsToPayload()"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-rsvp-rules-tab>
+
+      <!-- 9 & 10. Mesa de Regalos y Sobre Digital -->
+      <app-editor-gifts-tab
+        *ngIf="activeTab === 'gifts' || activeTab === 'giftRegistry' || activeTab === 'digitalEnvelope' || activeTab === 'all'"
+        [invitation]="invitation" [activeTab]="activeTab" [assetUploading]="assetUploading"
+        (addGiftItem)="addGiftRegistryItem()" (removeGiftItem)="removeGiftRegistryItem($event)"
+        (uploadEnvelopeQr)="uploadEnvelopeQr($event)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-gifts-tab>
+
+      <!-- 11 & 12. Dedicatorias y Álbum Interactivo -->
+      <app-editor-dedications-tab
+        *ngIf="activeTab === 'dedications' || activeTab === 'guestAlbum' || activeTab === 'all'"
+        [invitation]="invitation" [activeTab]="activeTab"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-dedications-tab>
+
+      <!-- 13, 14 & 15. Archivos, Galería, Hospedaje y Música de Fondo -->
+      <app-editor-assets-tab
+        *ngIf="activeTab === 'assets' || activeTab === 'gallery' || activeTab === 'lodging' || activeTab === 'backgroundMusic' || activeTab === 'all'"
+        [invitation]="invitation" [activeTab]="activeTab" [assetUploading]="assetUploading" [musicError]="musicError"
+        (selectAsset)="selectAsset($event.event, $event.folder)" (removeCover)="removeCover()"
+        (removeMusic)="removeMusic()" (removeGalleryImage)="removeGalleryImage($event)"
+        (uploadSectionMusic)="uploadSectionMusic($event.event, $event.sectionKey)"
+        (removeSectionMusic)="removeSectionMusic($event)" (musicPlaybackError)="onMusicPlaybackError()"
+        (addLodgingItem)="addLodgingItem()" (removeLodgingItem)="removeLodgingItem($event)"
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+      </app-editor-assets-tab>
+
+      <!-- Plantillas / Plan del evento -->
+      <app-editor-plans-tab *ngIf="activeTab === 'plans' || activeTab === 'all'" [invitation]="invitation"
+        [event]="event" [templates]="templates" [plans]="plans" [currentPlan]="currentPlan"
+        [checkoutLoading]="checkoutLoading" [payments]="payments" (selectTemplateKey)="onSelectTemplateKey($event)"
+        (applyTemplate)="applyTemplate($event)" (saveChanges)="save()" (checkout)="checkout($event)"
+        (openAiWizard)="openAiWizard()" (openTextEditor)="openTextEditor($event)">
+      </app-editor-plans-tab>
+
+      <!-- Floating Save Bar at the bottom for quick access -->
+      <div class="nw-floating-save-bar">
+        <div class="nw-floating-bar-content">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="nw-pill" [class.success]="invitation.status === 'published'"
+              [class.warning]="invitation.status === 'draft'">
+              {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
+            </span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="nw-btn nw-floating-save-btn nw-btn-sm" (click)="save()" [disabled]="saving"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>{{ saving ? 'Guardando...' : 'Guardar cambios' }}</span>
+            </button>
+            <button *ngIf="invitation.status !== 'published'" class="nw-btn nw-btn-primary nw-btn-sm"
+              (click)="publish()" [disabled]="publishing" style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                </path>
+              </svg>
+              <span>{{ publishing ? 'Publicando...' : 'Publicar' }}</span>
+            </button>
+            <a class="nw-btn nw-btn-ghost nw-btn-sm" [routerLink]="['/i', invitation.slug]" target="_blank"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <span>Ver pública</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Espaciador inferior para evitar que la barra flotante tape el contenido al hacer scroll -->
+      <div style="height: 90px;" aria-hidden="true"></div>
+
+    </ng-container>
+  </main>
+</div>
+
+<!-- MODAL ASISTENTE IA GEMINI -->
+<app-ai-template-wizard-modal *ngIf="showAiWizardModal" [event]="event" [invitation]="invitation"
+  (close)="showAiWizardModal = false" (templateApplied)="onAiTemplateApplied($event)">
+</app-ai-template-wizard-modal>
+
+<!-- MODAL EDITOR VISUAL DE TEXTOS -->
+<app-visual-template-text-editor-modal
+  *ngIf="showTextEditorModal"
+  [invitation]="invitation"
+  [event]="event"
+  [templateKey]="textEditorTemplateKey"
+  [editingSubmission]="textEditorSubmission"
+  [cleanBase]="textEditorCleanBase"
+  (close)="showTextEditorModal = false"
+  (submitted)="onTextEditSubmitted()">
+</app-visual-template-text-editor-modal>

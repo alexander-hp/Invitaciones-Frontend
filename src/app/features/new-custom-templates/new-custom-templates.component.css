@@ -1,0 +1,96 @@
+.nw-page-wrapper {
+  min-height: 100vh;
+  background: var(--nw-bg, #faf7f2);
+  color: var(--nw-text, #2e2621);
+}
+
+.submission-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid var(--nw-border, #eadecc);
+}
+
+.submission-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--nw-shadow-md, 0 8px 24px rgba(0, 0, 0, 0.08));
+  border-color: var(--nw-accent, #c09c78);
+}
+
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #b45309;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+}
+
+.pulsing-dot-amber {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  animation: pulse-amber 1.8s infinite;
+}
+
+@keyframes pulse-amber {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 7px rgba(245, 158, 11, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.nw-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  background: var(--nw-surface, #ffffff);
+  color: var(--nw-text, #2e2621);
+  border: 1px solid var(--nw-border, #eadecc);
+  border-left: 4px solid var(--nw-success, #22c55e);
+  border-radius: var(--nw-radius-sm, 10px);
+  padding: 14px 20px;
+  box-shadow: var(--nw-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.12));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  animation: slide-in-toast 0.3s ease;
+}
+
+.nw-toast.error {
+  border-left-color: var(--nw-danger, #ef4444);
+  color: var(--nw-danger, #ef4444);
+}
+
+@keyframes slide-in-toast {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .nw-content-container {
+    padding: 16px 12px !important;
+  }
+}

@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, throwError } from 'rxjs';
@@ -17,9 +17,13 @@ export class AuthTokenInterceptor implements HttpInterceptor {
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (isApiRequest && error.status === 401 && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
+        const isAuthEntryPoint = ['/auth/login', '/auth/register', '/auth/social'].some((path) => req.url.includes(path));
+        const isPublicGuestUrl = ['/public/', '/external/'].some((path) => req.url.includes(path));
+        const isCurrentRoutePublic = ['/i/', '/new/i/', '/e/', '/new/e/', '/external-access/', '/new/external-access/', '/check-in/'].some((p) => this.router.url.includes(p));
+
+        if (isApiRequest && error.status === 401 && !isAuthEntryPoint && !isPublicGuestUrl && !isCurrentRoutePublic) {
           localStorage.removeItem(TOKEN_KEY);
-          this.router.navigate(['/login']);
+          this.router.navigate(['/new/login']);
         }
         return throwError(() => error);
       })

@@ -5,10 +5,9 @@
     <label>Nombre<input name="name" [(ngModel)]="form.name" required></label>
     <label>Email<input name="email" type="email" [(ngModel)]="form.email" required></label>
     <label>Password<input name="password" type="password" [(ngModel)]="form.password" minlength="8" required></label>
-    <label>Tipo de cuenta
-      <select name="role" [(ngModel)]="form.role">
-        <option value="client">Cliente</option>
-        <option value="organizer">Organizador</option>
+    <label>Perfil de cuenta
+      <select name="accountType" [(ngModel)]="form.accountType">
+        <option *ngFor="let type of accountTypes" [value]="type.value">{{ type.label }}</option>
       </select>
     </label>
     <p *ngIf="error" class="error">{{ error }}</p>

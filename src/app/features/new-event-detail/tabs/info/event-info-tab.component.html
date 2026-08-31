@@ -1,0 +1,976 @@
+<section>
+  <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+  <div class="nw-toast-container" *ngIf="message || error">
+    <!-- Mensaje de Éxito -->
+    <div *ngIf="message" class="nw-toast success">
+      <span>✨ {{ message }}</span>
+      <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
+    </div>
+
+    <!-- Mensaje de Error -->
+    <div *ngIf="error" class="nw-toast error">
+      <span>⚠️ {{ error }}</span>
+      <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+    </div>
+  </div>
+
+  <div class="nw-metrics">
+    <div class="nw-metric success"><span class="metric-label">Confirmados</span><span class="metric-value">{{
+        confirmedCount }}</span></div>
+    <div class="nw-metric warning"><span class="metric-label">Pendientes</span><span class="metric-value">{{
+        pendingCount }}</span></div>
+    <div class="nw-metric danger"><span class="metric-label">Rechazados</span><span class="metric-value">{{
+        declinedCount }}</span></div>
+    <div class="nw-metric info"><span class="metric-label">Check-in</span><span class="metric-value">{{ checkedInCount
+        }}</span></div>
+    <div class="nw-metric"><span class="metric-label">Lugares totales</span><span class="metric-value">{{ totalSeats
+        }}</span></div>
+  </div>
+
+  <!-- Detalles del evento -->
+  <div class="nw-card" [class.is-collapsed]="collapsedCards['details']" style="margin-top:20px;" *ngIf="event">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
+      (click)="toggleCard('details')">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; min-width:0;">
+        <h3>Detalles del evento</h3>
+      </div>
+      <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('details')">
+        {{ collapsedCards['details'] ? '▼ Expandir' : '▲ Colapsar' }}
+      </button>
+    </div>
+    <div class="nw-form-grid" style="gap:16px;" *ngIf="!collapsedCards['details']">
+      <div><span style="font-size:13px; color:var(--nw-text-3)">Tipo</span>
+        <p style="margin:4px 0 0; font-weight:600; display:flex; align-items:center; gap:8px;">
+          <span class="card-icon-badge" [class]="'badge-' + getNormalizedEventType(event)"
+            style="width: 28px; height: 28px; border-radius: 8px; flex-shrink:0;">
+            <ng-container [ngSwitch]="getNormalizedEventType(event)">
+              <svg *ngSwitchCase="'boda'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l1.5 3 3 1.5-3 1.5L12 11l-1.5-3L7.5 6.5 9 5z" />
+                <circle cx="9" cy="14" r="4.5" />
+                <circle cx="15" cy="14" r="4.5" />
+              </svg>
+              <svg *ngSwitchCase="'xv'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 19h20L19 9l-5 4-2-7-2 7-5-4L2 19z" />
+                <circle cx="12" cy="5" r="1.5" fill="currentColor" />
+              </svg>
+              <svg *ngSwitchCase="'graduacion'" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c0 2 6 2 6 2s6 0 6-2v-5" />
+              </svg>
+              <svg *ngSwitchCase="'cumpleanos'" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" />
+                <path d="M4 16h16" />
+                <path d="M12 11V7" />
+                <path d="M12 4.5a1.5 1.5 0 0 1 0-3 1.5 1.5 0 0 1 0 3z" />
+              </svg>
+              <svg *ngSwitchCase="'bautizo'" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M7 8h10" />
+              </svg>
+              <svg *ngSwitchDefault viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z" />
+              </svg>
+            </ng-container>
+          </span>
+          {{ eventTypeLabel(event) }}
+        </p>
+      </div>
+      <div>
+        <span style="font-size:13px; color:var(--nw-text-3)">Estado</span>
+        <div style="margin-top:6px;">
+          <select class="nw-select-status" [class.status-published]="event.status === 'published'"
+            [class.status-draft]="event.status === 'draft'" [class.status-archived]="event.status === 'archived'"
+            [ngModel]="event.status" (ngModelChange)="changeStatus($event)" [disabled]="saving">
+            <option value="draft" style="color: var(--nw-text); background: var(--nw-surface);">Borrador</option>
+            <option value="published" style="color: var(--nw-text); background: var(--nw-surface);">Publicado</option>
+            <option value="archived" style="color: var(--nw-text); background: var(--nw-surface);">Archivado</option>
+          </select>
+        </div>
+      </div>
+      <div *ngIf="event.hosts?.length"><span style="font-size:13px; color:var(--nw-text-3)">Anfitriones</span>
+        <p style="margin:4px 0 0; font-weight:600">{{ event.hosts.join(', ') }}</p>
+      </div>
+      <div *ngIf="event.venue?.name"><span style="font-size:13px; color:var(--nw-text-3)">Lugar</span>
+        <p style="margin:4px 0 0; font-weight:600">{{ event.venue.name }}</p>
+      </div>
+      <div *ngIf="event.venue?.address"><span style="font-size:13px; color:var(--nw-text-3)">Dirección</span>
+        <p style="margin:4px 0 0">{{ event.venue.address }}</p>
+      </div>
+      <div><span style="font-size:13px; color:var(--nw-text-3)">Modo</span>
+        <p style="margin:4px 0 0">{{ event.mode === 'external_dashboard' ? 'Dashboard externo' : 'Invitación digital' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: FOTO PRINCIPAL / PORTADA DEL EVENTO -->
+  <div *ngIf="isOwner()" class="nw-card" style="margin-top:16px; padding: 20px 20px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 12px;">
+      <div>
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto Principal / Portada del Evento
+          <span *ngIf="coverImageUrl" class="nw-pill success" style="font-size: 11px; font-weight: 700; display: inline-flex; align-items: center;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px;">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Portada Activa
+          </span>
+          <span *ngIf="!coverImageUrl" class="nw-pill warning" style="font-size: 11px; font-weight: 700;">
+            Sin Foto Principal
+          </span>
+        </h3>
+        <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2);">
+          Configura la imagen principal de bienvenida que tus invitados verán en la portada de tu invitación digital y en la ficha del evento.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <label class="nw-btn nw-btn-primary nw-btn-sm" style="cursor: pointer; height: 36px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;">
+          <input type="file" accept="image/*" (change)="uploadCoverImage($event)" [disabled]="uploadingCover" style="display: none;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>{{ coverImageUrl ? 'Cambiar Foto Principal' : 'Subir Foto Principal' }}</span>
+        </label>
+        <button *ngIf="coverImageUrl" type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="removeCoverImage()" [disabled]="uploadingCover" style="height: 36px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+          <span>Quitar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Indicador de Carga -->
+    <div *ngIf="uploadingCover" class="nw-alert info nw-loading" style="margin-top: 10px;">
+      Subiendo e integrando foto principal...
+    </div>
+
+    <!-- Vista de Foto Configurada -->
+    <div *ngIf="!uploadingCover && coverImageUrl" style="margin-top: 12px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: var(--nw-surface-2); border: 1px solid var(--nw-border); padding: 14px; border-radius: var(--nw-radius-sm); box-shadow: var(--nw-shadow-sm);">
+      <div style="position: relative; width: 220px; height: 130px; border-radius: 8px; overflow: hidden; background: #222; flex-shrink: 0; cursor: pointer; border: 1px solid var(--nw-border);" (click)="previewCoverModal = true">
+        <img [src]="coverImageUrl" alt="Foto principal del evento" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.65); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+          Clic para ampliar
+        </div>
+      </div>
+
+      <div style="flex: 1; min-width: 220px;">
+        <strong style="font-size: 14px; color: var(--nw-text); display: flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto asignada y activa
+        </strong>
+        <p style="margin: 4px 0 10px; font-size: 12.5px; color: var(--nw-text-3); word-break: break-all;">
+          {{ coverImageUrl }}
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewCoverModal = true" style="font-size: 12px; height: 34px; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Ver en tamaño completo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado Vacío -->
+    <div *ngIf="!uploadingCover && !coverImageUrl" style="margin-top: 10px; border: 2px dashed var(--nw-border); border-radius: var(--nw-radius-sm); padding: 24px 16px; text-align: center; background: var(--nw-surface-2);">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); margin-bottom: 8px; display: inline-block;">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      <strong style="font-size: 14px; color: var(--nw-text); display: block;">No se ha configurado una foto principal</strong>
+      <p style="margin: 4px 0 12px; font-size: 12.5px; color: var(--nw-text-2);">
+        Agrega una foto representativa para personalizar la portada de tu evento y la invitación digital.
+      </p>
+      <label class="nw-btn nw-btn-secondary nw-btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+        <input type="file" accept="image/*" (change)="uploadCoverImage($event)" style="display: none;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Elegir foto principal</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Invitaciones -->
+  <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['invitations']"
+    style="margin-top:16px; padding: 20px 20px 24px;">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom: 16px; cursor:pointer;"
+      (click)="toggleCard('invitations')">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap; flex:1; min-width:0;">
+        <h3 style="margin:0;">Invitaciones</h3>
+        <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="$event.stopPropagation(); createInvitation()"
+          [disabled]="saving || event.mode === 'external_dashboard' || invitations.length >= 1"
+          style="display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Crear invitación</span>
+        </button>
+      </div>
+      <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('invitations')">
+        {{ collapsedCards['invitations'] ? '▼ Expandir' : '▲ Colapsar' }}
+      </button>
+    </div>
+
+    <div *ngIf="!collapsedCards['invitations']">
+      <div *ngIf="!invitations.length" class="nw-empty"
+        style="padding: 30px 20px; text-align: center; color: var(--nw-text-3); background: var(--nw-surface-2); border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm);">
+        <span class="empty-icon" style="font-size: 32px; display: block; margin-bottom: 6px;">📂</span>
+        <h3 style="margin: 0; font-size: 14.5px; font-weight: 700; color: var(--nw-text);">Este evento aún no tiene
+          invitaciones.</h3>
+        <p style="font-size: 12.5px; margin-top: 4px; color: var(--nw-text-2);">Crea tu primera invitación para empezar
+          a personalizarla.</p>
+      </div>
+      <div style="display:grid; gap:10px;" *ngIf="invitations.length > 0">
+        <div *ngFor="let inv of invitations"
+          style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 16px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow: var(--nw-shadow-sm);">
+          <div>
+            <strong style="font-size: 14.5px; color: var(--nw-text);">{{ inv.content?.headline || inv.slug }}</strong>
+            <span style="color:var(--nw-text-3); font-size:13px; margin-left:8px;">/new/i/{{ inv.slug }}</span>
+            <span class="nw-pill"
+              style="margin-left:12px; font-size: 10.5px; font-weight: 800; text-transform: uppercase;"
+              [class.success]="inv.status === 'published'" [class.warning]="inv.status === 'draft'">
+              {{ inv.status === 'published' ? 'Publicado' : 'Borrador' }}
+            </span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <!-- Copiar Link -->
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyInvitationLink(inv.slug)"
+              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copiar link</span>
+            </button>
+            <!-- Ver -->
+            <a [routerLink]="['/new/i', inv.slug]" target="_blank" class="nw-btn nw-btn-ghost nw-btn-sm"
+              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span>Ver</span>
+            </a>
+            <!-- Editar -->
+            <a [routerLink]="['/new/invitations', inv._id || inv.id, 'editor']" class="nw-btn nw-btn-ghost nw-btn-sm"
+              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <span>Editar</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permisos y Accesos Info Banner -->
+  <div *ngIf="isOwner()"
+    style="margin-top: 24px; margin-bottom: 16px; padding: 20px; background: var(--nw-surface-2); border: 1px solid var(--nw-border); border-radius: var(--nw-radius); display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="color: var(--nw-accent); display: inline-flex; align-items: center;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </span>
+      <div>
+        <h3
+          style="margin: 0; font-family: var(--nw-font-display); font-weight: 700; font-size: 17px; color: var(--nw-text);">
+          Gestión de Colaboradores y Permisos</h3>
+        <p style="margin: 2px 0 0; font-size: 13px; color: var(--nw-text-2);">Configura los accesos de tu equipo técnico
+          y operativo según sus necesidades del evento.</p>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+      <div
+        style="background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 14px; border-top: 4px solid var(--nw-accent); display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--nw-shadow-sm);">
+        <span
+          style="background: var(--nw-accent-glow); padding: 6px; border-radius: 8px; color: var(--nw-accent); display: inline-flex;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </span>
+        <div>
+          <strong style="font-size: 13px; color: var(--nw-text); display: block; margin-bottom: 4px;">Equipo Interno
+            (Cuentas Permanentes)</strong>
+          <span style="font-size: 12px; color: var(--nw-text-2); line-height: 1.45; display: block;">
+            Para organizadores, clientes o proveedores con cuenta registrada. Permite acceso al panel de control
+            mediante inicio de sesión estándar.
+          </span>
+          <span
+            style="font-size: 11px; font-weight: 700; color: var(--nw-accent); display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;">
+            Seguridad Alta • Control Detallado
+          </span>
+        </div>
+      </div>
+
+      <div
+        style="background: var(--nw-surface); border: 1px solid var(--nw-border); border-radius: var(--nw-radius-sm); padding: 14px; border-top: 4px solid var(--nw-accent-2); display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--nw-shadow-sm);">
+        <span
+          style="background: rgba(219, 141, 128, 0.08); padding: 6px; border-radius: 8px; color: var(--nw-accent-2); display: inline-flex;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </span>
+        <div>
+          <strong style="font-size: 13px; color: var(--nw-text); display: block; margin-bottom: 4px;">Accesos Externos
+            (Enlaces Temporales)</strong>
+          <span style="font-size: 12px; color: var(--nw-text-2); line-height: 1.45; display: block;">
+            Para personal del evento (DJ, fotografía, personal de mesa) sin registro. Enlace único directo y seguro que
+            expira automáticamente.
+          </span>
+          <span
+            style="font-size: 11px; font-weight: 700; color: var(--nw-accent-2); display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;">
+            Enlace Temporal • Acceso sin Contraseña
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equipo Interno -->
+  <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['team']"
+    style="margin-top:20px; border-top: 4px solid var(--nw-accent); padding: 24px;">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom: 12px; cursor:pointer;"
+      (click)="toggleCard('team')">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; min-width:0;">
+        <span style="color: var(--nw-accent); display: inline-flex; align-items: center; margin-right: 2px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </span>
+        <h3 style="margin:0; font-size: 18px; font-weight: 700;">Equipo Interno</h3>
+        <span class="nw-pill accent"
+          style="font-size:10px; font-weight:700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Permanente
+        </span>
+        <span class="nw-pill success" style="font-weight:700;">{{ eventMembers.length }} miembros</span>
+      </div>
+      <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('team')">
+        {{ collapsedCards['team'] ? '▼ Expandir' : '▲ Colapsar' }}
+      </button>
+    </div>
+
+    <div *ngIf="!collapsedCards['team']">
+      <p style="color:var(--nw-text-2); font-size:13.5px; margin-top:0; margin-bottom:20px; line-height: 1.5;">
+        Colaboradores fijos del evento. Permite asignar perfiles con permisos granulares específicos para la gestión del
+        tablero administrativo.
+      </p>
+
+      <!-- Formulario Agregar Miembro (Colapsable) -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px 20px; margin-bottom:20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
+          (click)="toggleTeamInvite()">
+          <h4
+            style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 8px; flex:1; min-width:0; flex-wrap:wrap;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Invitar nuevo miembro
+          </h4>
+          <button type="button" class="nw-collapse-btn" style="padding:4px 10px; font-size:11.5px;"
+            (click)="$event.stopPropagation(); toggleTeamInvite()">
+            {{ collapsedTeamInvite ? '▼ Expandir' : '▲ Colapsar' }}
+          </button>
+        </div>
+
+        <div *ngIf="!collapsedTeamInvite" style="margin-top:16px;">
+          <div
+            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:16px;">
+            <div>
+              <label class="nw-label" style="font-weight:600; margin-bottom:6px; display:block;">Email</label>
+              <input class="nw-input" type="email" [(ngModel)]="memberForm.email" placeholder="persona@dominio.com"
+                style="height:40px; padding:8px 12px; font-size:13px;">
+            </div>
+            <div>
+              <label class="nw-label" style="font-weight:600; margin-bottom:6px; display:block;">Nombre</label>
+              <input class="nw-input" [(ngModel)]="memberForm.name" placeholder="Opcional"
+                style="height:40px; padding:8px 12px; font-size:13px;">
+            </div>
+            <div>
+              <label class="nw-label" style="font-weight:600; margin-bottom:6px; display:block;">Rol por Defecto</label>
+              <select class="nw-select" [(ngModel)]="memberForm.role" (change)="onMemberRoleChange()"
+                style="height:40px; padding:8px 12px; font-size:13px; cursor:pointer;">
+                <option *ngFor="let role of memberRoles" [value]="role.value">{{ role.label }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Checkboxes de Permisos Granulares -->
+          <div style="margin-bottom:16px;">
+            <span class="nw-label" style="font-weight:600; margin-bottom:8px; display:block;">Permisos asignados:</span>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
+              <label *ngFor="let permission of eventPermissions"
+                [style.borderColor]="memberForm.permissions.includes(permission) ? 'var(--nw-accent)' : 'var(--nw-border)'"
+                [style.background]="memberForm.permissions.includes(permission) ? 'var(--nw-accent-glow)' : 'var(--nw-surface)'"
+                [style.color]="memberForm.permissions.includes(permission) ? 'var(--nw-text)' : 'var(--nw-text-2)'"
+                style="display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; cursor:pointer; padding:8px 12px; border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); user-select:none; transition: all var(--nw-duration) var(--nw-ease);">
+                <span style="font-weight:600;">{{ permissionLabel(permission) }}</span>
+                <span class="nw-switch" style="width:36px; height:20px; flex-shrink:0;">
+                  <input type="checkbox" [checked]="memberForm.permissions.includes(permission)"
+                    (change)="toggleMemberPermission(permission, $any($event.target).checked)">
+                  <span class="nw-slider" style="border-radius:20px;"></span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="createMember()">
+              Invitar al Equipo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Miembros (Colapsable) -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
+          (click)="toggleTeamList()">
+          <h4
+            style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text); display: flex; align-items: center; gap: 8px; flex:1; min-width:0; flex-wrap:wrap;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            Lista de Miembros ({{ activeMembersCount }})
+          </h4>
+          <button type="button" class="nw-collapse-btn" style="padding:4px 10px; font-size:11.5px;"
+            (click)="$event.stopPropagation(); toggleTeamList()">
+            {{ collapsedTeamList ? '▼ Expandir' : '▲ Colapsar' }}
+          </button>
+        </div>
+
+        <div *ngIf="!collapsedTeamList" style="margin-top:16px; display:grid; gap:10px;">
+          <!-- Activos e Invitados -->
+          <ng-container *ngFor="let member of eventMembers">
+            <div *ngIf="member.status !== 'disabled'"
+              style="display:flex; flex-direction:column; padding:16px; border:1px solid var(--nw-border); background:var(--nw-surface); border-radius:var(--nw-radius-sm); gap:12px; box-shadow: var(--nw-shadow-sm); transition: border-color var(--nw-duration) var(--nw-ease);">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                  <div style="min-width:0;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <strong style="font-size:14px; color:var(--nw-text);">{{ member.name || member.email }}</strong>
+                      <span class="nw-pill accent" style="font-size:10px; padding:2px 8px; font-weight: 700;">{{
+                        memberRoleLabel(member.role) }}</span>
+                      <span class="nw-pill" [class.success]="member.status === 'active'"
+                        [class.warning]="member.status === 'invited'"
+                        style="font-size:9.5px; padding:2px 6px; text-transform:uppercase; font-weight: 700;">
+                        {{ member.status }}
+                      </span>
+                    </div>
+                    <div style="color:var(--nw-text-3); font-size:12.5px; margin-top:2px;">{{ member.email }}</div>
+                  </div>
+                </div>
+
+                <!-- Acciones -->
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="toggleEditPermissions(member)"
+                    style="padding:5px 12px; font-size:12.5px; height:34px; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                      </path>
+                    </svg>
+                    <span>{{ (editingMemberId === (member._id || member.id)) ? 'Cerrar' : 'Permisos' }}</span>
+                  </button>
+                  <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="disableMember(member)"
+                    style="padding:5px 12px; font-size:12.5px; height:34px;">
+                    Desactivar
+                  </button>
+                </div>
+              </div>
+
+              <!-- Permisos Actuales -->
+              <div
+                style="padding-top:10px; border-top:1px dashed var(--nw-border); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span
+                  style="font-size:11px; color:var(--nw-text-3); font-weight:700; margin-right:4px;">Permisos:</span>
+                <span *ngFor="let perm of member.permissions" class="nw-pill success"
+                  style="font-size:10px; padding:2px 8px; background:rgba(74, 127, 98, 0.06); color:var(--nw-success); border:1px solid rgba(74, 127, 98, 0.15);">
+                  {{ permissionLabel(perm) }}
+                </span>
+                <span *ngIf="!member.permissions?.length"
+                  style="font-size:11px; color:var(--nw-text-3); font-style:italic;">Ninguno (Solo ver)</span>
+              </div>
+
+              <!-- Panel Interactivo para Actualizar Permisos -->
+              <div *ngIf="editingMemberId === (member._id || member.id)"
+                style="margin-top:8px; padding:14px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm);">
+                <span
+                  style="font-size:12.5px; font-weight:700; color:var(--nw-text); display:block; margin-bottom:10px;">
+                  Modificar permisos de {{ member.name || member.email }}:
+                </span>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
+                  <label *ngFor="let permission of eventPermissions"
+                    [style.borderColor]="hasMemberPermission(member, permission) ? 'var(--nw-accent)' : 'var(--nw-border)'"
+                    [style.background]="hasMemberPermission(member, permission) ? 'var(--nw-accent-glow)' : 'var(--nw-surface)'"
+                    style="display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:12px; cursor:pointer; padding:8px 10px; border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); user-select:none; transition: all var(--nw-duration) var(--nw-ease);">
+                    <span style="font-weight:600; font-size:12px;">{{ permissionLabel(permission) }}</span>
+                    <span class="nw-switch" style="width:34px; height:18px; flex-shrink:0;">
+                      <input type="checkbox" [checked]="hasMemberPermission(member, permission)"
+                        (change)="toggleExistingMemberPermission(member, permission, $any($event.target).checked)">
+                      <span class="nw-slider" style="border-radius:20px;"></span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <div *ngIf="!hasActiveMembers()"
+            style="padding:24px; text-align:center; color:var(--nw-text-3); font-size:13.5px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px dashed var(--nw-border);">
+            No hay colaboradores activos en el equipo.
+          </div>
+
+          <!-- Bloque Colapsado de Colaboradores Desactivados -->
+          <div *ngIf="hasDisabledMembers()"
+            style="margin-top: 14px; border-top: 1px solid var(--nw-border); padding-top: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+              (click)="collapsedDisabledTeam = !collapsedDisabledTeam">
+              <span
+                style="font-size:12.5px; font-weight:700; color:var(--nw-text-3); display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3);">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Colaboradores Desactivados ({{ disabledMembersCount }})
+              </span>
+              <button type="button" class="nw-collapse-btn" style="padding:2px 8px; font-size:11px;">
+                {{ collapsedDisabledTeam ? '▼ Mostrar' : '▲ Ocultar' }}
+              </button>
+            </div>
+            <div *ngIf="!collapsedDisabledTeam" style="margin-top:10px; display:grid; gap:10px;">
+              <ng-container *ngFor="let member of eventMembers">
+                <div *ngIf="member.status === 'disabled'"
+                  style="display:flex; flex-direction:column; padding:12px 14px; border:1px solid var(--nw-border); background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); gap:8px; opacity: 0.65;">
+                  <div
+                    style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                    <div style="min-width:0;">
+                      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <strong style="font-size:13.5px; color:var(--nw-text-2);">{{ member.name || member.email
+                          }}</strong>
+                        <span class="nw-pill"
+                          style="font-size:9.5px; padding:2px 6px; text-transform:uppercase; font-weight: 700; background: var(--nw-border); color: var(--nw-text-3);">
+                          Desactivado
+                        </span>
+                      </div>
+                      <div style="color:var(--nw-text-3); font-size:12px; margin-top:2px;">{{ member.email }}</div>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos Externos -->
+  <div *ngIf="isOwner()" class="nw-card" [class.is-collapsed]="collapsedCards['external']"
+    style="margin-top:20px; border-top: 4px solid var(--nw-accent-2); padding: 24px;">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor:pointer; flex-wrap: wrap; gap: 10px;"
+      (click)="toggleCard('external')">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap: wrap;">
+        <span style="color: var(--nw-accent-2); display: inline-flex; align-items: center; margin-right: 2px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </span>
+        <h3 style="margin:0; font-size: 18px; font-weight: 700;">Accesos Externos</h3>
+        <span class="nw-pill warning"
+          style="font-size:10px; font-weight:700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Enlace Temporal
+        </span>
+        <span class="nw-pill info" style="font-weight:700;">{{ activeLinksCount }} activos</span>
+      </div>
+      <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('external')">
+        {{ collapsedCards['external'] ? '▼ Expandir' : '▲ Colapsar' }}
+      </button>
+    </div>
+
+    <div *ngIf="!collapsedCards['external']">
+      <p style="color:var(--nw-text-2); font-size:13.5px; margin-top:0; margin-bottom:20px; line-height: 1.5;">
+        Enlaces sin registro de usuario con token de expiración. Ideales para personal operativo del día del evento
+        (DJs, fotógrafos, asistentes de check-in).
+      </p>
+
+      <!-- Formulario Crear Link -->
+      <div
+        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:20px; background:var(--nw-surface-2); padding:20px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border); align-items: end; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+        <div>
+          <span
+            style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Sección
+            / Rol</span>
+          <select class="nw-select" [(ngModel)]="accessLinkForm.role"
+            style="height:40px; padding:6px 12px; font-size:13px; cursor:pointer;">
+            <option value="check_in">Check-in</option>
+            <option value="photographer">Fotógrafo: subir y ver mis fotos</option>
+            <option value="album_review">Revisión y moderación de álbum</option>
+            <option value="album_view">Ver Álbum: galería de fotos aprobadas</option>
+            <option value="client_view">Vista cliente / anfitrión</option>
+            <option value="guest_ops">Operación invitados</option>
+            <option value="dj">Sección DJ (Canciones)</option>
+            <option value="integration_api">API integración externa</option>
+          </select>
+        </div>
+        <div>
+          <span
+            style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Etiqueta
+            (DJ Pedro, Barra, etc.)</span>
+          <input class="nw-input" [(ngModel)]="accessLinkForm.label" placeholder="Ej: Staff de Entrada"
+            style="height:40px; padding:8px 12px; font-size:13px;">
+        </div>
+        <div>
+          <span
+            style="font-size:13px; font-weight:600; color:var(--nw-text-2); display: block; margin-bottom: 6px;">Días de
+            validez</span>
+          <input class="nw-input" type="number" min="1" max="90" [(ngModel)]="accessLinkForm.days"
+            style="height:40px; padding:8px; font-size:13px; text-align:center;">
+        </div>
+        <div>
+          <button class="nw-btn nw-btn-primary" (click)="createAccessLink()"
+            style="height:40px; font-size:13px; padding:0 20px; width: 100%;">Crear enlace</button>
+        </div>
+      </div>
+
+      <!-- Lista de Links -->
+      <div style="display:grid; gap:10px;">
+        <ng-container *ngFor="let link of eventAccessLinks">
+          <div *ngIf="!link.revokedAt" class="nw-access-link-item">
+            <div style="min-width:0; display:grid; gap:4px; flex: 1; max-width: 100%;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <strong style="font-size:14px; color:var(--nw-text); word-break: break-all; overflow-wrap: anywhere;">{{ link.label || link.role }}</strong>
+                <span class="nw-pill info"
+                  style="font-size:10px; padding:2px 8px; text-transform:uppercase; font-weight: 700;">{{ link.role
+                  }}</span>
+                <span class="nw-pill success"
+                  style="font-size:10px; padding:2px 8px; background:rgba(74,127,98,0.08); color:var(--nw-success); font-weight: 700;">Activo</span>
+              </div>
+              <div
+                style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--nw-text-3); flex-wrap: wrap; min-width:0; max-width:100%;">
+                <div (click)="copyAccessLinkUrl(link)"
+                  style="cursor: pointer; display: flex; align-items: flex-start; gap: 4px; color: var(--nw-accent); word-break: break-all; overflow-wrap: anywhere; min-width: 0; max-width: 100%;"
+                  title="Copiar enlace">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 3px;">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <span style="text-decoration: underline; font-weight: 500; word-break: break-all; overflow-wrap: anywhere;">{{ getNewAccessUrl(link) }}</span>
+                </div>
+                <span>•</span>
+                <span style="white-space: nowrap;">Expira: {{ formatShortDate(link.expiresAt) }}</span>
+              </div>
+              <div *ngIf="link.role === 'integration_api'"
+                style="display:grid; gap:6px; padding:10px 14px; background:var(--nw-surface-2); border-radius:8px; border:1px solid var(--nw-border); margin-top:6px; min-width:0; max-width:100%; box-sizing: border-box;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 6px;">
+                  <span style="font-size:12px; color:var(--nw-text-2); word-break: break-all; overflow-wrap: anywhere;">
+                    Token API:
+                    <strong style="word-break: break-all; overflow-wrap: anywhere;">
+                      {{ isTokenVisible(link._id || link.id) ? (link.accessToken || link.tokenPreview || 'Disponible al
+                      crear el enlace') : '••••••••••••••••••••••••••••••••••••••••' }}
+                    </strong>
+                  </span>
+                  <button type="button" (click)="toggleTokenVisibility(link._id || link.id)"
+                    class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="padding:2px 6px; height:24px; font-size:11px; display:inline-flex; align-items:center; gap:4px; flex-shrink: 0;">
+                    <svg *ngIf="!isTokenVisible(link._id || link.id)" viewBox="0 0 24 24" width="13" height="13"
+                      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg *ngIf="isTokenVisible(link._id || link.id)" viewBox="0 0 24 24" width="13" height="13"
+                      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                      </path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                    <span>{{ isTokenVisible(link._id || link.id) ? 'Ocultar' : 'Mostrar' }}</span>
+                  </button>
+                </div>
+                <code
+                  style="font-size:11px; color:var(--nw-text-3); word-break:break-all; overflow-wrap: anywhere; font-family:monospace; background:var(--nw-surface); padding:4px 8px; border-radius:4px; border:1px solid var(--nw-border); max-width: 100%; box-sizing: border-box;">
+                  Authorization: Bearer {{ isTokenVisible(link._id || link.id) ? (link.accessToken || '[token]') : '••••••••••••••••••••••••••••••••••••••••' }}
+                </code>
+              </div>
+            </div>
+            <div class="nw-access-link-actions">
+              <a class="nw-btn nw-btn-ghost nw-btn-sm" [href]="getNewAccessUrl(link)" target="_blank"
+                style="height:32px; padding: 0 12px; font-size:12px;">Abrir</a>
+              <button *ngIf="link.role === 'integration_api' && link.accessToken" class="nw-btn nw-btn-ghost nw-btn-sm"
+                type="button" (click)="copyAccessToken(link)"
+                style="height:32px; padding: 0 12px; font-size:12px;">Copiar token</button>
+              <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="revokeAccessLink(link)"
+                style="height:32px; padding: 0 12px; font-size:12px;">Revocar</button>
+            </div>
+          </div>
+        </ng-container>
+
+        <div *ngIf="!hasActiveLinks()"
+          style="padding:24px; text-align:center; color:var(--nw-text-3); font-size:13.5px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px dashed var(--nw-border);">
+          No hay enlaces de acceso temporal activos.
+        </div>
+
+        <!-- Bloque Colapsado de Enlaces Revocados -->
+        <div *ngIf="hasRevokedLinks()"
+          style="margin-top: 14px; border-top: 1px solid var(--nw-border); padding-top: 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;"
+            (click)="collapsedRevokedAccess = !collapsedRevokedAccess">
+            <span
+              style="font-size:12.5px; font-weight:700; color:var(--nw-text-3); display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3);">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Enlaces de Acceso Revocados ({{ revokedLinksCount }})
+            </span>
+            <button type="button" class="nw-collapse-btn" style="padding:2px 8px; font-size:11px;">
+              {{ collapsedRevokedAccess ? '▼ Mostrar' : '▲ Ocultar' }}
+            </button>
+          </div>
+          <div *ngIf="!collapsedRevokedAccess" style="margin-top:10px; display:grid; gap:10px;">
+            <ng-container *ngFor="let link of eventAccessLinks">
+              <div *ngIf="link.revokedAt" class="nw-access-link-item"
+                style="padding:12px 14px; background:var(--nw-surface-2); opacity: 0.65;">
+                <div style="min-width:0; display:grid; gap:4px; flex: 1; max-width: 100%;">
+                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <strong style="font-size:13.5px; color:var(--nw-text-2); word-break: break-all; overflow-wrap: anywhere;">{{ link.label || link.role }}</strong>
+                    <span class="nw-pill"
+                      style="font-size:9.5px; padding:2px 6px; text-transform:uppercase; font-weight: 700; background: var(--nw-border); color: var(--nw-text-3);">{{
+                      link.role }}</span>
+                    <span class="nw-pill danger"
+                      style="font-size:9.5px; padding:2px 6px; font-weight: 700;">Revocado</span>
+                  </div>
+                  <div style="font-size:11.5px; color:var(--nw-text-3); word-break: break-all; overflow-wrap: anywhere;">
+                    Expira: {{ formatShortDate(link.expiresAt) }}
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Planes y Pagos -->
+  <div class="nw-card" [class.is-collapsed]="collapsedCards['plans']" style="margin-top:16px;">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; cursor:pointer;"
+      (click)="toggleCard('plans')">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1; min-width:0;">
+        <h3>Planes y Pagos</h3>
+        <span class="nw-pill accent" *ngIf="currentPlan">{{ currentPlan.name }}</span>
+        <span class="nw-pill warning" *ngIf="!currentPlan && !premiumActive">Plan Gratuito</span>
+        <span class="nw-pill success" *ngIf="premiumActive"
+          style="display: inline-flex; align-items: center; gap: 6px;">
+          <span>Suscripción Activa</span>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+      </div>
+      <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('plans')">
+        {{ collapsedCards['plans'] ? '▼ Expandir' : '▲ Colapsar' }}
+      </button>
+    </div>
+
+    <div *ngIf="!collapsedCards['plans']" style="padding: 16px 20px 24px;">
+      <!-- Si YA PAGÓ / Tiene Suscripción Activa -->
+      <div *ngIf="premiumActive"
+        style="background: var(--nw-accent-glow); border: 1.5px solid var(--nw-accent); border-radius: var(--nw-radius); padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 4px 12px rgba(192, 156, 120, 0.08);">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div class="card-icon-badge badge-boda"
+            style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; background: var(--nw-accent); color: white; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <strong
+              style="font-size: 16px; color: var(--nw-text); display: block; font-family: var(--nw-font-display);">Suscripción
+              / Plan Activo</strong>
+            <p style="margin: 4px 0 0; font-size: 13.5px; color: var(--nw-text-2);">
+              {{ subscriptionActive ? 'Suscripción Planner Pro activa con acceso ilimitado.' : 'Plan del evento activo'
+              }}
+              <span *ngIf="eventPlanExpiresAt"> · Vence: <strong>{{ formatShortDate(eventPlanExpiresAt)
+                  }}</strong></span>
+            </p>
+          </div>
+        </div>
+        <span class="nw-pill accent"
+          style="font-size: 11px; font-weight: 800; padding: 6px 14px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--nw-accent);">
+          Premium Habilitado
+        </span>
+      </div>
+
+      <!-- Si AÚN NO HA PAGADO -->
+      <div *ngIf="!premiumActive && isOwner()">
+        <div style="margin-bottom:16px;">
+          <div class="nw-toast warning"
+            style="width: 100%; box-sizing: border-box; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; border-radius: var(--nw-radius-sm);">
+            <span>⚠️ Plan Gratuito. Activa un plan premium para funciones avanzadas.</span>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+          <!-- Evento Individual -->
+          <div class="nw-card"
+            style="background:var(--nw-surface-2); padding:20px; display:grid; gap:8px; border: 1px solid var(--nw-border); border-radius: var(--nw-radius);">
+            <strong style="font-size: 15px; color: var(--nw-text);">Evento Individual</strong>
+            <span
+              style="font-size:22px; font-weight:800; color:var(--nw-accent); font-family: var(--nw-font-display);">{{
+              getPlanPrice(event.mode === 'external_dashboard' ? 'external_dashboard_12m' : 'event_12m') }}</span>
+            <span style="font-size:13px; color:var(--nw-text-3);">Pago único 12 meses</span>
+            <button *ngIf="event.mode !== 'external_dashboard'" class="nw-btn nw-btn-primary nw-btn-sm"
+              (click)="checkoutPlan('event_12m')" [disabled]="checkoutLoading !== '' || hasPendingPayment('event_12m')"
+              style="margin-top: 8px;">
+              {{ checkoutLoading === 'event_12m' ? 'Cargando...' : (hasPendingPayment('event_12m') ? 'Pendiente' :
+              'Activar') }}
+            </button>
+            <button *ngIf="event.mode === 'external_dashboard'" class="nw-btn nw-btn-primary nw-btn-sm"
+              (click)="checkoutPlan('external_dashboard_12m')"
+              [disabled]="checkoutLoading !== '' || hasPendingPayment('external_dashboard_12m')"
+              style="margin-top: 8px;">
+              {{ checkoutLoading === 'external_dashboard_12m' ? 'Cargando...' :
+              (hasPendingPayment('external_dashboard_12m') ? 'Pendiente' : 'Activar Dashboard') }}
+            </button>
+          </div>
+
+          <!-- Planner Pro Mensual -->
+          <div class="nw-card"
+            style="background:var(--nw-surface-2); padding:20px; display:grid; gap:8px; border: 1px solid var(--nw-border); border-radius: var(--nw-radius);">
+            <strong style="font-size: 15px; color: var(--nw-text);">Planner Pro (Mensual)</strong>
+            <span
+              style="font-size:22px; font-weight:800; color:var(--nw-accent); font-family: var(--nw-font-display);">{{
+              getPlanPrice('planner_pro_monthly') }}</span>
+            <span style="font-size:13px; color:var(--nw-text-3);">Acceso ilimitado</span>
+            <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_monthly')"
+              [disabled]="checkoutLoading !== '' || hasPendingPayment('planner_pro_monthly')" style="margin-top: 8px;">
+              {{ hasPendingPayment('planner_pro_monthly') ? 'Pendiente' : 'Activar Pro' }}
+            </button>
+          </div>
+
+          <!-- Planner Pro Anual -->
+          <div class="nw-card"
+            style="background:var(--nw-surface-2); padding:20px; display:grid; gap:8px; border: 1px solid var(--nw-border); border-radius: var(--nw-radius);">
+            <strong style="font-size: 15px; color: var(--nw-text);">Planner Pro (Anual)</strong>
+            <span
+              style="font-size:22px; font-weight:800; color:var(--nw-accent); font-family: var(--nw-font-display);">{{
+              getPlanPrice('planner_pro_yearly') }}</span>
+            <span style="font-size:13px; color:var(--nw-text-3);">Ahorra hasta 20%</span>
+            <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="checkoutPlan('planner_pro_yearly')"
+              [disabled]="checkoutLoading !== '' || hasPendingPayment('planner_pro_yearly')" style="margin-top: 8px;">
+              {{ hasPendingPayment('planner_pro_yearly') ? 'Pendiente' : 'Activar Anual' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Lightbox de Foto Principal -->
+  <div class="nw-modal-backdrop" *ngIf="previewCoverModal" (click)="previewCoverModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()"
+      style="max-width: 760px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: #111111; color: #ffffff; border: 1px solid var(--nw-border-2, #444);">
+      <div style="padding: 14px 20px; border-bottom: 1px solid #333333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto Principal / Portada del Evento
+        </h3>
+        <button type="button" (click)="previewCoverModal = false" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #aaaaaa; padding: 4px 8px; border-radius: 8px;">✕</button>
+      </div>
+      <div style="padding: 16px; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; background: #000000;">
+        <img [src]="coverImageUrl" alt="Foto principal" style="max-width: 100%; max-height: 65vh; object-fit: contain; border-radius: 8px;">
+      </div>
+      <div style="padding: 14px 20px; background: #1a1a1a; border-top: 1px solid #333333; display: flex; justify-content: flex-end;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="previewCoverModal = false">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</section>

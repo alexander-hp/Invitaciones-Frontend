@@ -1,9 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { AlbumAssetModel, AssetFolder, DashboardMetrics, DedicationModel, DedicationStatus, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, EventModel, EventTableModel, ExternalContent, GuestCommunicationStatus, GuestMessageChannel, GuestMessageType, GuestModel, GuestPayload, InvitationModel, PaymentPackage, PlanDefinition, RsvpModel, SongRequestModel, SongRequestStatus, WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaPayload, WhatsAppMediaType, WhatsAppProvider } from '../../core/models';
 import { environment } from '../../../environments/environment';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { generateGuestPassHtml } from '../new-public-invitation/guest-pass-template';
 
 interface MessageTemplateOption {
   value: GuestMessageType;
@@ -12,6 +15,16 @@ interface MessageTemplateOption {
 
 @Component({ selector: 'app-event-detail', templateUrl: './event-detail.component.html' })
 export class EventDetailComponent implements OnInit {
+  activePlayingSong?: {
+    title: string;
+    artist?: string;
+    thumbnailUrl?: string;
+    sourceUrl?: string;
+    embedUrl?: SafeResourceUrl | null;
+    previewUrl?: string;
+    isDirectAudio?: boolean;
+    isSpotify?: boolean;
+  };
   event?: EventModel;
   invitations: InvitationModel[] = [];
   guests: GuestModel[] = [];
@@ -65,7 +78,24 @@ export class EventDetailComponent implements OnInit {
   eventPlanExpiresAt = '';
   subscriptionActive = false;
   editingGuest?: GuestModel;
-  guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+  countryCodes = [
+    { code: '+52', country: '🇲🇽 México (+52)' },
+    { code: '+1', country: '🇺🇸 EE.UU. / 🇨🇦 Canadá (+1)' },
+    { code: '+54', country: '🇦🇷 Argentina (+54)' },
+    { code: '+56', country: '🇨🇱 Chile (+56)' },
+    { code: '+57', country: '🇨🇴 Colombia (+57)' },
+    { code: '+593', country: '🇪🇨 Ecuador (+593)' },
+    { code: '+34', country: '🇪🇸 España (+34)' },
+    { code: '+502', country: '🇬🇹 Guatemala (+502)' },
+    { code: '+51', country: '🇵🇪 Perú (+51)' },
+    { code: '+506', country: '🇨🇷 Costa Rica (+506)' },
+    { code: '+503', country: '🇸🇻 El Salvador (+503)' },
+    { code: '+504', country: '🇭🇳 Honduras (+504)' },
+    { code: '+595', country: '🇵🇾 Paraguay (+595)' },
+    { code: '+598', country: '🇺🇾 Uruguay (+598)' },
+    { code: '+58', country: '🇻🇪 Venezuela (+58)' }
+  ];
+  guestForm = { name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
   companionNames = '';
   tableForm = { name: '', capacity: 10, notes: '', order: 0 };
   guestFilters = { search: '', status: '', communicationStatus: '', group: '' };
@@ -125,7 +155,55 @@ export class EventDetailComponent implements OnInit {
   private readonly maxImageSize = 5 * 1024 * 1024;
   private readonly maxAudioSize = 10 * 1024 * 1024;
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService, private confirmDialog: ConfirmDialogService, private sanitizer: DomSanitizer) {}
+
+  playSong(sr: Partial<SongRequestModel> | SongRequestModel): void {
+    if (!sr) return;
+    const sourceUrl = sr.sourceUrl || '';
+    const previewUrl = sr.previewUrl || '';
+    const { embedUrl, isDirectAudio, isSpotify } = this.parseSongEmbedUrl(sourceUrl, previewUrl);
+    this.activePlayingSong = {
+      title: sr.title || 'Canción',
+      artist: sr.artist || '',
+      thumbnailUrl: sr.thumbnailUrl || '',
+      sourceUrl,
+      previewUrl,
+      embedUrl,
+      isDirectAudio,
+      isSpotify
+    };
+  }
+
+  closePlayer(): void {
+    this.activePlayingSong = undefined;
+  }
+
+  private parseSongEmbedUrl(sourceUrl?: string, previewUrl?: string): { embedUrl: SafeResourceUrl | null; isDirectAudio: boolean; isSpotify: boolean } {
+    const url = sourceUrl || previewUrl || '';
+    if (!url) return { embedUrl: null, isDirectAudio: false, isSpotify: false };
+
+    if (/\.(mp3|wav|ogg|m4a)(\?.*)?$/i.test(url) || (previewUrl && !sourceUrl)) {
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url), isDirectAudio: true, isSpotify: false };
+    }
+
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      const embedStr = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&enablejsapi=1`;
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedStr), isDirectAudio: false, isSpotify: false };
+    }
+
+    const spMatch = url.match(/spotify\.com\/(?:intl-[a-z]+\/)?track\/([a-zA-Z0-9]+)/i);
+    if (spMatch && spMatch[1]) {
+      const embedStr = `https://open.spotify.com/embed/track/${spMatch[1]}?utm_source=generator&theme=0`;
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(embedStr), isDirectAudio: false, isSpotify: true };
+    }
+
+    if (/^https?:\/\//i.test(url)) {
+      return { embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url), isDirectAudio: false, isSpotify: false };
+    }
+
+    return { embedUrl: null, isDirectAudio: false, isSpotify: false };
+  }
 
   ngOnInit(): void {
     this.load();
@@ -189,9 +267,27 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  saveGuest(): void {
+  parsePhoneParts(phone?: string): { countryCode: string; localNumber: string } {
+    if (!phone) return { countryCode: '+52', localNumber: '' };
+    const clean = phone.trim();
+    const codes = ['+52', '+1', '+54', '+56', '+57', '+593', '+34', '+502', '+51', '+506', '+503', '+504', '+595', '+598', '+58'];
+    for (const code of codes) {
+      if (clean.startsWith(code)) {
+        return { countryCode: code, localNumber: clean.substring(code.length).replace(/\D/g, '') };
+      }
+    }
+    return { countryCode: '+52', localNumber: clean.replace(/\D/g, '') };
+  }
+
+  saveGuest(keepOpen = false): void {
     const eventId = this.getEventId();
     if (!eventId) return;
+    if (!this.guestForm.name.trim()) { this.guestError = 'El nombre del invitado es obligatorio'; return; }
+
+    const cleanLocal = (this.guestForm.phoneLocal || '').trim().replace(/\D/g, '');
+    const fullPhone = cleanLocal ? `${this.guestForm.phoneCountryCode || '+52'}${cleanLocal}` : '';
+    this.guestForm.phone = fullPhone;
+
     const duplicate = this.findDuplicateGuest(this.editingGuest ? this.getGuestId(this.editingGuest) : undefined);
     if (duplicate) {
       this.guestError = `Ese ${duplicate.field === 'email' ? 'correo' : 'telefono'} ya pertenece a ${duplicate.guest.name}. Puedes editar ese invitado en la lista.`;
@@ -205,7 +301,7 @@ export class EventDetailComponent implements OnInit {
     const guestData: Omit<GuestPayload, 'event'> = {
       name: this.guestForm.name,
       email: this.guestForm.email || undefined,
-      phone: this.guestForm.phone || undefined,
+      phone: fullPhone || undefined,
       group: this.guestForm.group || undefined,
       roles: this.splitCsv(this.guestForm.rolesText),
       tags: this.splitCsv(this.guestForm.tagsText),
@@ -226,9 +322,21 @@ export class EventDetailComponent implements OnInit {
         this.guests = this.editingGuest
           ? this.guests.map((item) => this.getGuestId(item) === this.getGuestId(guest) ? guest : item).sort((a, b) => a.name.localeCompare(b.name))
           : [guest, ...this.guests].sort((a, b) => a.name.localeCompare(b.name));
-        this.resetGuestForm();
-        this.guestMessage = wasEditing ? 'Invitado actualizado.' : 'Invitado agregado.';
+        this.guestMessage = wasEditing ? `✅ Invitado "${guest.name}" actualizado.` : `🎉 ¡Invitado "${guest.name}" guardado!`;
         this.guestSaving = false;
+
+        if (keepOpen && !wasEditing) {
+          const lastGroup = this.guestForm.group;
+          const lastCode = this.guestForm.phoneCountryCode;
+          this.guestForm.name = '';
+          this.guestForm.email = '';
+          this.guestForm.phoneLocal = '';
+          this.companionNames = '';
+          this.guestForm.group = lastGroup;
+          this.guestForm.phoneCountryCode = lastCode || '+52';
+        } else {
+          this.resetGuestForm();
+        }
       },
       error: (error) => {
         this.guestError = this.buildGuestError(error, this.editingGuest ? 'No se pudo actualizar el invitado.' : 'No se pudo agregar el invitado.');
@@ -241,10 +349,13 @@ export class EventDetailComponent implements OnInit {
     this.editingGuest = guest;
     this.guestError = '';
     this.guestMessage = '';
+    const parsedPhone = this.parsePhoneParts(guest.phone);
     this.guestForm = {
       name: guest.name,
       email: guest.email || '',
       phone: guest.phone || '',
+      phoneCountryCode: parsedPhone.countryCode,
+      phoneLocal: parsedPhone.localNumber,
       group: guest.group || '',
       rolesText: (guest.roles || []).join(', '),
       tagsText: (guest.tags || []).join(', '),
@@ -702,13 +813,24 @@ export class EventDetailComponent implements OnInit {
   revokeAccessLink(link: EventAccessLinkModel): void {
     const eventId = this.getEventId();
     const linkId = link.id || link._id || '';
-    if (!eventId || !linkId || !window.confirm('Revocar este link externo?')) return;
-    this.api.revokeEventAccessLink(eventId, linkId).subscribe({
-      next: () => {
-        this.guestMessage = 'Link revocado.';
-        this.loadAccessLinks(eventId);
-      },
-      error: (error) => this.guestError = error.error?.message || 'No se pudo revocar el link.'
+    if (!eventId || !linkId) return;
+
+    this.confirmDialog.confirm({
+      title: '¿Revocar este link?',
+      message: `¿Estás seguro de que deseas revocar el enlace de acceso "${link.label || link.role}"?`,
+      confirmText: 'Sí, Revocar',
+      cancelText: 'Cancelar',
+      type: 'danger',
+      icon: '🔐'
+    }).then((confirmed) => {
+      if (!confirmed) return;
+      this.api.revokeEventAccessLink(eventId, linkId).subscribe({
+        next: () => {
+          this.guestMessage = 'Link revocado.';
+          this.loadAccessLinks(eventId);
+        },
+        error: (error) => this.guestError = error.error?.message || 'No se pudo revocar el link.'
+      });
     });
   }
 
@@ -744,8 +866,20 @@ export class EventDetailComponent implements OnInit {
     return this.externalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.externalPortalUrl)}` : '';
   }
 
+  get newExternalPortalUrl(): string {
+    return this.event?.externalPortalSlug ? `${window.location.origin}/new/e/${this.event.externalPortalSlug}` : '';
+  }
+
+  get newExternalPortalQrUrl(): string {
+    return this.newExternalPortalUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(this.newExternalPortalUrl)}` : '';
+  }
+
   get rsvpIframeSnippet(): string {
     return this.externalPortalUrl ? `<iframe src="${this.externalPortalUrl}" width="100%" height="720" style="border:0"></iframe>` : '';
+  }
+
+  get newRsvpIframeSnippet(): string {
+    return this.newExternalPortalUrl ? `<iframe src="${this.newExternalPortalUrl}" width="100%" height="900" style="border:0"></iframe>` : '';
   }
 
   get externalApiConfigUrl(): string {
@@ -795,7 +929,8 @@ export class EventDetailComponent implements OnInit {
   get embedWidgets(): Array<{ key: string; label: string; url: string; snippet: string }> {
     const widgets = this.embedManifest?.widgets || {};
     const snippets = this.embedManifest?.snippets || {};
-    return [
+    const appOrigin = window.location.origin;
+    const list = [
       { key: 'rsvp', label: 'RSVP', url: widgets['rsvp'] || this.widgetUrl('rsvp'), snippet: snippets['rsvp'] || this.iframeSnippet('rsvp', 720) },
       { key: 'guestPass', label: 'Pase QR', url: widgets['guestPass'] || this.widgetUrl('guest-pass'), snippet: this.iframeSnippet('guest-pass', 520) },
       { key: 'album', label: 'Album', url: widgets['album'] || this.widgetUrl('album'), snippet: snippets['album'] || this.iframeSnippet('album', 720) },
@@ -803,7 +938,11 @@ export class EventDetailComponent implements OnInit {
       { key: 'map', label: 'Mapa', url: widgets['map'] || this.widgetUrl('map'), snippet: snippets['map'] || this.iframeSnippet('map', 480) },
       { key: 'songRequests', label: 'DJ', url: widgets['songRequests'] || this.widgetUrl('song-requests'), snippet: snippets['songRequests'] || this.iframeSnippet('song-requests', 520) },
       { key: 'fullPortal', label: 'Portal completo', url: widgets['fullPortal'] || this.widgetUrl('full-portal'), snippet: this.iframeSnippet('full-portal', 900) }
-    ].filter((item) => item.url);
+    ];
+    if (this.newExternalPortalUrl) {
+      list.push({ key: 'rsvpWidget', label: 'Widget RSVP (Div + Script)', url: this.widgetUrl('rsvp'), snippet: `<div data-kyndra-widget="rsvp" data-portal="${this.event?.externalPortalSlug || ''}"></div>\n<script src="${appOrigin}/assets/kyndra-embed.js"></script>` });
+    }
+    return list.filter((item) => item.url);
   }
 
   get bulkWhatsappPreview(): string {
@@ -828,6 +967,9 @@ export class EventDetailComponent implements OnInit {
     const eventId = this.getEventId();
     const songRequestId = songRequest._id || songRequest.id || '';
     if (!eventId || !songRequestId) return;
+    if (status === 'played') {
+      this.playSong(songRequest);
+    }
     this.api.updateSongRequest(eventId, songRequestId, status).subscribe({
       next: ({ songRequest: updated }) => {
         this.songRequests = this.songRequests.map((item) => (item._id || item.id) === songRequestId ? updated : item);
@@ -1206,6 +1348,32 @@ export class EventDetailComponent implements OnInit {
     return guest._id || guest.id || '';
   }
 
+  downloadGuestPass(guest: GuestModel): void {
+    const primaryInvitation = this.invitations[0];
+    const passHtml = generateGuestPassHtml({
+      guestName: guest.name,
+      tableName: guest.tableName,
+      seatLabel: guest.seatLabel,
+      allowedCompanions: guest.allowedCompanions || 1,
+      qrCodeUrl: this.getQrImageUrl(guest),
+      headline: primaryInvitation?.content?.headline || this.event?.title || 'Invitación Digital',
+      subheadline: primaryInvitation?.content?.subheadline || 'Pase de Entrada VIP',
+      eventDateFormatted: this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
+      locationAddress: primaryInvitation?.content?.locations?.[0]?.address || this.event?.venue?.address || this.event?.venue?.name,
+      dressCode: primaryInvitation?.content?.dressCode,
+      brandLogoUrl: primaryInvitation?.content?.brandLogoUrl,
+      coverImageUrl: primaryInvitation?.content?.coverImageUrl,
+      primaryColor: primaryInvitation?.content?.palette?.primary,
+      accentColor: primaryInvitation?.content?.palette?.accent
+    });
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.write(passHtml);
+      printWin.document.close();
+    }
+  }
+
   getTableId(table: EventTableModel): string {
     return table._id || table.id || '';
   }
@@ -1216,7 +1384,7 @@ export class EventDetailComponent implements OnInit {
 
   private resetGuestForm(): void {
     this.editingGuest = undefined;
-    this.guestForm = { name: '', email: '', phone: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
+    this.guestForm = { name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', rolesText: '', tagsText: '', relationshipLabel: '', visibilityGroup: '', tableName: '', seatLabel: '', allowedCompanions: 0 };
     this.companionNames = '';
   }
 
@@ -1539,7 +1707,9 @@ export class EventDetailComponent implements OnInit {
   }
 
   private widgetUrl(widget: string): string {
-    return this.event?.externalPortalSlug ? `${window.location.origin}/embed/${this.event.externalPortalSlug}/${widget}` : '';
+    if (!this.event?.externalPortalSlug) return '';
+    const prefix = this.newExternalPortalUrl ? 'new/embed' : 'embed';
+    return `${window.location.origin}/${prefix}/${this.event.externalPortalSlug}/${widget}`;
   }
 
   private iframeSnippet(widget: string, height: number): string {

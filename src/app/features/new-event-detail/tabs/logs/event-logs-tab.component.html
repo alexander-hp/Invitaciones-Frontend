@@ -1,0 +1,193 @@
+<div class="logs-container">
+
+  <!-- Quick Summary Metrics Cards -->
+  <div class="logs-metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon-box bg-blue">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Movimientos</span>
+        <strong class="metric-value">{{ totalLogs }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box bg-emerald">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Hoy</span>
+        <strong class="metric-value">{{ summary.today || 0 }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box bg-rose">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Respuestas RSVP</span>
+        <strong class="metric-value">{{ summary.byCategory['rsvp'] || 0 }}</strong>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-box bg-purple">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Actividad Invitados</span>
+        <strong class="metric-value">{{ summary.byCategory['guest'] || 0 }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search Toolbar -->
+  <div class="logs-toolbar-card">
+    <div style="display: flex; align-items: center; gap: 12px; width: 100%; flex-wrap: wrap;">
+      <div class="logs-search-wrapper" style="flex: 1; min-width: 240px;">
+        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="logs-search-input"
+          placeholder="Buscar por invitado, acción o detalle..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+        />
+        <button *ngIf="searchQuery" type="button" class="search-clear-btn" (click)="clearSearch()" title="Limpiar búsqueda">✕</button>
+      </div>
+
+      <select
+        class="nw-select"
+        [ngModel]="selectedCategory"
+        (ngModelChange)="onCategorySelectChange($event)"
+        style="height: 42px; padding: 0 32px 0 14px; width: 220px; font-size: 13.5px; font-weight: 600; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;"
+      >
+        <option *ngFor="let opt of categoryOptions" [value]="opt.key">
+          {{ opt.label }} {{ opt.key !== 'all' && (summary.byCategory[opt.key] || 0) > 0 ? '(' + summary.byCategory[opt.key] + ')' : '' }}
+        </option>
+      </select>
+
+      <button type="button" class="nw-btn nw-btn-secondary" (click)="loadLogs(currentPage)" [disabled]="loading" title="Recargar actividad" style="height: 42px; padding: 0 16px;">
+        <svg [class.spinning]="loading" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>{{ loading ? 'Actualizando...' : 'Actualizar' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="nw-alert error" style="margin-bottom: 20px;">
+    <span>{{ error }}</span>
+    <button type="button" class="nw-btn nw-btn-sm nw-btn-ghost" (click)="loadLogs(currentPage)">Reintentar</button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && logs.length === 0" class="logs-loading-state">
+    <div class="spinner"></div>
+    <p>Cargando historial de cambios...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && logs.length === 0" class="logs-empty-state">
+    <div class="empty-icon" style="display: flex; justify-content: center; align-items: center; margin-bottom: 12px;">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3);">
+        <polyline points="12 8 12 12 14 14"></polyline>
+        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+      </svg>
+    </div>
+    <h3>No se encontraron registros</h3>
+    <p *ngIf="searchQuery || selectedCategory !== 'all'">
+      No hay actividad que coincida con los filtros seleccionados. Intenta cambiar de categoría o limpiar tu búsqueda.
+    </p>
+    <p *ngIf="!searchQuery && selectedCategory === 'all'">
+      Aún no hay actividad registrada para este evento. Las acciones y cambios que realices aparecerán aquí automáticamente.
+    </p>
+    <button *ngIf="searchQuery || selectedCategory !== 'all'" type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="clearSearch(); selectCategory('all')">
+      Restablecer filtros
+    </button>
+  </div>
+
+  <!-- Timeline List of Logs -->
+  <div *ngIf="logs.length > 0" class="logs-timeline">
+    <div *ngFor="let log of logs" class="log-item-card" [class.expanded]="isExpanded(log)">
+      <div class="log-main-row" (click)="toggleExpand(log)">
+        <!-- Category Icon Box -->
+        <div class="log-avatar" [ngClass]="getCategoryBadgeClass(log.category)">
+          <span [innerHTML]="getCategorySvg(log.category)"></span>
+        </div>
+
+        <!-- Log Description & Context -->
+        <div class="log-body">
+          <div class="log-title-row">
+            <h4 class="log-description">{{ log.description }}</h4>
+            <span class="log-time-relative" [title]="formatExactTime(log.createdAt)">
+              {{ formatRelativeTime(log.createdAt) }}
+            </span>
+          </div>
+
+          <div class="log-meta-row">
+            <!-- Category Tag -->
+            <span class="meta-tag category-tag" [ngClass]="getCategoryBadgeClass(log.category)">
+              {{ getCategoryLabel(log.category) }}
+            </span>
+
+            <!-- Actor Tag -->
+            <span class="meta-tag actor-tag" [ngClass]="getActorBadge(log).class">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>{{ getActorBadge(log).label }}</span>
+            </span>
+
+            <!-- Exact Timestamp -->
+            <span class="meta-time">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>{{ formatExactTime(log.createdAt) }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Chevron to expand metadata -->
+        <button *ngIf="hasMetadata(log)" type="button" class="log-expand-btn" [class.open]="isExpanded(log)" (click)="$event.stopPropagation(); toggleExpand(log)" title="Ver detalles">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Expandable Metadata Drawer -->
+      <div *ngIf="isExpanded(log) && hasMetadata(log)" class="log-details-drawer">
+        <div class="drawer-header">
+          <span>Detalles del cambio</span>
+        </div>
+        <div class="drawer-grid">
+          <div *ngFor="let item of getFormattedMetadata(log.metadata)" class="detail-item">
+            <span class="detail-key">{{ item.key }}:</span>
+            <pre class="detail-val">{{ item.value }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div *ngIf="totalPages > 1" class="logs-pagination">
+    <div class="pagination-info">
+      Mostrando página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong> ({{ totalLogs }} registros totales)
+    </div>
+    <div class="pagination-buttons">
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-secondary" [disabled]="currentPage <= 1 || loading" (click)="loadLogs(currentPage - 1)">
+        ← Anterior
+      </button>
+      <button type="button" class="nw-btn nw-btn-sm nw-btn-secondary" [disabled]="currentPage >= totalPages || loading" (click)="loadLogs(currentPage + 1)">
+        Siguiente →
+      </button>
+    </div>
+  </div>
+</div>

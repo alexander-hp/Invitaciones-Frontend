@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento | Kyndra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Montserrat', sans-serif; background: #0b0b0e; color: #eaeaea; line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .section-title {
+      font-size: 2.8rem; font-weight: 800; text-align: center; margin-bottom: 1rem; letter-spacing: 1px;
+      background: linear-gradient(135deg, #ff6ec7, #ffd93d, #6bcbff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .section-title i { background: none; -webkit-text-fill-color: #ff6ec7; margin: 0 0.5rem; font-size: 2.2rem; }
+    .section-subtitle { text-align: center; font-size: 1.1rem; color: #b0b0b0; max-width: 700px; margin: 0 auto 2.8rem auto; font-weight: 300; }
+    .section-padding { padding: 80px 0; }
+    .section-dark { background: #121217; }
+    .section-darker { background: #0b0b0e; }
+
+    /* NAVBAR */
+    .navbar { position: fixed; top: 0; left: 0; width: 100%; background: rgba(11,11,14,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.06); z-index: 1000; padding: 10px 0; transition: all 0.3s; }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .navbar .logo { font-weight: 800; font-size: 1.6rem; letter-spacing: 2px; background: linear-gradient(135deg, #ff6ec7, #ffd93d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-links { display: flex; gap: 1.8rem; list-style: none; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; flex-wrap: wrap; }
+    .nav-links a { color: #ccc; transition: color 0.3s; position: relative; }
+    .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #ff6ec7; transition: width 0.3s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a:hover::after { width: 100%; }
+    .menu-toggle { display: none; font-size: 1.6rem; color: #fff; cursor: pointer; background: none; border: none; }
+
+    /* HERO */
+    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; background: #0b0b0e; padding: 120px 24px 80px; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 20% 50%, rgba(255,110,199,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,217,61,0.06) 0%, transparent 50%), radial-gradient(circle at 50% 80%, rgba(107,203,255,0.07) 0%, transparent 50%); pointer-events: none; }
+    .hero-content { position: relative; z-index: 2; max-width: 900px; }
+    .hero-badge { display: inline-block; background: rgba(255,255,255,0.04); backdrop-filter: blur(4px); color: #ffd93d; font-weight: 600; padding: 6px 28px; border-radius: 50px; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.08); }
+    .hero h1 { font-size: 5.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 0.5rem; background: linear-gradient(135deg, #ff6ec7, #ffd93d, #6bcbff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero .date-place { font-size: 1.3rem; color: #b0b0b0; margin: 1.2rem 0 2rem; font-weight: 300; }
+    .hero .date-place i { color: #ff6ec7; margin: 0 0.5rem; }
+    .hero .btn-primary { display: inline-block; background: linear-gradient(135deg, #ff6ec7, #ff3c9e); color: #fff; padding: 14px 48px; border-radius: 50px; font-weight: 700; font-size: 1rem; transition: all 0.3s; box-shadow: 0 8px 30px rgba(255,110,199,0.3); border: none; cursor: pointer; }
+    .hero .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(255,110,199,0.45); }
+
+    /* COUNTDOWN */
+    .countdown { display: flex; justify-content: center; gap: 1.5rem; margin: 2.5rem 0 2rem; flex-wrap: wrap; }
+    .countdown-item { background: rgba(255,255,255,0.04); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.08); padding: 14px 20px; border-radius: 14px; min-width: 80px; }
+    .countdown-item .number { font-size: 2.4rem; font-weight: 800; display: block; line-height: 1.2; background: linear-gradient(135deg, #ff6ec7, #ffd93d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .countdown-item .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+
+    /* WIDGET FRAME */
+    .widget-frame { max-width: 700px; margin: 0 auto; background: #1a1a20; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
+    .widget-frame-header { padding: 14px 20px; background: #15151a; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+    .widget-frame-header .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff6ec7; }
+    .widget-frame-header h4 { font-size: 1rem; color: #eaeaea; font-weight: 600; }
+    .widget-frame iframe { width: 100%; border: none; display: block; }
+
+    /* UBICACIONES */
+    .ubicaciones-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+    .ubicacion-card { background: #1a1a20; border-radius: 16px; padding: 28px; border: 1px solid rgba(255,255,255,0.06); transition: transform 0.3s; }
+    .ubicacion-card:hover { transform: translateY(-6px); }
+    .ubicacion-card .icon { font-size: 2.2rem; color: #ff6ec7; margin-bottom: 0.8rem; }
+    .ubicacion-card h3 { font-size: 1.4rem; margin-bottom: 0.5rem; color: #fff; }
+    .ubicacion-card p { color: #aaa; margin-bottom: 0.3rem; }
+    .ubicacion-card .map-link { display: inline-block; margin-top: 1rem; color: #6bcbff; font-weight: 600; font-size: 0.9rem; }
+
+    /* DRESS CODE */
+    .dress-code-card { max-width: 600px; margin: 0 auto; background: #1a1a20; border-radius: 16px; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.06); }
+    .dress-code-card .icons { font-size: 2.8rem; margin-bottom: 1rem; }
+    .dress-code-card h3 { font-size: 1.6rem; margin-bottom: 0.8rem; color: #fff; }
+    .dress-code-card p { color: #aaa; line-height: 1.7; }
+
+    /* GIFTS */
+    .gifts-layout { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+    .gift-store-item { background: #1a1a20; border-radius: 14px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; border: 1px solid rgba(255,255,255,0.06); }
+    .gift-store-item .icon { font-size: 2rem; color: #ffd93d; }
+    .gift-store-item .info { flex: 1; }
+    .gift-store-item .name { font-weight: 600; color: #fff; }
+    .gift-store-item .note { font-size: 0.85rem; color: #aaa; }
+    .gift-store-item .link { color: #ff6ec7; font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
+    .bank-envelope-box { background: #1a1a20; border-radius: 16px; padding: 32px; border: 1px solid rgba(255,255,255,0.06); text-align: center; }
+    .bank-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; color: #ccc; }
+    .bank-row:last-child { border: none; }
+    .bank-copy-btn { padding: 2px 10px; border: 1px solid #ff6ec7; background: transparent; color: #ff6ec7; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-left: 8px; transition: all 0.3s; }
+    .bank-copy-btn:hover { background: #ff6ec7; color: #fff; }
+
+    /* GALERÍA */
+    .galeria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; }
+    .galeria-grid img { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; transition: transform 0.4s; }
+    .galeria-grid img:hover { transform: scale(1.04); }
+
+    /* FAQ */
+    .faq-item { background: #1a1a20; padding: 18px 24px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.04); }
+    .faq-item h4 { font-weight: 600; color: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .faq-item .faq-body { color: #aaa; font-size: 0.95rem; display: none; margin-top: 8px; }
+    .faq-item .faq-body.open { display: block; }
+
+    /* FOOTER */
+    footer { background: #08080a; color: #777; padding: 48px 0 24px; text-align: center; }
+    footer .footer-logo { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; background: linear-gradient(135deg, #ff6ec7, #ffd93d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    footer p { font-size: 0.95rem; max-width: 500px; margin: 0 auto 1.5rem; }
+    footer .copy { font-size: 0.8rem; color: #555; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 1.5rem; }
+
+    /* ENVELOPE */
+    .envelope-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0b0b0e; z-index: 99999; display: flex; align-items: center; justify-content: center; transition: transform 0.8s cubic-bezier(0.85,0,0.15,1), opacity 0.6s ease; }
+    .envelope-overlay.opened { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+    .envelope-cover { background: #1a1a20; width: 90%; max-width: 440px; padding: 3.5rem 2rem; border-radius: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; transition: transform 0.3s; }
+    .envelope-cover:hover { transform: translateY(-6px); }
+    .wax-seal { font-size: 3rem; background: rgba(255,110,199,0.08); width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px double #ff6ec7; animation: sealFloat 3s ease-in-out infinite; }
+    @keyframes sealFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    .envelope-title { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #ff6ec7, #ffd93d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .envelope-text { font-size: 0.9rem; font-weight: 600; color: #6bcbff; letter-spacing: 2px; text-transform: uppercase; }
+    .envelope-btn { padding: 0.8rem 2.2rem; border-radius: 30px; border: 2px solid #ff6ec7; background: transparent; color: #ff6ec7; font-weight: 600; font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.3s; }
+    .envelope-cover:hover .envelope-btn { background: #ff6ec7; color: #fff; }
+
+    /* MUSIC */
+    .music-player-btn { position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #1a1a20; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 2px solid #ff6ec7; border-radius: 50%; width: 56px; height: 56px; display: none; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.3s; }
+    .music-player-btn:hover { transform: scale(1.1); }
+    .music-playing { animation: pulseMusic 2s infinite; }
+    @keyframes pulseMusic { 0% { box-shadow: 0 0 0 0 rgba(255,110,199,0.4); } 70% { box-shadow: 0 0 0 14px rgba(255,110,199,0); } 100% { box-shadow: 0 0 0 0 rgba(255,110,199,0); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .navbar .container { flex-wrap: wrap; }
+      .nav-links { display: none; flex-direction: column; width: 100%; gap: 0.8rem; padding: 1rem 0 0.5rem; text-align: center; }
+      .nav-links.open { display: flex; }
+      .menu-toggle { display: block; }
+      .hero h1 { font-size: 3rem; }
+      .countdown { gap: 1rem; }
+      .countdown-item { min-width: 60px; padding: 8px 12px; }
+      .section-title { font-size: 2rem; }
+      .ubicaciones-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENVELOPE -->
+  <div class="envelope-overlay" id="envelopeOverlay">
+    <div class="envelope-cover" onclick="openEnvelope()">
+      <div class="wax-seal">🎉</div>
+      <div class="envelope-text">Te invitamos a celebrar</div>
+      <h2 class="envelope-title" id="envelopeHostsTitle">Evento Especial</h2>
+      <button class="envelope-btn">Abrir Invitación</button>
+    </div>
+  </div>
+
+  <button class="music-player-btn" id="musicBtn" onclick="toggleMusic()"><i class="fas fa-music" id="musicIcon" style="color:#ff6ec7;font-size:1.2rem;"></i></button>
+  <audio id="bgAudio" loop></audio>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="logo" id="navLogoText">THE EVENT</div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menú"><i class="fas fa-bars"></i></button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#sec-ubicaciones">Ubicaciones</a></li>
+        <li><a href="#sec-rsvp">RSVP</a></li>
+        <li><a href="#sec-regalos">Regalos</a></li>
+        <li><a href="#sec-galeria">Galería</a></li>
+        <li><a href="#sec-dj">DJ</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fas fa-star" style="margin-right:8px;"></i> Evento Especial</div>
+      <h1 id="heroTitle">The Event</h1>
+      <div class="date-place">
+        <i class="fas fa-calendar-alt"></i> <span id="heroDate">Fecha por confirmar</span>
+        &nbsp;·&nbsp;
+        <i class="fas fa-map-marker-alt"></i> <span id="heroVenue">Lugar por confirmar</span>
+      </div>
+      <div class="countdown" id="countdown">
+        <div class="countdown-item"><span class="number" id="days">00</span><span class="label">Días</span></div>
+        <div class="countdown-item"><span class="number" id="hours">00</span><span class="label">Horas</span></div>
+        <div class="countdown-item"><span class="number" id="minutes">00</span><span class="label">Minutos</span></div>
+        <div class="countdown-item"><span class="number" id="seconds">00</span><span class="label">Segundos</span></div>
+      </div>
+      <a href="#sec-rsvp" class="btn-primary">Confirmar asistencia</a>
+    </div>
+  </section>
+
+  <!-- UBICACIONES -->
+  <section class="section-padding section-dark" id="sec-ubicaciones" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-map-pin"></i> Ubicaciones <i class="fas fa-map-pin"></i></h2>
+      <p class="section-subtitle">Los lugares especiales para el evento.</p>
+      <div class="ubicaciones-grid" id="ubicacionesGrid"></div>
+    </div>
+  </section>
+
+  <!-- RSVP -->
+  <section class="section-padding section-darker" id="sec-rsvp">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-check-circle"></i> Confirmar Asistencia <i class="fas fa-check-circle"></i></h2>
+      <div class="widget-frame"><div class="widget-frame-header"><span class="dot"></span><h4>Pase RSVP Digital</h4></div><iframe id="iframeRsvp" height="600" src="" title="RSVP"></iframe></div>
+    </div>
+  </section>
+
+  <!-- PASE -->
+  <section class="section-padding section-dark" id="sec-pass">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-ticket-alt"></i> Pase de Entrada <i class="fas fa-ticket-alt"></i></h2>
+      <div class="widget-frame"><div class="widget-frame-header"><span class="dot"></span><h4>Boleto QR</h4></div><iframe id="iframePass" height="420" src="" title="Pass"></iframe></div>
+    </div>
+  </section>
+
+  <!-- DRESS CODE -->
+  <section class="section-padding section-darker" id="sec-dress-code" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-tshirt"></i> Código de Vestimenta <i class="fas fa-tshirt"></i></h2>
+      <div class="dress-code-card"><div class="icons">👗👔</div><h3 id="dressCodeTitle">Código de Vestimenta</h3><p id="dressCodeDesc"></p></div>
+    </div>
+  </section>
+
+  <!-- REGALOS -->
+  <section class="section-padding section-dark" id="sec-regalos" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-gift"></i> Mesa de Regalos <i class="fas fa-gift"></i></h2>
+      <p class="section-subtitle" id="giftIntroText">Si deseas hacernos un obsequio, estas son algunas opciones.</p>
+      <div class="gifts-layout"><div id="storesContainer"></div><div id="bankContainer" style="display:none;"></div></div>
+    </div>
+  </section>
+
+  <!-- DJ -->
+  <section class="section-padding section-darker" id="sec-dj">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-music"></i> Sugerencias Musicales <i class="fas fa-music"></i></h2>
+      <div class="widget-frame"><div class="widget-frame-header"><span class="dot"></span><h4>Pedir Canción al DJ</h4></div><iframe id="iframeDj" height="440" src="" title="DJ"></iframe></div>
+    </div>
+  </section>
+
+  <!-- HOSPEDAJE -->
+  <section class="section-padding section-dark" id="sec-hospedaje" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-hotel"></i> Hospedaje <i class="fas fa-hotel"></i></h2>
+      <div id="hospedajeGrid"></div>
+    </div>
+  </section>
+
+  <!-- GALERÍA -->
+  <section class="section-padding section-darker" id="sec-galeria">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-images"></i> Galería <i class="fas fa-images"></i></h2>
+      <div class="galeria-grid" id="galeriaGrid"></div>
+    </div>
+  </section>
+
+  <!-- ÁLBUM -->
+  <section class="section-padding section-dark" id="sec-album">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-camera-retro"></i> Álbum Colectivo <i class="fas fa-camera-retro"></i></h2>
+      <div class="widget-frame"><div class="widget-frame-header"><span class="dot"></span><h4>Subir fotos</h4></div><iframe id="iframeAlbum" height="450" src="" title="Album"></iframe></div>
+    </div>
+  </section>
+
+  <!-- FAQs -->
+  <section class="section-padding section-darker" id="sec-faqs" style="display:none;">
+    <div class="container">
+      <h2 class="section-title"><i class="fas fa-question-circle"></i> Preguntas Frecuentes <i class="fas fa-question-circle"></i></h2>
+      <div id="faqsContainer" style="max-width:700px; margin:0 auto;"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-logo" id="footerTitle">The Event</div>
+      <p>Gracias por ser parte de este momento.</p>
+      <div class="copy">Kyndra · Invitación Digital Premium · © 2026</div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      'use strict';
+      function formatSpanishDate(d){if(!d)return '';try{const p=d.split('-');if(p.length===3){const m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return p[2]+' · '+m[parseInt(p[1],10)-1]+' · '+p[0];}}catch(e){}return d;}
+      function startCountdown(d){if(!d)return;const t=new Date(d+'T00:00:00').getTime();function u(){const diff=t-Date.now();if(diff<=0){['days','hours','minutes','seconds'].forEach(i=>{const e=document.getElementById(i);if(e)e.textContent='00';});return;}const set=(i,v)=>{const e=document.getElementById(i);if(e)e.textContent=String(v).padStart(2,'0');};set('days',Math.floor(diff/864e5));set('hours',Math.floor((diff%864e5)/36e5));set('minutes',Math.floor((diff%36e5)/6e4));set('seconds',Math.floor((diff%6e4)/1e3));}u();setInterval(u,1000);}
+      window.copyText=function(t,b){if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>{const o=b.textContent;b.textContent='¡Copiado!';setTimeout(()=>{b.textContent=o;},2000);});}};
+      window.openEnvelope=function(){const o=document.getElementById('envelopeOverlay');if(o)o.classList.add('opened');const a=document.getElementById('bgAudio');if(a&&a.src){a.play().then(()=>{const b=document.getElementById('musicBtn');if(b)b.classList.add('music-playing');}).catch(()=>{});}};
+      window.toggleMusic=function(){const a=document.getElementById('bgAudio'),b=document.getElementById('musicBtn'),i=document.getElementById('musicIcon');if(!a)return;if(a.paused){a.play();if(b)b.classList.add('music-playing');if(i)i.className='fas fa-pause';}else{a.pause();if(b)b.classList.remove('music-playing');if(i)i.className='fas fa-music';}};
+      window.toggleFaq=function(el){const b=el.nextElementSibling,a=el.querySelector('.faq-arrow');if(b.classList.contains('open')){b.classList.remove('open');if(a)a.textContent='▼';}else{b.classList.add('open');if(a)a.textContent='▲';}};
+      const mt=document.getElementById('menuToggle'),nl=document.getElementById('navLinks');
+      if(mt&&nl){mt.addEventListener('click',()=>nl.classList.toggle('open'));document.querySelectorAll('.nav-links a').forEach(l=>l.addEventListener('click',()=>nl.classList.remove('open')));}
+
+      function loadEventInvitation(ev,slug,api){
+        const c=ev.externalContent||{},fd=formatSpanishDate(ev.date),tt=ev.title||'Evento Especial';
+        const set=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
+        document.title=tt+' | Invitación Digital';
+        set('envelopeHostsTitle',tt);set('heroTitle',tt);set('heroDate',fd);set('heroVenue',ev.venue?.name||'');set('navLogoText',tt);set('footerTitle',tt);
+        const cv=c.heroImageUrl||c.coverImageUrl;if(cv){const h=document.querySelector('.hero');if(h)h.style.background="linear-gradient(rgba(11,11,14,0.85),rgba(11,11,14,0.9)),url('"+cv+"') center/cover no-repeat";}
+        if(ev.date)startCountdown(ev.date);
+        if(c.musicUrl){const a=document.getElementById('bgAudio');if(a)a.src=c.musicUrl;const mb=document.getElementById('musicBtn');if(mb)mb.style.display='flex';}
+        const locs=c.locations||[];const hv=ev.venue&&ev.venue.name;
+        if(hv||locs.length>0){document.getElementById('sec-ubicaciones').style.display='block';const g=document.getElementById('ubicacionesGrid');let h='';if(hv){h+='<div class="ubicacion-card"><div class="icon"><i class="fas fa-map-marker-alt"></i></div><h3>'+ev.venue.name+'</h3><p>'+(ev.venue.address||'')+'</p>'+(ev.venue.mapUrl?'<a class="map-link" href="'+ev.venue.mapUrl+'" target="_blank">Ver en mapa <i class="fas fa-arrow-right"></i></a>':'')+'</div>';}locs.forEach(l=>{h+='<div class="ubicacion-card"><div class="icon"><i class="fas fa-clock"></i></div><h3>'+(l.name||l.title||'Ubicación')+'</h3><p>'+(l.address||'')+'</p>'+(l.time?'<p><i class="fas fa-clock" style="color:#ff6ec7;"></i> '+l.time+'</p>':'')+(l.notes?'<p><em>'+l.notes+'</em></p>':'')+'<div style="display:flex;gap:8px;margin-top:8px;">'+(l.mapUrl?'<a class="map-link" href="'+l.mapUrl+'" target="_blank">Maps</a>':'')+(l.wazeUrl?'<a class="map-link" href="'+l.wazeUrl+'" target="_blank" style="color:#6bcbff;">Waze</a>':'')+'</div></div>';});g.innerHTML=h;}
+        const ds=(c.sections||[]).find(s=>s.type==='dress_code');if(ds){document.getElementById('sec-dress-code').style.display='block';set('dressCodeTitle',ds.title||'Código de Vestimenta');set('dressCodeDesc',ds.body||'');}
+        const gs=c.giftSettings||{};if(gs.enabled!==false){const reg=c.giftRegistry||[],env=c.digitalEnvelope||{};const hr=gs.showRegistry!==false&&reg.length>0,he=gs.showEnvelope!==false&&(env.bank||env.clabe||env.account);if(hr||he){document.getElementById('sec-regalos').style.display='block';if(gs.introText)set('giftIntroText',gs.introText);if(hr){let sh='';reg.forEach(s=>{sh+='<div class="gift-store-item"><div class="icon"><i class="fas fa-gift"></i></div><div class="info"><div class="name">'+(s.store||s.title||'Mesa de Regalos')+'</div>'+(s.note?'<div class="note">'+s.note+'</div>':'')+'</div>'+(s.url?'<a class="link" href="'+s.url+'" target="_blank">Ver Mesa →</a>':'')+'</div>';});document.getElementById('storesContainer').innerHTML=sh;}if(he){let bh='<div class="bank-envelope-box"><i class="fas fa-envelope-open-text" style="font-size:2.5rem;color:#ff6ec7;margin-bottom:10px;"></i><h3 style="font-size:1.5rem;margin-bottom:6px;color:#fff;">Sobre Digital</h3><p style="color:#aaa;margin-bottom:16px;">'+(env.note||'Si deseas realizarnos un obsequio en efectivo:')+'</p><div style="text-align:left;background:#15151a;padding:16px;border-radius:10px;">';if(env.bank)bh+='<div class="bank-row"><span>Banco</span><span>'+env.bank+'</span></div>';if(env.holder)bh+='<div class="bank-row"><span>Titular</span><span>'+env.holder+'</span></div>';if(env.account)bh+='<div class="bank-row"><span>Cuenta</span><span><code>'+env.account+'</code> <button class="bank-copy-btn" onclick="copyText(\''+env.account+'\',this)">Copiar</button></span></div>';if(env.clabe)bh+='<div class="bank-row"><span>CLABE</span><span><code>'+env.clabe+'</code> <button class="bank-copy-btn" onclick="copyText(\''+env.clabe+'\',this)">Copiar</button></span></div>';bh+='</div>';if(env.qrImageUrl)bh+='<div style="margin-top:16px;"><img src="'+env.qrImageUrl+'" alt="QR" style="max-width:160px;border-radius:12px;margin:0 auto;"></div>';bh+='</div>';document.getElementById('bankContainer').innerHTML=bh;document.getElementById('bankContainer').style.display='block';}}}
+        const lo=(c.sections||[]).find(s=>s.type==='lodging');if(lo){document.getElementById('sec-hospedaje').style.display='block';document.getElementById('hospedajeGrid').innerHTML='<div class="ubicacion-card"><h3>'+(lo.title||'Hospedaje')+'</h3><p style="color:#aaa;margin-bottom:12px;">'+(lo.body||'')+'</p>'+(lo.url?'<a href="'+lo.url+'" target="_blank" class="btn-primary" style="padding:8px 20px;font-size:0.9rem;">Ver Información</a>':'')+'</div>';}
+        const faqs=(c.sections||[]).filter(s=>s.type==='faq');if(faqs.length>0){document.getElementById('sec-faqs').style.display='block';let fh='';faqs.forEach(f=>{fh+='<div class="faq-item"><h4 onclick="toggleFaq(this)"><span>❓ '+(f.title||f.key)+'</span> <span class="faq-arrow">▼</span></h4><div class="faq-body">'+(f.body||'')+'</div></div>';});document.getElementById('faqsContainer').innerHTML=fh;}
+        if(slug){const o=window.location.origin;const si=(i,w)=>{const e=document.getElementById(i);if(e)e.src=o+'/new/embed/'+slug+'/'+w;};si('iframeRsvp','rsvp');si('iframePass','guest-pass');si('iframeDj','song-requests');si('iframeAlbum','album');}
+      }
+      function loadPublicGallery(slug,api){fetch(api+'/external/'+slug+'/assets?type=all').then(r=>r.ok?r.json():fetch(api+'/external/'+slug+'/album').then(r2=>r2.json())).then(d=>{const a=d.assets||[];if(a.length>0){const g=document.getElementById('galeriaGrid');if(g){let h='';a.forEach(x=>{const u=x.url||x.imageUrl;if(u)h+='<img src="'+u+'" alt="'+(x.title||'Foto')+'" loading="lazy">';});if(h)g.innerHTML=h;}}}).catch(e=>console.log('Gallery:',e));}
+      document.addEventListener('DOMContentLoaded',()=>{const p=new URLSearchParams(window.location.search).get('portal');if(!p)return;const api=(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1')?'http://localhost:4000/api':'/api';fetch(api+'/external/'+p+'/config').then(r=>{if(!r.ok)throw new Error('Not found');return r.json();}).then(d=>{if(d&&d.event){loadEventInvitation(d.event,p,api);loadPublicGallery(p,api);}}).catch(e=>console.log('Preview:',e));});
+    })();
+  </script>
+</body>
+</html>

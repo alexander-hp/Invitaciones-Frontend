@@ -1,0 +1,1248 @@
+<style>
+  :host {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .nw-carousel-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .nw-carousel-hero {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: clamp(340px, 58vh, 520px);
+    background: #0d0d0d;
+    border-radius: var(--nw-radius, 16px);
+    overflow: hidden;
+    box-shadow: var(--nw-shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.15));
+    border: 1px solid var(--nw-border, #eadecc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .nw-carousel-img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    transition: opacity 0.3s ease-in-out;
+    user-select: none;
+  }
+
+  .nw-carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    z-index: 10;
+  }
+
+  .nw-carousel-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.85);
+    border-color: var(--nw-accent, #c09c78);
+    transform: translateY(-50%) scale(1.08);
+  }
+
+  .nw-carousel-nav-btn.prev {
+    left: 14px;
+  }
+
+  .nw-carousel-nav-btn.next {
+    right: 14px;
+  }
+
+  .nw-carousel-topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 65%, transparent 100%);
+    z-index: 8;
+    pointer-events: none;
+    flex-wrap: wrap;
+  }
+
+  .nw-carousel-bottombar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 65%, transparent 100%);
+    z-index: 8;
+    pointer-events: none;
+    flex-wrap: wrap;
+  }
+
+  .nw-carousel-pill {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+  }
+
+  .nw-carousel-btn {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+
+  .nw-carousel-btn:hover {
+    background: rgba(0, 0, 0, 0.85);
+    border-color: var(--nw-accent, #c09c78);
+    transform: translateY(-1px);
+  }
+
+  .nw-carousel-btn.playing {
+    background: var(--nw-accent, #c09c78) !important;
+    border-color: var(--nw-accent, #c09c78) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(192, 156, 120, 0.4);
+  }
+
+  .nw-carousel-progress-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 9;
+    overflow: hidden;
+  }
+
+  .nw-carousel-progress-bar {
+    height: 100%;
+    background: var(--nw-accent, #c09c78);
+    width: 0%;
+    animation: nwCarouselProgress 4s linear infinite;
+  }
+
+  @keyframes nwCarouselProgress {
+    from {
+      width: 0%;
+    }
+
+    to {
+      width: 100%;
+    }
+  }
+
+  .nw-carousel-thumbs {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 6px 4px 12px 4px;
+    scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nw-carousel-thumbs::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .nw-carousel-thumbs::-webkit-scrollbar-track {
+    background: var(--nw-surface-2, #f5f1ea);
+    border-radius: 4px;
+  }
+
+  .nw-carousel-thumbs::-webkit-scrollbar-thumb {
+    background: var(--nw-surface-3, #eadecc);
+    border-radius: 4px;
+  }
+
+  .nw-carousel-thumbs::-webkit-scrollbar-thumb:hover {
+    background: var(--nw-accent, #c09c78);
+  }
+
+  .nw-carousel-thumb-item {
+    position: relative;
+    width: 88px;
+    height: 62px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s, border-color 0.2s;
+    border: 2px solid transparent;
+    background: #1a1a1a;
+  }
+
+  .nw-carousel-thumb-item:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-2px);
+  }
+
+  .nw-carousel-thumb-item.active {
+    border-color: var(--nw-accent, #c09c78);
+    transform: scale(1.05);
+    opacity: 1;
+    box-shadow: 0 4px 12px rgba(192, 156, 120, 0.3);
+  }
+
+  /* ========================================== */
+  /* FULLSCREEN PRESENTATION STYLES             */
+  /* ========================================== */
+  .nw-fs-presentation {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000000;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  .nw-fs-presentation.hide-cursor {
+    cursor: none;
+  }
+
+  .nw-fs-image-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #000000;
+  }
+
+  .nw-fs-image {
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    user-select: none;
+    animation: nwFsFade 0.35s ease-in-out;
+  }
+
+  @keyframes nwFsFade {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .nw-fs-topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 70%, transparent 100%);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .nw-fs-topbar.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .nw-fs-pill {
+    background: rgba(25, 25, 25, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nw-fs-btn {
+    background: rgba(25, 25, 25, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  }
+
+  .nw-fs-btn:hover {
+    background: rgba(45, 45, 45, 0.95);
+    border-color: var(--nw-accent, #c09c78);
+    transform: translateY(-1px);
+  }
+
+  .nw-fs-btn.close-btn:hover {
+    background: rgba(183, 89, 89, 0.9);
+    border-color: #b75959;
+  }
+
+  .nw-fs-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(20, 20, 20, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, background 0.2s, transform 0.2s, border-color 0.2s;
+  }
+
+  .nw-fs-nav-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .nw-fs-nav-btn.prev {
+    left: 20px;
+  }
+
+  .nw-fs-nav-btn.next {
+    right: 20px;
+  }
+
+  .nw-fs-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.95);
+    border-color: var(--nw-accent, #c09c78);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .nw-fs-progress-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    z-index: 15;
+    overflow: hidden;
+  }
+
+  .nw-fs-progress-bar {
+    height: 100%;
+    background: var(--nw-accent, #c09c78);
+    width: 0%;
+    animation: nwFsProgress linear infinite;
+  }
+
+  @keyframes nwFsProgress {
+    from {
+      width: 0%;
+    }
+
+    to {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .nw-carousel-nav-btn {
+      width: 36px;
+      height: 36px;
+    }
+
+    .nw-carousel-nav-btn.prev {
+      left: 8px;
+    }
+
+    .nw-carousel-nav-btn.next {
+      right: 8px;
+    }
+
+    .nw-carousel-topbar,
+    .nw-carousel-bottombar {
+      padding: 10px 12px;
+    }
+
+    .nw-carousel-pill,
+    .nw-carousel-btn {
+      font-size: 11.5px;
+      padding: 4px 10px;
+    }
+
+    .nw-fs-topbar {
+      padding: 10px 14px;
+    }
+
+    .nw-fs-pill,
+    .nw-fs-btn {
+      font-size: 11.5px;
+      padding: 6px 12px;
+    }
+
+    .nw-fs-nav-btn {
+      width: 42px;
+      height: 42px;
+    }
+
+    .nw-fs-nav-btn.prev {
+      left: 10px;
+    }
+
+    .nw-fs-nav-btn.next {
+      right: 10px;
+    }
+  }
+
+  .nw-gallery-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--nw-surface-2, #f5f1ea);
+    color: var(--nw-text, #2e2621);
+    border: 1px solid var(--nw-border, #eadecc);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    white-space: nowrap;
+    line-height: 1.3;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+
+  .nw-gallery-tag-chip.tag-super {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+    font-weight: 700;
+  }
+
+  .nw-gallery-tag-chip.tag-encanta {
+    background: #fdf2f8 !important;
+    color: #be185d !important;
+    border: 1px solid #fbcfe8 !important;
+    font-weight: 700;
+  }
+
+  .book-collage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-auto-flow: dense;
+    align-items: start;
+    gap: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .book-collage-card.book-hero {
+      grid-column: span 2;
+    }
+
+    .book-collage-card.book-wide {
+      grid-column: span 2;
+    }
+
+    .book-collage-card.book-tall {
+      grid-row: span 2;
+    }
+  }
+</style>
+
+<section class="nw-card" style="width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow: hidden;">
+  <!-- Encabezado de la Sección -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        Álbum Oficial del Evento
+        <span class="nw-badge"
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ totalApprovedCount }} {{ totalApprovedCount === 1 ? 'fotografía aprobada' : 'fotografías aprobadas' }}
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Explora la galería de recuerdos seleccionados y organizados por álbumes temáticos.
+      </p>
+    </div>
+
+    <!-- Acciones Superiores: Selector de Modos y Botón Presentación en Pantalla Completa -->
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <!-- Botón Presentación Pantalla Completa -->
+      <button *ngIf="approvedAssets.length > 0" type="button" class="nw-btn nw-btn-primary nw-btn-sm"
+        (click)="startFullscreenPresentation()"
+        style="height: 36px; font-size: 12.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; box-shadow: 0 2px 8px rgba(192, 156, 120, 0.35);">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        Presentación Completa
+      </button>
+
+      <!-- Selector de Vista en Mobile (<=640px) -->
+      <div class="nw-mobile-status-select" style="flex: 1; min-width: 150px;">
+        <select class="nw-select" [ngModel]="viewMode" (ngModelChange)="setViewMode($event)"
+          style="height: 36px; font-size: 12.5px; font-weight: 600; padding: 0 10px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+          <option value="carousel">Vista Carrusel</option>
+          <option value="grid">Vista Cuadrícula</option>
+          <option value="list">Vista Lista</option>
+          <option value="book">Libro de Recuerdos</option>
+        </select>
+      </div>
+
+      <!-- Selector de Modos en Desktop (>640px) -->
+      <div class="nw-desktop-status-pills"
+        style="gap: 4px; background: var(--nw-surface-2, #f5f1ea); padding: 4px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); align-items: center;">
+        <button type="button" class="nw-btn nw-btn-sm" (click)="setViewMode('carousel')"
+          [class.nw-btn-primary]="viewMode === 'carousel'" [class.nw-btn-ghost]="viewMode !== 'carousel'"
+          style="height: 34px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 3h-8"></path>
+          </svg>
+          Carrusel
+        </button>
+
+        <button type="button" class="nw-btn nw-btn-sm" (click)="setViewMode('grid')"
+          [class.nw-btn-primary]="viewMode === 'grid'" [class.nw-btn-ghost]="viewMode !== 'grid'"
+          style="height: 34px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Cuadrícula
+        </button>
+
+        <button type="button" class="nw-btn nw-btn-sm" (click)="setViewMode('list')"
+          [class.nw-btn-primary]="viewMode === 'list'" [class.nw-btn-ghost]="viewMode !== 'list'"
+          style="height: 34px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          Lista
+        </button>
+
+        <button type="button" class="nw-btn nw-btn-sm" (click)="setViewMode('book')"
+          [class.nw-btn-primary]="viewMode === 'book'" [class.nw-btn-ghost]="viewMode !== 'book'"
+          style="height: 34px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          Libro de Recuerdos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🏷️ SECCIÓN: ÁLBUMES TEMÁTICOS (POR TAGS) -->
+  <div *ngIf="viewMode !== 'book'" style="margin-bottom: 18px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <span
+        style="font-size: 13px; font-weight: 700; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px;">
+        📂 Álbumes Temáticos
+      </span>
+      <span *ngIf="selectedTagFilter !== 'all'"
+        style="font-size: 12px; color: var(--nw-accent, #c09c78); cursor: pointer; font-weight: 600;"
+        (click)="setTagFilter('all')">
+        Ver todos los recuerdos ✕
+      </span>
+    </div>
+
+    <!-- Dropdown de Álbumes Temáticos solo en Mobile (<=640px) -->
+    <div class="nw-mobile-status-select" style="width: 100%;">
+      <select class="nw-select" [ngModel]="selectedTagFilter" (ngModelChange)="setTagFilter($event)"
+        style="height: 40px; font-size: 13px; font-weight: 600; padding: 0 12px; width: 100%; border-color: var(--nw-border, #eadecc); background: var(--nw-surface, #ffffff); cursor: pointer;">
+        <option value="all">🖼️ Todos los Álbumes ({{ allApprovedAssets.length }})</option>
+        <option [value]="TAG_SUPER_ENCANTA">⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})</option>
+        <option [value]="TAG_ME_ENCANTA">❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})</option>
+        <ng-container *ngFor="let tag of availableTags">
+          <option *ngIf="tag !== TAG_SUPER_ENCANTA && tag !== TAG_ME_ENCANTA" [value]="tag">
+            🏷️ {{ tag }} ({{ getTagCount(tag) }})
+          </option>
+        </ng-container>
+      </select>
+    </div>
+
+    <!-- Botones Pills de Álbumes Temáticos en Desktop (>640px) -->
+    <div class="nw-desktop-status-pills" style="gap: 8px; align-items: center;">
+      <!-- Álbum: Todos -->
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter('all')"
+        [style.background]="selectedTagFilter === 'all' ? 'var(--nw-accent, #c09c78)' : 'var(--nw-surface, #ffffff)'"
+        [style.color]="selectedTagFilter === 'all' ? '#ffffff' : 'var(--nw-text, #2e2621)'"
+        [style.border]="selectedTagFilter === 'all' ? '1px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
+        style="height: 36px; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+        🖼️ Todos los Álbumes ({{ allApprovedAssets.length }})
+      </button>
+
+      <!-- Álbum: Me super encanta -->
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter(TAG_SUPER_ENCANTA)"
+        [style.background]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#f59e0b' : '#fffbeb'"
+        [style.color]="selectedTagFilter === TAG_SUPER_ENCANTA ? '#ffffff' : '#b45309'"
+        [style.border]="selectedTagFilter === TAG_SUPER_ENCANTA ? '1px solid #d97706' : '1px solid #fde68a'"
+        style="height: 36px; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+        ⭐ Me super encanta ({{ getTagCount(TAG_SUPER_ENCANTA) }})
+      </button>
+
+      <!-- Álbum: Me encanta -->
+      <button type="button" class="nw-btn nw-btn-sm" (click)="setTagFilter(TAG_ME_ENCANTA)"
+        [style.background]="selectedTagFilter === TAG_ME_ENCANTA ? '#ec4899' : '#fdf2f8'"
+        [style.color]="selectedTagFilter === TAG_ME_ENCANTA ? '#ffffff' : '#be185d'"
+        [style.border]="selectedTagFilter === TAG_ME_ENCANTA ? '1px solid #db2777' : '1px solid #fbcfe8'"
+        style="height: 36px; font-size: 13px; font-weight: 700; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+        ❤️ Me encanta ({{ getTagCount(TAG_ME_ENCANTA) }})
+      </button>
+
+      <!-- Álbumes de Tags Personalizados -->
+      <ng-container *ngFor="let tag of availableTags">
+        <button *ngIf="tag !== TAG_SUPER_ENCANTA && tag !== TAG_ME_ENCANTA" type="button" class="nw-btn nw-btn-sm"
+          (click)="setTagFilter(tag)"
+          [style.background]="selectedTagFilter === tag ? 'var(--nw-text, #2e2621)' : 'var(--nw-surface-2, #f5f1ea)'"
+          [style.color]="selectedTagFilter === tag ? '#ffffff' : 'var(--nw-text, #2e2621)'"
+          [style.border]="selectedTagFilter === tag ? '1px solid var(--nw-text, #2e2621)' : '1px solid var(--nw-border, #eadecc)'"
+          style="height: 36px; font-size: 13px; font-weight: 600; border-radius: 20px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;">
+          🏷️ {{ tag }} ({{ getTagCount(tag) }})
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Barra de Búsqueda -->
+  <div *ngIf="viewMode !== 'book'"
+    style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;">
+    <div style="flex: 1; position: relative;">
+      <input class="nw-input" [(ngModel)]="searchQuery" (ngModelChange)="carouselIndex = 0"
+        placeholder="Buscar fotografías por nombre de fotógrafo o invitado..."
+        style="height: 40px; padding: 0 14px 0 36px; width: 100%; font-size: 13px; box-sizing: border-box;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="position: absolute; left: 12px; top: 12px; color: var(--nw-text-3, #9e9083);">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </div>
+    <button *ngIf="searchQuery" type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+      (click)="searchQuery=''; carouselIndex=0" style="height: 40px; font-size: 12px;">
+      Limpiar búsqueda
+    </button>
+  </div>
+
+  <!-- Estado Vacío -->
+  <div *ngIf="approvedAssets.length === 0 && viewMode !== 'book'" class="nw-empty"
+    style="padding: 56px 20px; text-align: center; color: var(--nw-text-3, #9e9083); background: var(--nw-surface, #ffffff); border: 1px dashed var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px);">
+    <div
+      style="width: 64px; height: 64px; border-radius: 50%; background: var(--nw-surface-2, #f5f1ea); display: inline-flex; align-items: center; justify-content: center; color: var(--nw-text-3, #9e9083); margin-bottom: 14px;">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+    </div>
+    <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--nw-text, #2e2621);">
+      {{ searchQuery ? 'No se encontraron fotos con la búsqueda' : 'Álbum en preparación' }}
+    </h3>
+    <p
+      style="margin: 6px 0 0; font-size: 13.5px; color: var(--nw-text-2, #6e6157); max-width: 460px; margin-inline: auto;">
+      {{ searchQuery ? 'Prueba escribiendo otro nombre o elimina el término de búsqueda.' : 'Las fotografías aprobadas
+      por los organizadores se publicarán en este espacio.' }}
+    </p>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 1. MODO CARRUSEL INTERACTIVO (SLIDESHOW)   -->
+  <!-- ========================================== -->
+  <div *ngIf="approvedAssets.length > 0 && viewMode === 'carousel'" class="nw-carousel-container">
+
+    <!-- Hero Slider Container -->
+    <div class="nw-carousel-hero">
+
+      <!-- Imagen Activa Centrada -->
+      <img [src]="currentCarouselAsset?.url" [alt]="currentCarouselAsset?.uploaderName || 'Foto del evento'"
+        class="nw-carousel-img">
+
+      <!-- Barra de Progreso de Presentación Continua -->
+      <div *ngIf="isPlaying" class="nw-carousel-progress-track">
+        <div class="nw-carousel-progress-bar"></div>
+      </div>
+
+      <!-- Flecha Anterior -->
+      <button type="button" (click)="prevSlide()" class="nw-carousel-nav-btn prev" title="Foto anterior">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Flecha Siguiente -->
+      <button type="button" (click)="nextSlide()" class="nw-carousel-nav-btn next" title="Foto siguiente">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Barra Superior (Badge Contador + Presentación Completa + Lightbox) -->
+      <div class="nw-carousel-topbar">
+        <div class="nw-carousel-pill">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          Foto {{ safeCarouselIndex + 1 }} de {{ approvedAssets.length }}
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; pointer-events: auto;">
+          <!-- Botón Presentación Pantalla Completa -->
+          <button type="button" (click)="startFullscreenPresentation()" class="nw-carousel-btn"
+            title="Iniciar presentación en pantalla completa limpia">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Presentación
+          </button>
+
+          <!-- Botón Ampliar / Lightbox -->
+          <button type="button" (click)="openLightbox(currentCarouselAsset)" class="nw-carousel-btn"
+            title="Ver detalle">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            Ampliar
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra Inferior (Info del Autor + Botón Descargar) -->
+      <div class="nw-carousel-bottombar">
+        <div class="nw-carousel-pill" style="max-width: calc(100% - 130px);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ currentCarouselAsset?.uploaderName || 'Invitado del evento' }}
+          </span>
+        </div>
+
+        <div style="pointer-events: auto;">
+          <button type="button" (click)="downloadPhoto(currentCarouselAsset, $event)" class="nw-carousel-btn"
+            title="Descargar fotografía en alta calidad">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Descargar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tira Horizontal de Miniaturas del Carrusel -->
+    <div class="nw-carousel-thumbs">
+      <div *ngFor="let item of approvedAssets; let i = index" [id]="'nw-thumb-' + i" (click)="goToSlide(i)"
+        class="nw-carousel-thumb-item" [class.active]="safeCarouselIndex === i"
+        [style.opacity]="safeCarouselIndex === i ? '1' : '0.65'">
+        <img [src]="item.url" [alt]="item.uploaderName || 'Miniatura'"
+          style="width: 100%; height: 100%; object-fit: cover; display: block;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. MODO CUADRÍCULA / ÁLBUM (GRID VIEW)     -->
+  <!-- ========================================== -->
+  <div *ngIf="approvedAssets.length > 0 && viewMode === 'grid'"
+    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px;">
+
+    <article *ngFor="let asset of paginatedApprovedAssets" class="nw-album-card"
+      style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04));"
+      (click)="openLightbox(asset)">
+
+      <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #222; overflow: hidden;">
+        <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto'" loading="lazy" decoding="async"
+          style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;">
+
+        <span class="nw-pill success"
+          style="position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Aprobada
+        </span>
+
+        <div
+          style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Ver
+        </div>
+      </div>
+
+      <div
+        style="padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; background: var(--nw-surface, #ffffff); gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <strong
+            style="font-size: 13.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            {{ asset.uploaderName || 'Invitado' }}
+          </strong>
+
+          <button type="button" class="nw-btn nw-btn-sm" (click)="downloadPhoto(asset, $event)"
+            style="padding: 4px 10px; height: 30px; font-size: 11.5px; font-weight: 600; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; cursor: pointer;"
+            title="Descargar fotografía">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Chips de Tags asignados -->
+        <div *ngIf="asset.tags && asset.tags.length > 0" style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+          <span *ngFor="let t of asset.tags" class="nw-gallery-tag-chip" [class.tag-super]="t === TAG_SUPER_ENCANTA"
+            [class.tag-encanta]="t === TAG_ME_ENCANTA">
+            {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : '🏷️ ' + t) }}
+          </span>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. MODO LISTA DETALLADA (LIST VIEW)        -->
+  <!-- ========================================== -->
+  <div *ngIf="approvedAssets.length > 0 && viewMode === 'list'"
+    style="display: flex; flex-direction: column; gap: 12px;">
+    <article *ngFor="let asset of paginatedApprovedAssets"
+      style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); box-shadow: var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04)); gap: 16px; flex-wrap: wrap;">
+
+      <div style="display: flex; align-items: center; gap: 16px; min-width: 240px; flex: 1;">
+        <div
+          style="width: 90px; height: 68px; border-radius: 8px; overflow: hidden; background: #222; flex-shrink: 0; cursor: pointer;"
+          (click)="openLightbox(asset)">
+          <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto'"
+            style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+
+        <div>
+          <strong
+            style="font-size: 14.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            {{ asset.uploaderName || 'Invitado' }}
+          </strong>
+          <span *ngIf="asset.uploaderEmail"
+            style="font-size: 12.5px; color: var(--nw-text-3, #9e9083); display: block; margin-top: 2px;">
+            {{ asset.uploaderEmail }}
+          </span>
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap;">
+            <span class="nw-pill success"
+              style="font-size: 10.5px; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Foto Aprobada
+            </span>
+            <!-- Chips de Tags en Lista -->
+            <span *ngFor="let t of asset.tags" class="nw-gallery-tag-chip" [class.tag-super]="t === TAG_SUPER_ENCANTA"
+              [class.tag-encanta]="t === TAG_ME_ENCANTA">
+              {{ t === TAG_SUPER_ENCANTA ? '⭐ Super' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : '🏷️ ' + t) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openLightbox(asset)"
+          style=" font-size: 12.5px; height: 36px; display: inline-flex; align-items: center; gap: 5px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Ver ampliada
+        </button>
+
+        <button type="button" class="nw-btn nw-btn-sm" (click)="downloadPhoto(asset, $event)"
+          style="font-size: 12.5px; height: 36px; display: inline-flex; align-items: center; gap: 6px; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; font-weight: 600; cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Descargar
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <!-- 📊 CONTROLES DE PAGINACIÓN LOCAL (CUADRÍCULA Y LISTA) -->
+  <div *ngIf="approvedAssets.length > 0 && viewMode !== 'carousel' && viewMode !== 'book'"
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--nw-border, #eadecc); flex-wrap: wrap; gap: 12px;">
+
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+      <span>Mostrar:</span>
+      <select [ngModel]="pageSize" (change)="onPageSizeChange($event)" class="nw-input"
+        style="width: 75px; height: 34px; padding: 0 8px; font-size: 12.5px; border-radius: 8px; font-weight: 600;">
+        <option *ngFor="let option of pageSizeOptions" [value]="option">{{ option }}</option>
+      </select>
+      <span>fotos por página (Total: {{ approvedAssets.length }})</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 6px;" *ngIf="totalPages > 1">
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="prevPage()" [disabled]="currentPage === 1"
+        style="height: 34px; padding: 0 12px; font-weight: 600; font-size: 12.5px;">
+        ◄ Anterior
+      </button>
+
+      <span style="font-size: 13px; font-weight: 700; color: var(--nw-text, #2e2621); padding: 0 8px;">
+        Página {{ currentPage }} de {{ totalPages }}
+      </span>
+
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="nextPage()"
+        [disabled]="currentPage === totalPages"
+        style="height: 34px; padding: 0 12px; font-weight: 600; font-size: 12.5px;">
+        Siguiente ►
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. MODO LIBRO DE RECUERDOS DIGITAL         -->
+  <!-- ========================================== -->
+  <div *ngIf="viewMode === 'book'" style="margin-top: 10px;">
+    <app-event-book-widget
+      [assets]="allApprovedAssets"
+      [eventTitle]="session?.event?.title || 'Nuestro Evento Especial'">
+    </app-event-book-widget>
+  </div>
+</section>
+
+<!-- Modal Lightbox de Pantalla Completa (Vista Detallada) -->
+<div class="nw-modal-backdrop" *ngIf="selectedAsset" (click)="closeLightbox()">
+  <div class="nw-modal" (click)="$event.stopPropagation()"
+    style="max-width: 860px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: #111111; color: #ffffff; border: 1px solid var(--nw-border-2, #444);">
+
+    <!-- Header -->
+    <div
+      style="padding: 14px 20px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; background: #181818;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        <div>
+          <h3 style="margin: 0; font-size: 15.5px; font-weight: 700; color: #ffffff;">
+            {{ selectedAsset.uploaderName || 'Invitado' }}
+          </h3>
+          <p style="margin: 2px 0 0; font-size: 12px; color: #aaaaaa;">
+            Foto {{ lightboxIndex + 1 }} de {{ approvedAssets.length }}
+          </p>
+        </div>
+      </div>
+      <button type="button" (click)="closeLightbox()"
+        style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); font-size: 16px; cursor: pointer; color: #ffffff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"
+        title="Cerrar">
+        ✕
+      </button>
+    </div>
+
+    <!-- Imagen Central con Flechas -->
+    <div
+      style="position: relative; flex: 1; min-height: 300px; display: flex; align-items: center; justify-content: center; background: #000000; overflow: hidden; padding: 12px;">
+      <img [src]="selectedAsset.url" [alt]="selectedAsset.uploaderName || 'Foto'"
+        style="max-width: 100%; max-height: 60vh; object-fit: contain; border-radius: 8px;">
+
+      <!-- Flecha Anterior Lightbox -->
+      <button *ngIf="approvedAssets.length > 1" type="button" (click)="prevLightbox()"
+        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"
+        title="Foto anterior">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Flecha Siguiente Lightbox -->
+      <button *ngIf="approvedAssets.length > 1" type="button" (click)="nextLightbox()"
+        style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"
+        title="Foto siguiente">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div
+      style="padding: 14px 20px; background: #181818; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span class="nw-pill success"
+          style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4);">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Aprobada para el Álbum Oficial
+        </span>
+
+        <!-- Chips de Tags en Lightbox -->
+        <div *ngIf="selectedAsset?.tags && selectedAsset!.tags!.length > 0"
+          style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+          <span *ngFor="let t of selectedAsset?.tags" class="nw-gallery-tag-chip"
+            [class.tag-super]="t === TAG_SUPER_ENCANTA" [class.tag-encanta]="t === TAG_ME_ENCANTA">
+            {{ t === TAG_SUPER_ENCANTA ? '⭐ Me super encanta' : (t === TAG_ME_ENCANTA ? '❤️ Me encanta' : '🏷️ ' + t) }}
+          </span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="button" (click)="downloadPhoto(selectedAsset, $event)"
+          style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; border-radius: 20px; padding: 0 18px; height: 38px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Descargar Fotografía
+        </button>
+
+        <button type="button" (click)="closeLightbox()"
+          style="background: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 20px; padding: 0 18px; height: 38px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          ✕ Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 🌟 MODO PRESENTACIÓN EN PANTALLA COMPLETA 🌟 -->
+<!-- ========================================== -->
+<div *ngIf="isFullscreenPresentation" class="nw-fs-presentation" (mousemove)="onPresentationMouseMove()"
+  (touchstart)="onPresentationMouseMove()" [class.hide-cursor]="!showPresentationControls && isPlaying">
+
+  <!-- Imagen en Pantalla Completa Limpia -->
+  <div class="nw-fs-image-container" (click)="toggleAutoplay()">
+    <img [src]="currentCarouselAsset?.url" [alt]="currentCarouselAsset?.uploaderName || 'Fotografía en Presentación'"
+      class="nw-fs-image">
+  </div>
+
+  <!-- Barra de Progreso Inferior -->
+  <div class="nw-fs-progress-track" *ngIf="isPlaying">
+    <div class="nw-fs-progress-bar" [style.animationDuration]="autoplayIntervalMs + 'ms'"></div>
+  </div>
+
+  <!-- Flechas Laterales de Navegación -->
+  <button type="button" (click)="prevSlide(); $event.stopPropagation()" class="nw-fs-nav-btn prev"
+    [class.visible]="showPresentationControls" title="Foto anterior (Flecha Izquierda)">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+  </button>
+
+  <button type="button" (click)="nextSlide(); $event.stopPropagation()" class="nw-fs-nav-btn next"
+    [class.visible]="showPresentationControls" title="Foto siguiente (Flecha Derecha)">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </button>
+
+  <!-- Barra Superior Flotante (Auto-ocultable para limpieza visual) -->
+  <div class="nw-fs-topbar" [class.visible]="showPresentationControls" (click)="$event.stopPropagation()">
+    <div class="nw-fs-pill">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      <span>Foto {{ safeCarouselIndex + 1 }} de {{ approvedAssets.length }}</span>
+    </div>
+
+    <div *ngIf="currentCarouselAsset?.uploaderName" class="nw-fs-pill uploader-pill">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>{{ currentCarouselAsset?.uploaderName }}</span>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+      <!-- Botón Pausar / Reanudar -->
+      <button type="button" (click)="toggleAutoplay()" class="nw-fs-btn"
+        [title]="isPlaying ? 'Pausar presentación (Espacio)' : 'Reanudar presentación (Espacio)'">
+        <svg *ngIf="!isPlaying" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <svg *ngIf="isPlaying" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="4" width="4" height="16"></rect>
+          <rect x="14" y="4" width="4" height="16"></rect>
+        </svg>
+        <span>{{ isPlaying ? 'Pausar' : 'Reanudar' }}</span>
+      </button>
+
+      <!-- Botón Descargar -->
+      <button type="button" (click)="downloadPhoto(currentCarouselAsset, $event)" class="nw-fs-btn"
+        title="Descargar fotografía original">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+
+      <!-- Botón Salir -->
+      <button type="button" (click)="exitFullscreenPresentation()" class="nw-fs-btn close-btn"
+        title="Salir de pantalla completa (Esc)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>Salir</span>
+      </button>
+    </div>
+  </div>
+</div>

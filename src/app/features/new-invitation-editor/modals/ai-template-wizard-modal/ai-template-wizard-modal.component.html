@@ -1,0 +1,447 @@
+<div class="nw-modal-backdrop" (click)="close.emit()">
+  <div class="nw-modal ai-wizard-modal" (click)="$event.stopPropagation()">
+    
+    <!-- HEADER -->
+    <div class="ai-wizard-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="ai-icon-bubble">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h2 style="margin:0; font-size:19px; font-weight:800; color:var(--nw-text); font-family:var(--nw-font-display);">
+              Diseñador de Plantillas Inteligente
+            </h2>
+            <span class="ai-badge">Google Gemini AI</span>
+          </div>
+          <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-2);">
+            Crea una experiencia web personalizada y dinámica adaptada a tu evento: <strong>{{ event?.title || 'Mi Evento' }}</strong>
+          </p>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="close.emit()" style="font-size:16px;">✕</button>
+    </div>
+
+    <!-- ERROR BANNER IF ANY -->
+    <div *ngIf="saveError" class="ai-error-banner">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ saveError }}</span>
+    </div>
+
+    <!-- SUCCESS BANNER -->
+    <div *ngIf="saveSuccess" class="ai-success-banner">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>¡Plantilla guardada y aplicada exitosamente a tu invitación!</span>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- PASO 1, 2, 3, 4: CONFIGURADOR DE PREFERENCIAS -->
+    <!-- ========================================================= -->
+    <div *ngIf="step !== 'generating' && step !== 'preview'" class="ai-wizard-body">
+      
+      <!-- Stepper Nav Tabs -->
+      <div class="ai-step-tabs">
+        <button type="button" class="ai-step-tab" [class.active]="step === 'style'" (click)="step = 'style'">
+          <span class="step-num">1</span>
+          <span>Estilo & Concepto</span>
+        </button>
+        <button type="button" class="ai-step-tab" [class.active]="step === 'palette'" (click)="step = 'palette'">
+          <span class="step-num">2</span>
+          <span>Paleta & Colores</span>
+        </button>
+        <button type="button" class="ai-step-tab" [class.active]="step === 'sections'" (click)="step = 'sections'">
+          <span class="step-num">3</span>
+          <span>Módulos Activos ({{ selectedSectionsCount }})</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: ESTILOS VISUALES -->
+      <div *ngIf="step === 'style'" class="tab-pane">
+        <h4 style="margin:0 0 6px; font-size:15px; font-weight:700; color:var(--nw-text);">
+          Selecciona el estilo visual base para la IA:
+        </h4>
+        <p style="margin:0 0 16px; font-size:13px; color:var(--nw-text-2);">
+          Gemini combinará este concepto con los datos y tipografía de tu evento.
+        </p>
+
+        <div class="style-presets-grid">
+          <div *ngFor="let s of stylePresets" class="style-card"
+            [class.selected]="selectedStyleId === s.id"
+            (click)="selectStyle(s)">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <span class="style-badge" [class.accent]="selectedStyleId === s.id">{{ s.badge }}</span>
+              <!-- Color preview dots -->
+              <div style="display:flex; gap:4px;">
+                <span class="color-dot" [style.background]="s.palette.primary"></span>
+                <span class="color-dot" [style.background]="s.palette.secondary"></span>
+                <span class="color-dot" [style.background]="s.palette.accent"></span>
+              </div>
+            </div>
+            <h5 style="margin:0 0 4px; font-size:15px; font-weight:800; color:var(--nw-text);">{{ s.name }}</h5>
+            <p style="margin:0; font-size:12.5px; color:var(--nw-text-2); line-height:1.4;">{{ s.description }}</p>
+          </div>
+        </div>
+
+        <!-- Instrucciones Libres -->
+        <div style="margin-top:20px;">
+          <label class="nw-label" style="font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span>Instrucciones Especiales para Gemini (Opcional):</span>
+            <span style="font-size:11px; font-weight:400; color:var(--nw-text-3);">Escribe cualquier detalle específico</span>
+          </label>
+          <textarea class="nw-input" rows="2" [(ngModel)]="customPrompt"
+            placeholder="Ej. Quiero tipografía Cinzel para títulos, fondo con brillo dorado tenue y botones con esquinas redondeadas."></textarea>
+        </div>
+      </div>
+
+      <!-- TAB 2: PALETA DE COLORES Y VIBRA -->
+      <div *ngIf="step === 'palette'" class="tab-pane">
+        <h4 style="margin:0 0 6px; font-size:15px; font-weight:700; color:var(--nw-text);">
+          Personaliza la paleta de colores y vibra:
+        </h4>
+        <p style="margin:0 0 16px; font-size:13px; color:var(--nw-text-2);">
+          Ajusta los tonos principales con los que se construirán los degradados y botones.
+        </p>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;">
+          <div class="nw-card" style="padding:14px;">
+            <label class="nw-label" style="font-weight:700; margin-bottom:6px;">Color Primario (Fondos / Base)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" [(ngModel)]="customPalette.primary" style="width:40px; height:38px; border:none; border-radius:6px; cursor:pointer; padding:0;">
+              <input class="nw-input" [(ngModel)]="customPalette.primary" style="font-family:monospace; font-size:13px;">
+            </div>
+          </div>
+
+          <div class="nw-card" style="padding:14px;">
+            <label class="nw-label" style="font-weight:700; margin-bottom:6px;">Color Secundario (Superficies / Cards)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" [(ngModel)]="customPalette.secondary" style="width:40px; height:38px; border:none; border-radius:6px; cursor:pointer; padding:0;">
+              <input class="nw-input" [(ngModel)]="customPalette.secondary" style="font-family:monospace; font-size:13px;">
+            </div>
+          </div>
+
+          <div class="nw-card" style="padding:14px;">
+            <label class="nw-label" style="font-weight:700; margin-bottom:6px;">Color de Acento (Botones / Destacados)</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="color" [(ngModel)]="customPalette.accent" style="width:40px; height:38px; border:none; border-radius:6px; cursor:pointer; padding:0;">
+              <input class="nw-input" [(ngModel)]="customPalette.accent" style="font-family:monospace; font-size:13px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Atmósfera / Vibe Selector -->
+        <div>
+          <label class="nw-label" style="font-weight:700; margin-bottom:8px;">Atmósfera del Evento:</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="vibe-pill" [class.active]="selectedVibe === 'lujoso'" (click)="selectedVibe = 'lujoso'">✨ Lujoso y Exclusivo</button>
+            <button type="button" class="vibe-pill" [class.active]="selectedVibe === 'romantico'" (click)="selectedVibe = 'romantico'">❤️ Romántico y Emotivo</button>
+            <button type="button" class="vibe-pill" [class.active]="selectedVibe === 'formal'" (click)="selectedVibe = 'formal'">👔 Formal y Clásico</button>
+            <button type="button" class="vibe-pill" [class.active]="selectedVibe === 'festivo'" (click)="selectedVibe = 'festivo'">🎉 Festivo y Alegre</button>
+            <button type="button" class="vibe-pill" [class.active]="selectedVibe === 'juvenil'" (click)="selectedVibe = 'juvenil'">⚡ Juvenil y Dinámico</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SECCIONES ACTIVAS -->
+      <div *ngIf="step === 'sections'" class="tab-pane">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div>
+            <h4 style="margin:0; font-size:15px; font-weight:700; color:var(--nw-text);">
+              Módulos y Secciones Dinámicas para Incluir:
+            </h4>
+            <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-2);">
+              Gemini programará los formularios interactivos y la cuenta regresiva en vivo.
+            </p>
+          </div>
+          <span class="nw-pill accent" style="font-weight:700;">{{ selectedSectionsCount }} activas</span>
+        </div>
+
+        <div class="sections-grid">
+          <div *ngFor="let sec of sectionsList" class="section-card"
+            [class.selected]="selectedSections[sec.key]"
+            (click)="toggleSection(sec.key)">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" [checked]="selectedSections[sec.key]" (click)="$event.stopPropagation()" (change)="toggleSection(sec.key)" style="accent-color:var(--nw-accent); width:17px; height:17px; cursor:pointer;">
+              <div>
+                <h6 style="margin:0; font-size:13.5px; font-weight:700; color:var(--nw-text);">{{ sec.label }}</h6>
+                <p style="margin:2px 0 0; font-size:11.5px; color:var(--nw-text-3);">{{ sec.description }}</p>
+              </div>
+            </div>
+            <span *ngIf="sec.recommended" class="nw-pill" style="font-size:10px; padding:1px 6px;">Recomendado</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- ========================================================= -->
+    <!-- PANTALLA DE INSPECCIÓN DE PROMPT Y MENSAJE A ENVIAR -->
+    <!-- ========================================================= -->
+    <div *ngIf="step === 'inspect-prompt'" class="ai-wizard-body" style="padding: 20px; overflow-y: auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <h3 style="margin: 0 0 4px; font-size: 17px; font-weight: 800; color: var(--nw-text);">
+            🔍 Petición Real del Backend (0 Tokens Consumidos)
+          </h3>
+          <p style="margin: 0; font-size: 12.5px; color: var(--nw-text-2);">
+            Esta es la estructura exacta y el mensaje completo generado por el backend que se enviará a ChatGPT / Gemini al confirmar.
+          </p>
+        </div>
+        <span class="nw-pill accent" style="font-weight:700;">Vista Previa de Petición</span>
+      </div>
+
+      <!-- BLOQUE 1: SYSTEM INSTRUCTION (CONTEXTO TÉCNICO) -->
+      <div style="margin-bottom: 16px;">
+        <label class="nw-label" style="font-weight: 700; color: var(--nw-accent); margin-bottom: 6px; display: block;">
+          1. Contexto Técnico del Sistema (Endpoints REST & Especificaciones):
+        </label>
+        <div style="background: #0f172a; color: #38bdf8; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11.5px; line-height: 1.45; max-height: 180px; overflow-y: auto; white-space: pre-wrap;">{{ compiledPromptData?.systemInstruction }}</div>
+      </div>
+
+      <!-- BLOQUE 2: SOLICITUD ESPECÍFICA DEL USUARIO -->
+      <div style="margin-bottom: 16px;">
+        <label class="nw-label" style="font-weight: 700; color: #22c55e; margin-bottom: 6px; display: block;">
+          2. Petición Específica del Usuario (Datos del Evento & Preferencias):
+        </label>
+        <div style="background: #0f172a; color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11.5px; line-height: 1.45; max-height: 220px; overflow-y: auto; white-space: pre-wrap;">{{ compiledPromptData?.userPrompt }}</div>
+      </div>
+    </div>
+
+    <!-- PANTALLA DE CARGA / GENERACIÓN CON IA -->
+    <!-- ========================================================= -->
+    <div *ngIf="step === 'generating'" class="ai-generating-view">
+      <div class="ai-core-orb">
+        <div class="orb-glow"></div>
+        <div class="orb-inner">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+      </div>
+
+      <h3 style="margin:20px 0 8px; font-size:20px; font-weight:800; color:var(--nw-text);">
+        Creando tu plantilla interactiva con IA...
+      </h3>
+      <p style="margin:0; font-size:14px; color:var(--nw-accent); font-weight:600;" class="typing-text">
+        {{ generationStepText }}
+      </p>
+      <p style="margin:8px 0 0; font-size:12.5px; color:var(--nw-text-3); max-width:480px; text-align:center;">
+        La Inteligencia Artificial está programando la estructura HTML5 responsive, estilos CSS avanzados y scripts dinámicos en tiempo real.
+      </p>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA DE PREVISUALIZACIÓN Y CHAT DE REFINAMIENTO -->
+    <!-- ========================================================= -->
+    <div *ngIf="step === 'preview'" class="ai-preview-layout">
+      
+      <!-- PANEL IZQUIERDO: PREVISUALIZACIÓN EN VIVO -->
+      <div class="preview-stage-container">
+        
+        <!-- Toolbar de Vista -->
+        <div class="preview-stage-toolbar">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="nw-tab-group" style="display:flex; gap:3px;">
+              <button class="nw-btn nw-btn-sm" type="button"
+                [class.nw-btn-primary]="previewActiveTab === 'preview'"
+                [class.nw-btn-ghost]="previewActiveTab !== 'preview'"
+                (click)="previewActiveTab = 'preview'">Vista en Vivo</button>
+              <button class="nw-btn nw-btn-sm" type="button"
+                [class.nw-btn-primary]="previewActiveTab === 'html'"
+                [class.nw-btn-ghost]="previewActiveTab !== 'html'"
+                (click)="previewActiveTab = 'html'">HTML</button>
+              <button class="nw-btn nw-btn-sm" type="button"
+                [class.nw-btn-primary]="previewActiveTab === 'css'"
+                [class.nw-btn-ghost]="previewActiveTab !== 'css'"
+                (click)="previewActiveTab = 'css'">CSS</button>
+            </div>
+          </div>
+
+          <!-- Selector de Dispositivos -->
+          <div *ngIf="previewActiveTab === 'preview'" style="display:flex; gap:4px; align-items:center;">
+            <button class="nw-btn nw-btn-sm" type="button"
+              [class.nw-btn-primary]="previewViewport === 'desktop'"
+              [class.nw-btn-ghost]="previewViewport !== 'desktop'"
+              (click)="previewViewport = 'desktop'" title="Escritorio">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </button>
+            <button class="nw-btn nw-btn-sm" type="button"
+              [class.nw-btn-primary]="previewViewport === 'tablet'"
+              [class.nw-btn-ghost]="previewViewport !== 'tablet'"
+              (click)="previewViewport = 'tablet'" title="Tablet">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </button>
+            <button class="nw-btn nw-btn-sm" type="button"
+              [class.nw-btn-primary]="previewViewport === 'mobile'"
+              [class.nw-btn-ghost]="previewViewport !== 'mobile'"
+              (click)="previewViewport = 'mobile'" title="Móvil">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Iframe Frame -->
+        <div class="preview-iframe-wrapper">
+          <iframe *ngIf="previewActiveTab === 'preview' && previewSafeSrcdoc"
+            [srcdoc]="previewSafeSrcdoc"
+            class="preview-iframe"
+            [style.width]="previewViewport === 'mobile' ? '375px' : (previewViewport === 'tablet' ? '768px' : '100%')"
+            [style.height]="previewViewport === 'mobile' ? '667px' : '100%'">
+          </iframe>
+
+          <!-- HTML Code View -->
+          <div *ngIf="previewActiveTab === 'html'" style="height:100%; overflow:auto; padding:14px; background:#0f172a; color:#f8fafc; font-family:monospace; font-size:12px; line-height:1.45; white-space:pre-wrap;">
+            {{ generatedResult?.html }}
+          </div>
+
+          <!-- CSS Code View -->
+          <div *ngIf="previewActiveTab === 'css'" style="height:100%; overflow:auto; padding:14px; background:#0f172a; color:#f8fafc; font-family:monospace; font-size:12px; line-height:1.45; white-space:pre-wrap;">
+            {{ generatedResult?.css }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- PANEL DERECHO: CHAT DE REFINAMIENTO CON IA -->
+      <div class="ai-refine-chat-panel">
+        
+        <div class="chat-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="ai-pulse-dot"></span>
+            <strong style="font-size:14px; color:var(--nw-text);">Refinar con IA</strong>
+          </div>
+          <span style="font-size:11px; color:var(--nw-text-3);">Pide cambios en lenguaje natural</span>
+        </div>
+
+        <!-- Historial del Chat -->
+        <div class="chat-messages">
+          <div *ngFor="let msg of chatHistory" class="chat-bubble" [class.user]="msg.role === 'user'" [class.ai]="msg.role === 'ai'">
+            <div class="bubble-sender">{{ msg.role === 'ai' ? '✨ Asistente IA' : '👤 Tú' }}</div>
+            <div class="bubble-text">{{ msg.text }}</div>
+          </div>
+          <div *ngIf="refining" class="chat-bubble ai">
+            <div class="bubble-sender">✨ Asistente IA</div>
+            <div class="bubble-text" style="display:flex; align-items:center; gap:6px;">
+              <span class="mini-spinner"></span>
+              <span>Aplicando ajustes en el código...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sugerencias Rápidas -->
+        <div class="quick-prompts">
+          <button type="button" class="quick-pill" (click)="refinementInput = 'Haz los botones más grandes con esquinas redondeadas y efecto de brillo'">🔘 Botones redondeados</button>
+          <button type="button" class="quick-pill" (click)="refinementInput = 'Cambia el fondo a un degradado oscuro con estrellas y destellos dorados'">✨ Fondo oscuro dorado</button>
+          <button type="button" class="quick-pill" (click)="refinementInput = 'Haz la cuenta regresiva más grande y centrada'">⏳ Cuenta regresiva grande</button>
+        </div>
+
+        <!-- Input de Refinamiento -->
+        <div class="chat-input-row">
+          <input class="nw-input" [(ngModel)]="refinementInput" (keyup.enter)="sendRefinement()" placeholder="Pide un cambio (ej. 'Agrega un marco floral')..." [disabled]="refining" style="font-size:12.5px;">
+          <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="sendRefinement()" [disabled]="refining || !refinementInput.trim()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- FOOTER Y BOTONES DE ACCIÓN -->
+    <!-- ========================================================= -->
+    <div class="ai-wizard-footer">
+      <button *ngIf="step !== 'preview' && step !== 'generating'" class="nw-btn nw-btn-ghost" type="button" (click)="close.emit()">
+        Cancelar
+      </button>
+
+      <button *ngIf="step === 'preview'" class="nw-btn nw-btn-ghost" type="button" (click)="step = 'style'">
+        ← Volver a configurar
+      </button>
+
+      <!-- Botones de Siguiente / Generar -->
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button *ngIf="step === 'style'" class="nw-btn nw-btn-ghost" type="button" (click)="step = 'palette'">
+          Siguiente: Paleta →
+        </button>
+        <button *ngIf="step === 'palette'" class="nw-btn nw-btn-ghost" type="button" (click)="step = 'sections'">
+          Siguiente: Módulos →
+        </button>
+
+        <!-- BOTÓN 1: VER PETICIÓN (Llama a preview-prompt en backend sin gastar tokens) -->
+        <button *ngIf="step === 'style' || step === 'palette' || step === 'sections'"
+          class="nw-btn nw-btn-ghost" type="button" [disabled]="inspectingPrompt" (click)="inspectPrompt()"
+          style="display:inline-flex; align-items:center; gap:6px; font-weight:700; border:1px solid var(--nw-accent); color:var(--nw-accent);"
+          title="Consulta al backend el mensaje exacto que se enviaría sin consumir tokens">
+          <span *ngIf="inspectingPrompt" class="mini-spinner"></span>
+          <svg *ngIf="!inspectingPrompt" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>{{ inspectingPrompt ? 'Obteniendo Petición...' : 'Ver Petición' }}</span>
+        </button>
+
+        <!-- BOTÓN 2: MANDAR PETICIÓN (Ejecuta la llamada a la IA) -->
+        <button *ngIf="step === 'style' || step === 'palette' || step === 'sections'"
+          class="nw-btn nw-btn-primary ai-generate-btn" type="button" (click)="startGeneration()"
+          title="Envía la petición a ChatGPT / Gemini para crear la plantilla">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Mandar Petición</span>
+        </button>
+
+        <!-- Botones en estado inspect-prompt -->
+        <button *ngIf="step === 'inspect-prompt'" class="nw-btn nw-btn-ghost" type="button" (click)="step = 'sections'">
+          ← Modificar Preferencias
+        </button>
+
+        <button *ngIf="step === 'inspect-prompt'" class="nw-btn nw-btn-primary" type="button" (click)="startGeneration()"
+          style="display:inline-flex; align-items:center; gap:6px; font-weight:800; background:linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Mandar Petición a la IA</span>
+        </button>
+
+        <!-- Botón en estado preview -->
+        <button *ngIf="step === 'preview'" class="nw-btn nw-btn-primary" type="button"
+          [disabled]="saving || saveSuccess" (click)="applyAndSaveTemplate()"
+          style="display:inline-flex; align-items:center; gap:6px; font-weight:700;">
+          <svg *ngIf="!saving" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span *ngIf="saving" class="mini-spinner"></span>
+          <span>{{ saving ? 'Guardando en Servidor...' : (saveSuccess ? '¡Plantilla Aplicada!' : 'Guardar y Aplicar Plantilla') }}</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

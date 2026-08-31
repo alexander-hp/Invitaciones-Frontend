@@ -1,0 +1,1872 @@
+<!-- NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) -->
+<div class="nw-toast-container" *ngIf="externalSuccess || externalError">
+  <div *ngIf="externalSuccess" class="nw-toast success" style="display: flex; align-items: center; gap: 8px;">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span>{{ externalSuccess }}</span>
+    <button type="button" class="nw-toast-close" (click)="externalSuccess=''">✕</button>
+  </div>
+  <div *ngIf="externalError" class="nw-toast error" style="display: flex; align-items: center; gap: 8px;">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ externalError }}</span>
+    <button type="button" class="nw-toast-close" (click)="externalError=''">✕</button>
+  </div>
+</div>
+
+<section *ngIf="event">
+
+  <!-- 1. ENCABEZADO ESTÁNDAR DE SECCIÓN (PATRÓN UNIVERSAL DE DISEÑO) -->
+  <div class="nw-card" style="margin-bottom:24px; padding:24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h2
+          style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          Hub de Integraciones & API Headless
+          <span class="nw-badge"
+            style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+            {{ apiEndpoints.length }} Endpoints REST
+          </span>
+          <span class="nw-pill success"
+            style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            Headless Ready
+          </span>
+        </h2>
+        <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+          Combina la libertad de tu propia página web (Webflow, WordPress, Next.js, HTML) con la potencia de KyndraSoft:
+          RSVP, Pase QR, Álbum, DJ y Regalos.
+        </p>
+      </div>
+
+      <!-- Botones Principales de Acción -->
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="openCreateLinkModal()"
+          style="display: flex; align-items: center; gap: 6px; height: 38px; font-size: 13px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+            </path>
+          </svg>
+          <span>Generar Token / Enlace</span>
+        </button>
+        <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-secondary"
+          [href]="'/assets/demo-integraciones.html?portal=' + event.externalPortalSlug" target="_blank"
+          style="display: flex; align-items: center; gap: 6px; height: 38px; text-decoration: none; font-size: 13px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span>Ver Demo Integraciones</span>
+        </a>
+        <a *ngIf="event?.externalPortalSlug" class="nw-btn nw-btn-primary" [href]="demoInvitationUrl" target="_blank"
+          style="display: flex; align-items: center; gap: 6px; height: 38px; text-decoration: none; font-size: 13px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Ver Demo Invitación</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO BANNER -->
+  <div class="nw-card nw-integrations-hero"
+    style="margin-bottom:24px; padding:26px; background: linear-gradient(135deg, rgba(25, 33, 50, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%), radial-gradient(ellipse at top right, rgba(201, 169, 110, 0.25), transparent 70%); border: 1px solid rgba(201, 169, 110, 0.3); box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25); border-radius: 16px; color: #ffffff;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap;">
+      <div style="max-width:720px;">
+        <span class="nw-pill gold"
+          style="font-size:11px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; background:rgba(201, 169, 110, 0.18); color:#e2c99b; border:1px solid rgba(201, 169, 110, 0.35); margin-bottom:10px; display:inline-flex; align-items:center; gap:6px; padding:4px 12px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          API FIRST & SWAGGER REST SPEC
+        </span>
+        <h3
+          style="margin:6px 0 10px 0; font-size:24px; font-weight:800; color:#ffffff; font-family:var(--nw-font-display); line-height:1.2;">
+          Conecta KyndraSoft en Tu Propio Dominio Web
+        </h3>
+        <p style="color:#cbd5e1; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
+          Consume la API REST interactiva ejecutando peticiones reales contra el backend o incrusta cualquiera de
+          nuestros 10 widgets iFrame embebibles.
+        </p>
+
+        <!-- Feature Status Pills -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="nw-pill success"
+            style="font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+              </path>
+            </svg>
+            WhatsApp Sync
+          </span>
+          <span class="nw-pill success"
+            style="font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Check-in QR
+          </span>
+          <span class="nw-pill success"
+            style="font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            Álbum Digital
+          </span>
+          <span class="nw-pill success"
+            style="font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            Mesas & Croquis
+          </span>
+          <span class="nw-pill success"
+            style="font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            Solicitudes DJ
+          </span>
+          <span class="nw-pill success"
+            style="font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            CORS Habilitado
+          </span>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px; min-width:220px; width:100%; max-width:250px;">
+        <a *ngIf="externalApiConfigUrl" class="nw-btn nw-btn-ghost nw-btn-sm" [href]="externalApiConfigUrl"
+          target="_blank"
+          style="text-decoration:none; justify-content:center; text-align:center; color:#e2c99b; border-color:rgba(201,169,110,0.4); height:38px; display:inline-flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>Endpoint JSON Config</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: GESTOR DE ENLACES DE ACCESO Y TOKENS DE INTEGRACIÓN (DATOS REALES DEL BACKEND) -->
+  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:10px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <path
+              d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+            </path>
+          </svg>
+          Enlaces de Acceso y Tokens de Integración Activos
+          <span class="nw-badge" style="background:var(--nw-surface-2); color:var(--nw-text-2); font-size:12.5px;">{{
+            accessLinks.length }} generados</span>
+        </h3>
+        <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-3);">
+          Enlaces operativos sin contraseña para tu equipo (Recepción, DJ, Fotógrafo) y Tokens de API para clientes
+          externos.
+        </p>
+      </div>
+
+      <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openCreateLinkModal()"
+        style="display:flex; align-items:center; gap:6px; height:38px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Generar Nuevo Enlace o Token</span>
+      </button>
+    </div>
+
+    <!-- Lista de Links Activos -->
+    <div *ngIf="loadingAccessLinks" class="nw-alert info"
+      style="padding:14px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>Cargando enlaces de acceso desde el servidor...</span>
+    </div>
+
+    <div *ngIf="!loadingAccessLinks && accessLinks.length === 0" class="nw-empty"
+      style="padding:32px 16px; text-align:center; background:var(--nw-surface-2); border-radius:12px; border:1px dashed var(--nw-border); margin-bottom:12px;">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="color: var(--nw-text-3); margin-bottom: 8px; display: inline-block;">
+        <path d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+        </path>
+      </svg>
+      <h4 style="margin:0; font-size:15px; font-weight:700; color:var(--nw-text);">No hay enlaces de acceso creados</h4>
+      <p style="font-size:13px; margin:4px 0 12px 0; color:var(--nw-text-2);">Genera un enlace para tu personal de
+        puerta (Check-in QR), cabina DJ o fotógrafo del evento.</p>
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openCreateLinkModal()"
+        style="display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Generar Primer Enlace</span>
+      </button>
+    </div>
+
+    <div *ngIf="!loadingAccessLinks && accessLinks.length > 0"
+      style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:14px;">
+      <div *ngFor="let link of accessLinks"
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:12px; padding:16px; display:flex; flex-direction:column; justify-content:space-between; position:relative;"
+        [style.opacity]="link.revokedAt ? '0.6' : '1'">
+
+        <div>
+          <!-- Header de Tarjeta -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;">
+            <div>
+              <strong style="font-size:14.5px; color:var(--nw-text); display:block;">
+                {{ link.label || getRoleLabel(link.role) }}
+              </strong>
+              <span class="nw-pill" [class.success]="!link.revokedAt" [class.danger]="link.revokedAt"
+                style="font-size:10.5px; font-weight:700; margin-top:2px;">
+                {{ getRoleLabel(link.role) }}
+              </span>
+            </div>
+
+            <span *ngIf="link.revokedAt" class="nw-pill danger"
+              style="font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:3px;">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              Revocado
+            </span>
+            <span *ngIf="!link.revokedAt" class="nw-pill success"
+              style="font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:3px;">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Activo
+            </span>
+          </div>
+
+          <!-- Información de Token y Vencimiento -->
+          <div
+            style="margin:10px 0; font-size:12px; color:var(--nw-text-2); display:flex; flex-direction:column; gap:4px;">
+            <div><strong>Token Preview:</strong> <code
+                style="background:var(--nw-surface); padding:2px 6px; border-radius:4px; font-size:11px;">{{ link.tokenPreview || (link.url ? link.url.split('/').pop() : '') }}</code>
+            </div>
+            <div><strong>Vence:</strong> {{ link.expiresAt | date:'mediumDate' }}</div>
+            <div *ngIf="link.lastUsedAt"><strong>Último uso:</strong> {{ link.lastUsedAt | date:'short' }}</div>
+          </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div
+          style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; border-top:1px solid var(--nw-border); padding-top:10px;">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+            (click)="copyToClipboard(link.url, 'Enlace de acceso')" [disabled]="link.revokedAt"
+            style="font-size:11.5px; padding:0 8px; height:30px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Copiar URL</span>
+          </button>
+
+          <button *ngIf="link.role === 'integration_api' && link.accessToken" type="button"
+            class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyToClipboard(link.accessToken, 'Token de Integración')"
+            [disabled]="link.revokedAt"
+            style="font-size:11.5px; padding:0 8px; height:30px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+              </path>
+            </svg>
+            <span>Copiar Token API</span>
+          </button>
+
+          <a *ngIf="!link.revokedAt && link.url" [href]="link.url" target="_blank"
+            class="nw-btn nw-btn-secondary nw-btn-sm"
+            style="text-decoration:none; font-size:11.5px; padding:0 8px; height:30px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span>Abrir</span>
+          </a>
+
+          <button *ngIf="!link.revokedAt" type="button" class="nw-btn nw-btn-danger nw-btn-sm"
+            (click)="revokeAccessLink(link)"
+            style="font-size:11.5px; padding:0 8px; height:30px; margin-left:auto; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            <span>Revocar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3: CONFIGURACIÓN DEL PORTAL EXTERNO & MÓDULOS -->
+  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img *ngIf="externalPortalQrUrl" [src]="externalPortalQrUrl" alt="QR portal"
+          style="width:52px; height:52px; border-radius:10px; border:1px solid var(--nw-border);">
+        <div>
+          <h3 style="margin:0; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+              </path>
+            </svg>
+            Configuración del Portal Externo & Módulos
+          </h3>
+          <p style="color:var(--nw-text-3); font-size:13px; margin:2px 0 0;">
+            Define la URL de tu sitio web oficial, marcas, imágenes de portada y módulos habilitados.
+          </p>
+        </div>
+      </div>
+      <span *ngIf="event?.externalPortalSlug" class="nw-pill gold" style="font-weight:700;">
+        Slug: {{ event.externalPortalSlug }}
+      </span>
+    </div>
+
+    <form [formGroup]="externalForm" (ngSubmit)="saveExternalConfig()">
+
+      <!-- Form Grid -->
+      <div
+        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-bottom:20px;">
+        <label class="nw-label" style="grid-column: 1 / -1;">
+          <span style="display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+              </path>
+            </svg>
+            URL de tu Sitio Web Oficial
+          </span>
+          <input class="nw-input" formControlName="externalSiteUrl" placeholder="https://mi-boda-sofia-y-ale.com"
+            style="height:42px; margin-top:4px;">
+        </label>
+
+        <label class="nw-label">
+          Etiqueta del Enlace
+          <input class="nw-input" formControlName="externalSiteLabel" placeholder="Abrir sitio web oficial"
+            style="height:42px; margin-top:4px;">
+        </label>
+
+        <label class="nw-label">
+          Marca Personalizada del Portal
+          <input class="nw-input" formControlName="brandLabel" placeholder="KyndraSoft"
+            style="height:42px; margin-top:4px;">
+        </label>
+
+        <label class="nw-label" style="grid-column: 1 / -1;">
+          Mensaje de Bienvenida del Portal
+          <input class="nw-input" formControlName="welcomeMessage"
+            placeholder="Confirma tu asistencia y solicita tus canciones favoritas..."
+            style="height:42px; margin-top:4px;">
+        </label>
+
+        <label class="nw-label" style="grid-column: 1 / -1;">
+          Imagen de Portada (URL o Subir)
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <input class="nw-input" formControlName="coverImageUrl" placeholder="https://.../portada.jpg"
+              style="flex:1; height:42px;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm"
+              style="cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; height:42px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Subir</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                (change)="uploadExternalAsset($event, 'cover')" style="display:none;">
+            </label>
+          </div>
+        </label>
+
+        <label class="nw-label" style="grid-column: 1 / -1;">
+          Imagen Hero Espectacular (URL o Subir)
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <input class="nw-input" formControlName="heroImageUrl" placeholder="https://.../hero.jpg"
+              style="flex:1; height:42px;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm"
+              style="cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; height:42px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Subir Hero</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                (change)="uploadExternalAsset($event, 'hero')" style="display:none;">
+            </label>
+          </div>
+        </label>
+
+        <label class="nw-label" style="grid-column: 1 / -1;">
+          Audio / Música de Fondo (URL o Subir)
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <input class="nw-input" formControlName="musicUrl" placeholder="https://.../cancion.mp3"
+              style="flex:1; height:42px;">
+            <label class="nw-btn nw-btn-ghost nw-btn-sm"
+              style="cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; height:42px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+              <span>Subir Audio</span>
+              <input type="file" accept="audio/mpeg,audio/mp3,audio/wav" (change)="uploadExternalAsset($event, 'music')"
+                style="display:none;">
+            </label>
+          </div>
+        </label>
+      </div>
+
+      <p *ngIf="externalAssetUploading"
+        style="color:var(--nw-accent); font-size:13px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Subiendo {{ externalAssetUploading }}...</span>
+      </p>
+
+      <!-- Switches de Módulos Activos -->
+      <div
+        style="background:var(--nw-surface-2); padding:18px; margin-bottom:20px; border-radius:12px; border:1px solid var(--nw-border);">
+        <h4 style="margin:0 0 14px 0; font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          Módulos de Funcionalidad Activos
+        </h4>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Portal Activo</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Habilitar KyndraSoft</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="externalPortalEnabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Solicitudes DJ</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Pedir canciones</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="songRequestsEnabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Dedicatoria DJ</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Mensajes en canciones</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="songRequestsDedications">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Álbum Digital</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Fotos de invitados</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="guestAlbumEnabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Libro de Visitas</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Dedicatorias públicas</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="dedicationsEnabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Mesa de regalos</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Sección de obsequios</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="giftEnabled">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+          <div
+            style="background:var(--nw-surface); border:1px solid var(--nw-border); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px; display:block;">Sobre digital</strong>
+              <span style="font-size:11px; color:var(--nw-text-3);">Datos bancarios/CLABE</span>
+            </div>
+            <label class="nw-switch">
+              <input type="checkbox" formControlName="giftShowEnvelope">
+              <span class="nw-slider"></span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <button class="nw-btn nw-btn-primary" type="submit" [disabled]="externalSaving"
+        style="font-weight:700; height:42px; display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span>{{ externalSaving ? 'Guardando cambios...' : 'Guardar Configuración de Integración' }}</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- SECCIÓN 4: SWAGGER UI / API REST EXPLORER CON EJECUCIÓN REAL AL BACKEND -->
+  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+
+    <!-- Swagger Header -->
+    <div
+      style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0; font-size:20px; font-weight:700; display:flex; align-items:center; gap:10px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+          API REST Interactiva (Swagger / OpenAPI 3.0)
+          <span class="nw-badge"
+            style="background: var(--nw-surface-2); color: var(--nw-accent); border-color: var(--nw-border);">Ejecución
+            Real en Backend</span>
+        </h3>
+        <p style="margin:4px 0 0; font-size:13px; color:var(--nw-text-2);">
+          Especificación completa e interactiva de los endpoints para construir tu propia página web de invitación (12
+          Secciones). Prueba peticiones en vivo contra el servidor Node.js/MongoDB o genera comandos cURL.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="expandAllEndpoints()"
+          style="font-size:12px; height:34px; display:inline-flex; align-items:center; gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 13 12 18 17 13"></polyline>
+            <polyline points="7 6 12 11 17 6"></polyline>
+          </svg>
+          <span>Expandir Todo</span>
+        </button>
+        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="collapseAllEndpoints()"
+          style="font-size:12px; height:34px; display:inline-flex; align-items:center; gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="17 11 12 6 7 11"></polyline>
+            <polyline points="17 18 12 13 7 18"></polyline>
+          </svg>
+          <span>Colapsar Todo</span>
+        </button>
+        <span class="nw-pill gold" style="font-weight:700;">{{ apiEndpoints.length }} Endpoints</span>
+      </div>
+    </div>
+
+    <!-- Barra de Control Global de Credenciales & Parámetros -->
+    <div
+      style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:12px; padding:16px; margin-bottom:20px;">
+      <div
+        style="font-size:13px; font-weight:700; color:var(--nw-text); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span>Configuración Global de Pruebas</span>
+          <span class="nw-pill accent" style="font-size:10.5px;">CORS Habilitado</span>
+        </div>
+        <div style="display:flex; gap:8px; font-size:11.5px; color:var(--nw-text-2);">
+          <span>Slug: <strong style="color:var(--nw-accent);">{{ event?.externalPortalSlug || 'N/A' }}</strong></span>
+          <span>·</span>
+          <span>Event ID: <strong style="color:var(--nw-accent);">{{ (event?._id || event?.id) || 'N/A'
+              }}</strong></span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+        <!-- Base URL -->
+        <div>
+          <label class="nw-label"
+            style="font-size:11.5px; font-weight:700; margin-bottom:4px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+              </path>
+            </svg>
+            URL Base del Backend
+          </label>
+          <input class="nw-input" [(ngModel)]="customBaseUrl"
+            [placeholder]="externalApiConfigUrl ? externalApiConfigUrl.replace('/config', '') : 'https://api.tu-dominio.com/api'"
+            style="height:36px; font-size:12.5px; font-family:monospace;">
+        </div>
+
+        <!-- Auth Token / JWT -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <label class="nw-label"
+              style="font-size:11.5px; font-weight:700; margin:0; display:inline-flex; align-items:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Token de Autorización (JWT / Bearer)
+            </label>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="useActiveJwtAsToken()"
+              style="padding:0 6px; height:22px; font-size:10.5px; display:inline-flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span>Cargar mi JWT activo</span>
+            </button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <input class="nw-input" [(ngModel)]="globalAuthToken" placeholder="Pega tu JWT o Token de acceso..."
+              style="height:36px; font-size:12px; font-family:monospace; flex:1;">
+            <button *ngIf="globalAuthToken" type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+              (click)="copyToClipboard(globalAuthToken, 'Token JWT')" title="Copiar Token"
+              style="height:36px; padding:0 10px; display:inline-flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4.1 BARRA DE FILTROS EN UNA SOLA FILA HORIZONTAL (PATRÓN DE DISEÑO) -->
+    <div
+      style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 16px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+
+      <!-- Buscador por palabra clave -->
+      <div style="flex: 1; min-width: 220px;">
+        <input class="nw-input" [(ngModel)]="apiSearchQuery" placeholder="Buscar endpoint, path, método o tag..."
+          style="height: 42px; padding: 0 14px; width: 100%; font-size: 13px; box-sizing: border-box;">
+      </div>
+
+      <!-- Select Filtro de Categoría / Tag -->
+      <select class="nw-select" [(ngModel)]="apiTagFilter"
+        style="height: 42px; padding: 0 28px 0 12px; width: 210px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+        <option value="">Todas las categorías ({{ apiEndpoints.length }})</option>
+        <option *ngFor="let cat of tagCategories" [value]="cat.name">{{ cat.name }} ({{ cat.count }})</option>
+      </select>
+
+      <!-- Select Filtro de Método HTTP -->
+      <select class="nw-select" [(ngModel)]="apiMethodFilter"
+        style="height: 42px; padding: 0 28px 0 12px; width: 150px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+        <option value="">Todos los métodos</option>
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PATCH">PATCH</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+
+      <!-- Botón Limpiar Filtros -->
+      <button *ngIf="apiSearchQuery || apiTagFilter || apiMethodFilter || selectedTagPill !== 'all'" type="button"
+        class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearApiFilters()"
+        style="white-space: nowrap; height: 42px; font-size: 12px; flex-shrink: 0; display:inline-flex; align-items:center; gap:4px;">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>Limpiar</span>
+      </button>
+    </div>
+
+    <!-- 4.2 FILTROS SEGMENTADOS POR PILLS (PATRÓN DE DISEÑO) -->
+    <div
+      style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+      <button type="button" class="nw-btn nw-btn-sm" (click)="selectTagPill('all')"
+        [class.nw-btn-primary]="selectedTagPill === 'all'" [class.nw-btn-ghost]="selectedTagPill !== 'all'"
+        style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600; display:inline-flex; align-items:center; gap:5px;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span>Todos ({{ apiEndpoints.length }})</span>
+      </button>
+
+      <button *ngFor="let cat of tagCategories" type="button" class="nw-btn nw-btn-sm" (click)="selectTagPill(cat.name)"
+        [class.nw-btn-primary]="selectedTagPill.toLowerCase() === cat.name.toLowerCase()"
+        [class.nw-btn-ghost]="selectedTagPill.toLowerCase() !== cat.name.toLowerCase()"
+        style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+        {{ cat.name }} ({{ cat.count }})
+      </button>
+    </div>
+
+    <!-- 4.3 ACCORDEÓN SWAGGER DE ENDPOINTS -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+
+      <!-- Estado Vacío si los Filtros no dan resultados -->
+      <div *ngIf="filteredEndpoints.length === 0" class="nw-empty"
+        style="padding:40px 20px; text-align:center; color:var(--nw-text-3);">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"
+          style="color: var(--nw-text-3); margin-bottom: 8px; display: inline-block;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--nw-text);">Sin endpoints coincidentes</h3>
+        <p style="font-size:13px; margin-top:4px; color:var(--nw-text-2);">Ajusta la búsqueda o borra los filtros
+          activos.</p>
+        <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="clearApiFilters()"
+          style="margin-top:10px;">Limpiar Filtros</button>
+      </div>
+
+      <!-- Item del Endpoint (Swagger Opblock Box) -->
+      <div *ngFor="let ep of filteredEndpoints"
+        style="border-radius:10px; border:1px solid; overflow:hidden; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);"
+        [style.borderColor]="ep.method === 'GET' ? 'var(--nw-accent)' : (ep.method === 'POST' ? '#10b981' : (ep.method === 'DELETE' ? '#ef4444' : '#f59e0b'))"
+        [style.background]="ep.method === 'GET' ? 'rgba(192, 156, 120, 0.05)' : (ep.method === 'POST' ? 'rgba(16, 185, 129, 0.05)' : (ep.method === 'DELETE' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)'))">
+
+        <!-- Bar Cabecera del Endpoint (Swagger Summary Bar) -->
+        <div (click)="toggleEndpoint(ep)"
+          style="padding:10px 16px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px; user-select:none;">
+
+          <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;">
+            <!-- Badge Método HTTP (GET/POST/PATCH/DELETE) -->
+            <span
+              style="color:#ffffff; font-weight:800; font-size:12px; padding:5px 12px; border-radius:6px; min-width:70px; text-align:center; display:inline-block; font-family:sans-serif;"
+              [style.background]="ep.method === 'GET' ? 'var(--nw-accent, #c09c78)' : (ep.method === 'POST' ? '#10b981' : (ep.method === 'DELETE' ? '#ef4444' : '#f59e0b'))">
+              {{ ep.method }}
+            </span>
+
+            <!-- Path de la Petición -->
+            <code
+              style="font-weight:700; font-size:14px; font-family:monospace; color:var(--nw-text); white-space:nowrap;">
+              {{ ep.path }}
+            </code>
+
+            <!-- Resumen Breve -->
+            <span
+              style="font-size:13px; color:var(--nw-text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              {{ ep.summary }}
+            </span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+            <!-- Tag Badge -->
+            <span class="nw-pill"
+              style="font-size:10.5px; padding:2px 8px; background:var(--nw-surface); border:1px solid var(--nw-border); color:var(--nw-text-2);">
+              {{ ep.tag }}
+            </span>
+
+            <!-- Auth Badges -->
+            <span *ngIf="ep.authType === 'jwt' || ep.requiresAuth" class="nw-pill danger"
+              title="Requiere autenticación JWT (Authorization: Bearer <token>)"
+              style="font-size:10.5px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              JWT
+            </span>
+            <span *ngIf="ep.authType === 'token'" class="nw-pill accent" title="Requiere token de acceso o sesión"
+              style="font-size:10.5px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+                </path>
+              </svg>
+              Token
+            </span>
+            <span *ngIf="ep.authType === 'public' && !ep.requiresAuth" class="nw-pill success"
+              title="Endpoint público (sin autenticación requerida)"
+              style="font-size:10.5px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                </path>
+              </svg>
+              Público
+            </span>
+            <span *ngIf="ep.isMultipart" class="nw-pill warning" title="Acepta multipart/form-data (archivos)"
+              style="font-size:10.5px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                </path>
+              </svg>
+              Multipart
+            </span>
+
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"
+              style="color:var(--nw-text-2); transition: transform 0.2s; margin-left:4px;"
+              [style.transform]="ep.expanded ? 'rotate(180deg)' : 'rotate(0deg)'">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Cuerpo Desplegable del Endpoint (Swagger Opblock Body) -->
+        <div *ngIf="ep.expanded"
+          style="background:var(--nw-surface, #ffffff); border-top:1px solid rgba(0,0,0,0.08); padding:18px;">
+
+          <div
+            style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
+            <p style="font-size:13.5px; color:var(--nw-text-2); margin:0; line-height:1.5; flex:1; min-width:240px;">
+              {{ ep.description }}
+            </p>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyToClipboard(ep.path, 'Path')"
+                style="font-size:11.5px; height:30px; display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Copiar Path</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Parameters Section Header -->
+          <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--nw-border);">
+            <h4 style="margin:0; font-size:15px; font-weight:700; color:var(--nw-text);">Parameters</h4>
+
+            <button type="button" class="nw-btn nw-btn-sm" (click)="toggleTryItOut(ep)"
+              [style.background]="ep.trying ? '#ef4444' : 'var(--nw-surface-2)'"
+              [style.color]="ep.trying ? '#ffffff' : 'var(--nw-text)'"
+              style="border:1px solid var(--nw-border); font-weight:700; font-size:12px; height:32px; display:inline-flex; align-items:center; gap:5px;">
+              <svg *ngIf="!ep.trying" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <svg *ngIf="ep.trying" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>{{ ep.trying ? 'Cancel' : 'Try it out' }}</span>
+            </button>
+          </div>
+
+          <!-- Tabla de Parámetros Swagger -->
+          <div *ngIf="ep.parameters && ep.parameters.length > 0" class="nw-table-responsive"
+            style="margin-bottom:16px; overflow-x:auto;">
+            <table class="nw-table" style="width:100%; min-width:600px; margin:0;">
+              <thead>
+                <tr style="background:var(--nw-surface-2); font-size:12px;">
+                  <th style="padding:8px 12px; text-align:left; width:30%;">Name</th>
+                  <th style="padding:8px 12px; text-align:left; width:70%;">Description & Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let param of ep.parameters">
+                  <td style="padding:10px 12px; vertical-align:top;">
+                    <strong style="font-size:13px; font-family:monospace; color:var(--nw-text);">{{ param.name
+                      }}</strong>
+                    <span *ngIf="param.required"
+                      style="color:var(--nw-danger); font-size:11px; font-weight:700; margin-left:4px;">*
+                      required</span>
+                    <div style="font-size:11px; color:var(--nw-text-3); margin-top:2px;">{{ param.type }}</div>
+                    <div style="font-size:11px; color:var(--nw-text-2); font-style:italic;">({{ param.in }})</div>
+                  </td>
+                  <td style="padding:10px 12px; vertical-align:top;">
+                    <div style="font-size:13px; color:var(--nw-text-2);">{{ param.description }}</div>
+                    <div *ngIf="ep.trying" style="margin-top:8px;">
+                      <input class="nw-input" [(ngModel)]="param.value" [placeholder]="param.defaultValue || param.name"
+                        style="height:36px; font-size:12.5px; width:100%; max-width:420px; font-family:monospace;">
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="!ep.parameters || ep.parameters.length === 0" style="margin-bottom:16px;">
+            <p style="font-size:12.5px; color:var(--nw-text-3); margin:0;">No parameters required for this endpoint.</p>
+          </div>
+
+          <!-- Request Body Section (POST / PUT / PATCH) -->
+          <div *ngIf="ep.requestBodySchema" style="margin-top:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--nw-text);">Request body</h4>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button *ngIf="ep.trying" type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+                  (click)="formatJsonBody(ep)"
+                  style="font-size:11px; height:24px; padding:0 8px; display:inline-flex; align-items:center; gap:4px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                  </svg>
+                  <span>Formatear JSON</span>
+                </button>
+                <span class="nw-pill accent" style="font-size:10.5px;">application/json</span>
+              </div>
+            </div>
+
+            <!-- Precalculado JSON Schema o Editable cuando "Try it out" -->
+            <div *ngIf="!ep.trying">
+              <pre
+                style="background:#1e293b; color:#e2e8f0; padding:12px; border-radius:8px; font-size:12px; font-family:monospace; margin:0; overflow-x:auto;">{{ ep.requestBodySchema }}</pre>
+            </div>
+            <div *ngIf="ep.trying">
+              <textarea class="nw-input" [(ngModel)]="ep.requestBodyInput" rows="6"
+                style="width:100%; font-family:monospace; font-size:12px; background:#1e293b; color:#ffffff; border:1px solid var(--nw-border); border-radius:8px; padding:10px; resize:vertical;"></textarea>
+            </div>
+          </div>
+
+          <!-- Botón de Ejecutar Petición Real al Backend -->
+          <div *ngIf="ep.trying" style="margin-top:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button type="button" class="nw-btn nw-btn-primary" (click)="executeEndpoint(ep)" [disabled]="ep.executing"
+              style="font-weight:700; font-size:13px; height:40px; padding:0 22px; flex:1; max-width:320px; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <svg *ngIf="ep.executing" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <svg *ngIf="!ep.executing" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>{{ ep.executing ? 'Ejecutando petición...' : 'Execute (Ejecutar en Backend)' }}</span>
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearExecution(ep)"
+              style="height:40px; display:inline-flex; align-items:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Limpiar</span>
+            </button>
+          </div>
+
+          <!-- Resultado Real de la Petición -->
+          <div *ngIf="ep.simulatedResult"
+            style="margin-top:16px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:10px; padding:16px;">
+            <div
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <strong style="font-size:14px; color:var(--nw-text);">Server response</strong>
+                <span class="nw-pill"
+                  [class.success]="ep.simulatedResult.status >= 200 && ep.simulatedResult.status < 300"
+                  [class.danger]="ep.simulatedResult.status >= 400 || ep.simulatedResult.status === 0"
+                  style="font-weight:800;">
+                  {{ ep.simulatedResult.statusText }}
+                </span>
+              </div>
+              <div style="font-size:12px; color:var(--nw-text-3); display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Latencia: <strong>{{ ep.simulatedResult.durationMs }} ms</strong>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div style="font-size:11px; font-weight:700; color:var(--nw-text-3);">cURL Command generado:</div>
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+                  (click)="copyToClipboard(ep.simulatedResult.curl, 'Comando cURL')"
+                  style="height:22px; font-size:10.5px; padding:0 6px; display:inline-flex; align-items:center; gap:4px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Copiar cURL</span>
+                </button>
+              </div>
+              <pre
+                style="background:#0f172a; color:#38bdf8; padding:10px; border-radius:6px; font-size:11.5px; font-family:monospace; margin:0; overflow-x:auto;">{{ ep.simulatedResult.curl }}</pre>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div style="font-size:11px; font-weight:700; color:var(--nw-text-3);">Response Body:</div>
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+                  (click)="copyToClipboard(ep.simulatedResult.body, 'Response JSON')"
+                  style="height:22px; font-size:10.5px; padding:0 6px; display:inline-flex; align-items:center; gap:4px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Copiar JSON</span>
+                </button>
+              </div>
+              <pre
+                style="background:#0f172a; color:#f1f5f9; padding:10px; border-radius:6px; font-size:11.5px; font-family:monospace; margin:0; overflow-x:auto; max-height:300px;">{{ ep.simulatedResult.body }}</pre>
+            </div>
+          </div>
+
+          <!-- Respuestas Esperadas en la Especificación -->
+          <div style="margin-top:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <h4 style="margin:0; font-size:14px; font-weight:700; color:var(--nw-text);">Responses (Especificación
+                OpenAPI 3.0)</h4>
+              <span style="font-size:11.5px; color:var(--nw-text-3);">Content-Type: application/json</span>
+            </div>
+
+            <div class="nw-table-responsive" style="overflow-x:auto;">
+              <table class="nw-table" style="width:100%; min-width:600px; margin:0;">
+                <thead>
+                  <tr style="background:var(--nw-surface-2); font-size:12px;">
+                    <th style="padding:8px 12px; text-align:left; width:15%;">Code</th>
+                    <th style="padding:8px 12px; text-align:left; width:85%;">Description & Example Schema</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let resp of ep.responses">
+                    <td style="padding:10px 12px; vertical-align:top;">
+                      <span class="nw-pill" [class.success]="resp.code >= 200 && resp.code < 300"
+                        [class.danger]="resp.code >= 400" style="font-weight:800; font-size:12px;">
+                        {{ resp.code }}
+                      </span>
+                    </td>
+                    <td style="padding:10px 12px; vertical-align:top;">
+                      <div style="font-size:13px; font-weight:600; color:var(--nw-text);">{{ resp.description }}</div>
+                      <div *ngIf="resp.schema" style="margin-top:6px;">
+                        <pre
+                          style="background:#1e293b; color:#cbd5e1; padding:10px; border-radius:6px; font-size:11.5px; font-family:monospace; margin:0; overflow-x:auto;">{{ resp.schema }}</pre>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 5: GUÍA PASO A PASO: CÓMO CREAR UNA INVITACIÓN COMPLETA VIA API -->
+  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+    <div style="margin-bottom:20px;">
+      <h3 style="margin:0 0 6px 0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+          <line x1="8" y1="2" x2="8" y2="18"></line>
+          <line x1="16" y1="6" x2="16" y2="22"></line>
+        </svg>
+        Guía Paso a Paso: Cómo Construir una Invitación Completa como KyndraSoft
+      </h3>
+      <p style="margin:0; font-size:14px; color:var(--nw-text-3);">
+        Sigue este flujo de 4 pasos en tu propio código web para implementar una experiencia interactiva idéntica a
+        nuestra plataforma.
+      </p>
+    </div>
+
+    <!-- Timeline / Process Steps Grid -->
+    <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;">
+
+      <!-- Step 1 -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-left:4px solid var(--nw-accent); border-radius:10px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <span
+            style="background:var(--nw-accent, #c09c78); color:#ffffff; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:14px;">1</span>
+          <h4 style="margin:0; font-size:16px; font-weight:700;">Inicialización & Carga de Datos del Evento</h4>
+        </div>
+        <p style="font-size:13px; color:var(--nw-text-2); margin:0 0 8px 0; line-height:1.5;">
+          Llama a <code
+            style="background:var(--nw-surface); padding:2px 6px;">GET /api/external/:portalSlug/config</code> al cargar
+          la página para obtener nombres de novios, fecha, hora, mapa de ubicación, código de vestimenta, música de
+          fondo y estado de los módulos.
+        </p>
+        <span class="nw-pill success" style="font-size:11px;">Endpoints: GET /api/external/:portalSlug/config, GET
+          /api/external/:portalSlug/assets</span>
+      </div>
+
+      <!-- Step 2 -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-left:4px solid var(--nw-accent); border-radius:10px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <span
+            style="background:var(--nw-accent, #c09c78); color:#ffffff; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:14px;">2</span>
+          <h4 style="margin:0; font-size:16px; font-weight:700;">Identificación del Invitado & Token de Sesión</h4>
+        </div>
+        <p style="font-size:13px; color:var(--nw-text-2); margin:0 0 8px 0; line-height:1.5;">
+          Solicita el email o teléfono del invitado y envía a <code
+            style="background:var(--nw-surface); padding:2px 6px;">POST /api/external/:portalSlug/guest/identify</code>.
+          Guarda el <code style="background:var(--nw-surface); padding:2px 6px;">guestSessionToken</code> para
+          adjuntarlo en las siguientes peticiones como Bearer Token.
+        </p>
+        <span class="nw-pill accent" style="font-size:11px;">Endpoints: POST /api/external/:portalSlug/guest/identify,
+          GET /api/external/:portalSlug/my-status</span>
+      </div>
+
+      <!-- Step 3 -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-left:4px solid var(--nw-accent); border-radius:10px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <span
+            style="background:var(--nw-accent, #c09c78); color:#ffffff; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:14px;">3</span>
+          <h4 style="margin:0; font-size:16px; font-weight:700;">Formulario RSVP & Asignación de Pases</h4>
+        </div>
+        <p style="font-size:13px; color:var(--nw-text-2); margin:0 0 8px 0; line-height:1.5;">
+          Muestra la casilla de confirmación (Asistiré / No asistiré), límite de acompañantes devuelto en el Paso 2 y
+          requerimientos alimenticios. Al enviar a <code
+            style="background:var(--nw-surface); padding:2px 6px;">POST /api/external/:portalSlug/rsvp</code>, el
+          sistema confirmará la asistencia.
+        </p>
+        <span class="nw-pill gold" style="font-size:11px;">Endpoints: POST /api/external/:portalSlug/rsvp</span>
+      </div>
+
+      <!-- Step 4 -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-left:4px solid var(--nw-accent); border-radius:10px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <span
+            style="background:var(--nw-accent, #c09c78); color:#ffffff; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:14px;">4</span>
+          <h4 style="margin:0; font-size:16px; font-weight:700;">Módulos Interactivos (Música DJ, Álbum, Regalos & Libro
+            de Visitas)</h4>
+        </div>
+        <p style="font-size:13px; color:var(--nw-text-2); margin:0 0 8px 0; line-height:1.5;">
+          Integra las características en la interfaz del invitado:
+        </p>
+        <ul style="margin:0; padding-left:20px; font-size:12.5px; color:var(--nw-text-2); line-height:1.6;">
+          <li><strong>DJ Playlist:</strong> Usa <code style="font-size:11px;">POST /song-lookup</code> para resolver
+            canciones y <code style="font-size:11px;">POST /song-requests</code> para enviar la propuesta.</li>
+          <li><strong>Álbum de Fotos:</strong> Permite tomar o seleccionar fotos y subirlas mediante <code
+              style="font-size:11px;">POST /album</code>.</li>
+          <li><strong>Sobre Digital & Regalos:</strong> Consume <code style="font-size:11px;">GET /gifts</code> para
+            renderizar tiendas y copiar la CLABE bancaria.</li>
+          <li><strong>Libro de Visitas:</strong> Lee y publica comentarios con <code
+              style="font-size:11px;">GET & POST /dedications</code>.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Ejemplo Práctico en JavaScript -->
+    <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:10px; padding:18px;">
+      <h4
+        style="margin:0 0 8px 0; font-size:15px; font-weight:700; color:var(--nw-text); display:flex; align-items:center; gap:8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Código de Ejemplo JavaScript / TypeScript (Cliente Completo)
+      </h4>
+      <p style="font-size:12.5px; color:var(--nw-text-3); margin:0 0 12px 0;">
+        Snippet listo para copiar en tu proyecto React, Vue, Next.js o HTML nativo.
+      </p>
+      <pre
+        style="background:#0f172a; color:#e2e8f0; border:1px solid var(--nw-border); padding:14px; border-radius:8px; font-size:11.5px; font-family:monospace; line-height:1.5; overflow-x:auto; margin:0;">
+const API_BASE = '{{ externalApiConfigUrl ? externalApiConfigUrl.replace('/config', '') : 'https://backend.tudominio.com/api/external/' + (event?.externalPortalSlug || 'slug') }}';
+let guestToken = '';
+
+// 1. Cargar Configuración del Evento
+async function inicializarInvitacion() &#123;
+  const resConfig = await fetch(API_BASE + '/config');
+  const data = await resConfig.json();
+  console.log('Evento:', data.event.title, 'Fecha:', data.event.date);
+&#125;
+
+// 2. Identificar Invitado por Email
+async function identificarInvitado(email) &#123;
+  const res = await fetch(API_BASE + '/guest/identify', &#123;
+    method: 'POST',
+    headers: &#123; 'Content-Type': 'application/json' &#125;,
+    body: JSON.stringify(&#123; email &#125;)
+  &#125;);
+  const data = await res.json();
+  guestToken = data.guestSessionToken;
+  return data;
+&#125;
+
+// 3. Enviar Confirmación RSVP
+async function enviarRSVP(guestId, respuesta, acompanantes, comida) &#123;
+  const res = await fetch(API_BASE + '/rsvp', &#123;
+    method: 'POST',
+    headers: &#123;
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + guestToken
+    &#125;,
+    body: JSON.stringify(&#123; guest: guestId, response: respuesta, companions: acompanantes, dietaryRestrictions: comida &#125;)
+  &#125;);
+  return await res.json();
+&#125;</pre>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 6: CATÁLOGO DE WIDGETS E IFRAMES EMBEBIBLES -->
+  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Catálogo de Widgets e iFrames Embebibles (/new/ Embeds)
+        </h3>
+        <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-3);">
+          Copia y pega cualquiera de estos snippets HTML en tu propia página web (Webflow, WordPress, Wix o HTML
+          nativo).
+        </p>
+      </div>
+      <span class="nw-pill gold" style="font-weight:700;">10 Widgets Listos</span>
+    </div>
+
+    <!-- SECCIÓN DIV + SCRIPT (KYNDRA-EMBED.JS) -->
+    <div
+      style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:12px; padding:18px; margin-bottom:20px;">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <div>
+            <h4 style="margin:0; font-size:15px; font-weight:700; color:var(--nw-text);">Widget RSVP (Div + Script de
+              Carga Automática)</h4>
+            <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-3);">Inserta el widget usando contenedores
+              HTML nativos y el script universal de KyndraSoft.</p>
+          </div>
+        </div>
+        <span class="nw-pill success" style="font-weight:700;">Webflow & WordPress</span>
+      </div>
+
+      <textarea readonly rows="2"
+        style="width:100%; font-family:monospace; font-size:12px; line-height:1.45; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:8px; padding:10px; color:var(--nw-accent); resize:none;">{{ divScriptSnippet }}</textarea>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap:16px;">
+      <div *ngFor="let widget of newEmbedWidgets"
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:12px; padding:16px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:15px; color:var(--nw-text);">{{ widget.label }}</strong>
+            <span class="nw-pill accent" style="font-size:11px; font-weight:700;">/new/embed</span>
+          </div>
+
+          <p style="font-size:12px; color:var(--nw-text-3); word-break:break-all; margin:0 0 8px 0;">
+            <strong style="color:var(--nw-text-2);">URL:</strong> {{ widget.url }}
+          </p>
+
+          <textarea readonly rows="3"
+            style="width:100%; font-family:monospace; font-size:11.5px; line-height:1.4; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:6px; padding:8px; color:var(--nw-text-2); resize:none; margin-bottom:10px;">{{ widget.snippet }}</textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:4px;">
+          <a class="nw-btn nw-btn-ghost nw-btn-sm" [href]="widget.url" target="_blank" rel="noreferrer"
+            style="font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span>Probar Widget /new/</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 7: NOSOTROS SUBIMOS TU PÁGINA (ALOJAMIENTO HTML/CSS) -->
+  <div class="nw-card" style="margin-bottom:16px; border-top: 4px solid var(--nw-accent, #c09c78); padding:24px;">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+        </svg>
+        <div>
+          <h3 style="margin:0; font-size:18px; font-weight:700;">Nosotros subimos tu página (HTML / CSS)</h3>
+          <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-2);">Sube o pega tus archivos HTML y CSS
+            personalizados. Nuestro validador verificará la estructura y podrás previsualizar y enviar tu diseño como
+            plantilla para aprobación y publicación.</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span class="nw-pill accent" style="font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Alojamiento HTML/CSS
+        </span>
+      </div>
+    </div>
+
+    <!-- BANNER DE ESTADO DE LA SOLICITUD / PLANTILLA -->
+    <div *ngIf="currentCustomSubmission" style="margin-top:14px; margin-bottom:16px;">
+      <!-- ESTADO: APROBADO Y PUBLICADO -->
+      <div *ngIf="currentCustomSubmission.status === 'approved'"
+        style="background:rgba(34, 197, 94, 0.08); border:1px solid rgba(34, 197, 94, 0.35); border-radius:var(--nw-radius-sm); padding:16px; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div
+              style="width:36px; height:36px; border-radius:50%; background:rgba(34,197,94,0.2); display:flex; align-items:center; justify-content:center; color:#16a34a;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div>
+              <strong style="color:#15803d; font-size:15px;">¡Página Personalizada Aprobada y Activa!</strong>
+              <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-2);">Tu diseño HTML/CSS ha sido aprobado
+                por el administrador y está publicado en el enlace oficial de la invitación.</p>
+            </div>
+          </div>
+          <span class="nw-pill success" style="font-weight:700;">Publicada en Vivo</span>
+        </div>
+
+        <div *ngIf="approvedInvitationUrl"
+          style="background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:8px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent); flex-shrink:0;">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span
+              style="font-family:monospace; font-size:13px; color:var(--nw-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{
+              approvedInvitationUrl }}</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyPublicUrl(approvedInvitationUrl)"
+              style="display:inline-flex; align-items:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copiar</span>
+            </button>
+            <a [href]="approvedInvitationUrl" target="_blank" class="nw-btn nw-btn-primary nw-btn-sm"
+              style="display:inline-flex; align-items:center; gap:5px; text-decoration:none;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <span>Ver Invitación</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO: PENDIENTE DE REVISIÓN -->
+      <div *ngIf="currentCustomSubmission.status === 'pending'"
+        style="background:rgba(234, 179, 8, 0.08); border:1px solid rgba(234, 179, 8, 0.35); border-radius:var(--nw-radius-sm); padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div
+            style="width:36px; height:36px; border-radius:50%; background:rgba(234,179,8,0.2); display:flex; align-items:center; justify-content:center; color:#b45309;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div>
+            <strong style="color:#b45309; font-size:15px;">Solicitud enviada — En Revisión por el Administrador</strong>
+            <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-2);">Tu página HTML/CSS fue registrada el {{
+              currentCustomSubmission.submittedAt | date:'short' }}. El administrador revisará el código y lo aprobará
+              para su publicación.</p>
+          </div>
+        </div>
+        <span class="nw-pill warning" style="font-weight:700;">Pendiente de Aprobación</span>
+      </div>
+
+      <!-- ESTADO: RECHAZADO / AJUSTES REQUERIDOS -->
+      <div *ngIf="currentCustomSubmission.status === 'rejected'"
+        style="background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.35); border-radius:var(--nw-radius-sm); padding:16px; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div
+              style="width:36px; height:36px; border-radius:50%; background:rgba(239,68,68,0.2); display:flex; align-items:center; justify-content:center; color:#dc2626;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <div>
+              <strong style="color:#b91c1c; font-size:15px;">Ajustes Requeridos por el Administrador</strong>
+              <p *ngIf="currentCustomSubmission.adminFeedback"
+                style="margin:4px 0 0; font-size:13px; color:var(--nw-text);">
+                <strong>Motivo/Comentarios:</strong> {{ currentCustomSubmission.adminFeedback }}
+              </p>
+            </div>
+          </div>
+          <span class="nw-pill danger" style="font-weight:700;">Ajustes Solicitados</span>
+        </div>
+        <p style="margin:4px 0 0; font-size:12.5px; color:var(--nw-text-2);">Puedes modificar el código HTML/CSS abajo y
+          presionar "Solicitar Publicación por KyndraSoft" nuevamente para reenviar la revisión.</p>
+      </div>
+    </div>
+
+    <!-- Metadatos de la Plantilla Personalizada -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-top:14px;">
+      <div>
+        <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Nombre del Diseño / Plantilla</label>
+        <input class="nw-input" [(ngModel)]="customTemplateName"
+          [placeholder]="'Ej. Diseño Especial ' + (event?.title || '')" style="height:40px;">
+      </div>
+      <div>
+        <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Diseñador / Contacto</label>
+        <input class="nw-input" [(ngModel)]="customTemplateAuthor" placeholder="Ej. Nombre del solicitante o diseñador"
+          style="height:40px;">
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Notas o Instrucciones para el Administrador
+          (Opcional)</label>
+        <input class="nw-input" [(ngModel)]="customTemplateNotes"
+          placeholder="Ej. Requiere reproducir audio automáticamente en hero, fuentes Google Fonts incluidas en header..."
+          style="height:40px;">
+      </div>
+    </div>
+
+    <!-- Archivos e Ingreso de Código -->
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:16px; margin-top:16px;">
+      <!-- HTML Editor & File Upload -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="nw-label" style="font-weight:700; margin:0; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Código HTML (.html)
+          </label>
+          <label class="nw-btn nw-btn-ghost nw-btn-sm"
+            style="cursor:pointer; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span>Cargar archivo HTML</span>
+            <input type="file" accept=".html,.htm" (change)="onCustomHtmlFileSelected($event)" style="display:none;">
+          </label>
+        </div>
+        <textarea class="nw-input" rows="8" [(ngModel)]="customHtmlCode"
+          placeholder="<!DOCTYPE html>&#10;<html>&#10;  <head>...</head>&#10;  <body>...</body>&#10;</html>"
+          style="font-family:monospace; font-size:12.5px; line-height:1.45; white-space:pre; resize:vertical; background:var(--nw-surface);"></textarea>
+      </div>
+
+      <!-- CSS Editor & File Upload -->
+      <div
+        style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:16px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="nw-label" style="font-weight:700; margin:0; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="4"></circle>
+              <line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line>
+              <line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line>
+              <line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line>
+              <line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line>
+            </svg>
+            Estilos CSS (.css)
+          </label>
+          <label class="nw-btn nw-btn-ghost nw-btn-sm"
+            style="cursor:pointer; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span>Cargar archivo CSS</span>
+            <input type="file" accept=".css" (change)="onCustomCssFileSelected($event)" style="display:none;">
+          </label>
+        </div>
+        <textarea class="nw-input" rows="8" [(ngModel)]="customCssCode"
+          placeholder="body {&#10;  background: #1f2a44;&#10;  color: #ffffff;&#10;}"
+          style="font-family:monospace; font-size:12.5px; line-height:1.45; white-space:pre; resize:vertical; background:var(--nw-surface);"></textarea>
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; align-items:center;">
+      <button class="nw-btn nw-btn-primary" type="button" (click)="validateCustomHtmlCss()"
+        [disabled]="validatingCustomCode" style="display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>{{ validatingCustomCode ? 'Validando...' : 'Validar Código HTML & CSS' }}</span>
+      </button>
+      <button class="nw-btn nw-btn-ghost" type="button" (click)="showCustomPagePreviewModal = true"
+        [disabled]="!customHtmlCode.trim()" style="display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span>Previsualizar Página Web</span>
+      </button>
+      <button class="nw-btn nw-btn-gold" type="button" (click)="requestCustomPagePublish()"
+        [disabled]="submittingCustomTemplate || !customHtmlCode.trim()"
+        style="margin-left:auto; display:inline-flex; align-items:center; gap:6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        <span>{{ submittingCustomTemplate ? 'Enviando Solicitud...' : (currentCustomSubmission?.status === 'pending' ?
+          'Actualizar Solicitud' : 'Solicitar Publicación por KyndraSoft') }}</span>
+      </button>
+    </div>
+
+    <!-- Resultado de la Validación -->
+    <div *ngIf="customValidationResult"
+      style="margin-top:16px; padding:16px; border-radius:var(--nw-radius-sm); border:1px solid;"
+      [style.borderColor]="customValidationResult.valid ? 'rgba(74, 127, 98, 0.4)' : 'rgba(239, 68, 68, 0.4)'"
+      [style.background]="customValidationResult.valid ? 'rgba(74, 127, 98, 0.06)' : 'rgba(239, 68, 68, 0.06)'">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+        <strong style="font-size:14.5px;"
+          [style.color]="customValidationResult.valid ? 'var(--nw-success)' : 'var(--nw-danger)'">
+          {{ customValidationResult.message }}
+        </strong>
+        <span class="nw-pill" [class.success]="customValidationResult.valid"
+          [class.danger]="!customValidationResult.valid" style="font-weight:700;">
+          Puntuación de Código: {{ customValidationResult.score }} / 100
+        </span>
+      </div>
+
+      <div
+        style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:10px; font-size:12.5px;">
+        <div><strong>Tamaño HTML:</strong> {{ customValidationResult.details.htmlSize }}</div>
+        <div><strong>Reglas CSS:</strong> {{ customValidationResult.details.cssRulesCount }} reglas</div>
+        <div>
+          <strong>Estructura DOCTYPE:</strong>
+          <span [style.color]="customValidationResult.details.hasDoctype ? 'var(--nw-success)' : 'var(--nw-warning)'"
+            style="margin-left:4px; font-weight:600;">
+            {{ customValidationResult.details.hasDoctype ? 'Presente' : 'Opcional' }}
+          </span>
+        </div>
+        <div>
+          <strong>Estructura BODY:</strong>
+          <span [style.color]="customValidationResult.details.hasBody ? 'var(--nw-success)' : 'var(--nw-warning)'"
+            style="margin-left:4px; font-weight:600;">
+            {{ customValidationResult.details.hasBody ? 'Completo' : 'Sin etiqueta body' }}
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="customValidationResult.details.metaTagsFound.length"
+        style="font-size:12px; color:var(--nw-text-2); margin-top:6px;">
+        <strong>Etiquetas detectadas:</strong> {{ customValidationResult.details.metaTagsFound.join(' · ') }}
+      </div>
+
+      <ul *ngIf="customValidationResult.warnings.length"
+        style="margin:8px 0 0; padding-left:20px; font-size:12.5px; color:var(--nw-warning);">
+        <li *ngFor="let w of customValidationResult.warnings">{{ w }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MODAL: GENERAR NUEVO ENLACE O TOKEN DE ACCESO (PATRÓN UNIVERSAL DE DISEÑO) -->
+  <div class="nw-modal-backdrop" *ngIf="showCreateLinkModal" (click)="showCreateLinkModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()"
+      style="max-width: 580px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: var(--nw-radius, 16px); background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); box-shadow: var(--nw-shadow-lg);">
+
+      <!-- Header del Modal -->
+      <div
+        style="padding: 18px 24px; border-bottom: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center;">
+        <h3
+          style="margin: 0; font-size: 19px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <path
+              d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+            </path>
+          </svg>
+          Generar Enlace / Token de Acceso
+        </h3>
+        <button type="button" (click)="showCreateLinkModal = false"
+          style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nw-text-3);">✕</button>
+      </div>
+
+      <!-- Body del Modal -->
+      <div
+        style="padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--nw-bg, #faf7f2);">
+
+        <label class="nw-label">
+          Rol del Enlace o Token <span style="color: var(--nw-danger);">*</span>
+          <select class="nw-select" [(ngModel)]="newLinkRole"
+            style="height: 42px; padding: 0 28px 0 12px; margin-top: 4px; width: 100%; box-sizing: border-box;">
+            <option value="check_in">Recepción / Check-in QR en Puerta (check_in)</option>
+            <option value="dj">Cabina DJ / Solicitudes Musicales (dj)</option>
+            <option value="album_review">Moderador de Fotos del Álbum (album_review)</option>
+            <option value="photographer">Fotógrafo Oficial del Evento (photographer)</option>
+            <option value="client_view">Vista Anfitrión / Novios (client_view)</option>
+            <option value="guest_ops">Operaciones Generales (guest_ops)</option>
+            <option value="integration_api">Token de Integración API Headless (integration_api)</option>
+          </select>
+        </label>
+
+        <label class="nw-label">
+          Etiqueta o Nombre Asignado (Opcional)
+          <input class="nw-input" [(ngModel)]="newLinkLabel"
+            placeholder="Ej. Puerta Principal, DJ Alex, App React Webflow" style="height: 42px; margin-top: 4px;">
+        </label>
+
+        <label class="nw-label">
+          Vigencia del Enlace (en días) <span style="color: var(--nw-danger);">*</span>
+          <select class="nw-select" [(ngModel)]="newLinkDays"
+            style="height: 42px; padding: 0 28px 0 12px; margin-top: 4px; width: 100%; box-sizing: border-box;">
+            <option [value]="7">7 días</option>
+            <option [value]="15">15 días</option>
+            <option [value]="30">30 días (Recomendado)</option>
+            <option [value]="60">60 días</option>
+            <option [value]="90">90 días</option>
+            <option [value]="365">1 año</option>
+          </select>
+        </label>
+
+        <div
+          style="background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:10px; padding:12px; font-size:12.5px; color:var(--nw-text-2); line-height:1.5; display:flex; align-items:flex-start; gap:8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"
+            style="color: var(--nw-accent); flex-shrink: 0; margin-top: 2px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <div>
+            <strong>Nota de Seguridad:</strong> El enlace generado permite acceso directo sin usuario ni contraseña.
+            Podrás revocar el acceso en cualquier momento desde esta pestaña.
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer de Acciones -->
+      <div
+        style="padding: 16px 24px; background: var(--nw-surface, #ffffff); border-top: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center;">
+        <button class="nw-btn nw-btn-ghost" type="button" (click)="showCreateLinkModal = false">Cancelar</button>
+        <button class="nw-btn nw-btn-primary" type="button" [disabled]="creatingLink" (click)="submitCreateAccessLink()"
+          style="display:inline-flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2M3 21l8-8m0 0l4-4a5.5 5.5 0 1 0-7.78-7.78l-4 4a5.5 5.5 0 0 0 7.78 7.78z">
+            </path>
+          </svg>
+          <span>{{ creatingLink ? 'Generando...' : 'Generar Enlace' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Previsualización en Vivo -->
+  <div class="nw-modal-backdrop" *ngIf="showCustomPagePreviewModal" (click)="showCustomPagePreviewModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()"
+      style="max-width:980px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:20px;">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2 style="margin:0; font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Previsualizador de Página Web HTML/CSS
+          </h2>
+          <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-3);">Así es como tus invitados visualizarán tu
+            sitio web personalizado.</p>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="customPreviewViewport === 'desktop'"
+            [class.nw-btn-ghost]="customPreviewViewport !== 'desktop'" (click)="customPreviewViewport = 'desktop'"
+            style="display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>Escritorio</span>
+          </button>
+          <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="customPreviewViewport === 'tablet'"
+            [class.nw-btn-ghost]="customPreviewViewport !== 'tablet'" (click)="customPreviewViewport = 'tablet'"
+            style="display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>Tablet</span>
+          </button>
+          <button class="nw-btn nw-btn-sm" type="button" [class.nw-btn-primary]="customPreviewViewport === 'mobile'"
+            [class.nw-btn-ghost]="customPreviewViewport !== 'mobile'" (click)="customPreviewViewport = 'mobile'"
+            style="display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>Móvil</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showCustomPagePreviewModal = false"
+            style="display:inline-flex; align-items:center; gap:4px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>Cerrar</span>
+          </button>
+        </div>
+      </div>
+
+      <div
+        style="flex:1; background:#000000; border-radius:var(--nw-radius-sm); overflow:hidden; display:flex; justify-content:center; align-items:center; padding:10px;">
+        <iframe [srcdoc]="getCustomPageSafeSrcdoc()"
+          style="background:#ffffff; border:none; transition: width 0.3s ease, height 0.3s ease; border-radius:6px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);"
+          [style.width]="customPreviewViewport === 'mobile' ? '375px' : (customPreviewViewport === 'tablet' ? '768px' : '100%')"
+          [style.height]="customPreviewViewport === 'mobile' ? '667px' : '100%'">
+        </iframe>
+      </div>
+    </div>
+  </div>
+
+</section>

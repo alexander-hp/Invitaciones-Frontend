@@ -162,3 +162,287 @@ th { color: #607080; font-size: 13px; }
 .package-card { display: grid; gap: 8px; border: 1px solid #dde4d7; border-radius: 8px; padding: 12px; background: #fafcf8; }
 .package-card span { color: #172033; font-weight: 800; }
 .package-card small { color: #607080; line-height: 1.45; }
+
+/* Modern Toggle Switch */
+.nw-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #fafcf8;
+  border: 1px solid #dde4d7;
+  border-radius: 10px;
+}
+.nw-toggle-info strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #172033;
+}
+.nw-toggle-info span {
+  display: block;
+  font-size: 12px;
+  color: #607080;
+  margin-top: 2px;
+}
+.nw-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.nw-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.nw-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: .3s;
+  border-radius: 26px;
+}
+.nw-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.nw-switch input:checked + .nw-slider {
+  background-color: #10b981;
+}
+.nw-switch input:checked + .nw-slider:before {
+  transform: translateX(22px);
+}
+
+/* Toast Floating Notifications */
+.nw-toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 440px;
+  width: calc(100vw - 48px);
+  pointer-events: none;
+}
+
+.nw-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  animation: nwToastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #1e293b;
+}
+
+@keyframes nwToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nw-toast.success {
+  border-left: 4px solid #10b981;
+  background: #f0fdf4;
+  color: #065f46;
+}
+
+.nw-toast.error {
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.nw-toast.info {
+  border-left: 4px solid #3b82f6;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.nw-toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  margin-left: auto;
+}
+.nw-toast-close:hover {
+  opacity: 1;
+}
+
+/* Editor Header (Static flow so top header scrolls away and only bottom bar floats) */
+.nw-editor-sticky-header {
+  position: relative;
+  background: #ffffff;
+  padding: 16px 24px;
+  margin: -24px -24px 24px -24px;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nw-editor-sticky-header .nw-btn-primary {
+  background: #1f2a44 !important;
+  color: #ffffff !important;
+  border: 1px solid #1f2a44 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 6px rgba(31, 42, 68, 0.18);
+  transition: all 0.2s ease;
+}
+.nw-editor-sticky-header .nw-btn-primary:hover {
+  background: #111827 !important;
+  border-color: #111827 !important;
+}
+
+.nw-editor-sticky-header .nw-btn-ghost {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+.nw-editor-sticky-header .nw-btn-ghost:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.nw-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.nw-back-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateX(-3px);
+}
+
+.nw-floating-save-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+
+.nw-floating-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(221, 228, 215, 0.9);
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0,0,0,0.06);
+  animation: nwSlideUp 0.3s ease-out;
+}
+
+@keyframes nwSlideUp {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.nw-floating-save-btn {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(16,185,129,0.3) !important;
+  transition: all 0.2s ease !important;
+}
+.nw-floating-save-btn:hover {
+  background: #059669 !important;
+  transform: scale(1.03);
+}
+
+/* -- Responsive: Editor Header & Floating Save Bar -- */
+@media (max-width: 768px) {
+  .nw-editor-sticky-header {
+    margin: -16px -16px 16px -16px;
+    padding: 12px 16px;
+  }
+
+  .nw-floating-save-bar {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .nw-floating-bar-content {
+    border-radius: 0;
+    padding: 10px 14px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .nw-editor-sticky-header {
+    margin: -12px -12px 12px -12px;
+    padding: 10px 12px;
+  }
+
+  .nw-floating-bar-content {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+}
+

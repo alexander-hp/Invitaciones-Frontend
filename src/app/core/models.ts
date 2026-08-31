@@ -3,14 +3,25 @@ export type EventMode = 'invitation' | 'external_dashboard';
 export type EventStatus = 'draft' | 'published' | 'archived';
 export type InvitationStatus = 'draft' | 'published' | 'unpublished';
 export type RsvpResponse = 'confirmed' | 'declined' | 'maybe';
-export type InvitationAccessMode = 'open' | 'guest_list';
+export type InvitationAccessMode = 'open' | 'public' | 'guest_list' | 'specific_users';
+export type UserRole = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'admin';
+export type AccountType = 'client' | 'organizer' | 'venue_owner' | 'vendor' | 'planner' | 'staff';
+export type AuthProvider = 'password' | 'google' | 'facebook' | 'apple';
+export type EventMemberRole = 'owner' | 'organizer' | 'client' | 'venue_owner' | 'vendor' | 'staff' | 'dj' | 'photographer';
+export type EventMemberStatus = 'invited' | 'active' | 'disabled';
+export type EventPermission =
+  'view_event' | 'edit_event' | 'view_metrics' | 'manage_guests' | 'manage_tables' |
+  'check_in' | 'review_album' | 'review_dedications' | 'manage_songs' | 'view_payments';
 
 export interface User {
   _id?: string;
   id?: string;
   name: string;
   email: string;
-  role: 'client' | 'organizer' | 'admin';
+  role: UserRole;
+  accountType?: AccountType;
+  avatarUrl?: string;
+  authProviders?: AuthProvider[];
   plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
   subscriptionPlan?: PaymentPackage;
   subscriptionStatus?: SubscriptionStatus;
@@ -20,6 +31,20 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface SocialLoginPayload {
+  provider: Exclude<AuthProvider, 'password'>;
+  idToken?: string;
+  accessToken?: string;
+  profile?: {
+    email: string;
+    name?: string;
+    providerUserId?: string;
+    avatarUrl?: string;
+  };
+  role?: Exclude<UserRole, 'admin'>;
+  accountType?: AccountType;
 }
 
 export interface MessageResponse {
@@ -80,13 +105,41 @@ export interface EventModel {
     name?: string;
     address?: string;
     mapUrl?: string;
+    width?: number;
+    height?: number;
   };
   agenda?: EventAgendaItem[];
   plan?: PaymentPackage | 'basic' | 'premium' | 'organizer';
   planActivatedAt?: string;
   status: EventStatus;
+  access?: { owner: boolean; role?: EventMemberRole; permissions: EventPermission[] };
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface EventMemberModel {
+  _id?: string;
+  id?: string;
+  user?: Partial<User> | string;
+  email: string;
+  name?: string;
+  role: EventMemberRole;
+  permissions: EventPermission[];
+  status: EventMemberStatus;
+  invitedAt?: string;
+  inviteTokenExpiresAt?: string;
+  inviteEmailSentAt?: string;
+  acceptedAt?: string;
+  lastUsedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventMemberPayload {
+  email: string;
+  name?: string;
+  role: EventMemberRole;
+  permissions?: EventPermission[];
 }
 
 export interface EventPayload {
@@ -105,6 +158,8 @@ export interface EventPayload {
     name?: string;
     address?: string;
     mapUrl?: string;
+    width?: number;
+    height?: number;
   };
   agenda?: EventAgendaItem[];
   status?: EventStatus;
@@ -118,6 +173,29 @@ export interface ExternalPortalSettings {
   showLocation?: boolean;
   brandLabel?: string;
   welcomeMessage?: string;
+}
+
+export interface SectionSettings {
+  story?: boolean;
+  locations?: boolean;
+  itinerary?: boolean;
+  dressCode?: boolean;
+  rsvp?: boolean;
+  giftRegistry?: boolean;
+  digitalEnvelope?: boolean;
+  lodging?: boolean;
+  gallery?: boolean;
+  guestAlbum?: boolean;
+  dedications?: boolean;
+  backgroundMusic?: boolean;
+  songRequests?: boolean;
+}
+
+export interface SongRequestSettings {
+  enabled?: boolean;
+  maxRequestsPerGuest?: number;
+  allowDedications?: boolean;
+  requireApproval?: boolean;
 }
 
 export interface ExternalContent {
@@ -140,15 +218,34 @@ export interface ExternalContent {
     order?: number;
   }>;
   rsvpSettings?: RsvpSettings;
-  songRequestSettings?: {
-    enabled?: boolean;
-    maxRequestsPerGuest?: number;
-    allowDedications?: boolean;
+  songRequestSettings?: SongRequestSettings;
+  moderationSettings?: {
+    notifyOnReview?: boolean;
+    autoApproveRoles?: string[];
+    autoApproveGroups?: string[];
+    autoApproveEmails?: string[];
+    autoApprovePhones?: string[];
+    autoApproveAlbum?: boolean;
+    autoApproveSongs?: boolean;
+    autoApproveDedications?: boolean;
   };
   giftRegistry?: GiftRegistryItem[];
   digitalEnvelope?: DigitalEnvelope;
   giftSettings?: GiftSettings;
   dedicationSettings?: DedicationSettings;
+}
+
+export interface SectionMusicSettings {
+  global?: string;
+  rsvp?: string;
+  dressCode?: string;
+  locations?: string;
+  gallery?: string;
+  gifts?: string;
+  dedications?: string;
+  lodging?: string;
+  itinerary?: string;
+  [key: string]: string | undefined;
 }
 
 export interface InvitationContent {
@@ -161,6 +258,7 @@ export interface InvitationContent {
     accent?: string;
   };
   musicUrl?: string;
+  sectionMusic?: SectionMusicSettings;
   coverImageUrl?: string;
   gallery?: string[];
   itinerary?: Array<{ time?: string; title?: string; description?: string }>;
@@ -170,11 +268,87 @@ export interface InvitationContent {
   digitalEnvelope?: DigitalEnvelope;
   giftSettings?: GiftSettings;
   dedicationSettings?: DedicationSettings;
+  songRequestSettings?: SongRequestSettings;
+  sectionSettings?: SectionSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;
   lodging?: Array<{ name?: string; description?: string; url?: string }>;
+  storyTitle?: string;
+  storyBody?: string;
+  template?: string;
+  customHtml?: string;
+  customCss?: string;
+  customPageApproved?: boolean;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
+  editedTexts?: Record<string, string>;
+  sourceTemplateKey?: string;
+  activeCustomTemplateId?: string;
+}
+
+export interface CustomTemplateSubmission {
+  id: string;
+  _id?: string;
+  eventId?: string;
+  eventTitle?: string;
+  eventSlug?: string;
+  eventType?: EventType;
+  invitationId?: string;
+  name: string;
+  description?: string;
+  htmlCode: string;
+  cssCode: string;
+  authorName?: string;
+  authorEmail?: string;
+  notes?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  score?: number;
+  submittedAt: string;
+  reviewedAt?: string;
+  adminFeedback?: string;
+  publicUrl?: string;
+  sourceTemplateKey?: string;
+  editedTexts?: Record<string, string>;
+}
+
+export interface AiTemplateGenerateRequest {
+  eventId?: string;
+  style: string;
+  palette?: { primary?: string; secondary?: string; accent?: string };
+  vibe?: string;
+  sections?: string[];
+  customPrompt?: string;
+}
+
+export interface AiTemplateRefineRequest {
+  currentHtml: string;
+  currentCss?: string;
+  userFeedback: string;
+  eventId?: string;
+}
+
+export interface AiTemplateResult {
+  name: string;
+  description: string;
+  html: string;
+  css: string;
+  features?: string[];
+}
+
+export interface AiTemplateResponse {
+  success: boolean;
+  template: AiTemplateResult;
+  message?: string;
+}
+
+export interface AiTemplatePromptPreviewResponse {
+  success: boolean;
+  isPreview: boolean;
+  promptPreview: {
+    systemInstruction: string;
+    userPrompt: string;
+  };
+  message?: string;
 }
 
 export interface RsvpSettings {
@@ -183,8 +357,19 @@ export interface RsvpSettings {
   allowChangesUntilDeadline?: boolean;
   declineRequiresConfirmation?: boolean;
   reminderDaysBeforeDeadline?: number;
+  identityMethods?: Array<'email' | 'phone'>;
+  allowCompanionsDefault?: boolean;
+  defaultAllowedCompanions?: number;
+  maxAttendees?: number;
+  allowedGuestIds?: string[];
+  allowedRoles?: string[];
+  allowedGroups?: string[];
+  allowedEmails?: string[];
+  allowedPhones?: string[];
   customQuestions?: RsvpCustomQuestion[];
 }
+
+export type InvitationSectionSettings = SectionSettings;
 
 export interface RsvpCustomQuestion {
   key?: string;
@@ -233,6 +418,7 @@ export interface RsvpPayload {
   customAnswers?: Array<{ key: string; label?: string; value?: string | number | boolean | null }>;
   message?: string;
   declineConfirmed?: boolean;
+  phone?: string;
   phoneCountryCode?: string;
   phoneNationalNumber?: string;
 }
@@ -392,6 +578,8 @@ export interface GuestPayload {
   seatLabel?: string;
   companions?: GuestCompanion[];
   allowedCompanions?: number;
+  checkedIn?: boolean;
+  checkedInAt?: string;
 }
 
 export interface GuestCompanion {
@@ -400,6 +588,8 @@ export interface GuestCompanion {
   seatLabel?: string;
   checkedIn?: boolean;
   checkedInAt?: string;
+  dietaryRestrictions?: string;
+  confirmed?: boolean;
 }
 
 export type TemplateTier = 'free' | 'premium';
@@ -407,6 +597,7 @@ export type TemplateTier = 'free' | 'premium';
 export interface TemplateModel {
   _id?: string;
   id?: string;
+  key?: string;
   name: string;
   eventType: EventType;
   tier: TemplateTier;
@@ -462,6 +653,7 @@ export interface SongRequestModel {
   thumbnailUrl?: string;
   previewUrl?: string;
   durationMs?: number;
+  sortOrder?: number;
   status: SongRequestStatus;
   reviewedAt?: string;
   playedAt?: string;
@@ -567,6 +759,19 @@ export interface CheckoutResponse {
   message?: string;
 }
 
+export type TableShape =
+  | 'round'
+  | 'rect'
+  | 'oval'
+  | 'square'
+  | 'dance_floor'
+  | 'stage_dj'
+  | 'bar'
+  | 'gift_table'
+  | 'cake_table'
+  | 'photobooth'
+  | 'entrance';
+
 export interface EventTableModel {
   _id?: string;
   id?: string;
@@ -574,6 +779,13 @@ export interface EventTableModel {
   capacity: number;
   notes?: string;
   order?: number;
+  x?: number;
+  y?: number;
+  shape?: TableShape;
+  width?: number;
+  height?: number;
+  floor?: number;
+  floorName?: string;
   occupied?: number;
   available?: number;
   overCapacity?: boolean;
@@ -587,19 +799,44 @@ export interface EventTableModel {
   }>;
 }
 
+export type AutoAssignStrategy = 'fill_order' | 'by_group';
+export type TableAutoAssignStrategy = AutoAssignStrategy;
+
+export interface AutoAssignTablesPayload {
+  strategy?: AutoAssignStrategy;
+  includeStatuses?: (GuestStatus | string)[];
+  overwrite?: boolean;
+}
+export type TableAutoAssignPayload = AutoAssignTablesPayload;
+
+export interface AutoAssignTablesResponse {
+  assigned: Array<{
+    guest: { id: string; name: string; group?: string; seats: number };
+    table: string;
+    seatLabel?: string;
+  }>;
+  skipped: Array<{
+    guest: { id: string; name: string; group?: string; seats: number };
+    reason: string;
+  }>;
+  tables: EventTableModel[];
+}
+
 export interface StaffCheckInSession {
   event: Pick<EventModel, 'title' | 'date' | 'venue'>;
   guests: GuestModel[];
   expiresAt: string;
 }
 
-export type EventAccessRole = 'check_in' | 'album_review' | 'client_view' | 'guest_ops';
+export type EventAccessRole = 'check_in' | 'album_review' | 'photographer' | 'album_view' | 'client_view' | 'guest_ops' | 'dj' | 'integration_api';
 
 export interface EventAccessLinkModel {
   id?: string;
   _id?: string;
   role: EventAccessRole;
   label?: string;
+  tokenPreview?: string;
+  accessToken?: string;
   expiresAt: string;
   revokedAt?: string;
   lastUsedAt?: string;
@@ -615,6 +852,7 @@ export interface EventAccessSession {
   rsvps: RsvpModel[];
   tables: EventTableModel[];
   albumAssets: AlbumAssetModel[];
+  songRequests?: SongRequestModel[];
   expiresAt: string;
 }
 
@@ -708,6 +946,7 @@ export interface AlbumAssetModel {
   uploaderEmail?: string;
   url: string;
   status: 'pending' | 'approved' | 'rejected';
+  tags?: string[];
   reviewedAt?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -727,3 +966,45 @@ export interface SongLookupResponse {
     artist?: string;
   };
 }
+
+export type EventLogCategory = 'guest' | 'table' | 'rsvp' | 'album' | 'music' | 'dedication' | 'event' | 'access' | 'communication' | 'all';
+
+export interface EventLogActor {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+}
+
+export interface EventLogModel {
+  _id?: string;
+  id?: string;
+  event: string | { _id?: string; id?: string; title?: string; date?: string; venue?: string; type?: string };
+  actorType: 'user' | 'guest' | 'staff' | 'system';
+  actor?: EventLogActor;
+  category: 'guest' | 'table' | 'rsvp' | 'album' | 'music' | 'dedication' | 'event' | 'access' | 'communication';
+  action: string;
+  description: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface EventLogSummary {
+  total: number;
+  today: number;
+  byCategory: Record<string, number>;
+}
+
+export interface EventLogResponse {
+  logs: EventLogModel[];
+  events?: Array<{ _id?: string; id?: string; title?: string; date?: string; venue?: string; type?: string }>;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  summary: EventLogSummary;
+}
+

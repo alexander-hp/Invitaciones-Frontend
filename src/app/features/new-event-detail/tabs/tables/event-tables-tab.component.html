@@ -1,0 +1,955 @@
+<!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="tableMessage || tableError">
+  <div *ngIf="tableMessage" class="nw-toast success">
+    <span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+        <path d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z"></path>
+      </svg>
+      {{ tableMessage }}
+    </span>
+    <button type="button" class="nw-toast-close" (click)="tableMessage=''">✕</button>
+  </div>
+  <div *ngIf="tableError" class="nw-toast error">
+    <span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      {{ tableError }}
+    </span>
+    <button type="button" class="nw-toast-close" (click)="tableError=''">✕</button>
+  </div>
+</div>
+
+<section>
+  <!-- Menú de Acciones: Fila 1 Texto | Fila 2 Todos los Botones -->
+  <div
+    style="display:flex; flex-direction:column; gap:16px; margin-bottom:20px; background:var(--nw-surface); padding:18px 20px; border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <!-- Fila 1: Título y Descripción -->
+    <div>
+      <h3 style="margin:0; font-size:20px; color:var(--nw-text); font-weight:800; font-family:var(--nw-font-display);">
+        Organización de mesas</h3>
+      <p style="margin:4px 0 0; font-size:14px; color:var(--nw-text-3)">Administra mesas, asigna invitados directamente
+        a sus lugares o abre el croquis interactivo</p>
+    </div>
+
+    <!-- Fila 2: Todos los Botones Reunidos -->
+    <div
+      style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-top:1px dashed var(--nw-border); padding-top:14px;">
+      <button class="nw-btn nw-btn-primary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
+        (click)="openCreateModal()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nueva Mesa / Elemento
+      </button>
+      <button class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
+        (click)="openAssignModal()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Asignar Invitado
+      </button>
+      <button class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
+        (click)="openAutoAssignModal()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        Auto-asignar
+      </button>
+      <button *ngIf="missingAssignedTables.length > 0" class="nw-btn nw-btn-secondary"
+        style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--nw-accent);"
+        (click)="createMissingAssignedTables()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+        Crear mesas asignadas ({{ missingAssignedTables.length }})
+      </button>
+      <button class="nw-btn nw-btn-ghost"
+        style="padding:10px 18px; font-size:13.5px; font-weight:700; border:1px solid var(--nw-border); background:var(--nw-surface-2); display: inline-flex; align-items: center; gap: 6px;"
+        (click)="goToSeating()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18"></path>
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <path d="M3 9h18"></path>
+          <path d="M3 15h18"></path>
+        </svg>
+        Abrir croquis
+      </button>
+      <button class="nw-btn nw-btn-ghost"
+        style="padding:10px 18px; font-size:13.5px; font-weight:600; color:var(--nw-text-2); display: inline-flex; align-items: center; gap: 6px;"
+        (click)="clearAssignments()" [disabled]="clearingTables || !hasAssignedGuests"
+        title="Desasignar a todos los invitados de sus mesas">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10"></path>
+          <path d="M12 20V4"></path>
+          <path d="M6 20v-6"></path>
+        </svg>
+        {{ clearingTables ? 'Limpiando...' : 'Limpiar mesas' }}
+      </button>
+      <button class="nw-btn nw-btn-danger nw-btn-ghost" style="padding:10px 18px; font-size:13.5px; font-weight:600; display: inline-flex; align-items: center; gap: 6px;"
+        (click)="deleteAllTables()" [disabled]="deletingAllTables || tables.length === 0"
+        title="Borrar todas las mesas creadas en el evento">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        {{ deletingAllTables ? 'Borrando...' : 'Borrar mesas' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="tablesLoading" class="nw-alert info">Cargando mesas...</div>
+
+  <div *ngIf="!tablesLoading && tables.length === 0" class="nw-empty">
+    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); margin-bottom: 12px;">
+      <path d="M12 3v18"></path>
+      <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+      <path d="M3 9h18"></path>
+      <path d="M3 15h18"></path>
+    </svg>
+    <h3>Sin mesas</h3>
+    <p>Crea mesas aquí o en el croquis interactivo.</p>
+  </div>
+
+  <!-- Grid de Tarjetas de Mesas -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px;"
+    *ngIf="!tablesLoading && tables.length > 0">
+    <div class="nw-card" *ngFor="let t of paginatedTables"
+      [style.border-left]="'4px solid ' + (t.overCapacity ? 'var(--nw-danger)' : (t.available === 0 ? 'var(--nw-warning)' : 'var(--nw-success)'))">
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div>
+          <strong style="font-size:16px;">{{ t.name }}</strong>
+          <span *ngIf="t.floorName || (t.floor && t.floor > 1)"
+            style="font-size:11px; color:var(--nw-text-3); display:inline-flex; align-items:center; gap:4px; margin-top:2px;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+              <line x1="9" y1="22" x2="9" y2="16"></line>
+              <line x1="9" y1="16" x2="15" y2="16"></line>
+              <line x1="15" y1="16" x2="15" y2="22"></line>
+              <line x1="9" y1="8" x2="9.01" y2="8"></line>
+              <line x1="15" y1="8" x2="15.01" y2="8"></line>
+              <line x1="9" y1="12" x2="9.01" y2="12"></line>
+              <line x1="15" y1="12" x2="15.01" y2="12"></line>
+            </svg>
+            {{ t.floorName || ('Piso ' + t.floor) }}
+          </span>
+        </div>
+        <div style="display:flex; gap:4px; align-items:center;">
+          <span class="nw-pill" [class.danger]="t.overCapacity" [class.warning]="!t.overCapacity && t.available === 0"
+            [class.success]="!t.overCapacity && (t.available || 0) > 0">{{ t.occupied || 0 }}/{{ t.capacity }}</span>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteTable(t)" style="display:inline-flex; align-items:center; justify-content:center; padding:4px 6px; height: 26px;"
+            title="Eliminar mesa">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="nw-progress" style="margin-bottom:10px;">
+        <div class="nw-progress-fill" [style.width.%]="Math.min(100, ((t.occupied || 0) / t.capacity) * 100)"
+          [style.background]="t.overCapacity ? 'var(--nw-danger)' : ''"></div>
+      </div>
+
+      <!-- Lista de Invitados en la Mesa -->
+      <div *ngIf="t.guests?.length" style="display:grid; gap:6px;">
+        <div *ngFor="let g of t.guests"
+          style="display:flex; align-items:center; gap:8px; font-size:12.5px; padding:4px 8px; background:var(--nw-surface-2); border-radius:6px; border:1px solid var(--nw-border);">
+          <span class="nw-guest-avatar" (click)="openGuestDetailModal(g)" style="cursor:pointer;"
+            title="Ver información del invitado">
+            {{ guestInitials(g.name) }}
+          </span>
+          <div style="display:grid; gap:1px; overflow:hidden; flex:1;">
+            <span style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{ g.name }}</span>
+            <span style="font-size:10px; color:var(--nw-accent); font-weight:600; display:inline-flex; align-items:center; gap:3px;" *ngIf="g.group">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <circle cx="7" cy="7" r="0.5" fill="currentColor"></circle>
+              </svg>
+              {{ g.group }}
+            </span>
+          </div>
+          <span class="nw-pill" style="font-size:10px; font-weight:700;">{{ g.seats }} lugar{{ g.seats !== 1 ? 'es' : '' }}</span>
+          <button class="nw-btn nw-btn-danger nw-btn-sm" style="padding:0 5px; font-size:10px; min-height:22px;"
+            (click)="unassignGuest(g)" title="Desasignar invitado de esta mesa">✕</button>
+        </div>
+      </div>
+
+      <p *ngIf="!t.guests?.length" style="font-size:13px; color:var(--nw-text-3); margin:6px 0;">Sin invitados asignados
+      </p>
+
+      <!-- Botón directo Asignar invitado a esta mesa -->
+      <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--nw-border);">
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openAssignModal(t)"
+          style="width:100%; justify-content:center; font-size:11.5px; font-weight:700; color:var(--nw-accent); border:1px solid var(--nw-border); background:var(--nw-surface); display:inline-flex; align-items:center; gap:4px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Asignar invitado a esta mesa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎛️ Paginación de Mesas -->
+  <div *ngIf="tables.length > tablePageSize"
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 16px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+    <span style="font-size: 13px; color: var(--nw-text-2, #6e6157); font-weight: 500;">
+      Mostrando <strong>{{ (tablePage - 1) * tablePageSize + 1 }}</strong> a <strong>{{ Math.min(tablePage * tablePageSize, tables.length) }}</strong> de <strong>{{ tables.length }}</strong> mesas
+    </span>
+
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <!-- Botón Anterior -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="tablePage === 1" (click)="setTablePage(tablePage - 1)"
+        style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Anterior
+      </button>
+
+      <!-- Números de Página -->
+      <button type="button" *ngFor="let p of getTablePagesArray()" class="nw-btn nw-btn-sm"
+        (click)="setTablePage(p)"
+        [class.nw-btn-primary]="tablePage === p"
+        [class.nw-btn-ghost]="tablePage !== p"
+        style="height: 32px; min-width: 32px; padding: 0 8px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">
+        {{ p }}
+      </button>
+
+      <!-- Botón Siguiente -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="tablePage === totalTablePages" (click)="setTablePage(tablePage + 1)"
+        style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+        Siguiente
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 👤 MODAL DIRECTO PARA ASIGNAR INVITADOS A MESA (MULTI-SELECCIÓN + FILTROS) 👤 -->
+  <div class="nw-modal-backdrop" *ngIf="showAssignGuestModal" (click)="showAssignGuestModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 620px;">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--nw-border); padding-bottom: 12px; margin-bottom: 16px;">
+        <div>
+          <h2
+            style="margin: 0; font-size: 20px; color: var(--nw-text); font-weight: 800; font-family: var(--nw-font-display); display: inline-flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+            Asignar Invitados a Mesa
+          </h2>
+          <span style="font-size: 12px; color: var(--nw-text-3);">
+            Selecciona uno o múltiples invitados y asignalos en lote a la mesa elegida
+          </span>
+        </div>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showAssignGuestModal = false"
+          style="font-size: 16px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Selector de Mesa Destino -->
+        <label class="nw-label" style="margin: 0;">
+          Seleccionar Mesa Destino
+          <select class="nw-select" [(ngModel)]="selectedTableForAssign" style="font-weight: 700;">
+            <option *ngFor="let t of tables" [ngValue]="t">
+              Mesa: {{ t.name }} ({{ t.occupied || 0 }}/{{ t.capacity }} lugares{{ (t.occupied || 0) >= t.capacity ? ' - Llena' : '' }})
+            </option>
+          </select>
+        </label>
+
+        <!-- Barra de Filtros de Invitados -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--nw-surface-2); padding: 12px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+          <div>
+            <label class="nw-label" style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase;">Filtrar por Estado</label>
+            <select class="nw-select nw-select-sm" [(ngModel)]="assignStatusFilter">
+              <option value="all">Todos los estados</option>
+              <option value="confirmed">Confirmados</option>
+              <option value="pending">Pendientes</option>
+              <option value="declined">Rechazados</option>
+            </select>
+          </div>
+          <div>
+            <label class="nw-label" style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase;">Filtrar por Grupo / Familia</label>
+            <select class="nw-select nw-select-sm" [(ngModel)]="assignGroupFilter">
+              <option value="all">Todos los grupos</option>
+              <option *ngFor="let grp of distinctGroups" [value]="grp">{{ grp }}</option>
+            </select>
+          </div>
+          <div style="grid-column: span 2;">
+            <input class="nw-input nw-input-sm" [(ngModel)]="assignSearch"
+              placeholder="Buscar por nombre o grupo de familia..." style="margin: 0;">
+          </div>
+        </div>
+
+        <!-- Alerta Prominente si se Sobrepasa la Capacidad -->
+        <div *ngIf="isOverCapacityWarning" class="nw-alert warning"
+          style="margin: 0; padding: 10px 14px; font-size: 12.5px; border-left: 4px solid var(--nw-danger); display: flex; align-items: flex-start; gap: 10px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-warning); flex-shrink: 0; margin-top: 2px;">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div>
+            <strong>Capacidad sobrepasada en {{ selectedTableForAssign?.name }}:</strong><br>
+            Has seleccionado <strong>{{ selectedGuestIds.length }} invitado(s) (total {{ selectedSeatsCount }}
+              pases/lugares)</strong>, pero a la mesa solo le quedan <strong>{{ selectedTableAvailableSeats }} lugares
+              disponibles</strong>.
+            <span style="color: var(--nw-danger); font-weight: 700; display: block; margin-top: 2px;">
+              Exceso detectado: +{{ overCapacityExcess }} pase(s) de más.
+            </span>
+          </div>
+        </div>
+
+        <!-- Barra de Resumen de Selección y Conteo de Pases -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="color: var(--nw-text-2); font-weight: 600;">
+              Listados: <strong>{{ filteredUnassignedGuests.length }}</strong> •
+              Selección: <strong style="color: var(--nw-accent);">{{ selectedGuestIds.length }} invitado(s) ({{
+                selectedSeatsCount }} pases)</strong>
+            </span>
+            <span *ngIf="selectedTableForAssign" class="nw-pill" [class.danger]="isOverCapacityWarning"
+              [class.success]="!isOverCapacityWarning" style="font-size: 11px; font-weight: 700;">
+              {{ selectedTableAvailableSeats }} libres en {{ selectedTableForAssign.name }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Lista de Invitados con Checkboxes de Selección Múltiple -->
+        <div
+          style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+          <div *ngFor="let g of filteredUnassignedGuests" (click)="toggleGuestSelection(g)"
+            [style.background]="isGuestSelected(g) ? 'rgba(192, 156, 120, 0.15)' : 'var(--nw-surface)'"
+            [style.border-color]="isGuestSelected(g) ? 'var(--nw-accent)' : 'var(--nw-border)'"
+            style="padding: 10px 12px; border-radius: 6px; border: 1px solid var(--nw-border); font-size: 13px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s ease;">
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" [checked]="isGuestSelected(g)"
+                (click)="$event.stopPropagation(); toggleGuestSelection(g)"
+                style="width: 16px; height: 16px; cursor: pointer;">
+              <span class="nw-guest-avatar" style="width: 30px; height: 30px; font-size: 11px;">{{ guestInitials(g.name) }}</span>
+              <div>
+                <strong style="display: block; color: var(--nw-text);">{{ g.name }}</strong>
+                <span *ngIf="g.group" style="font-size: 11px; color: var(--nw-accent); font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <circle cx="7" cy="7" r="0.5" fill="currentColor"></circle>
+                  </svg>
+                  {{ g.group }}
+                </span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="nw-pill" [class.success]="g.status === 'confirmed'" [class.warning]="g.status === 'pending'"
+                [class.danger]="g.status === 'declined'" style="font-size: 10px;">
+                {{ g.status === 'confirmed' ? 'Confirmado' : (g.status === 'declined' ? 'Rechazado' : 'Pendiente') }}
+              </span>
+              <span class="nw-pill" style="font-size: 11px; font-weight: 700;">{{ 1 + (g.allowedCompanions || 0) }}
+                pase{{ (g.allowedCompanions || 0) !== 0 ? 's' : '' }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="filteredUnassignedGuests.length === 0"
+            style="padding: 20px; text-align: center; color: var(--nw-text-3); font-size: 13px;">
+            {{ unassignedGuests.length === 0 ? 'Todos los invitados están asignados a una mesa.' : 'No se encontraron invitados con los filtros seleccionados.' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="nw-modal-actions" style="margin-top: 20px;">
+        <button class="nw-btn nw-btn-ghost" (click)="showAssignGuestModal = false">Cancelar</button>
+        <button class="nw-btn" [class.nw-btn-warning]="isOverCapacityWarning"
+          [class.nw-btn-primary]="!isOverCapacityWarning"
+          [disabled]="selectedGuestIds.length === 0 || !selectedTableForAssign || assigningGuests"
+          (click)="assignSelectedGuestsToTable()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          {{ assigningGuests ? 'Asignando...' : ('Asignar (' + selectedGuestIds.length + ' inv. / ' + selectedSeatsCount + ' pases) a ' + (selectedTableForAssign?.name || 'Mesa')) }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚡ MODAL DE AUTO-ASIGNACIÓN (IDÉNTICO A CROQUIS) ⚡ -->
+  <div class="nw-modal-backdrop" *ngIf="showAutoAssignModal" (click)="showAutoAssignModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 520px;">
+      <h2 style="margin: 0 0 4px; font-size: 20px; font-weight: 700; color: var(--nw-text); display: inline-flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        Acomodar mesas en automático
+      </h2>
+      <p style="font-size: 13px; color: var(--nw-text-3); margin-top: 0; margin-bottom: 16px;">
+        Asigna asientos dinámicamente considerando al invitado principal y sus acompañantes.
+      </p>
+
+      <p *ngIf="autoAssignError" class="nw-alert error" style="margin-bottom: 14px;">{{ autoAssignError }}</p>
+      <p *ngIf="tables.length === 0" class="nw-alert warning" style="margin-bottom: 14px; display: inline-flex; align-items: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        Tu evento aún no tiene mesas creadas. Crea primero tus mesas para que el sistema pueda distribuir a los invitados.
+      </p>
+
+      <div *ngIf="!autoAssignResult" style="display: flex; flex-direction: column; gap: 14px;">
+        <label class="nw-label" style="margin: 0;">
+          Estrategia de Asignación
+          <select class="nw-select" [(ngModel)]="autoAssignForm.strategy" style="font-weight: 700;">
+            <option value="by_group">Por Familia / Grupo (Recomendado)</option>
+            <option value="fill_order">Orden Alfabético</option>
+          </select>
+        </label>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <span class="nw-label" style="margin: 0; font-size: 13px; font-weight: 700; color: var(--nw-text-2);">Incluir invitados con estado:</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <label class="nw-status-chip" [class.active]="autoAssignForm.includeConfirmed">
+              <input type="checkbox" [(ngModel)]="autoAssignForm.includeConfirmed">
+              <span>Confirmados</span>
+            </label>
+            <label class="nw-status-chip" [class.active]="autoAssignForm.includePending">
+              <input type="checkbox" [(ngModel)]="autoAssignForm.includePending">
+              <span>Pendientes</span>
+            </label>
+            <label class="nw-status-chip" [class.active]="autoAssignForm.includeDeclined">
+              <input type="checkbox" [(ngModel)]="autoAssignForm.includeDeclined">
+              <span>Rechazados</span>
+            </label>
+          </div>
+        </div>
+
+        <div
+          style="border-top: 1px dashed var(--nw-border); padding-top: 14px; margin-top: 4px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+          <div>
+            <strong style="font-size: 13px; color: var(--nw-text); display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Reiniciar asignaciones (Sobrescribir)
+            </strong>
+            <span style="color: var(--nw-text-3); font-size: 12px;">Reacomoda a todos los invitados desde cero</span>
+          </div>
+
+          <label class="nw-switch" title="Activar para desasignar a todos antes de reacomodarlos">
+            <input type="checkbox" [(ngModel)]="autoAssignForm.overwrite">
+            <span class="nw-switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showAutoAssignModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="autoAssigning || tables.length === 0"
+            (click)="runAutoAssign()">
+            {{ autoAssigning ? 'Acomodando...' : 'Ejecutar asignación' }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="autoAssignResult">
+        <div class="nw-alert success" style="margin-bottom: 16px;">
+          <strong>¡Asignación completada!</strong><br>
+          Se ubicaron con éxito <strong>{{ autoAssignResult.assigned.length }}</strong> invitados en las mesas disponibles.
+        </div>
+
+        <div *ngIf="autoAssignResult.skipped.length > 0" style="margin-bottom: 16px;">
+          <h4 style="margin: 0 0 8px; color: var(--nw-warning); font-size: 14px; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+            </svg>
+            Invitados sin ubicar ({{ autoAssignResult.skipped.length }})
+          </h4>
+          <div
+            style="max-height: 140px; overflow-y: auto; display: grid; gap: 6px; padding: 8px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border);">
+            <div *ngFor="let s of autoAssignResult.skipped" style="font-size: 12px; color: var(--nw-text-2);">
+              • {{ s.guest.name }} <span *ngIf="s.guest.group">({{ s.guest.group }})</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nw-modal-actions">
+          <button class="nw-btn nw-btn-primary" (click)="showAutoAssignModal = false">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ➕ MODAL UNIFICADO DE CREACIÓN DE MESAS Y ELEMENTOS ➕ -->
+  <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="showCreateModal = false">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 580px;">
+      <h2 style="margin: 0 0 4px; display: inline-flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Agregar al croquis
+      </h2>
+      <p style="font-size: 13px; color: var(--nw-text-3); margin: 0 0 14px;">
+        Agrega mesas individuales, elementos del salón o genera un grupo de mesas por lote o presets.
+      </p>
+
+      <!-- Pestañas de Modo (Individual vs Lote vs Presets) -->
+      <div
+        style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--nw-border); padding-bottom: 10px;">
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="createTab === 'single'"
+          [class.nw-btn-ghost]="createTab !== 'single'" (click)="createTab = 'single'"
+          style="display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
+          Individual
+        </button>
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="createTab === 'batch'"
+          [class.nw-btn-ghost]="createTab !== 'batch'" (click)="createTab = 'batch'"
+          style="display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Por Lote (N Mesas)
+        </button>
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="createTab === 'preset'"
+          [class.nw-btn-ghost]="createTab !== 'preset'" (click)="createTab = 'preset'"
+          style="display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+          Presets
+        </button>
+      </div>
+
+      <!-- MODO INDIVIDUAL -->
+      <div *ngIf="createTab === 'single'">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <label class="nw-label" style="margin: 0;">
+            Tipo de Elemento o Mesa
+            <select class="nw-select" [(ngModel)]="newTable.shape" (change)="onShapeSelect(newTable.shape)"
+              style="font-weight: 700;">
+              <optgroup label="Mesas de Invitados">
+                <ng-container *ngFor="let s of shapes">
+                  <option *ngIf="s.category === 'table'" [value]="s.value">{{ s.label }}</option>
+                </ng-container>
+              </optgroup>
+              <optgroup label="Elementos del Salón">
+                <ng-container *ngFor="let s of shapes">
+                  <option *ngIf="s.category === 'element'" [value]="s.value">{{ s.label }}</option>
+                </ng-container>
+              </optgroup>
+            </select>
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label class="nw-label" style="margin: 0;">
+              Nombre / Etiqueta
+              <input class="nw-input" [(ngModel)]="newTable.name" placeholder="Ej: Mesa 1, Pista de Baile...">
+            </label>
+            <label class="nw-label" style="margin: 0;" *ngIf="!isElementShape(newTable.shape)">
+              Capacidad (sillas)
+              <input class="nw-input" type="number" [(ngModel)]="newTable.capacity" min="1" max="100">
+            </label>
+            <div *ngIf="isElementShape(newTable.shape)"
+              style="display: flex; align-items: center; font-size: 12px; color: var(--nw-text-3); font-style: italic;">
+              * Elemento de ambientación (sin sillas)
+            </div>
+          </div>
+
+          <label class="nw-label" style="margin: 0;">
+            Piso / Nivel Destino
+            <select class="nw-select" [(ngModel)]="newTable.floor">
+              <option *ngFor="let f of floorsList" [value]="f.id">{{ f.name }}</option>
+            </select>
+          </label>
+
+          <div style="border-top: 1px dashed var(--nw-border); padding-top: 12px; margin-top: 4px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+              (click)="showAdvancedDimensions = !showAdvancedDimensions"
+              style="font-size: 12px; color: var(--nw-text-2); font-weight: 600; padding: 4px 8px; border: 1px solid var(--nw-border);">
+              {{ showAdvancedDimensions ? '▲ Ocultar dimensiones' : '▼ Ajustar dimensiones (Ancho x Alto)' }}
+            </button>
+
+            <div *ngIf="showAdvancedDimensions"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+              <label class="nw-label" style="margin: 0;">
+                Ancho (m)
+                <input class="nw-input" type="number" [(ngModel)]="newTable.width" min="0.4" max="12.0" step="0.1">
+              </label>
+              <label class="nw-label" style="margin: 0;">
+                Alto (m)
+                <input class="nw-input" type="number" [(ngModel)]="newTable.height" min="0.4" max="12.0" step="0.1">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating || !newTable.name" (click)="createSingleTable()">
+            {{ creating ? 'Agregando...' : 'Agregar al croquis' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- MODO POR LOTE -->
+      <div *ngIf="createTab === 'batch'">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div
+            style="background: var(--nw-surface-2); padding: 10px 14px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 13px; color: var(--nw-text-2); display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .6 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
+              <line x1="9" y1="18" x2="15" y2="18"></line>
+              <line x1="10" y1="22" x2="14" y2="22"></line>
+            </svg>
+            <span>Genera múltiples mesas del mismo tamaño rápidamente y distribúyelas automáticamente en el plano del piso seleccionado.</span>
+          </div>
+
+          <label class="nw-label" style="margin: 0;">
+            Tipo / Forma de las Mesas
+            <select class="nw-select" [(ngModel)]="batchForm.shape" (change)="onBatchShapeSelect(batchForm.shape)"
+              style="font-weight: 700;">
+              <ng-container *ngFor="let s of shapes">
+                <option *ngIf="s.category === 'table'" [value]="s.value">{{ s.label }}</option>
+              </ng-container>
+            </select>
+          </label>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label class="nw-label" style="margin: 0;">
+              ¿Cuántas mesas crear?
+              <input class="nw-input" type="number" [(ngModel)]="batchForm.quantity" min="1" max="50">
+            </label>
+
+            <label class="nw-label" style="margin: 0;">
+              Prefijo del nombre
+              <input class="nw-input" [(ngModel)]="batchForm.prefix" placeholder="Ej: Mesa (Mesa 1, Mesa 2...)">
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <label class="nw-label" style="margin: 0;">
+              Capacidad por mesa (sillas)
+              <input class="nw-input" type="number" [(ngModel)]="batchForm.capacity" min="1" max="100">
+            </label>
+
+            <label class="nw-label" style="margin: 0;">
+              Piso / Nivel Destino
+              <select class="nw-select" [(ngModel)]="batchForm.floor">
+                <option *ngFor="let f of floorsList" [value]="f.id">{{ f.name }}</option>
+              </select>
+            </label>
+          </div>
+
+          <div style="border-top: 1px dashed var(--nw-border); padding-top: 12px; margin-top: 4px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
+              (click)="showAdvancedDimensions = !showAdvancedDimensions"
+              style="font-size: 12px; color: var(--nw-text-2); font-weight: 600; padding: 4px 8px; border: 1px solid var(--nw-border);">
+              {{ showAdvancedDimensions ? '▲ Ocultar dimensiones' : '▼ Ajustar dimensiones (Ancho x Alto)' }}
+            </button>
+
+            <div *ngIf="showAdvancedDimensions"
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+              <label class="nw-label" style="margin: 0;">
+                Ancho (m)
+                <input class="nw-input" type="number" [(ngModel)]="batchForm.width" min="0.4" max="12.0" step="0.1">
+              </label>
+              <label class="nw-label" style="margin: 0;">
+                Alto (m)
+                <input class="nw-input" type="number" [(ngModel)]="batchForm.height" min="0.4" max="12.0" step="0.1">
+              </label>
+            </div>
+          </div>
+
+          <div style="margin-top: 2px; font-size: 12px; color: var(--nw-accent); font-weight: 600;">
+            📊 Resultado estimado: Se agregarán <strong>{{ batchForm.quantity || 0 }}</strong> mesas de <strong>{{
+              batchForm.capacity || 0 }}</strong> asientos (total <strong>{{ (batchForm.quantity || 0) *
+              (batchForm.capacity || 0) }}</strong> lugares).
+          </div>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating || batchForm.quantity < 1"
+            (click)="createBatchTables()">
+            {{ creating ? 'Generando...' : 'Generar ' + (batchForm.quantity || 0) + ' Mesas' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- MODO PLANTILLAS RÁPIDAS (PRESETS POR CAPACIDAD) -->
+      <div *ngIf="createTab === 'preset'">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div
+            style="background: var(--nw-surface-2); padding: 10px 14px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 13px; color: var(--nw-text-2); display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .6 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
+              <line x1="9" y1="18" x2="15" y2="18"></line>
+              <line x1="10" y1="22" x2="14" y2="22"></line>
+            </svg>
+            <span>Selecciona la cantidad total de invitados estimada para crear automáticamente el conjunto de mesas recomendado (10 personas por mesa).</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(10)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+              </svg>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">100 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">10 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(15)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">150 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">15 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(20)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">200 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">20 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(25)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+              </svg>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">250 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">25 mesas de 10 sillas</span>
+              </div>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="createPresetSet(30)" [disabled]="creating"
+              style="justify-content: flex-start; padding: 12px 14px; display: flex; align-items: center; gap: 10px; grid-column: span 2;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <div style="text-align: left;">
+                <strong style="display: block; font-size: 14px;">300 Invitados</strong>
+                <span style="font-size: 11px; color: var(--nw-text-3);">30 mesas de 10 sillas</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="nw-modal-actions" style="margin-top: 20px;">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest Detail Popup Modal -->
+  <div class="nw-modal-backdrop" *ngIf="showGuestDetailModal" (click)="closeGuestDetailModal()">
+    <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width: 560px;">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--nw-border); padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="nw-guest-avatar"
+            style="width: 44px; height: 44px; font-size: 16px; background: linear-gradient(135deg, var(--nw-accent-2), var(--nw-accent)); color: #fff;">
+            {{ selectedGuestForDetail ? guestInitials(selectedGuestForDetail.name) : 'G' }}
+          </span>
+          <div>
+            <h2 style="margin: 0; font-size: 18px; color: var(--nw-text); font-weight: 700;">
+              {{ selectedGuestForDetail?.name || 'Cargando invitado...' }}
+            </h2>
+            <span *ngIf="selectedGuestForDetail?.status" class="nw-pill"
+              [class.success]="selectedGuestForDetail?.status === 'confirmed'"
+              [class.warning]="selectedGuestForDetail?.status === 'pending'"
+              [class.danger]="selectedGuestForDetail?.status === 'declined'" style="margin-top: 4px; font-size: 11px;">
+              {{ selectedGuestForDetail?.status === 'confirmed' ? 'Confirmado' : (selectedGuestForDetail?.status ===
+              'declined' ? 'Rechazado' : 'Pendiente') }}
+            </span>
+          </div>
+        </div>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="closeGuestDetailModal()"
+          style="font-size: 16px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <p *ngIf="loadingGuestDetail" class="nw-alert info nw-loading" style="margin-bottom: 16px;">Cargando datos
+        completos del invitado desde la API...</p>
+
+      <div *ngIf="selectedGuestForDetail" style="display: grid; gap: 16px;">
+        <!-- Information Grid -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--nw-surface-2); padding: 14px; border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 13px;">
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Correo Electrónico
+            </span>
+            <strong>{{ selectedGuestForDetail.email || 'No registrado' }}</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+              Teléfono
+            </span>
+            <strong>{{ selectedGuestForDetail.phone || 'No registrado' }}</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Grupo / Familia
+            </span>
+            <strong>{{ selectedGuestForDetail.group || 'Sin grupo' }}</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v18"></path>
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <path d="M3 9h18"></path>
+                <path d="M3 15h18"></path>
+              </svg>
+              Mesa Asignada
+            </span>
+            <strong [style.color]="selectedGuestForDetail.tableName ? 'var(--nw-accent)' : 'var(--nw-text-3)'">
+              {{ selectedGuestForDetail.tableName ? selectedGuestForDetail.tableName : 'Sin mesa (En espera)' }}
+            </strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Acompañantes Permitidos
+            </span>
+            <strong>+{{ selectedGuestForDetail.allowedCompanions || 0 }} lugares</strong>
+          </div>
+          <div>
+            <span
+              style="font-size: 11px; color: var(--nw-text-3); font-weight: 700; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              </svg>
+              Relación / Rol
+            </span>
+            <strong>{{ getGuestGroupOrRole(selectedGuestForDetail) }}</strong>
+          </div>
+        </div>
+
+        <!-- Companions List if available -->
+        <div *ngIf="selectedGuestForDetail.companions && selectedGuestForDetail.companions.length > 0">
+          <span
+            style="font-size: 12px; font-weight: 700; color: var(--nw-text-2); text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Acompañantes registrados ({{ selectedGuestForDetail.companions.length }})
+          </span>
+          <div style="display: grid; gap: 6px;">
+            <div *ngFor="let comp of selectedGuestForDetail.companions"
+              style="padding: 8px 12px; background: var(--nw-surface-2); border-radius: var(--nw-radius-sm); border: 1px solid var(--nw-border); font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>{{ comp.name }}</strong>
+                <span *ngIf="comp.dietaryRestrictions"
+                  style="display: block; font-size: 11px; color: var(--nw-warning);">Restricción: {{ comp.dietaryRestrictions }}</span>
+              </div>
+              <span class="nw-pill" [class.success]="comp.confirmed" style="font-size: 10px;">{{ comp.confirmed ?
+                'Confirmado' : 'Pendiente' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Check-in & System details -->
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; padding: 10px 14px; background: rgba(99,102,241,0.06); border: 1px dashed rgba(99,102,241,0.3); border-radius: var(--nw-radius-sm);">
+          <div>
+            <span style="color: var(--nw-text-3); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+              </svg>
+              Código Check-In:
+            </span>
+            <strong style="display: block; font-size: 13px; color: var(--nw-accent-2);">{{
+              selectedGuestForDetail.checkInCode || selectedGuestForDetail.invitationToken || 'Sin código' }}</strong>
+          </div>
+          <div>
+            <span style="color: var(--nw-text-3); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Estado Check-In:
+            </span>
+            <strong style="display: block; font-size: 13px;"
+              [style.color]="selectedGuestForDetail.checkedIn ? 'var(--nw-success)' : 'var(--nw-text-3)'">
+              {{ selectedGuestForDetail.checkedIn ? '✓ Ingresó al evento' : 'Pendiente' }}
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="nw-modal-actions" style="margin-top: 20px;">
+        <button class="nw-btn nw-btn-primary" (click)="closeGuestDetailModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</section>

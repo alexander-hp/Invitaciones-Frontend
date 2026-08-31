@@ -1,0 +1,589 @@
+<div class="mobile-template-root"
+  [style.--primary]="invitation?.content?.palette?.primary || '#1f2a44'"
+  [style.--secondary]="invitation?.content?.palette?.secondary || '#f7f2ea'"
+  [style.--accent]="invitation?.content?.palette?.accent || '#b67b4b'">
+
+  <!-- BACKGROUND IMAGE WITH OVERLAY -->
+  <div class="bg-cover-wrapper">
+    <div class="bg-cover-image"
+      [style.background-image]="'url(' + getCoverImageUrl() + ')'">
+    </div>
+    <div class="bg-cover-overlay"></div>
+  </div>
+
+  <!-- 1. ENVELOPE INTRO SCREEN -->
+  <div class="envelope-screen" *ngIf="!envelopeOpened" [class.opening]="isOpeningEnvelope">
+    <div class="envelope-card-container">
+      
+      <!-- Animated Envelope Outer -->
+      <div class="envelope-outer">
+        <div class="envelope-flap"></div>
+        <div class="envelope-pocket">
+          <div class="wax-seal" (click)="openEnvelope()">
+            <span class="seal-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="envelope-content-inner">
+          <p class="env-subtitle">{{ invitation?.content?.subheadline || 'Nuestra Boda / Evento Especial' }}</p>
+          <h1 class="env-title">{{ invitation?.content?.headline || event?.title || 'Invitación Especial' }}</h1>
+          
+          <div class="env-date-pill" *ngIf="event?.date" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>{{ formatDate(event?.date) }}</span>
+          </div>
+
+          <!-- GUEST ACCESS VERIFICATION PROMPT IF REQUIRED -->
+          <div class="env-auth-box" *ngIf="requiresGuestAuth">
+            <p class="env-auth-desc">
+              Esta invitación es privada. Por favor ingresa tu correo electrónico o número telefónico registrado para acceder.
+            </p>
+            <div class="env-auth-input-group">
+              <input type="text" 
+                     class="env-input" 
+                     [(ngModel)]="guestAccessInput" 
+                     placeholder="Tu correo o teléfono (ej. 5512345678)"
+                     (keyup.enter)="openEnvelope()">
+              <button type="button" class="env-btn-open" (click)="openEnvelope()" [disabled]="checkingGuest" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <span>{{ checkingGuest ? 'Verificando...' : 'Verificar e Ingresar' }}</span>
+              </button>
+            </div>
+            <p class="env-error" *ngIf="error">{{ error }}</p>
+          </div>
+
+          <!-- OPEN ENVELOPE BUTTON FOR PUBLIC ACCESS -->
+          <div class="env-action-box" *ngIf="!requiresGuestAuth">
+            <p class="env-welcome" *ngIf="verifiedGuest">
+              ¡Hola, <strong>{{ verifiedGuest.name }}</strong>! Haz clic para abrir tu invitación.
+            </p>
+            <p class="env-welcome" *ngIf="!verifiedGuest">
+              Te invitamos a compartir este momento tan importante con nosotros.
+            </p>
+            <button type="button" class="env-btn-open" (click)="openEnvelope()" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>Abrir Invitación</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. MAIN SWIPABLE CARDS INVITATION VIEW -->
+  <div class="invitation-main-view" *ngIf="envelopeOpened">
+
+    <!-- FLOATING TOP BAR -->
+    <header class="top-nav-bar">
+      <div class="top-brand">
+        <span class="top-title">{{ invitation?.content?.headline || 'Invitación' }}</span>
+      </div>
+    </header>
+
+    <!-- CARD NAVIGATION INDICATORS -->
+    <div class="cards-progress-bar">
+      <div class="cards-dots">
+        <button *ngFor="let card of activeCards; let i = index"
+                type="button"
+                class="dot-btn"
+                [class.active]="i === currentCardIndex"
+                (click)="goToCard(i)"
+                [title]="card.title">
+        </button>
+      </div>
+      <span class="cards-counter">{{ currentCardIndex + 1 }} / {{ activeCards.length }}</span>
+    </div>
+
+    <!-- CAROUSEL CARDS WRAPPER -->
+    <div class="cards-viewport" 
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+      
+      <div class="cards-track" [style.transform]="'translateX(-' + (currentCardIndex * 100) + '%)'">
+        
+        <!-- CARD 1: PORTADA & CUENTA REGRESIVA -->
+        <div class="card-slide">
+          <div class="card-glass">
+            <div class="hero-logo-box" *ngIf="invitation?.content?.brandLogoUrl">
+              <img [src]="invitation?.content?.brandLogoUrl" alt="Logo" class="hero-logo" />
+            </div>
+
+            <p class="card-subtitle">{{ invitation?.content?.subheadline }}</p>
+            <h2 class="card-headline">{{ invitation?.content?.headline || event?.title }}</h2>
+            
+            <div class="card-date-badge" *ngIf="event?.date">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>{{ formatDate(event?.date) }}</span>
+            </div>
+
+            <!-- COUNTDOWN TIMER -->
+            <div class="countdown-row" *ngIf="!countdown.isOver && event?.date">
+              <div class="count-box">
+                <span class="count-val">{{ countdown.days }}</span>
+                <span class="count-lbl">Días</span>
+              </div>
+              <div class="count-box">
+                <span class="count-val">{{ countdown.hours }}</span>
+                <span class="count-lbl">Horas</span>
+              </div>
+              <div class="count-box">
+                <span class="count-val">{{ countdown.minutes }}</span>
+                <span class="count-lbl">Min</span>
+              </div>
+              <div class="count-box">
+                <span class="count-val">{{ countdown.seconds }}</span>
+                <span class="count-lbl">Seg</span>
+              </div>
+            </div>
+
+            <div class="event-started-badge" *ngIf="countdown.isOver && event?.date" style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>¡El evento ya ha comenzado!</span>
+            </div>
+
+            <!-- HOSTS & VENUE INFO PREVIEW -->
+            <div class="hero-info-grid">
+              <div class="hero-info-item" *ngIf="event?.venue?.name">
+                <span class="info-label">Lugar</span>
+                <strong class="info-val">{{ event?.venue?.name }}</strong>
+              </div>
+            </div>
+
+            <!-- QUICK SHORTCUT BUTTONS -->
+            <div class="hero-buttons-row">
+              <a *ngIf="event?.date" 
+                 [href]="getCalendarUrl()" 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                 class="card-primary-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Agendar en Google Calendar</span>
+              </a>
+
+              <button type="button" class="card-outline-btn" (click)="shareWhatsApp()" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                <span>Compartir Invitación</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CARD 2: PASE VIP / GUEST ACCESS (ONLY IF GUEST LIST) -->
+        <div class="card-slide" *ngIf="requiresGuestAuth">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>PASE VIP DE ENTRADA</span>
+            </div>
+            
+            <div class="guest-pass-content" *ngIf="verifiedGuest">
+              <h3 class="pass-guest-name">{{ verifiedGuest.name }}</h3>
+              <span class="pass-confirmed-pill">Pase Confirmado</span>
+
+              <div class="qr-box-inner" *ngIf="guestQrUrl" (click)="openLightbox.emit(guestQrUrl)">
+                <img [src]="guestQrUrl" alt="QR Pase" class="pass-qr-img" />
+              </div>
+
+              <div class="pass-details-list">
+                <div class="pass-detail-item" *ngIf="verifiedGuest.tableName">
+                  <span class="lbl">Mesa Asignada</span>
+                  <strong class="val">{{ verifiedGuest.tableName }}</strong>
+                </div>
+                <div class="pass-detail-item">
+                  <span class="lbl">Pases Permitidos</span>
+                  <strong class="val">{{ verifiedGuest.allowedCompanions || 1 }} persona(s)</strong>
+                </div>
+              </div>
+
+              <button type="button" class="card-outline-btn" (click)="downloadPass()" style="margin-top:14px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Descargar Pase Digital</span>
+              </button>
+            </div>
+
+            <div class="guest-pass-locked" *ngIf="!verifiedGuest">
+              <div class="locked-icon" style="font-size:32px; margin-bottom:10px;">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <p class="locked-text">Ingresa tus datos en la pantalla de bienvenida para generar tu pase digital con código QR.</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CARD 3: RSVP CONFIRMACIÓN -->
+        <div class="card-slide" *ngIf="isSectionActive('rsvp')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>CONFIRMAR ASISTENCIA</span>
+            </div>
+            <h3 class="card-title">¿Nos acompañas?</h3>
+
+            <form (ngSubmit)="submitRsvp.emit()" class="card-form-scroll">
+              <div class="form-field">
+                <label>Tu Nombre Completo *</label>
+                <input type="text" class="card-input" [(ngModel)]="rsvp.name" name="rsvpName" required placeholder="Nombre y apellido" />
+              </div>
+
+              <div class="form-field">
+                <label>¿Asistirás?</label>
+                <div class="rsvp-options-grid">
+                  <button type="button" 
+                          class="rsvp-opt-btn" 
+                          [class.selected]="rsvp.response === 'confirmed'"
+                          (click)="rsvp.response = 'confirmed'">
+                    Sí, asistiré
+                  </button>
+                  <button type="button" 
+                          class="rsvp-opt-btn" 
+                          [class.selected]="rsvp.response === 'declined'"
+                          (click)="rsvp.response = 'declined'">
+                    Lo siento, no podré
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-field" *ngIf="rsvp.response === 'confirmed'">
+                <label>Número de Acompañantes</label>
+                <input type="number" class="card-input" [(ngModel)]="rsvp.companions" name="rsvpCompanions" min="0" max="10" />
+              </div>
+
+              <div class="form-field" *ngIf="rsvp.response === 'confirmed'">
+                <label>Restricciones Alimenticias / Alergias</label>
+                <input type="text" class="card-input" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet" placeholder="Vegetariano, celíaco, etc." />
+              </div>
+
+              <div class="form-field">
+                <label>Mensaje para los anfitriones</label>
+                <textarea class="card-textarea" [(ngModel)]="rsvp.message" name="rsvpMessage" rows="2" placeholder="Escribe un lindo mensaje..."></textarea>
+              </div>
+
+              <button type="submit" class="card-primary-btn" [disabled]="sending || !rsvp.name" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>{{ sending ? 'Enviando...' : 'Enviar Confirmación' }}</span>
+              </button>
+
+              <p class="form-success-msg" *ngIf="success">{{ success }}</p>
+              <p class="form-error-msg" *ngIf="error">{{ error }}</p>
+            </form>
+          </div>
+        </div>
+
+        <!-- CARD 4: NUESTRA HISTORIA / MENSAJE -->
+        <div class="card-slide" *ngIf="isSectionActive('story') && (invitation?.content?.message || invitation?.content?.storyBody || invitation?.content?.storyTitle || invitation?.content?.subheadline)">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>NUESTRA HISTORIA</span>
+            </div>
+            <h3 class="card-title">{{ invitation?.content?.storyTitle || invitation?.content?.subheadline || 'Un Mensaje Especial' }}</h3>
+            
+            <div class="card-body-scroll">
+              <p class="story-body-text">
+                {{ invitation?.content?.storyBody || invitation?.content?.message }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 5: UBICACIONES Y MAPAS -->
+        <div class="card-slide" *ngIf="isSectionActive('locations') && (invitation?.content?.locations?.length || 0) > 0">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>UBICACIONES</span>
+            </div>
+            <h3 class="card-title">¿Cómo Llegar?</h3>
+
+            <div class="card-body-scroll">
+              <div *ngFor="let loc of invitation?.content?.locations" class="loc-card-inner">
+                <span class="loc-badge">{{ loc.type || 'Lugar' }}</span>
+                <h4 class="loc-title">{{ loc.name }}</h4>
+                <p class="loc-address" *ngIf="loc.address">{{ loc.address }}</p>
+                <p class="loc-notes" *ngIf="loc.notes">{{ loc.notes }}</p>
+
+                <div class="loc-actions-grid">
+                  <a [href]="getDirectionsUrl(loc)" target="_blank" rel="noopener noreferrer" class="card-primary-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                      <line x1="8" y1="2" x2="8" y2="18"></line>
+                      <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>Ver en Google Maps</span>
+                  </a>
+                  <a *ngIf="loc.wazeUrl" [href]="getWazeUrl(loc)" target="_blank" rel="noopener noreferrer" class="card-outline-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                    </svg>
+                    <span>Abrir en Waze</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 6: ITINERARIO -->
+        <div class="card-slide" *ngIf="isSectionActive('itinerary') && (invitation?.content?.itinerary?.length || 0) > 0">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>ITINERARIO</span>
+            </div>
+            <h3 class="card-title">Programa del Evento</h3>
+
+            <div class="card-body-scroll">
+              <div class="itinerary-timeline">
+                <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-row">
+                  <div class="timeline-time-col">
+                    <span class="t-time">{{ item.time }}</span>
+                  </div>
+                  <div class="timeline-dot-col">
+                    <div class="t-dot"></div>
+                  </div>
+                  <div class="timeline-desc-col">
+                    <strong class="t-title">{{ item.title }}</strong>
+                    <p class="t-desc" *ngIf="item.description">{{ item.description }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 7: CÓDIGO DE VESTIMENTA -->
+        <div class="card-slide" *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>CÓDIGO DE VESTIMENTA</span>
+            </div>
+            <h3 class="card-title">Dress Code</h3>
+
+            <div class="card-body-scroll text-center">
+              <div class="dresscode-icon-box" style="font-size:36px; margin:16px 0;">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+                </svg>
+              </div>
+              <p class="dresscode-highlight">{{ invitation?.content?.dressCode }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 8: MESA DE REGALOS & SOBRE DIGITAL -->
+        <div class="card-slide" *ngIf="isSectionActive('giftRegistry') || isSectionActive('digitalEnvelope')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>MESA DE REGALOS</span>
+            </div>
+            <h3 class="card-title">Mesa de Regalos</h3>
+
+            <div class="card-body-scroll">
+              <p class="gift-intro-p" *ngIf="invitation?.content?.giftSettings?.introText">
+                {{ invitation?.content?.giftSettings?.introText }}
+              </p>
+
+              <!-- STORES -->
+              <div *ngIf="isSectionActive('giftRegistry') && (invitation?.content?.giftRegistry?.length || 0) > 0" class="gift-stores-list">
+                <div *ngFor="let gift of invitation?.content?.giftRegistry" class="store-item">
+                  <div class="store-info">
+                    <strong class="store-name">{{ gift.store || 'Tienda' }}</strong>
+                    <span class="store-title">{{ gift.title || gift.label }}</span>
+                  </div>
+                  <a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener noreferrer" class="store-link-btn" style="display:inline-flex; align-items:center; gap:4px;">
+                    <span>Abrir</span>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+
+              <!-- DIGITAL ENVELOPE / CLABE -->
+              <div *ngIf="isSectionActive('digitalEnvelope') && (invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account)" class="envelope-digital-card">
+                <strong class="env-digi-title" style="display:inline-flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                  </svg>
+                  <span>Sobre Digital / Transferencia</span>
+                </strong>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.bank">Banco: <strong>{{ invitation?.content?.digitalEnvelope?.bank }}</strong></p>
+                <p *ngIf="invitation?.content?.digitalEnvelope?.holder">Titular: <strong>{{ invitation?.content?.digitalEnvelope?.holder }}</strong></p>
+                
+                <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="clabe-copy-box">
+                  <code>{{ invitation?.content?.digitalEnvelope?.clabe }}</code>
+                  <button type="button" class="copy-btn-inner" (click)="copyClabe(invitation?.content?.digitalEnvelope?.clabe || '')">
+                    {{ copiedClabe ? '✓ Copiado' : 'Copiar CLABE' }}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 9: FOTOS Y ÁLBUM DE INVITADOS -->
+        <div class="card-slide" *ngIf="isSectionActive('guestAlbum') || isSectionActive('gallery')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>FOTOS Y ÁLBUM</span>
+            </div>
+            <h3 class="card-title">Galería y Recuerdos</h3>
+
+            <div class="card-body-scroll">
+              <!-- GUEST UPLOAD BUTTON -->
+              <div class="album-upload-trigger" *ngIf="isSectionActive('guestAlbum')">
+                <input type="file" #photoInput accept="image/*" (change)="onPhotoSelected($event)" style="display:none;" />
+                <button type="button" class="card-primary-btn" (click)="photoInput.click()" [disabled]="uploadingAlbum" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <span>{{ uploadingAlbum ? 'Subiendo foto...' : 'Subir Foto al Álbum' }}</span>
+                </button>
+              </div>
+
+              <!-- PHOTO GRID -->
+              <div class="photos-masonry-grid" *ngIf="allDisplayPhotos.length > 0">
+                <div *ngFor="let photo of allDisplayPhotos" class="photo-thumb-item" (click)="openLightbox.emit(photo)">
+                  <img [src]="photo" alt="Recuerdo" loading="lazy" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 10: DEDICATORIAS / LIBRO DE FIRMAS -->
+        <div class="card-slide" *ngIf="isSectionActive('dedications')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>LIBRO DE FIRMAS</span>
+            </div>
+            <h3 class="card-title">Dedicatorias</h3>
+            <p class="gift-intro-p" *ngIf="invitation?.content?.dedicationSettings?.introText">
+              {{ invitation?.content?.dedicationSettings?.introText }}
+            </p>
+
+            <div class="card-body-scroll">
+              <!-- DEDICATION FORM -->
+              <form (ngSubmit)="submitDedicationForm()" class="dedication-inner-form">
+                <input type="text" class="card-input" [(ngModel)]="newDedicationName" name="dedName" placeholder="Tu nombre" *ngIf="!verifiedGuest" />
+                <textarea class="card-textarea" [(ngModel)]="newDedicationMessage" name="dedMsg" rows="2" placeholder="Escribe tus mejores deseos..."></textarea>
+                <button type="submit" class="card-outline-btn" [disabled]="sending || !newDedicationMessage" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  <span>Dejar Dedicatoria</span>
+                </button>
+              </form>
+
+              <!-- DEDICATIONS LIST -->
+              <div class="dedications-bubble-list" *ngIf="dedications.length > 0">
+                <div *ngFor="let d of dedications" class="dedication-bubble">
+                  <p class="ded-msg">“{{ d.message }}”</p>
+                  <span class="ded-author">— {{ d.publicName || 'Invitado' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 11: MÚSICA DJ -->
+        <div class="card-slide" *ngIf="isSectionActive('songRequests')">
+          <div class="card-glass">
+            <div class="card-header-badge">
+              <span>MÚSICA DJ</span>
+            </div>
+            <h3 class="card-title">Pide tu Canción</h3>
+
+            <div class="card-body-scroll text-center">
+              <p class="dj-hint">
+                ¿Qué canción no puede faltar en la fiesta? ¡Sugiérela directamente al DJ!
+              </p>
+              <div class="dj-form-box">
+                <input class="card-input" placeholder="Nombre de la canción y artista" />
+                <button type="button" class="card-primary-btn" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                  </svg>
+                  <span>Enviar al DJ</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- BOTTOM MOBILE FOOTER NAVIGATION -->
+    <footer class="bottom-card-nav">
+      <button type="button" class="nav-bottom-btn" [disabled]="currentCardIndex === 0" (click)="prevCard()" style="display:inline-flex; align-items:center; gap:4px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Anterior</span>
+      </button>
+      
+      <span class="nav-bottom-label">
+        {{ activeCards[currentCardIndex]?.title }}
+      </span>
+
+      <button type="button" class="nav-bottom-btn" [disabled]="currentCardIndex === activeCards.length - 1" (click)="nextCard()" style="display:inline-flex; align-items:center; gap:4px;">
+        <span>Siguiente</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </footer>
+
+  </div>
+
+</div>

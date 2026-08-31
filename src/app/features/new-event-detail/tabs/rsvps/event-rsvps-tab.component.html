@@ -1,0 +1,297 @@
+<!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="message || error">
+  <div *ngIf="message" class="nw-toast success">
+    <span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+        <path d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z"></path>
+      </svg>
+      {{ message }}
+    </span>
+    <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
+  </div>
+  <div *ngIf="error" class="nw-toast error">
+    <span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      {{ error }}
+    </span>
+    <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+  </div>
+</div>
+
+<section class="nw-card">
+  <!-- ENCABEZADO ESTÁNDAR DE LA SECCIÓN -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Respuestas RSVP
+        <span class="nw-badge" style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ rsvps.length }} respuestas
+        </span>
+        <span *ngIf="pendingCount > 0" class="nw-pill warning" style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          {{ pendingCount }} pendientes
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Consulta, filtra y exporta las respuestas de asistencia enviadas por tus invitados desde el portal web.
+      </p>
+    </div>
+
+    <!-- Acciones Principales -->
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <button class="nw-btn nw-btn-primary" (click)="exportRsvps()" [disabled]="exportingRsvps || !rsvps.length" style="display: inline-flex; align-items: center; gap: 6px; height: 38px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        {{ exportingRsvps ? 'Exportando CSV...' : 'Exportar CSV' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- TARJETAS DE MÉTRICAS KPI -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        Total Respuestas
+      </span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">{{ rsvps.length }}</div>
+    </div>
+
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm); border-left: 4px solid var(--nw-success, #2e7d32);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-success, #2e7d32); text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        Confirmados
+      </span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">
+        {{ confirmedCount }} <small style="font-size: 12px; font-weight: 600; color: var(--nw-text-2);">({{ totalAttendingGuests }} personas)</small>
+      </div>
+    </div>
+
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm); border-left: 4px solid var(--nw-danger, #d32f2f);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-danger, #d32f2f); text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Rechazados
+      </span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">{{ declinedCount }}</div>
+    </div>
+
+    <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm); border-left: 4px solid var(--nw-warning, #ed6c02);">
+      <span style="font-size: 12px; font-weight: 600; color: var(--nw-warning, #ed6c02); text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Pendientes
+      </span>
+      <div style="font-size: 24px; font-weight: 800; color: var(--nw-text, #2e2621); margin-top: 4px;">{{ pendingCount }}</div>
+    </div>
+  </div>
+
+  <!-- BARRA DE FILTROS -->
+  <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+    
+    <!-- Buscador -->
+    <div style="flex: 1; min-width: 220px; position: relative;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px; top: 13px; color: var(--nw-text-3);">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input class="nw-input" [(ngModel)]="searchQuery" (ngModelChange)="rsvpPage = 1" placeholder="Buscar por invitado, correo, teléfono o mensaje..." style="height: 42px; padding: 0 14px 0 38px; width: 100%; font-size: 13px; box-sizing: border-box;">
+    </div>
+    
+    <!-- Filtro Estado -->
+    <select class="nw-select" [(ngModel)]="statusFilter" (ngModelChange)="rsvpPage = 1" style="height: 42px; padding: 0 28px 0 12px; width: 175px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <option value="">Todos los estados</option>
+      <option value="confirmed">Confirmados</option>
+      <option value="declined">Rechazados</option>
+      <option value="pending">Pendientes</option>
+    </select>
+
+    <!-- Filtro Acompañantes -->
+    <select class="nw-select" [(ngModel)]="companionsFilter" (ngModelChange)="rsvpPage = 1" style="height: 42px; padding: 0 28px 0 12px; width: 185px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <option value="">Acompañantes (Todos)</option>
+      <option value="with_companions">Con Acompañantes</option>
+      <option value="solo">Sin Acompañantes</option>
+    </select>
+
+    <!-- Limpiar Filtros -->
+    <button *ngIf="searchQuery || statusFilter || companionsFilter" type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearFilters()" style="white-space: nowrap; height: 42px; font-size: 12px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;">
+      ✕ Limpiar
+    </button>
+  </div>
+
+  <!-- ESTADO CARGANDO -->
+  <div *ngIf="rsvpsLoading" class="nw-alert info" style="margin-bottom: 16px;">
+    Cargando respuestas RSVP...
+  </div>
+
+  <!-- ESTADO VACÍO -->
+  <div *ngIf="!rsvpsLoading && filteredRsvps.length === 0" class="nw-empty" style="padding: 40px 20px; text-align: center; color: var(--nw-text-3);">
+    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); margin-bottom: 8px;">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text);">
+      {{ rsvps.length === 0 ? 'Sin respuestas aún' : 'No hay respuestas que coincidan con la búsqueda' }}
+    </h3>
+    <p style="font-size: 13px; margin-top: 4px; color: var(--nw-text-2);">
+      {{ rsvps.length === 0 ? 'Las respuestas aparecerán cuando los invitados confirmen desde la invitación digital.' : 'Intenta ajustar los filtros de búsqueda.' }}
+    </p>
+  </div>
+
+  <!-- TABLA RESPONSIVA DE RSVPS -->
+  <div class="nw-table-responsive" *ngIf="!rsvpsLoading && filteredRsvps.length > 0" style="overflow-x: auto; max-width: 100%; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
+    <table class="nw-table" style="width: 100%; min-width: 820px; margin: 0;">
+      <thead>
+        <tr>
+          <th style="padding: 12px 14px;">Invitado</th>
+          <th style="padding: 12px 14px;">Contacto</th>
+          <th style="padding: 12px 14px;">Estado</th>
+          <th style="padding: 12px 14px;">Acompañantes</th>
+          <th style="padding: 12px 14px;">Menú / Respuestas</th>
+          <th style="padding: 12px 14px;">Mensaje</th>
+          <th style="padding: 12px 14px; text-align: right;">Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of paginatedRsvps">
+          <!-- Nombre Invitado -->
+          <td style="white-space: nowrap; padding: 12px 14px;">
+            <strong style="color: var(--nw-text); font-size: 14px;">{{ r.name }}</strong>
+          </td>
+
+          <!-- Contacto en 2 Líneas Apiladas -->
+          <td style="font-size: 12.5px; color: var(--nw-text-2); padding: 10px 14px; white-space: nowrap;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div *ngIf="r.phone || r.phoneE164" style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent); flex-shrink: 0;">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+                {{ r.phoneE164 || r.phone }}
+              </div>
+              <div *ngIf="r.email" style="display: flex; align-items: center; gap: 6px; color: var(--nw-text-3); font-size: 12px;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); flex-shrink: 0;">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                {{ r.email }}
+              </div>
+              <span *ngIf="!r.email && !r.phone && !r.phoneE164" style="color: var(--nw-text-3);">—</span>
+            </div>
+          </td>
+
+          <!-- Estado RSVP -->
+          <td style="white-space: nowrap; padding: 12px 14px;">
+            <span class="nw-pill" [ngClass]="statusPillClass(r.response)" style="font-weight: 600;">
+              {{ statusLabel(r.response) }}
+            </span>
+          </td>
+
+          <!-- Acompañantes -->
+          <td style="white-space: nowrap; padding: 12px 14px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-weight: 700; font-size: 13px;">
+                {{ r.companions || 0 }} {{ (r.companions || 0) === 1 ? 'persona' : 'personas' }}
+              </span>
+              <span *ngIf="r.companionNames?.length" style="font-size: 11.5px; color: var(--nw-text-3); display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); flex-shrink: 0;">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                {{ r.companionNames?.join(', ') }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Menú y Preguntas Personalizadas -->
+          <td style="padding: 10px 14px;">
+            <div *ngIf="getCustomAnswersList(r).length > 0" style="display: flex; flex-direction: column; gap: 4px; max-width: 320px;">
+              <span *ngFor="let qa of getCustomAnswersList(r)" class="nw-pill" style="font-size: 11.5px; padding: 3px 8px; line-height: 1.3; text-align: left; background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); display: inline-block; word-break: break-word;">
+                <strong style="color: var(--nw-accent, #c9a96e);">{{ qa.label }}:</strong> {{ qa.value }}
+              </span>
+            </div>
+            <span *ngIf="getCustomAnswersList(r).length === 0" style="color: var(--nw-text-3);">—</span>
+          </td>
+
+          <!-- Mensaje -->
+          <td style="max-width: 240px; color: var(--nw-text-2); font-size: 13px; padding: 12px 14px;">
+            <span *ngIf="r.message" style="font-style: italic;">“{{ r.message }}”</span>
+            <span *ngIf="!r.message" style="color: var(--nw-text-3);">—</span>
+          </td>
+
+          <!-- Fecha -->
+          <td style="color: var(--nw-text-3); font-size: 12px; white-space: nowrap; padding: 12px 14px; text-align: right;">
+            {{ formatShortDate(r.createdAt || '') || '—' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 🎛️ Paginación de Respuestas RSVP -->
+  <div *ngIf="filteredRsvps.length > rsvpPageSize"
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 16px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); flex-wrap: wrap; gap: 10px;">
+    <span style="font-size: 13px; color: var(--nw-text-2, #6e6157); font-weight: 500;">
+      Mostrando <strong>{{ (rsvpPage - 1) * rsvpPageSize + 1 }}</strong> a <strong>{{ Math.min(rsvpPage * rsvpPageSize, filteredRsvps.length) }}</strong> de <strong>{{ filteredRsvps.length }}</strong> respuestas
+    </span>
+
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <!-- Botón Anterior -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="rsvpPage === 1" (click)="setRsvpPage(rsvpPage - 1)"
+        style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Anterior
+      </button>
+
+      <!-- Números de Página -->
+      <button type="button" *ngFor="let p of getRsvpPagesArray()" class="nw-btn nw-btn-sm"
+        (click)="setRsvpPage(p)"
+        [class.nw-btn-primary]="rsvpPage === p"
+        [class.nw-btn-ghost]="rsvpPage !== p"
+        style="height: 32px; min-width: 32px; padding: 0 8px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">
+        {{ p }}
+      </button>
+
+      <!-- Botón Siguiente -->
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" [disabled]="rsvpPage === totalRsvpPages" (click)="setRsvpPage(rsvpPage + 1)"
+        style="height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px;">
+        Siguiente
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>

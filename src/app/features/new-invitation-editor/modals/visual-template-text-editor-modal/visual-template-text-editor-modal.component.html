@@ -1,0 +1,106 @@
+<!-- MODAL OVERLAY -->
+<div class="vte-overlay" (click)="onClose()">
+  <div class="vte-modal" (click)="$event.stopPropagation()">
+
+    <!-- TOP TOOLBAR -->
+    <div class="vte-header">
+      <div class="vte-header-left">
+        <div class="vte-icon-box">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h2 class="vte-title">Editar Textos — {{ templateDisplayName }}</h2>
+            <span class="vte-pill-tag">Modo Edición Directa</span>
+          </div>
+          <p class="vte-subtitle">Haz clic sobre cualquier título o texto directamente en la invitación para modificarlo como en Word.</p>
+        </div>
+      </div>
+
+      <!-- HEADER ACTIONS -->
+      <div class="vte-header-controls">
+        <!-- Viewport Switcher -->
+        <div class="vte-device-toggle">
+          <button type="button" class="vte-device-btn" [class.active]="previewViewport === 'desktop'"
+            (click)="previewViewport = 'desktop'" title="Vista Desktop">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>Desktop</span>
+          </button>
+          <button type="button" class="vte-device-btn" [class.active]="previewViewport === 'mobile'"
+            (click)="previewViewport = 'mobile'" title="Vista Móvil">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>Móvil</span>
+          </button>
+        </div>
+
+        <button type="button" class="vte-btn vte-btn-ghost" (click)="onClose()" [disabled]="saving">
+          Cancelar
+        </button>
+
+        <button type="button" class="vte-btn vte-btn-primary" (click)="submitForReview()" [disabled]="saving">
+          <svg *ngIf="!saving" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2L11 13"></path>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+          </svg>
+          <span *ngIf="!saving">Guardar y Enviar a Revisión</span>
+          <span *ngIf="saving">Guardando...</span>
+        </button>
+
+        <button type="button" class="vte-close-btn" (click)="onClose()" title="Cerrar">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- INSTRUCTION BANNER -->
+    <div class="vte-hint-bar">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 16px;">💡</span>
+        <span><strong>Edición en vivo:</strong> Puedes hacer clic y escribir directamente en los títulos, párrafos y mensajes de la invitación. Al terminar, pulsa <strong>Guardar y Enviar a Revisión</strong>.</span>
+      </div>
+    </div>
+
+    <!-- FULL CANVAS BODY -->
+    <div class="vte-canvas-body">
+      <div class="vte-iframe-wrapper" [class.viewport-mobile]="previewViewport === 'mobile'">
+        <div class="vte-phone-frame" *ngIf="previewViewport === 'mobile'">
+          <div class="vte-phone-speaker"></div>
+          <iframe #mobileFrame *ngIf="previewUrl" [src]="previewUrl" class="vte-iframe"
+            (load)="onIframeLoad(mobileFrame)"
+            allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <iframe #desktopFrame *ngIf="previewViewport === 'desktop' && previewUrl" [src]="previewUrl" class="vte-iframe"
+          (load)="onIframeLoad(desktopFrame)"
+          allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <!-- FLOATING TOAST -->
+    <div *ngIf="toastMessage" class="vte-toast" [class.success]="toastType === 'success'" [class.error]="toastType === 'error'">
+      <svg *ngIf="toastType === 'success'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <svg *ngIf="toastType === 'error'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+
+  </div>
+</div>

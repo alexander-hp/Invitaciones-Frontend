@@ -1,0 +1,313 @@
+<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <h3 style="margin:0;">Reglas RSVP y Preguntas</h3>
+      <span class="nw-pill" [class.success]="isSectionActive('rsvp_rules')"
+        [class.warning]="!isSectionActive('rsvp_rules')">
+        {{ isSectionActive('rsvp_rules') ? 'Activo' : 'Inactivo' }}
+      </span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <label class="nw-switch" title="Activar / Desactivar RSVP en la invitación">
+        <input type="checkbox" [checked]="isSectionActive('rsvp_rules')"
+          (change)="toggleSectionActive.emit({ key: 'rsvp_rules', active: $any($event.target).checked })">
+        <span class="nw-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="nw-card-body" style="padding-top:16px;">
+    <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.rsvpSettings as rsvpSettings">
+      <label class="nw-label">Fecha límite RSVP
+        <input class="nw-input" type="datetime-local" [(ngModel)]="rsvpSettings.deadline">
+      </label>
+      <label class="nw-label">Días antes para recordatorio
+        <input class="nw-input" type="number" min="0" max="60" [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline">
+      </label>
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir "No estoy seguro"</strong>
+          <span>Opción de respuesta intermedia al confirmar asistencia.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.allowMaybe">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir cambios hasta la fecha límite</strong>
+          <span>Los invitados podrán modificar su RSVP libremente.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <div class="nw-toggle-row nw-form-wide">
+        <div class="nw-toggle-info">
+          <strong>Confirmación al declinar</strong>
+          <span>Pedir confirmación extra cuando un invitado indique que no asistirá.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.declineRequiresConfirmation">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Confirmar por correo</strong>
+          <span>Requerir validación por email al enviar RSVP.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')"
+            (change)="toggleIdentityMethod.emit({ method: 'email', checked: $any($event.target).checked })">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Confirmar por teléfono</strong>
+          <span>Requerir validación de teléfono/SMS al enviar RSVP.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')"
+            (change)="toggleIdentityMethod.emit({ method: 'phone', checked: $any($event.target).checked })">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+
+      <div class="nw-toggle-row">
+        <div class="nw-toggle-info">
+          <strong>Permitir acompañantes por defecto</strong>
+          <span>Los invitados podrán especificar cuántas personas asisten.</span>
+        </div>
+        <label class="nw-switch">
+          <input type="checkbox" [(ngModel)]="rsvpSettings.allowCompanionsDefault">
+          <span class="nw-slider"></span>
+        </label>
+      </div>
+      <label class="nw-label">Máximo acompañantes por defecto
+        <input class="nw-input" type="number" min="0" max="20" [(ngModel)]="rsvpSettings.defaultAllowedCompanions">
+      </label>
+      <label class="nw-label">Máximo asistentes en total
+        <input class="nw-input" type="number" min="1" [(ngModel)]="rsvpSettings.maxAttendees" placeholder="Ej. 150">
+      </label>
+
+      <ng-container *ngIf="invitation.accessMode === 'specific_users'">
+        <div class="nw-form-wide"
+          style="padding:18px; background:var(--nw-surface); border:1px solid var(--nw-accent); border-radius:var(--nw-radius-md); box-shadow:var(--nw-shadow-sm); margin-top:8px;">
+
+          <div
+            style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; border-bottom:1px solid var(--nw-border); padding-bottom:10px;">
+            <strong style="font-size:15px; color:var(--nw-text);">Acceso por Rol Específico</strong>
+            <span *ngIf="loadedGuests.length" class="nw-pill success" style="font-size:11px; padding:3px 8px;">
+              {{ loadedGuests.length }} invitados cargados
+            </span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+            <!-- Lista 1: Roles -->
+            <div>
+              <strong style="display:block; font-size:13.5px; color:var(--nw-text); margin-bottom:4px;">Roles
+                permitidos</strong>
+              <p style="font-size:12px; color:var(--nw-text-2); margin:0 0 10px;">
+                Marca los roles que pueden ver y confirmar esta invitación:
+              </p>
+
+              <div
+                style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding:10px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); margin-bottom:10px;">
+                <label *ngFor="let role of availableRoleOptions"
+                  style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--nw-text); cursor:pointer; user-select:none;">
+                  <input type="checkbox" [checked]="isRoleSelected(role.value)" (change)="toggleRole(role.value)"
+                    style="accent-color:var(--nw-primary); width:16px; height:16px;">
+                  <span>{{ role.label }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Lista 2: Grupos -->
+            <div>
+              <strong style="display:block; font-size:13.5px; color:var(--nw-text); margin-bottom:4px;">Grupos
+                permitidos</strong>
+              <p style="font-size:12px; color:var(--nw-text-2); margin:0 0 10px;">
+                Marca los grupos que pueden ver y confirmar esta invitación:
+              </p>
+
+              <div
+                style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding:10px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); margin-bottom:10px;">
+                <label *ngFor="let group of availableGroupOptions"
+                  style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--nw-text); cursor:pointer; user-select:none;">
+                  <input type="checkbox" [checked]="isGroupSelected(group.value)" (change)="toggleGroup(group.value)"
+                    style="accent-color:var(--nw-primary); width:16px; height:16px;">
+                  <span>{{ group.label }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Preguntas Personalizadas Visual Editor -->
+      <div class="nw-form-wide" style="margin-top:16px; border-top:1px solid var(--nw-border); padding-top:16px;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+          <strong style="font-size:15px; color:var(--nw-text);">Preguntas personalizadas para tus invitados</strong>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addCustomQuestion.emit()"
+            style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Agregar pregunta</span>
+          </button>
+        </div>
+
+        <!-- Quick Presets -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
+          <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Sugeridas:</span>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('song')"
+            style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <span>Canción preferida</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('diet')"
+            style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+            </svg>
+            <span>Restricciones alimenticias</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('menu')"
+            style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+            <span>Selección de menú</span>
+          </button>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('transport')"
+            style="display:inline-flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <path d="M7 17v2"></path>
+              <path d="M17 17v2"></path>
+              <circle cx="7.5" cy="14.5" r="1.5"></circle>
+              <circle cx="16.5" cy="14.5" r="1.5"></circle>
+            </svg>
+            <span>Transporte</span>
+          </button>
+        </div>
+
+        <p *ngIf="!customQuestionsList.length" style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
+          Sin preguntas personalizadas aún. Puedes agregar preguntas sugeridas o crear una propia.
+        </p>
+
+        <div style="display:grid; gap:12px;">
+          <div *ngFor="let q of customQuestionsList; let i = index"
+            style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
+            <div class="nw-form-grid" style="gap:10px;">
+              <label class="nw-label nw-form-wide">Pregunta / Texto
+                <input class="nw-input" [(ngModel)]="q.label" (ngModelChange)="syncQuestions.emit()"
+                  placeholder="Ej. ¿Tienes alguna alergia o dieta especial?">
+              </label>
+              <label class="nw-label">Tipo de respuesta
+                <select class="nw-select" [(ngModel)]="q.type" (ngModelChange)="syncQuestions.emit()">
+                  <option value="text">Texto corto</option>
+                  <option value="textarea">Texto largo / comentario</option>
+                  <option value="select">Opción múltiple (lista)</option>
+                  <option value="boolean">Casilla Sí / No</option>
+                </select>
+              </label>
+              <div class="nw-toggle-row" style="padding:8px 12px;">
+                <div class="nw-toggle-info">
+                  <strong style="font-size:13px;">¿Respuesta obligatoria?</strong>
+                </div>
+                <label class="nw-switch">
+                  <input type="checkbox" [(ngModel)]="q.required" (ngModelChange)="syncQuestions.emit()">
+                  <span class="nw-slider"></span>
+                </label>
+              </div>
+              <!-- Tabla de Opciones para tipo 'select' -->
+              <div class="nw-form-wide" *ngIf="q.type === 'select'"
+                style="margin-top:8px; padding:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <strong style="font-size:13px; color:var(--nw-text-2);">Opciones Seleccionables</strong>
+                  <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="addQuestionOption(q)"
+                    style="font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Agregar opción</span>
+                  </button>
+                </div>
+
+                <div *ngIf="ensureOptionsArray(q).length" style="display:grid; gap:8px;">
+                  <div *ngFor="let opt of q.options; let optIdx = index; trackBy: trackByIndex"
+                    style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--nw-text-3); width:20px;">#{{ optIdx + 1
+                      }}</span>
+                    <input class="nw-input" [ngModel]="getOptionValue(q, optIdx)"
+                      (ngModelChange)="setOptionValue(q, optIdx, $event)"
+                      placeholder="Texto de la opción (ej. Menú Vegetariano)" style="flex:1;">
+                    <button type="button" class="nw-btn nw-btn-danger nw-btn-sm"
+                      (click)="removeQuestionOption(q, optIdx)" style="padding:4px 8px;" title="Eliminar esta opción">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <p *ngIf="!q.options?.length" style="margin:6px 0 0; font-size:12px; color:var(--nw-text-3);">
+                  Sin opciones aún. Haz clic en <strong>Agregar opción</strong> para definir las respuestas elegibles.
+                </p>
+
+                <!-- Vista rápida / fallback de texto -->
+                <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--nw-border);">
+                  <label class="nw-label" style="font-size:11.5px; color:var(--nw-text-3);">
+                    Vista rápida en texto plano (separadas por punto y coma ;)
+                    <input class="nw-input" [(ngModel)]="q.optionsText"
+                      (ngModelChange)="q.options = parseOptionsText(q.optionsText); syncQuestions.emit()"
+                      placeholder="Pollo; Carne; Vegetariano; Menú infantil" style="font-size:12px; height:32px;">
+                  </label>
+                </div>
+              </div>
+            </div>
+            <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCustomQuestion.emit(i)"
+              style="margin-top:10px; display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>Quitar pregunta</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

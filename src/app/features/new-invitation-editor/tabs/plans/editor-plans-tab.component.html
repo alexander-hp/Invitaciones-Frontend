@@ -1,0 +1,448 @@
+<!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="message || error">
+  <div *ngIf="message" class="nw-toast success">
+    <span>✨ {{ message }}</span>
+    <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
+  </div>
+  <div *ngIf="error" class="nw-toast error">
+    <span>⚠️ {{ error }}</span>
+    <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+  </div>
+</div>
+
+<!-- PLANTILLAS Y FORMATO DE DISEÑO -->
+<section class="nw-card" style="margin-bottom: 24px;">
+  <!-- Encabezado de la Sección -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        📋 Plantillas y Estructura de Invitación
+        <span class="nw-badge"
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ totalTemplatesCount }} plantillas
+        </span>
+        <span *ngIf="pendingCustomCount > 0" class="nw-pill warning" style="font-size: 12px; font-weight: 700;">
+          ⏳ {{ pendingCustomCount }} en revisión
+        </span>
+        <span *ngIf="approvedCustomCount > 0" class="nw-pill success" style="font-size: 12px; font-weight: 700;">
+          ✨ {{ approvedCustomCount }} personalizadas
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
+        Elige la experiencia de navegación para tus invitados al abrir la invitación o diseña una exclusiva con IA.
+      </p>
+    </div>
+  </div>
+
+  <!-- BANNER HERO DE IA GEMINI -->
+  <div
+    style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(121, 40, 202, 0.08) 0%, rgba(255, 0, 128, 0.05) 50%, var(--nw-surface-2, #f5f1ea) 100%); border: 1px solid rgba(121, 40, 202, 0.25); border-radius: var(--nw-radius-sm, 12px); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div style="display: flex; gap: 14px; align-items: center;">
+      <div
+        style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #7928ca, #ff0080); display: flex; align-items: center; justify-content: center; color: #ffffff; flex-shrink: 0; box-shadow: 0 4px 12px rgba(121, 40, 202, 0.3);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+          </polygon>
+        </svg>
+      </div>
+      <div>
+        <h4
+          style="margin: 0; font-size: 15px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 8px;">
+          Generador Inteligente de Plantillas e Interactividad
+          <span class="nw-pill accent" style="font-size: 10.5px;">Potenciado por Gemini</span>
+        </h4>
+        <p style="margin: 3px 0 0; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.4;">
+          Crea estructuras dinámicas, paletas de color y módulos interactivos adaptados al estilo y temática de tu
+          evento.
+        </p>
+      </div>
+    </div>
+    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openAiWizard.emit()"
+      style="font-size: 12.5px; height: 36px; padding: 0 16px; font-weight: 700; background: linear-gradient(135deg, #7928ca, #ff0080) !important; border: none !important; color: #ffffff !important; display: inline-flex; align-items: center; gap: 6px;">
+      <span>✨ Abrir Diseñador IA</span>
+      <span style="font-size: 11px;">→</span>
+    </button>
+  </div>
+
+  <!-- FILTROS SEGMENTADOS POR PILLS (SECCIÓN 5) -->
+  <div
+    style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'all'"
+      [class.nw-btn-primary]="activeFilterTab === 'all'" [class.nw-btn-ghost]="activeFilterTab !== 'all'"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+      🖼️ Todas ({{ totalTemplatesCount }})
+    </button>
+
+    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'builtin'"
+      [class.nw-btn-primary]="activeFilterTab === 'builtin'" [class.nw-btn-ghost]="activeFilterTab !== 'builtin'"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+      🏛️ Plantillas Base ({{ builtinTemplates.length }})
+    </button>
+
+    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'custom'"
+      [class.nw-btn-primary]="activeFilterTab === 'custom'" [class.nw-btn-ghost]="activeFilterTab !== 'custom'"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+      ✨ Versiones Editadas e IA ({{ customSubmissions.length }})
+    </button>
+  </div>
+
+  <!-- CUADRÍCULA DE TARJETAS DE PLANTILLAS -->
+  <div
+    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; margin-bottom: 20px;">
+
+    <!-- 1. TARJETAS DE PLANTILLAS BASE (CLEAN ORIGINALS) -->
+    <ng-container *ngIf="activeFilterTab === 'all' || activeFilterTab === 'builtin'">
+      <div *ngFor="let tpl of builtinTemplates" class="nw-card-item"
+        [style.border]="isBuiltinActive(tpl.id) ? '2px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
+        [style.box-shadow]="isBuiltinActive(tpl.id) ? '0 4px 16px rgba(192, 156, 120, 0.2)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
+        style="background: var(--nw-surface, #ffffff); border-radius: var(--nw-radius-sm, 12px); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; box-sizing: border-box;">
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div
+              style="width: 40px; height: 40px; border-radius: 10px; background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); display: flex; align-items: center; justify-content: center; color: var(--nw-accent, #c09c78);">
+              <svg *ngIf="tpl.iconKey === 'envelope'" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <svg *ngIf="tpl.iconKey === 'classic'" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <svg *ngIf="tpl.iconKey === 'modern'" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span *ngIf="isBuiltinActive(tpl.id)" class="nw-pill success" style="font-size: 11px; font-weight: 700;">
+                Activa ✅
+              </span>
+              <span class="nw-pill"
+                style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157);">
+                {{ tpl.badge }}
+              </span>
+            </div>
+          </div>
+
+          <h4 style="margin: 0 0 6px; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
+            {{ tpl.name }}
+          </h4>
+          <p style="margin: 0 0 12px; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.45;">
+            {{ tpl.description }}
+          </p>
+
+          <ul
+            style="margin: 0; padding-left: 18px; font-size: 12px; color: var(--nw-text-3, #8c7e72); line-height: 1.55;">
+            <li *ngFor="let feat of tpl.features">{{ feat }}</li>
+          </ul>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 12px;">
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="isBuiltinActive(tpl.id)"
+            [class.nw-btn-secondary]="!isBuiltinActive(tpl.id)" (click)="setBuiltinTemplate(tpl.id)"
+            style="width: 100%; height: 36px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">
+            {{ isBuiltinActive(tpl.id) ? '✓ Seleccionada' : 'Usar esta plantilla' }}
+          </button>
+
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="editCleanBuiltin(tpl.id)"
+              title="Editar textos desde la plantilla base limpia"
+              style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <span>Editar</span>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewBuiltinTemplate(tpl.id)"
+              title="Ver vista previa limpia"
+              style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span>Ver</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+    <!-- 2. TARJETAS DE VERSIONES / RUTINAS EDITADAS E IA (INDIVIDUALES) -->
+    <ng-container *ngIf="activeFilterTab === 'all' || activeFilterTab === 'custom'">
+      <div *ngFor="let sub of customSubmissions" class="nw-card-item"
+        [style.border]="isCustomSubmissionActive(sub) ? '2px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
+        [style.box-shadow]="isCustomSubmissionActive(sub) ? '0 4px 16px rgba(121, 40, 202, 0.25)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
+        style="background: linear-gradient(180deg, rgba(121, 40, 202, 0.04) 0%, var(--nw-surface, #ffffff) 100%); border-radius: var(--nw-radius-sm, 12px); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; box-sizing: border-box;">
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div
+              style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #7928ca, #ff0080); display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 3px 8px rgba(121, 40, 202, 0.3);">
+              <svg *ngIf="!sub.sourceTemplateKey" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                </polygon>
+              </svg>
+              <svg *ngIf="sub.sourceTemplateKey" viewBox="0 0 24 24" width="18" height="18" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <span *ngIf="isCustomSubmissionActive(sub)" class="nw-pill success"
+                style="font-size: 11px; font-weight: 700;">
+                Activa ✅
+              </span>
+              <span *ngIf="sub.status === 'approved'" class="nw-pill accent" style="font-size: 11px; font-weight: 700;">
+                ✓ Aprobada
+              </span>
+              <span *ngIf="sub.status === 'pending'" class="nw-pill warning" style="font-size: 11px; font-weight: 700;">
+                ⏳ En Revisión
+              </span>
+            </div>
+          </div>
+
+          <h4 style="margin: 0 0 6px; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
+            {{ sub.name }}
+          </h4>
+          <p style="margin: 0 0 12px; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.45;">
+            {{ sub.description || 'Rutina personalizada con interactividad nativa y textos ajustados para tu evento.' }}
+          </p>
+
+          <div
+            style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--nw-text-3, #8c7e72); background: var(--nw-surface-2, #f5f1ea); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc);">
+            <div *ngIf="sub.sourceTemplateKey" style="display: flex; align-items: center; gap: 6px;">
+              <span>🏛️ Base:</span>
+              <strong style="color: var(--nw-text, #2e2621);">{{ getBuiltinName(sub.sourceTemplateKey) }}</strong>
+            </div>
+            <div *ngIf="sub.editedTexts" style="display: flex; align-items: center; gap: 6px;">
+              <span>📝 Modificaciones:</span>
+              <strong style="color: var(--nw-accent, #c09c78);">{{ getEditedTextsCount(sub) }} textos editados</strong>
+            </div>
+            <div *ngIf="sub.submittedAt" style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+              <span>📅 Creada:</span>
+              <span>{{ sub.submittedAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 12px;">
+          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="isCustomSubmissionActive(sub)"
+            [class.nw-btn-secondary]="!isCustomSubmissionActive(sub)" (click)="setCustomSubmission(sub)"
+            style="width: 100%; height: 36px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">
+            {{ isCustomSubmissionActive(sub) ? '✓ Seleccionada' : 'Usar esta versión' }}
+          </button>
+
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="editCustomSubmission(sub)"
+              title="Continuar editando esta versión"
+              style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <span>Editar</span>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewCustomSubmission(sub)"
+              title="Previsualizar esta versión"
+              style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span>Ver</span>
+            </button>
+
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="deleteCustomSubmission(sub, $event)"
+              title="Eliminar esta versión personalizada"
+              style="height: 34px; padding: 0 10px; color: #dc2626; border: 1px solid rgba(220,38,38,0.2); background: rgba(220,38,38,0.04); display: flex; align-items: center; justify-content: center; border-radius: var(--nw-radius-sm, 8px);">
+              🗑️
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- ESTADO VACÍO CUANDO NO HAY VERSIONES PERSONALIZADAS Y SE FILTRA POR ELLAS -->
+  <div *ngIf="activeFilterTab === 'custom' && customSubmissions.length === 0 && !loadingSubmissions" class="nw-empty"
+    style="padding: 40px 20px; text-align: center; color: var(--nw-text-3, #9e9083); background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 12px); border: 1px dashed var(--nw-border, #eadecc); margin-bottom: 20px;">
+    <span class="empty-icon" style="font-size: 40px; display: block; margin-bottom: 8px;">✨</span>
+    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
+      No tienes versiones o rutinas editadas aún
+    </h3>
+    <p style="font-size: 13px; margin: 4px 0 16px; color: var(--nw-text-2, #6e6157);">
+      Haz clic en "Editar" en cualquiera de las plantillas base o utiliza el Asistente IA para crear tu primera rutina
+      personalizada.
+    </p>
+    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openAiWizard.emit()"
+      style="background: linear-gradient(135deg, #7928ca, #ff0080) !important; border: none !important; color: #ffffff !important;">
+      ✨ Diseñar con IA
+    </button>
+  </div>
+
+  <!-- TIENDA / PRESETS DE API SI EXISTEN -->
+  <div *ngIf="templates.length"
+    style="border-top: 1px dashed var(--nw-border, #eadecc); padding-top: 16px; margin-top: 10px;">
+    <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--nw-text, #2e2621);">Estilos
+      Predefinidos Disponibles:</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+      <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
+        (click)="applyTemplate.emit(template)"
+        style="display: flex; flex-direction: column; align-items: flex-start; padding: 12px; text-align: left; border: 1px solid var(--nw-border, #eadecc); border-radius: 8px;">
+        <strong>{{ template.name }}</strong>
+        <span style="font-size: 12px; color: var(--nw-text-3, #8c7e72);">{{ template.eventType }} · {{ template.tier
+          }}</span>
+        <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
+          style="margin-top: 6px; font-size: 11px;">Requiere upgrade</span>
+      </button>
+    </div>
+  </div>
+
+</section>
+
+<!-- VISTA PREVIA RÁPIDA EN VIVO (DINÁMICA POR PLANTILLA SELECCIONADA) -->
+<div class="nw-card" style="margin-bottom: 24px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <h3
+        style="margin: 0; font-size: 18px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <span>Vista Previa Rápida en Vivo</span>
+        <span class="nw-pill accent" style="font-size: 11.5px; font-weight: 700;">
+          ✨ {{ activeTemplateDisplayName }}
+        </span>
+      </h3>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <!-- Switch Viewport Mobile / Desktop -->
+      <div style="display: flex; background: var(--nw-surface-2, #f5f1ea); border-radius: 8px; padding: 2px; border: 1px solid var(--nw-border, #eadecc);">
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewViewport === 'mobile'"
+          [class.nw-btn-ghost]="previewViewport !== 'mobile'" (click)="previewViewport = 'mobile'"
+          style="height: 30px; padding: 0 10px; font-size: 12px; font-weight: 600;">
+          📱 Celular
+        </button>
+        <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewViewport === 'desktop'"
+          [class.nw-btn-ghost]="previewViewport !== 'desktop'" (click)="previewViewport = 'desktop'"
+          style="height: 30px; padding: 0 10px; font-size: 12px; font-weight: 600;">
+          💻 Pantalla Completa
+        </button>
+      </div>
+
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="refreshPreview()" title="Recargar vista previa"
+        style="height: 34px; padding: 0 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+        <span>🔄 Recargar</span>
+      </button>
+
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openLivePreviewWindow()" title="Abrir en ventana nueva"
+        style="height: 34px; padding: 0 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+        <span>↗ Abrir en ventana</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="nw-card-body" style="padding: 20px 16px; display: flex; justify-content: center; background: var(--nw-surface-2, #f5f1ea); border-radius: 0 0 12px 12px;">
+    <!-- Render Iframe with active template URL -->
+    <div *ngIf="livePreviewUrl" [style.max-width]="previewViewport === 'mobile' ? '400px' : '100%'"
+      style="width: 100%; transition: all 0.3s ease; position: relative;">
+      
+      <!-- Container frame -->
+      <div [style.border-radius]="previewViewport === 'mobile' ? '28px' : '12px'"
+        [style.border]="previewViewport === 'mobile' ? '8px solid #2e2621' : '1px solid var(--nw-border, #eadecc)'"
+        [style.box-shadow]="previewViewport === 'mobile' ? '0 12px 36px rgba(0,0,0,0.18)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
+        style="background: #ffffff; overflow: hidden; height: 680px; position: relative;">
+        
+        <!-- Frame Notch for Mobile View -->
+        <div *ngIf="previewViewport === 'mobile'"
+          style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 18px; background: #2e2621; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10;"></div>
+
+        <iframe [src]="livePreviewUrl" (load)="onIframeLoad()"
+          style="width: 100%; height: 100%; border: none; display: block;"
+          allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAN Y LICENCIA DEL EVENTO (COLAPSABLE, INICIA COLAPSADO ABAJO DE VISTA PREVIA) -->
+<div class="nw-card" style="margin-bottom: 24px;">
+  <div class="nw-card-header" (click)="togglePlanCollapsed()"
+    style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+      <h3
+        style="margin: 0; font-size: 18px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 8px;">
+        Plan y Licencia del Evento
+        <span style="font-size: 13px; color: var(--nw-text-3, #8c7e72); font-weight: 400;">
+          {{ planCollapsed ? '(Clic para ver planes)' : '(Clic para colapsar)' }}
+        </span>
+      </h3>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
+      <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
+      <span style="font-size: 14px; font-weight: 700; color: var(--nw-text-2, #6e6157); transition: transform 0.2s;">
+        {{ planCollapsed ? '▼' : '▲' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="nw-card-body" *ngIf="!planCollapsed" style="padding-top: 16px;">
+    <p style="font-size: 13.5px; color: var(--nw-text-2, #6e6157); margin-bottom: 16px;">
+      Un evento puede tener varias invitaciones segmentadas. El plan desbloquea este evento completo.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+      <div *ngFor="let plan of plans" class="nw-card-item"
+        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 16px; display: grid; gap: 8px;">
+        <strong style="font-size: 15px; color: var(--nw-text, #2e2621);">{{ plan.name }}</strong>
+        <span style="font-size: 18px; font-weight: 700; color: var(--nw-accent, #c09c78);">{{ formatPrice(plan) }}</span>
+        <span style="font-size: 13px; color: var(--nw-text-2, #6e6157);">{{ checkoutScopeText(plan) }}</span>
+        <span style="font-size: 12px; color: var(--nw-text-3, #8c7e72);">{{ planLimitText(plan) }}</span>
+        <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button"
+          (click)="checkout.emit(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)"
+          style="margin-top: 4px;">
+          {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar pago') }}
+        </button>
+        <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'"
+          style="font-size: 12px; color: var(--nw-text-3, #8c7e72);">Ya cubierto por el plan activo.</span>
+      </div>
+    </div>
+  </div>
+</div>
