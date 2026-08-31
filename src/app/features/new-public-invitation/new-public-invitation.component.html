@@ -2,9 +2,10 @@
 <div id="nw-pub-yt-player" style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;"></div>
 
 <!-- Feedback Toast Notification -->
-<div *ngIf="toastMessage" class="nw-pub-toast-notification">
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:6px; color:var(--accent, #c59b6c);">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+<div *ngIf="toastMessage" class="nw-pub-toast-notification" role="alert">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toast-svg-icon">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+    <polyline points="22 4 12 14.01 9 11.01"></polyline>
   </svg>
   <span>{{ toastMessage }}</span>
 </div>
@@ -12,27 +13,30 @@
 <!-- Lightbox Modal -->
 <div *ngIf="activeLightboxImage" class="nw-pub-lightbox-overlay" (click)="closeLightbox()">
   <div class="nw-pub-lightbox-modal" (click)="$event.stopPropagation()">
-    <button class="nw-pub-lightbox-close" (click)="closeLightbox()">&times;</button>
+    <button class="nw-pub-lightbox-close" (click)="closeLightbox()" aria-label="Cerrar vista previa">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
     <img [src]="activeLightboxImage" alt="Vista previa de imagen" class="nw-pub-lightbox-img">
   </div>
 </div>
 
 <!-- Floating Audio Player Button -->
-<div *ngIf="hasMusicTrack() && isClassicVerticalTemplate()" class="nw-pub-audio-floating">
+<div *ngIf="hasMusicTrack() && isClassicVerticalTemplate() && (!requiresGuestValidation || verifiedGuest)" class="nw-pub-audio-floating">
   <button type="button" class="nw-pub-audio-btn" [class.playing]="isPlayingMusic" (click)="toggleMusic()"
     [attr.aria-label]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
     <span class="nw-pub-audio-icon">
-      <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="6" y="4" width="4" height="16"></rect>
         <rect x="14" y="4" width="4" height="16"></rect>
       </svg>
-      <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 18V5l12-2v13"></path>
-        <circle cx="6" cy="18" r="3"></circle>
-        <circle cx="18" cy="16" r="3"></circle>
+      <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
       </svg>
     </span>
-    <span class="nw-pub-audio-text">{{ isPlayingMusic ? 'Pausar música' : 'Reproducir música' }}</span>
+    <span class="nw-pub-audio-text">{{ isPlayingMusic ? 'Pausar música' : 'Música del evento' }}</span>
     <div *ngIf="isPlayingMusic" class="nw-pub-audio-bars">
       <span></span><span></span><span></span>
     </div>
@@ -42,23 +46,24 @@
 <!-- Loading & Error state -->
 <div *ngIf="loading" class="nw-pub-state-container">
   <div class="nw-pub-spinner"></div>
-  <p>Cargando invitación especial...</p>
+  <p class="nw-pub-state-text">Cargando tu invitación especial...</p>
 </div>
 
 <div *ngIf="error && !invitation" class="nw-pub-state-container error">
   <div class="nw-pub-state-icon">
-    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="12" y1="8" x2="12" y2="12"></line>
       <line x1="12" y1="16" x2="12.01" y2="16"></line>
     </svg>
   </div>
-  <h2>Invitación no encontrada</h2>
+  <h2>Invitación no disponible</h2>
   <p>{{ error }}</p>
 </div>
 
 <!-- MAIN PUBLIC INVITATION CONTAINER -->
 <ng-container *ngIf="invitation">
+
   <!-- PLANTILLA PERSONALIZADA HTML / CSS -->
   <div *ngIf="isCustomHtmlTemplate()" class="nw-pub-custom-page-container" style="width:100vw; min-height:100vh; position:relative; background:transparent; overflow:hidden;">
     <iframe *ngIf="customHtmlSafeSrcdoc" [srcdoc]="customHtmlSafeSrcdoc"
@@ -67,7 +72,7 @@
     </iframe>
   </div>
 
-  <!-- NUEVA PLANTILLA SOBRE & CARDS -->
+  <!-- PLANTILLA SOBRE & CARDS -->
   <app-new-public-invitation-envelope-cards
     *ngIf="isEnvelopeCardsTemplate()"
     [invitation]="invitation"
@@ -89,443 +94,555 @@
     [companionNamesText]="companionNamesText"
     [customAnswers]="customAnswers"
     [declineConfirmed]="declineConfirmed"
+    [songSearchQuery]="songSearchQuery"
+    [songSearchResults]="songSearchResults"
+    [searchingSongs]="searchingSongs"
+    [songRequest]="songRequest"
+    [songRequestSending]="songRequestSending"
+    [songRequestMessage]="songRequestMessage"
+    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
+    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+    [requireSongApproval]="requireSongApproval"
+    [allowDedicationsEnabled]="allowDedicationsEnabled"
     (toggleMusic)="toggleMusic()"
     (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
     (submitRsvp)="submitRsvp()"
     (submitDedication)="submitDedicationFromData($event)"
     (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)">
+    (openLightbox)="openLightbox($event)"
+    (searchSong)="searchSongForRequestDirect($event)"
+    (selectSong)="selectSongFromSearch($event)"
+    (requestSong)="submitSongRequest()"
+    (resetGuest)="resetGuestAccess()"
+    (downloadPass)="downloadGuestPass()">
   </app-new-public-invitation-envelope-cards>
 
-  <!-- PLANTILLA CLÁSICA VERTICAL EDITORIAL -->
-  <main *ngIf="isClassicVerticalTemplate()" class="nw-pub-wrapper" [style.--primary]="invitation.content.palette?.primary || '#1c2434'"
-  [style.--secondary]="invitation.content.palette?.secondary || '#f8f5f0'"
-  [style.--accent]="invitation.content.palette?.accent || '#c59b6c'">
+  <!-- ═════════════════════════════════════════════════════════════════════
+       PLANTILLA CLÁSICA VERTICAL EDITORIAL
+       ═════════════════════════════════════════════════════════════════════ -->
 
-  <!-- HERO SECTION -->
-  <header class="nw-pub-hero" data-section-key="hero">
-    <div *ngIf="invitation.content.coverImageUrl" class="nw-pub-hero-bg"
+  <!-- A. PANTALLA TIPO SOBRE DE VALIDACIÓN VIP OBLIGATORIA (SI NO ESTÁ VALIDADO) -->
+  <div *ngIf="isClassicVerticalTemplate() && requiresGuestValidation && !verifiedGuest"
+    class="nw-pub-vip-envelope-screen" [class.opening]="isOpeningVipEnvelope"
+    [style.--primary]="invitation.content.palette?.primary || '#1c2434'"
+    [style.--secondary]="invitation.content.palette?.secondary || '#f8f5f0'"
+    [style.--accent]="invitation.content.palette?.accent || '#c59b6c'">
+
+    <div *ngIf="invitation.content.coverImageUrl" class="nw-pub-envelope-bg"
       [style.backgroundImage]="'url(' + invitation.content.coverImageUrl + ')'"></div>
-    <div class="nw-pub-hero-overlay"></div>
+    <div class="nw-pub-envelope-overlay"></div>
 
-    <div class="nw-pub-hero-card">
-      <img *ngIf="invitation.content.brandLogoUrl" class="nw-pub-brand-logo" [src]="invitation.content.brandLogoUrl"
-        alt="Logo del evento">
+    <div class="nw-pub-envelope-modal-wrap">
+      <!-- 3D Luxury Envelope Component -->
+      <div class="nw-pub-3d-envelope">
+        <div class="nw-pub-env-flap"></div>
+        <div class="nw-pub-env-pocket">
+          <div class="nw-pub-wax-seal" (click)="validateAndOpenEnvelope()">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="M12 8v4"></path>
+              <path d="M12 16h.01"></path>
+            </svg>
+          </div>
+        </div>
 
-      <p *ngIf="invitation.content.subheadline" class="nw-pub-subheadline">{{ invitation.content.subheadline }}</p>
-      <h1 class="nw-pub-headline">{{ invitation.content.headline }}</h1>
+        <!-- Tarjeta que emerge del sobre -->
+        <div class="nw-pub-env-letter-card">
+          <div class="nw-pub-env-badge-row">
+            <span class="nw-pub-env-vip-badge">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+              </svg>
+              <span>¡Estás Invitado(a)! · Acceso VIP</span>
+            </span>
+          </div>
 
-      <div *ngIf="event?.date" class="nw-pub-date-badge">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nw-pub-date-icon">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <span>{{ event?.date | date:'fullDate' }}</span>
+          <p *ngIf="invitation.content.subheadline" class="nw-pub-env-subtitle">{{ invitation.content.subheadline }}</p>
+          <h1 class="nw-pub-env-title">{{ invitation.content.headline || event?.title || 'Nuestra Celebración' }}</h1>
+
+          <div *ngIf="event?.date" class="nw-pub-env-date-pill">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>{{ event?.date | date:'fullDate' }}</span>
+          </div>
+
+          <div class="nw-pub-env-auth-block">
+            <p class="nw-pub-env-auth-desc">
+              Esta invitación digital es privada y personalizada. Para abrir tu sobre y acceder a todos los detalles del evento, ingresa tu correo electrónico o teléfono registrado:
+            </p>
+
+            <div class="nw-pub-env-input-group">
+              <div class="nw-pub-env-input-wrap">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" class="env-icon">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input type="text" class="nw-pub-env-input" [(ngModel)]="guestAccessSingleInput"
+                  placeholder="Tu correo o teléfono registrado..."
+                  (keyup.enter)="validateAndOpenEnvelope()"
+                  [disabled]="checkingGuest">
+              </div>
+
+              <button type="button" class="nw-pub-btn nw-pub-btn-gold nw-pub-env-open-btn"
+                (click)="validateAndOpenEnvelope()"
+                [disabled]="checkingGuest || !guestAccessSingleInput.trim()">
+                <svg *ngIf="!checkingGuest" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                </svg>
+                <div *ngIf="checkingGuest" class="nw-pub-btn-spinner"></div>
+                <span>{{ checkingGuest ? 'Abriendo sobre...' : 'Validar y Abrir Sobre' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="error" class="nw-pub-form-error-banner" style="margin-top:14px; text-align:left;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{{ error }}</span>
+            </div>
+          </div>
+
+        </div>
       </div>
+    </div>
+  </div>
 
-      <!-- COUNTDOWN TIMER -->
-      <div *ngIf="event?.date && !countdown.isOver" class="nw-pub-countdown">
-        <div class="nw-pub-countdown-item">
-          <span class="num">{{ countdown.days }}</span>
-          <span class="lbl">Días</span>
-        </div>
-        <div class="nw-pub-countdown-item">
-          <span class="num">{{ countdown.hours }}</span>
-          <span class="lbl">Horas</span>
-        </div>
-        <div class="nw-pub-countdown-item">
-          <span class="num">{{ countdown.minutes }}</span>
-          <span class="lbl">Minutos</span>
-        </div>
-        <div class="nw-pub-countdown-item">
-          <span class="num">{{ countdown.seconds }}</span>
-          <span class="lbl">Segundos</span>
-        </div>
-      </div>
-      <div *ngIf="countdown.isOver" class="nw-pub-countdown-over">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:6px;">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-        </svg>
-        <span>¡El evento ya ha comenzado!</span>
-      </div>
+  <!-- B. PÁGINA COMPLETA DE LA INVITACIÓN (VISIBLE CUANDO ES ABIERTA O EL INVITADO YA SE VALIDÓ) -->
+  <main *ngIf="isClassicVerticalTemplate() && (!requiresGuestValidation || verifiedGuest)" class="nw-pub-wrapper"
+    [style.--primary]="invitation.content.palette?.primary || '#1c2434'"
+    [style.--secondary]="invitation.content.palette?.secondary || '#f8f5f0'"
+    [style.--accent]="invitation.content.palette?.accent || '#c59b6c'">
 
-      <!-- QUICK ACTIONS -->
-      <div class="nw-pub-hero-actions">
-        <a *ngIf="calendarUrl" [href]="calendarUrl" target="_blank" rel="noreferrer" class="nw-pub-btn nw-pub-btn-gold">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 1. HERO SECTION -->
+    <header class="nw-pub-hero" data-section-key="hero">
+      <div *ngIf="invitation.content.coverImageUrl" class="nw-pub-hero-bg"
+        [style.backgroundImage]="'url(' + invitation.content.coverImageUrl + ')'"></div>
+      <div class="nw-pub-hero-overlay"></div>
+
+      <div class="nw-pub-hero-card">
+        <!-- Logo or Monogram -->
+        <img *ngIf="invitation.content.brandLogoUrl" class="nw-pub-brand-logo" [src]="invitation.content.brandLogoUrl"
+          alt="Logo o Monograma del Evento">
+
+        <!-- Subtitle & Main Headline -->
+        <p *ngIf="invitation.content.subheadline" class="nw-pub-subheadline">{{ invitation.content.subheadline }}</p>
+        <h1 class="nw-pub-headline">{{ invitation.content.headline || event?.title || 'Nuestra Celebración' }}</h1>
+
+        <!-- Date Pill Badge -->
+        <div *ngIf="event?.date" class="nw-pub-date-badge">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nw-pub-date-icon">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span>Agregar a Google Calendar</span>
-        </a>
-        <button type="button" (click)="shareWhatsApp()" class="nw-pub-btn nw-pub-btn-outline">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-          </svg>
-          <span>Compartir por WhatsApp</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- BODY CONTENT CONTAINER -->
-  <div class="nw-pub-container">
-
-    <!-- 1. GUEST VALIDATION SECTION (FOR PRIVATE GUEST LISTS) -->
-    <section *ngIf="requiresGuestValidation" id="guest-access-section" class="nw-pub-section">
-      <!-- BEFORE VALIDATION: LOCK CARD WITH EMAIL/PHONE CHECKER -->
-      <div *ngIf="!verifiedGuest" class="nw-pub-card nw-pub-guest-access-box">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </span>
-          <h2>Validación de Invitado VIP</h2>
+          <span>{{ event?.date | date:'fullDate' }}</span>
         </div>
-        <p>Esta invitación es exclusiva para invitados registrados. Por favor ingresa tu correo electrónico o teléfono para validar
-          tu pase VIP y acceder al RSVP, Álbum de Fotos y Muro de Dedicatorias:</p>
 
-        <div class="nw-pub-form-row" style="flex-wrap:wrap; gap:10px;">
-          <input *ngIf="canIdentifyByEmail" type="email" class="nw-pub-input" [(ngModel)]="guestAccessEmail" placeholder="tu-email@ejemplo.com"
-            [disabled]="checkingGuest" (keyup.enter)="checkGuestAccess()" style="flex:1; min-width:200px;">
-          <input *ngIf="canIdentifyByPhone" type="tel" class="nw-pub-input" [(ngModel)]="guestAccessPhone" placeholder="3312345678"
-            [disabled]="checkingGuest" (keyup.enter)="checkGuestAccess()" style="flex:1; min-width:180px;">
-          <button type="button" class="nw-pub-btn nw-pub-btn-gold" (click)="checkGuestAccess()"
-            [disabled]="checkingGuest || (!guestAccessEmail && !guestAccessPhone)" style="display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-            </svg>
-            <span>{{ checkingGuest ? 'Validando...' : 'Validar Invitado' }}</span>
-          </button>
-        </div>
-        <p *ngIf="error" class="nw-pub-form-error" style="margin-top:12px;">{{ error }}</p>
-      </div>
-
-      <!-- AFTER VALIDATION: CONFIRMED VIP PASS BANNER -->
-      <div *ngIf="verifiedGuest" class="nw-pub-card nw-pub-guest-pass-banner">
-        <div class="nw-pub-pass-qr">
-          <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de check-in" (click)="openLightbox(guestQrUrl)">
-        </div>
-        <div class="nw-pub-pass-details">
-          <span class="badge">Pase Confirmado VIP</span>
-          <h3>¡Bienvenido/a, {{ verifiedGuest.name }}!</h3>
-          <p>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            Mesa: <strong>{{ verifiedGuest.tableName || 'Pendiente' }}</strong> <span
-              *ngIf="verifiedGuest.seatLabel">| Asiento: {{ verifiedGuest.seatLabel }}</span></p>
-          <p>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            Acompañantes permitidos: <strong>{{ verifiedGuest.allowedCompanions }}</strong></p>
-          <div class="nw-pub-pass-actions">
-            <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-gold" (click)="downloadGuestPass()" style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              <span>Descargar Pase</span>
-            </button>
-            <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-outline" (click)="resetGuestAccess()" style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <polyline points="1 20 1 14 7 14"></polyline>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-              </svg>
-              <span>Usar otro correo o teléfono</span>
-            </button>
+        <!-- COUNTDOWN TIMER -->
+        <div *ngIf="event?.date && !countdown.isOver" class="nw-pub-countdown">
+          <div class="nw-pub-countdown-item">
+            <span class="num">{{ countdown.days }}</span>
+            <span class="lbl">Días</span>
+          </div>
+          <div class="nw-pub-countdown-item">
+            <span class="num">{{ countdown.hours }}</span>
+            <span class="lbl">Horas</span>
+          </div>
+          <div class="nw-pub-countdown-item">
+            <span class="num">{{ countdown.minutes }}</span>
+            <span class="lbl">Minutos</span>
+          </div>
+          <div class="nw-pub-countdown-item">
+            <span class="num">{{ countdown.seconds }}</span>
+            <span class="lbl">Segundos</span>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- 2. INVITATION MESSAGE / LETTER SECTION -->
-    <section *ngIf="(invitation.content.message || invitation.content.storyBody || invitation.content.storyTitle || invitation.content.subheadline) && isSectionActive('story')" class="nw-pub-section" data-section-key="story">
-      <div class="nw-pub-card nw-pub-message-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        <div *ngIf="countdown.isOver" class="nw-pub-countdown-over">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>¡El gran día ha llegado!</span>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="nw-pub-hero-actions">
+          <a *ngIf="calendarUrl" [href]="calendarUrl" target="_blank" rel="noreferrer" class="nw-pub-btn nw-pub-btn-gold">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+              <line x1="12" y1="14" x2="12" y2="18"></line>
+              <line x1="10" y1="16" x2="14" y2="16"></line>
             </svg>
-          </span>
-          <h2>{{ invitation.content.storyTitle || invitation.content.subheadline || 'Nuestra Historia & Mensaje' }}</h2>
-          <button *ngIf="hasSectionMusic('story')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('story')" (click)="toggleSectionMusic('story')"
-            [title]="isSectionMusicPlaying('story') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('story')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('story')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('story') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('story')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
+            <span>Guardar en Calendario</span>
+          </a>
+          <button type="button" (click)="shareWhatsApp()" class="nw-pub-btn nw-pub-btn-outline">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir</span>
           </button>
         </div>
-        <p class="nw-pub-message-text">{{ invitation.content.storyBody || invitation.content.message }}</p>
       </div>
-    </section>
+    </header>
 
-    <!-- 3. LOCATIONS & MAPS -->
-    <section *ngIf="displayLocations.length && isSectionActive('locations')" class="nw-pub-section" data-section-key="locations">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-          </span>
-          <h2>Ubicaciones & Cómo Llegar</h2>
-          <button *ngIf="hasSectionMusic('locations')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('locations')" (click)="toggleSectionMusic('locations')"
-            [title]="isSectionMusicPlaying('locations') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('locations')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('locations')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
+    <!-- BODY CONTENT CONTAINER -->
+    <div class="nw-pub-container">
+
+      <!-- 2. PASE VIP CONFIRMADO (SI EL INVITADO YA FUE VALIDADO) -->
+      <section *ngIf="verifiedGuest" id="guest-access-section" class="nw-pub-section">
+        <div class="nw-pub-card nw-pub-guest-pass-banner">
+          <div class="nw-pub-pass-qr-wrapper">
+            <img *ngIf="guestQrUrl" [src]="guestQrUrl" alt="QR de check-in" (click)="openLightbox(guestQrUrl)" class="nw-pub-pass-qr-img">
+            <span class="nw-pub-qr-hint">Toca para ampliar</span>
+          </div>
+
+          <div class="nw-pub-pass-details">
+            <div class="nw-pub-pass-badge-row">
+              <span class="badge badge-gold">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+                Pase VIP Confirmado
+              </span>
+            </div>
+
+            <h3 class="nw-pub-guest-title">¡Bienvenido(a), {{ verifiedGuest.name }}!</h3>
+
+            <div class="nw-pub-pass-grid-info">
+              <div class="nw-pub-pass-info-item">
+                <span class="info-label">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  Mesa Asignada
+                </span>
+                <span class="info-value">{{ verifiedGuest.tableName || 'Por asignar' }}</span>
+              </div>
+
+              <div class="nw-pub-pass-info-item" *ngIf="verifiedGuest.seatLabel">
+                <span class="info-label">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  </svg>
+                  Asiento
+                </span>
+                <span class="info-value">{{ verifiedGuest.seatLabel }}</span>
+              </div>
+
+              <div class="nw-pub-pass-info-item">
+                <span class="info-label">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  Pases Permitidos
+                </span>
+                <span class="info-value">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} persona(s)</span>
+              </div>
+            </div>
+
+            <div class="nw-pub-pass-actions">
+              <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-gold" (click)="downloadGuestPass()">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Descargar Pase Digital</span>
+              </button>
+              <button type="button" class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-secondary" (click)="resetGuestAccess()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                <span>Cambiar de Invitado</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. INVITATION MESSAGE / LETTER SECTION -->
+      <section *ngIf="(invitation.content.message || invitation.content.storyBody || invitation.content.storyTitle || invitation.content.subheadline) && isSectionActive('story')" class="nw-pub-section" data-section-key="story">
+        <div class="nw-pub-card nw-pub-message-card">
+          <div class="nw-pub-section-header center-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
               </svg>
             </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('locations') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('locations')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
+            <h2>{{ invitation.content.storyTitle || invitation.content.subheadline || 'Nuestra Historia & Mensaje' }}</h2>
+            <button *ngIf="hasSectionMusic('story')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('story')" (click)="toggleSectionMusic('story')"
+              [title]="isSectionMusicPlaying('story') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('story')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('story')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('story') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('story')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+          <div class="nw-pub-ornament-line">
+            <span></span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.2L12 16.8 5.7 21.2l2.3-7.2-6-4.6h7.6z"></path>
+            </svg>
+            <span></span>
+          </div>
+          <p class="nw-pub-message-text">{{ invitation.content.storyBody || invitation.content.message }}</p>
         </div>
-        <div class="nw-pub-locations-grid">
-          <article *ngFor="let location of displayLocations" class="nw-pub-card-inner nw-pub-location-card">
-            <div class="nw-pub-location-badge">{{ location.type || 'Lugar' }}</div>
-            <h3 class="nw-pub-location-title">{{ location.name || 'Ubicación del evento' }}</h3>
-            <p class="nw-pub-location-address">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+      </section>
+
+      <!-- 4. LOCATIONS & DIRECTIONS -->
+      <section *ngIf="displayLocations.length && isSectionActive('locations')" class="nw-pub-section" data-section-key="locations">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
-              {{ location.address }}
-            </p>
-            <p *ngIf="location.notes" class="nw-pub-location-notes">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+            </span>
+            <h2>Ubicaciones & Cómo Llegar</h2>
+            <button *ngIf="hasSectionMusic('locations')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('locations')" (click)="toggleSectionMusic('locations')"
+              [title]="isSectionMusicPlaying('locations') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('locations')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('locations')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('locations') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('locations')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <div class="nw-pub-locations-grid">
+            <article *ngFor="let location of displayLocations" class="nw-pub-card-inner nw-pub-location-card">
+              <div class="nw-pub-location-badge">{{ location.type || 'Lugar del evento' }}</div>
+              <h3 class="nw-pub-location-title">{{ location.name || 'Ubicación' }}</h3>
+              <p class="nw-pub-location-address">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{{ location.address }}</span>
+              </p>
+              <p *ngIf="location.notes" class="nw-pub-location-notes">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>{{ location.notes }}</span>
+              </p>
+              <div class="nw-pub-location-actions">
+                <a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noreferrer"
+                  class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-primary">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                  </svg>
+                  <span>Abrir en Google Maps</span>
+                </a>
+                <a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noreferrer"
+                  class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-secondary">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                  </svg>
+                  <span>Abrir en Waze</span>
+                </a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. ITINERARY TIMELINE -->
+      <section *ngIf="invitation.content.itinerary?.length && isSectionActive('itinerary')" class="nw-pub-section" data-section-key="itinerary">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              {{ location.notes }}
-            </p>
-            <div class="nw-pub-location-actions">
-              <a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noreferrer"
-                class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-primary" style="display:inline-flex; align-items:center; gap:6px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                  <line x1="8" y1="2" x2="8" y2="18"></line>
-                  <line x1="16" y1="6" x2="16" y2="22"></line>
-                </svg>
-                <span>Ver en Google Maps</span>
-              </a>
-              <a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noreferrer"
-                class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-secondary" style="display:inline-flex; align-items:center; gap:6px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-                </svg>
-                <span>Ver en Waze</span>
-              </a>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. ITINERARY TIMELINE -->
-    <section *ngIf="invitation.content.itinerary?.length && isSectionActive('itinerary')" class="nw-pub-section" data-section-key="itinerary">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </span>
-          <h2>Itinerario del Evento</h2>
-          <button *ngIf="hasSectionMusic('itinerary')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('itinerary')" (click)="toggleSectionMusic('itinerary')"
-            [title]="isSectionMusicPlaying('itinerary') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('itinerary')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('itinerary')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('itinerary') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('itinerary')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-        <div class="nw-pub-timeline">
-          <div *ngFor="let item of invitation.content.itinerary" class="nw-pub-timeline-item">
-            <div class="nw-pub-timeline-icon">
-              <ng-container [ngSwitch]="getItineraryIconKey(item.title)">
-                <svg *ngSwitchCase="'church'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2v20M7 8h10"></path>
+            <h2>Itinerario de la Celebración</h2>
+            <button *ngIf="hasSectionMusic('itinerary')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('itinerary')" (click)="toggleSectionMusic('itinerary')"
+              [title]="isSectionMusicPlaying('itinerary') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('itinerary')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
                 </svg>
-                <svg *ngSwitchCase="'cocktail'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M8 22h8m-4 0v-7l7-9H5l7 9v7"></path>
+                <svg *ngIf="!isSectionMusicPlaying('itinerary')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                <svg *ngSwitchCase="'dinner'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 2v20M6 2v20M2 7h8a4 4 0 0 1-4 4V2"></path>
-                </svg>
-                <svg *ngSwitchCase="'party'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                <svg *ngSwitchCase="'toast'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M8 22h8m-4 0v-7l7-9H5l7 9v7"></path>
-                </svg>
-                <svg *ngSwitchDefault viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-              </ng-container>
-            </div>
-            <div class="nw-pub-timeline-content">
-              <span class="nw-pub-timeline-time">{{ item.time }}</span>
-              <h4 class="nw-pub-timeline-title">{{ item.title }}</h4>
-              <p *ngIf="item.description" class="nw-pub-timeline-desc">{{ item.description }}</p>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('itinerary') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('itinerary')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <div class="nw-pub-timeline">
+            <div *ngFor="let item of invitation.content.itinerary" class="nw-pub-timeline-item">
+              <div class="nw-pub-timeline-icon">
+                <ng-container [ngSwitch]="getItineraryIconKey(item.title)">
+                  <!-- Church / Ceremony -->
+                  <svg *ngSwitchCase="'church'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M7 8h10"></path>
+                  </svg>
+                  <!-- Cocktail -->
+                  <svg *ngSwitchCase="'cocktail'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 22h8m-4 0v-7l7-9H5l7 9v7"></path>
+                  </svg>
+                  <!-- Dinner / Banquet -->
+                  <svg *ngSwitchCase="'dinner'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 2v20M6 2v20M2 7h8a4 4 0 0 1-4 4V2"></path>
+                  </svg>
+                  <!-- Dance / Party -->
+                  <svg *ngSwitchCase="'party'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                  <!-- Toast / Cake -->
+                  <svg *ngSwitchCase="'toast'" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 22h8m-4 0v-7l7-9H5l7 9v7"></path>
+                    <path d="M12 2v2"></path>
+                  </svg>
+                  <!-- Default Clock -->
+                  <svg *ngSwitchDefault viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </ng-container>
+              </div>
+              <div class="nw-pub-timeline-content">
+                <span class="nw-pub-timeline-time">{{ item.time }}</span>
+                <h4 class="nw-pub-timeline-title">{{ item.title }}</h4>
+                <p *ngIf="item.description" class="nw-pub-timeline-desc">{{ item.description }}</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- 5. DRESS CODE CARD -->
-    <section *ngIf="invitation.content.dressCode && isSectionActive('dressCode')" class="nw-pub-section" data-section-key="dressCode">
-      <div class="nw-pub-card nw-pub-dresscode-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
-            </svg>
-          </span>
-          <h2>Código de Vestimenta (Dress Code)</h2>
-          <button *ngIf="hasSectionMusic('dressCode')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('dressCode')" (click)="toggleSectionMusic('dressCode')"
-            [title]="isSectionMusicPlaying('dressCode') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('dressCode')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('dressCode')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
+      <!-- 6. DRESS CODE CARD -->
+      <section *ngIf="invitation.content.dressCode && isSectionActive('dressCode')" class="nw-pub-section" data-section-key="dressCode">
+        <div class="nw-pub-card nw-pub-dresscode-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
               </svg>
             </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('dressCode') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('dressCode')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-        <p class="nw-pub-dresscode-val">{{ invitation.content.dressCode }}</p>
-      </div>
-    </section>
-
-    <!-- 6. RSVP FORM SECTION -->
-    <section *ngIf="isSectionActive('rsvp')" id="rsvp-section" class="nw-pub-section" data-section-key="rsvp">
-      <div class="nw-pub-card nw-pub-rsvp-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
-          </span>
-          <h2>Confirmación de Asistencia (RSVP)</h2>
-          <span *ngIf="deadlineLabel" class="nw-pub-deadline-pill">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            Fecha límite: {{ deadlineLabel }}
-          </span>
-          <button *ngIf="hasSectionMusic('rsvp')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('rsvp')" (click)="toggleSectionMusic('rsvp')"
-            [title]="isSectionMusicPlaying('rsvp') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('rsvp')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('rsvp')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('rsvp') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('rsvp')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-
-        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice">
-          <div class="nw-pub-locked-icon">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
+            <h2>Código de Vestimenta (Dress Code)</h2>
+            <button *ngIf="hasSectionMusic('dressCode')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('dressCode')" (click)="toggleSectionMusic('dressCode')"
+              [title]="isSectionMusicPlaying('dressCode') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('dressCode')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('dressCode')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('dressCode') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('dressCode')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
           </div>
-          <h3>RSVP Bloqueado</h3>
-          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para confirmar tu
-            asistencia.</p>
+          <div class="nw-pub-dresscode-val">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dresscode-icon">
+              <path d="M12 2l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z"></path>
+            </svg>
+            <span>{{ invitation.content.dressCode }}</span>
+          </div>
         </div>
+      </section>
 
-        <!-- GUEST PASS BADGE & FORM -->
-        <ng-container *ngIf="!requiresGuestValidation || verifiedGuest">
+      <!-- 7. RSVP FORM SECTION (CONFIRMACIÓN DE ASISTENCIA) -->
+      <section *ngIf="isSectionActive('rsvp')" id="rsvp-section" class="nw-pub-section" data-section-key="rsvp">
+        <div class="nw-pub-card nw-pub-rsvp-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
+            <h2>Confirmación de Asistencia (RSVP)</h2>
+            <span *ngIf="deadlineLabel" class="nw-pub-deadline-pill">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>Límite: {{ deadlineLabel }}</span>
+            </span>
+            <button *ngIf="hasSectionMusic('rsvp')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('rsvp')" (click)="toggleSectionMusic('rsvp')"
+              [title]="isSectionMusicPlaying('rsvp') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('rsvp')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('rsvp')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('rsvp') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('rsvp')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
           <!-- PUBLIC INVITATION QR BADGE -->
-          <div *ngIf="!verifiedGuest && publicQrUrl" class="nw-pub-guest-pass-banner public"
-            style="margin-bottom:24px;">
-            <div class="nw-pub-pass-qr">
-              <img [src]="publicQrUrl" alt="QR de Invitación" (click)="openLightbox(publicQrUrl)">
+          <div *ngIf="!verifiedGuest && publicQrUrl" class="nw-pub-guest-pass-banner public" style="margin-bottom:24px;">
+            <div class="nw-pub-pass-qr-wrapper">
+              <img [src]="publicQrUrl" alt="QR de Invitación" (click)="openLightbox(publicQrUrl)" class="nw-pub-pass-qr-img">
             </div>
             <div class="nw-pub-pass-details">
-              <h3>QR de la Invitación</h3>
-              <p>Escanea este código QR con la cámara de tu celular para abrir esta invitación digital en cualquier
-                momento.</p>
+              <h3 class="nw-pub-guest-title">Código QR de la Invitación</h3>
+              <p>Escanea este código con tu teléfono celular para volver a abrir esta invitación cuando lo desees.</p>
             </div>
           </div>
 
@@ -535,7 +652,7 @@
               <div class="nw-pub-field">
                 <label>Nombre Completo *</label>
                 <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.name" name="rsvpName" [readonly]="requiresGuestValidation"
-                  required placeholder="Tu nombre">
+                  required placeholder="Tu nombre y apellido">
               </div>
 
               <div class="nw-pub-field" *ngIf="canIdentifyByEmail">
@@ -558,8 +675,7 @@
 
               <div class="nw-pub-field full-width">
                 <label>¿Confirmas tu asistencia? *</label>
-                <select class="nw-pub-select" [(ngModel)]="rsvp.response" name="rsvpResponse"
-                  (change)="onResponseChange()">
+                <select class="nw-pub-select" [(ngModel)]="rsvp.response" name="rsvpResponse" (change)="onResponseChange()">
                   <option value="confirmed">Sí, asistiré con mucho gusto</option>
                   <option value="declined">Lo siento, no podré asistir</option>
                   <option *ngIf="canUseMaybe" value="maybe">Aún no estoy seguro(a)</option>
@@ -625,7 +741,7 @@
 
               <!-- IF DECLINED -->
               <div *ngIf="rsvp.response === 'declined'" class="nw-pub-field full-width nw-pub-warning-box">
-                <p>Lamentamos que no nos puedas acompañar.</p>
+                <p>Lamentamos mucho que no nos puedas acompañar en este día tan especial.</p>
                 <div *ngIf="requiresDeclineConfirmation" class="nw-pub-checkbox-field">
                   <input type="checkbox" id="declineCB" [(ngModel)]="declineConfirmed" name="declineCB">
                   <label for="declineCB">Confirmo definitivamente que no podré asistir</label>
@@ -638,637 +754,659 @@
                 <textarea class="nw-pub-textarea" [(ngModel)]="rsvp.message" name="rsvpMessage"
                   placeholder="Escribe unas palabras cariñosas para los festejados..."></textarea>
               </div>
-
             </div>
 
-            <p *ngIf="error" class="nw-pub-form-error">{{ error }}</p>
-            <p *ngIf="success" class="nw-pub-form-success">{{ success }}</p>
-
-            <button type="submit" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-lg"
-              [disabled]="sending || (requiresGuestValidation && !verifiedGuest)" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            <div *ngIf="error" class="nw-pub-form-error-banner">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <span>{{ sending ? 'Enviando confirmación...' : 'Enviar RSVP' }}</span>
-            </button>
-
-            <button *ngIf="requiresGuestValidation && verifiedGuest" type="button" class="nw-pub-btn nw-pub-btn-outline" style="margin-top:12px;" (click)="resetGuestAccess()">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <polyline points="1 20 1 14 7 14"></polyline>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-              </svg>
-              <span>Usar otro correo o teléfono</span>
-            </button>
-          </form>
-        </ng-container>
-
-      </div>
-    </section>
-
-    <!-- 7. MESA DE REGALOS (GIFT REGISTRY) -->
-    <section
-      *ngIf="invitation.content.giftSettings?.enabled !== false && isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length"
-      class="nw-pub-section" data-section-key="giftRegistry">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 12 20 22 4 22 4 12"></polyline>
-              <rect x="2" y="7" width="20" height="5"></rect>
-              <line x1="12" y1="22" x2="12" y2="7"></line>
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-            </svg>
-          </span>
-          <h2>Mesa de Regalos</h2>
-          <button *ngIf="hasSectionMusic('giftRegistry')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('giftRegistry')" (click)="toggleSectionMusic('giftRegistry')"
-            [title]="isSectionMusicPlaying('giftRegistry') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('giftRegistry')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('giftRegistry')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('giftRegistry') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('giftRegistry')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
+              <span>{{ error }}</span>
             </div>
-          </button>
-        </div>
 
-        <!-- Gift Intro Text -->
-        <p *ngIf="invitation.content.giftSettings?.introText" class="muted" style="margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">
-          {{ invitation.content.giftSettings?.introText }}
-        </p>
-
-        <!-- Gift Store Links -->
-        <div class="nw-pub-gifts-grid">
-          <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
-            <div *ngIf="getStoreLogo(registry)" class="nw-pub-gift-logo-box" (click)="openLightbox(getStoreLogo(registry))">
-              <img [src]="getStoreLogo(registry)" alt="Mesa de regalos" class="nw-pub-gift-img">
+            <div *ngIf="success" class="nw-pub-form-success-banner">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>{{ success }}</span>
             </div>
-            <h3>{{ registry.title || registry.label || registry.store || 'Mesa de Regalos' }}</h3>
-            <p *ngIf="registry.note">{{ registry.note }}</p>
-            <a *ngIf="registry.url" [href]="registry.url" target="_blank" rel="noreferrer"
-              class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              <span>Abrir Mesa de Regalos</span>
-            </a>
-          </article>
-        </div>
-      </div>
-    </section>
 
-    <!-- 8. SOBRE DIGITAL (DIGITAL ENVELOPE) -->
-    <section
-      *ngIf="invitation.content.giftSettings?.showEnvelope !== false && isSectionActive('digitalEnvelope') && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account || invitation.content.digitalEnvelope?.qrImageUrl || invitation.content.digitalEnvelope?.note)"
-      class="nw-pub-section" data-section-key="digitalEnvelope">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-              <line x1="1" y1="10" x2="23" y2="10"></line>
-            </svg>
-          </span>
-          <h2>Sobre Digital & Transferencias</h2>
-          <button *ngIf="hasSectionMusic('digitalEnvelope')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('digitalEnvelope')" (click)="toggleSectionMusic('digitalEnvelope')"
-            [title]="isSectionMusicPlaying('digitalEnvelope') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('digitalEnvelope')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('digitalEnvelope')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('digitalEnvelope') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('digitalEnvelope')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-
-        <div class="nw-pub-envelope-details">
-          <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl"
-            [src]="invitation.content.digitalEnvelope?.qrImageUrl"
-            (click)="openLightbox(invitation.content.digitalEnvelope?.qrImageUrl || '')" alt="QR sobre digital"
-            class="nw-pub-envelope-qr">
-
-          <div class="nw-pub-envelope-info">
-            <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{
-              invitation.content.digitalEnvelope?.bank }}</p>
-            <p *ngIf="invitation.content.digitalEnvelope?.holder"><strong>Titular:</strong> {{
-              invitation.content.digitalEnvelope?.holder }}</p>
-
-            <div *ngIf="invitation.content.digitalEnvelope?.account" class="nw-pub-copy-row">
-              <span><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</span>
-              <button type="button" class="nw-pub-copy-btn"
-                (click)="copyText(invitation.content.digitalEnvelope?.account || '', 'Número de cuenta')">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            <div class="nw-pub-rsvp-submit-wrap">
+              <button type="submit" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-lg"
+                [disabled]="sending">
+                <svg *ngIf="!sending" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
-                Copiar
+                <div *ngIf="sending" class="nw-pub-btn-spinner"></div>
+                <span>{{ sending ? 'Enviando confirmación...' : 'Confirmar Mi Asistencia (RSVP)' }}</span>
               </button>
             </div>
-
-            <div *ngIf="invitation.content.digitalEnvelope?.clabe" class="nw-pub-copy-row">
-              <span><strong>CLABE Interbancaria:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</span>
-              <button type="button" class="nw-pub-copy-btn"
-                (click)="copyText(invitation.content.digitalEnvelope?.clabe || '', 'CLABE interbancaria')">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                Copiar CLABE
-              </button>
-            </div>
-
-            <p *ngIf="invitation.content.digitalEnvelope?.note" class="nw-pub-envelope-note">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              {{ invitation.content.digitalEnvelope?.note }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 8. LODGING SECTION -->
-    <section *ngIf="invitation.content.lodging?.length && isSectionActive('lodging')" class="nw-pub-section" data-section-key="lodging">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-          </span>
-          <h2>Hospedaje Recomendado</h2>
-          <button *ngIf="hasSectionMusic('lodging')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('lodging')" (click)="toggleSectionMusic('lodging')"
-            [title]="isSectionMusicPlaying('lodging') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('lodging')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('lodging')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('lodging') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('lodging')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-        <div class="nw-pub-lodging-grid">
-          <article *ngFor="let hotel of invitation.content.lodging" class="nw-pub-card-inner nw-pub-lodging-card">
-            <h4>{{ hotel.name || 'Hotel recomendado' }}</h4>
-            <p *ngIf="hotel.description">{{ hotel.description }}</p>
-            <a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noreferrer"
-              class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-outline" style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              <span>Reservar Hotel</span>
-            </a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9. PHOTO GALLERY -->
-    <section *ngIf="invitation.content.gallery?.length && isSectionActive('gallery')" class="nw-pub-section" data-section-key="gallery">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-          </span>
-          <h2>Galería de Fotos</h2>
-          <button *ngIf="hasSectionMusic('gallery')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('gallery')" (click)="toggleSectionMusic('gallery')"
-            [title]="isSectionMusicPlaying('gallery') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('gallery')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('gallery')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('gallery') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('gallery')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-        <div class="nw-pub-gallery-grid">
-          <div *ngFor="let imageUrl of invitation.content.gallery" class="nw-pub-gallery-item"
-            (click)="openLightbox(imageUrl)">
-            <img [src]="imageUrl" alt="Foto del evento" loading="lazy" decoding="async">
-            <div class="nw-pub-gallery-hover">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <line x1="11" y1="8" x2="11" y2="14"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
-              <span>Ampliar</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 10. PRIVATE GUEST ALBUM -->
-    <section *ngIf="invitation.content.privateAlbumEnabled && isSectionActive('guestAlbum')" class="nw-pub-section" data-section-key="guestAlbum">
-      <div class="nw-pub-card nw-pub-album-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-              <circle cx="12" cy="13" r="4"></circle>
-            </svg>
-          </span>
-          <h2>Álbum Colectivo de Invitados</h2>
-          <button *ngIf="hasSectionMusic('guestAlbum')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('guestAlbum')" (click)="toggleSectionMusic('guestAlbum')"
-            [title]="isSectionMusicPlaying('guestAlbum') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('guestAlbum')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('guestAlbum')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('guestAlbum') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('guestAlbum')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-        <p class="muted" style="margin-bottom:20px;">¿Tienes fotos geniales del evento? Súbelas aquí para compartirlas
-          con los anfitriones. Se mostrarán una vez aprobadas.</p>
-
-        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
-          <div class="nw-pub-locked-icon">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para subir fotos al álbum
-            colaborativo del evento.</p>
-        </div>
-
-        <div *ngIf="!requiresGuestValidation || verifiedGuest" class="nw-pub-album-upload-box">
-          <input type="file" id="albumFileInput" accept="image/*" (change)="selectAlbumFile($event)"
-            style="display:none;">
-          <label for="albumFileInput" class="nw-pub-btn nw-pub-btn-secondary nw-pub-btn-sm" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            <span>Seleccionar Foto</span>
-          </label>
-          <span *ngIf="albumMessage" class="nw-pub-file-name">{{ albumMessage }}</span>
-
-          <button type="button" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-sm" (click)="uploadAlbumPhoto()"
-            [disabled]="!selectedAlbumFile || uploadingAlbum" style="display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <span>{{ uploadingAlbum ? 'Subiendo...' : 'Enviar Foto' }}</span>
-          </button>
-        </div>
-
-        <div *ngIf="publicAlbumAssets.length" class="nw-pub-gallery-grid" style="margin-top:20px;">
-          <div *ngFor="let asset of publicAlbumAssets" class="nw-pub-gallery-item" (click)="openLightbox(asset.url)">
-            <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto de invitado'" loading="lazy" decoding="async">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 11. DEDICATIONS / GUESTBOOK WALL -->
-    <section *ngIf="invitation.content.dedicationSettings?.enabled !== false && isSectionActive('dedications')" class="nw-pub-section" data-section-key="dedications">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-          </span>
-          <h2>Muro de Dedicatorias & Libros de Deseos</h2>
-          <button *ngIf="hasSectionMusic('dedications')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('dedications')" (click)="toggleSectionMusic('dedications')"
-            [title]="isSectionMusicPlaying('dedications') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('dedications')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>
-              <svg *ngIf="!isSectionMusicPlaying('dedications')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('dedications') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('dedications')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-
-        <p *ngIf="dedicationIntroText" class="muted" style="margin-bottom:20px; font-size:0.95rem; line-height:1.5;">
-          {{ dedicationIntroText }}
-        </p>
-
-        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
-          <div class="nw-pub-locked-icon">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <h3>Muro de Dedicatorias Bloqueado</h3>
-          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para dejar tus
-            dedicatorias y felicitaciones.</p>
-        </div>
-
-        <div *ngIf="!requiresGuestValidation || verifiedGuest" class="nw-pub-dedication-form-card" style="margin-bottom:24px;">
-          <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:16px;">Deja tu mensaje a los novios / anfitriones</h3>
-          <form (ngSubmit)="submitDedication()">
-            <div class="nw-pub-form-grid">
-              <div class="nw-pub-field">
-                <label>Tu Nombre</label>
-                <input type="text" class="nw-pub-input" [(ngModel)]="dedication.publicName" name="dedPublicName"
-                  [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'">
-              </div>
-              <div class="nw-pub-field">
-                <label>Tipo de Mensaje</label>
-                <select class="nw-pub-select" [(ngModel)]="dedication.type" name="dedType">
-                  <option value="dedication">Dedicatoria</option>
-                  <option value="wish">Buenos Deseos</option>
-                  <option value="memory">Recuerdo Especial</option>
-                  <option value="toast">Brindis Virtual</option>
-                </select>
-              </div>
-              <div class="nw-pub-field full-width">
-                <label>Mensaje *</label>
-                <textarea class="nw-pub-textarea" [(ngModel)]="dedication.message" name="dedMessage" required
-                  placeholder="Escribe tus buenos deseos..."></textarea>
-              </div>
-            </div>
-            <p *ngIf="dedicationMessage" class="nw-pub-form-success">{{ dedicationMessage }}</p>
-            <button type="submit" class="nw-pub-btn nw-pub-btn-gold" [disabled]="sending || !dedication.message" style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-              <span>Enviar Mensaje</span>
-            </button>
           </form>
         </div>
+      </section>
 
-        <!-- DEDICATIONS LIST WALL -->
-        <div *ngIf="dedications.length" class="nw-pub-dedications-wall">
-          <article *ngFor="let item of dedications" class="nw-pub-card-inner nw-pub-dedication-card">
-            <div class="nw-pub-dedication-header">
-              <span class="author">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
+      <!-- 8. MESA DE REGALOS (GIFT REGISTRY) -->
+      <section
+        *ngIf="invitation.content.giftSettings?.enabled !== false && isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length"
+        class="nw-pub-section" data-section-key="giftRegistry">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                <rect x="2" y="7" width="20" height="5"></rect>
+                <line x1="12" y1="22" x2="12" y2="7"></line>
+                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+              </svg>
+            </span>
+            <h2>Mesa de Regalos</h2>
+            <button *ngIf="hasSectionMusic('giftRegistry')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('giftRegistry')" (click)="toggleSectionMusic('giftRegistry')"
+              [title]="isSectionMusicPlaying('giftRegistry') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('giftRegistry')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
                 </svg>
-                {{ item.publicName || 'Invitado' }}
+                <svg *ngIf="!isSectionMusicPlaying('giftRegistry')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
               </span>
-              <span class="badge">{{ item.type || 'dedicatoria' }}</span>
-            </div>
-            <p class="message">"{{ item.message }}"</p>
-          </article>
-        </div>
-      </div>
-    </section>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('giftRegistry') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('giftRegistry')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
 
-    <!-- 12. DJ / SONG REQUESTS SECTION -->
-    <section *ngIf="isSectionActive('songRequests')" class="nw-pub-section" data-section-key="songRequests">
-      <div class="nw-pub-card">
-        <div class="nw-pub-section-header">
-          <span class="nw-pub-section-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 18V5l12-2v13"></path>
-              <circle cx="6" cy="18" r="3"></circle>
-              <circle cx="18" cy="16" r="3"></circle>
-            </svg>
-          </span>
-          <h2>Música & Peticiones al DJ</h2>
-          <button *ngIf="hasSectionMusic('songRequests')" type="button" class="nw-pub-section-music-btn"
-            [class.playing]="isSectionMusicPlaying('songRequests')" (click)="toggleSectionMusic('songRequests')"
-            [title]="isSectionMusicPlaying('songRequests') ? 'Pausar música' : 'Reproducir música de esta sección'">
-            <span class="nw-pub-sec-music-icon">
-              <svg *ngIf="isSectionMusicPlaying('songRequests')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
+          <p *ngIf="invitation.content.giftSettings?.introText" class="nw-pub-section-intro">
+            {{ invitation.content.giftSettings?.introText }}
+          </p>
+
+          <div class="nw-pub-gifts-grid">
+            <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
+              <div *ngIf="getStoreLogo(registry)" class="nw-pub-gift-logo-box" (click)="openLightbox(getStoreLogo(registry))">
+                <img [src]="getStoreLogo(registry)" alt="Mesa de regalos" class="nw-pub-gift-img">
+              </div>
+              <h3>{{ registry.title || registry.label || registry.store || 'Mesa de Regalos' }}</h3>
+              <p *ngIf="registry.note" class="nw-pub-gift-note">{{ registry.note }}</p>
+              <a *ngIf="registry.url" [href]="registry.url" target="_blank" rel="noreferrer" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-sm">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                <span>Ver Mesa de Regalos</span>
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. SOBRE DIGITAL (DIGITAL ENVELOPE / BANK TRANSFERS) -->
+      <section
+        *ngIf="invitation.content.giftSettings?.showEnvelope !== false && isSectionActive('digitalEnvelope') && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account || invitation.content.digitalEnvelope?.qrImageUrl || invitation.content.digitalEnvelope?.note)"
+        class="nw-pub-section" data-section-key="digitalEnvelope">
+        <div class="nw-pub-card nw-pub-envelope-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
               </svg>
-              <svg *ngIf="!isSectionMusicPlaying('songRequests')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            </span>
+            <h2>Lluvia de Sobres / Transferencias</h2>
+            <button *ngIf="hasSectionMusic('digitalEnvelope')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('digitalEnvelope')" (click)="toggleSectionMusic('digitalEnvelope')"
+              [title]="isSectionMusicPlaying('digitalEnvelope') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('digitalEnvelope')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('digitalEnvelope')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('digitalEnvelope') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('digitalEnvelope')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <div class="nw-pub-envelope-details">
+            <div *ngIf="invitation.content.digitalEnvelope?.qrImageUrl" class="nw-pub-envelope-qr-box">
+              <img [src]="invitation.content.digitalEnvelope?.qrImageUrl"
+                (click)="openLightbox(invitation.content.digitalEnvelope?.qrImageUrl || '')" alt="QR sobre digital"
+                class="nw-pub-envelope-qr">
+              <span class="nw-pub-qr-hint">Toca para ampliar QR</span>
+            </div>
+
+            <div class="nw-pub-envelope-info">
+              <p *ngIf="invitation.content.digitalEnvelope?.bank" class="nw-pub-info-line">
+                <strong>Banco:</strong> {{ invitation.content.digitalEnvelope?.bank }}
+              </p>
+              <p *ngIf="invitation.content.digitalEnvelope?.holder" class="nw-pub-info-line">
+                <strong>Titular:</strong> {{ invitation.content.digitalEnvelope?.holder }}
+              </p>
+
+              <div *ngIf="invitation.content.digitalEnvelope?.account" class="nw-pub-copy-row">
+                <span class="copy-label"><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</span>
+                <button type="button" class="nw-pub-copy-btn"
+                  (click)="copyText(invitation.content.digitalEnvelope?.account || '', 'Número de cuenta')">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Copiar</span>
+                </button>
+              </div>
+
+              <div *ngIf="invitation.content.digitalEnvelope?.clabe" class="nw-pub-copy-row">
+                <span class="copy-label"><strong>CLABE Interbancaria:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</span>
+                <button type="button" class="nw-pub-copy-btn"
+                  (click)="copyText(invitation.content.digitalEnvelope?.clabe || '', 'CLABE interbancaria')">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Copiar CLABE</span>
+                </button>
+              </div>
+
+              <p *ngIf="invitation.content.digitalEnvelope?.note" class="nw-pub-envelope-note">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>{{ invitation.content.digitalEnvelope?.note }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. LODGING SECTION -->
+      <section *ngIf="invitation.content.lodging?.length && isSectionActive('lodging')" class="nw-pub-section" data-section-key="lodging">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </span>
+            <h2>Hospedaje Sugerido</h2>
+            <button *ngIf="hasSectionMusic('lodging')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('lodging')" (click)="toggleSectionMusic('lodging')"
+              [title]="isSectionMusicPlaying('lodging') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('lodging')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('lodging')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('lodging') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('lodging')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <div class="nw-pub-lodging-grid">
+            <article *ngFor="let hotel of invitation.content.lodging" class="nw-pub-card-inner nw-pub-lodging-card">
+              <h4>{{ hotel.name || 'Hotel recomendado' }}</h4>
+              <p *ngIf="hotel.description">{{ hotel.description }}</p>
+              <a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noreferrer"
+                class="nw-pub-btn nw-pub-btn-sm nw-pub-btn-secondary">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <span>Ver y Reservar</span>
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. HOST PHOTO GALLERY -->
+      <section *ngIf="invitation.content.gallery?.length && isSectionActive('gallery')" class="nw-pub-section" data-section-key="gallery">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </span>
+            <h2>Galería de Recuerdos</h2>
+            <button *ngIf="hasSectionMusic('gallery')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('gallery')" (click)="toggleSectionMusic('gallery')"
+              [title]="isSectionMusicPlaying('gallery') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('gallery')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('gallery')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('gallery') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('gallery')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <div class="nw-pub-gallery-grid">
+            <div *ngFor="let imageUrl of invitation.content.gallery" class="nw-pub-gallery-item"
+              (click)="openLightbox(imageUrl)">
+              <img [src]="imageUrl" alt="Foto del evento" loading="lazy" decoding="async">
+              <div class="nw-pub-gallery-hover">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+                <span>Ampliar Foto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12. GUEST INTERACTIVE ZONE -->
+
+      <!-- 12a. COLLECTIVE GUEST ALBUM -->
+      <section *ngIf="invitation.content.privateAlbumEnabled && isSectionActive('guestAlbum')" class="nw-pub-section" data-section-key="guestAlbum">
+        <div class="nw-pub-card nw-pub-album-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </span>
+            <h2>Álbum Colectivo de Invitados</h2>
+            <button *ngIf="hasSectionMusic('guestAlbum')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('guestAlbum')" (click)="toggleSectionMusic('guestAlbum')"
+              [title]="isSectionMusicPlaying('guestAlbum') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('guestAlbum')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('guestAlbum')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('guestAlbum') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('guestAlbum')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <p class="nw-pub-section-intro">
+            ¿Tienes fotos o momentos especiales del evento? Súbelas aquí para compartirlas con los anfitriones y formar parte del álbum de recuerdos.
+          </p>
+
+          <!-- UPLOAD BOX -->
+          <div class="nw-pub-album-upload-box">
+            <input type="file" id="albumFileInput" accept="image/*" (change)="selectAlbumFile($event)" style="display:none;">
+            <label for="albumFileInput" class="nw-pub-btn nw-pub-btn-secondary nw-pub-btn-sm" style="cursor:pointer;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <span>Seleccionar Foto</span>
+            </label>
+            <span *ngIf="albumMessage" class="nw-pub-file-name">{{ albumMessage }}</span>
+
+            <button type="button" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-sm" (click)="uploadAlbumPhoto()"
+              [disabled]="!selectedAlbumFile || uploadingAlbum">
+              <svg *ngIf="!uploadingAlbum" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <div *ngIf="uploadingAlbum" class="nw-pub-btn-spinner"></div>
+              <span>{{ uploadingAlbum ? 'Subiendo foto...' : 'Enviar al Álbum' }}</span>
+            </button>
+          </div>
+
+          <!-- PUBLIC ASSETS GRID -->
+          <div *ngIf="publicAlbumAssets.length" class="nw-pub-gallery-grid" style="margin-top:20px;">
+            <div *ngFor="let asset of publicAlbumAssets" class="nw-pub-gallery-item" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" [alt]="asset.uploaderName || 'Foto de invitado'" loading="lazy" decoding="async">
+              <div class="nw-pub-gallery-hover">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>{{ asset.uploaderName ? ('Por ' + asset.uploaderName) : 'Ampliar' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12b. DEDICATIONS / GUESTBOOK WALL -->
+      <section *ngIf="invitation.content.dedicationSettings?.enabled !== false && isSectionActive('dedications')" class="nw-pub-section" data-section-key="dedications">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+            </span>
+            <h2>Muro de Dedicatorias & Buenos Deseos</h2>
+            <button *ngIf="hasSectionMusic('dedications')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('dedications')" (click)="toggleSectionMusic('dedications')"
+              [title]="isSectionMusicPlaying('dedications') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('dedications')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('dedications')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('dedications') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('dedications')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
+
+          <p *ngIf="dedicationIntroText" class="nw-pub-section-intro">
+            {{ dedicationIntroText }}
+          </p>
+
+          <!-- FORM -->
+          <div class="nw-pub-dedication-form-card">
+            <h3 class="nw-pub-form-subtitle">Deja tus felicitaciones o buenos deseos</h3>
+            <form (ngSubmit)="submitDedication()">
+              <div class="nw-pub-form-grid">
+                <div class="nw-pub-field">
+                  <label>Tu Nombre</label>
+                  <input type="text" class="nw-pub-input" [(ngModel)]="dedication.publicName" name="dedPublicName"
+                    [placeholder]="verifiedGuest?.name || rsvp.name || 'Tu nombre'">
+                </div>
+
+                <div class="nw-pub-field">
+                  <label>Tipo de Mensaje</label>
+                  <select class="nw-pub-select" [(ngModel)]="dedication.type" name="dedType">
+                    <option value="dedication">Dedicatoria</option>
+                    <option value="wish">Buenos Deseos</option>
+                    <option value="memory">Recuerdo Especial</option>
+                    <option value="toast">Brindis Virtual</option>
+                  </select>
+                </div>
+
+                <div class="nw-pub-field full-width">
+                  <label>Mensaje *</label>
+                  <textarea class="nw-pub-textarea" [(ngModel)]="dedication.message" name="dedMessage" required
+                    placeholder="Escribe tus palabras cariñosas aquí..."></textarea>
+                </div>
+              </div>
+
+              <div *ngIf="dedicationMessage" class="nw-pub-form-success-banner">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>{{ dedicationMessage }}</span>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="submit" class="nw-pub-btn nw-pub-btn-gold" [disabled]="sending || !dedication.message">
+                  <svg *ngIf="!sending" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  <div *ngIf="sending" class="nw-pub-btn-spinner"></div>
+                  <span>{{ sending ? 'Publicando...' : 'Publicar Mensaje' }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- DEDICATIONS LIST WALL -->
+          <div *ngIf="dedications.length" class="nw-pub-dedications-wall">
+            <article *ngFor="let item of dedications" class="nw-pub-card-inner nw-pub-dedication-card">
+              <div class="nw-pub-dedication-header">
+                <span class="author">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  {{ item.publicName || 'Invitado' }}
+                </span>
+                <span class="badge">{{ item.type || 'dedicatoria' }}</span>
+              </div>
+              <p class="message">"{{ item.message }}"</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12c. DJ / SONG REQUESTS SECTION -->
+      <section *ngIf="isSectionActive('songRequests')" class="nw-pub-section" data-section-key="songRequests">
+        <div class="nw-pub-card">
+          <div class="nw-pub-section-header">
+            <span class="nw-pub-section-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18V5l12-2v13"></path>
                 <circle cx="6" cy="18" r="3"></circle>
                 <circle cx="18" cy="16" r="3"></circle>
               </svg>
             </span>
-            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('songRequests') ? 'Sonando' : 'Música' }}</span>
-            <div *ngIf="isSectionMusicPlaying('songRequests')" class="nw-pub-sec-music-bars">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
-        <p class="muted" style="margin-bottom:20px;">
-          ¿Qué canción no puede faltar en la fiesta? ¡Sugiérela directamente al DJ para bailar toda la noche!
-        </p>
+            <h2>Música & Peticiones al DJ</h2>
+            <button *ngIf="hasSectionMusic('songRequests')" type="button" class="nw-pub-section-music-btn"
+              [class.playing]="isSectionMusicPlaying('songRequests')" (click)="toggleSectionMusic('songRequests')"
+              [title]="isSectionMusicPlaying('songRequests') ? 'Pausar música' : 'Reproducir música de esta sección'">
+              <span class="nw-pub-sec-music-icon">
+                <svg *ngIf="isSectionMusicPlaying('songRequests')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg *ngIf="!isSectionMusicPlaying('songRequests')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('songRequests') ? 'Sonando' : 'Música' }}</span>
+              <div *ngIf="isSectionMusicPlaying('songRequests')" class="nw-pub-sec-music-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </button>
+          </div>
 
-        <!-- LOCKED NOTICE IF GUEST NOT VALIDATED YET -->
-        <div *ngIf="requiresGuestValidation && !verifiedGuest" class="nw-pub-locked-notice" style="margin-bottom:20px;">
-          <div class="nw-pub-locked-icon">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          <p class="nw-pub-section-intro">
+            ¿Qué canción no puede faltar en la pista de baile? ¡Sugiérela directamente al DJ para disfrutar toda la noche!
+          </p>
+
+          <!-- IDENTIFICACIÓN DEL INVITADO -->
+          <div *ngIf="verifiedGuest" class="nw-pub-guest-pill-banner">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
             </svg>
-          </div>
-          <h3>Peticiones de Canciones Bloqueadas</h3>
-          <p>Ingresa tu correo o teléfono en la sección de <strong>Validación de Invitado</strong> arriba para sugerir tus canciones al DJ.</p>
-        </div>
-
-        <ng-container *ngIf="!requiresGuestValidation || verifiedGuest">
-          <!-- IDENTIFICACIÓN DEL INVITADO O RECORDATORIO DE VALIDACIÓN -->
-          <div *ngIf="verifiedGuest" style="margin-bottom: 16px; padding: 10px 14px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 10px; font-size: 13px; color: #065f46; display: flex; align-items: center; gap: 8px;">
-            <span>👤 Solicitando como invitado: <strong>{{ verifiedGuest.name }}</strong> ({{ verifiedGuest.email || guestAccessPhone || 'Confirmado' }})</span>
+            <span>Solicitando como: <strong>{{ verifiedGuest.name }}</strong> ({{ verifiedGuest.email || guestAccessPhone || 'Invitado VIP' }})</span>
           </div>
 
-          <!-- BARRA DE ESTADO DE LÍMITE Y MODO DE APROBACIÓN -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; padding: 10px 14px; background: rgba(0,0,0,0.02); border-radius: 10px; border: 1px solid rgba(0,0,0,0.05);">
-            <span style="font-size: 12.5px; font-weight: 600; opacity: 0.85; display: flex; align-items: center; gap: 6px;">
-              <span>📊 Límite por invitado:</span>
-              <strong style="color: var(--nw-pub-accent, #c09c78);">{{ getGuestSubmittedSongCount() }} de {{ maxSongRequestsAllowed }} enviada(s)</strong>
+          <!-- BARRA DE ESTADO DE LÍMITES Y MODO DE APROBACIÓN -->
+          <div class="nw-pub-dj-status-bar">
+            <div class="nw-pub-dj-limit-indicator">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20v-6M6 20V10M18 20V4"></path>
+              </svg>
+              <span>Peticiones: <strong>{{ getGuestSubmittedSongCount() }} de {{ maxSongRequestsAllowed }} enviada(s)</strong></span>
+            </div>
+
+            <span *ngIf="requireSongApproval" class="nw-pub-badge-pill warning">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Requiere validación del DJ
             </span>
-            <span *ngIf="requireSongApproval" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(245,158,11,0.15); color: #b45309; display: inline-flex; align-items: center; gap: 4px;">
-              ⏳ Requiere aprobación previa del DJ
-            </span>
-            <span *ngIf="!requireSongApproval" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16,185,129,0.15); color: #047857; display: inline-flex; align-items: center; gap: 4px;">
-              ⚡ Aprobación directa en playlist
+            <span *ngIf="!requireSongApproval" class="nw-pub-badge-pill success">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              Directo a la playlist
             </span>
           </div>
 
           <!-- AVISO DE LÍMITE ALCANZADO -->
-          <div *ngIf="songRequestsLimitReached"
-            style="margin-bottom: 16px; padding: 12px 16px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; font-size: 13px; color: #b45309; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <span>⚠️ Has alcanzado el límite máximo de {{ maxSongRequestsAllowed }} canción(es) sugeridas por invitado para este evento.</span>
+          <div *ngIf="songRequestsLimitReached" class="nw-pub-warning-box" style="margin-bottom: 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Has alcanzado el límite máximo de {{ maxSongRequestsAllowed }} canción(es) sugeridas por invitado para este evento.</span>
           </div>
 
-          <!-- BUSCADOR INTERACTIVO DE CANCIONES (YOUTUBE / SPOTIFY) -->
-          <div style="margin-bottom: 20px; background: rgba(0,0,0,0.025); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 16px;" [style.opacity]="songRequestsLimitReached ? '0.6' : '1'">
-            <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--nw-pub-text, #2e2621);">
-              🔍 Buscar canción en YouTube (o pega el enlace del video)
+          <!-- BUSCADOR INTERACTIVO DE CANCIONES -->
+          <div class="nw-pub-song-search-box" [style.opacity]="songRequestsLimitReached ? '0.6' : '1'">
+            <label class="nw-pub-search-label">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <span>Buscar canción o pegar enlace de YouTube:</span>
             </label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+
+            <div class="nw-pub-search-row">
               <input type="text" class="nw-pub-input" [(ngModel)]="songSearchQuery" (keyup.enter)="searchSongForRequest()"
                 [disabled]="songRequestsLimitReached"
-                placeholder="Ej: Vivir Mi Vida Marc Anthony o https://www.youtube.com/watch?v=..." style="flex: 1; min-width: 200px;">
-              <button type="button" class="nw-pub-btn nw-pub-btn-gold" (click)="searchSongForRequest()" [disabled]="searchingSongs || !songSearchQuery.trim() || songRequestsLimitReached"
-                style="display: inline-flex; align-items: center; gap: 6px; padding: 0 16px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                placeholder="Ej: Vivir Mi Vida Marc Anthony o https://www.youtube.com/watch?v=...">
+              <button type="button" class="nw-pub-btn nw-pub-btn-gold" (click)="searchSongForRequest()"
+                [disabled]="searchingSongs || !songSearchQuery.trim() || songRequestsLimitReached">
+                <svg *ngIf="!searchingSongs" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
+                <div *ngIf="searchingSongs" class="nw-pub-btn-spinner"></div>
                 <span>{{ searchingSongs ? 'Buscando...' : 'Buscar' }}</span>
               </button>
             </div>
 
-            <!-- RESULTADOS DE BÚSQUEDA DE CANCIONES -->
-            <div *ngIf="songSearchResults.length > 0 && !songRequestsLimitReached" style="margin-top: 14px; display: grid; gap: 8px;">
-              <span style="font-size: 11.5px; font-weight: 700; text-transform: uppercase; opacity: 0.75;">
-                Resultados encontrados (haz clic para seleccionar e incorporar):
-              </span>
+            <!-- RESULTADOS DE BÚSQUEDA -->
+            <div *ngIf="songSearchResults.length > 0 && !songRequestsLimitReached" class="nw-pub-search-results">
+              <span class="results-header">Selecciona tu canción:</span>
               <div *ngFor="let s of songSearchResults" (click)="selectSongFromSearch(s)"
-                style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255,255,255,0.95); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: all 0.2s; gap: 10px;"
-                [style.border-color]="songRequest.title === s.title ? 'var(--nw-pub-accent, #c09c78)' : 'rgba(0,0,0,0.1)'"
-                [style.background]="songRequest.title === s.title ? 'rgba(192,156,120,0.12)' : 'rgba(255,255,255,0.95)'">
+                class="nw-pub-song-item-card"
+                [class.selected]="songRequest.title === s.title">
                 
-                <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; flex: 1;">
-                  <img *ngIf="s.thumbnailUrl" [src]="s.thumbnailUrl" alt="Cover" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0;">
-                  <div *ngIf="!s.thumbnailUrl" style="width: 44px; height: 44px; border-radius: 6px; background: rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px;">
-                    🎵
+                <div class="song-info-row">
+                  <img *ngIf="s.thumbnailUrl" [src]="s.thumbnailUrl" alt="Carátula" class="song-thumb">
+                  <div *ngIf="!s.thumbnailUrl" class="song-thumb-placeholder">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 18V5l12-2v13"></path>
+                      <circle cx="6" cy="18" r="3"></circle>
+                      <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
                   </div>
-                  <div style="min-width: 0; flex: 1;">
-                    <h4 style="margin: 0; font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--nw-pub-text, #2e2621);">
-                      {{ s.title }}
-                    </h4>
-                    <p style="margin: 2px 0 0; font-size: 12px; opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                      {{ s.artist || 'Artista' }}
-                    </p>
+                  <div class="song-text-col">
+                    <h4 class="song-title">{{ s.title }}</h4>
+                    <p class="song-artist">{{ s.artist || 'Artista' }}</p>
                   </div>
                 </div>
 
-                <button type="button" class="nw-pub-btn nw-pub-btn-sm" style="font-size: 11.5px; padding: 4px 10px; flex-shrink: 0;">
-                  {{ songRequest.title === s.title ? '✓ Seleccionada' : '+ Seleccionar' }}
+                <button type="button" class="nw-pub-btn nw-pub-btn-sm" [class.nw-pub-btn-gold]="songRequest.title === s.title" [class.nw-pub-btn-secondary]="songRequest.title !== s.title">
+                  <svg *ngIf="songRequest.title === s.title" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>{{ songRequest.title === s.title ? 'Seleccionada' : 'Seleccionar' }}</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <form (ngSubmit)="submitSongRequest()" class="nw-pub-card-inner" style="padding: 20px; border-radius: 12px; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06);" [style.opacity]="songRequestsLimitReached ? '0.6' : '1'">
+          <!-- FORMULARIO DE ENVÍO DE CANCIÓN -->
+          <form (ngSubmit)="submitSongRequest()" class="nw-pub-card-inner" [style.opacity]="songRequestsLimitReached ? '0.6' : '1'">
             <div class="nw-pub-form-grid">
               <div class="nw-pub-field">
-                <label>Nombre de la Canción *</label>
+                <label>Título de la Canción *</label>
                 <input type="text" class="nw-pub-input" [(ngModel)]="songRequest.title" name="songTitle" required
-                  [disabled]="songRequestsLimitReached"
-                  placeholder="Ej: Vivir Mi Vida">
+                  [disabled]="songRequestsLimitReached" placeholder="Ej: Vivir Mi Vida">
               </div>
               <div class="nw-pub-field">
-                <label>Artista / Grupo</label>
+                <label>Artista o Intérprete</label>
                 <input type="text" class="nw-pub-input" [(ngModel)]="songRequest.artist" name="songArtist"
-                  [disabled]="songRequestsLimitReached"
-                  placeholder="Ej: Marc Anthony">
+                  [disabled]="songRequestsLimitReached" placeholder="Ej: Marc Anthony">
               </div>
               <div class="nw-pub-field full-width" *ngIf="songRequest.sourceUrl">
                 <label>Enlace de YouTube Incorporado</label>
                 <input type="text" class="nw-pub-input" [(ngModel)]="songRequest.sourceUrl" name="songSourceUrl" readonly
-                  style="opacity: 0.85; background: rgba(0,0,0,0.04);">
+                  style="opacity: 0.85; background: rgba(0,0,0,0.03);">
               </div>
               <div class="nw-pub-field full-width" *ngIf="allowDedicationsEnabled">
-                <label>Dedicatoria u Ocasión (Opcional)</label>
+                <label>Dedicatoria u Ocasión Especial (Opcional)</label>
                 <input type="text" class="nw-pub-input" [(ngModel)]="songRequest.dedication" name="songDedication"
-                  [disabled]="songRequestsLimitReached"
-                  placeholder="Ej: Para bailar con los novios">
+                  [disabled]="songRequestsLimitReached" placeholder="Ej: Para bailar con los novios / anfitriones">
               </div>
             </div>
-            <p *ngIf="songRequestMessage" class="nw-pub-form-success" [style.color]="songRequestsLimitReached ? '#b45309' : ''">{{ songRequestMessage }}</p>
+
+            <div *ngIf="songRequestMessage" class="nw-pub-form-success-banner" [style.color]="songRequestsLimitReached ? '#b45309' : ''" style="margin-top:14px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>{{ songRequestMessage }}</span>
+            </div>
+
             <div style="margin-top:16px;">
-              <button type="submit" class="nw-pub-btn nw-pub-btn-gold" [disabled]="songRequestSending || !songRequest.title.trim() || songRequestsLimitReached" style="display:inline-flex; align-items:center; gap:6px;">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <button type="submit" class="nw-pub-btn nw-pub-btn-gold"
+                [disabled]="songRequestSending || !songRequest.title.trim() || songRequestsLimitReached">
+                <svg *ngIf="!songRequestSending" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M9 18V5l12-2v13"></path>
                   <circle cx="6" cy="18" r="3"></circle>
                   <circle cx="18" cy="16" r="3"></circle>
                 </svg>
-                <span>{{ songRequestSending ? 'Agregando...' : (requireSongApproval ? '⏳ Enviar a Revisión al DJ' : '➕ Agregar Canción a Playlist') }}</span>
+                <div *ngIf="songRequestSending" class="nw-pub-btn-spinner"></div>
+                <span>{{ songRequestSending ? 'Enviando...' : (requireSongApproval ? 'Enviar Sugerencia al DJ' : 'Agregar Canción a la Playlist') }}</span>
               </button>
             </div>
           </form>
-        </ng-container>
-      </div>
-    </section>
+        </div>
+      </section>
 
-    <!-- FOOTER BRANDING -->
-    <footer *ngIf="!invitation.content.hideBranding" class="nw-pub-footer">
-      <p>Invitación Digital Interactiva creada con <strong>KyndraSoft</strong></p>
-    </footer>
+      <!-- 13. FOOTER BRANDING -->
+      <footer *ngIf="!invitation.content.hideBranding" class="nw-pub-footer">
+        <div class="nw-pub-footer-ornament">
+          <span></span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.2L12 16.8 5.7 21.2l2.3-7.2-6-4.6h7.6z"></path>
+          </svg>
+          <span></span>
+        </div>
+        <p>Invitación Digital Interactiva creada con <strong>KyndraSoft</strong></p>
+      </footer>
 
-  </div>
-</main>
+    </div>
+  </main>
 
-  <!-- NUEVA PLANTILLA 3 (MODERNA / MINIMALISTA) -->
+  <!-- PLANTILLA 3 (MODERNA / MINIMALISTA) -->
   <app-new-public-invitation-template3
     *ngIf="isTemplate3()"
     [invitation]="invitation"

@@ -61,6 +61,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   dedications: DedicationModel[] = [];
   guestAccessEmail = '';
   guestAccessPhone = '';
+  guestAccessSingleInput = '';
+  isOpeningVipEnvelope = false;
   selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
@@ -724,29 +726,88 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     });
   }
 
+  scrollToGuestAccess(): void {
+    const el = document.getElementById('guest-access-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = el.querySelector('input') as HTMLInputElement | null;
+      if (input) {
+        setTimeout(() => input.focus(), 400);
+      }
+    }
+  }
+
+  validateAndOpenEnvelope(): void {
+    if (this.guestAccessSingleInput) {
+      const val = this.guestAccessSingleInput.trim();
+      if (val.includes('@')) {
+        this.guestAccessEmail = val;
+        this.guestAccessPhone = '';
+      } else {
+        this.guestAccessPhone = val.replace(/\D/g, '');
+        this.guestAccessEmail = '';
+      }
+    }
+    this.checkGuestAccess();
+  }
+
   checkGuestAccess(): void {
+    if (this.guestAccessSingleInput && !this.guestAccessEmail && !this.guestAccessPhone) {
+      const val = this.guestAccessSingleInput.trim();
+      if (val.includes('@')) {
+        this.guestAccessEmail = val;
+      } else {
+        this.guestAccessPhone = val.replace(/\D/g, '');
+      }
+    }
     if (!this.invitation || (!this.guestAccessEmail && !this.guestAccessPhone)) return;
     this.checkingGuest = true;
     this.error = '';
     this.success = '';
     this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
       next: ({ guest }) => {
-        this.verifiedGuest = guest;
-        this.rsvp.name = guest.name;
-        this.rsvp.email = guest.email || this.guestAccessEmail;
-        if (!guest.email && this.guestAccessPhone) this.rsvp.phoneNationalNumber = this.guestAccessPhone.replace(/\D/g, '');
-        this.rsvp.companions = 0;
-        this.success = `¡Hola ${guest.name}! Ya puedes confirmar tu asistencia.`;
-        this.checkingGuest = false;
-        this.loadGuestSongRequests();
+        this.isOpeningVipEnvelope = true;
+        setTimeout(() => {
+          this.verifiedGuest = guest;
+          this.rsvp.name = guest.name;
+          this.rsvp.email = guest.email || this.guestAccessEmail;
+          if (!guest.email && this.guestAccessPhone) this.rsvp.phoneNationalNumber = this.guestAccessPhone.replace(/\D/g, '');
+          this.rsvp.companions = 0;
+          this.success = `¡Hola ${guest.name}! Tu pase VIP ha sido validado con éxito.`;
+          this.checkingGuest = false;
+          this.isOpeningVipEnvelope = false;
+          this.loadGuestSongRequests();
+          this.showToast(`¡Pase VIP activado para ${guest.name}!`);
+
+          // Attempt music playback on user gesture if available
+          if (this.hasMusicTrack() && !this.isPlayingMusic) {
+            this.toggleMusic();
+          }
+        }, 600);
       },
       error: (error) => {
         this.verifiedGuest = undefined;
         this.guestSubmittedSongsCount = 0;
-        this.error = error.error?.message || 'Este invitado no está en la lista registrada.';
+        this.error = error.error?.message || 'Este invitado no fue encontrado en la lista del evento. Por favor revisa tu correo o teléfono.';
         this.checkingGuest = false;
+        this.isOpeningVipEnvelope = false;
       }
     });
+  }
+
+  resetGuestAccess(): void {
+    this.verifiedGuest = undefined;
+    this.guestAccessPhone = '';
+    this.guestAccessEmail = '';
+    this.guestAccessSingleInput = '';
+    this.isOpeningVipEnvelope = false;
+    this.guestSubmittedSongsCount = 0;
+    this.success = '';
+    this.error = '';
+    this.declineConfirmed = false;
+    this.companionNamesText = '';
+    this.customAnswers = {};
+    this.rsvp = { name: '', email: '', response: 'confirmed' as RsvpResponse, companions: 0, dietaryRestrictions: '', mealPreference: '', menuSelection: '', message: '', phoneCountryCode: '+52', phoneNationalNumber: '' };
   }
 
   submitRsvp(): void {
@@ -840,18 +901,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       next: ({ dedications }) => this.dedications = dedications,
       error: () => this.dedications = []
     });
-  }
-
-  resetGuestAccess(): void {
-    this.verifiedGuest = undefined;
-    this.guestAccessPhone = '';
-    this.guestSubmittedSongsCount = 0;
-    this.success = '';
-    this.error = '';
-    this.declineConfirmed = false;
-    this.companionNamesText = '';
-    this.customAnswers = {};
-    this.rsvp = { name: '', email: '', response: 'confirmed' as RsvpResponse, companions: 0, dietaryRestrictions: '', mealPreference: '', menuSelection: '', message: '', phoneCountryCode: '+52', phoneNationalNumber: '' };
   }
 
   downloadGuestPass(): void {
@@ -1229,6 +1278,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   getYouTubeVideoId(url: string): string {
     const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
     return match ? match[1] : '';
+  }
+
+  searchSongForRequestDirect(query: string): void {
+    this.songSearchQuery = query;
+    this.searchSongForRequest();
   }
 
   searchSongForRequest(): void {
