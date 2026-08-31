@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel, CustomTemplateSubmission } from '../../core/models';
 
 @Component({ selector: 'app-new-invitation-editor', templateUrl: './new-invitation-editor.component.html' })
 export class NewInvitationEditorComponent implements OnInit {
@@ -55,9 +55,19 @@ export class NewInvitationEditorComponent implements OnInit {
   showAiWizardModal = false;
   showTextEditorModal = false;
   textEditorTemplateKey = '';
+  textEditorSubmission?: CustomTemplateSubmission;
+  textEditorCleanBase = false;
 
-  openTextEditor(templateKey: string): void {
-    this.textEditorTemplateKey = templateKey;
+  openTextEditor(event: string | { templateKey: string; submission?: CustomTemplateSubmission; clean?: boolean }): void {
+    if (typeof event === 'string') {
+      this.textEditorTemplateKey = event;
+      this.textEditorSubmission = undefined;
+      this.textEditorCleanBase = true;
+    } else if (event) {
+      this.textEditorTemplateKey = event.templateKey;
+      this.textEditorSubmission = event.submission;
+      this.textEditorCleanBase = event.clean ?? (!event.submission);
+    }
     this.showTextEditorModal = true;
   }
 
@@ -1391,6 +1401,9 @@ export class NewInvitationEditorComponent implements OnInit {
 
     delete rawContent.storyTitle;
     delete rawContent.storyBody;
+    delete rawContent.activeCustomTemplateId;
+    delete rawContent.sourceTemplateKey;
+    delete rawContent.editedTexts;
 
     return {
       ...rawContent,

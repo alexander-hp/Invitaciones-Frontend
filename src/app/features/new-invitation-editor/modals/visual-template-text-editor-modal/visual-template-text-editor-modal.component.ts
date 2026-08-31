@@ -13,6 +13,8 @@ export class VisualTemplateTextEditorModalComponent implements OnInit, OnChanges
   @Input() invitation?: InvitationModel;
   @Input() event?: EventModel;
   @Input() templateKey = '';
+  @Input() editingSubmission?: CustomTemplateSubmission;
+  @Input() cleanBase = false;
 
   @Output() close = new EventEmitter<void>();
   @Output() submitted = new EventEmitter<void>();
@@ -42,7 +44,7 @@ export class VisualTemplateTextEditorModalComponent implements OnInit, OnChanges
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['invitation'] || changes['templateKey']) {
+    if (changes['invitation'] || changes['templateKey'] || changes['editingSubmission'] || changes['cleanBase']) {
       this.setupPreviewUrl();
     }
   }
@@ -55,6 +57,9 @@ export class VisualTemplateTextEditorModalComponent implements OnInit, OnChanges
   }
 
   get templateDisplayName(): string {
+    if (this.editingSubmission?.name) {
+      return this.editingSubmission.name;
+    }
     const names: Record<string, string> = {
       'envelope-cards': 'Sobre Interactivo & Cards Deslizables',
       'classic-vertical': 'Clásica Editorial Vertical',
@@ -66,7 +71,12 @@ export class VisualTemplateTextEditorModalComponent implements OnInit, OnChanges
 
   private setupPreviewUrl(): void {
     if (this.invitation?.slug) {
-      const url = `${window.location.origin}/new/i/${this.invitation.slug}?tpl=${this.templateKey}&editMode=true`;
+      let url = `${window.location.origin}/new/i/${this.invitation.slug}?tpl=${this.templateKey}&editMode=true`;
+      if (this.cleanBase) {
+        url += '&clean=1';
+      } else if (this.editingSubmission?.id || this.editingSubmission?._id) {
+        url += `&subId=${this.editingSubmission.id || this.editingSubmission._id}`;
+      }
       this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
     }
   }
@@ -231,23 +241,33 @@ export class VisualTemplateTextEditorModalComponent implements OnInit, OnChanges
     const invId = this.invitation._id || this.invitation.id || '';
     const eventObj = this.event;
 
+    let submissionName = this.editingSubmission?.name;
+    if (!submissionName) {
+      const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+      submissionName = `Edición — ${this.templateDisplayName} (${timeStr})`;
+    }
+
     const payload: Partial<CustomTemplateSubmission> = {
+      ...(this.editingSubmission || {}),
+      id: this.editingSubmission?.id || (this.editingSubmission as any)?._id,
       eventId: typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event as any)?._id,
       eventTitle: eventObj?.title || 'Evento Especial',
       eventSlug: this.invitation.slug,
       eventType: eventObj?.type || 'otro',
       invitationId: invId,
-      name: `Edición de textos — ${this.templateDisplayName}`,
+      name: submissionName,
       description: `Edición visual de textos en vivo directamente sobre la plantilla "${this.templateDisplayName}".`,
       htmlCode,
       cssCode,
       notes: `Plantilla base: ${this.templateKey}. Editada en modo Word interactivo.`,
       sourceTemplateKey: this.templateKey,
-      editedTexts: Object.keys(editedTexts).length > 0 ? editedTexts : undefined,
+      editedTexts: Object.keys(editedTexts).length > 0 ? editedTexts : (this.editingSubmission?.editedTexts || undefined),
       status: 'pending'
     };
 
     console.log('test edit: [TextEditor] submitForReview - FULL PAYLOAD:', JSON.stringify({
+      id: payload.id,
+      name: payload.name,
       sourceTemplateKey: payload.sourceTemplateKey,
       editedTextsCount: payload.editedTexts ? Object.keys(payload.editedTexts).length : 0,
       editedTexts: payload.editedTexts,

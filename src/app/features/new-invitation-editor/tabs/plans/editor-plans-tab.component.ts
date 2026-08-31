@@ -1,11 +1,13 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { InvitationModel, EventModel, TemplateModel, PlanDefinition, PaymentPackage } from '../../../../core/models';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { InvitationModel, EventModel, TemplateModel, PlanDefinition, PaymentPackage, CustomTemplateSubmission } from '../../../../core/models';
+import { ApiService } from '../../../../core/api.service';
+import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
 
 @Component({
   selector: 'app-editor-plans-tab',
   templateUrl: './editor-plans-tab.component.html'
 })
-export class EditorPlansTabComponent {
+export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() invitation!: InvitationModel;
   @Input() event?: EventModel;
   @Input() templates: TemplateModel[] = [];
@@ -19,7 +21,18 @@ export class EditorPlansTabComponent {
   @Output() selectTemplateKey = new EventEmitter<string>();
   @Output() saveChanges = new EventEmitter<void>();
   @Output() openAiWizard = new EventEmitter<void>();
-  @Output() openTextEditor = new EventEmitter<string>();
+  @Output() openTextEditor = new EventEmitter<{ templateKey: string; submission?: CustomTemplateSubmission; clean?: boolean } | string>();
+
+  // Custom submissions / Edited routine cards
+  customSubmissions: CustomTemplateSubmission[] = [];
+  loadingSubmissions = false;
+  activeFilterTab: 'all' | 'builtin' | 'custom' = 'all';
+
+  // Toasts
+  message = '';
+  error = '';
+  private messageTimeout?: any;
+  private errorTimeout?: any;
 
   builtinTemplates = [
     {
@@ -48,6 +61,82 @@ export class EditorPlansTabComponent {
     }
   ];
 
+  constructor(
+    private apiService: ApiService,
+    private confirmDialog: ConfirmDialogService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCustomSubmissions();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['invitation'] || changes['event']) {
+      this.loadCustomSubmissions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.messageTimeout) clearTimeout(this.messageTimeout);
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+  }
+
+  showSuccess(msg: string): void {
+    this.message = msg;
+    if (this.messageTimeout) clearTimeout(this.messageTimeout);
+    this.messageTimeout = setTimeout(() => { this.message = ''; }, 3500);
+  }
+
+  showError(msg: string): void {
+    this.error = msg;
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+    this.errorTimeout = setTimeout(() => { this.error = ''; }, 4000);
+  }
+
+  loadCustomSubmissions(): void {
+    this.loadingSubmissions = true;
+    const slug = this.invitation?.slug;
+    const eventId = typeof this.invitation?.event === 'string'
+      ? this.invitation.event
+      : (this.invitation?.event as any)?._id || this.event?.id || this.event?._id;
+    const invId = this.invitation?._id || this.invitation?.id;
+
+    this.apiService.listCustomTemplateSubmissions().subscribe({
+      next: res => {
+        const all = res.submissions || [];
+        this.customSubmissions = all.filter(s => {
+          if (slug && s.eventSlug === slug) return true;
+          if (eventId && s.eventId === eventId) return true;
+          if (invId && s.invitationId === invId) return true;
+          return false;
+        });
+        this.loadingSubmissions = false;
+      },
+      error: () => {
+        const local = this.apiService.getLocalCustomSubmissions();
+        this.customSubmissions = local.filter(s => {
+          if (slug && s.eventSlug === slug) return true;
+          if (eventId && s.eventId === eventId) return true;
+          if (invId && s.invitationId === invId) return true;
+          return false;
+        });
+        this.loadingSubmissions = false;
+      }
+    });
+  }
+
+  get totalTemplatesCount(): number {
+    return this.builtinTemplates.length + this.customSubmissions.length;
+  }
+
+  get approvedCustomCount(): number {
+    return this.customSubmissions.filter(s => s.status === 'approved').length;
+  }
+
+  get pendingCustomCount(): number {
+    return this.customSubmissions.filter(s => s.status === 'pending').length;
+  }
+
   get currentTemplateKey(): string {
     const invId = this.invitation?._id || this.invitation?.id;
     const slug = this.invitation?.slug;
@@ -55,50 +144,165 @@ export class EditorPlansTabComponent {
     return this.invitation?.content?.template || stored || 'envelope-cards';
   }
 
-  isTemplateActive(key: string): boolean {
+  isBuiltinActive(tplId: string): boolean {
+    if (this.invitation?.content?.activeCustomTemplateId) {
+      return false;
+    }
     const current = this.currentTemplateKey;
-    if (key === 'modern-minimal' && (current === 'modern-minimal' || current === 'template-3' || current === 'plantilla-3')) {
+    if (tplId === 'modern-minimal' && (current === 'modern-minimal' || current === 'template-3' || current === 'plantilla-3')) {
       return true;
     }
-    return current === key;
+    return current === tplId;
   }
 
-  hasCustomTemplate(): boolean {
-    const slug = this.invitation?.slug;
-    return !!(this.invitation?.content?.customHtml || (slug && localStorage.getItem(`inv_custom_html_${slug}`)));
+  isCustomSubmissionActive(sub: CustomTemplateSubmission): boolean {
+    const subId = sub.id || sub._id;
+    if (this.invitation?.content?.activeCustomTemplateId && this.invitation.content.activeCustomTemplateId === subId) {
+      return true;
+    }
+    return false;
   }
 
-  isCustomTemplateActive(): boolean {
-    const current = this.currentTemplateKey;
-    return current === 'custom-html' || current === 'html-css';
+  /**
+   * Activates a clean base template for this invitation, removing custom overlays.
+   */
+  setBuiltinTemplate(key: string): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+
+    // Clear custom template overrides
+    delete this.invitation.content.activeCustomTemplateId;
+    delete this.invitation.content.editedTexts;
+    delete this.invitation.content.customHtml;
+    delete this.invitation.content.customCss;
+    delete this.invitation.content.customPageApproved;
+    delete this.invitation.content.sourceTemplateKey;
+    delete this.invitation.template;
+
+    this.invitation.content.template = key;
+
+    const invId = this.invitation._id || this.invitation.id;
+    const slug = this.invitation.slug;
+    if (slug) {
+      localStorage.setItem(`inv_tpl_${slug}`, key);
+      localStorage.removeItem(`inv_edited_texts_${slug}`);
+      localStorage.removeItem(`inv_custom_html_${slug}`);
+      localStorage.removeItem(`inv_custom_css_${slug}`);
+      localStorage.removeItem(`custom_template_html_${slug}`);
+      localStorage.removeItem(`custom_template_css_${slug}`);
+    }
+    if (invId) {
+      localStorage.setItem(`inv_tpl_${invId}`, key);
+    }
+
+    this.selectTemplateKey.emit(key);
+    this.saveChanges.emit();
+    this.showSuccess(`Plantilla base "${this.getBuiltinName(key)}" activada.`);
   }
 
-  setTemplate(key: string): void {
-    if (this.invitation) {
-      if (!this.invitation.content) this.invitation.content = {};
-      this.invitation.content.template = key;
-      const invId = this.invitation._id || this.invitation.id;
-      const slug = this.invitation.slug;
-      if (invId) {
-        localStorage.setItem(`inv_tpl_${invId}`, key);
-      }
-      if (slug) {
-        localStorage.setItem(`inv_tpl_${slug}`, key);
-      }
-      if (/^[0-9a-fA-F]{24}$/.test(key)) {
-        this.invitation.template = key;
+  /**
+   * Activates a custom edited routine or AI generated template.
+   */
+  setCustomSubmission(sub: CustomTemplateSubmission): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+
+    const subId = sub.id || sub._id || '';
+    this.invitation.content.activeCustomTemplateId = subId;
+    this.invitation.content.sourceTemplateKey = sub.sourceTemplateKey;
+    this.invitation.content.editedTexts = sub.editedTexts;
+    this.invitation.content.customHtml = sub.htmlCode;
+    this.invitation.content.customCss = sub.cssCode;
+    this.invitation.content.customPageApproved = sub.status === 'approved';
+
+    const targetTpl = sub.sourceTemplateKey || 'custom-html';
+    this.invitation.content.template = targetTpl;
+
+    const slug = this.invitation.slug;
+    const invId = this.invitation._id || this.invitation.id;
+
+    if (slug) {
+      if (sub.editedTexts && Object.keys(sub.editedTexts).length > 0 && sub.sourceTemplateKey) {
+        localStorage.setItem(`inv_edited_texts_${slug}`, JSON.stringify(sub.editedTexts));
+        localStorage.setItem(`inv_source_tpl_${slug}`, sub.sourceTemplateKey);
+        localStorage.setItem(`inv_tpl_${slug}`, sub.sourceTemplateKey);
+        localStorage.removeItem(`inv_custom_html_${slug}`);
       } else {
-        delete this.invitation.template;
+        localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode || '');
+        localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
+        localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
       }
-      this.selectTemplateKey.emit(key);
-      this.saveChanges.emit();
+    }
+    if (invId) {
+      localStorage.setItem(`inv_tpl_${invId}`, targetTpl);
+    }
+
+    this.selectTemplateKey.emit(targetTpl);
+    this.saveChanges.emit();
+    this.showSuccess(`Versión personalizada "${sub.name}" seleccionada.`);
+  }
+
+  getBuiltinName(key: string): string {
+    const found = this.builtinTemplates.find(t => t.id === key);
+    return found ? found.name : key;
+  }
+
+  getEditedTextsCount(sub: CustomTemplateSubmission): number {
+    return sub.editedTexts ? Object.keys(sub.editedTexts).length : 0;
+  }
+
+  previewBuiltinTemplate(key: string): void {
+    if (this.invitation?.slug) {
+      window.open(`/new/i/${this.invitation.slug}?tpl=${key}&preview=true&clean=1`, '_blank');
     }
   }
 
-  previewTemplate(key: string): void {
+  previewCustomSubmission(sub: CustomTemplateSubmission): void {
     if (this.invitation?.slug) {
-      window.open(`/new/i/${this.invitation.slug}?tpl=${key}`, '_blank');
+      const subId = sub.id || sub._id;
+      const tpl = sub.sourceTemplateKey || 'custom-html';
+      window.open(`/new/i/${this.invitation.slug}?tpl=${tpl}&preview=true&subId=${subId}`, '_blank');
     }
+  }
+
+  editCleanBuiltin(key: string): void {
+    this.openTextEditor.emit({ templateKey: key, clean: true });
+  }
+
+  editCustomSubmission(sub: CustomTemplateSubmission): void {
+    if (sub.sourceTemplateKey && sub.editedTexts) {
+      this.openTextEditor.emit({ templateKey: sub.sourceTemplateKey, submission: sub, clean: false });
+    } else {
+      this.openAiWizard.emit();
+    }
+  }
+
+  deleteCustomSubmission(sub: CustomTemplateSubmission, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    const subId = sub.id || sub._id || '';
+
+    this.confirmDialog.confirm({
+      title: '¿Eliminar versión personalizada?',
+      message: `¿Estás seguro de eliminar "${sub.name}"? Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.apiService.deleteCustomTemplateSubmission(subId).subscribe({
+          next: () => {
+            if (this.isCustomSubmissionActive(sub)) {
+              this.setBuiltinTemplate('envelope-cards');
+            }
+            this.loadCustomSubmissions();
+            this.showSuccess('Versión personalizada eliminada.');
+          },
+          error: (err) => {
+            this.showError(err?.message || 'Error al eliminar la versión personalizada.');
+          }
+        });
+      }
+    });
   }
 
   canUsePremiumTemplates(): boolean {

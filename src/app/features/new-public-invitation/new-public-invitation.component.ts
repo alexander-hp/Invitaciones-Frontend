@@ -172,30 +172,37 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
         console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
 
-        // Auto-detect if customHtml is an edited snapshot of a standard Angular template
-        const customHtml = invitation.content?.customHtml || localStorage.getItem(`inv_custom_html_${slug}`) || '';
-        const savedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
+        // If invitation content specifies a base template and has no customHtml, ensure detectedSourceTemplate is cleared
+        const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+        if (isCleanRequested || (invitation.content?.template && invitation.content.template !== 'custom-html' && !invitation.content?.customHtml)) {
+          this.detectedSourceTemplate = undefined;
+          this.pendingEditedTexts = undefined;
+        } else {
+          // Auto-detect if customHtml is an edited snapshot of a standard Angular template
+          const customHtml = invitation.content?.customHtml || localStorage.getItem(`inv_custom_html_${slug}`) || '';
+          const savedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
 
-        if (customHtml) {
-          const detected = this.detectSourceTemplateFromHtml(customHtml);
-          if (detected) {
-            console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
-            this.detectedSourceTemplate = detected.templateKey;
-            if (this.invitation.content) {
-              this.invitation.content.template = detected.templateKey;
-              this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
+          if (customHtml) {
+            const detected = this.detectSourceTemplateFromHtml(customHtml);
+            if (detected) {
+              console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
+              this.detectedSourceTemplate = detected.templateKey;
+              if (this.invitation.content) {
+                this.invitation.content.template = detected.templateKey;
+                this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
+              }
+              this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
+            } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
+              this.detectedSourceTemplate = savedSourceTpl;
+              if (this.invitation.content) {
+                this.invitation.content.template = savedSourceTpl;
+              }
             }
-            this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
           } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
             this.detectedSourceTemplate = savedSourceTpl;
             if (this.invitation.content) {
               this.invitation.content.template = savedSourceTpl;
             }
-          }
-        } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
-          this.detectedSourceTemplate = savedSourceTpl;
-          if (this.invitation.content) {
-            this.invitation.content.template = savedSourceTpl;
           }
         }
 
@@ -732,12 +739,18 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
     if (queryTpl) return queryTpl;
 
+    const invContentTpl = (this.invitation?.content as any)?.template;
+    if (invContentTpl && invContentTpl !== 'custom-html') return invContentTpl;
+
     if (this.detectedSourceTemplate) {
       return this.detectedSourceTemplate;
     }
 
     const slug = this.invitation?.slug;
     const invId = this.invitation?._id || this.invitation?.id;
+    const storedTpl = (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null) || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null);
+    if (storedTpl && storedTpl !== 'custom-html') return storedTpl;
+
     const sourceTpl =
       this.invitation?.content?.sourceTemplateKey ||
       (slug ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
@@ -747,16 +760,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return sourceTpl;
     }
 
-    const invContentTpl = (this.invitation?.content as any)?.template;
-    if (invContentTpl && invContentTpl !== 'custom-html') return invContentTpl;
-
     const invRootTpl = (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : null;
     if (invRootTpl && invRootTpl !== 'custom-html') return invRootTpl;
 
-    const storedTpl = (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null);
-    if (storedTpl && storedTpl !== 'custom-html') return storedTpl;
-
-    return 'classic-vertical';
+    return 'envelope-cards';
   }
 
   isCustomHtmlTemplate(): boolean {
@@ -1007,19 +1014,47 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     console.log('test edit: [PublicInv] loadEditedTexts() called, slug:', slug);
     console.log('test edit: [PublicInv] isCustomHtmlTemplate:', this.isCustomHtmlTemplate());
     console.log('test edit: [PublicInv] currentTemplate:', this.currentTemplate);
+    // Check if clean base template is explicitly requested (e.g. from editor clean edit)
+    const isCleanMode = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    if (isCleanMode) {
+      console.log('test edit: [PublicInv] loadEditedTexts() SKIPPED - clean base mode requested');
+      this.pendingEditedTexts = undefined;
+      return;
+    }
+
     // Skip if this is a custom-html template (those use full HTML replacement)
     if (this.isCustomHtmlTemplate()) {
       console.log('test edit: [PublicInv] loadEditedTexts() SKIPPED - isCustomHtmlTemplate is true');
       return;
     }
 
-    // Priority: invitation content > localStorage
-    const fromContent = this.invitation?.content?.editedTexts;
-    const fromLocal = this.textOverlay.loadEditedTexts(slug);
-    const editedTexts = fromContent || fromLocal;
+    const subId = this.route.snapshot.queryParamMap.get('subId');
+    let editedTexts: Record<string, string> | undefined;
 
-    console.log('test edit: [PublicInv] loadEditedTexts - fromContent:', fromContent ? Object.keys(fromContent).length + ' keys' : 'undefined');
-    console.log('test edit: [PublicInv] loadEditedTexts - fromLocal:', fromLocal ? Object.keys(fromLocal).length + ' keys' : 'null');
+    if (subId) {
+      // Load specific submission's texts
+      const rawSubTexts = localStorage.getItem(`inv_edited_texts_${slug}_${subId}`);
+      if (rawSubTexts) {
+        try {
+          editedTexts = JSON.parse(rawSubTexts);
+        } catch {}
+      }
+      if (!editedTexts) {
+        const subs = this.api.getLocalCustomSubmissions();
+        const found = subs.find(s => s.id === subId || s._id === subId);
+        if (found?.editedTexts) {
+          editedTexts = found.editedTexts;
+        }
+      }
+    }
+
+    if (!editedTexts) {
+      // Priority: invitation content > localStorage
+      const fromContent = this.invitation?.content?.editedTexts;
+      const fromLocal = this.textOverlay.loadEditedTexts(slug);
+      editedTexts = fromContent || fromLocal || undefined;
+    }
+
     console.log('test edit: [PublicInv] loadEditedTexts - final editedTexts:', editedTexts ? Object.keys(editedTexts).length + ' keys' : 'null');
 
     if (editedTexts && Object.keys(editedTexts).length > 0) {

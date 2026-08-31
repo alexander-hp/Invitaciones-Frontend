@@ -1,109 +1,109 @@
-<!-- PLANTILLAS Y FORMATO DE DISEÑO -->
-<div class="nw-card" style="margin-bottom:16px;">
-  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <div style="display:flex; align-items:center; gap:10px;">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="3" y1="9" x2="21" y2="9"></line>
-        <line x1="9" y1="21" x2="9" y2="9"></line>
-      </svg>
-      <h3 style="margin:0;">Plantillas y Estructura de Invitación</h3>
-    </div>
-    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="saveChanges.emit()" style="display:inline-flex; align-items:center; gap:6px;">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-        <polyline points="7 3 7 8 15 8"></polyline>
-      </svg>
-      <span>Guardar Cambios</span>
-    </button>
+<!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
+<div class="nw-toast-container" *ngIf="message || error">
+  <div *ngIf="message" class="nw-toast success">
+    <span>✨ {{ message }}</span>
+    <button type="button" class="nw-toast-close" (click)="message=''">✕</button>
   </div>
-  <div class="nw-card-body" style="padding-top:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-      <p style="font-size:14px; color:var(--nw-text-3); margin:0;">
+  <div *ngIf="error" class="nw-toast error">
+    <span>⚠️ {{ error }}</span>
+    <button type="button" class="nw-toast-close" (click)="error=''">✕</button>
+  </div>
+</div>
+
+<!-- PLANTILLAS Y FORMATO DE DISEÑO -->
+<section class="nw-card" style="margin-bottom: 24px;">
+  <!-- Encabezado de la Sección -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        📋 Plantillas y Estructura de Invitación
+        <span class="nw-badge" style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          {{ totalTemplatesCount }} plantillas
+        </span>
+        <span *ngIf="pendingCustomCount > 0" class="nw-pill warning" style="font-size: 12px; font-weight: 700;">
+          ⏳ {{ pendingCustomCount }} en revisión
+        </span>
+        <span *ngIf="approvedCustomCount > 0" class="nw-pill success" style="font-size: 12px; font-weight: 700;">
+          ✨ {{ approvedCustomCount }} personalizadas
+        </span>
+      </h2>
+      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
         Elige la experiencia de navegación para tus invitados al abrir la invitación o diseña una exclusiva con IA.
       </p>
-      
-      <!-- BOTON GENERAR CON IA -->
-      <button type="button" class="nw-btn nw-btn-primary" (click)="openAiWizard.emit()"
-        style="background:linear-gradient(135deg, #7928ca 0%, #ff0080 50%, #f59e0b 100%) !important; border:none !important; color:#ffffff !important; font-weight:800; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 16px rgba(121,40,202,0.35); padding:8px 16px; border-radius:999px;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-        </svg>
-        <span>✨ Crear / Diseñar con IA (Gemini)</span>
-      </button>
     </div>
 
-    <!-- BUILT-IN TEMPLATES LIST -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
-      
-      <!-- TARJETA DE PLANTILLA CREADA CON IA / CUSTOM (SI EXISTE) -->
-      <div *ngIf="hasCustomTemplate()"
-           class="nw-card"
-           [style.border]="isCustomTemplateActive() ? '2px solid var(--nw-accent)' : '1px solid var(--nw-border)'"
-           style="padding:16px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(180deg, rgba(121,40,202,0.05) 0%, var(--nw-surface-2) 100%);">
-        
-        <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="width:36px; height:36px; border-radius:8px; background:linear-gradient(135deg, #7928ca, #ff0080); display:flex; align-items:center; justify-content:center; color:#ffffff;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-            </div>
-            <span class="nw-pill accent" [class.accent]="isCustomTemplateActive()">
-              {{ isCustomTemplateActive() ? 'Activa' : 'Generada con IA' }}
-            </span>
-          </div>
+    <!-- Botones de Acción del Encabezado -->
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <button type="button" class="nw-btn nw-btn-primary" (click)="openAiWizard.emit()"
+        style="display: flex; align-items: center; gap: 8px; font-size: 13px; height: 38px; font-weight: 700; background: linear-gradient(135deg, #7928ca 0%, #ff0080 50%, #f59e0b 100%) !important; border: none !important; color: #ffffff !important; box-shadow: 0 4px 14px rgba(121, 40, 202, 0.35);">
+        ✨ Diseñar con IA (Gemini)
+      </button>
+      <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="saveChanges.emit()" style="display: flex; align-items: center; gap: 6px; font-size: 13px; height: 38px;">
+        💾 Guardar Cambios
+      </button>
+    </div>
+  </div>
 
-          <h4 style="margin:0 0 6px; font-size:16px; font-weight:800;">Plantilla Inteligente Personalizada</h4>
-          <p style="margin:0 0 12px; font-size:13px; color:var(--nw-text-3); line-height:1.5;">
-            Diseño dinámico exclusivo generado con Inteligencia Artificial Gemini para tu evento.
-          </p>
-
-          <ul style="margin:0 0 16px; padding-left:18px; font-size:12px; color:var(--nw-text-2); line-height:1.6;">
-            <li>Diseño 100% interactivo y responsive</li>
-            <li>Cuenta regresiva y RSVP dinámico</li>
-            <li>Módulos configurados a medida</li>
-          </ul>
-        </div>
-
-        <div style="display:flex; gap:8px;">
-          <button type="button" 
-                  class="nw-btn nw-btn-sm" 
-                  [class.nw-btn-primary]="isCustomTemplateActive()"
-                  [class.nw-btn-ghost]="!isCustomTemplateActive()"
-                  (click)="setTemplate('custom-html')"
-                  style="flex:1;">
-            {{ isCustomTemplateActive() ? 'Plantilla Seleccionada' : 'Usar esta plantilla' }}
-          </button>
-
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openAiWizard.emit()" title="Editar o Regenerar con IA" style="display:inline-flex; align-items:center; gap:4px;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-            <span>Editar</span>
-          </button>
-
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewTemplate('custom-html')" style="display:inline-flex; align-items:center; gap:4px;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <span>Ver</span>
-          </button>
-        </div>
-
+  <!-- BANNER HERO DE IA GEMINI -->
+  <div style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(121, 40, 202, 0.08) 0%, rgba(255, 0, 128, 0.05) 50%, var(--nw-surface-2, #f5f1ea) 100%); border: 1px solid rgba(121, 40, 202, 0.25); border-radius: var(--nw-radius-sm, 12px); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div style="display: flex; gap: 14px; align-items: center;">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #7928ca, #ff0080); display: flex; align-items: center; justify-content: center; color: #ffffff; flex-shrink: 0; box-shadow: 0 4px 12px rgba(121, 40, 202, 0.3);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
       </div>
+      <div>
+        <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 8px;">
+          Generador Inteligente de Plantillas e Interactividad
+          <span class="nw-pill accent" style="font-size: 10.5px;">Potenciado por Gemini</span>
+        </h4>
+        <p style="margin: 3px 0 0; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.4;">
+          Crea estructuras dinámicas, paletas de color y módulos interactivos adaptados al estilo y temática de tu evento.
+        </p>
+      </div>
+    </div>
+    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openAiWizard.emit()"
+      style="font-size: 12.5px; height: 36px; padding: 0 16px; font-weight: 700; background: linear-gradient(135deg, #7928ca, #ff0080) !important; border: none !important; color: #ffffff !important; display: inline-flex; align-items: center; gap: 6px;">
+      <span>✨ Abrir Diseñador IA</span>
+      <span style="font-size: 11px;">→</span>
+    </button>
+  </div>
 
-      <div *ngFor="let tpl of builtinTemplates" 
-           class="nw-card" 
-           [style.border]="isTemplateActive(tpl.id) ? '2px solid var(--nw-accent)' : '1px solid var(--nw-border)'"
-           style="padding:16px; display:flex; flex-direction:column; justify-content:space-between; background:var(--nw-surface-2);">
+  <!-- FILTROS SEGMENTADOS POR PILLS (SECCIÓN 5) -->
+  <div style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'all'"
+      [class.nw-btn-primary]="activeFilterTab === 'all'" [class.nw-btn-ghost]="activeFilterTab !== 'all'"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+      🖼️ Todas ({{ totalTemplatesCount }})
+    </button>
+
+    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'builtin'"
+      [class.nw-btn-primary]="activeFilterTab === 'builtin'" [class.nw-btn-ghost]="activeFilterTab !== 'builtin'"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+      🏛️ Plantillas Base ({{ builtinTemplates.length }})
+    </button>
+
+    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'custom'"
+      [class.nw-btn-primary]="activeFilterTab === 'custom'" [class.nw-btn-ghost]="activeFilterTab !== 'custom'"
+      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
+      ✨ Versiones Editadas e IA ({{ customSubmissions.length }})
+    </button>
+  </div>
+
+  <!-- CUADRÍCULA DE TARJETAS DE PLANTILLAS -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; margin-bottom: 20px;">
+    
+    <!-- 1. TARJETAS DE PLANTILLAS BASE (CLEAN ORIGINALS) -->
+    <ng-container *ngIf="activeFilterTab === 'all' || activeFilterTab === 'builtin'">
+      <div *ngFor="let tpl of builtinTemplates"
+           class="nw-card-item"
+           [style.border]="isBuiltinActive(tpl.id) ? '2px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
+           [style.box-shadow]="isBuiltinActive(tpl.id) ? '0 4px 16px rgba(192, 156, 120, 0.2)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
+           style="background: var(--nw-surface, #ffffff); border-radius: var(--nw-radius-sm, 12px); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s;">
         
         <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="width:36px; height:36px; border-radius:8px; background:var(--nw-surface); border:1px solid var(--nw-border); display:flex; align-items:center; justify-content:center; color:var(--nw-accent);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); display: flex; align-items: center; justify-content: center; color: var(--nw-accent, #c09c78);">
               <svg *ngIf="tpl.iconKey === 'envelope'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
@@ -121,39 +121,53 @@
                 <polyline points="2 12 12 17 22 12"></polyline>
               </svg>
             </div>
-            <span class="nw-pill" [class.accent]="isTemplateActive(tpl.id)">
-              {{ isTemplateActive(tpl.id) ? 'Activa' : tpl.badge }}
-            </span>
+            
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span *ngIf="isBuiltinActive(tpl.id)" class="nw-pill success" style="font-size: 11px; font-weight: 700;">
+                Activa ✅
+              </span>
+              <span class="nw-pill" style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157);">
+                {{ tpl.badge }}
+              </span>
+            </div>
           </div>
 
-          <h4 style="margin:0 0 6px; font-size:16px; font-weight:700;">{{ tpl.name }}</h4>
-          <p style="margin:0 0 12px; font-size:13px; color:var(--nw-text-3); line-height:1.5;">{{ tpl.description }}</p>
+          <h4 style="margin: 0 0 6px; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
+            {{ tpl.name }}
+          </h4>
+          <p style="margin: 0 0 12px; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.45;">
+            {{ tpl.description }}
+          </p>
 
-          <ul style="margin:0 0 16px; padding-left:18px; font-size:12px; color:var(--nw-text-2); line-height:1.6;">
+          <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: var(--nw-text-3, #8c7e72); line-height: 1.55;">
             <li *ngFor="let feat of tpl.features">{{ feat }}</li>
           </ul>
         </div>
 
-        <div style="display:flex; gap:8px;">
+        <div style="display: flex; gap: 8px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 12px; align-items: center;">
           <button type="button" 
                   class="nw-btn nw-btn-sm" 
-                  [class.nw-btn-primary]="isTemplateActive(tpl.id)"
-                  [class.nw-btn-ghost]="!isTemplateActive(tpl.id)"
-                  (click)="setTemplate(tpl.id)"
-                  style="flex:1;">
-            {{ isTemplateActive(tpl.id) ? 'Plantilla Seleccionada' : 'Usar esta plantilla' }}
+                  [class.nw-btn-primary]="isBuiltinActive(tpl.id)"
+                  [class.nw-btn-secondary]="!isBuiltinActive(tpl.id)"
+                  (click)="setBuiltinTemplate(tpl.id)"
+                  style="flex: 1; height: 36px; font-size: 12.5px; font-weight: 600;">
+            {{ isBuiltinActive(tpl.id) ? '✓ Seleccionada' : 'Usar esta plantilla' }}
           </button>
 
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openTextEditor.emit(tpl.id)" style="display:inline-flex; align-items:center; gap:4px;" title="Editar textos de esta plantilla">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="editCleanBuiltin(tpl.id)"
+            title="Editar textos desde la plantilla base limpia"
+            style="display: inline-flex; align-items: center; gap: 4px; height: 36px; font-size: 12.5px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
             <span>Editar</span>
           </button>
 
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewTemplate(tpl.id)" style="display:inline-flex; align-items:center; gap:4px;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewBuiltinTemplate(tpl.id)"
+            title="Ver vista previa limpia"
+            style="display: inline-flex; align-items: center; gap: 4px; height: 36px; font-size: 12.5px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
@@ -162,131 +176,251 @@
         </div>
 
       </div>
-    </div>
+    </ng-container>
 
-    <!-- TIENDA / PRESETS DE API SI EXISTEN -->
-    <div *ngIf="templates.length" style="border-top:1px dashed var(--nw-border); padding-top:16px;">
-      <h4 style="margin:0 0 10px; font-size:14px;">Estilos Predefinidos Disponibles:</h4>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
-        <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
-          (click)="applyTemplate.emit(template)"
-          style="display:flex; flex-direction:column; align-items:flex-start; padding:12px; text-align:left;">
-          <strong>{{ template.name }}</strong>
-          <span style="font-size:12px; color:var(--nw-text-3);">{{ template.eventType }} · {{ template.tier }}</span>
-          <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
-            style="margin-top:6px; font-size:11px;">Requiere upgrade</span>
-        </button>
+    <!-- 2. TARJETAS DE VERSIONES / RUTINAS EDITADAS E IA (INDIVIDUALES) -->
+    <ng-container *ngIf="activeFilterTab === 'all' || activeFilterTab === 'custom'">
+      <div *ngFor="let sub of customSubmissions"
+           class="nw-card-item"
+           [style.border]="isCustomSubmissionActive(sub) ? '2px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
+           [style.box-shadow]="isCustomSubmissionActive(sub) ? '0 4px 16px rgba(121, 40, 202, 0.25)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
+           style="background: linear-gradient(180deg, rgba(121, 40, 202, 0.04) 0%, var(--nw-surface, #ffffff) 100%); border-radius: var(--nw-radius-sm, 12px); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s;">
+        
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #7928ca, #ff0080); display: flex; align-items: center; justify-content: center; color: #ffffff; box-shadow: 0 3px 8px rgba(121, 40, 202, 0.3);">
+              <svg *ngIf="!sub.sourceTemplateKey" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <svg *ngIf="sub.sourceTemplateKey" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </div>
+            
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <span *ngIf="isCustomSubmissionActive(sub)" class="nw-pill success" style="font-size: 11px; font-weight: 700;">
+                Activa ✅
+              </span>
+              <span *ngIf="sub.status === 'approved'" class="nw-pill accent" style="font-size: 11px; font-weight: 700;">
+                ✓ Aprobada
+              </span>
+              <span *ngIf="sub.status === 'pending'" class="nw-pill warning" style="font-size: 11px; font-weight: 700;">
+                ⏳ En Revisión
+              </span>
+            </div>
+          </div>
+
+          <h4 style="margin: 0 0 6px; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
+            {{ sub.name }}
+          </h4>
+          <p style="margin: 0 0 12px; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.45;">
+            {{ sub.description || 'Rutina personalizada con interactividad nativa y textos ajustados para tu evento.' }}
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--nw-text-3, #8c7e72); background: var(--nw-surface-2, #f5f1ea); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc);">
+            <div *ngIf="sub.sourceTemplateKey" style="display: flex; align-items: center; gap: 6px;">
+              <span>🏛️ Base:</span>
+              <strong style="color: var(--nw-text, #2e2621);">{{ getBuiltinName(sub.sourceTemplateKey) }}</strong>
+            </div>
+            <div *ngIf="sub.editedTexts" style="display: flex; align-items: center; gap: 6px;">
+              <span>📝 Modificaciones:</span>
+              <strong style="color: var(--nw-accent, #c09c78);">{{ getEditedTextsCount(sub) }} textos editados</strong>
+            </div>
+            <div *ngIf="sub.submittedAt" style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
+              <span>📅 Creada:</span>
+              <span>{{ sub.submittedAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 12px; align-items: center;">
+          <button type="button" 
+                  class="nw-btn nw-btn-sm" 
+                  [class.nw-btn-primary]="isCustomSubmissionActive(sub)"
+                  [class.nw-btn-secondary]="!isCustomSubmissionActive(sub)"
+                  (click)="setCustomSubmission(sub)"
+                  style="flex: 1; height: 36px; font-size: 12.5px; font-weight: 600;">
+            {{ isCustomSubmissionActive(sub) ? '✓ Seleccionada' : 'Usar esta versión' }}
+          </button>
+
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="editCustomSubmission(sub)"
+            title="Continuar editando esta versión"
+            style="display: inline-flex; align-items: center; gap: 4px; height: 36px; font-size: 12.5px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Editar</span>
+          </button>
+
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewCustomSubmission(sub)"
+            title="Previsualizar esta versión"
+            style="display: inline-flex; align-items: center; gap: 4px; height: 36px; font-size: 12.5px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span>Ver</span>
+          </button>
+
+          <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="deleteCustomSubmission(sub, $event)"
+            title="Eliminar esta versión personalizada"
+            style="height: 36px; padding: 0 10px;">
+            🗑️
+          </button>
+        </div>
+
       </div>
-    </div>
+    </ng-container>
 
   </div>
-</div>
+
+  <!-- ESTADO VACÍO CUANDO NO HAY VERSIONES PERSONALIZADAS Y SE FILTRA POR ELLAS -->
+  <div *ngIf="activeFilterTab === 'custom' && customSubmissions.length === 0 && !loadingSubmissions"
+       class="nw-empty"
+       style="padding: 40px 20px; text-align: center; color: var(--nw-text-3, #9e9083); background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 12px); border: 1px dashed var(--nw-border, #eadecc); margin-bottom: 20px;">
+    <span class="empty-icon" style="font-size: 40px; display: block; margin-bottom: 8px;">✨</span>
+    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
+      No tienes versiones o rutinas editadas aún
+    </h3>
+    <p style="font-size: 13px; margin: 4px 0 16px; color: var(--nw-text-2, #6e6157);">
+      Haz clic en "Editar" en cualquiera de las plantillas base o utiliza el Asistente IA para crear tu primera rutina personalizada.
+    </p>
+    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openAiWizard.emit()"
+      style="background: linear-gradient(135deg, #7928ca, #ff0080) !important; border: none !important; color: #ffffff !important;">
+      ✨ Diseñar con IA
+    </button>
+  </div>
+
+  <!-- TIENDA / PRESETS DE API SI EXISTEN -->
+  <div *ngIf="templates.length" style="border-top: 1px dashed var(--nw-border, #eadecc); padding-top: 16px; margin-top: 10px;">
+    <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--nw-text, #2e2621);">Estilos Predefinidos Disponibles:</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+      <button *ngFor="let template of templates" class="nw-btn nw-btn-ghost" type="button"
+        (click)="applyTemplate.emit(template)"
+        style="display: flex; flex-direction: column; align-items: flex-start; padding: 12px; text-align: left; border: 1px solid var(--nw-border, #eadecc); border-radius: 8px;">
+        <strong>{{ template.name }}</strong>
+        <span style="font-size: 12px; color: var(--nw-text-3, #8c7e72);">{{ template.eventType }} · {{ template.tier }}</span>
+        <span *ngIf="template.tier === 'premium' && !canUsePremiumTemplates()" class="nw-pill warning"
+          style="margin-top: 6px; font-size: 11px;">Requiere upgrade</span>
+      </button>
+    </div>
+  </div>
+
+</section>
 
 <!-- PLAN DEL EVENTO -->
-<div class="nw-card" style="margin-bottom:16px;">
-  <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center;">
-    <div style="display:flex; align-items:center; gap:10px;">
+<div class="nw-card" style="margin-bottom: 24px;">
+  <div class="nw-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 10px;">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
         <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
         <polyline points="2 17 12 22 22 17"></polyline>
         <polyline points="2 12 12 17 22 12"></polyline>
       </svg>
-      <h3 style="margin:0;">Plan y Licencia del Evento</h3>
+      <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+        Plan y Licencia del Evento
+      </h3>
     </div>
     <span *ngIf="currentPlan" class="nw-pill accent">{{ currentPlan.name }}</span>
     <span *ngIf="!currentPlan" class="nw-pill warning">Plan Gratuito</span>
   </div>
-  <div class="nw-card-body" style="padding-top:16px;">
-    <p style="font-size:14px; color:var(--nw-text-3); margin-bottom:12px;">Un evento puede tener varias invitaciones
-      segmentadas. El plan desbloquea este evento completo.</p>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-      <div *ngFor="let plan of plans" class="nw-card"
-        style="background:var(--nw-surface-2); padding:14px; display:grid; gap:8px;">
-        <strong>{{ plan.name }}</strong>
-        <span style="font-size:18px; font-weight:700; color:var(--nw-accent);">{{ formatPrice(plan) }}</span>
-        <span style="font-size:13px; color:var(--nw-text-3);">{{ checkoutScopeText(plan) }}</span>
-        <span style="font-size:12px; color:var(--nw-text-3);">{{ planLimitText(plan) }}</span>
+  <div class="nw-card-body" style="padding-top: 16px;">
+    <p style="font-size: 13.5px; color: var(--nw-text-2, #6e6157); margin-bottom: 16px;">
+      Un evento puede tener varias invitaciones segmentadas. El plan desbloquea este evento completo.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+      <div *ngFor="let plan of plans" class="nw-card-item"
+        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 16px; display: grid; gap: 8px;">
+        <strong style="font-size: 15px; color: var(--nw-text, #2e2621);">{{ plan.name }}</strong>
+        <span style="font-size: 18px; font-weight: 700; color: var(--nw-accent, #c09c78);">{{ formatPrice(plan) }}</span>
+        <span style="font-size: 13px; color: var(--nw-text-2, #6e6157);">{{ checkoutScopeText(plan) }}</span>
+        <span style="font-size: 12px; color: var(--nw-text-3, #8c7e72);">{{ planLimitText(plan) }}</span>
         <button *ngIf="canCheckoutPlan(plan)" class="nw-btn nw-btn-primary nw-btn-sm" type="button"
-          (click)="checkout.emit(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)">
+          (click)="checkout.emit(plan.key)" [disabled]="!!checkoutLoading || hasPendingPayment(plan.key)"
+          style="margin-top: 4px;">
           {{ checkoutLoading === plan.key ? 'Abriendo...' : (hasPendingPayment(plan.key) ? 'Pendiente' : 'Preparar pago') }}
         </button>
         <span *ngIf="!canCheckoutPlan(plan) && plan.key !== 'free'"
-          style="font-size:12px; color:var(--nw-text-3);">Ya cubierto por el plan activo.</span>
+          style="font-size: 12px; color: var(--nw-text-3, #8c7e72);">Ya cubierto por el plan activo.</span>
       </div>
     </div>
   </div>
 </div>
 
 <!-- VISTA PREVIA RÁPIDA -->
-<div class="nw-card" style="margin-bottom:16px;" *ngIf="invitation">
-  <div class="nw-card-header" style="display:flex; align-items:center; gap:10px;">
+<div class="nw-card" style="margin-bottom: 16px;" *ngIf="invitation">
+  <div class="nw-card-header" style="display: flex; align-items: center; gap: 10px;">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
       <circle cx="12" cy="12" r="3"></circle>
     </svg>
-    <h3 style="margin:0;">Vista Previa Rápida</h3>
+    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display);">
+      Vista Previa Rápida
+    </h3>
   </div>
-  <div class="nw-card-body" style="padding-top:16px;">
-    <div style="border-radius:var(--nw-radius-sm); overflow:hidden; border:1px solid var(--nw-border);"
+  <div class="nw-card-body" style="padding-top: 16px;">
+    <div style="border-radius: var(--nw-radius-sm, 12px); overflow: hidden; border: 1px solid var(--nw-border, #eadecc);"
       [style.--primary]="invitation.content.palette?.primary || '#1f2a44'"
       [style.--secondary]="invitation.content.palette?.secondary || '#f7f2ea'"
       [style.--accent]="invitation.content.palette?.accent || '#b67b4b'">
-      <div *ngIf="invitation.content.coverImageUrl" style="width:100%; height:200px; overflow:hidden;">
+      <div *ngIf="invitation.content.coverImageUrl" style="width: 100%; height: 200px; overflow: hidden;">
         <img [src]="invitation.content.coverImageUrl" alt="Portada"
-          style="width:100%; height:100%; object-fit:cover;">
+          style="width: 100%; height: 100%; object-fit: cover;">
       </div>
       <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
-        style="padding:32px; text-align:center;">
+        style="padding: 32px; text-align: center;">
         <p [style.color]="invitation.content.palette?.accent || '#b67b4b'"
-          style="text-transform:uppercase; font-size:13px; letter-spacing:2px; margin:0 0 8px;">{{
+          style="text-transform: uppercase; font-size: 13px; letter-spacing: 2px; margin: 0 0 8px;">{{
           invitation.content.subheadline }}</p>
         <h2 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-          style="font-family:var(--nw-font-display); font-size:28px; font-weight:800; margin:0 0 8px;">{{
+          style="font-family: var(--nw-font-display); font-size: 28px; font-weight: 800; margin: 0 0 8px;">{{
           invitation.content.headline }}</h2>
-        <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size:14px; margin:0;">{{
+        <p [style.color]="invitation.content.palette?.accent || '#b67b4b'" style="font-size: 14px; margin: 0;">{{
           event?.date | date:'fullDate' }}</p>
       </div>
       <div [style.background]="invitation.content.palette?.secondary || '#f7f2ea'"
-        style="padding:0 32px 32px; display:grid; gap:16px;">
+        style="padding: 0 32px 32px; display: grid; gap: 16px;">
         <div *ngIf="invitation.content.message">
           <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:16px; margin:0 0 6px;">Mensaje</h3>
+            style="font-size: 16px; margin: 0 0 6px;">Mensaje</h3>
           <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:14px; opacity:0.8; margin:0; line-height:1.6;">{{ invitation.content.message }}</p>
+            style="font-size: 14px; opacity: 0.8; margin: 0; line-height: 1.6;">{{ invitation.content.message }}</p>
         </div>
         <div *ngIf="event?.venue?.name">
           <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:16px; margin:0 0 6px;">Lugar</h3>
+            style="font-size: 16px; margin: 0 0 6px;">Lugar</h3>
           <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:14px; opacity:0.8; margin:0;">{{ event?.venue?.name }}</p>
+            style="font-size: 14px; opacity: 0.8; margin: 0;">{{ event?.venue?.name }}</p>
           <p *ngIf="event?.venue?.address" [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:13px; opacity:0.6; margin:4px 0 0;">{{ event?.venue?.address }}</p>
+            style="font-size: 13px; opacity: 0.6; margin: 4px 0 0;">{{ event?.venue?.address }}</p>
         </div>
         <div *ngIf="invitation.content.dressCode">
           <h3 [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:16px; margin:0 0 6px;">Detalles</h3>
+            style="font-size: 16px; margin: 0 0 6px;">Detalles</h3>
           <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:14px; opacity:0.8; margin:0;">Dress code: {{ invitation.content.dressCode }}</p>
+            style="font-size: 14px; opacity: 0.8; margin: 0;">Dress code: {{ invitation.content.dressCode }}</p>
         </div>
-        <div *ngIf="invitation.content.itinerary?.length" style="text-align:left;">
+        <div *ngIf="invitation.content.itinerary?.length" style="text-align: left;">
           <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:13px; opacity:0.6; margin:0;">Itinerario configurado ({{
+            style="font-size: 13px; opacity: 0.6; margin: 0;">Itinerario configurado ({{
             invitation.content.itinerary?.length }} momentos)</p>
         </div>
-        <div *ngIf="invitation.content.giftRegistry?.length" style="text-align:left;">
+        <div *ngIf="invitation.content.giftRegistry?.length" style="text-align: left;">
           <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:13px; opacity:0.6; margin:0;">Mesa de regalos configurada</p>
+            style="font-size: 13px; opacity: 0.6; margin: 0;">Mesa de regalos configurada</p>
         </div>
-        <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align:left;">
+        <div *ngIf="invitation.content.privateAlbumEnabled" style="text-align: left;">
           <p [style.color]="invitation.content.palette?.primary || '#1f2a44'"
-            style="font-size:13px; opacity:0.6; margin:0;">Álbum de invitados activo</p>
+            style="font-size: 13px; opacity: 0.6; margin: 0;">Álbum de invitados activo</p>
         </div>
       </div>
       <!-- Gallery preview -->
       <div *ngIf="invitation.content.gallery?.length"
-        style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:4px; padding:0 4px 4px;">
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 4px; padding: 0 4px 4px;">
         <img *ngFor="let url of invitation.content.gallery" [src]="url" alt="Galería" loading="lazy"
-          decoding="async" style="width:100%; height:80px; object-fit:cover;">
+          decoding="async" style="width: 100%; height: 80px; object-fit: cover;">
       </div>
     </div>
   </div>

@@ -403,11 +403,28 @@ export class ApiService {
   }
 
   createInvitation(payload: InvitationPayload): Observable<{ invitation: InvitationModel; publicUrl: string }> {
-    return this.http.post<{ invitation: InvitationModel; publicUrl: string }>(`${this.apiUrl}/invitations`, payload);
+    const cleanPayload = this.sanitizeInvitationPayload(payload);
+    return this.http.post<{ invitation: InvitationModel; publicUrl: string }>(`${this.apiUrl}/invitations`, cleanPayload);
   }
 
   updateInvitation(id: string, payload: Partial<InvitationPayload>): Observable<{ invitation: InvitationModel }> {
-    return this.http.patch<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/${id}`, payload);
+    const cleanPayload = this.sanitizeInvitationPayload(payload);
+    return this.http.patch<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/${id}`, cleanPayload);
+  }
+
+  private sanitizeInvitationPayload<T extends Partial<InvitationPayload>>(payload: T): T {
+    if (!payload || typeof payload !== 'object') return payload;
+    const cleaned = { ...payload } as any;
+    if (cleaned.content && typeof cleaned.content === 'object') {
+      const cleanContent = { ...cleaned.content };
+      delete cleanContent.activeCustomTemplateId;
+      delete cleanContent.sourceTemplateKey;
+      delete cleanContent.editedTexts;
+      delete cleanContent.storyTitle;
+      delete cleanContent.storyBody;
+      cleaned.content = cleanContent;
+    }
+    return cleaned as T;
   }
 
   publishInvitation(id: string): Observable<{ invitation: InvitationModel; publicUrl: string; message?: string; warning?: string }> {
@@ -556,7 +573,7 @@ export class ApiService {
   // -------------------------------------------------------------
   // CUSTOM HTML/CSS TEMPLATES & HOSTING MANAGEMENT
   // -------------------------------------------------------------
-  private getLocalCustomSubmissions(): CustomTemplateSubmission[] {
+  public getLocalCustomSubmissions(): CustomTemplateSubmission[] {
     try {
       const raw = localStorage.getItem('kyndra_custom_template_submissions');
       return raw ? JSON.parse(raw) : [];
@@ -565,7 +582,7 @@ export class ApiService {
     }
   }
 
-  private saveLocalCustomSubmissions(list: CustomTemplateSubmission[]): void {
+  public saveLocalCustomSubmissions(list: CustomTemplateSubmission[]): void {
     try {
       localStorage.setItem('kyndra_custom_template_submissions', JSON.stringify(list));
     } catch {}
@@ -598,29 +615,28 @@ export class ApiService {
 
   submitCustomTemplate(payload: Partial<CustomTemplateSubmission>): Observable<{ submission: CustomTemplateSubmission }> {
     const cleanPayload = { ...payload };
-    if (cleanPayload.id && cleanPayload.id.startsWith('custom_tpl_')) {
-      delete cleanPayload.id;
-    }
+    const generatedId = cleanPayload.id || (cleanPayload as any)._id || `custom_tpl_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    cleanPayload.id = generatedId;
 
     console.log('test edit: [API] submitCustomTemplate called with payload:', {
+      id: generatedId,
       eventSlug: payload.eventSlug,
       sourceTemplateKey: payload.sourceTemplateKey,
       editedTextsCount: payload.editedTexts ? Object.keys(payload.editedTexts).length : 0,
       name: payload.name
     });
 
-    // Also persist immediately in localStorage as working copy
+    // Cache working copy keyed by submission ID to avoid polluting the base template
     if (payload.eventSlug && payload.editedTexts && payload.sourceTemplateKey) {
-      localStorage.setItem(`inv_edited_texts_${payload.eventSlug}`, JSON.stringify(payload.editedTexts));
-      localStorage.setItem(`inv_source_tpl_${payload.eventSlug}`, payload.sourceTemplateKey);
-      localStorage.setItem(`inv_tpl_${payload.eventSlug}`, payload.sourceTemplateKey);
-      console.log('test edit: [API] submitCustomTemplate: immediately cached working copy in localStorage for slug:', payload.eventSlug);
+      localStorage.setItem(`inv_edited_texts_${payload.eventSlug}_${generatedId}`, JSON.stringify(payload.editedTexts));
+      localStorage.setItem(`inv_source_tpl_${payload.eventSlug}_${generatedId}`, payload.sourceTemplateKey);
+      console.log('test edit: [API] submitCustomTemplate: cached working copy for sub ID:', generatedId);
     }
 
     return this.http.post<{ submission: CustomTemplateSubmission }>(`${this.apiUrl}/templates/custom-submissions`, cleanPayload).pipe(
       tap(res => {
         const list = this.getLocalCustomSubmissions();
-        const subId = res.submission?._id || res.submission?.id || payload.id || `custom_tpl_${Date.now()}`;
+        const subId = res.submission?._id || res.submission?.id || generatedId;
         const mergedSub: CustomTemplateSubmission = {
           ...cleanPayload,
           ...(res.submission || {}),
@@ -629,7 +645,7 @@ export class ApiService {
           editedTexts: payload.editedTexts
         } as CustomTemplateSubmission;
 
-        const idx = list.findIndex(s => (s.id && s.id === subId) || (s._id && s._id === subId) || (s.eventId && s.eventId === mergedSub.eventId));
+        const idx = list.findIndex(s => (s.id && s.id === subId) || (s._id && s._id === subId));
         if (idx >= 0) {
           list[idx] = { ...list[idx], ...mergedSub };
         } else {
@@ -641,7 +657,7 @@ export class ApiService {
       catchError(err => {
         console.warn('test edit: [API] submitCustomTemplate HTTP error, using local fallback:', err);
         const fallbackSub: CustomTemplateSubmission = {
-          id: payload.id || `custom_tpl_${Date.now()}`,
+          id: generatedId,
           eventId: payload.eventId,
           eventTitle: payload.eventTitle || 'Evento Especial',
           eventSlug: payload.eventSlug || 'invitacion-especial',
@@ -661,7 +677,12 @@ export class ApiService {
           submittedAt: new Date().toISOString()
         };
         const existing = this.getLocalCustomSubmissions();
-        existing.unshift(fallbackSub);
+        const idx = existing.findIndex(s => s.id === generatedId);
+        if (idx >= 0) {
+          existing[idx] = fallbackSub;
+        } else {
+          existing.unshift(fallbackSub);
+        }
         this.saveLocalCustomSubmissions(existing);
         console.log('test edit: [API] submitCustomTemplate fallback: saved to localStorage list:', fallbackSub);
         return of({ submission: fallbackSub });
@@ -680,7 +701,7 @@ export class ApiService {
       sub.reviewedAt = new Date().toISOString();
       if (feedback) sub.adminFeedback = feedback;
       const slug = sub.eventSlug || 'invitacion-especial';
-      sub.publicUrl = `${window.location.origin}/new/i/${slug}`;
+      sub.publicUrl = `${window.location.origin}/new/i/${slug}?subId=${sub.id || sub._id}`;
       this.saveLocalCustomSubmissions(list);
 
       const isTextOverlay = Boolean(sub.editedTexts && Object.keys(sub.editedTexts).length > 0 && sub.sourceTemplateKey);
@@ -690,37 +711,15 @@ export class ApiService {
       console.log('test edit: [API] approveCustomTemplateSubmission - slug:', slug);
 
       if (isTextOverlay) {
-        // TEXT OVERLAY MODE: Keep the original Angular template, just persist the edited texts
-        localStorage.setItem(`inv_edited_texts_${slug}`, JSON.stringify(sub.editedTexts));
-        localStorage.setItem(`inv_source_tpl_${slug}`, sub.sourceTemplateKey!);
-        localStorage.setItem(`inv_tpl_${slug}`, sub.sourceTemplateKey!);
-        console.log('test edit: [API] TEXT OVERLAY APPROVED - set inv_edited_texts_' + slug, 'and inv_tpl_' + slug + ' =', sub.sourceTemplateKey);
-
-        // Clean up any previous custom-html override for this slug
-        localStorage.removeItem(`inv_custom_html_${slug}`);
-        localStorage.removeItem(`inv_custom_css_${slug}`);
-        localStorage.removeItem(`custom_template_html_${slug}`);
-        localStorage.removeItem(`custom_template_css_${slug}`);
-        if (sub.eventId) {
-          localStorage.setItem(`inv_tpl_${sub.eventId}`, sub.sourceTemplateKey!);
-          localStorage.setItem(`inv_edited_texts_${sub.eventId}`, JSON.stringify(sub.editedTexts));
-          localStorage.setItem(`inv_source_tpl_${sub.eventId}`, sub.sourceTemplateKey!);
-          localStorage.removeItem(`custom_template_html_${sub.eventId}`);
-          localStorage.removeItem(`custom_template_css_${sub.eventId}`);
-        }
+        // TEXT OVERLAY MODE: Store texts keyed to this version
+        localStorage.setItem(`inv_edited_texts_${slug}_${sub.id}`, JSON.stringify(sub.editedTexts));
+        localStorage.setItem(`inv_source_tpl_${slug}_${sub.id}`, sub.sourceTemplateKey!);
+        console.log('test edit: [API] TEXT OVERLAY APPROVED for submission ID:', sub.id);
       } else {
-        // FULL CUSTOM-HTML MODE: Replace entire template (legacy behavior)
-        console.log('test edit: [API] FULL CUSTOM-HTML APPROVED - set inv_tpl_' + slug + ' = custom-html');
-        localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode);
-        localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
-        localStorage.setItem(`custom_template_html_${slug}`, sub.htmlCode);
-        localStorage.setItem(`custom_template_css_${slug}`, sub.cssCode || '');
-        localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
-        if (sub.eventId) {
-          localStorage.setItem(`inv_tpl_${sub.eventId}`, 'custom-html');
-          localStorage.setItem(`custom_template_html_${sub.eventId}`, sub.htmlCode);
-          localStorage.setItem(`custom_template_css_${sub.eventId}`, sub.cssCode || '');
-        }
+        // FULL CUSTOM-HTML MODE: Store code keyed to this version
+        localStorage.setItem(`inv_custom_html_${slug}_${sub.id}`, sub.htmlCode);
+        localStorage.setItem(`inv_custom_css_${slug}_${sub.id}`, sub.cssCode || '');
+        console.log('test edit: [API] FULL CUSTOM-HTML APPROVED for submission ID:', sub.id);
       }
     }
 

@@ -282,6 +282,7 @@ export interface InvitationContent {
   privateAlbumEnabled?: boolean;
   editedTexts?: Record<string, string>;
   sourceTemplateKey?: string;
+  activeCustomTemplateId?: string;
 }
 
 export interface CustomTemplateSubmission {
