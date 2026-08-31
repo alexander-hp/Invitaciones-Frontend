@@ -137,6 +137,41 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     return this.customSubmissions.filter(s => s.status === 'pending').length;
   }
 
+  get activeCustomSubmissionId(): string | null {
+    if (this.invitation?.content?.activeCustomTemplateId) {
+      return this.invitation.content.activeCustomTemplateId;
+    }
+    // Check if customHtml saved in backend database contains sub ID marker
+    const customHtml = this.invitation?.content?.customHtml;
+    if (customHtml) {
+      const match = customHtml.match(/<!--\s*custom_sub_id:([a-zA-Z0-9_\-]+)\s*-->/);
+      if (match && match[1]) {
+        return match[1];
+      }
+      const found = this.customSubmissions.find(s => {
+        const sid = s.id || s._id;
+        if (!sid) return false;
+        if (s.htmlCode && (s.htmlCode.trim() === customHtml.trim() || customHtml.includes(sid))) return true;
+        return false;
+      });
+      if (found) {
+        return found.id || found._id || null;
+      }
+    }
+
+    const invId = this.invitation?._id || this.invitation?.id;
+    const slug = this.invitation?.slug;
+    const fromStorage = (slug ? localStorage.getItem(`inv_active_sub_${slug}`) : null) ||
+                        (invId ? localStorage.getItem(`inv_active_sub_${invId}`) : null);
+    if (fromStorage) return fromStorage;
+
+    if (slug && typeof document !== 'undefined') {
+      const match = document.cookie.match(new RegExp(`(^|;\\s*)inv_active_sub_${slug}=([^;]+)`));
+      if (match) return match[2];
+    }
+    return null;
+  }
+
   get currentTemplateKey(): string {
     const invId = this.invitation?._id || this.invitation?.id;
     const slug = this.invitation?.slug;
@@ -145,8 +180,12 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isBuiltinActive(tplId: string): boolean {
-    if (this.invitation?.content?.activeCustomTemplateId) {
-      return false;
+    const activeSubId = this.activeCustomSubmissionId;
+    if (activeSubId) {
+      const activeSub = this.customSubmissions.find(s => (s.id || s._id) === activeSubId);
+      if (activeSub) {
+        return false;
+      }
     }
     const current = this.currentTemplateKey;
     if (tplId === 'modern-minimal' && (current === 'modern-minimal' || current === 'template-3' || current === 'plantilla-3')) {
@@ -157,10 +196,8 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
 
   isCustomSubmissionActive(sub: CustomTemplateSubmission): boolean {
     const subId = sub.id || sub._id;
-    if (this.invitation?.content?.activeCustomTemplateId && this.invitation.content.activeCustomTemplateId === subId) {
-      return true;
-    }
-    return false;
+    const activeSubId = this.activeCustomSubmissionId;
+    return activeSubId === subId;
   }
 
   /**
@@ -185,14 +222,19 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     const slug = this.invitation.slug;
     if (slug) {
       localStorage.setItem(`inv_tpl_${slug}`, key);
+      localStorage.removeItem(`inv_active_sub_${slug}`);
       localStorage.removeItem(`inv_edited_texts_${slug}`);
       localStorage.removeItem(`inv_custom_html_${slug}`);
       localStorage.removeItem(`inv_custom_css_${slug}`);
       localStorage.removeItem(`custom_template_html_${slug}`);
       localStorage.removeItem(`custom_template_css_${slug}`);
+      if (typeof document !== 'undefined') {
+        document.cookie = `inv_active_sub_${slug}=; path=/; max-age=0`;
+      }
     }
     if (invId) {
       localStorage.setItem(`inv_tpl_${invId}`, key);
+      localStorage.removeItem(`inv_active_sub_${invId}`);
     }
 
     this.selectTemplateKey.emit(key);
@@ -211,7 +253,12 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     this.invitation.content.activeCustomTemplateId = subId;
     this.invitation.content.sourceTemplateKey = sub.sourceTemplateKey;
     this.invitation.content.editedTexts = sub.editedTexts;
-    this.invitation.content.customHtml = sub.htmlCode;
+
+    let htmlCode = sub.htmlCode || '';
+    if (htmlCode && !htmlCode.includes('custom_sub_id:')) {
+      htmlCode = `<!-- custom_sub_id:${subId} -->\n` + htmlCode;
+    }
+    this.invitation.content.customHtml = htmlCode;
     this.invitation.content.customCss = sub.cssCode;
     this.invitation.content.customPageApproved = sub.status === 'approved';
 
@@ -222,18 +269,24 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     const invId = this.invitation._id || this.invitation.id;
 
     if (slug) {
+      localStorage.setItem(`inv_active_sub_${slug}`, subId);
+      if (typeof document !== 'undefined') {
+        document.cookie = `inv_active_sub_${slug}=${encodeURIComponent(subId)}; path=/; max-age=31536000`;
+      }
+
       if (sub.editedTexts && Object.keys(sub.editedTexts).length > 0 && sub.sourceTemplateKey) {
         localStorage.setItem(`inv_edited_texts_${slug}`, JSON.stringify(sub.editedTexts));
         localStorage.setItem(`inv_source_tpl_${slug}`, sub.sourceTemplateKey);
         localStorage.setItem(`inv_tpl_${slug}`, sub.sourceTemplateKey);
         localStorage.removeItem(`inv_custom_html_${slug}`);
       } else {
-        localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode || '');
+        localStorage.setItem(`inv_custom_html_${slug}`, htmlCode);
         localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
         localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
       }
     }
     if (invId) {
+      localStorage.setItem(`inv_active_sub_${invId}`, subId);
       localStorage.setItem(`inv_tpl_${invId}`, targetTpl);
     }
 

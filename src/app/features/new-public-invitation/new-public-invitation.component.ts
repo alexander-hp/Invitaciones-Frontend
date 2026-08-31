@@ -1028,7 +1028,16 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return;
     }
 
-    const subId = this.route.snapshot.queryParamMap.get('subId');
+    let cookieSubId: string | null = null;
+    if (slug && typeof document !== 'undefined') {
+      const match = document.cookie.match(new RegExp(`(^|;\\s*)inv_active_sub_${slug}=([^;]+)`));
+      if (match) cookieSubId = match[2];
+    }
+    const invId = this.invitation?._id || this.invitation?.id;
+    const subId = this.route.snapshot.queryParamMap.get('subId') ||
+                  (slug ? localStorage.getItem(`inv_active_sub_${slug}`) : null) ||
+                  (invId ? localStorage.getItem(`inv_active_sub_${invId}`) : null) ||
+                  cookieSubId;
     let editedTexts: Record<string, string> | undefined;
 
     if (subId) {
