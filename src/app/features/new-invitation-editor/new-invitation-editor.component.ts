@@ -149,18 +149,18 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   readonly configurableSectionsList = [
-    { key: 'guestAlbum', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real.' },
-    { key: 'gallery', title: 'Galería Fotográfica Oficial', description: 'Galería oficial con fotos del evento o novios.' },
-    { key: 'songRequests', title: 'Música / Pedir Canciones (DJ)', description: 'Permite a los invitados sugerir temas para el DJ.' },
-    { key: 'dedications', title: 'Dedicatorias y Libro de Firmas', description: 'Muro de firmas, felicitaciones y mensajes.' },
+    { key: 'story', title: 'Nuestra Historia', description: 'Mensaje especial, reseña o historia de los festejados.' },
+    { key: 'locations', title: 'Ubicaciones & Cómo Llegar', description: 'Direcciones con enlaces directos a Google Maps o Waze.' },
+    { key: 'itinerary', title: 'Itinerario del Evento', description: 'Agenda y horarios de las actividades del evento.' },
+    { key: 'dressCode', title: 'Código de Vestimenta (Dress Code)', description: 'Instrucciones de etiqueta y vestuario sugerido.' },
     { key: 'rsvp', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario, reglas y preguntas personalizadas de RSVP.' },
-    { key: 'story', title: 'Nuestra Historia', description: 'Reseña o historia de los novios / festejados.' },
-    { key: 'locations', title: 'Mapas y Ubicaciones', description: 'Direcciones con enlaces directos a Google Maps o Waze.' },
-    { key: 'itinerary', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades del evento.' },
-    { key: 'dressCode', title: 'Código de Vestimenta', description: 'Instrucciones de etiqueta y vestuario sugerido.' },
-    { key: 'giftRegistry', title: 'Mesa de Regalos', description: 'Catálogo y enlaces a tiendas externas (Amazon, Liverpool, etc.).' },
-    { key: 'digitalEnvelope', title: 'Sobre Digital / Transferencias', description: 'Datos bancarios, CLABE y QR para obsequios en efectivo.' },
-    { key: 'lodging', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
+    { key: 'giftRegistry', title: 'Mesa de Regalos', description: 'Catálogo y enlaces a tiendas de regalos externas (Amazon, Liverpool, etc.).' },
+    { key: 'digitalEnvelope', title: 'Sobre Digital & Transferencias', description: 'Datos bancarios, CLABE y QR para obsequios en efectivo.' },
+    { key: 'lodging', title: 'Hospedaje Recomendado', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
+    { key: 'gallery', title: 'Galería de Fotos', description: 'Galería oficial de fotografías de los festejados.' },
+    { key: 'guestAlbum', title: 'Álbum Colectivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real.' },
+    { key: 'dedications', title: 'Muro de Dedicatorias & Libros de Deseos', description: 'Muro de firmas, felicitaciones y mensajes de los invitados.' },
+    { key: 'songRequests', title: 'Música & Peticiones al DJ', description: 'Permite a los invitados sugerir canciones para la fiesta.' },
     { key: 'backgroundMusic', title: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
   ];
 
@@ -182,7 +182,7 @@ export class NewInvitationEditorComponent implements OnInit {
         description: 'Módulos interactivos y gestión de invitados',
         items: [
           { key: 'rsvp', title: 'Confirmación RSVP', description: 'Formulario de pases, asistencia y preguntas personalizadas.', isMandatory: false },
-          { key: 'guestAlbum', title: 'Álbum Interactivo', description: 'Permite a los invitados subir fotos en vivo durante el evento.', isMandatory: false },
+          { key: 'guestAlbum', title: 'Álbum Colectivo', description: 'Permite a los invitados subir fotos en vivo durante el evento.', isMandatory: false },
           { key: 'songRequests', title: 'Música / DJ', description: 'Sugerencias de canciones de los invitados para la fiesta.', isMandatory: false },
           { key: 'dedications', title: 'Libro de Firmas', description: 'Muro de mensajes, felicidades y buenos deseos.', isMandatory: false },
           { key: 'backgroundMusic', title: 'Música de Fondo', description: 'Audio ambiental que suena al recorrer la invitación.', isMandatory: false }
@@ -192,11 +192,11 @@ export class NewInvitationEditorComponent implements OnInit {
         category: 'Detalles del Evento',
         description: 'Ubicaciones, tiempos e información para los asistentes',
         items: [
-          { key: 'story', title: 'Mensaje & Nuestra Historia', description: 'Mensaje especial de bienvenida, historia o reseña para los invitados.', isMandatory: false },
-          { key: 'locations', title: 'Mapas y Ubicaciones', description: 'Direcciones directas con Waze y Google Maps.', isMandatory: false },
-          { key: 'itinerary', title: 'Itinerario / Cronograma', description: 'Agenda y horarios de las actividades del evento.', isMandatory: false },
+          { key: 'story', title: 'Nuestra Historia', description: 'Mensaje especial de bienvenida, historia o reseña para los invitados.', isMandatory: false },
+          { key: 'locations', title: 'Ubicaciones & Cómo Llegar', description: 'Direcciones directas con Waze y Google Maps.', isMandatory: false },
+          { key: 'itinerary', title: 'Itinerario del Evento', description: 'Agenda y horarios de las actividades del evento.', isMandatory: false },
           { key: 'dressCode', title: 'Código de Vestimenta', description: 'Instrucciones de etiqueta y estilo recomendado.', isMandatory: false },
-          { key: 'lodging', title: 'Hospedaje y Hoteles', description: 'Recomendaciones de hoteles cercanos y hospedaje.', isMandatory: false }
+          { key: 'lodging', title: 'Hospedaje Recomendado', description: 'Recomendaciones de hoteles cercanos y hospedaje.', isMandatory: false }
         ]
       },
       {
@@ -204,8 +204,8 @@ export class NewInvitationEditorComponent implements OnInit {
         description: 'Mesa de regalos, datos de obsequios y fotos oficiales',
         items: [
           { key: 'giftRegistry', title: 'Mesa de Regalos', description: 'Enlaces a mesas de regalos externas (Amazon, Liverpool, etc.).', isMandatory: false },
-          { key: 'digitalEnvelope', title: 'Sobre Digital', description: 'Datos bancarios y CLABE para obsequios en efectivo.', isMandatory: false },
-          { key: 'gallery', title: 'Galería Oficial', description: 'Fotografías oficiales de los festejados o del evento.', isMandatory: false }
+          { key: 'digitalEnvelope', title: 'Sobre Digital & Transferencias', description: 'Datos bancarios y CLABE para obsequios en efectivo.', isMandatory: false },
+          { key: 'gallery', title: 'Galería de Fotos', description: 'Fotografías oficiales de los festejados o del evento.', isMandatory: false }
         ]
       }
     ];

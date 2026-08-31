@@ -1102,6 +1102,25 @@
             </svg>
           </span>
           <h2>Música & Peticiones al DJ</h2>
+          <button *ngIf="hasSectionMusic('songRequests')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('songRequests')" (click)="toggleSectionMusic('songRequests')"
+            [title]="isSectionMusicPlaying('songRequests') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">
+              <svg *ngIf="isSectionMusicPlaying('songRequests')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+              <svg *ngIf="!isSectionMusicPlaying('songRequests')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </span>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('songRequests') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('songRequests')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
         <p class="muted" style="margin-bottom:20px;">
           ¿Qué canción no puede faltar en la fiesta? ¡Sugiérela directamente al DJ para bailar toda la noche!
