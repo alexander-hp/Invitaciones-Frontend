@@ -312,12 +312,12 @@
         </div>
 
         <!-- CARD 4: NUESTRA HISTORIA / MENSAJE -->
-        <div class="card-slide" *ngIf="isSectionActive('story') && (invitation?.content?.message || invitation?.content?.storyBody)">
+        <div class="card-slide" *ngIf="isSectionActive('story') && (invitation?.content?.message || invitation?.content?.storyBody || invitation?.content?.storyTitle || invitation?.content?.subheadline)">
           <div class="card-glass">
             <div class="card-header-badge">
               <span>NUESTRA HISTORIA</span>
             </div>
-            <h3 class="card-title">{{ invitation?.content?.storyTitle || 'Un Mensaje Especial' }}</h3>
+            <h3 class="card-title">{{ invitation?.content?.storyTitle || invitation?.content?.subheadline || 'Un Mensaje Especial' }}</h3>
             
             <div class="card-body-scroll">
               <p class="story-body-text">

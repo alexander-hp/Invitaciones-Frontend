@@ -1425,8 +1425,6 @@ export class NewInvitationEditorComponent implements OnInit {
       rawContent.message = rawContent.storyBody;
     }
 
-    delete rawContent.storyTitle;
-    delete rawContent.storyBody;
     delete rawContent.activeCustomTemplateId;
     delete rawContent.sourceTemplateKey;
     delete rawContent.editedTexts;

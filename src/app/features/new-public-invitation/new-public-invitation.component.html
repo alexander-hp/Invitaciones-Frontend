@@ -251,7 +251,7 @@
     </section>
 
     <!-- 2. INVITATION MESSAGE / LETTER SECTION -->
-    <section *ngIf="invitation.content.message && isSectionActive('story')" class="nw-pub-section" data-section-key="story">
+    <section *ngIf="(invitation.content.message || invitation.content.storyBody || invitation.content.storyTitle || invitation.content.subheadline) && isSectionActive('story')" class="nw-pub-section" data-section-key="story">
       <div class="nw-pub-card nw-pub-message-card">
         <div class="nw-pub-section-header">
           <span class="nw-pub-section-icon">
@@ -260,7 +260,7 @@
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
           </span>
-          <h2>{{ invitation.content.storyTitle || 'Nuestra Historia & Mensaje' }}</h2>
+          <h2>{{ invitation.content.storyTitle || invitation.content.subheadline || 'Nuestra Historia & Mensaje' }}</h2>
           <button *ngIf="hasSectionMusic('story')" type="button" class="nw-pub-section-music-btn"
             [class.playing]="isSectionMusicPlaying('story')" (click)="toggleSectionMusic('story')"
             [title]="isSectionMusicPlaying('story') ? 'Pausar música' : 'Reproducir música de esta sección'">

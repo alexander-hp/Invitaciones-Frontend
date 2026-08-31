@@ -124,7 +124,7 @@
   <div class="tpl3-main-container">
 
     <!-- MENSAJE DE BIENVENIDA / HISTORIA -->
-    <section *ngIf="isSectionActive('story') && (invitation?.content?.message || invitation?.content?.storyBody)" class="tpl3-section">
+    <section *ngIf="isSectionActive('story') && (invitation?.content?.message || invitation?.content?.storyBody || invitation?.content?.storyTitle || invitation?.content?.subheadline)" class="tpl3-section">
       <div class="tpl3-card">
         <div class="tpl3-card-header">
           <span class="section-icon">
@@ -133,7 +133,7 @@
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
           </span>
-          <h2>{{ invitation?.content?.storyTitle || 'Nuestra Historia' }}</h2>
+          <h2>{{ invitation?.content?.storyTitle || invitation?.content?.subheadline || 'Nuestra Historia' }}</h2>
         </div>
         <p class="tpl3-body-text" style="white-space:pre-line;">
           {{ invitation?.content?.storyBody || invitation?.content?.message }}
