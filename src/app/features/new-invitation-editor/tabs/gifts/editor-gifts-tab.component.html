@@ -254,33 +254,32 @@
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <span>Subir foto de QR</span>
+              <span>{{ envelope.qrImageUrl ? 'Cambiar foto de QR' : 'Subir foto de QR' }}</span>
               <input type="file" accept="image/*" (change)="uploadEnvelopeQr.emit($event)" [disabled]="assetUploading"
                 style="display:none;">
             </label>
-            <input class="nw-input" [(ngModel)]="envelope.qrImageUrl"
-              placeholder="O pega enlace directo: https://.../qr.png" style="flex:1; min-width:240px;">
+            <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo archivo...</span>
           </div>
+
           <div *ngIf="envelope.qrImageUrl"
-            style="display:flex; align-items:center; gap:16px; margin-top:8px; padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow:var(--nw-shadow-sm); width:fit-content;">
+            style="display:flex; align-items:center; gap:16px; margin-top:8px; padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow:var(--nw-shadow-sm); width:fit-content; max-width:100%;">
             <div
-              style="width:110px; height:110px; background:#ffffff; border-radius:8px; border:1px solid var(--nw-border); padding:6px; display:flex; align-items:center; justify-content:center;">
+              style="width:90px; height:90px; background:#ffffff; border-radius:8px; border:1px solid var(--nw-border); padding:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
               <img [src]="envelope.qrImageUrl" alt="QR sobre digital"
                 style="max-width:100%; max-height:100%; object-fit:contain;">
             </div>
-            <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
               <div style="display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--nw-success)" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
+                  stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                <strong style="font-size:13.5px; color:var(--nw-text);">Imagen de QR Configurada</strong>
+                <strong style="font-size:13.5px; color:var(--nw-text); word-break:break-all;">{{ getFileName(envelope.qrImageUrl) }}</strong>
               </div>
-              <span style="font-size:12px; color:var(--nw-text-3);">Los invitados podrán escanear este código para
-                realizar transferencias.</span>
+              <span style="font-size:12px; color:var(--nw-text-3);">Código QR cargado correctamente para tus invitados.</span>
               <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="envelope.qrImageUrl=''"
-                style="width:fit-content; margin-top:4px; display:inline-flex; align-items:center; gap:6px;">
+                style="width:fit-content; margin-top:6px; display:inline-flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 6 5 6 21 6"></polyline>

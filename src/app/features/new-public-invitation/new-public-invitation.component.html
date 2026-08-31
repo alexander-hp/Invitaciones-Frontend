@@ -664,9 +664,9 @@
       </div>
     </section>
 
-    <!-- 7. GIFT REGISTRY & DIGITAL ENVELOPE -->
+    <!-- 7. MESA DE REGALOS (GIFT REGISTRY) -->
     <section
-      *ngIf="(invitation.content.giftSettings?.enabled !== false) && ((isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length) || (isSectionActive('digitalEnvelope') && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)))"
+      *ngIf="invitation.content.giftSettings?.enabled !== false && isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length"
       class="nw-pub-section" data-section-key="giftRegistry">
       <div class="nw-pub-card">
         <div class="nw-pub-section-header">
@@ -679,7 +679,7 @@
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
             </svg>
           </span>
-          <h2>{{ (isSectionActive('giftRegistry') && isSectionActive('digitalEnvelope')) ? 'Mesa de Regalos & Sobre Digital' : (isSectionActive('digitalEnvelope') ? 'Sobre Digital & Transferencias' : 'Mesa de Regalos') }}</h2>
+          <h2>Mesa de Regalos</h2>
           <button *ngIf="hasSectionMusic('giftRegistry')" type="button" class="nw-pub-section-music-btn"
             [class.playing]="isSectionMusicPlaying('giftRegistry')" (click)="toggleSectionMusic('giftRegistry')"
             [title]="isSectionMusicPlaying('giftRegistry') ? 'Pausar música' : 'Reproducir música de esta sección'">
@@ -702,12 +702,12 @@
         </div>
 
         <!-- Gift Intro Text -->
-        <p *ngIf="invitation.content.giftSettings?.introText && isSectionActive('giftRegistry')" class="muted" style="margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">
+        <p *ngIf="invitation.content.giftSettings?.introText" class="muted" style="margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">
           {{ invitation.content.giftSettings?.introText }}
         </p>
 
         <!-- Gift Store Links -->
-        <div *ngIf="isSectionActive('giftRegistry') && invitation.content.giftSettings?.showRegistry !== false && invitation.content.giftRegistry?.length" class="nw-pub-gifts-grid">
+        <div class="nw-pub-gifts-grid">
           <article *ngFor="let registry of invitation.content.giftRegistry" class="nw-pub-card-inner nw-pub-gift-card">
             <div *ngIf="getStoreLogo(registry)" class="nw-pub-gift-logo-box" (click)="openLightbox(getStoreLogo(registry))">
               <img [src]="getStoreLogo(registry)" alt="Mesa de regalos" class="nw-pub-gift-img">
@@ -725,68 +725,87 @@
             </a>
           </article>
         </div>
+      </div>
+    </section>
 
-        <!-- Digital Envelope Card with 1-Click Copy -->
-        <div
-          *ngIf="isSectionActive('digitalEnvelope') && invitation.content.giftSettings?.showEnvelope !== false && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account)"
-          class="nw-pub-card-inner nw-pub-envelope-card" style="margin-top: 20px;">
-          <div class="nw-pub-envelope-header">
-            <span class="icon">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                <line x1="1" y1="10" x2="23" y2="10"></line>
+    <!-- 8. SOBRE DIGITAL (DIGITAL ENVELOPE) -->
+    <section
+      *ngIf="invitation.content.giftSettings?.showEnvelope !== false && isSectionActive('digitalEnvelope') && (invitation.content.digitalEnvelope?.bank || invitation.content.digitalEnvelope?.clabe || invitation.content.digitalEnvelope?.account || invitation.content.digitalEnvelope?.qrImageUrl || invitation.content.digitalEnvelope?.note)"
+      class="nw-pub-section" data-section-key="digitalEnvelope">
+      <div class="nw-pub-card">
+        <div class="nw-pub-section-header">
+          <span class="nw-pub-section-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </span>
+          <h2>Sobre Digital & Transferencias</h2>
+          <button *ngIf="hasSectionMusic('digitalEnvelope')" type="button" class="nw-pub-section-music-btn"
+            [class.playing]="isSectionMusicPlaying('digitalEnvelope')" (click)="toggleSectionMusic('digitalEnvelope')"
+            [title]="isSectionMusicPlaying('digitalEnvelope') ? 'Pausar música' : 'Reproducir música de esta sección'">
+            <span class="nw-pub-sec-music-icon">
+              <svg *ngIf="isSectionMusicPlaying('digitalEnvelope')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+              <svg *ngIf="!isSectionMusicPlaying('digitalEnvelope')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
               </svg>
             </span>
-            <div>
-              <h3>Sobre Digital & Datos de Transferencia</h3>
+            <span class="nw-pub-sec-music-label">{{ isSectionMusicPlaying('digitalEnvelope') ? 'Sonando' : 'Música' }}</span>
+            <div *ngIf="isSectionMusicPlaying('digitalEnvelope')" class="nw-pub-sec-music-bars">
+              <span></span><span></span><span></span>
             </div>
-          </div>
+          </button>
+        </div>
 
-          <div class="nw-pub-envelope-details">
-            <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl"
-              [src]="invitation.content.digitalEnvelope?.qrImageUrl"
-              (click)="openLightbox(invitation.content.digitalEnvelope?.qrImageUrl || '')" alt="QR sobre digital"
-              class="nw-pub-envelope-qr">
+        <div class="nw-pub-envelope-details">
+          <img *ngIf="invitation.content.digitalEnvelope?.qrImageUrl"
+            [src]="invitation.content.digitalEnvelope?.qrImageUrl"
+            (click)="openLightbox(invitation.content.digitalEnvelope?.qrImageUrl || '')" alt="QR sobre digital"
+            class="nw-pub-envelope-qr">
 
-            <div class="nw-pub-envelope-info">
-              <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{
-                invitation.content.digitalEnvelope?.bank }}</p>
-              <p *ngIf="invitation.content.digitalEnvelope?.holder"><strong>Titular:</strong> {{
-                invitation.content.digitalEnvelope?.holder }}</p>
+          <div class="nw-pub-envelope-info">
+            <p *ngIf="invitation.content.digitalEnvelope?.bank"><strong>Banco:</strong> {{
+              invitation.content.digitalEnvelope?.bank }}</p>
+            <p *ngIf="invitation.content.digitalEnvelope?.holder"><strong>Titular:</strong> {{
+              invitation.content.digitalEnvelope?.holder }}</p>
 
-              <div *ngIf="invitation.content.digitalEnvelope?.account" class="nw-pub-copy-row">
-                <span><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</span>
-                <button type="button" class="nw-pub-copy-btn"
-                  (click)="copyText(invitation.content.digitalEnvelope?.account || '', 'Número de cuenta')">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  Copiar
-                </button>
-              </div>
-
-              <div *ngIf="invitation.content.digitalEnvelope?.clabe" class="nw-pub-copy-row">
-                <span><strong>CLABE Interbancaria:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</span>
-                <button type="button" class="nw-pub-copy-btn"
-                  (click)="copyText(invitation.content.digitalEnvelope?.clabe || '', 'CLABE interbancaria')">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  Copiar CLABE
-                </button>
-              </div>
-
-              <p *ngIf="invitation.content.digitalEnvelope?.note" class="nw-pub-envelope-note">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            <div *ngIf="invitation.content.digitalEnvelope?.account" class="nw-pub-copy-row">
+              <span><strong>Cuenta:</strong> {{ invitation.content.digitalEnvelope?.account }}</span>
+              <button type="button" class="nw-pub-copy-btn"
+                (click)="copyText(invitation.content.digitalEnvelope?.account || '', 'Número de cuenta')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
-                {{ invitation.content.digitalEnvelope?.note }}
-              </p>
+                Copiar
+              </button>
             </div>
+
+            <div *ngIf="invitation.content.digitalEnvelope?.clabe" class="nw-pub-copy-row">
+              <span><strong>CLABE Interbancaria:</strong> {{ invitation.content.digitalEnvelope?.clabe }}</span>
+              <button type="button" class="nw-pub-copy-btn"
+                (click)="copyText(invitation.content.digitalEnvelope?.clabe || '', 'CLABE interbancaria')">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copiar CLABE
+              </button>
+            </div>
+
+            <p *ngIf="invitation.content.digitalEnvelope?.note" class="nw-pub-envelope-note">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              {{ invitation.content.digitalEnvelope?.note }}
+            </p>
           </div>
         </div>
       </div>

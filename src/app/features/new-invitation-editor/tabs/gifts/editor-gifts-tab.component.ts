@@ -151,4 +151,16 @@ export class EditorGiftsTabComponent {
     }
     return img;
   }
+
+  getFileName(url?: string): string {
+    if (!url) return '';
+    try {
+      const clean = url.split('?')[0].split('#')[0];
+      const parts = clean.split('/');
+      const rawName = decodeURIComponent(parts[parts.length - 1] || '');
+      return rawName.replace(/^\d+[-_]/, '') || rawName;
+    } catch {
+      return url;
+    }
+  }
 }
