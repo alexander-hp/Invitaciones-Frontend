@@ -755,7 +755,7 @@
         [event]="event" [templates]="templates" [plans]="plans" [currentPlan]="currentPlan"
         [checkoutLoading]="checkoutLoading" [payments]="payments" (selectTemplateKey)="onSelectTemplateKey($event)"
         (applyTemplate)="applyTemplate($event)" (saveChanges)="save()" (checkout)="checkout($event)"
-        (openAiWizard)="openAiWizard()">
+        (openAiWizard)="openAiWizard()" (openTextEditor)="openTextEditor($event)">
       </app-editor-plans-tab>
 
       <!-- Floating Save Bar at the bottom for quick access -->
@@ -814,3 +814,13 @@
 <app-ai-template-wizard-modal *ngIf="showAiWizardModal" [event]="event" [invitation]="invitation"
   (close)="showAiWizardModal = false" (templateApplied)="onAiTemplateApplied($event)">
 </app-ai-template-wizard-modal>
+
+<!-- MODAL EDITOR VISUAL DE TEXTOS -->
+<app-visual-template-text-editor-modal
+  *ngIf="showTextEditorModal"
+  [invitation]="invitation"
+  [event]="event"
+  [templateKey]="textEditorTemplateKey"
+  (close)="showTextEditorModal = false"
+  (submitted)="onTextEditSubmitted()">
+</app-visual-template-text-editor-modal>

@@ -303,6 +303,8 @@ export interface CustomTemplateSubmission {
   reviewedAt?: string;
   adminFeedback?: string;
   publicUrl?: string;
+  sourceTemplateKey?: string;
+  editedTexts?: Record<string, string>;
 }
 
 export interface AiTemplateGenerateRequest {

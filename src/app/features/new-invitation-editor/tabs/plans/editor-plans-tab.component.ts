@@ -19,6 +19,7 @@ export class EditorPlansTabComponent {
   @Output() selectTemplateKey = new EventEmitter<string>();
   @Output() saveChanges = new EventEmitter<void>();
   @Output() openAiWizard = new EventEmitter<void>();
+  @Output() openTextEditor = new EventEmitter<string>();
 
   builtinTemplates = [
     {

@@ -75,6 +75,8 @@ import { EditorDedicationsTabComponent } from './features/new-invitation-editor/
 import { EditorAssetsTabComponent } from './features/new-invitation-editor/tabs/assets/editor-assets-tab.component';
 import { EditorPlansTabComponent } from './features/new-invitation-editor/tabs/plans/editor-plans-tab.component';
 import { AiTemplateWizardModalComponent } from './features/new-invitation-editor/modals/ai-template-wizard-modal/ai-template-wizard-modal.component';
+import { VisualTemplateTextEditorModalComponent } from './features/new-invitation-editor/modals/visual-template-text-editor-modal/visual-template-text-editor-modal.component';
+import { VisualTemplateCustomizerModalComponent } from './features/new-invitation-editor/modals/visual-template-customizer-modal/visual-template-customizer-modal.component';
 
 import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
 import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
@@ -110,6 +112,8 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     EditorAssetsTabComponent,
     EditorPlansTabComponent,
     AiTemplateWizardModalComponent,
+    VisualTemplateTextEditorModalComponent,
+    VisualTemplateCustomizerModalComponent,
     NewInvitationSectionsComponent,
     NewMemberInviteComponent,
     NewUserGuideComponent,

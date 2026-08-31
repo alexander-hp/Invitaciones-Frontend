@@ -53,6 +53,18 @@ export class NewInvitationEditorComponent implements OnInit {
   collapsedSections: Record<string, boolean> = {};
 
   showAiWizardModal = false;
+  showTextEditorModal = false;
+  textEditorTemplateKey = '';
+
+  openTextEditor(templateKey: string): void {
+    this.textEditorTemplateKey = templateKey;
+    this.showTextEditorModal = true;
+  }
+
+  onTextEditSubmitted(): void {
+    this.showTextEditorModal = false;
+    this.message = '¡Edición de textos enviada a revisión exitosamente!';
+  }
 
   openAiWizard(): void {
     this.showAiWizardModal = true;
