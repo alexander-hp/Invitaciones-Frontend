@@ -268,6 +268,7 @@ export interface InvitationContent {
   digitalEnvelope?: DigitalEnvelope;
   giftSettings?: GiftSettings;
   dedicationSettings?: DedicationSettings;
+  songRequestSettings?: SongRequestSettings;
   sectionSettings?: SectionSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;

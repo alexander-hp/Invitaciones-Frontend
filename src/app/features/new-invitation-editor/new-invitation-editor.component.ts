@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel, CustomTemplateSubmission } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
 
 @Component({ selector: 'app-new-invitation-editor', templateUrl: './new-invitation-editor.component.html' })
@@ -620,16 +620,16 @@ export class NewInvitationEditorComponent implements OnInit {
 
         const eventId = this.getEventId();
         if (eventId && this.event) {
-          const songEnabled = this.invitation.content?.sectionSettings?.songRequests !== false;
+          const cleanDj = this.getCleanSongRequestSettings();
           if (!this.event.externalContent) this.event.externalContent = {};
-          if (!this.event.externalContent.songRequestSettings) {
-            this.event.externalContent.songRequestSettings = { enabled: songEnabled, maxRequestsPerGuest: 3, allowDedications: true, requireApproval: true };
-          } else {
-            this.event.externalContent.songRequestSettings.enabled = songEnabled;
+          this.event.externalContent.songRequestSettings = cleanDj;
+          if (this.invitation?.content) {
+            this.invitation.content.songRequestSettings = { ...cleanDj };
           }
 
           const rawExternalContent: ExternalContent = {
-            ...(this.event.externalContent || {})
+            ...(this.event.externalContent || {}),
+            songRequestSettings: cleanDj
           };
 
           this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
@@ -698,16 +698,16 @@ export class NewInvitationEditorComponent implements OnInit {
       next: () => {
         const eventId = this.getEventId();
         if (eventId && this.event) {
-          const songEnabled = this.invitation?.content?.sectionSettings?.songRequests !== false;
+          const cleanDj = this.getCleanSongRequestSettings();
           if (!this.event.externalContent) this.event.externalContent = {};
-          if (!this.event.externalContent.songRequestSettings) {
-            this.event.externalContent.songRequestSettings = { enabled: songEnabled, maxRequestsPerGuest: 3, allowDedications: true, requireApproval: true };
-          } else {
-            this.event.externalContent.songRequestSettings.enabled = songEnabled;
+          this.event.externalContent.songRequestSettings = cleanDj;
+          if (this.invitation?.content) {
+            this.invitation.content.songRequestSettings = { ...cleanDj };
           }
 
           const rawExternalContent: ExternalContent = {
-            ...(this.event.externalContent || {})
+            ...(this.event.externalContent || {}),
+            songRequestSettings: cleanDj
           };
 
           this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
@@ -1399,6 +1399,18 @@ export class NewInvitationEditorComponent implements OnInit {
     return cleaned;
   }
 
+  private getCleanSongRequestSettings(): SongRequestSettings {
+    const djSettings = (this.event?.externalContent?.songRequestSettings || this.invitation?.content?.songRequestSettings || {}) as any;
+    const songEnabled = this.invitation?.content?.sectionSettings?.songRequests !== false;
+    const max = Number(djSettings.maxRequestsPerGuest);
+    return {
+      enabled: songEnabled && djSettings.enabled !== false,
+      maxRequestsPerGuest: !isNaN(max) && max > 0 ? max : 3,
+      allowDedications: djSettings.allowDedications !== false,
+      requireApproval: djSettings.requireApproval !== false
+    };
+  }
+
   private getContentPayload() {
     if (!this.invitation) return undefined;
     const invId = this.getInvitationId(this.invitation);
@@ -1422,6 +1434,7 @@ export class NewInvitationEditorComponent implements OnInit {
     return {
       ...rawContent,
       template: activeTemplateKey,
+      songRequestSettings: this.getCleanSongRequestSettings(),
       sectionMusic: this.cleanSectionMusic(this.invitation.content.sectionMusic || {}),
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),

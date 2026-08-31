@@ -277,6 +277,10 @@ export class NewInvitationSectionsComponent implements OnInit {
         ...this.sectionSettings,
         songRequests: Boolean(this.songRequestSettings.enabled)
       },
+      songRequestSettings: {
+        ...this.songRequestSettings,
+        maxRequestsPerGuest: Number(this.songRequestSettings.maxRequestsPerGuest) || 3
+      },
       giftSettings: { ...this.giftSettings },
       dedicationSettings: { ...this.dedicationSettings }
     };

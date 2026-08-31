@@ -18,7 +18,10 @@ export class AuthTokenInterceptor implements HttpInterceptor {
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
         const isAuthEntryPoint = ['/auth/login', '/auth/register', '/auth/social'].some((path) => req.url.includes(path));
-        if (isApiRequest && error.status === 401 && !isAuthEntryPoint) {
+        const isPublicGuestUrl = ['/public/', '/external/'].some((path) => req.url.includes(path));
+        const isCurrentRoutePublic = ['/i/', '/new/i/', '/e/', '/new/e/', '/external-access/', '/new/external-access/', '/check-in/'].some((p) => this.router.url.includes(p));
+
+        if (isApiRequest && error.status === 401 && !isAuthEntryPoint && !isPublicGuestUrl && !isCurrentRoutePublic) {
           localStorage.removeItem(TOKEN_KEY);
           this.router.navigate(['/new/login']);
         }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
@@ -207,18 +207,50 @@ export class ApiService {
 
   createSongRequest(eventId: string, payload: SongRequestPayload): Observable<{ songRequest: SongRequestModel }> {
     return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests`, payload).pipe(
-      catchError(err => {
-        if (err.status === 404) {
-          return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${eventId}/song-requests`, payload);
+      catchError((err) => {
+        if (err.status === 404 || err.status === 401 || err.status === 403) {
+          return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/invitations/public/${eventId}/song-requests`, payload).pipe(
+            catchError(() => this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${eventId}/song-requests`, payload))
+          );
         }
-        throw err;
+        return throwError(() => err);
       })
+    );
+  }
+
+  createPublicSongRequest(slug: string, payload: SongRequestPayload): Observable<{ songRequest: SongRequestModel }> {
+    return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/invitations/public/${slug}/song-requests`, payload).pipe(
+      catchError((err) => {
+        if (err.status === 404 || err.status === 401 || err.status === 403) {
+          return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${slug}/song-requests`, payload);
+        }
+        return throwError(() => err);
+      })
+    );
+  }
+
+  listPublicSongRequests(slug: string, params?: { guest?: string; email?: string }): Observable<{ songRequests: SongRequestModel[] }> {
+    const httpParams: any = {};
+    if (params?.guest) httpParams.guest = params.guest;
+    if (params?.email) httpParams.email = params.email;
+    return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/invitations/public/${slug}/song-requests`, { params: httpParams }).pipe(
+      catchError(() => of({ songRequests: [] }))
+    );
+  }
+
+  lookupPublicSong(slug: string, query: string): Observable<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }> {
+    return this.http.post<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }>(`${this.apiUrl}/invitations/public/${slug}/song-lookup`, { query }).pipe(
+      catchError(() => of({ video: undefined }))
     );
   }
 
   lookupYouTubeVideo(eventId: string, query: string): Observable<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }> {
     return this.http.post<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }>(`${this.apiUrl}/events/${eventId}/song-requests/lookup-youtube`, { query }).pipe(
-      catchError(() => of({ video: undefined }))
+      catchError(() => {
+        return this.http.post<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }>(`${this.apiUrl}/invitations/public/${eventId}/song-lookup`, { query }).pipe(
+          catchError(() => of({ video: undefined }))
+        );
+      })
     );
   }
 

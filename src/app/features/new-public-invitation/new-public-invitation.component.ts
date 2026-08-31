@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
@@ -76,9 +77,20 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     phoneNationalNumber: ''
   };
 
-  songRequest = { title: '', artist: '', dedication: '' };
+  songRequest = { title: '', artist: '', dedication: '', sourceUrl: '', thumbnailUrl: '' };
   songRequestSending = false;
   songRequestMessage = '';
+  guestSubmittedSongsCount = 0;
+
+  songSearchQuery = '';
+  searchingSongs = false;
+  songSearchResults: Array<{
+    title: string;
+    artist: string;
+    sourceUrl: string;
+    thumbnailUrl: string;
+    previewUrl?: string;
+  }> = [];
 
   customHtmlSafeSrcdoc?: SafeHtml;
 
@@ -87,7 +99,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     private api: ApiService,
     private sanitizer: DomSanitizer,
     private textOverlay: TemplateTextOverlayService,
-    private elRef: ElementRef
+    private elRef: ElementRef,
+    private http: HttpClient
   ) {}
   private iframeBridgeListener?: (e: MessageEvent) => void;
 
@@ -165,7 +178,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       next: ({ invitation }) => {
         this.invitation = invitation;
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
-        this.event = typeof invitation.event === 'string' ? undefined : invitation.event;
+        this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
 
         console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
         console.log('🎵 [PublicInvitation] content:', invitation?.content);
@@ -551,9 +564,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         this.rsvp.companions = 0;
         this.success = `¡Hola ${guest.name}! Ya puedes confirmar tu asistencia.`;
         this.checkingGuest = false;
+        this.loadGuestSongRequests();
       },
       error: (error) => {
         this.verifiedGuest = undefined;
+        this.guestSubmittedSongsCount = 0;
         this.error = error.error?.message || 'Este invitado no está en la lista registrada.';
         this.checkingGuest = false;
       }
@@ -656,6 +671,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   resetGuestAccess(): void {
     this.verifiedGuest = undefined;
     this.guestAccessPhone = '';
+    this.guestSubmittedSongsCount = 0;
     this.success = '';
     this.error = '';
     this.declineConfirmed = false;
@@ -961,24 +977,247 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return this.getItineraryIconKey(title);
   }
 
+  get songRequestSettings() {
+    return this.invitation?.content?.songRequestSettings || this.event?.externalContent?.songRequestSettings;
+  }
+
+  get maxSongRequestsAllowed(): number {
+    const max = Number(this.songRequestSettings?.maxRequestsPerGuest);
+    return !isNaN(max) && max > 0 ? max : 3;
+  }
+
+  get requireSongApproval(): boolean {
+    const setting = this.songRequestSettings?.requireApproval;
+    return setting !== undefined ? Boolean(setting) : true;
+  }
+
+  get allowDedicationsEnabled(): boolean {
+    const setting = this.songRequestSettings?.allowDedications;
+    return setting !== undefined ? Boolean(setting) : true;
+  }
+
+  getGuestSubmittedSongCount(): number {
+    const slug = this.invitation?.slug;
+    if (!slug || typeof localStorage === 'undefined') return this.guestSubmittedSongsCount;
+    try {
+      const guestKey = this.verifiedGuest?.id || (this.verifiedGuest as any)?._id || this.verifiedGuest?.email || this.guestAccessEmail || 'anon';
+      const stored = localStorage.getItem(`song_req_list_${slug}_${guestKey}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return Math.max(parsed.length, this.guestSubmittedSongsCount);
+      }
+    } catch (e) {}
+    return this.guestSubmittedSongsCount;
+  }
+
+  get songRequestsLimitReached(): boolean {
+    return this.getGuestSubmittedSongCount() >= this.maxSongRequestsAllowed;
+  }
+
+  recordGuestSubmittedSong(songTitle: string): void {
+    this.guestSubmittedSongsCount += 1;
+    const slug = this.invitation?.slug;
+    if (!slug || typeof localStorage === 'undefined') return;
+    try {
+      const guestKey = this.verifiedGuest?.id || (this.verifiedGuest as any)?._id || this.verifiedGuest?.email || this.guestAccessEmail || 'anon';
+      const key = `song_req_list_${slug}_${guestKey}`;
+      const stored = localStorage.getItem(key);
+      const list: string[] = stored ? JSON.parse(stored) : [];
+      list.push(songTitle);
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  loadGuestSongRequests(): void {
+    if (!this.invitation?.slug) return;
+    const guestId = this.verifiedGuest?.id || (this.verifiedGuest as any)?._id;
+    const email = this.verifiedGuest?.email || this.guestAccessEmail;
+    if (!guestId && !email) return;
+
+    this.api.listPublicSongRequests(this.invitation.slug, { guest: guestId, email }).subscribe({
+      next: (res) => {
+        if (res?.songRequests) {
+          this.guestSubmittedSongsCount = res.songRequests.length;
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  getYouTubeVideoId(url: string): string {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    return match ? match[1] : '';
+  }
+
+  searchSongForRequest(): void {
+    if (this.songRequestsLimitReached) {
+      this.songRequestMessage = `⚠️ Has alcanzado el límite máximo de ${this.maxSongRequestsAllowed} canción(es) permitida(s) por invitado para este evento.`;
+      return;
+    }
+
+    const query = this.songSearchQuery.trim();
+    if (!query) return;
+
+    this.searchingSongs = true;
+    this.songSearchResults = [];
+
+    const ytId = this.getYouTubeVideoId(query);
+    if (ytId) {
+      const videoUrl = `https://www.youtube.com/watch?v=${ytId}`;
+      const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`;
+      this.http.get<any>(oembedUrl).subscribe({
+        next: (data) => {
+          let rawTitle = data.title || 'Canción de YouTube';
+          let artist = data.author_name || '';
+          let cleanTitle = rawTitle.replace(/\s*\([^)]*(?:official|video|audio|hd|4k|lyric|remastered)[^)]*\)/gi, '').trim();
+          cleanTitle = cleanTitle.replace(/\s*\[[^\]]*(?:official|video|audio|hd|4k|lyric|remastered)[^\]]*\]/gi, '').trim();
+
+          let title = cleanTitle;
+          if (cleanTitle.includes(' - ')) {
+            const parts = cleanTitle.split(' - ');
+            artist = parts[0].trim();
+            title = parts.slice(1).join(' - ').trim();
+          }
+
+          const result = {
+            title,
+            artist,
+            sourceUrl: videoUrl,
+            thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+          };
+          this.songSearchResults = [result];
+          this.selectSongFromSearch(result);
+          this.searchingSongs = false;
+        },
+        error: () => {
+          const fallback = {
+            title: 'Canción de YouTube',
+            artist: '',
+            sourceUrl: videoUrl,
+            thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+          };
+          this.songSearchResults = [fallback];
+          this.selectSongFromSearch(fallback);
+          this.searchingSongs = false;
+        }
+      });
+      return;
+    }
+
+    const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=6`;
+    this.http.get<any>(itunesUrl).subscribe({
+      next: (res) => {
+        const items = res?.results || [];
+        this.songSearchResults = items.map((item: any) => {
+          const title = item.trackName || query;
+          const artist = item.artistName || '';
+          const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(artist + ' ' + title)}`;
+          const artwork = item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : '';
+          return {
+            title,
+            artist,
+            sourceUrl: ytSearchUrl,
+            thumbnailUrl: artwork,
+            previewUrl: item.previewUrl
+          };
+        });
+
+        if (this.songSearchResults.length > 0) {
+          this.selectSongFromSearch(this.songSearchResults[0]);
+          this.resolveYouTubeVideoUrl(this.songSearchResults[0]);
+        }
+        this.searchingSongs = false;
+      },
+      error: () => {
+        const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        const fallback = {
+          title: query,
+          artist: '',
+          sourceUrl: ytSearchUrl,
+          thumbnailUrl: ''
+        };
+        this.songSearchResults = [fallback];
+        this.selectSongFromSearch(fallback);
+        this.searchingSongs = false;
+      }
+    });
+  }
+
+  resolveYouTubeVideoUrl(song: { title: string; artist: string; sourceUrl: string; thumbnailUrl: string }): void {
+    const slug = this.invitation?.slug;
+    if (!slug || !song.title) return;
+    const searchTerm = `${song.artist} ${song.title}`.trim();
+
+    this.api.lookupPublicSong(slug, searchTerm).subscribe({
+      next: (res) => {
+        if (res?.video?.sourceUrl) {
+          song.sourceUrl = res.video.sourceUrl;
+          if (this.songRequest.title === song.title) {
+            this.songRequest.sourceUrl = song.sourceUrl;
+          }
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  selectSongFromSearch(s: { title: string; artist: string; sourceUrl: string; thumbnailUrl: string }): void {
+    this.songRequest.title = s.title;
+    this.songRequest.artist = s.artist;
+    this.songRequest.sourceUrl = s.sourceUrl;
+    this.songRequest.thumbnailUrl = s.thumbnailUrl;
+  }
+
   submitSongRequest(): void {
     if (!this.songRequest.title.trim()) return;
-    const eventId = (this.event?._id || this.event?.id || (typeof this.invitation?.event === 'string' ? this.invitation?.event : this.invitation?.event?.id) || this.invitation?.slug) as string;
-    if (!eventId) return;
+    const slug = this.invitation?.slug;
+    if (!slug) return;
+
+    if (this.requiresGuestValidation && !this.verifiedGuest) {
+      this.songRequestMessage = '⚠️ Debes validar tu correo o teléfono en la sección superior antes de sugerir canciones.';
+      return;
+    }
+
+    if (this.songRequestsLimitReached) {
+      this.songRequestMessage = `⚠️ Has alcanzado el límite máximo de ${this.maxSongRequestsAllowed} canción(es) sugerida(s) para este evento.`;
+      return;
+    }
+
+    const requiresApproval = this.requireSongApproval;
+    const initialStatus = requiresApproval ? 'pending' : 'approved';
 
     this.songRequestSending = true;
     this.songRequestMessage = '';
-    this.api.createSongRequest(eventId, {
+
+    const payload = {
+      guest: this.verifiedGuest?.id || (this.verifiedGuest as any)?._id,
       title: this.songRequest.title.trim(),
       artist: this.songRequest.artist.trim() || undefined,
-      dedication: this.songRequest.dedication.trim() || undefined,
-      requesterName: this.verifiedGuest?.name || this.rsvp.name || undefined
-    }).subscribe({
-      next: () => {
-        this.songRequestMessage = '¡Canción sugerida con éxito al DJ!';
-        this.songRequest = { title: '', artist: '', dedication: '' };
+      dedication: this.allowDedicationsEnabled ? (this.songRequest.dedication.trim() || undefined) : undefined,
+      sourceUrl: this.songRequest.sourceUrl ? this.songRequest.sourceUrl.trim() : undefined,
+      url: this.songRequest.sourceUrl ? this.songRequest.sourceUrl.trim() : undefined,
+      requesterName: this.verifiedGuest?.name || this.rsvp.name || undefined,
+      requesterEmail: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail || undefined
+    };
+
+    this.api.createPublicSongRequest(slug, payload as any).subscribe({
+      next: (res: any) => {
+        this.recordGuestSubmittedSong(this.songRequest.title.trim());
+        const status = res?.songRequest?.status;
+        const isApproved = status === 'approved' || (!this.requireSongApproval && status !== 'pending');
+
+        if (!isApproved) {
+          this.songRequestMessage = '⏳ ¡Canción enviada a revisión con éxito! El organizador o DJ la validará antes de integrarla a la playlist.';
+          this.showToast('Canción enviada a revisión');
+        } else {
+          this.songRequestMessage = '✨ ¡Canción sugerida e incorporada directamente a la playlist del DJ con éxito!';
+          this.showToast('Canción agregada a la playlist');
+        }
+
+        this.songRequest = { title: '', artist: '', dedication: '', sourceUrl: '', thumbnailUrl: '' };
+        this.songSearchQuery = '';
+        this.songSearchResults = [];
         this.songRequestSending = false;
-        this.showToast('Canción enviada al DJ');
       },
       error: (err: any) => {
         this.songRequestMessage = err?.error?.message || 'No se pudo enviar la canción.';
@@ -998,6 +1237,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         this.rsvp.email = guest.email || '';
         this.success = `¡Hola ${guest.name}! Tu pase personalizado está listo.`;
         this.checkingGuest = false;
+        this.loadGuestSongRequests();
       },
       error: () => {
         this.checkingGuest = false;
