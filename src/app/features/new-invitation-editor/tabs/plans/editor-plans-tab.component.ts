@@ -65,6 +65,38 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       description: 'Diseño vanguardista con estética limpia, tarjetas flotantes glassmorphism, hero interactivo, timeline moderno y animación fluida.',
       iconKey: 'modern',
       features: ['Estilo Glassmorphism', 'Diseño Minimalista & Lujo', 'Hero interactivo', 'Optimizada Móvil & Desktop']
+    },
+    {
+      id: 'boda-mobile-first',
+      name: 'Boda Mobile-First (Story Vertical)',
+      badge: 'Nueva &bull; Móvil',
+      description: 'Experiencia inmersiva vertical tipo Story móvil con microinteracciones táctiles, barra FAB flotante inferior (RSVP y mapa directo), animaciones suaves on-scroll (AOS) y destellos de confeti dorado.',
+      iconKey: 'envelope',
+      features: ['Formato vertical tipo Story', 'Barra FAB flotante fija', 'Efectos on-scroll AOS', 'Confeti dorado de celebración']
+    },
+    {
+      id: 'boda-desktop-first',
+      name: 'Boda Desktop-First (Revista Editorial)',
+      badge: 'Nueva &bull; Editorial',
+      description: 'Diseño estilo revista editorial de alta gama para pantallas anchas y portátiles, con tipografía monumental Cinzel y Cormorant Garamond, composiciones asimétricas y total adaptabilidad responsiva a celulares.',
+      iconKey: 'classic',
+      features: ['Layout editorial tipo revista', 'Tipografía monumental de gala', 'Dípticos y grids asimétricos', '100% responsiva']
+    },
+    {
+      id: 'boda-cards-lateral',
+      name: 'Boda Cards Lateral (App Deck Deslizable)',
+      badge: 'Innovación &bull; Swipe',
+      description: 'Presentación horizontal tipo App con swipe táctil a pantalla completa, flechas de navegación y paginación de puntos que rompe el esquema tradicional de scroll vertical.',
+      iconKey: 'envelope',
+      features: ['Deck horizontal deslizable', 'Navegación por Swipe táctil', '16 diapositivas completas', 'Controles interactivos']
+    },
+    {
+      id: 'boda-creativa-premium',
+      name: 'Boda Creativa Premium (Royal Cinematic)',
+      badge: 'Exclusiva &bull; Súper Lujo',
+      description: 'Atmósfera cinematográfica nocturna de alta costura con auroras doradas en movimiento, tarjetas esmeriladas en arco de catedral, tipografía de oro líquido y animaciones GSAP de máximo impacto.',
+      iconKey: 'modern',
+      features: ['Estética Royal Cinematic', 'Arcos de catedral esmerilados', 'Microinteracciones GSAP', 'Efectos de oro líquido']
     }
   ];
 

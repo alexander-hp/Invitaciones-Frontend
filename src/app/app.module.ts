@@ -60,6 +60,10 @@ import { NewPublicInvitationComponent } from './features/new-public-invitation/n
 import { NewPublicInvitationClassicVerticalComponent } from './features/new-public-invitation/templates/classic-vertical/new-public-invitation-classic-vertical.component';
 import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component';
 import { NewPublicInvitationTemplate3Component } from './features/new-public-invitation/templates/template-3/new-public-invitation-template3.component';
+import { NewPublicInvitationBodaMobileFirstComponent } from './features/new-public-invitation/templates/boda-mobile-first/new-public-invitation-boda-mobile-first.component';
+import { NewPublicInvitationBodaDesktopFirstComponent } from './features/new-public-invitation/templates/boda-desktop-first/new-public-invitation-boda-desktop-first.component';
+import { NewPublicInvitationBodaCardsLateralComponent } from './features/new-public-invitation/templates/boda-cards-lateral/new-public-invitation-boda-cards-lateral.component';
+import { NewPublicInvitationBodaCreativaPremiumComponent } from './features/new-public-invitation/templates/boda-creativa-premium/new-public-invitation-boda-creativa-premium.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
@@ -145,6 +149,10 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     NewPublicInvitationClassicVerticalComponent,
     NewPublicInvitationEnvelopeCardsComponent,
     NewPublicInvitationTemplate3Component,
+    NewPublicInvitationBodaMobileFirstComponent,
+    NewPublicInvitationBodaDesktopFirstComponent,
+    NewPublicInvitationBodaCardsLateralComponent,
+    NewPublicInvitationBodaCreativaPremiumComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

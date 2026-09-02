@@ -1060,7 +1060,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   isEnvelopeCardsTemplate(): boolean {
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (!this.isClassicVerticalTemplate() && !this.isTemplate3());
+    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (!this.isClassicVerticalTemplate() && !this.isTemplate3() && !this.isBodaMobileFirstTemplate() && !this.isBodaDesktopFirstTemplate() && !this.isBodaCardsLateralTemplate() && !this.isBodaCreativaPremiumTemplate());
   }
 
   isClassicVerticalTemplate(): boolean {
@@ -1073,6 +1073,30 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'modern-minimal' || t === 'template-3' || t === 'plantilla-3' || t === 'minimal';
+  }
+
+  isBodaMobileFirstTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-mobile-first' || t === 'boda-mobile' || t === 'wedding-mobile-first';
+  }
+
+  isBodaDesktopFirstTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-desktop-first' || t === 'boda-desktop' || t === 'wedding-desktop-first';
+  }
+
+  isBodaCardsLateralTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-cards-lateral' || t === 'cards-lateral' || t === 'boda-cards' || t === 'wedding-cards-lateral';
+  }
+
+  isBodaCreativaPremiumTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-creativa-premium' || t === 'creativa-premium' || t === 'boda-premium' || t === 'wedding-creativa-premium';
   }
 
   get requiresGuestValidation(): boolean {
