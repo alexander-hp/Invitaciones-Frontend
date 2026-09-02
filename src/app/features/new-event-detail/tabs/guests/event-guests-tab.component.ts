@@ -688,10 +688,27 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     }
   }
 
-  processImport(): void {
+  async processImport(): Promise<void> {
     if (!this.importFile) return;
     this.importing = true;
-    this.apiService.importGuests(this.eventId, this.importFile).subscribe({
+    let fileToUpload = this.importFile;
+
+    try {
+      const ext = (fileToUpload.name.split('.').pop() || '').toLowerCase();
+      if (ext === 'csv') {
+        const buffer = await fileToUpload.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+        // Detectar y quitar BOM UTF-8 (EF BB BF) si está presente
+        if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+          const stripped = bytes.slice(3);
+          fileToUpload = new File([stripped], fileToUpload.name, { type: 'text/csv' });
+        }
+      }
+    } catch (e) {
+      console.warn('No se pudo preprocesar BOM en el frontend:', e);
+    }
+
+    this.apiService.importGuests(this.eventId, fileToUpload).subscribe({
       next: () => {
         this.importing = false;
         this.importFile = undefined;
