@@ -57,6 +57,7 @@ import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-chec
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
 import { NewPublicInvitationComponent } from './features/new-public-invitation/new-public-invitation.component';
+import { NewPublicInvitationClassicVerticalComponent } from './features/new-public-invitation/templates/classic-vertical/new-public-invitation-classic-vertical.component';
 import { NewPublicInvitationEnvelopeCardsComponent } from './features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component';
 import { NewPublicInvitationTemplate3Component } from './features/new-public-invitation/templates/template-3/new-public-invitation-template3.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
@@ -141,6 +142,7 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     NewPasswordResetConfirmComponent,
     PublicInvitationComponent,
     NewPublicInvitationComponent,
+    NewPublicInvitationClassicVerticalComponent,
     NewPublicInvitationEnvelopeCardsComponent,
     NewPublicInvitationTemplate3Component,
     RegisterComponent,
