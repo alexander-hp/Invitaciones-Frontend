@@ -75,6 +75,22 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   uploadingCover = false;
   previewCoverModal = false;
 
+  get coverImageFileName(): string {
+    return this.getFileName(this.coverImageUrl);
+  }
+
+  getFileName(url?: string): string {
+    if (!url) return '';
+    try {
+      const cleanUrl = url.split('?')[0].split('#')[0];
+      const segments = cleanUrl.split('/');
+      const last = segments.pop() || '';
+      return decodeURIComponent(last);
+    } catch {
+      return url || '';
+    }
+  }
+
   showSuccess(text: string): void {
     this.message = text;
     setTimeout(() => { this.message = ''; }, 3500);
