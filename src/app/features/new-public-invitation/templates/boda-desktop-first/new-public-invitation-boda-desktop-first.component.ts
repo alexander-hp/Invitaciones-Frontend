@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, AfterViewInit, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, AfterViewInit, OnDestroy, Output, NgZone } from '@angular/core';
 import * as AOS from 'aos';
 import * as confettiNamespace from 'canvas-confetti';
 const confetti: any = (confettiNamespace as any).default || confettiNamespace;
@@ -86,6 +86,12 @@ export class NewPublicInvitationBodaDesktopFirstComponent implements OnInit, Aft
   selectedAlbumFile?: File;
   dedication = { publicName: '', message: '', type: 'dedication' };
 
+  constructor(private ngZone: NgZone) {}
+
+  private waxSealTween?: any;
+  private _cachedLocationsVenue?: any;
+  private _cachedLocationsFallback: InvitationLocation[] = [];
+
   ngOnInit(): void {
     if (this.verifiedGuest) {
       this.rsvp.name = this.verifiedGuest.name || '';
@@ -94,30 +100,39 @@ export class NewPublicInvitationBodaDesktopFirstComponent implements OnInit, Aft
   }
 
   ngAfterViewInit(): void {
-    try {
-      AOS.init({
-        duration: 900,
-        easing: 'ease-out-cubic',
-        once: true,
-        offset: 60
-      });
-      setTimeout(() => {
-        AOS.refresh();
-      }, 500);
-    } catch (err) {
-      console.warn('AOS initialization error:', err);
-    }
+    this.ngZone.runOutsideAngular(() => {
+      try {
+        AOS.init({
+          duration: 900,
+          easing: 'ease-out-cubic',
+          once: true,
+          offset: 60
+        });
+        setTimeout(() => {
+          try { AOS.refresh(); } catch {}
+        }, 500);
+      } catch (err) {
+        console.warn('AOS initialization error:', err);
+      }
 
-    try {
-      gsap.fromTo(
-        '.bdf-wax-seal',
-        { scale: 0.95, filter: 'drop-shadow(0 4px 10px rgba(184, 134, 11, 0.4))' },
-        { scale: 1.06, filter: 'drop-shadow(0 8px 24px rgba(212, 175, 55, 0.75))', repeat: -1, yoyo: true, duration: 2, ease: 'sine.inOut' }
-      );
-    } catch (e) {}
+      try {
+        const seal = document.querySelector('.bdf-wax-seal');
+        if (seal) {
+          this.waxSealTween = gsap.fromTo(
+            seal,
+            { scale: 0.95, filter: 'drop-shadow(0 4px 10px rgba(184, 134, 11, 0.4))' },
+            { scale: 1.06, filter: 'drop-shadow(0 8px 24px rgba(212, 175, 55, 0.75))', repeat: -1, yoyo: true, duration: 2, ease: 'sine.inOut' }
+          );
+        }
+      } catch (e) {}
+    });
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    if (this.waxSealTween && typeof this.waxSealTween.kill === 'function') {
+      try { this.waxSealTween.kill(); } catch {}
+    }
+  }
 
   triggerCelebrationConfetti(): void {
     try {
@@ -237,7 +252,16 @@ export class NewPublicInvitationBodaDesktopFirstComponent implements OnInit, Aft
     if (contentLocations.length) return contentLocations;
     const venue = this.event?.venue;
     if (!venue?.name && !venue?.address && !venue?.mapUrl) return [];
-    return [{ type: 'principal', name: venue.name || 'Lugar de la Celebración', address: venue.address || '', mapUrl: venue.mapUrl || '' }];
+    if (this._cachedLocationsVenue !== venue) {
+      this._cachedLocationsVenue = venue;
+      this._cachedLocationsFallback = [{
+        type: 'principal',
+        name: venue.name || 'Lugar de la Celebración',
+        address: venue.address || '',
+        mapUrl: venue.mapUrl || ''
+      }];
+    }
+    return this._cachedLocationsFallback;
   }
 
   getItineraryIconKey(title?: string): string {

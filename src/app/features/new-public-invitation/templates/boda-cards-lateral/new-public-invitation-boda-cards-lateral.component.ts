@@ -125,21 +125,32 @@ export class NewPublicInvitationBodaCardsLateralComponent implements OnInit, OnC
     this.updateAvailableSlides();
   }
 
-  ngAfterViewInit(): void {
-    try {
-      AOS.init({ duration: 750, once: true });
-    } catch (e) {}
+  private waxSealTween?: any;
 
-    try {
-      gsap.fromTo(
-        '.bcl-wax-seal',
-        { scale: 0.96, boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)' },
-        { scale: 1.05, boxShadow: '0 8px 24px rgba(212, 175, 55, 0.7)', repeat: -1, yoyo: true, duration: 1.8, ease: 'sine.inOut' }
-      );
-    } catch (e) {}
+  ngAfterViewInit(): void {
+    this.ngZone.runOutsideAngular(() => {
+      try {
+        AOS.init({ duration: 750, once: true });
+      } catch (e) {}
+
+      try {
+        const seal = document.querySelector('.bcl-wax-seal');
+        if (seal) {
+          this.waxSealTween = gsap.fromTo(
+            seal,
+            { scale: 0.96, boxShadow: '0 4px 14px rgba(184, 134, 11, 0.4)' },
+            { scale: 1.05, boxShadow: '0 8px 24px rgba(212, 175, 55, 0.7)', repeat: -1, yoyo: true, duration: 1.8, ease: 'sine.inOut' }
+          );
+        }
+      } catch (e) {}
+    });
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    if (this.waxSealTween && typeof this.waxSealTween.kill === 'function') {
+      try { this.waxSealTween.kill(); } catch {}
+    }
+  }
 
   // Keyboard navigation
   @HostListener('window:keydown', ['$event'])

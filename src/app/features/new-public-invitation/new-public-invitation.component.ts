@@ -155,6 +155,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   handleIframeBridgeMessage(event: MessageEvent): void {
     if (!event.data || typeof event.data !== 'object') return;
     const { type, slug, payload, email, phone, publicName, message } = event.data;
+    if (!type || typeof type !== 'string' || type.startsWith('webpack')) return;
     if (slug && this.invitation && this.invitation.slug !== slug) return;
 
     console.log('test edit: [PublicInv] Received bridge message from iframe:', type, event.data);
@@ -235,10 +236,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
     this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
 
-    console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
-    console.log('🎵 [PublicInvitation] content:', invitation?.content);
-    console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
-    console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
+    //console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
+    //console.log('🎵 [PublicInvitation] content:', invitation?.content);
+    //console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
+    //console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
 
     // If invitation content specifies a base template and has no customHtml, ensure detectedSourceTemplate is cleared
     const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';

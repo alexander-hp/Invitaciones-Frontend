@@ -88,6 +88,10 @@ export class NewPublicInvitationBodaMobileFirstComponent implements OnInit, Afte
 
   constructor(private ngZone: NgZone) {}
 
+  private waxSealTween?: any;
+  private _cachedLocationsVenue?: any;
+  private _cachedLocationsFallback: InvitationLocation[] = [];
+
   ngOnInit(): void {
     if (this.verifiedGuest) {
       this.rsvp.name = this.verifiedGuest.name || '';
@@ -96,30 +100,39 @@ export class NewPublicInvitationBodaMobileFirstComponent implements OnInit, Afte
   }
 
   ngAfterViewInit(): void {
-    try {
-      AOS.init({
-        duration: 800,
-        easing: 'ease-out-cubic',
-        once: true,
-        offset: 40
-      });
-      setTimeout(() => {
-        AOS.refresh();
-      }, 500);
-    } catch (err) {
-      console.warn('AOS initialization error:', err);
-    }
+    this.ngZone.runOutsideAngular(() => {
+      try {
+        AOS.init({
+          duration: 800,
+          easing: 'ease-out-cubic',
+          once: true,
+          offset: 40
+        });
+        setTimeout(() => {
+          try { AOS.refresh(); } catch {}
+        }, 500);
+      } catch (err) {
+        console.warn('AOS initialization error:', err);
+      }
 
-    try {
-      gsap.fromTo(
-        '.bmf-wax-seal',
-        { scale: 0.95, boxShadow: '0 4px 15px rgba(184, 134, 11, 0.4)' },
-        { scale: 1.05, boxShadow: '0 8px 25px rgba(212, 175, 55, 0.7)', repeat: -1, yoyo: true, duration: 1.8, ease: 'sine.inOut' }
-      );
-    } catch (e) {}
+      try {
+        const seal = document.querySelector('.bmf-wax-seal');
+        if (seal) {
+          this.waxSealTween = gsap.fromTo(
+            seal,
+            { scale: 0.95, boxShadow: '0 4px 15px rgba(184, 134, 11, 0.4)' },
+            { scale: 1.05, boxShadow: '0 8px 25px rgba(212, 175, 55, 0.7)', repeat: -1, yoyo: true, duration: 1.8, ease: 'sine.inOut' }
+          );
+        }
+      } catch (e) {}
+    });
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    if (this.waxSealTween && typeof this.waxSealTween.kill === 'function') {
+      try { this.waxSealTween.kill(); } catch {}
+    }
+  }
 
   triggerCelebrationConfetti(): void {
     try {
@@ -241,7 +254,16 @@ export class NewPublicInvitationBodaMobileFirstComponent implements OnInit, Afte
     if (contentLocations.length) return contentLocations;
     const venue = this.event?.venue;
     if (!venue?.name && !venue?.address && !venue?.mapUrl) return [];
-    return [{ type: 'principal', name: venue.name || 'Lugar de la Celebración', address: venue.address || '', mapUrl: venue.mapUrl || '' }];
+    if (this._cachedLocationsVenue !== venue) {
+      this._cachedLocationsVenue = venue;
+      this._cachedLocationsFallback = [{
+        type: 'principal',
+        name: venue.name || 'Lugar de la Celebración',
+        address: venue.address || '',
+        mapUrl: venue.mapUrl || ''
+      }];
+    }
+    return this._cachedLocationsFallback;
   }
 
   getItineraryIconKey(title?: string): string {

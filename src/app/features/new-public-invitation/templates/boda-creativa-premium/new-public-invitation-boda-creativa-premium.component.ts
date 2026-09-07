@@ -87,6 +87,10 @@ export class NewPublicInvitationBodaCreativaPremiumComponent implements OnInit, 
 
   constructor(private ngZone: NgZone) {}
 
+  private activeTweens: any[] = [];
+  private _cachedLocationsVenue?: any;
+  private _cachedLocationsFallback: InvitationLocation[] = [];
+
   ngOnInit(): void {
     if (this.verifiedGuest) {
       this.rsvp.name = this.verifiedGuest.name || '';
@@ -95,37 +99,63 @@ export class NewPublicInvitationBodaCreativaPremiumComponent implements OnInit, 
   }
 
   ngAfterViewInit(): void {
-    try {
-      AOS.init({ duration: 800, once: true, offset: 60 });
-    } catch (e) {}
+    this.ngZone.runOutsideAngular(() => {
+      try {
+        AOS.init({ duration: 800, once: true, offset: 60 });
+      } catch (e) {}
 
-    try {
-      gsap.to('.bcp-aurora-orb-1', {
-        x: 40,
-        y: -30,
-        scale: 1.15,
-        duration: 8,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut'
-      });
-      gsap.to('.bcp-aurora-orb-2', {
-        x: -50,
-        y: 40,
-        scale: 0.9,
-        duration: 10,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut'
-      });
-      gsap.fromTo('.bcp-wax-seal',
-        { scale: 0.95 },
-        { scale: 1.05, duration: 1.6, repeat: -1, yoyo: true, ease: 'power1.inOut' }
-      );
-    } catch (e) {}
+      try {
+        const orb1 = document.querySelector('.bcp-aurora-orb-1');
+        if (orb1) {
+          this.activeTweens.push(
+            gsap.to(orb1, {
+              x: 40,
+              y: -30,
+              scale: 1.15,
+              duration: 8,
+              repeat: -1,
+              yoyo: true,
+              ease: 'sine.inOut'
+            })
+          );
+        }
+
+        const orb2 = document.querySelector('.bcp-aurora-orb-2');
+        if (orb2) {
+          this.activeTweens.push(
+            gsap.to(orb2, {
+              x: -50,
+              y: 40,
+              scale: 0.9,
+              duration: 10,
+              repeat: -1,
+              yoyo: true,
+              ease: 'sine.inOut'
+            })
+          );
+        }
+
+        const seal = document.querySelector('.bcp-wax-seal');
+        if (seal) {
+          this.activeTweens.push(
+            gsap.fromTo(seal,
+              { scale: 0.95 },
+              { scale: 1.05, duration: 1.6, repeat: -1, yoyo: true, ease: 'power1.inOut' }
+            )
+          );
+        }
+      } catch (e) {}
+    });
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.activeTweens.forEach(t => {
+      if (t && typeof t.kill === 'function') {
+        try { t.kill(); } catch {}
+      }
+    });
+    this.activeTweens = [];
+  }
 
   triggerGoldenCelebration(): void {
     try {
@@ -238,7 +268,16 @@ export class NewPublicInvitationBodaCreativaPremiumComponent implements OnInit, 
     if (contentLocations.length) return contentLocations;
     const venue = this.event?.venue;
     if (!venue?.name && !venue?.address && !venue?.mapUrl) return [];
-    return [{ type: 'principal', name: venue.name || 'Lugar de la Boda', address: venue.address || '', mapUrl: venue.mapUrl || '' }];
+    if (this._cachedLocationsVenue !== venue) {
+      this._cachedLocationsVenue = venue;
+      this._cachedLocationsFallback = [{
+        type: 'principal',
+        name: venue.name || 'Lugar de la Boda',
+        address: venue.address || '',
+        mapUrl: venue.mapUrl || ''
+      }];
+    }
+    return this._cachedLocationsFallback;
   }
 
   getItineraryIconKey(title?: string): string {

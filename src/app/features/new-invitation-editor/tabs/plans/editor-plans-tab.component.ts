@@ -154,16 +154,22 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     private sanitizer: DomSanitizer
   ) {}
 
+  private lastLoadedEntityKey = '';
+
   ngOnInit(): void {
+    const currentKey = `${this.invitation?.id || this.invitation?._id || this.invitation?.slug || ''}_${this.event?.id || this.event?._id || ''}`;
+    this.lastLoadedEntityKey = currentKey;
     this.loadCustomSubmissions();
     this.updateLivePreviewUrl();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['invitation'] || changes['event']) {
+    const currentKey = `${this.invitation?.id || this.invitation?._id || this.invitation?.slug || ''}_${this.event?.id || this.event?._id || ''}`;
+    if ((changes['invitation'] || changes['event']) && currentKey !== this.lastLoadedEntityKey) {
+      this.lastLoadedEntityKey = currentKey;
       this.loadCustomSubmissions();
-      this.updateLivePreviewUrl();
     }
+    this.updateLivePreviewUrl();
   }
 
   ngOnDestroy(): void {
