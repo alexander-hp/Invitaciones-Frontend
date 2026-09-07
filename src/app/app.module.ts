@@ -53,6 +53,7 @@ import { AccessClientViewComponent } from './features/new-event-access/views/acc
 import { AccessAlbumViewComponent } from './features/new-event-access/views/access-album-view.component';
 import { AccessPhotographerViewComponent } from './features/new-event-access/views/access-photographer-view.component';
 import { AccessAlbumGalleryViewComponent } from './features/new-event-access/views/access-album-gallery-view.component';
+import { AccessIntegrationApiViewComponent } from './features/new-event-access/views/access-integration-api-view.component';
 import { NewCheckInStaffComponent } from './features/new-check-in-staff/new-check-in-staff.component';
 import { NewExternalEmbedComponent } from './features/new-external-embed/new-external-embed.component';
 import { NewExternalPortalComponent } from './features/new-external-portal/new-external-portal.component';
@@ -177,6 +178,7 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     AccessAlbumViewComponent,
     AccessPhotographerViewComponent,
     AccessAlbumGalleryViewComponent,
+    AccessIntegrationApiViewComponent,
     NewCheckInStaffComponent,
     NewExternalEmbedComponent,
     NewExternalPortalComponent

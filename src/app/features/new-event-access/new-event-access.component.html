@@ -137,6 +137,13 @@
         (bulkUpdateAlbumEvent)="bulkUpdateAlbum($event)"
         (uploadBatchEvent)="uploadBatchAlbumFiles($event)">
       </app-access-guestops-view>
+
+      <!-- 9. Sección Integración API / Documentación Externa -->
+      <app-access-integration-api-view
+        *ngIf="hasPermission('integration_api')"
+        [session]="session"
+        [token]="token">
+      </app-access-integration-api-view>
     </ng-container>
   </div>
 </div>
