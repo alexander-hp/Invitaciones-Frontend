@@ -64,6 +64,12 @@ import { NewPublicInvitationBodaMobileFirstComponent } from './features/new-publ
 import { NewPublicInvitationBodaDesktopFirstComponent } from './features/new-public-invitation/templates/boda-desktop-first/new-public-invitation-boda-desktop-first.component';
 import { NewPublicInvitationBodaCardsLateralComponent } from './features/new-public-invitation/templates/boda-cards-lateral/new-public-invitation-boda-cards-lateral.component';
 import { NewPublicInvitationBodaCreativaPremiumComponent } from './features/new-public-invitation/templates/boda-creativa-premium/new-public-invitation-boda-creativa-premium.component';
+import { NewPublicInvitationTemplateBodaComponent } from './features/new-public-invitation/templates/template-boda/new-public-invitation-template-boda.component';
+import { NewPublicInvitationTemplateXvComponent } from './features/new-public-invitation/templates/template-xv/new-public-invitation-template-xv.component';
+import { NewPublicInvitationTemplateGraduacionComponent } from './features/new-public-invitation/templates/template-graduacion/new-public-invitation-template-graduacion.component';
+import { NewPublicInvitationTemplateCumpleanosComponent } from './features/new-public-invitation/templates/template-cumpleanos/new-public-invitation-template-cumpleanos.component';
+import { NewPublicInvitationTemplateBautizoComponent } from './features/new-public-invitation/templates/template-bautizo/new-public-invitation-template-bautizo.component';
+import { NewPublicInvitationTemplateOtroComponent } from './features/new-public-invitation/templates/template-otro/new-public-invitation-template-otro.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
@@ -153,6 +159,12 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     NewPublicInvitationBodaDesktopFirstComponent,
     NewPublicInvitationBodaCardsLateralComponent,
     NewPublicInvitationBodaCreativaPremiumComponent,
+    NewPublicInvitationTemplateBodaComponent,
+    NewPublicInvitationTemplateXvComponent,
+    NewPublicInvitationTemplateGraduacionComponent,
+    NewPublicInvitationTemplateCumpleanosComponent,
+    NewPublicInvitationTemplateBautizoComponent,
+    NewPublicInvitationTemplateOtroComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

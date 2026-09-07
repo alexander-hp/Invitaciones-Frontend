@@ -1,0 +1,1402 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Cinzel:wght@600;700&display=swap');
+
+:host {
+  display: block;
+  width: 100%;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #0f172a;
+  background-color: var(--secondary, #f8fafc);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── REPRODUCTOR DE AUDIO FLOTANTE ── */
+.totro-audio-floating {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+.totro-audio-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(4, 120, 87, 0.4);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.totro-audio-btn:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(4, 120, 87, 0.3);
+}
+
+.totro-audio-bars {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  align-items: flex-end;
+}
+
+.totro-audio-bars span {
+  width: 2px;
+  height: 100%;
+  background: #047857;
+  animation: totroBarPulse 0.8s ease infinite alternate;
+}
+
+.totro-audio-bars span:nth-child(2) { animation-delay: 0.2s; background: #e2b342; }
+.totro-audio-bars span:nth-child(3) { animation-delay: 0.4s; background: #10b981; }
+
+@keyframes totroBarPulse {
+  from { height: 2px; }
+  to { height: 12px; }
+}
+
+/* ── PANTALLA SOBRE VIP 3D DE VALIDACIÓN PRIVADA ── */
+.totro-vip-envelope-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #0f172a;
+  overflow-y: auto;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.totro-vip-envelope-screen.opening {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.totro-envelope-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  opacity: 0.35;
+}
+
+.totro-envelope-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.85) 0%, rgba(2, 6, 23, 0.98) 100%);
+}
+
+.totro-envelope-modal-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 480px;
+  margin: auto;
+}
+
+.totro-3d-envelope {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(4, 120, 87, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  padding: 42px 28px 32px;
+  text-align: center;
+}
+
+.totro-wax-seal {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #34d399 0%, #047857 70%, #064e3b 100%);
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.5);
+  transition: transform 0.25s ease;
+}
+
+.totro-wax-seal:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.totro-vip-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+  margin-bottom: 8px;
+}
+
+.totro-env-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: #64748b;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.totro-env-headline {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 6px 0 16px;
+}
+
+.totro-env-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(4, 120, 87, 0.12);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #047857;
+  margin-bottom: 18px;
+}
+
+.totro-env-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+  margin-bottom: 24px;
+}
+
+.totro-env-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── HERO OTRO / EVENTOS GENERALES ── */
+.totro-hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  overflow: hidden;
+  background: #0f172a;
+  color: #fff;
+}
+
+.totro-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+  transform: scale(1.02);
+  transition: transform 12s ease-out;
+}
+
+.totro-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.5) 0%, rgba(15, 23, 42, 0.85) 70%, rgba(15, 23, 42, 0.98) 100%);
+}
+
+.totro-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  margin: auto;
+}
+
+.totro-diamond-badge {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(4, 120, 87, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(4, 120, 87, 0.35);
+}
+
+.totro-diamond-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.totro-hero-subtitle {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: #e2b342;
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.totro-hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin: 0 0 16px;
+  color: #fff;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+.totro-ornament-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 auto 24px;
+  color: #047857;
+}
+
+.totro-ornament-divider .line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #047857, transparent);
+}
+
+.totro-hero-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 30px;
+}
+
+/* ── CONTADOR REGRESIVO ── */
+.totro-countdown-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.totro-countdown-lbl {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #e2b342;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.totro-countdown-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.totro-count-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 56px;
+}
+
+.totro-count-box .num {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.totro-count-box .txt {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+
+.totro-count-sep {
+  font-size: 22px;
+  color: #047857;
+  opacity: 0.8;
+}
+
+.totro-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── BOTONES GLOBALES ── */
+.totro-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.totro-btn-emerald {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.4);
+}
+
+.totro-btn-emerald:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.5);
+}
+
+.totro-btn-white {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.totro-btn-white:hover {
+  background: #f1f5f9;
+}
+
+.totro-btn-outline {
+  background: transparent;
+  border: 1px solid #047857;
+  color: #047857;
+}
+
+.totro-btn-outline:hover {
+  background: rgba(4, 120, 87, 0.1);
+}
+
+.totro-btn-text {
+  background: transparent;
+  color: #64748b;
+  padding: 6px 12px;
+}
+
+.totro-btn-block {
+  width: 100%;
+}
+
+.totro-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.totro-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+
+/* ── CONTENEDOR Y SECCIONES ── */
+.totro-section-wrap {
+  padding: 70px 20px;
+}
+
+.totro-container {
+  max-width: 860px;
+  margin: auto;
+}
+
+.totro-section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.totro-section-header .tag {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.totro-section-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 12px;
+}
+
+.totro-section-header .divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #047857;
+}
+
+.totro-section-header .divider span {
+  width: 40px;
+  height: 1px;
+  background: #047857;
+}
+
+/* ── PASE VIP CONFIRMADO CARD ── */
+.totro-vip-ticket-card {
+  background: #ffffff;
+  border: 1px solid rgba(4, 120, 87, 0.35);
+  border-radius: 16px;
+  padding: 36px 28px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  text-align: center;
+}
+
+.totro-vip-ticket-card .badge {
+  display: inline-block;
+  padding: 4px 14px;
+  background: rgba(4, 120, 87, 0.15);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #047857;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.totro-vip-ticket-card h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.totro-vip-ticket-card .lead {
+  color: #475569;
+  margin-bottom: 24px;
+}
+
+.totro-ticket-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.totro-ticket-metrics .metric .lbl {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #64748b;
+}
+
+.totro-ticket-metrics .metric .val {
+  font-size: 16px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.totro-ticket-metrics .metric .val.confirmed {
+  color: #059669;
+}
+
+.totro-ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── MENSAJE / BIENVENIDA CARD ── */
+.totro-editorial-card {
+  background: #ffffff;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  border-radius: 16px;
+  padding: 44px 32px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  text-align: center;
+}
+
+.totro-editorial-card .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+}
+
+.totro-editorial-card h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 8px 0 12px;
+  color: #0f172a;
+}
+
+.totro-editorial-card .ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #e2b342;
+  margin-bottom: 24px;
+}
+
+.totro-editorial-card .ornament span {
+  width: 50px;
+  height: 1px;
+  background: #e2b342;
+}
+
+.totro-editorial-card .story-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #334155;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  white-space: pre-line;
+}
+
+.totro-editorial-card .hosts-block {
+  border-top: 1px solid rgba(4, 120, 87, 0.2);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.totro-editorial-card .hosts-lbl {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #64748b;
+}
+
+.totro-editorial-card .hosts-names {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 6px;
+}
+
+.totro-sec-music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(4, 120, 87, 0.12);
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+/* ── UBICACIONES ── */
+.totro-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.totro-location-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(4, 120, 87, 0.25);
+  padding: 28px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.totro-location-card .loc-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #047857;
+}
+
+.totro-location-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 6px 0 10px;
+  color: #0f172a;
+}
+
+.totro-location-card .loc-addr {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #475569;
+  margin-bottom: 12px;
+}
+
+.totro-location-card .loc-notes {
+  font-size: 13px;
+  color: #64748b;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.totro-location-card .loc-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+/* ── ITINERARIO TIMELINE ── */
+.totro-timeline {
+  position: relative;
+  max-width: 580px;
+  margin: auto;
+  padding: 20px 0;
+}
+
+.totro-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+  width: 2px;
+  background: rgba(4, 120, 87, 0.35);
+}
+
+.totro-timeline-node {
+  position: relative;
+  display: flex;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.totro-timeline-node .node-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #047857;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #047857;
+  flex-shrink: 0;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.2);
+}
+
+.totro-timeline-node .node-content {
+  background: #ffffff;
+  border: 1px solid rgba(4, 120, 87, 0.25);
+  border-radius: 12px;
+  padding: 16px 20px;
+  flex: 1;
+}
+
+.totro-timeline-node .node-content .time {
+  font-size: 12px;
+  font-weight: 700;
+  color: #047857;
+  text-transform: uppercase;
+}
+
+.totro-timeline-node .node-content h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  margin: 4px 0 6px;
+  color: #0f172a;
+}
+
+.totro-timeline-node .node-content p {
+  font-size: 13px;
+  color: #475569;
+  margin: 0;
+}
+
+/* ── DRESS CODE CARD ── */
+.totro-dresscode-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  padding: 36px 24px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.totro-dresscode-card .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+}
+
+.totro-dresscode-card h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  margin: 6px 0 18px;
+  color: #0f172a;
+}
+
+.totro-dresscode-card .dresscode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: rgba(4, 120, 87, 0.12);
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #047857;
+  margin-bottom: 12px;
+}
+
+.totro-dresscode-card .notes {
+  font-size: 14px;
+  color: #475569;
+  max-width: 500px;
+  margin: auto;
+}
+
+/* ── FORMULARIO RSVP ── */
+.totro-rsvp-card {
+  background: #ffffff;
+  border: 1px solid rgba(4, 120, 87, 0.35);
+  border-radius: 16px;
+  padding: 40px 30px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.totro-rsvp-card .card-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.totro-rsvp-card .card-header .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+}
+
+.totro-rsvp-card .card-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 6px 0;
+  color: #0f172a;
+}
+
+.totro-rsvp-card .card-header .deadline {
+  font-size: 13px;
+  color: #047857;
+  font-weight: 600;
+}
+
+.totro-form .form-group {
+  margin-bottom: 18px;
+}
+
+.totro-form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.totro-input,
+.totro-textarea,
+.totro-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(4, 120, 87, 0.4);
+  background: #f8fafc;
+  font-family: inherit;
+  font-size: 14px;
+  color: #0f172a;
+  transition: border-color 0.2s;
+}
+
+.totro-input:focus,
+.totro-textarea:focus,
+.totro-select:focus {
+  outline: none;
+  border-color: #047857;
+  background: #ffffff;
+}
+
+.radio-pill-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.radio-pill.selected {
+  background: rgba(4, 120, 87, 0.15);
+  border-color: #047857;
+  font-weight: 600;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.totro-success-banner {
+  padding: 12px;
+  background: #e8f5e9;
+  color: #15803d;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.totro-error-banner {
+  padding: 12px;
+  background: #ffebee;
+  color: #b91c1c;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+/* ── MESA DE REGALOS ── */
+.totro-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.totro-gift-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(4, 120, 87, 0.25);
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.totro-gift-card .gift-logo-wrap {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.totro-gift-card .store-img {
+  max-height: 44px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
+.totro-gift-card .store-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.totro-gift-card h3 {
+  font-size: 15px;
+  margin: 6px 0;
+  color: #0f172a;
+}
+
+.totro-gift-card p {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 16px;
+}
+
+/* ── LLUVIA DE SOBRES ── */
+.totro-envelope-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(4, 120, 87, 0.35);
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.totro-envelope-card .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+}
+
+.totro-envelope-card h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  margin: 6px 0 14px;
+  color: #0f172a;
+}
+
+.totro-envelope-card .envelope-note {
+  font-size: 14px;
+  color: #475569;
+  max-width: 540px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.envelope-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.envelope-data-grid .data-item {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid rgba(4, 120, 87, 0.2);
+}
+
+.envelope-data-grid .data-item .lbl {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.envelope-data-grid .data-item .copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.copy-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #047857;
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.transfer-qr img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.transfer-qr span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* ── HOSPEDAJE ── */
+.totro-lodging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.totro-lodging-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(4, 120, 87, 0.25);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.totro-lodging-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.totro-lodging-card .desc {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 12px;
+}
+
+.totro-lodging-card .addr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.totro-lodging-card a {
+  margin-top: auto;
+}
+
+/* ── GALERÍA DE FOTOS ── */
+.totro-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.totro-gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.totro-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.totro-gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+.totro-gallery-item .overlay-hover {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.totro-gallery-item:hover .overlay-hover {
+  opacity: 1;
+}
+
+/* ── ZONA DE COMUNIDAD ── */
+.totro-submodule-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  padding: 32px 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+}
+
+.totro-submodule-card .sub-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.totro-submodule-card .sub-header .tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #047857;
+}
+
+.totro-submodule-card .sub-header h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 4px 0 8px;
+  color: #0f172a;
+}
+
+.totro-submodule-card .sub-header p {
+  font-size: 13px;
+  color: #475569;
+  margin: 0;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.upload-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.community-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.community-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.community-item .uploader {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+.dedications-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.dedication-bubble {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 16px;
+  border-left: 3px solid #047857;
+}
+
+.dedication-bubble .msg {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #334155;
+  margin: 0 0 8px;
+  font-style: italic;
+}
+
+.dedication-bubble .author {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.song-results-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid rgba(4, 120, 87, 0.3);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.song-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.song-result-item:hover {
+  background: #f8fafc;
+}
+
+.song-result-item img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.song-result-item .song-txt {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+/* ── FOOTER ── */
+.totro-footer {
+  background: #0f172a;
+  color: #fff;
+  padding: 50px 20px;
+  text-align: center;
+}
+
+.totro-footer-content {
+  max-width: 500px;
+  margin: auto;
+}
+
+.totro-footer .footer-gem {
+  color: #047857;
+  margin-bottom: 12px;
+}
+
+.totro-footer .headline {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: 0.5px;
+}
+
+.totro-footer .closing {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  color: #94a3b8;
+  margin: 0 0 20px;
+}
+
+.totro-footer .brand {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+}
+
+.totro-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(15, 23, 42, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: totroSpin 0.7s linear infinite;
+}
+
+@keyframes totroSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── REGLA CRÍTICA PARA IMPRESIÓN Y CAPTURA ── */
+@media print {
+  * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+
+  .no-print,
+  .totro-audio-floating,
+  .totro-vip-envelope-screen {
+    display: none !important;
+  }
+
+  .totro-hero-section {
+    min-height: auto !important;
+    padding: 30px 0 !important;
+    background: #fff !important;
+    color: #0f172a !important;
+  }
+
+  .totro-hero-title {
+    color: #0f172a !important;
+  }
+
+  .totro-hero-overlay,
+  .totro-hero-bg {
+    display: none !important;
+  }
+
+  .totro-section-wrap {
+    padding: 20px 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

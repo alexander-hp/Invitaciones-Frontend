@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
 
@@ -360,7 +361,12 @@ export class NewInvitationEditorComponent implements OnInit {
     { name: 'Malva & Perla Nácar', primary: '#4a3a4b', secondary: '#faf6fa', accent: '#c7a4b5' }
   ];
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) { }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private api: ApiService,
+    private confirmDialogService: ConfirmDialogService
+  ) { }
 
   ngOnInit(): void {
     this.load();
@@ -760,6 +766,38 @@ export class NewInvitationEditorComponent implements OnInit {
         }
         this.publishing = false;
       }
+    });
+  }
+
+  deleteInvitation(): void {
+    if (!this.invitation) return;
+    const invId = this.getInvitationId(this.invitation);
+    if (!invId) return;
+
+    this.confirmDialogService.confirm({
+      title: 'Eliminar Invitación',
+      message: `¿Estás seguro de que deseas eliminar permanentemente la invitación "${this.invitation.content?.headline || this.invitation.slug}"? Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.saving = true;
+      this.api.deleteInvitation(invId).subscribe({
+        next: () => {
+          this.saving = false;
+          const eventId = this.getEventId();
+          if (eventId) {
+            this.router.navigate(['/new/events', eventId]);
+          } else {
+            this.router.navigate(['/new/events']);
+          }
+        },
+        error: (err) => {
+          this.saving = false;
+          this.error = err?.error?.message || 'Error al eliminar la invitación';
+        }
+      });
     });
   }
 

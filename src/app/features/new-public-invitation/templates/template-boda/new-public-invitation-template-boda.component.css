@@ -1,0 +1,1388 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+:host {
+  display: block;
+  width: 100%;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #2c2421;
+  background-color: var(--secondary, #faf8f5);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── REPRODUCTOR DE AUDIO FLOTANTE ── */
+.tboda-audio-floating {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+.tboda-audio-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(197, 155, 108, 0.4);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(44, 36, 33, 0.1);
+  color: #2c2421;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.tboda-audio-btn:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(197, 155, 108, 0.25);
+}
+
+.tboda-audio-bars {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  align-items: flex-end;
+}
+
+.tboda-audio-bars span {
+  width: 2px;
+  height: 100%;
+  background: #c59b6c;
+  animation: tbodaBarPulse 0.8s ease infinite alternate;
+}
+
+.tboda-audio-bars span:nth-child(2) { animation-delay: 0.2s; }
+.tboda-audio-bars span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes tbodaBarPulse {
+  from { height: 2px; }
+  to { height: 12px; }
+}
+
+/* ── PANTALLA SOBRE VIP 3D DE VALIDACIÓN PRIVADA ── */
+.tboda-vip-envelope-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #2c2421;
+  overflow-y: auto;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.tboda-vip-envelope-screen.opening {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.tboda-envelope-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  opacity: 0.35;
+}
+
+.tboda-envelope-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(44, 36, 33, 0.85) 0%, rgba(20, 16, 15, 0.98) 100%);
+}
+
+.tboda-envelope-modal-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 480px;
+  margin: auto;
+}
+
+.tboda-3d-envelope {
+  position: relative;
+  background: #faf8f5;
+  border-radius: 16px;
+  border: 1px solid rgba(197, 155, 108, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  padding: 40px 28px 32px;
+  text-align: center;
+}
+
+.tboda-wax-seal {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e4c59e 0%, #c59b6c 70%, #9a6f3b 100%);
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(197, 155, 108, 0.5);
+  transition: transform 0.25s ease;
+}
+
+.tboda-wax-seal:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.tboda-vip-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+  margin-bottom: 8px;
+}
+
+.tboda-env-sub {
+  font-family: 'Great Vibes', cursive;
+  font-size: 26px;
+  color: #8c735d;
+  margin: 0;
+}
+
+.tboda-env-headline {
+  font-family: 'Cinzel', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c2421;
+  margin: 6px 0 16px;
+  letter-spacing: 1px;
+}
+
+.tboda-env-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(197, 155, 108, 0.12);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9a6f3b;
+  margin-bottom: 18px;
+}
+
+.tboda-env-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #635750;
+  margin-bottom: 24px;
+}
+
+.tboda-env-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── HERO NUPCIAL ── */
+.tboda-hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  overflow: hidden;
+  background: #2c2421;
+  color: #fff;
+}
+
+.tboda-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.55;
+  transform: scale(1.02);
+  transition: transform 12s ease-out;
+}
+
+.tboda-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(44, 36, 33, 0.4) 0%, rgba(44, 36, 33, 0.8) 70%, rgba(44, 36, 33, 0.95) 100%);
+}
+
+.tboda-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  margin: auto;
+}
+
+.tboda-monogram-ring {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(197, 155, 108, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+.tboda-monogram-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.tboda-hero-cursive {
+  display: block;
+  font-family: 'Great Vibes', cursive;
+  font-size: 38px;
+  color: #dfba87;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.tboda-hero-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0 0 16px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.tboda-ornament-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 auto 24px;
+  color: #dfba87;
+}
+
+.tboda-ornament-divider .line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #dfba87, transparent);
+}
+
+.tboda-hero-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin-bottom: 30px;
+}
+
+/* ── CONTADOR REGRESIVO ── */
+.tboda-countdown-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+.tboda-countdown-lbl {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #dfba87;
+  margin-bottom: 12px;
+}
+
+.tboda-countdown-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tboda-count-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 54px;
+}
+
+.tboda-count-box .num {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.tboda-count-box .txt {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+
+.tboda-count-sep {
+  font-size: 22px;
+  color: #dfba87;
+  opacity: 0.6;
+}
+
+.tboda-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── BOTONES GLOBALES ── */
+.tboda-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.tboda-btn-gold {
+  background: linear-gradient(135deg, #dfba87 0%, #c59b6c 100%);
+  color: #2c2421;
+  box-shadow: 0 4px 14px rgba(197, 155, 108, 0.35);
+}
+
+.tboda-btn-gold:hover {
+  background: linear-gradient(135deg, #ebd0a7 0%, #d4a976 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(197, 155, 108, 0.45);
+}
+
+.tboda-btn-white {
+  background: #ffffff;
+  color: #2c2421;
+}
+
+.tboda-btn-white:hover {
+  background: #f7f3ee;
+}
+
+.tboda-btn-outline {
+  background: transparent;
+  border: 1px solid #c59b6c;
+  color: #9a6f3b;
+}
+
+.tboda-btn-outline:hover {
+  background: rgba(197, 155, 108, 0.1);
+}
+
+.tboda-btn-text {
+  background: transparent;
+  color: #8c735d;
+  padding: 6px 12px;
+}
+
+.tboda-btn-block {
+  width: 100%;
+}
+
+.tboda-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tboda-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+
+/* ── CONTENEDOR Y SECCIONES ── */
+.tboda-section-wrap {
+  padding: 70px 20px;
+}
+
+.tboda-container {
+  max-width: 860px;
+  margin: auto;
+}
+
+.tboda-section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.tboda-section-header .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.tboda-section-header h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 30px;
+  color: #2c2421;
+  margin: 0 0 12px;
+}
+
+.tboda-section-header .divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #c59b6c;
+}
+
+.tboda-section-header .divider span {
+  width: 40px;
+  height: 1px;
+  background: #c59b6c;
+}
+
+/* ── PASE VIP CONFIRMADO CARD ── */
+.tboda-vip-ticket-card {
+  background: #ffffff;
+  border: 1px solid rgba(197, 155, 108, 0.35);
+  border-radius: 16px;
+  padding: 36px 28px;
+  box-shadow: 0 10px 30px rgba(44, 36, 33, 0.06);
+  text-align: center;
+}
+
+.tboda-vip-ticket-card .badge {
+  display: inline-block;
+  padding: 4px 14px;
+  background: rgba(197, 155, 108, 0.15);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #9a6f3b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.tboda-vip-ticket-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  margin: 0 0 6px;
+  color: #2c2421;
+}
+
+.tboda-vip-ticket-card .lead {
+  color: #635750;
+  margin-bottom: 24px;
+}
+
+.tboda-ticket-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+  padding: 16px;
+  background: #faf8f5;
+  border-radius: 12px;
+}
+
+.tboda-ticket-metrics .metric .lbl {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8c735d;
+}
+
+.tboda-ticket-metrics .metric .val {
+  font-size: 16px;
+  color: #2c2421;
+}
+
+.tboda-ticket-metrics .metric .val.confirmed {
+  color: #2e7d32;
+}
+
+.tboda-ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── NUESTRA HISTORIA CARD ── */
+.tboda-editorial-card {
+  background: #ffffff;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  border-radius: 16px;
+  padding: 44px 32px;
+  box-shadow: 0 8px 24px rgba(44, 36, 33, 0.05);
+  text-align: center;
+}
+
+.tboda-editorial-card .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+}
+
+.tboda-editorial-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  margin: 8px 0 12px;
+  color: #2c2421;
+}
+
+.tboda-editorial-card .ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #c59b6c;
+  margin-bottom: 24px;
+}
+
+.tboda-editorial-card .ornament span {
+  width: 50px;
+  height: 1px;
+  background: #c59b6c;
+}
+
+.tboda-editorial-card .story-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #4a3e38;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  white-space: pre-line;
+}
+
+.tboda-editorial-card .hosts-block {
+  border-top: 1px solid rgba(197, 155, 108, 0.2);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.tboda-editorial-card .hosts-lbl {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8c735d;
+}
+
+.tboda-editorial-card .hosts-names {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c2421;
+  margin-top: 6px;
+}
+
+.tboda-sec-music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(197, 155, 108, 0.12);
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  color: #9a6f3b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+/* ── UBICACIONES ── */
+.tboda-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.tboda-location-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(197, 155, 108, 0.25);
+  padding: 28px;
+  box-shadow: 0 6px 20px rgba(44, 36, 33, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.tboda-location-card .loc-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #c59b6c;
+}
+
+.tboda-location-card h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  margin: 6px 0 10px;
+  color: #2c2421;
+}
+
+.tboda-location-card .loc-addr {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #635750;
+  margin-bottom: 12px;
+}
+
+.tboda-location-card .loc-notes {
+  font-size: 13px;
+  color: #8c735d;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.tboda-location-card .loc-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+/* ── ITINERARIO TIMELINE ── */
+.tboda-timeline {
+  position: relative;
+  max-width: 580px;
+  margin: auto;
+  padding: 20px 0;
+}
+
+.tboda-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+  width: 2px;
+  background: rgba(197, 155, 108, 0.35);
+}
+
+.tboda-timeline-node {
+  position: relative;
+  display: flex;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.tboda-timeline-node .node-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #c59b6c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c59b6c;
+  flex-shrink: 0;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(197, 155, 108, 0.2);
+}
+
+.tboda-timeline-node .node-content {
+  background: #ffffff;
+  border: 1px solid rgba(197, 155, 108, 0.25);
+  border-radius: 12px;
+  padding: 16px 20px;
+  flex: 1;
+}
+
+.tboda-timeline-node .node-content .time {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c59b6c;
+  text-transform: uppercase;
+}
+
+.tboda-timeline-node .node-content h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  margin: 4px 0 6px;
+  color: #2c2421;
+}
+
+.tboda-timeline-node .node-content p {
+  font-size: 13px;
+  color: #635750;
+  margin: 0;
+}
+
+/* ── DRESS CODE CARD ── */
+.tboda-dresscode-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  padding: 36px 24px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(44, 36, 33, 0.05);
+}
+
+.tboda-dresscode-card .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+}
+
+.tboda-dresscode-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  margin: 6px 0 18px;
+  color: #2c2421;
+}
+
+.tboda-dresscode-card .dresscode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: rgba(197, 155, 108, 0.12);
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #9a6f3b;
+  margin-bottom: 12px;
+}
+
+.tboda-dresscode-card .notes {
+  font-size: 14px;
+  color: #635750;
+  max-width: 500px;
+  margin: auto;
+}
+
+/* ── FORMULARIO RSVP ── */
+.tboda-rsvp-card {
+  background: #ffffff;
+  border: 1px solid rgba(197, 155, 108, 0.35);
+  border-radius: 16px;
+  padding: 40px 30px;
+  box-shadow: 0 10px 30px rgba(44, 36, 33, 0.06);
+}
+
+.tboda-rsvp-card .card-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.tboda-rsvp-card .card-header .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+}
+
+.tboda-rsvp-card .card-header h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  margin: 6px 0;
+  color: #2c2421;
+}
+
+.tboda-rsvp-card .card-header .deadline {
+  font-size: 13px;
+  color: #b76e79;
+  font-weight: 600;
+}
+
+.tboda-form .form-group {
+  margin-bottom: 18px;
+}
+
+.tboda-form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c2421;
+  margin-bottom: 6px;
+}
+
+.tboda-input,
+.tboda-textarea,
+.tboda-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(197, 155, 108, 0.4);
+  background: #faf8f5;
+  font-family: inherit;
+  font-size: 14px;
+  color: #2c2421;
+  transition: border-color 0.2s;
+}
+
+.tboda-input:focus,
+.tboda-textarea:focus,
+.tboda-select:focus {
+  outline: none;
+  border-color: #c59b6c;
+  background: #ffffff;
+}
+
+.radio-pill-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  border-radius: 8px;
+  background: #faf8f5;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.radio-pill.selected {
+  background: rgba(197, 155, 108, 0.15);
+  border-color: #c59b6c;
+  font-weight: 600;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.tboda-success-banner {
+  padding: 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.tboda-error-banner {
+  padding: 12px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+/* ── MESA DE REGALOS ── */
+.tboda-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.tboda-gift-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(197, 155, 108, 0.25);
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(44, 36, 33, 0.04);
+}
+
+.tboda-gift-card .gift-logo-wrap {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.tboda-gift-card .store-img {
+  max-height: 44px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
+.tboda-gift-card .store-text {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c2421;
+}
+
+.tboda-gift-card h3 {
+  font-size: 15px;
+  margin: 6px 0;
+  color: #2c2421;
+}
+
+.tboda-gift-card p {
+  font-size: 13px;
+  color: #635750;
+  margin-bottom: 16px;
+}
+
+/* ── LLUVIA DE SOBRES ── */
+.tboda-envelope-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(197, 155, 108, 0.35);
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(44, 36, 33, 0.05);
+}
+
+.tboda-envelope-card .tag {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+}
+
+.tboda-envelope-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  margin: 6px 0 14px;
+  color: #2c2421;
+}
+
+.tboda-envelope-card .envelope-note {
+  font-size: 14px;
+  color: #635750;
+  max-width: 540px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.envelope-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.envelope-data-grid .data-item {
+  background: #faf8f5;
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid rgba(197, 155, 108, 0.2);
+}
+
+.envelope-data-grid .data-item .lbl {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8c735d;
+  margin-bottom: 4px;
+}
+
+.envelope-data-grid .data-item .copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.copy-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #c59b6c;
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.transfer-qr img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.transfer-qr span {
+  display: block;
+  font-size: 12px;
+  color: #8c735d;
+  margin-top: 6px;
+}
+
+/* ── HOSPEDAJE ── */
+.tboda-lodging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.tboda-lodging-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(197, 155, 108, 0.25);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tboda-lodging-card h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  margin: 0 0 8px;
+  color: #2c2421;
+}
+
+.tboda-lodging-card .desc {
+  font-size: 13px;
+  color: #635750;
+  margin-bottom: 12px;
+}
+
+.tboda-lodging-card .addr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #8c735d;
+  margin-bottom: 16px;
+}
+
+.tboda-lodging-card a {
+  margin-top: auto;
+}
+
+/* ── GALERÍA DE FOTOS ── */
+.tboda-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.tboda-gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(44, 36, 33, 0.08);
+}
+
+.tboda-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.tboda-gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+.tboda-gallery-item .overlay-hover {
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 36, 33, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tboda-gallery-item:hover .overlay-hover {
+  opacity: 1;
+}
+
+/* ── ZONA DE COMUNIDAD ── */
+.tboda-submodule-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  padding: 32px 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 6px 20px rgba(44, 36, 33, 0.04);
+}
+
+.tboda-submodule-card .sub-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tboda-submodule-card .sub-header .tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c59b6c;
+}
+
+.tboda-submodule-card .sub-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  margin: 4px 0 8px;
+  color: #2c2421;
+}
+
+.tboda-submodule-card .sub-header p {
+  font-size: 13px;
+  color: #635750;
+  margin: 0;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.upload-zone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.community-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.community-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.community-item .uploader {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+.dedications-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.dedication-bubble {
+  background: #faf8f5;
+  border-radius: 10px;
+  padding: 16px;
+  border-left: 3px solid #c59b6c;
+}
+
+.dedication-bubble .msg {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4a3e38;
+  margin: 0 0 8px;
+  font-style: italic;
+}
+
+.dedication-bubble .author {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8c735d;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.song-results-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.song-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.song-result-item:hover {
+  background: #faf8f5;
+}
+
+.song-result-item img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.song-result-item .song-txt {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+/* ── FOOTER ── */
+.tboda-footer {
+  background: #2c2421;
+  color: #fff;
+  padding: 50px 20px;
+  text-align: center;
+}
+
+.tboda-footer-content {
+  max-width: 500px;
+  margin: auto;
+}
+
+.tboda-footer .footer-ring {
+  color: #dfba87;
+  margin-bottom: 12px;
+}
+
+.tboda-footer .headline {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: 1px;
+}
+
+.tboda-footer .closing {
+  font-family: 'Great Vibes', cursive;
+  font-size: 24px;
+  color: #dfba87;
+  margin: 0 0 20px;
+}
+
+.tboda-footer .brand {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+}
+
+.tboda-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: tbodaSpin 0.7s linear infinite;
+}
+
+@keyframes tbodaSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── REGLA CRÍTICA PARA IMPRESIÓN Y CAPTURA ── */
+@media print {
+  * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+
+  .no-print,
+  .tboda-audio-floating,
+  .tboda-vip-envelope-screen {
+    display: none !important;
+  }
+
+  .tboda-hero-section {
+    min-height: auto !important;
+    padding: 30px 0 !important;
+    background: #fff !important;
+    color: #2c2421 !important;
+  }
+
+  .tboda-hero-title {
+    color: #2c2421 !important;
+  }
+
+  .tboda-hero-overlay,
+  .tboda-hero-bg {
+    display: none !important;
+  }
+
+  .tboda-section-wrap {
+    padding: 20px 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

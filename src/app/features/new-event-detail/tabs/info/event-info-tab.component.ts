@@ -279,6 +279,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
           this.invitations = this.invitations.filter(i => (i._id || i.id) !== invId);
           this.saving = false;
           this.showSuccess('Invitación eliminada correctamente');
+          this.eventUpdated.emit();
         },
         error: err => {
           this.showError(err?.error?.message || 'Error al borrar invitación');

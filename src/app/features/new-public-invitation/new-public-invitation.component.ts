@@ -181,105 +181,205 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
   }
 
+  get isOwnerOrInEditor(): boolean {
+    const hasToken = Boolean(localStorage.getItem('invitaciones_token'));
+    const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+    return hasToken || isIframe;
+  }
+
   load(): void {
     const slug = this.route.snapshot.paramMap.get('slug') || '';
     this.loading = true;
     this.error = '';
     this.api.getPublicInvitation(slug).subscribe({
       next: ({ invitation }) => {
-        this.invitation = invitation;
-        if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
-        this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
-
-        console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
-        console.log('🎵 [PublicInvitation] content:', invitation?.content);
-        console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
-        console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
-
-        // If invitation content specifies a base template and has no customHtml, ensure detectedSourceTemplate is cleared
-        const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
-        if (isCleanRequested || (invitation.content?.template && invitation.content.template !== 'custom-html' && !invitation.content?.customHtml)) {
-          this.detectedSourceTemplate = undefined;
-          this.pendingEditedTexts = undefined;
-        } else {
-          // Auto-detect if customHtml is an edited snapshot of a standard Angular template
-          const customHtml = invitation.content?.customHtml || localStorage.getItem(`inv_custom_html_${slug}`) || '';
-          const savedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
-
-          if (customHtml) {
-            const detected = this.detectSourceTemplateFromHtml(customHtml);
-            if (detected) {
-              console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
-              this.detectedSourceTemplate = detected.templateKey;
-              if (this.invitation.content) {
-                this.invitation.content.template = detected.templateKey;
-                this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
-              }
-              this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
-            } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
-              this.detectedSourceTemplate = savedSourceTpl;
-              if (this.invitation.content) {
-                this.invitation.content.template = savedSourceTpl;
-              }
-            }
-          } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
-            this.detectedSourceTemplate = savedSourceTpl;
-            if (this.invitation.content) {
-              this.invitation.content.template = savedSourceTpl;
-            }
-          }
-        }
-
-        this.updateCustomHtmlSafeSrcdoc();
-        this.loadGuestToken();
-        this.loadPublicAlbum();
-        this.loadDedications();
-        this.startCountdown();
-        this.initAudio();
-        this.setupSectionObserver();
-        this.loadEditedTexts(slug);
-        this.loading = false;
+        this.applyInvitation(invitation, slug);
       },
       error: (error) => {
-        // Fallback: Verificar si existe una plantilla personalizada aprobada para este slug
-        const localCustomHtml = localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
-        const localCustomCss = localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
-        const localSourceTpl = localStorage.getItem(`inv_source_tpl_${slug}`);
+        const hasToken = Boolean(localStorage.getItem('invitaciones_token'));
+        const isIframe = typeof window !== 'undefined' && window.self !== window.top;
 
-        if (localCustomHtml) {
-          const detected = this.detectSourceTemplateFromHtml(localCustomHtml);
-          const tplKey = detected ? detected.templateKey : (localSourceTpl || 'custom-html');
-
-          this.invitation = {
-            id: 'custom-' + slug,
-            slug: slug,
-            status: 'published',
-            accessMode: 'open',
-            content: {
-              template: tplKey,
-              customHtml: localCustomHtml,
-              customCss: localCustomCss,
-              customPageApproved: true,
-              headline: 'Invitación Especial',
-              editedTexts: detected ? detected.editedTexts : undefined
+        // Si el usuario es el anfitrión logueado, cargar su invitación aunque esté en borrador
+        if (hasToken) {
+          this.api.listInvitations().subscribe({
+            next: ({ invitations }) => {
+              const found = (invitations || []).find(i => i.slug === slug || (i as any)._id === slug || i.id === slug);
+              if (found) {
+                this.applyInvitation(found, slug);
+                return;
+              }
+              this.handleFallbackOrError(slug, error, true);
+            },
+            error: () => {
+              this.handleFallbackOrError(slug, error, true);
             }
-          } as any;
-
-          if (detected) {
-            this.detectedSourceTemplate = detected.templateKey;
-            this.pendingEditedTexts = detected.editedTexts;
-          }
-
-          this.updateCustomHtmlSafeSrcdoc();
-          this.loadEditedTexts(slug);
-          this.loading = false;
+          });
           return;
         }
 
-        this.error = error.error?.message || 'Invitación no encontrada o no publicada';
+        // Si está dentro del iframe del editor
+        if (isIframe) {
+          this.handleFallbackOrError(slug, error, true);
+          return;
+        }
+
+        // Para invitados externos (sin sesión): respetar la seguridad del backend
+        this.error = error?.error?.message || 'Invitación no encontrada o no publicada';
         this.loading = false;
       }
     });
+  }
+
+  private applyInvitation(invitation: InvitationModel, slug: string): void {
+    this.invitation = invitation;
+    if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
+    this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
+
+    console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
+    console.log('🎵 [PublicInvitation] content:', invitation?.content);
+    console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
+    console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
+
+    // If invitation content specifies a base template and has no customHtml, ensure detectedSourceTemplate is cleared
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    if (isCleanRequested || (invitation.content?.template && invitation.content.template !== 'custom-html' && !invitation.content?.customHtml)) {
+      this.detectedSourceTemplate = undefined;
+      this.pendingEditedTexts = undefined;
+    } else {
+      // Auto-detect if customHtml is an edited snapshot of a standard Angular template
+      const customHtml = invitation.content?.customHtml || localStorage.getItem(`inv_custom_html_${slug}`) || '';
+      const savedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
+
+      if (customHtml) {
+        const detected = this.detectSourceTemplateFromHtml(customHtml);
+        if (detected) {
+          console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
+          this.detectedSourceTemplate = detected.templateKey;
+          if (this.invitation.content) {
+            this.invitation.content.template = detected.templateKey;
+            this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
+          }
+          this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
+        } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
+          this.detectedSourceTemplate = savedSourceTpl;
+          if (this.invitation.content) {
+            this.invitation.content.template = savedSourceTpl;
+          }
+        }
+      } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
+        this.detectedSourceTemplate = savedSourceTpl;
+        if (this.invitation.content) {
+          this.invitation.content.template = savedSourceTpl;
+        }
+      }
+    }
+
+    this.updateCustomHtmlSafeSrcdoc();
+    this.loadGuestToken();
+    this.loadPublicAlbum();
+    this.loadDedications();
+    this.startCountdown();
+    this.initAudio();
+    this.setupSectionObserver();
+    this.loadEditedTexts(slug);
+    this.loading = false;
+  }
+
+  private handleFallbackOrError(slug: string, originalError: any, isPreview: boolean): void {
+    // Fallback 1: LocalStorage custom HTML
+    const localCustomHtml = localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
+    const localCustomCss = localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
+    const localSourceTpl = localStorage.getItem(`inv_source_tpl_${slug}`);
+
+    if (localCustomHtml) {
+      const detected = this.detectSourceTemplateFromHtml(localCustomHtml);
+      const tplKey = detected ? detected.templateKey : (localSourceTpl || 'custom-html');
+
+      const mockInv: any = {
+        id: 'custom-' + slug,
+        slug: slug,
+        status: 'published',
+        accessMode: 'open',
+        content: {
+          template: tplKey,
+          customHtml: localCustomHtml,
+          customCss: localCustomCss,
+          customPageApproved: true,
+          headline: 'Invitación Especial',
+          editedTexts: detected ? detected.editedTexts : undefined
+        }
+      };
+
+      if (detected) {
+        this.detectedSourceTemplate = detected.templateKey;
+        this.pendingEditedTexts = detected.editedTexts;
+      }
+
+      this.applyInvitation(mockInv, slug);
+      return;
+    }
+
+    // Fallback 2: If in preview mode or previewing a template, generate a demo preview so the user can see it
+    if (isPreview) {
+      const tplParam = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template') || 'envelope-cards';
+      const demoDate = new Date();
+      demoDate.setDate(demoDate.getDate() + 30);
+      demoDate.setHours(18, 0, 0, 0);
+
+      const demoInv: any = {
+        id: 'preview-' + slug,
+        slug: slug,
+        status: 'published',
+        accessMode: 'open',
+        content: {
+          template: tplParam,
+          headline: '¡Nuestra Boda!',
+          subheadline: 'Acompáñanos a celebrar este día tan especial',
+          welcomeMessage: 'Los momentos más felices de la vida se comparten con las personas que más queremos.',
+          dressCode: 'Formal / Rigurosa Etiqueta',
+          palette: { primary: '#c09c78', secondary: '#2e2621', background: '#faf7f2', text: '#2e2621' },
+          locations: [
+            {
+              title: 'Ceremonia Religiosa',
+              name: 'Parroquia Nuestra Señora de Guadalupe',
+              address: 'Av. Reforma 123, Centro Histórico',
+              time: '17:00 HRS',
+              mapUrl: 'https://maps.google.com'
+            },
+            {
+              title: 'Recepción & Banquete',
+              name: 'Hacienda San José',
+              address: 'Carretera Nacional Km 14',
+              time: '19:00 HRS',
+              mapUrl: 'https://maps.google.com'
+            }
+          ],
+          itinerary: [
+            { time: '17:00', title: 'Ceremonia Religiosa', description: 'Misa de bendición nupcial', icon: 'church' },
+            { time: '18:30', title: 'Cóctel de Bienvenida', description: 'Bebidas y bocadillos en el jardín', icon: 'cocktail' },
+            { time: '20:00', title: 'Cena & Brindis', description: 'Banquete de gala', icon: 'dinner' },
+            { time: '21:30', title: 'Apertura de Pista', description: '¡A bailar toda la noche!', icon: 'party' }
+          ],
+          giftRegistries: [
+            { store: 'Liverpool', url: 'https://www.liverpool.com.mx', code: 'EVENTO-98234' },
+            { store: 'Amazon', url: 'https://www.amazon.com.mx', code: 'BODA-AMAZON-2026' }
+          ]
+        },
+        event: {
+          id: 'demo-event',
+          title: 'Nuestra Boda',
+          eventType: 'boda',
+          date: demoDate.toISOString(),
+          location: 'Hacienda San José'
+        }
+      };
+
+      this.applyInvitation(demoInv, slug);
+      return;
+    }
+
+    this.error = originalError?.error?.message || 'Invitación no encontrada o no publicada';
+    this.loading = false;
   }
 
   updateCustomHtmlSafeSrcdoc(): void {
@@ -684,6 +784,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   submit(): void {
     if (!this.invitation) return;
+    if (this.invitation.id?.startsWith('preview-')) {
+      this.showToast('Esta es una vista previa demo. Las confirmaciones de asistencia están deshabilitadas.');
+      return;
+    }
     if (this.requiresGuestValidation && !this.verifiedGuest) {
       this.error = 'Valida tu correo o teléfono antes de enviar tu RSVP.';
       return;
@@ -976,7 +1080,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   get currentTemplate(): string {
     const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
-    if (queryTpl) return queryTpl;
+    if (queryTpl && (this.isOwnerOrInEditor || this.invitation?.id?.startsWith('preview-'))) {
+      return queryTpl;
+    }
 
     const invContentTpl = (this.invitation?.content as any)?.template;
     if (invContentTpl && invContentTpl !== 'custom-html') return invContentTpl;
@@ -1001,6 +1107,16 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
     const invRootTpl = (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : null;
     if (invRootTpl && invRootTpl !== 'custom-html') return invRootTpl;
+
+    // Resolución por tipo de evento
+    const rawEventType = this.event?.type || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel).type : '') || (this.invitation as any)?.eventType || '';
+    const eventType = String(rawEventType).toLowerCase().trim();
+    if (eventType === 'boda') return 'template-boda';
+    if (eventType === 'xv') return 'template-xv';
+    if (eventType === 'graduacion') return 'template-graduacion';
+    if (eventType === 'cumpleanos' || eventType === 'cumpleaños') return 'template-cumpleanos';
+    if (eventType === 'bautizo') return 'template-bautizo';
+    if (eventType === 'otro') return 'template-otro';
 
     return 'envelope-cards';
   }
@@ -1060,7 +1176,20 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   isEnvelopeCardsTemplate(): boolean {
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (!this.isClassicVerticalTemplate() && !this.isTemplate3() && !this.isBodaMobileFirstTemplate() && !this.isBodaDesktopFirstTemplate() && !this.isBodaCardsLateralTemplate() && !this.isBodaCreativaPremiumTemplate());
+    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (
+      !this.isClassicVerticalTemplate() &&
+      !this.isTemplate3() &&
+      !this.isBodaMobileFirstTemplate() &&
+      !this.isBodaDesktopFirstTemplate() &&
+      !this.isBodaCardsLateralTemplate() &&
+      !this.isBodaCreativaPremiumTemplate() &&
+      !this.isTemplateBoda() &&
+      !this.isTemplateXv() &&
+      !this.isTemplateGraduacion() &&
+      !this.isTemplateCumpleanos() &&
+      !this.isTemplateBautizo() &&
+      !this.isTemplateOtro()
+    );
   }
 
   isClassicVerticalTemplate(): boolean {
@@ -1097,6 +1226,42 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-creativa-premium' || t === 'creativa-premium' || t === 'boda-premium' || t === 'wedding-creativa-premium';
+  }
+
+  isTemplateBoda(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'template-boda' || t === 'boda';
+  }
+
+  isTemplateXv(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'template-xv' || t === 'xv' || t === 'xv-anos';
+  }
+
+  isTemplateGraduacion(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'template-graduacion' || t === 'graduacion';
+  }
+
+  isTemplateCumpleanos(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'template-cumpleanos' || t === 'cumpleanos' || t === 'cumpleaños';
+  }
+
+  isTemplateBautizo(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'template-bautizo' || t === 'bautizo';
+  }
+
+  isTemplateOtro(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'template-otro' || t === 'otro';
   }
 
   get requiresGuestValidation(): boolean {

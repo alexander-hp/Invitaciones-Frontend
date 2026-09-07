@@ -97,6 +97,54 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       description: 'Atmósfera cinematográfica nocturna de alta costura con auroras doradas en movimiento, tarjetas esmeriladas en arco de catedral, tipografía de oro líquido y animaciones GSAP de máximo impacto.',
       iconKey: 'modern',
       features: ['Estética Royal Cinematic', 'Arcos de catedral esmerilados', 'Microinteracciones GSAP', 'Efectos de oro líquido']
+    },
+    {
+      id: 'template-boda',
+      name: 'Temática Boda: Royal Champagne & Marfil Imperial',
+      badge: 'Exclusiva Boda',
+      description: 'Paleta solemne marfil, champagne y oro real. Monograma de alianzas, tipografía Cinzel y Great Vibes, y sobre 3D con sello de matrimonio.',
+      iconKey: 'classic',
+      features: ['Sello nupcial 3D', 'Estética Marfil & Oro', 'Módulos completos de boda', 'Elegancia intemporal']
+    },
+    {
+      id: 'template-xv',
+      name: 'Temática XV Años: Gala Rosé Gold & Diamond Dust',
+      badge: 'Exclusiva XV',
+      description: 'Atmósfera de cuento de hadas con tonos Rosé Gold, destellos brillantes, tiara real en el sello de bienvenida y vals de honor en el itinerario.',
+      iconKey: 'envelope',
+      features: ['Tiara y sello de 15 Años', 'Paleta Rosé Gold & Rosa Pastel', 'Vals de honor y brindis', 'Confeti festivo brillante']
+    },
+    {
+      id: 'template-graduacion',
+      name: 'Temática Graduación: Honor Académico & Oxford Blue',
+      badge: 'Exclusiva Graduación',
+      description: 'Solemnidad académica con azul Oxford, oro universitario y marfil. Sello de birrete con laureles dorados y protocolo de entrega de diplomas.',
+      iconKey: 'classic',
+      features: ['Birrete con laureles en 3D', 'Paleta Azul Oxford & Oro', 'Protocolo de diplomas y gala', 'Dedicaciones académicas']
+    },
+    {
+      id: 'template-cumpleanos',
+      name: 'Temática Cumpleaños: Celebration Midnight & Festive Glow',
+      badge: 'Exclusiva Cumpleaños',
+      description: 'Noche festiva vibrante con neón ámbar, magenta y púrpura. Sello de pastel de cumpleaños, globos flotantes y confeti multicolor.',
+      iconKey: 'modern',
+      features: ['Pastel de cumpleaños en 3D', 'Paleta Festive Glow & Neón', 'Globos flotantes y confeti', 'Wishlist y peticiones DJ']
+    },
+    {
+      id: 'template-bautizo',
+      name: 'Temática Bautizo: Celestial Serenity & Angelic Grace',
+      badge: 'Exclusiva Bautizo',
+      description: 'Luz celestial con blanco puro, celeste etéreo y oro suave. Sello de paloma de la paz y cruz sacra, espacio especial para padrinos y bendiciones.',
+      iconKey: 'envelope',
+      features: ['Sello sacro con cruz y paloma', 'Paleta Blanco Puro & Celeste', 'Bendición de papás y padrinos', 'Música sacra y ambientación']
+    },
+    {
+      id: 'template-otro',
+      name: 'Temática General / Otro: Modern Vanguard & Emerald Slate',
+      badge: 'Exclusiva Eventos',
+      description: 'Diseño vanguardista de alta gama en pizarra grafito, verde esmeralda y oro nórdico. Adaptable a cócteles, aniversarios, galas y eventos corporativos.',
+      iconKey: 'modern',
+      features: ['Sello diamante geométrico', 'Paleta Grafito Slate & Esmeralda', 'Versatilidad corporativa y social', 'Tipografía contemporánea']
     }
   ];
 
