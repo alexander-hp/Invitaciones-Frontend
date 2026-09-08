@@ -15,7 +15,7 @@ export class EditorAssetsTabComponent {
     { key: 'locations', label: '📍 Ubicaciones & Cómo Llegar' },
     { key: 'itinerary', label: '📅 Itinerario del Evento' },
     { key: 'dressCode', label: '👔 Código de Vestimenta (Dress Code)' },
-    { key: 'rsvp', label: '💌 Confirmación de Asistencia (RSVP)' },
+    { key: 'rsvp', label: '💌 Respuesta a tu Evento / Confirmación' },
     { key: 'giftRegistry', label: '🎁 Mesa de Regalos' },
     { key: 'digitalEnvelope', label: '✉️ Sobre Digital & Transferencias' },
     { key: 'lodging', label: '🏨 Hospedaje Recomendado' },

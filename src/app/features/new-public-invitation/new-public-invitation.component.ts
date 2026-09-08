@@ -241,38 +241,46 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     //console.log('🎵 [PublicInvitation] musicUrl:', invitation?.content?.musicUrl);
     //console.log('🎵 [PublicInvitation] sectionMusic:', invitation?.content?.sectionMusic);
 
-    // If invitation content specifies a base template and has no customHtml, ensure detectedSourceTemplate is cleared
+    // Custom HTML source resolution: invitation content > localStorage / submissions
     const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
-    if (isCleanRequested || (invitation.content?.template && invitation.content.template !== 'custom-html' && !invitation.content?.customHtml)) {
-      this.detectedSourceTemplate = undefined;
-      this.pendingEditedTexts = undefined;
-    } else {
-      // Auto-detect if customHtml is an edited snapshot of a standard Angular template
-      const customHtml = invitation.content?.customHtml || localStorage.getItem(`inv_custom_html_${slug}`) || '';
-      const savedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
+    const resolvedCustomHtml = invitation.content?.customHtml || this.customHtmlContent;
+    const resolvedSourceTpl = invitation.content?.sourceTemplateKey || localStorage.getItem(`inv_source_tpl_${slug}`);
 
-      if (customHtml) {
-        const detected = this.detectSourceTemplateFromHtml(customHtml);
-        if (detected) {
-          console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
-          this.detectedSourceTemplate = detected.templateKey;
-          if (this.invitation.content) {
-            this.invitation.content.template = detected.templateKey;
-            this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
-          }
-          this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
-        } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
-          this.detectedSourceTemplate = savedSourceTpl;
-          if (this.invitation.content) {
-            this.invitation.content.template = savedSourceTpl;
-          }
-        }
-      } else if (savedSourceTpl && savedSourceTpl !== 'custom-html') {
-        this.detectedSourceTemplate = savedSourceTpl;
+    if (resolvedCustomHtml && !isCleanRequested) {
+      const detected = this.detectSourceTemplateFromHtml(resolvedCustomHtml);
+      if (detected) {
+        console.log('test edit: [PublicInv] Auto-detected native template:', detected.templateKey, 'with texts:', Object.keys(detected.editedTexts).length);
+        this.detectedSourceTemplate = detected.templateKey;
         if (this.invitation.content) {
-          this.invitation.content.template = savedSourceTpl;
+          this.invitation.content.template = detected.templateKey;
+          this.invitation.content.editedTexts = { ...(this.invitation.content.editedTexts || {}), ...detected.editedTexts };
+        }
+        this.pendingEditedTexts = { ...detected.editedTexts, ...(this.pendingEditedTexts || {}) };
+      } else if (resolvedSourceTpl && resolvedSourceTpl !== 'custom-html') {
+        this.detectedSourceTemplate = resolvedSourceTpl;
+        if (this.invitation.content) {
+          this.invitation.content.template = resolvedSourceTpl;
+        }
+      } else {
+        // True custom HTML/CSS page (e.g. uploaded custom template)
+        this.detectedSourceTemplate = undefined;
+        if (this.invitation.content) {
+          this.invitation.content.template = 'custom-html';
+          this.invitation.content.customHtml = resolvedCustomHtml;
+          if (this.customCssContent) {
+            this.invitation.content.customCss = this.customCssContent;
+          }
+          this.invitation.content.customPageApproved = true;
         }
       }
+    } else if (resolvedSourceTpl && resolvedSourceTpl !== 'custom-html') {
+      this.detectedSourceTemplate = resolvedSourceTpl;
+      if (this.invitation.content) {
+        this.invitation.content.template = resolvedSourceTpl;
+      }
+    } else if (isCleanRequested) {
+      this.detectedSourceTemplate = undefined;
+      this.pendingEditedTexts = undefined;
     }
 
     this.updateCustomHtmlSafeSrcdoc();
@@ -287,9 +295,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   private handleFallbackOrError(slug: string, originalError: any, isPreview: boolean): void {
-    // Fallback 1: LocalStorage custom HTML
-    const localCustomHtml = localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
-    const localCustomCss = localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
+    // Fallback 1: LocalStorage / Submissions custom HTML
+    const localCustomHtml = this.customHtmlContent || localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
+    const localCustomCss = this.customCssContent || localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
     const localSourceTpl = localStorage.getItem(`inv_source_tpl_${slug}`);
 
     if (localCustomHtml) {
@@ -391,13 +399,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const html = this.customHtmlContent;
     const css = this.customCssContent;
 
-    // Clean cloned webpack/zone scripts and unsafe data URIs
+    // Clean only bundled angular/webpack runtime scripts, preserve custom template scripts
     const cleanHtml = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<script\b[^>]*src=["'][^"']*(polyfills|runtime|vendor)[^"']*["'][^>]*>\s*<\/script>/gi, '')
       .replace(/unsafe:data:image\/svg\+xml/gi, 'data:image/svg+xml');
 
     const runtimeScript = generateInteractiveRuntimeScript({
-      slug: this.invitation?.slug || '',
+      slug: this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '',
       musicUrl: this.invitation?.content?.musicUrl || this.getAudioUrlForSection('hero'),
       eventDate: this.event?.date ? new Date(this.event.date).toISOString() : undefined,
       headline: this.invitation?.content?.headline,
@@ -405,23 +413,50 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       palette: this.invitation?.content?.palette
     });
 
-    const combined = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            html, body { margin: 0; padding: 0; min-height: 100%; }
-            ${css}
-          </style>
-        </head>
-        <body>
-          ${cleanHtml}
-          ${runtimeScript}
-        </body>
-      </html>
-    `;
+    let combined = '';
+    const hasHtmlTag = /<html\b/i.test(cleanHtml);
+    const hasHeadTag = /<head\b/i.test(cleanHtml);
+    const hasBodyTag = /<body\b/i.test(cleanHtml);
+
+    if (hasHtmlTag || (hasHeadTag && hasBodyTag)) {
+      combined = cleanHtml;
+      // Inject CSS
+      if (css && css.trim()) {
+        const styleTag = `<style>\nhtml, body { margin: 0; padding: 0; min-height: 100%; }\n${css}\n</style>`;
+        if (/<head\b[^>]*>/i.test(combined)) {
+          combined = combined.replace(/<head\b[^>]*>/i, `$&${styleTag}`);
+        } else if (/<\/head>/i.test(combined)) {
+          combined = combined.replace(/<\/head>/i, `${styleTag}</head>`);
+        } else {
+          combined = styleTag + combined;
+        }
+      }
+      // Inject runtime script
+      if (/<\/body>/i.test(combined)) {
+        combined = combined.replace(/<\/body>/i, `${runtimeScript}</body>`);
+      } else {
+        combined = combined + runtimeScript;
+      }
+    } else {
+      combined = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              html, body { margin: 0; padding: 0; min-height: 100%; }
+              ${css || ''}
+            </style>
+          </head>
+          <body>
+            ${cleanHtml}
+            ${runtimeScript}
+          </body>
+        </html>
+      `;
+    }
+
     this.customHtmlSafeSrcdoc = this.sanitizer.bypassSecurityTrustHtml(combined);
   }
 
@@ -1085,18 +1120,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return queryTpl;
     }
 
-    const invContentTpl = (this.invitation?.content as any)?.template;
-    if (invContentTpl && invContentTpl !== 'custom-html') return invContentTpl;
-
     if (this.detectedSourceTemplate) {
       return this.detectedSourceTemplate;
     }
 
-    const slug = this.invitation?.slug;
+    const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     const invId = this.invitation?._id || this.invitation?.id;
-    const storedTpl = (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null) || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null);
-    if (storedTpl && storedTpl !== 'custom-html') return storedTpl;
 
+    // Check if source template was explicitly set to a native template
     const sourceTpl =
       this.invitation?.content?.sourceTemplateKey ||
       (slug ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
@@ -1106,8 +1137,31 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return sourceTpl;
     }
 
+    const invContentTpl = (this.invitation?.content as any)?.template;
+    if (invContentTpl === 'custom-html' || invContentTpl === 'html-css' || invContentTpl === 'custom') {
+      return 'custom-html';
+    }
+
+    const storedTpl = (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null) || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null);
+    if (storedTpl === 'custom-html') {
+      return 'custom-html';
+    }
+
+    // If custom HTML code exists and is not a native template overlay, it's custom-html
+    if (Boolean(this.customHtmlContent?.trim())) {
+      return 'custom-html';
+    }
+
+    if (invContentTpl) {
+      return invContentTpl;
+    }
+
+    if (storedTpl) {
+      return storedTpl;
+    }
+
     const invRootTpl = (this.invitation?.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template)) ? this.invitation.template : null;
-    if (invRootTpl && invRootTpl !== 'custom-html') return invRootTpl;
+    if (invRootTpl) return invRootTpl;
 
     // Resolución por tipo de evento
     const rawEventType = this.event?.type || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel).type : '') || (this.invitation as any)?.eventType || '';
@@ -1127,7 +1181,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return false;
     }
 
-    const slug = this.invitation?.slug;
+    const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     const invId = this.invitation?._id || this.invitation?.id;
     const sourceTpl =
       this.invitation?.content?.sourceTemplateKey ||
@@ -1139,39 +1193,84 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
 
     const t = this.currentTemplate;
-    return t === 'custom-html' || t === 'html-css' || t === 'custom';
+    if (t === 'custom-html' || t === 'html-css' || t === 'custom') {
+      return true;
+    }
+
+    if (Boolean(this.customHtmlContent?.trim())) {
+      return true;
+    }
+
+    return false;
   }
 
   get customHtmlContent(): string {
-    const slug = this.invitation?.slug;
-    return this.invitation?.content?.customHtml || (slug ? localStorage.getItem(`inv_custom_html_${slug}`) : '') || '';
+    const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
+    if (this.invitation?.content?.customHtml?.trim()) {
+      return this.invitation.content.customHtml;
+    }
+    if (slug) {
+      const local1 = localStorage.getItem(`inv_custom_html_${slug}`);
+      if (local1?.trim()) return local1;
+      const local2 = localStorage.getItem(`custom_template_html_${slug}`);
+      if (local2?.trim()) return local2;
+
+      const subId = this.route.snapshot.queryParamMap.get('subId');
+      if (subId) {
+        const localSub = localStorage.getItem(`inv_custom_html_${slug}_${subId}`);
+        if (localSub?.trim()) return localSub;
+      }
+
+      // Check approved submissions stored in localStorage
+      try {
+        const stored = localStorage.getItem('kyndra_custom_template_submissions') || localStorage.getItem('custom_template_submissions');
+        if (stored) {
+          const list = JSON.parse(stored);
+          const found = list.find((s: any) =>
+            (s.eventSlug === slug || s.slug === slug || (subId && (s.id === subId || s._id === subId))) &&
+            s.htmlCode?.trim()
+          );
+          if (found?.htmlCode?.trim()) return found.htmlCode;
+        }
+      } catch { }
+    }
+    return '';
   }
 
   get customCssContent(): string {
-    const slug = this.invitation?.slug;
-    return this.invitation?.content?.customCss || (slug ? localStorage.getItem(`inv_custom_css_${slug}`) : '') || '';
+    const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
+    if (this.invitation?.content?.customCss !== undefined && this.invitation?.content?.customCss !== null && this.invitation?.content?.customCss !== '') {
+      return this.invitation.content.customCss;
+    }
+    if (slug) {
+      const local1 = localStorage.getItem(`inv_custom_css_${slug}`);
+      if (local1 !== null && local1 !== '') return local1;
+      const local2 = localStorage.getItem(`custom_template_css_${slug}`);
+      if (local2 !== null && local2 !== '') return local2;
+
+      const subId = this.route.snapshot.queryParamMap.get('subId');
+      if (subId) {
+        const localSub = localStorage.getItem(`inv_custom_css_${slug}_${subId}`);
+        if (localSub !== null && localSub !== '') return localSub;
+      }
+
+      try {
+        const stored = localStorage.getItem('kyndra_custom_template_submissions') || localStorage.getItem('custom_template_submissions');
+        if (stored) {
+          const list = JSON.parse(stored);
+          const found = list.find((s: any) =>
+            (s.eventSlug === slug || s.slug === slug || (subId && (s.id === subId || s._id === subId))) &&
+            s.cssCode !== undefined
+          );
+          if (found && found.cssCode !== undefined) return found.cssCode;
+        }
+      } catch { }
+    }
+    return '';
   }
 
   getCustomHtmlSafeSrcdoc(): SafeHtml {
-    const html = this.customHtmlContent;
-    const css = this.customCssContent;
-    const combined = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            html, body { margin: 0; padding: 0; min-height: 100%; }
-            ${css}
-          </style>
-        </head>
-        <body>
-          ${html}
-        </body>
-      </html>
-    `;
-    return this.sanitizer.bypassSecurityTrustHtml(combined);
+    return this.customHtmlSafeSrcdoc || '';
   }
 
   isEnvelopeCardsTemplate(): boolean {

@@ -79,8 +79,8 @@
       </div>
     </section>
     <form *ngIf="sectionEnabled('rsvp')" class="rsvp-panel" (ngSubmit)="submit()">
-      <h2>RSVP</h2>
-      <p *ngIf="deadlineLabel" class="notice">Fecha limite para responder: {{ deadlineLabel }}</p>
+      <h2>Respuesta a tu Evento</h2>
+      <p *ngIf="deadlineLabel" class="notice">Fecha límite para responder: {{ deadlineLabel }}</p>
 
       <div *ngIf="requiresGuestValidation && !verifiedGuest" class="guest-access-box">
         <p class="muted">Esta invitacion es privada o segmentada. Ingresa el correo o telefono registrado en la lista de invitados.</p>
@@ -150,7 +150,7 @@
       </ng-container>
 
       <p *ngIf="success" class="success">{{ success }}</p>
-      <button class="primary" type="submit" [disabled]="sending || (requiresGuestValidation && !verifiedGuest)">{{ sending ? 'Enviando...' : 'Enviar RSVP' }}</button>
+      <button class="primary" type="submit" [disabled]="sending || (requiresGuestValidation && !verifiedGuest)">{{ sending ? 'Enviando...' : 'Enviar Respuesta' }}</button>
     </form>
   </div>
 

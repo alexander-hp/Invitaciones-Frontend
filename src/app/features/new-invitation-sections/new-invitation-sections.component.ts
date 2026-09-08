@@ -91,7 +91,7 @@ export class NewInvitationSectionsComponent implements OnInit {
     { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica Oficial', description: 'Muestra la galería con fotos del evento o sesión de los novios/festejados.' },
     { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones (DJ)', description: 'Módulo interactivo para que los invitados sugieran canciones al DJ.' },
     { key: 'dedications', icon: '💬', title: 'Dedicatorias y Libro de Firmas', description: 'Muro de mensajes, felicitaciones y buenos deseos para los festejados.' },
-    { key: 'rsvp', icon: '💌', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario de confirmación de asistencia, pases y acompañantes.' },
+    { key: 'rsvp', icon: '💌', title: 'Respuesta a tu Evento / Confirmación', description: 'Formulario de confirmación de asistencia, pases y acompañantes.' },
     { key: 'story', icon: '📖', title: 'Nuestra Historia', description: 'Reseña o historia de la pareja / festejado(a).' },
     { key: 'locations', icon: '📍', title: 'Mapas y Ubicaciones', description: 'Direcciones de misa/recepción con enlaces directos a Google Maps o Waze.' },
     { key: 'itinerary', icon: '📅', title: 'Itinerario / Cronograma', description: 'Agenda con horarios y actividades del evento.' },

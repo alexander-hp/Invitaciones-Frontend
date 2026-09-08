@@ -6,14 +6,14 @@
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
         <polyline points="22,6 12,13 2,6"></polyline>
       </svg>
-      <h3 style="margin:0;">Reglas RSVP y Preguntas</h3>
+      <h3 style="margin:0;">Respuesta a tu Evento y Confirmación</h3>
       <span class="nw-pill" [class.success]="isSectionActive('rsvp_rules')"
         [class.warning]="!isSectionActive('rsvp_rules')">
         {{ isSectionActive('rsvp_rules') ? 'Activo' : 'Inactivo' }}
       </span>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
-      <label class="nw-switch" title="Activar / Desactivar RSVP en la invitación">
+      <label class="nw-switch" title="Activar / Desactivar Respuesta a tu Evento en la invitación">
         <input type="checkbox" [checked]="isSectionActive('rsvp_rules')"
           (change)="toggleSectionActive.emit({ key: 'rsvp_rules', active: $any($event.target).checked })">
         <span class="nw-slider"></span>
@@ -22,7 +22,7 @@
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
     <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.rsvpSettings as rsvpSettings">
-      <label class="nw-label">Fecha límite RSVP
+      <label class="nw-label">Fecha límite de respuesta
         <input class="nw-input" type="datetime-local" [(ngModel)]="rsvpSettings.deadline">
       </label>
       <label class="nw-label">Días antes para recordatorio
@@ -41,7 +41,7 @@
       <div class="nw-toggle-row">
         <div class="nw-toggle-info">
           <strong>Permitir cambios hasta la fecha límite</strong>
-          <span>Los invitados podrán modificar su RSVP libremente.</span>
+          <span>Los invitados podrán modificar su respuesta libremente.</span>
         </div>
         <label class="nw-switch">
           <input type="checkbox" [(ngModel)]="rsvpSettings.allowChangesUntilDeadline">
@@ -62,7 +62,7 @@
       <div class="nw-toggle-row">
         <div class="nw-toggle-info">
           <strong>Confirmar por correo</strong>
-          <span>Requerir validación por email al enviar RSVP.</span>
+          <span>Requerir validación por email al responder o confirmar asistencia.</span>
         </div>
         <label class="nw-switch">
           <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('email')"
@@ -74,7 +74,7 @@
       <div class="nw-toggle-row">
         <div class="nw-toggle-info">
           <strong>Confirmar por teléfono</strong>
-          <span>Requerir validación de teléfono/SMS al enviar RSVP.</span>
+          <span>Requerir validación de teléfono/SMS al responder o confirmar asistencia.</span>
         </div>
         <label class="nw-switch">
           <input type="checkbox" [checked]="rsvpSettings.identityMethods?.includes('phone')"

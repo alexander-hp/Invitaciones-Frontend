@@ -76,7 +76,7 @@ export class PublicInvitationComponent implements OnInit {
   submit(): void {
     if (!this.invitation) return;
     if (this.requiresGuestValidation && !this.verifiedGuest) {
-      this.error = 'Valida tu correo o telefono antes de enviar tu RSVP.';
+      this.error = 'Valida tu correo o teléfono antes de enviar tu respuesta.';
       return;
     }
     if (this.rsvp.response === 'declined' && this.requiresDeclineConfirmation && !this.declineConfirmed) {
@@ -110,7 +110,7 @@ export class PublicInvitationComponent implements OnInit {
         this.sending = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo enviar tu RSVP.';
+        this.error = error.error?.message || 'No se pudo enviar tu respuesta.';
         this.sending = false;
       }
     });

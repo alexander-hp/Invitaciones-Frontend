@@ -743,14 +743,23 @@ export class ApiService {
       console.log('test edit: [API] approveCustomTemplateSubmission - slug:', slug);
 
       if (isTextOverlay) {
-        // TEXT OVERLAY MODE: Store texts keyed to this version
+        // TEXT OVERLAY MODE: Store texts keyed to this version and base slug
+        localStorage.setItem(`inv_edited_texts_${slug}`, JSON.stringify(sub.editedTexts));
+        localStorage.setItem(`inv_source_tpl_${slug}`, sub.sourceTemplateKey!);
+        localStorage.setItem(`inv_tpl_${slug}`, sub.sourceTemplateKey!);
         localStorage.setItem(`inv_edited_texts_${slug}_${sub.id}`, JSON.stringify(sub.editedTexts));
         localStorage.setItem(`inv_source_tpl_${slug}_${sub.id}`, sub.sourceTemplateKey!);
         console.log('test edit: [API] TEXT OVERLAY APPROVED for submission ID:', sub.id);
       } else {
-        // FULL CUSTOM-HTML MODE: Store code keyed to this version
+        // FULL CUSTOM-HTML MODE: Store code keyed to this version and base slug
+        localStorage.setItem(`inv_custom_html_${slug}`, sub.htmlCode);
+        localStorage.setItem(`inv_custom_css_${slug}`, sub.cssCode || '');
+        localStorage.setItem(`custom_template_html_${slug}`, sub.htmlCode);
+        localStorage.setItem(`custom_template_css_${slug}`, sub.cssCode || '');
+        localStorage.setItem(`inv_tpl_${slug}`, 'custom-html');
         localStorage.setItem(`inv_custom_html_${slug}_${sub.id}`, sub.htmlCode);
         localStorage.setItem(`inv_custom_css_${slug}_${sub.id}`, sub.cssCode || '');
+        localStorage.setItem(`inv_tpl_${slug}_${sub.id}`, 'custom-html');
         console.log('test edit: [API] FULL CUSTOM-HTML APPROVED for submission ID:', sub.id);
       }
     }
@@ -778,10 +787,12 @@ export class ApiService {
               localStorage.setItem(`inv_tpl_${resSlug}`, srcTpl);
               console.log('test edit: [API] HTTP tap: persisted text overlay for slug:', resSlug, 'tpl:', srcTpl);
             } else {
-              localStorage.setItem(`inv_custom_html_${resSlug}`, resSub.htmlCode || sub?.htmlCode || '');
-              localStorage.setItem(`inv_custom_css_${resSlug}`, resSub.cssCode || sub?.cssCode || '');
-              localStorage.setItem(`custom_template_html_${resSlug}`, resSub.htmlCode || sub?.htmlCode || '');
-              localStorage.setItem(`custom_template_css_${resSlug}`, resSub.cssCode || sub?.cssCode || '');
+              const htmlCode = resSub.htmlCode || sub?.htmlCode || '';
+              const cssCode = resSub.cssCode || sub?.cssCode || '';
+              localStorage.setItem(`inv_custom_html_${resSlug}`, htmlCode);
+              localStorage.setItem(`inv_custom_css_${resSlug}`, cssCode);
+              localStorage.setItem(`custom_template_html_${resSlug}`, htmlCode);
+              localStorage.setItem(`custom_template_css_${resSlug}`, cssCode);
               localStorage.setItem(`inv_tpl_${resSlug}`, 'custom-html');
               console.log('test edit: [API] HTTP tap: persisted custom-html for slug:', resSlug);
             }
@@ -791,9 +802,17 @@ export class ApiService {
       catchError(err => {
         console.warn('test edit: [API] approveCustomTemplateSubmission HTTP error, using local fallback:', err);
         if (!sub) throw new Error('Plantilla no encontrada');
+        const fallbackSlug = sub.eventSlug || 'invitacion-especial';
+        if (sub.htmlCode) {
+          localStorage.setItem(`inv_custom_html_${fallbackSlug}`, sub.htmlCode);
+          localStorage.setItem(`inv_custom_css_${fallbackSlug}`, sub.cssCode || '');
+          localStorage.setItem(`custom_template_html_${fallbackSlug}`, sub.htmlCode);
+          localStorage.setItem(`custom_template_css_${fallbackSlug}`, sub.cssCode || '');
+          localStorage.setItem(`inv_tpl_${fallbackSlug}`, 'custom-html');
+        }
         return of({
           submission: sub,
-          publicUrl: sub.publicUrl || `${window.location.origin}/new/i/${sub.eventSlug || 'invitacion-especial'}`
+          publicUrl: sub.publicUrl || `${window.location.origin}/new/i/${fallbackSlug}`
         });
       })
     );

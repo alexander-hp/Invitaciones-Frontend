@@ -123,12 +123,31 @@ export class NewInvitationEditorComponent implements OnInit {
     this.inactiveSectionsCollapsed = !this.inactiveSectionsCollapsed;
   }
 
-  setActiveTab(tab: string): void {
+  setActiveTab(tab: string, scrollToEditor = false): void {
     this.activeTab = tab;
     if (tab === 'plans') {
       setTimeout(() => {
         this.plansTab?.loadCustomSubmissions();
       }, 50);
+    }
+    if (scrollToEditor) {
+      this.scrollToEditor();
+    }
+  }
+
+  scrollToEditor(): void {
+    setTimeout(() => {
+      const el = document.getElementById('activeSectionEditor');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
+  }
+
+  scrollToCardsGrid(): void {
+    const el = document.getElementById('sectionsGridHeader');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -154,7 +173,7 @@ export class NewInvitationEditorComponent implements OnInit {
     { key: 'locations', title: 'Ubicaciones & Cómo Llegar', description: 'Direcciones con enlaces directos a Google Maps o Waze.' },
     { key: 'itinerary', title: 'Itinerario del Evento', description: 'Agenda y horarios de las actividades del evento.' },
     { key: 'dressCode', title: 'Código de Vestimenta (Dress Code)', description: 'Instrucciones de etiqueta y vestuario sugerido.' },
-    { key: 'rsvp', title: 'Confirmación de Asistencia (RSVP)', description: 'Formulario, reglas y preguntas personalizadas de RSVP.' },
+    { key: 'rsvp', title: 'Respuesta a tu Evento (Confirmación)', description: 'Formulario, pases, reglas y preguntas personalizadas para los invitados.' },
     { key: 'giftRegistry', title: 'Mesa de Regalos', description: 'Catálogo y enlaces a tiendas de regalos externas (Amazon, Liverpool, etc.).' },
     { key: 'digitalEnvelope', title: 'Sobre Digital & Transferencias', description: 'Datos bancarios, CLABE y QR para obsequios en efectivo.' },
     { key: 'lodging', title: 'Hospedaje Recomendado', description: 'Recomendaciones de alojamiento y hoteles cercanos.' },
@@ -182,7 +201,7 @@ export class NewInvitationEditorComponent implements OnInit {
         category: 'Interacción y Confirmación',
         description: 'Módulos interactivos y gestión de invitados',
         items: [
-          { key: 'rsvp', title: 'Confirmación RSVP', description: 'Formulario de pases, asistencia y preguntas personalizadas.', isMandatory: false },
+          { key: 'rsvp', title: 'Respuesta al Evento', description: 'Formulario de pases, confirmación y preguntas personalizadas.', isMandatory: false },
           { key: 'guestAlbum', title: 'Álbum Colectivo', description: 'Permite a los invitados subir fotos en vivo durante el evento.', isMandatory: false },
           { key: 'songRequests', title: 'Música / DJ', description: 'Sugerencias de canciones de los invitados para la fiesta.', isMandatory: false },
           { key: 'dedications', title: 'Libro de Firmas', description: 'Muro de mensajes, felicidades y buenos deseos.', isMandatory: false },
@@ -254,6 +273,78 @@ export class NewInvitationEditorComponent implements OnInit {
 
   get inactiveConfigurableSections() {
     return this.configurableSectionsList.filter(sec => !this.isSectionActive(sec.key));
+  }
+
+  readonly allEditorSections: Array<{ key: string; title: string; shortTitle: string; icon: string }> = [
+    { key: 'content', title: 'Contenido Principal', shortTitle: 'Contenido', icon: 'content' },
+    { key: 'style', title: 'Estilo y Colores', shortTitle: 'Estilo', icon: 'style' },
+    { key: 'story', title: 'Nuestra Historia', shortTitle: 'Historia', icon: 'story' },
+    { key: 'locations', title: 'Ubicaciones & Cómo Llegar', shortTitle: 'Ubicaciones', icon: 'locations' },
+    { key: 'itinerary', title: 'Itinerario del Evento', shortTitle: 'Itinerario', icon: 'itinerary' },
+    { key: 'dressCode', title: 'Código de Vestimenta', shortTitle: 'Vestimenta', icon: 'dressCode' },
+    { key: 'rsvp', title: 'Respuesta a tu Evento (Confirmación)', shortTitle: 'Respuesta al Evento', icon: 'rsvp' },
+    { key: 'giftRegistry', title: 'Mesa de Regalos', shortTitle: 'Mesa Regalos', icon: 'giftRegistry' },
+    { key: 'digitalEnvelope', title: 'Sobre Digital & Transferencias', shortTitle: 'Sobre Digital', icon: 'digitalEnvelope' },
+    { key: 'lodging', title: 'Hospedaje Recomendado', shortTitle: 'Hospedaje', icon: 'lodging' },
+    { key: 'gallery', title: 'Galería de Fotos', shortTitle: 'Galería', icon: 'gallery' },
+    { key: 'guestAlbum', title: 'Álbum Colectivo de Invitados', shortTitle: 'Álbum Fotos', icon: 'guestAlbum' },
+    { key: 'dedications', title: 'Muro de Dedicatorias & Firmas', shortTitle: 'Dedicatorias', icon: 'dedications' },
+    { key: 'songRequests', title: 'Música & Peticiones al DJ', shortTitle: 'Música DJ', icon: 'songRequests' },
+    { key: 'backgroundMusic', title: 'Música de Fondo', shortTitle: 'Audio Fondo', icon: 'backgroundMusic' },
+    { key: 'plans', title: 'Plantillas y Plan', shortTitle: 'Plan', icon: 'plans' }
+  ];
+
+  get navigableSections(): Array<{ key: string; title: string; shortTitle: string; icon: string }> {
+    return this.allEditorSections.filter(sec =>
+      sec.key === 'content' ||
+      sec.key === 'style' ||
+      sec.key === 'plans' ||
+      this.isSectionActive(sec.key) ||
+      this.activeTab === sec.key
+    );
+  }
+
+  get currentSectionIndex(): number {
+    return this.navigableSections.findIndex(s => s.key === this.activeTab);
+  }
+
+  get currentSectionInfo(): { key: string; title: string; shortTitle: string; icon: string } | undefined {
+    return this.allEditorSections.find(s => s.key === this.activeTab);
+  }
+
+  get previousSection(): { key: string; title: string; shortTitle: string; icon: string } | null {
+    const idx = this.currentSectionIndex;
+    if (idx > 0) {
+      return this.navigableSections[idx - 1];
+    }
+    return null;
+  }
+
+  get nextSection(): { key: string; title: string; shortTitle: string; icon: string } | null {
+    const idx = this.currentSectionIndex;
+    if (idx >= 0 && idx < this.navigableSections.length - 1) {
+      return this.navigableSections[idx + 1];
+    }
+    return null;
+  }
+
+  get progressPercentage(): number {
+    if (!this.navigableSections.length || this.currentSectionIndex < 0) return 0;
+    return Math.round(((this.currentSectionIndex + 1) / this.navigableSections.length) * 100);
+  }
+
+  goToPreviousSection(): void {
+    const prev = this.previousSection;
+    if (prev) {
+      this.setActiveTab(prev.key, true);
+    }
+  }
+
+  goToNextSection(): void {
+    const next = this.nextSection;
+    if (next) {
+      this.setActiveTab(next.key, true);
+    }
   }
 
   isSectionActive(key: string): boolean {
@@ -1279,7 +1370,7 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   sectionMusicOptions = [
-    { key: 'rsvp', label: '💌 Confirmación RSVP' },
+    { key: 'rsvp', label: '💌 Respuesta a tu Evento / Confirmación' },
     { key: 'dressCode', label: '👔 Código de Vestimenta' },
     { key: 'locations', label: '📍 Ubicaciones / Lugares' },
     { key: 'itinerary', label: '🗓️ Itinerario del Evento' },

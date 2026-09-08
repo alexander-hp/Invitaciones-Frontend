@@ -12,7 +12,7 @@
       <label class="nw-label nw-form-wide">Slug (URL)
         <input class="nw-input" [(ngModel)]="invitation.slug" required placeholder="mi-boda">
       </label>
-      <label class="nw-label">Acceso RSVP
+      <label class="nw-label">Acceso y Confirmación
         <select class="nw-select" [(ngModel)]="invitation.accessMode">
           <option value="public">Pública: todos pueden verla y confirmar</option>
           <option value="guest_list">Lista cerrada: solo invitados registrados</option>
@@ -132,7 +132,7 @@
       una invitación segmentada: padrinos, damas, VIP o familia.</p>
     <p *ngIf="invitation.accessMode === 'open' || invitation.accessMode === 'public'"
       style="font-size:13px; color:var(--nw-text-3); margin:12px 0 0;">En modo público, cualquiera con el enlace puede
-      ver la invitación y enviar RSVP.</p>
+      ver la invitación y responder o confirmar asistencia.</p>
     <p *ngIf="!canUseWhiteLabel" style="font-size:13px; color:var(--nw-warning); margin:8px 0 0;">Marca blanca
       requiere plan Pro.</p>
 
