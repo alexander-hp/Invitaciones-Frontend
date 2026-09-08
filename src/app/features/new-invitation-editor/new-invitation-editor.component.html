@@ -790,7 +790,7 @@
       </app-editor-locations-tab>
 
       <!-- 8. RSVP y Reglas -->
-      <app-editor-rsvp-rules-tab *ngIf="activeTab === 'rsvp' || activeTab === 'all'" [invitation]="invitation"
+      <app-editor-rsvp-rules-tab *ngIf="activeTab === 'rsvp' || activeTab === 'all'" [invitation]="invitation" [event]="event"
         [loadedGuests]="loadedGuests" [customQuestionsList]="customQuestionsList"
         [(allowedRolesText)]="allowedRolesText" [(allowedGroupsText)]="allowedGroupsText"
         [(allowedEmailsText)]="allowedEmailsText" [(allowedPhonesText)]="allowedPhonesText"

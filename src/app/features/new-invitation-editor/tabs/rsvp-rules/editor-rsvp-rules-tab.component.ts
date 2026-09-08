@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { GuestModel, InvitationModel } from '../../../../core/models';
+import { EventModel, GuestModel, InvitationModel } from '../../../../core/models';
 
 @Component({
   selector: 'app-editor-rsvp-rules-tab',
@@ -7,6 +7,7 @@ import { GuestModel, InvitationModel } from '../../../../core/models';
 })
 export class EditorRsvpRulesTabComponent {
   @Input() invitation!: InvitationModel;
+  @Input() event?: EventModel;
   @Input() loadedGuests: GuestModel[] = [];
   @Input() customQuestionsList: Array<{
     key: string;
@@ -194,5 +195,92 @@ export class EditorRsvpRulesTabComponent {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  get reminderNotice(): { text: string; dateFormatted: string; detail?: string } | null {
+    const rsvp = this.invitation?.rsvpSettings;
+    if (!rsvp) return null;
+
+    const days = rsvp.reminderDaysBeforeDeadline !== undefined && rsvp.reminderDaysBeforeDeadline !== null
+      ? Number(rsvp.reminderDaysBeforeDeadline)
+      : 3;
+
+    if (isNaN(days) || days < 0) return null;
+
+    // Base date priority: deadline > event date
+    const deadlineRaw = rsvp.deadline;
+    const eventDateRaw = this.event?.date || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.date : '');
+
+    let baseDate: Date | null = null;
+    let baseLabel = '';
+
+    if (deadlineRaw) {
+      baseDate = this.parseLocalDate(deadlineRaw);
+      if (baseDate) {
+        baseLabel = 'de la fecha límite de respuesta';
+      }
+    }
+
+    if (!baseDate && eventDateRaw) {
+      baseDate = this.parseLocalDate(eventDateRaw);
+      if (baseDate) {
+        baseLabel = 'del día del evento';
+      }
+    }
+
+    if (!baseDate) {
+      return {
+        text: 'Aviso de recordatorio automático:',
+        dateFormatted: `${days} día${days === 1 ? '' : 's'} antes`,
+        detail: 'Define la fecha límite o la fecha del evento para ver el día calendario exacto.'
+      };
+    }
+
+    // Calculate reminder date: baseDate - days
+    const reminderDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() - days);
+
+    // Format in Spanish
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    };
+
+    let formatted = reminderDate.toLocaleDateString('es-ES', options);
+    formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+
+    const baseShort = `${baseDate.getDate().toString().padStart(2, '0')}/${(baseDate.getMonth() + 1).toString().padStart(2, '0')}/${baseDate.getFullYear()}`;
+    const reminderShort = `${reminderDate.getDate().toString().padStart(2, '0')}/${(reminderDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+    if (days === 0) {
+      return {
+        text: 'El recordatorio se enviará el mismo día:',
+        dateFormatted: `${formatted} (${reminderShort})`,
+        detail: `Coincide con el día programado (${baseLabel}: ${baseShort}).`
+      };
+    }
+
+    return {
+      text: 'El recordatorio se enviará el:',
+      dateFormatted: `${formatted} (${reminderShort})`,
+      detail: `${days} día${days === 1 ? '' : 's'} antes ${baseLabel} (${baseShort}).`
+    };
+  }
+
+  private parseLocalDate(dateStr: string): Date | null {
+    if (!dateStr) return null;
+    try {
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        const parts = dateStr.split('T')[0].split('-').map(Number);
+        if (parts.length === 3) {
+          return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+      }
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    } catch {
+      return null;
+    }
   }
 }
