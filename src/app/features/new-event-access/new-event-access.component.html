@@ -142,7 +142,8 @@
       <app-access-integration-api-view
         *ngIf="hasPermission('integration_api')"
         [session]="session"
-        [token]="token">
+        [token]="token"
+        style="display: block; width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box;">
       </app-access-integration-api-view>
     </ng-container>
   </div>

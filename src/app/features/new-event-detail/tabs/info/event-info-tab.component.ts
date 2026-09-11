@@ -3,7 +3,8 @@ import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
 import {
   EventModel, DashboardMetrics, InvitationModel, PlanDefinition,
-  EventMemberModel, EventPermission, EventMemberRole, EventAccessLinkModel, EventAccessRole
+  EventMemberModel, EventPermission, EventMemberRole, EventAccessLinkModel, EventAccessRole,
+  EventType, EventMode
 } from '../../../../core/models';
 
 @Component({
@@ -33,6 +34,18 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   loadingData = false;
   error = '';
   message = '';
+
+  editingDetails = false;
+  savingDetails = false;
+  editDetailsForm = {
+    title: '',
+    type: 'otro' as EventType,
+    date: '',
+    hosts: '',
+    venueName: '',
+    venueAddress: '',
+    mode: 'invitation' as EventMode
+  };
 
   memberForm = {
     email: '',
@@ -254,6 +267,122 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     } catch {
       return dateStr;
     }
+  }
+
+  formatEventFullDate(dateStr?: string): string {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const dateFormatted = d.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      const capitalized = dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1);
+      const hours = d.getHours();
+      const minutes = d.getMinutes();
+      if ((hours !== 0 || minutes !== 0) || (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('T00:00:00'))) {
+        const timeFormatted = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true });
+        return `${capitalized} · ${timeFormatted}`;
+      }
+      return capitalized;
+    } catch {
+      return dateStr;
+    }
+  }
+
+  toDatetimeLocal(isoStr?: string): string {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const mm = pad(d.getMonth() + 1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    } catch {
+      return '';
+    }
+  }
+
+  canEdit(): boolean {
+    if (this.isOwner()) return true;
+    return this.event?.access?.permissions?.includes('edit_event') || false;
+  }
+
+  openEditDetails(): void {
+    if (!this.event) return;
+    this.editDetailsForm = {
+      title: this.event.title || '',
+      type: (this.event.type as EventType) || 'otro',
+      date: this.toDatetimeLocal(this.event.date),
+      hosts: (this.event.hosts || []).join(', '),
+      venueName: this.event.venue?.name || '',
+      venueAddress: this.event.venue?.address || '',
+      mode: (this.event.mode as EventMode) || 'invitation'
+    };
+    this.editingDetails = true;
+    this.collapsedCards['details'] = false;
+  }
+
+  cancelEditDetails(): void {
+    this.editingDetails = false;
+  }
+
+  saveEventDetails(): void {
+    const id = (this.event._id || this.event.id)!;
+    if (!id) return;
+    if (!this.editDetailsForm.title.trim()) {
+      this.showError('El título del evento es obligatorio');
+      return;
+    }
+
+    this.savingDetails = true;
+    const hostsArray = this.editDetailsForm.hosts
+      ? this.editDetailsForm.hosts.split(',').map(h => h.trim()).filter(Boolean)
+      : [];
+
+    const payload: any = {
+      title: this.editDetailsForm.title.trim(),
+      type: this.editDetailsForm.type,
+      hosts: hostsArray,
+      venue: {
+        ...(this.event.venue || {}),
+        name: this.editDetailsForm.venueName.trim(),
+        address: this.editDetailsForm.venueAddress.trim()
+      },
+      mode: this.editDetailsForm.mode
+    };
+
+    if (this.editDetailsForm.date) {
+      payload.date = new Date(this.editDetailsForm.date).toISOString();
+    }
+
+    this.apiService.updateEvent(id, payload).subscribe({
+      next: res => {
+        this.savingDetails = false;
+        this.editingDetails = false;
+        if (res.event) {
+          this.event.title = res.event.title;
+          this.event.type = res.event.type;
+          this.event.hosts = res.event.hosts;
+          this.event.date = res.event.date;
+          this.event.venue = res.event.venue;
+          this.event.mode = res.event.mode;
+        }
+        this.showSuccess('Detalles del evento actualizados correctamente');
+        this.eventUpdated.emit();
+      },
+      error: err => {
+        this.savingDetails = false;
+        this.showError(err?.error?.message || 'Error al guardar los detalles del evento');
+      }
+    });
   }
 
   changeStatus(newStatus: string): void {

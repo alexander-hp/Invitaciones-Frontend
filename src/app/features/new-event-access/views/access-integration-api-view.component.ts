@@ -16,9 +16,16 @@ export interface PayloadFieldDoc {
   selector: 'app-access-integration-api-view',
   templateUrl: './access-integration-api-view.component.html',
   styles: [`
+    :host {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
     .nw-filter-bar {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       gap: 10px;
       align-items: center;
       margin-bottom: 20px;
@@ -26,7 +33,10 @@ export interface PayloadFieldDoc {
       padding: 10px 14px;
       border-radius: var(--nw-radius-sm, 12px);
       border: 1px solid var(--nw-border, #eadecc);
-      overflow-x: auto;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .nw-nav-pill-btn {
       height: 42px;
@@ -65,7 +75,33 @@ export interface PayloadFieldDoc {
       font-size: 12px;
       line-height: 1.5;
       overflow-x: auto;
+      overflow-y: auto;
       position: relative;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .code-box pre {
+      margin: 0;
+      min-width: 0;
+      max-width: 100%;
+      white-space: pre;
+    }
+    .code-box::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .code-box::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 4px;
+    }
+    .code-box::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+    }
+    .code-box::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.45);
     }
     .copy-btn {
       position: absolute;
@@ -96,6 +132,10 @@ export interface PayloadFieldDoc {
       gap: 8px;
       box-shadow: var(--nw-shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
       transition: border-color 0.2s;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .payload-card:hover {
       border-color: var(--nw-accent, #c9a96e);
