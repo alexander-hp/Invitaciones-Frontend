@@ -71,6 +71,7 @@ import { NewPublicInvitationTemplateGraduacionComponent } from './features/new-p
 import { NewPublicInvitationTemplateCumpleanosComponent } from './features/new-public-invitation/templates/template-cumpleanos/new-public-invitation-template-cumpleanos.component';
 import { NewPublicInvitationTemplateBautizoComponent } from './features/new-public-invitation/templates/template-bautizo/new-public-invitation-template-bautizo.component';
 import { NewPublicInvitationTemplateOtroComponent } from './features/new-public-invitation/templates/template-otro/new-public-invitation-template-otro.component';
+import { NewPublicInvitationMaisonDoreComponent } from './features/new-public-invitation/templates/maison-dore/new-public-invitation-maison-dore.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
@@ -166,6 +167,7 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     NewPublicInvitationTemplateCumpleanosComponent,
     NewPublicInvitationTemplateBautizoComponent,
     NewPublicInvitationTemplateOtroComponent,
+    NewPublicInvitationMaisonDoreComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

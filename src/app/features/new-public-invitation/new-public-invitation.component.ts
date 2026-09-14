@@ -50,13 +50,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   };
 
   publicAlbumAssets: Array<{ url: string; uploaderName?: string; createdAt?: string }> = [];
+  allAlbumAssets: Array<{ url: string; uploaderName?: string; createdAt?: string }> = [];
 
-  get allAlbumAssets(): Array<{ url: string; uploaderName?: string; createdAt?: string }> {
+  updateAllAlbumAssets(): void {
     const hostPhotos = (this.invitation?.content?.privateAlbum || []).map(url => ({
       url,
       uploaderName: 'Anfitrión'
     }));
-    return [...hostPhotos, ...this.publicAlbumAssets];
+    this.allAlbumAssets = [...hostPhotos, ...this.publicAlbumAssets];
   }
   dedications: DedicationModel[] = [];
   guestAccessEmail = '';
@@ -291,6 +292,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.initAudio();
     this.setupSectionObserver();
     this.loadEditedTexts(slug);
+    this.updateAllAlbumAssets();
     this.loading = false;
   }
 
@@ -1030,8 +1032,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   loadPublicAlbum(): void {
     if (!this.invitation?.content.privateAlbumEnabled) return;
     this.api.listPublicAlbum(this.invitation.slug).subscribe({
-      next: ({ assets }) => this.publicAlbumAssets = assets,
-      error: () => this.publicAlbumAssets = []
+      next: ({ assets }) => {
+        this.publicAlbumAssets = assets;
+        this.updateAllAlbumAssets();
+      },
+      error: () => {
+        this.publicAlbumAssets = [];
+        this.updateAllAlbumAssets();
+      }
     });
   }
 
@@ -1288,7 +1296,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       !this.isTemplateGraduacion() &&
       !this.isTemplateCumpleanos() &&
       !this.isTemplateBautizo() &&
-      !this.isTemplateOtro()
+      !this.isTemplateOtro() &&
+      !this.isMaisonDoreTemplate()
     );
   }
 
@@ -1362,6 +1371,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-otro' || t === 'otro';
+  }
+
+  isMaisonDoreTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'maison-dore' || t === 'la-maison-dore' || t === 'lamaisondore';
   }
 
   get requiresGuestValidation(): boolean {
@@ -1855,23 +1870,30 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       const rootEl = this.elRef.nativeElement as HTMLElement;
       if (!rootEl) return;
 
-      let isApplying = false;
+      // Initial apply
+      if (this.pendingEditedTexts && Object.keys(this.pendingEditedTexts).length > 0) {
+        this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
+      }
+
+      let debounceTimer: any = null;
       this.textOverlayMutationObserver = new MutationObserver(() => {
-        if (isApplying) return;
-        if (this.pendingEditedTexts && Object.keys(this.pendingEditedTexts).length > 0) {
-          isApplying = true;
-          this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
-          setTimeout(() => { isApplying = false; }, 100);
-        }
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          if (this.pendingEditedTexts && Object.keys(this.pendingEditedTexts).length > 0) {
+            // Desconectar observer antes de modificar el DOM para evitar recursión infinita
+            this.textOverlayMutationObserver?.disconnect();
+            this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
+            // Reconectar después de que el DOM se haya estabilizado
+            setTimeout(() => {
+              if (this.textOverlayMutationObserver && rootEl) {
+                this.textOverlayMutationObserver.observe(rootEl, { childList: true, subtree: true });
+              }
+            }, 300);
+          }
+        }, 200);
       });
 
       this.textOverlayMutationObserver.observe(rootEl, { childList: true, subtree: true });
-      console.log('test edit: [PublicInv] setupTextOverlayObserver successfully attached to root DOM');
-
-      // Initial apply
-      if (this.pendingEditedTexts) {
-        this.textOverlay.applyTexts(rootEl, this.pendingEditedTexts);
-      }
     }, 150);
   }
 

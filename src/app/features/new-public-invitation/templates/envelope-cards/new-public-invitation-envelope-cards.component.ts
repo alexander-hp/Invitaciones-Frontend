@@ -77,7 +77,7 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
   @Output() downloadPass = new EventEmitter<void>();
 
   // State
-  envelopeOpened = false;
+  envelopeOpened = true;
   isOpeningEnvelope = false;
   currentCardIndex = 0;
   guestAccessInput = '';
@@ -145,6 +145,9 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
     if (this.isSectionActive('songRequests')) {
       cards.push({ key: 'dj', title: 'Música DJ', icon: 'dj' });
     }
+
+    // Card del sobre colocada al final
+    cards.push({ key: 'envelopeGateway', title: 'Sobre & Acceso', icon: 'envelope' });
 
     return cards;
   }

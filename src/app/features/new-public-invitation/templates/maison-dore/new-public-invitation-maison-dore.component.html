@@ -1,0 +1,615 @@
+<!-- ==========================================================================
+     PLANTILLA: LA MAISON DORÉE (EDICIÓN ALTA COSTURA / LUXURY EDITORIAL)
+     ========================================================================== -->
+
+<!-- ==================== 1. OVERLAY CINEMÁTICO SOBRE & APERTURA ==================== -->
+<div *ngIf="introOverlayVisible"
+     class="md-intro-overlay"
+     [class.fading]="envelopeStage === 'fading'"
+     (click)="startOpeningSequence()">
+
+  <!-- Botón Omitir -->
+  <button type="button" class="md-skip-btn" (click)="$event.stopPropagation(); skipIntro()">
+    Omitir Intro ✕
+  </button>
+
+  <!-- Estado 1: Poster Estático del Sobre -->
+  <img *ngIf="envelopeStage === 'idle'"
+       [src]="assetBaseUrl + 'envelope-poster-CthGb2ks.jpg'"
+       alt="Sobre de Boda"
+       class="md-intro-poster" />
+
+  <!-- Estado 2: Video del Sobre interactivo -->
+  <video #envelopeVideo
+         [src]="assetBaseUrl + 'envelope-video-Dp_L7sB9.mp4'"
+         [poster]="assetBaseUrl + 'envelope-poster-CthGb2ks.jpg'"
+         class="md-intro-video"
+         [style.opacity]="(envelopeStage === 'playing_envelope') ? '1' : '0'"
+         (ended)="onEnvelopeVideoEnded()"
+         playsinline
+         muted
+         preload="metadata">
+  </video>
+
+  <!-- Estado 3: Video Cinemático de Apertura -->
+  <video #introVideo
+         [src]="assetBaseUrl + 'intro-video-new-NNPe0W7X.mp4'"
+         class="md-intro-video"
+         [style.opacity]="(envelopeStage === 'playing_intro' || envelopeStage === 'fading') ? '1' : '0'"
+         (ended)="onIntroVideoEnded()"
+         playsinline
+         muted
+         preload="metadata">
+  </video>
+
+  <!-- Indicador táctil / Botón abrir si no es privado -->
+  <div *ngIf="envelopeStage === 'idle' && !requiresGuestValidation" class="md-tap-hint">
+    Toca para abrir la invitación
+  </div>
+
+  <!-- Modal de Validación Privada sobre el sobre si es privado -->
+  <div *ngIf="envelopeStage === 'idle' && requiresGuestValidation"
+       class="md-vip-pass-card"
+       style="position: relative; z-index: 50; max-width: 440px;"
+       (click)="$event.stopPropagation()">
+    <span class="md-vip-badge">Acceso Exclusivo</span>
+    <h3 class="md-card-title" style="font-size: 1.8rem;">Invitación Privada</h3>
+    <p class="md-card-badge">Ingresa tu número de teléfono o correo para acceder a tu invitación</p>
+    <div style="margin: 20px 0;">
+      <input type="text"
+             class="md-input"
+             placeholder="Teléfono o Correo electrónico"
+             [(ngModel)]="guestAccessSingleInput"
+             (keyup.enter)="validateAndOpenPrivateEnvelope()" />
+    </div>
+    <button type="button"
+            class="md-submit-btn"
+            [disabled]="checkingGuest"
+            (click)="validateAndOpenPrivateEnvelope()">
+      {{ checkingGuest ? 'Validando...' : 'Desbloquear y Abrir Sobre' }}
+    </button>
+  </div>
+</div>
+
+<!-- ==================== 2. BOTÓN FLOTANTE DE MÚSICA ==================== -->
+<button type="button"
+        class="md-music-fab"
+        [class.playing]="isPlayingMusic"
+        (click)="toggleMusicOutput.emit()"
+        [attr.aria-label]="isPlayingMusic ? 'Silenciar música' : 'Reproducir música'">
+  <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <circle cx="12" cy="12" r="3"></circle>
+    <line x1="12" y1="2" x2="12" y2="4"></line>
+  </svg>
+  <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    <line x1="23" y1="9" x2="17" y2="15"></line>
+    <line x1="17" y1="9" x2="23" y2="15"></line>
+  </svg>
+</button>
+
+<!-- ==================== 3. CONTENEDOR PRINCIPAL DE LA INVITACIÓN ==================== -->
+<div class="md-main-container">
+
+  <!-- ==================== 4. SECCIÓN HERO ==================== -->
+  <section class="md-hero-section" id="hero">
+    <img [src]="assetBaseUrl + 'intro-poster-new-B2unBQtC.jpg'" alt="" class="md-hero-bg" draggable="false" />
+
+    <div class="md-hero-content" [style.opacity]="heroTextVisible ? '1' : '0'">
+      <img [src]="assetBaseUrl + 'monogram-Dd4GSvtc.png'" alt="Monograma" class="md-monogram" />
+
+      <h1 class="md-hero-names">
+        {{ headlineCouple.partner1 }}
+        <span class="amp" *ngIf="headlineCouple.partner2">&amp;</span>
+        {{ headlineCouple.partner2 }}
+      </h1>
+
+      <p class="md-hero-invitation-text">
+        {{ invitation?.content?.subheadline || 'Tenemos el honor de invitarte a celebrar nuestra boda' }}
+      </p>
+
+      <!-- Badge de Fecha Editorial -->
+      <div class="md-hero-date-badge" *ngIf="event?.date">
+        <div class="md-date-line"></div>
+        <div class="md-date-col">
+          <span class="md-date-label">{{ event?.date | date:'MMMM' }}</span>
+          <span class="md-date-day">{{ event?.date | date:'dd' }}</span>
+          <span class="md-date-label">{{ event?.date | date:'yyyy' }}</span>
+        </div>
+        <div class="md-date-line"></div>
+      </div>
+
+      <div class="md-actions-row">
+        <a href="#rsvp" (click)="$event.preventDefault(); scrollToSection('rsvp')" class="md-hero-btn">
+          Confirmar Asistencia
+        </a>
+        <button type="button" (click)="saveCalendar()" class="md-hero-btn">
+          Guardar en Calendario
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 5. PASE VIP CONFIRMADO (SI EL INVITADO YA ESTÁ VERIFICADO) ==================== -->
+  <section *ngIf="verifiedGuest" class="md-welcome-section" style="padding-top: 40px; padding-bottom: 20px;">
+    <div class="md-vip-pass-card" data-aos="fade-up">
+      <span class="md-vip-badge">Pase VIP Oficial</span>
+      <h3 class="md-card-title" style="font-size: 2rem;">{{ verifiedGuest.name }}</h3>
+      <p class="md-card-badge">Boletos Asignados: {{ (verifiedGuest.allowedCompanions || 0) + 1 }}</p>
+      <p class="md-card-details" *ngIf="verifiedGuest.tableName">
+        Mesa: <strong>{{ verifiedGuest.tableName }}</strong>
+      </p>
+
+      <img *ngIf="guestQrUrl"
+           [src]="guestQrUrl"
+           alt="Código QR de Acceso"
+           class="md-vip-qr"
+           (click)="openPassLightbox()" />
+
+      <div class="md-actions-row">
+        <button type="button" class="md-btn-outline" (click)="downloadPassOutput.emit()">
+          Descargar Pase
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="md-divider"></div>
+
+  <!-- ==================== 6. COUNTDOWN (CON COLUMNAS ROMANAS) ==================== -->
+  <section class="md-countdown-section" id="countdown">
+    <!-- Columnas romanas clásicas extraídas -->
+    <img [src]="assetBaseUrl + 'column-left-Deau9Trj.png'" alt="" class="md-col-left" />
+    <img [src]="assetBaseUrl + 'column-right-Dq5wy1M7.png'" alt="" class="md-col-right" />
+
+    <div class="md-countdown-inner" data-aos="fade-up">
+      <h2 class="md-section-title">Cuenta Regresiva</h2>
+      <p class="md-section-subtitle" *ngIf="event?.date">
+        Para el {{ event?.date | date:'dd \'de\' MMMM \'de\' yyyy' }}
+      </p>
+
+      <div class="md-timer-grid">
+        <div class="md-timer-block">
+          <span class="md-timer-num">{{ countdown.days | number:'2.0-0' }}</span>
+          <span class="md-timer-label">Días</span>
+        </div>
+        <span class="md-timer-sep">:</span>
+        <div class="md-timer-block">
+          <span class="md-timer-num">{{ countdown.hours | number:'2.0-0' }}</span>
+          <span class="md-timer-label">Horas</span>
+        </div>
+        <span class="md-timer-sep">:</span>
+        <div class="md-timer-block">
+          <span class="md-timer-num">{{ countdown.minutes | number:'2.0-0' }}</span>
+          <span class="md-timer-label">Minutos</span>
+        </div>
+        <span class="md-timer-sep">:</span>
+        <div class="md-timer-block">
+          <span class="md-timer-num">{{ countdown.seconds | number:'2.0-0' }}</span>
+          <span class="md-timer-label">Segundos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="md-divider"></div>
+
+  <!-- ==================== 7. BIENVENIDA & HISTORIA ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.story !== false" class="md-welcome-section">
+    <div class="md-welcome-card" data-aos="fade-up">
+      <img [src]="assetBaseUrl + 'bouquet-BbYUpj3K.png'" alt="Bouquet Floral" class="md-bouquet-img" />
+      <h2 class="md-section-title">{{ invitation?.content?.storyTitle || 'Nuestra Historia' }}</h2>
+      <img [src]="assetBaseUrl + 'floral-divider-DJovYoL0.png'" alt="" style="max-width: 180px; margin: 12px auto 28px; display: block;" />
+
+      <p class="md-welcome-text">
+        {{ invitation?.content?.storyBody || invitation?.content?.message || 'Junto a nuestras familias, tenemos el honor y la alegría de invitarte a celebrar la unión de nuestras vidas en un día que será inolvidable.' }}
+      </p>
+    </div>
+  </section>
+
+  <div class="md-divider" *ngIf="invitation?.content?.sectionSettings?.story !== false"></div>
+
+  <!-- ==================== 8. CELEBRACIONES & UBICACIONES ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.locations !== false" class="md-events-section" id="locations">
+    <div class="md-events-container">
+      <div style="text-align: center; margin-bottom: 50px;" data-aos="fade-up">
+        <h2 class="md-section-title">Celebraciones</h2>
+        <p class="md-section-subtitle">Lugares y Ceremonia</p>
+      </div>
+
+      <!-- Iteración sobre las ubicaciones del evento -->
+      <ng-container *ngIf="invitation?.content?.locations && invitation?.content?.locations?.length; else defaultLocations">
+        <div *ngFor="let loc of invitation?.content?.locations; let i = index" class="md-card-elegant" data-aos="fade-up">
+          <!-- Ilustración de Yate o Salón alternados -->
+          <img *ngIf="i % 2 === 0" [src]="assetBaseUrl + 'peninsula-hotel-DfDFGUc8.png'" alt="Ubicación" class="md-illustration" />
+          <img *ngIf="i % 2 !== 0" [src]="assetBaseUrl + 'yacht-illustration-BxPtm2NZ.png'" alt="Celebración" class="md-illustration" />
+
+          <p class="md-card-badge">{{ loc.type || 'Lugar' }}</p>
+          <h3 class="md-card-title">{{ loc.name || loc.type || 'Celebración' }}</h3>
+          <p class="md-card-subtitle" *ngIf="loc.notes">{{ loc.notes }}</p>
+          <p class="md-card-details">{{ loc.address }}</p>
+
+          <div class="md-actions-row">
+            <a *ngIf="loc.mapUrl || loc.address"
+               [href]="getGoogleMapsUrl(loc)"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="md-btn-outline">
+              Google Maps
+            </a>
+            <a *ngIf="loc.wazeUrl || loc.address"
+               [href]="getWazeUrl(loc)"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="md-btn-outline">
+              Waze
+            </a>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #defaultLocations>
+        <div class="md-card-elegant" data-aos="fade-up">
+          <img [src]="assetBaseUrl + 'peninsula-hotel-DfDFGUc8.png'" alt="Lugar" class="md-illustration" />
+          <p class="md-card-badge">Ceremonia y Recepción</p>
+          <h3 class="md-card-title">Salón Principal</h3>
+          <p class="md-card-subtitle">6:00 PM</p>
+          <p class="md-card-details">Hermosa Hacienda y Jardín de Eventos</p>
+          <div class="md-actions-row">
+            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="md-btn-outline">
+              Ver en Google Maps
+            </a>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </section>
+
+  <div class="md-divider" *ngIf="invitation?.content?.sectionSettings?.locations !== false"></div>
+
+  <!-- ==================== 9. ITINERARIO (CON CORTINAS REALISTAS) ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.itinerary !== false" class="md-program-section" id="itinerary">
+    <!-- Cortinas ornamentales extraídas de la cabecera -->
+    <img [src]="assetBaseUrl + 'curtain-left-new-C9yBPbWK.png'" alt="" class="md-curtain-left" />
+    <img [src]="assetBaseUrl + 'curtain-center-new-EwKr26ZU.png'" alt="" class="md-curtain-center" />
+    <img [src]="assetBaseUrl + 'curtain-right-new-Dusl3IYi.png'" alt="" class="md-curtain-right" />
+
+    <div class="md-program-container" data-aos="fade-up">
+      <h2 class="md-section-title">Itinerario</h2>
+      <p class="md-section-subtitle">Programa del Evento</p>
+
+      <div *ngIf="invitation?.content?.itinerary && invitation?.content?.itinerary?.length; else defaultItinerary">
+        <div *ngFor="let item of invitation?.content?.itinerary" class="md-timeline-item">
+          <div class="md-timeline-time">{{ item.time }}</div>
+          <h4 class="md-timeline-title">{{ item.title }}</h4>
+          <p *ngIf="item.description" class="md-card-details" style="font-size: 1rem; margin-top: 6px;">
+            {{ item.description }}
+          </p>
+        </div>
+      </div>
+
+      <ng-template #defaultItinerary>
+        <div class="md-timeline-item">
+          <div class="md-timeline-time">5:30 PM</div>
+          <h4 class="md-timeline-title">Llegada de Invitados</h4>
+        </div>
+        <div class="md-timeline-item">
+          <div class="md-timeline-time">6:00 PM</div>
+          <h4 class="md-timeline-title">Ceremonia Nupcial</h4>
+        </div>
+        <div class="md-timeline-item">
+          <div class="md-timeline-time">7:30 PM</div>
+          <h4 class="md-timeline-title">Cóctel de Bienvenida</h4>
+        </div>
+        <div class="md-timeline-item">
+          <div class="md-timeline-time">8:30 PM</div>
+          <h4 class="md-timeline-title">Banquete & Brindis</h4>
+        </div>
+        <div class="md-timeline-item">
+          <div class="md-timeline-time">10:00 PM</div>
+          <h4 class="md-timeline-title">Fiesta & Celebración</h4>
+        </div>
+      </ng-template>
+    </div>
+  </section>
+
+  <div class="md-divider" *ngIf="invitation?.content?.sectionSettings?.itinerary !== false"></div>
+
+  <!-- ==================== 10. CÓDIGO DE VESTIMENTA (DRESS CODE) ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.dressCode !== false" class="md-dress-section" id="dress-code">
+    <div class="md-dress-container" data-aos="fade-up">
+      <!-- Rosas ornamentales en esquinas -->
+      <img [src]="assetBaseUrl + 'roses-top-left-D0RRxzlV.png'" alt="" class="md-dec-roses-tl" />
+      <img [src]="assetBaseUrl + 'roses-bottom-right-C-Wj2fia.png'" alt="" class="md-dec-roses-br" />
+
+      <h2 class="md-section-title">Código de Vestimenta</h2>
+      <p class="md-section-subtitle">
+        {{ invitation?.content?.dressCode || 'Rigurosa Etiqueta / Black Tie' }}
+      </p>
+
+      <div class="md-dress-grid">
+        <div class="md-dress-card">
+          <h4 class="md-dress-role">Damas</h4>
+          <p class="md-dress-desc">
+            Vestido largo de noche. Se reserva el color blanco para la novia.
+          </p>
+        </div>
+        <div class="md-dress-card">
+          <h4 class="md-dress-role">Caballeros</h4>
+          <p class="md-dress-desc">
+            Traje formal oscuro o esmoquin con corbata o pajarita.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="md-divider" *ngIf="invitation?.content?.sectionSettings?.dressCode !== false"></div>
+
+  <!-- ==================== 11. HOSPEDAJE RECOMENDADO ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.lodging !== false" class="md-hotels-section" id="lodging">
+    <div style="text-align: center;" data-aos="fade-up">
+      <h2 class="md-section-title">Hospedaje</h2>
+      <p class="md-section-subtitle">Hoteles sugeridos cerca del evento</p>
+    </div>
+
+    <div class="md-hotels-grid">
+      <div class="md-hotel-card" data-aos="fade-up">
+        <img [src]="assetBaseUrl + 'hotel-peninsula-Is4jSbdC.png'" alt="Hotel" class="md-hotel-img" />
+        <h4 class="md-hotel-title">The Peninsula</h4>
+        <p class="md-card-badge">Tarifa especial mencionando la boda</p>
+      </div>
+      <div class="md-hotel-card" data-aos="fade-up" data-aos-delay="100">
+        <img [src]="assetBaseUrl + 'hotel-marriott-wV0E4Iky.png'" alt="Hotel" class="md-hotel-img" />
+        <h4 class="md-hotel-title">JW Marriott</h4>
+        <p class="md-card-badge">A 10 minutos del recinto</p>
+      </div>
+      <div class="md-hotel-card" data-aos="fade-up" data-aos-delay="200">
+        <img [src]="assetBaseUrl + 'hotel-novotel-CUyCHsIf.png'" alt="Hotel" class="md-hotel-img" />
+        <h4 class="md-hotel-title">Novotel</h4>
+        <p class="md-card-badge">Habitaciones estándar y suites</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="md-divider" *ngIf="invitation?.content?.sectionSettings?.lodging !== false"></div>
+
+  <!-- ==================== 12. MESA DE REGALOS & SOBRE DIGITAL ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.digitalEnvelope !== false || invitation?.content?.sectionSettings?.giftRegistry !== false"
+           class="md-gifts-section"
+           id="gifts">
+    <div class="md-gifts-card" data-aos="fade-up">
+      <!-- Jarrones y soportes de flores a los lados -->
+      <img [src]="assetBaseUrl + 'flower-stand-BmJQHDXB.png'" alt="" style="position: absolute; top: -20px; left: -20px; width: 100px; pointer-events: none;" />
+      <img [src]="assetBaseUrl + 'flower-vase-B9_turUq.png'" alt="" style="position: absolute; bottom: -20px; right: -20px; width: 100px; pointer-events: none;" />
+
+      <h2 class="md-section-title">Regalos</h2>
+      <p class="md-card-details" style="max-width: 500px; margin: 0 auto 24px; font-style: italic;">
+        {{ invitation?.content?.digitalEnvelope?.note || 'Tu presencia es nuestro mejor regalo. Si deseas hacernos un obsequio en efectivo, te dejamos nuestros datos bancarios:' }}
+      </p>
+
+      <div *ngIf="invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.holder" style="margin-bottom: 16px; text-align: center;">
+        <p *ngIf="invitation?.content?.digitalEnvelope?.bank" class="md-card-badge" style="margin-bottom: 4px;">
+          Banco: {{ invitation?.content?.digitalEnvelope?.bank }}
+        </p>
+        <p *ngIf="invitation?.content?.digitalEnvelope?.holder" class="md-card-details">
+          Titular: {{ invitation?.content?.digitalEnvelope?.holder }}
+        </p>
+      </div>
+
+      <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="md-bank-row">
+        <div>
+          <span class="md-label" style="margin-bottom: 2px;">CLABE Interbancaria</span>
+          <strong style="font-family: var(--md-font-display); font-size: 1.1rem;">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+        </div>
+        <button type="button" class="md-copy-btn" (click)="copyToClipboard(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+          {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+
+      <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="md-bank-row">
+        <div>
+          <span class="md-label" style="margin-bottom: 2px;">Número de Cuenta</span>
+          <strong style="font-family: var(--md-font-display); font-size: 1rem;">
+            {{ invitation?.content?.digitalEnvelope?.account }}
+          </strong>
+        </div>
+        <button type="button" class="md-copy-btn" (click)="copyToClipboard(invitation?.content?.digitalEnvelope?.account, 'account')">
+          {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="md-divider"></div>
+
+  <!-- ==================== 13. FORMULARIO RSVP NATIVO ==================== -->
+  <section *ngIf="invitation?.content?.sectionSettings?.rsvp !== false" class="md-rsvp-section" id="rsvp">
+    <div class="md-rsvp-card" data-aos="fade-up">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 class="md-section-title">RSVP</h2>
+        <p class="md-section-subtitle">Confirmación de Asistencia</p>
+      </div>
+
+      <!-- Video de Confirmación si ya fue enviado con éxito -->
+      <div *ngIf="success" style="text-align: center;">
+        <video [src]="assetBaseUrl + 'rsvp-confirmation-DYbKwzwP.webm'" autoplay loop muted playsinline class="md-confirmation-video"></video>
+        <h3 class="md-card-title" style="font-size: 2rem; margin-top: 16px;">¡Muchas Gracias!</h3>
+        <p class="md-card-details">{{ success }}</p>
+      </div>
+
+      <form *ngIf="!success" (ngSubmit)="submitRsvpForm()">
+        <!-- Selector Asistencia Sí / No -->
+        <div class="md-form-group">
+          <label class="md-label">¿Nos acompañarás en nuestro gran día?</label>
+          <div class="md-radio-group">
+            <div class="md-radio-card"
+                 [class.active]="rsvp.response === 'confirmed'"
+                 (click)="onRsvpResponseChange('confirmed')">
+              ✓ Sí, con gusto asistiré
+            </div>
+            <div class="md-radio-card"
+                 [class.active]="rsvp.response === 'declined'"
+                 (click)="onRsvpResponseChange('declined')">
+              ✕ Lamentablemente no podré
+            </div>
+          </div>
+        </div>
+
+        <div class="md-form-group">
+          <label class="md-label">Nombre Completo *</label>
+          <input type="text" class="md-input" [(ngModel)]="rsvp.name" name="name" required placeholder="Tu nombre y apellido" />
+        </div>
+
+        <div class="md-form-group">
+          <label class="md-label">Correo Electrónico</label>
+          <input type="email" class="md-input" [(ngModel)]="rsvp.email" name="email" placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="md-form-group">
+          <label class="md-label">Teléfono / WhatsApp</label>
+          <input type="tel" class="md-input" [(ngModel)]="rsvp.phoneNationalNumber" name="phone" placeholder="10 dígitos" />
+        </div>
+
+        <!-- Acompañantes si confirma -->
+        <div *ngIf="rsvpConfirmedAttending" class="md-form-group">
+          <label class="md-label">Número de Acompañantes</label>
+          <select class="md-select" [(ngModel)]="rsvp.companions" name="companions">
+            <option [ngValue]="0">Sin acompañantes adicionales</option>
+            <option [ngValue]="1">+1 Acompañante</option>
+            <option [ngValue]="2">+2 Acompañantes</option>
+            <option [ngValue]="3">+3 Acompañantes</option>
+          </select>
+        </div>
+
+        <div *ngIf="rsvpConfirmedAttending && rsvp.companions > 0" class="md-form-group">
+          <label class="md-label">Nombre de tus acompañantes</label>
+          <input type="text" class="md-input" [(ngModel)]="companionNamesText" name="companionNames" placeholder="Nombres separados por coma" />
+        </div>
+
+        <div *ngIf="rsvpConfirmedAttending" class="md-form-group">
+          <label class="md-label">Restricciones Alimenticias / Alergias</label>
+          <input type="text" class="md-input" [(ngModel)]="rsvp.dietaryRestrictions" name="dietary" placeholder="Vegetariano, celíaco, alergia a mariscos..." />
+        </div>
+
+        <div class="md-form-group">
+          <label class="md-label">Mensaje para la pareja</label>
+          <textarea class="md-textarea" rows="3" [(ngModel)]="rsvp.message" name="message" placeholder="Escribe un mensaje de buenos deseos..."></textarea>
+        </div>
+
+        <div *ngIf="error" style="color: #b00020; margin-bottom: 16px; font-size: 0.9rem;">
+          {{ error }}
+        </div>
+
+        <button type="submit" class="md-submit-btn" [disabled]="sending">
+          {{ sending ? 'Enviando Confirmación...' : 'Enviar Confirmación' }}
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ==================== 14. MÓDULOS DEL SISTEMA: ÁLBUM, DEDICATORIAS & DJ ==================== -->
+  <!-- Álbum Interactivo de Invitados -->
+  <section *ngIf="invitation?.content?.sectionSettings?.guestAlbum" class="md-welcome-section">
+    <div class="md-module-card" data-aos="fade-up">
+      <h3 class="md-card-title">Álbum de Invitados</h3>
+      <p class="md-card-badge">Comparte tus mejores fotos del evento</p>
+
+      <div style="margin: 20px 0;">
+        <label class="md-btn-outline" style="cursor: pointer;">
+          📷 Subir una Foto
+          <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
+        </label>
+      </div>
+
+      <div *ngIf="publicAlbumAssets?.length" class="md-album-grid">
+        <img *ngFor="let asset of publicAlbumAssets"
+             [src]="asset.url"
+             alt="Foto del evento"
+             class="md-album-thumb"
+             (click)="openLightboxOutput.emit(asset.url)" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Libro de Firmas y Dedicatorias -->
+  <section *ngIf="invitation?.content?.sectionSettings?.dedications" class="md-welcome-section">
+    <div class="md-module-card" data-aos="fade-up">
+      <h3 class="md-card-title">Libro de Dedicatorias</h3>
+      <p class="md-card-badge">Deja tus felicitaciones a los festejados</p>
+
+      <div style="margin-top: 20px;">
+        <input type="text" class="md-input" [(ngModel)]="dedication.publicName" placeholder="Tu nombre" style="margin-bottom: 10px;" />
+        <textarea class="md-textarea" rows="2" [(ngModel)]="dedication.message" placeholder="Tu mensaje o felicitación..."></textarea>
+        <button type="button" class="md-submit-btn" style="margin-top: 12px;" (click)="sendDedication()">
+          Publicar Mensaje
+        </button>
+      </div>
+
+      <div *ngIf="dedications?.length" class="md-dedication-wall">
+        <div *ngFor="let d of dedications" class="md-dedication-item">
+          <strong style="font-family: var(--md-font-display);">{{ d.publicName || 'Invitado' }}</strong>
+          <p style="margin: 4px 0 0; font-family: var(--md-font-serif); font-size: 1.05rem;">{{ d.message }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Canciones para el DJ -->
+  <section *ngIf="event?.externalContent?.songRequestSettings?.enabled" class="md-welcome-section">
+    <div class="md-module-card" data-aos="fade-up">
+      <h3 class="md-card-title">Pide tu Canción al DJ</h3>
+      <p class="md-card-badge">¿Qué canción no puede faltar en la fiesta?</p>
+
+      <div style="margin-top: 16px;">
+        <input type="text"
+               class="md-input"
+               [(ngModel)]="songSearchQuery"
+               (input)="onSongSearchInput()"
+               placeholder="Busca por título o artista..." />
+      </div>
+
+      <div *ngIf="songSearchResults?.length" style="margin-top: 14px; text-align: left;">
+        <div *ngFor="let song of songSearchResults"
+             (click)="onSelectSong(song)"
+             style="padding: 10px; border-bottom: 1px solid var(--md-border); cursor: pointer; display: flex; align-items: center; gap: 10px;">
+          <img [src]="song.thumbnailUrl" alt="" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;" />
+          <div>
+            <strong style="font-family: var(--md-font-display); font-size: 0.95rem;">{{ song.title }}</strong>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--md-muted);">{{ song.artist }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 15. FOOTER EDITORIAL ==================== -->
+  <footer class="md-footer-section">
+    <div data-aos="fade-up">
+      <img [src]="assetBaseUrl + 'monogram-Dd4GSvtc.png'" alt="Monograma" class="md-footer-monogram" />
+      <h2 class="md-footer-names">
+        {{ headlineCouple.partner1 }}
+        <span style="font-style: italic; opacity: 0.7;">&amp;</span>
+        {{ headlineCouple.partner2 }}
+      </h2>
+      <p class="md-footer-date" *ngIf="event?.date">
+        {{ event?.date | date:'dd \'de\' MMMM \'de\' yyyy' }}
+      </p>
+
+      <div style="margin-top: 32px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+        <button type="button" (click)="shareWhatsApp()" class="md-btn-outline">
+          Compartir por WhatsApp
+        </button>
+        <button type="button" (click)="saveCalendar()" class="md-btn-outline">
+          Guardar en Calendario
+        </button>
+      </div>
+
+      <p style="font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--md-muted); margin-top: 40px;">
+        Invitación Digital Exclusiva
+      </p>
+    </div>
+  </footer>
+
+</div>

@@ -11,101 +11,8 @@
     <div class="bg-cover-overlay"></div>
   </div>
 
-  <!-- 1. ENVELOPE INTRO SCREEN -->
-  <div class="envelope-screen" *ngIf="!envelopeOpened" [class.opening]="isOpeningEnvelope">
-    <div class="envelope-card-container">
-      
-      <!-- Animated Envelope Outer -->
-      <div class="envelope-outer">
-        <div class="envelope-flap"></div>
-        <div class="envelope-pocket">
-          <div class="wax-seal" (click)="openEnvelope()">
-            <span class="seal-icon">
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <path d="M12 8v4"></path>
-                <path d="M12 16h.01"></path>
-              </svg>
-            </span>
-          </div>
-        </div>
-
-        <div class="envelope-content-inner">
-          <span class="env-vip-badge">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-            </svg>
-            <span>¡Estás Invitado(a)! · Acceso VIP</span>
-          </span>
-
-          <p class="env-subtitle">{{ invitation?.content?.subheadline || 'Nuestra Celebración Especial' }}</p>
-          <h1 class="env-title">{{ invitation?.content?.headline || event?.title || 'Invitación Especial' }}</h1>
-          
-          <div class="env-date-pill" *ngIf="event?.date">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            <span>{{ formatDate(event?.date) }}</span>
-          </div>
-
-          <!-- GUEST ACCESS VERIFICATION PROMPT IF REQUIRED -->
-          <div class="env-auth-box" *ngIf="requiresGuestAuth">
-            <p class="env-auth-desc">
-              Esta invitación es privada. Para abrir tu sobre y ver los detalles del evento, ingresa tu correo o teléfono registrado:
-            </p>
-            <div class="env-auth-input-group">
-              <div class="env-input-wrap">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-                <input type="text" 
-                       class="env-input" 
-                       [(ngModel)]="guestAccessInput" 
-                       placeholder="Tu correo o teléfono registrado..."
-                       (keyup.enter)="openEnvelope()"
-                       [disabled]="checkingGuest">
-              </div>
-              <button type="button" class="env-btn-open" (click)="openEnvelope()" [disabled]="checkingGuest || !guestAccessInput.trim()">
-                <svg *ngIf="!checkingGuest" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-                </svg>
-                <div *ngIf="checkingGuest" class="btn-spinner"></div>
-                <span>{{ checkingGuest ? 'Verificando...' : 'Validar y Abrir Sobre' }}</span>
-              </button>
-            </div>
-            <p class="env-error" *ngIf="error">{{ error }}</p>
-          </div>
-
-          <!-- OPEN ENVELOPE BUTTON FOR PUBLIC ACCESS -->
-          <div class="env-action-box" *ngIf="!requiresGuestAuth">
-            <p class="env-welcome" *ngIf="verifiedGuest">
-              ¡Hola, <strong>{{ verifiedGuest.name }}</strong>! Toca para abrir tu sobre de invitación.
-            </p>
-            <p class="env-welcome" *ngIf="!verifiedGuest">
-              Te invitamos a compartir este momento tan importante con nosotros.
-            </p>
-            <button type="button" class="env-btn-open" (click)="openEnvelope()">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              <span>Abrir Invitación</span>
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-    </div>
-  </div>
-
   <!-- 2. MAIN SWIPABLE CARDS INVITATION VIEW -->
-  <div class="invitation-main-view" *ngIf="envelopeOpened">
+  <div class="invitation-main-view">
 
     <!-- FLOATING TOP BAR -->
     <header class="top-nav-bar">
@@ -910,6 +817,96 @@
                     <span>{{ songRequestSending ? 'Enviando...' : (requireSongApproval ? 'Enviar al DJ' : 'Agregar a Playlist') }}</span>
                   </button>
                 </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD FINAL: SOBRE INTERACTIVO & ACCESO VIP -->
+        <div class="card-slide">
+          <div class="card-glass hero-card-layout" style="overflow-y: auto; padding: 16px;">
+            <div class="envelope-outer" style="max-width: 440px; margin: 0 auto; width: 100%;">
+              <div class="envelope-flap"></div>
+              <div class="envelope-pocket">
+                <div class="wax-seal" (click)="openEnvelope()">
+                  <span class="seal-icon">
+                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      <path d="M12 8v4"></path>
+                      <path d="M12 16h.01"></path>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+
+              <div class="envelope-content-inner">
+                <span class="env-vip-badge">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                  <span>¡Estás Invitado(a)! · Acceso VIP</span>
+                </span>
+
+                <p class="env-subtitle">{{ invitation?.content?.subheadline || 'Nuestra Celebración Especial' }}</p>
+                <h1 class="env-title">{{ invitation?.content?.headline || event?.title || 'Invitación Especial' }}</h1>
+                
+                <div class="env-date-pill" *ngIf="event?.date">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>{{ formatDate(event?.date) }}</span>
+                </div>
+
+                <!-- GUEST ACCESS VERIFICATION PROMPT IF REQUIRED -->
+                <div class="env-auth-box" *ngIf="requiresGuestAuth">
+                  <p class="env-auth-desc">
+                    Esta invitación es privada. Para abrir tu sobre y ver los detalles del evento, ingresa tu correo o teléfono registrado:
+                  </p>
+                  <div class="env-auth-input-group">
+                    <div class="env-input-wrap">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                      </svg>
+                      <input type="text" 
+                             class="env-input" 
+                             [(ngModel)]="guestAccessInput" 
+                             placeholder="Tu correo o teléfono registrado..."
+                             (keyup.enter)="openEnvelope()"
+                             [disabled]="checkingGuest">
+                    </div>
+                    <button type="button" class="env-btn-open" (click)="openEnvelope()" [disabled]="checkingGuest || !guestAccessInput.trim()">
+                      <svg *ngIf="!checkingGuest" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                      </svg>
+                      <div *ngIf="checkingGuest" class="btn-spinner"></div>
+                      <span>{{ checkingGuest ? 'Verificando...' : 'Validar y Abrir Sobre' }}</span>
+                    </button>
+                  </div>
+                  <p class="env-error" *ngIf="error">{{ error }}</p>
+                </div>
+
+                <!-- OPEN ENVELOPE BUTTON FOR PUBLIC ACCESS -->
+                <div class="env-action-box" *ngIf="!requiresGuestAuth">
+                  <p class="env-welcome" *ngIf="verifiedGuest">
+                    ¡Hola, <strong>{{ verifiedGuest.name }}</strong>! Tu acceso VIP está verificado.
+                  </p>
+                  <p class="env-welcome" *ngIf="!verifiedGuest">
+                    Te invitamos a compartir este momento tan importante con nosotros.
+                  </p>
+                  <button type="button" class="env-btn-open" (click)="openEnvelope()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <span>Abrir Invitación</span>
+                  </button>
+                </div>
+
               </div>
             </div>
           </div>

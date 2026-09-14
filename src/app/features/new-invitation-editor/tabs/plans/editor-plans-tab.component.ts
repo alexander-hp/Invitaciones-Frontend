@@ -99,6 +99,14 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       features: ['Estética Royal Cinematic', 'Arcos de catedral esmerilados', 'Microinteracciones GSAP', 'Efectos de oro líquido']
     },
     {
+      id: 'maison-dore',
+      name: 'La Maison Dorée (Haute Couture & Video Envelope)',
+      badge: 'Video Intro & Súper Lujo',
+      description: 'Experiencia inmersiva con video cinemático del sobre y apertura al tacto, columnas romanas clásicas, cortinas de terciopelo realistas, monograma de oro y estética editorial.',
+      iconKey: 'envelope',
+      features: ['Video de sobre interactivo', 'Video de apertura cinemática', 'Columnas romanas y cortinas', 'Estética editorial de alta costura']
+    },
+    {
       id: 'template-boda',
       name: 'Temática Boda: Royal Champagne & Marfil Imperial',
       badge: 'Exclusiva Boda',
@@ -152,7 +160,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     private apiService: ApiService,
     private confirmDialog: ConfirmDialogService,
     private sanitizer: DomSanitizer
-  ) {}
+  ) { }
 
   private lastLoadedEntityKey = '';
 
@@ -285,7 +293,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     const invId = this.invitation?._id || this.invitation?.id;
     const slug = this.invitation?.slug;
     const fromStorage = (slug ? localStorage.getItem(`inv_active_sub_${slug}`) : null) ||
-                        (invId ? localStorage.getItem(`inv_active_sub_${invId}`) : null);
+      (invId ? localStorage.getItem(`inv_active_sub_${invId}`) : null);
     if (fromStorage) return fromStorage;
 
     if (slug && typeof document !== 'undefined') {
