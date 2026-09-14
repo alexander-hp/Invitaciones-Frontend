@@ -403,7 +403,15 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     });
   }
 
+  get hasActiveInvitation(): boolean {
+    return !!(this.invitations && this.invitations.length > 0);
+  }
+
   createInvitation(): void {
+    if (this.invitations && this.invitations.length >= 3) {
+      this.showError('Has alcanzado el límite máximo de 3 invitaciones para este evento.');
+      return;
+    }
     this.openInvitationWizard.emit();
   }
 

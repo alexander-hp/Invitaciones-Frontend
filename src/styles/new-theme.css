@@ -644,6 +644,32 @@
   box-shadow: 0 2px 6px rgba(192, 156, 120, 0.2);
 }
 
+/* Botón con alto contraste / Focus nítido */
+.nw-btn-focus {
+  background: linear-gradient(135deg, #2a221d 0%, #15100d 100%);
+  color: #ffffff !important;
+  border: 1px solid rgba(192, 156, 120, 0.45);
+  box-shadow: 0 4px 14px rgba(35, 28, 24, 0.28);
+}
+
+.nw-btn-focus:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #3a3029 0%, #1e1713 100%);
+  box-shadow: 0 6px 18px rgba(35, 28, 24, 0.38), 0 0 0 2px rgba(192, 156, 120, 0.25);
+  filter: brightness(1.05);
+}
+
+.nw-btn-focus:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(35, 28, 24, 0.2);
+}
+
+.nw-btn-focus:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
 .nw-btn-ghost {
   background: var(--nw-surface);
   color: var(--nw-text-2);

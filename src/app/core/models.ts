@@ -333,12 +333,14 @@ export interface AiTemplateResult {
   html: string;
   css: string;
   features?: string[];
+  rawResponse?: string;
 }
 
 export interface AiTemplateResponse {
   success: boolean;
   template: AiTemplateResult;
   message?: string;
+  rawResponse?: string;
 }
 
 export interface AiTemplatePromptPreviewResponse {

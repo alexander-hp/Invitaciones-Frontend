@@ -460,3 +460,157 @@
     grid-template-rows: 1fr 280px;
   }
 }
+
+/* ========================================== */
+/* MODAL DE IMPORTACIÓN / SUBIDA DE JSON      */
+/* ========================================== */
+.import-json-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.import-json-dialog {
+  background: var(--nw-surface, #ffffff);
+  border: 1px solid var(--nw-border, #e2e8f0);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 580px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.import-json-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--nw-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.import-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(197, 155, 108, 0.15);
+  color: var(--nw-accent, #c59b6c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.import-json-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.import-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--nw-surface-2, #f8fafc);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--nw-border);
+}
+
+.import-tab-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nw-text-2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.import-tab-btn.active {
+  background: var(--nw-surface, #ffffff);
+  color: var(--nw-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.import-error-msg {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropzone-box {
+  border: 2px dashed var(--nw-accent, #c59b6c);
+  background: rgba(197, 155, 108, 0.04);
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dropzone-box:hover {
+  background: rgba(197, 155, 108, 0.09);
+  border-color: var(--nw-accent);
+  transform: translateY(-1px);
+}
+
+.dropzone-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(197, 155, 108, 0.12);
+  color: var(--nw-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.json-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  background: #0f172a;
+  color: #38bdf8;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.json-textarea::placeholder {
+  color: #64748b;
+}
+
+.import-json-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--nw-border);
+  display: flex;
+  justify-content: flex-end;
+  background: var(--nw-surface);
+}

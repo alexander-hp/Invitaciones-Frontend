@@ -35,15 +35,22 @@
       (click)="toggleCard('invitations')">
       <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap; flex:1; min-width:0;">
         <h3 style="margin:0;">Invitaciones</h3>
-        <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="$event.stopPropagation(); createInvitation()"
-          [disabled]="saving || event.mode === 'external_dashboard' || invitations.length >= 1"
-          style="display: inline-flex; align-items: center; gap: 4px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+        <span *ngIf="invitations.length > 0" class="nw-pill"
+          [style.background]="invitations.length >= 3 ? 'var(--nw-warning-bg)' : 'var(--nw-surface-2)'"
+          [style.color]="invitations.length >= 3 ? 'var(--nw-warning)' : 'var(--nw-text-2)'"
+          style="font-size: 11px; font-weight: 800; border: 1px solid var(--nw-border); padding: 2px 8px;">
+          {{ invitations.length }}/3
+        </span>
+        <button class="nw-btn nw-btn-focus nw-btn-sm" (click)="$event.stopPropagation(); createInvitation()"
+          [disabled]="saving || event.mode === 'external_dashboard' || invitations.length >= 3"
+          [title]="invitations.length >= 3 ? 'Has alcanzado el límite máximo de 3 invitaciones por evento' : 'Crear nueva invitación'"
+          style="display: inline-flex; align-items: center; gap: 5px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#f5d0a9" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span>Crear invitación</span>
+          <span>{{ invitations.length >= 3 ? 'Límite alcanzado (3/3)' : 'Crear invitación' }}</span>
         </button>
       </div>
       <button type="button" class="nw-collapse-btn" (click)="$event.stopPropagation(); toggleCard('invitations')">
@@ -52,13 +59,58 @@
     </div>
 
     <div *ngIf="!collapsedCards['invitations']">
-      <div *ngIf="!invitations.length" class="nw-empty"
-        style="padding: 30px 20px; text-align: center; color: var(--nw-text-3); background: var(--nw-surface-2); border: 1px dashed var(--nw-border); border-radius: var(--nw-radius-sm);">
-        <span class="empty-icon" style="font-size: 32px; display: block; margin-bottom: 6px;">📂</span>
-        <h3 style="margin: 0; font-size: 14.5px; font-weight: 700; color: var(--nw-text);">Este evento aún no tiene
-          invitaciones.</h3>
-        <p style="font-size: 12.5px; margin-top: 4px; color: var(--nw-text-2);">Crea tu primera invitación para empezar
-          a personalizarla.</p>
+      <!-- 🌟 BANNER INFORMATIVO (ARRIBA) CUANDO NO HAY INVITACIONES ACTIVAS 🌟 -->
+      <div *ngIf="!hasActiveInvitation" class="nw-invitation-banner"
+        style="padding: 24px; background: linear-gradient(135deg, #ffffff 0%, #faf6f0 60%, rgba(192, 156, 120, 0.12) 100%); border: 1.5px solid rgba(192, 156, 120, 0.45); border-left: 5px solid var(--nw-accent, #c09c78); border-radius: var(--nw-radius-sm); position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(46, 38, 33, 0.06), 0 1px 4px rgba(192, 156, 120, 0.1);">
+        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+          <!-- Ícono destacado -->
+          <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #2a221d 0%, #15100d 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(35, 28, 24, 0.25); border: 1px solid rgba(192, 156, 120, 0.4);">
+            💌
+          </div>
+
+          <!-- Contenido textual y CTA -->
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+              <h4 style="margin: 0; font-family: var(--nw-font-display); font-size: 16.5px; font-weight: 800; color: var(--nw-text);">
+                Configura tu Invitación Digital Interactiva
+              </h4>
+              <span class="nw-pill" style="font-size: 11px; font-weight: 800; background: rgba(192, 156, 120, 0.18); color: #7a5228; border: 1px solid rgba(192, 156, 120, 0.5);">
+                Hasta 3 invitaciones
+              </span>
+            </div>
+            <p style="margin: 0 0 16px; font-size: 13.5px; color: var(--nw-text-2); line-height: 1.55; max-width: 680px;">
+              Aún no tienes ninguna invitación activa para este evento. Diseña una experiencia inolvidable para tus invitados: añade música de fondo, itinerario del evento, mapas con Waze y Google Maps, confirmaciones RSVP en tiempo real y mesa de regalos o sobre digital.
+            </p>
+
+            <!-- Badges de características -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+                ✨ RSVP y pase digital
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+                🎵 Música y galería
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+                📍 Ubicaciones interactivas
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+                🎁 Regalos y sobre digital
+              </span>
+            </div>
+
+            <!-- Botón de acción principal con alto contraste -->
+            <button class="nw-btn nw-btn-focus" type="button" (click)="createInvitation()"
+              [disabled]="saving || event.mode === 'external_dashboard'"
+              style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; height: 40px; padding: 0 20px; font-size: 14px; border-radius: var(--nw-radius-sm);">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f5d0a9" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Crear invitación</span>
+            </button>
+          </div>
+        </div>
       </div>
       <div style="display:grid; gap:10px;" *ngIf="invitations.length > 0">
         <div *ngFor="let inv of invitations"
@@ -1109,6 +1161,60 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌟 BANNER INFORMATIVO AL FINAL CUANDO NO HAY INVITACIONES ACTIVAS 🌟 -->
+  <div *ngIf="!hasActiveInvitation && isOwner()" class="nw-invitation-banner"
+    style="margin-top: 24px; padding: 24px; background: linear-gradient(135deg, #ffffff 0%, #faf6f0 60%, rgba(192, 156, 120, 0.12) 100%); border: 1.5px solid rgba(192, 156, 120, 0.45); border-left: 5px solid var(--nw-accent, #c09c78); border-radius: var(--nw-radius); position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(46, 38, 33, 0.06), 0 1px 4px rgba(192, 156, 120, 0.1);">
+    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+      <!-- Ícono destacado -->
+      <div style="width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #2a221d 0%, #15100d 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(35, 28, 24, 0.25); border: 1px solid rgba(192, 156, 120, 0.4);">
+        💌
+      </div>
+
+      <!-- Contenido textual y CTA -->
+      <div style="flex: 1; min-width: 260px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+          <h4 style="margin: 0; font-family: var(--nw-font-display); font-size: 16.5px; font-weight: 800; color: var(--nw-text);">
+            Configura tu Invitación Digital Interactiva
+          </h4>
+          <span class="nw-pill" style="font-size: 11px; font-weight: 800; background: rgba(192, 156, 120, 0.18); color: #7a5228; border: 1px solid rgba(192, 156, 120, 0.5);">
+            Hasta 3 invitaciones
+          </span>
+        </div>
+        <p style="margin: 0 0 16px; font-size: 13.5px; color: var(--nw-text-2); line-height: 1.55; max-width: 680px;">
+          Aún no tienes ninguna invitación activa para este evento. Diseña una experiencia inolvidable para tus invitados: añade música de fondo, itinerario del evento, mapas con Waze y Google Maps, confirmaciones RSVP en tiempo real y mesa de regalos o sobre digital.
+        </p>
+
+        <!-- Badges de características -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+            ✨ RSVP y pase digital
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+            🎵 Música y galería
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+            📍 Ubicaciones interactivas
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2e2621; background: #ffffff; padding: 4px 10px; border-radius: var(--nw-radius-lg); border: 1px solid rgba(192, 156, 120, 0.35); box-shadow: 0 1px 3px rgba(46, 38, 33, 0.04);">
+            🎁 Regalos y sobre digital
+          </span>
+        </div>
+
+        <!-- Botón de acción principal con alto contraste -->
+        <button class="nw-btn nw-btn-focus" type="button" (click)="createInvitation()"
+          [disabled]="saving || event.mode === 'external_dashboard'"
+          style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; height: 40px; padding: 0 20px; font-size: 14px; border-radius: var(--nw-radius-sm);">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f5d0a9" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Crear invitación</span>
+        </button>
       </div>
     </div>
   </div>

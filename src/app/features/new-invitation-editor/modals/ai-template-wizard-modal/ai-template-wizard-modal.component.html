@@ -22,18 +22,58 @@
         </div>
       </div>
 
-      <!-- Close Button -->
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="close.emit()" style="font-size:16px;">✕</button>
+      <!-- Acciones de cabecera -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="openImportModal()"
+          style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:var(--nw-text-2); border:1px solid var(--nw-border);"
+          title="Cargar o subir un archivo JSON con una plantilla">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Cargar JSON</span>
+        </button>
+
+        <!-- Close Button -->
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="close.emit()" style="font-size:16px;">✕</button>
+      </div>
     </div>
 
     <!-- ERROR BANNER IF ANY -->
     <div *ngIf="saveError" class="ai-error-banner">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="8" x2="12" y2="12"></line>
-        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-      </svg>
-      <span>{{ saveError }}</span>
+      <div style="display:flex; align-items:center; gap:8px; flex:1;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ saveError }}</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+        <button *ngIf="lastFailedRawResponse" type="button" class="nw-btn nw-btn-sm" (click)="downloadFailedResponse()"
+          style="background:rgba(220, 38, 38, 0.12); color:#dc2626; border:1px solid rgba(220, 38, 38, 0.3); font-weight:700; display:inline-flex; align-items:center; gap:5px;"
+          title="Descargar el texto recibido de la IA antes del fallo">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Descargar Respuesta IA</span>
+        </button>
+
+        <button type="button" class="nw-btn nw-btn-sm" (click)="openImportModal()"
+          style="background:#dc2626; color:#ffffff; font-weight:700; border:none; display:inline-flex; align-items:center; gap:5px;"
+          title="Subir un archivo JSON corregido">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Subir JSON Corregido</span>
+        </button>
+      </div>
     </div>
 
     <!-- SUCCESS BANNER -->
@@ -268,6 +308,31 @@
             </div>
           </div>
 
+          <!-- Acciones de Descarga / Carga en Preview -->
+          <div style="display:flex; align-items:center; gap:6px; margin-left:auto; margin-right:8px;">
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="downloadCurrentJson()"
+              style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; border:1px solid var(--nw-border);"
+              title="Descargar esta plantilla en archivo JSON">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Descargar JSON</span>
+            </button>
+
+            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="openImportModal()"
+              style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; border:1px solid var(--nw-border);"
+              title="Cargar o reemplazar diseño con otro archivo JSON">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Subir JSON</span>
+            </button>
+          </div>
+
           <!-- Selector de Dispositivos -->
           <div *ngIf="previewActiveTab === 'preview'" style="display:flex; gap:4px; align-items:center;">
             <button class="nw-btn nw-btn-sm" type="button"
@@ -375,13 +440,36 @@
     <!-- FOOTER Y BOTONES DE ACCIÓN -->
     <!-- ========================================================= -->
     <div class="ai-wizard-footer">
-      <button *ngIf="step !== 'preview' && step !== 'generating'" class="nw-btn nw-btn-ghost" type="button" (click)="close.emit()">
-        Cancelar
-      </button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button *ngIf="step !== 'preview' && step !== 'generating'" class="nw-btn nw-btn-ghost" type="button" (click)="close.emit()">
+          Cancelar
+        </button>
 
-      <button *ngIf="step === 'preview'" class="nw-btn nw-btn-ghost" type="button" (click)="step = 'style'">
-        ← Volver a configurar
-      </button>
+        <button *ngIf="step !== 'preview' && step !== 'generating'" class="nw-btn nw-btn-ghost" type="button" (click)="openImportModal()"
+          style="display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--nw-text-2);">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Cargar JSON</span>
+        </button>
+
+        <button *ngIf="step === 'preview'" class="nw-btn nw-btn-ghost" type="button" (click)="step = 'style'">
+          ← Volver a configurar
+        </button>
+
+        <button *ngIf="step === 'preview'" class="nw-btn nw-btn-ghost" type="button" (click)="downloadCurrentJson()"
+          style="display:inline-flex; align-items:center; gap:6px; font-weight:600;"
+          title="Descargar una copia de esta plantilla en JSON">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Descargar JSON</span>
+        </button>
+      </div>
 
       <!-- Botones de Siguiente / Generar -->
       <div style="display:flex; gap:10px; align-items:center;">
@@ -440,6 +528,108 @@
           <span *ngIf="saving" class="mini-spinner"></span>
           <span>{{ saving ? 'Guardando en Servidor...' : (saveSuccess ? '¡Plantilla Aplicada!' : 'Guardar y Aplicar Plantilla') }}</span>
         </button>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL SECUNDARIO: CARGAR / IMPORTAR JSON -->
+    <!-- ========================================================= -->
+    <div *ngIf="showImportJsonModal" class="import-json-overlay" (click)="closeImportModal()">
+      <div class="import-json-dialog" (click)="$event.stopPropagation()">
+        
+        <!-- Header Dialog -->
+        <div class="import-json-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="import-icon-box">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div>
+              <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--nw-text);">Cargar Plantilla desde JSON</h3>
+              <p style="margin:2px 0 0; font-size:12px; color:var(--nw-text-3);">Importa un diseño en formato JSON para visualizarlo o refinarlo con la IA</p>
+            </div>
+          </div>
+          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="closeImportModal()" style="font-size:16px;">✕</button>
+        </div>
+
+        <!-- Body Dialog -->
+        <div class="import-json-body">
+          <!-- Tabs: Archivo / Pegar -->
+          <div class="import-tabs">
+            <button type="button" class="import-tab-btn" [class.active]="importJsonTab === 'file'" (click)="importJsonTab = 'file'">
+              📁 Subir Archivo .json
+            </button>
+            <button type="button" class="import-tab-btn" [class.active]="importJsonTab === 'paste'" (click)="importJsonTab = 'paste'">
+              📋 Pegar Código JSON
+            </button>
+          </div>
+
+          <!-- Error si hubo problema al parsear -->
+          <div *ngIf="importJsonError" class="import-error-msg">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ importJsonError }}</span>
+          </div>
+
+          <!-- Pestaña 1: Subir Archivo -->
+          <div *ngIf="importJsonTab === 'file'" class="dropzone-box" (click)="jsonFileInput.click()">
+            <input #jsonFileInput type="file" accept=".json,application/json" (change)="onJsonFileSelected($event)" style="display:none">
+            <div class="dropzone-icon">
+              <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <h4 style="margin:12px 0 4px; font-size:15px; font-weight:700; color:var(--nw-text);">Haz clic aquí para seleccionar tu archivo .json</h4>
+            <p style="margin:0 0 14px; font-size:12.5px; color:var(--nw-text-3);">Estructura admitida: <code>&#123; name, html, css, features &#125;</code> o archivo generado por IA</p>
+            <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Examinar en mi Equipo</span>
+            </button>
+          </div>
+
+          <!-- Pestaña 2: Pegar Texto -->
+          <div *ngIf="importJsonTab === 'paste'" style="display:flex; flex-direction:column; gap:10px;">
+            <p style="margin:0; font-size:12.5px; color:var(--nw-text-2);">
+              Pega aquí el contenido JSON devuelto por la IA o corregido manualmente:
+            </p>
+            <textarea class="nw-textarea json-textarea" [(ngModel)]="pastedJsonText"
+              rows="11" placeholder='{\n  "name": "Elegancia Oro y Noir",\n  "html": "<!DOCTYPE html>...",\n  "css": "body { ... }"\n}'></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="pastedJsonText = ''">
+                Limpiar
+              </button>
+              <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="applyPastedJson()" [disabled]="!pastedJsonText.trim()"
+                style="display:inline-flex; align-items:center; gap:6px; font-weight:700;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Cargar y Previsualizar</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer Dialog -->
+        <div class="import-json-footer">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="closeImportModal()">
+            Cerrar
+          </button>
+        </div>
+
       </div>
     </div>
 

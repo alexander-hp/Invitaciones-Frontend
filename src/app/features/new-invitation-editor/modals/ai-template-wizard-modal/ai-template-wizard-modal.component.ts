@@ -168,6 +168,16 @@ export class AiTemplateWizardModalComponent implements OnInit {
   refining = false;
   chatHistory: Array<{ role: 'user' | 'ai'; text: string; timestamp: Date }> = [];
 
+  // Respaldo de respuesta IA para descarga y depuración
+  lastRawResponse = '';
+  lastFailedRawResponse = '';
+
+  // Modal para importar JSON (archivo o pegar texto)
+  showImportJsonModal = false;
+  importJsonTab: 'file' | 'paste' = 'file';
+  pastedJsonText = '';
+  importJsonError = '';
+
   // Guardado
   saving = false;
   saveSuccess = false;
@@ -177,6 +187,144 @@ export class AiTemplateWizardModalComponent implements OnInit {
     private api: ApiService,
     private sanitizer: DomSanitizer
   ) {}
+
+  downloadJsonFile(content: any, fileName: string): void {
+    try {
+      const jsonString = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Error al descargar archivo JSON:', e);
+    }
+  }
+
+  getEventSlug(): string {
+    return this.invitation?.slug ||
+      (this.event as any)?.externalPortalSlug ||
+      (this.event as any)?.slug ||
+      (this.event?.title ? this.event.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'evento');
+  }
+
+  downloadCurrentJson(): void {
+    if (!this.generatedResult) return;
+    const slug = this.getEventSlug();
+    this.downloadJsonFile(this.generatedResult, `plantilla-ia-${slug}-${Date.now()}.json`);
+  }
+
+  downloadFailedResponse(): void {
+    if (!this.lastFailedRawResponse) return;
+    const slug = this.getEventSlug();
+    this.downloadJsonFile(this.lastFailedRawResponse, `respuesta-ia-incompleta-${slug}-${Date.now()}.json`);
+  }
+
+  openImportModal(): void {
+    this.showImportJsonModal = true;
+    this.importJsonError = '';
+    this.pastedJsonText = '';
+  }
+
+  closeImportModal(): void {
+    this.showImportJsonModal = false;
+    this.importJsonError = '';
+  }
+
+  onJsonFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const content = e.target?.result as string;
+      this.processAndLoadJson(content, file.name);
+      input.value = '';
+    };
+
+    reader.onerror = () => {
+      this.saveError = 'No se pudo leer el archivo seleccionado.';
+      input.value = '';
+    };
+
+    reader.readAsText(file, 'utf-8');
+  }
+
+  processAndLoadJson(rawText: string, sourceName?: string): boolean {
+    if (!rawText || !rawText.trim()) {
+      this.importJsonError = 'El contenido proporcionado está vacío.';
+      return false;
+    }
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(rawText.trim());
+    } catch (e1) {
+      const cleaned = rawText
+        .trim()
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e2: any) {
+        this.importJsonError = `Error al interpretar el JSON: ${e2?.message || 'Formato no válido'}. Asegúrate de que las comillas y llaves estén completas.`;
+        this.saveError = this.importJsonError;
+        return false;
+      }
+    }
+
+    const data = parsed.template || parsed;
+    const html = data.html || data.htmlCode || (typeof data === 'string' ? data : '');
+    const css = data.css || data.cssCode || '';
+    const name = data.name || (sourceName ? sourceName.replace(/\.json$/i, '') : 'Plantilla Importada');
+    const description = data.description || 'Plantilla cargada manualmente desde archivo JSON';
+    const features = Array.isArray(data.features) ? data.features : [];
+
+    if (!html || typeof html !== 'string' || !html.trim()) {
+      this.importJsonError = 'El JSON debe contener al menos la propiedad "html" con el código HTML de la invitación.';
+      this.saveError = this.importJsonError;
+      return false;
+    }
+
+    this.generatedResult = {
+      name,
+      description,
+      html,
+      css,
+      features
+    };
+
+    this.lastRawResponse = JSON.stringify(parsed, null, 2);
+    this.updatePreviewSrcdoc();
+    this.step = 'preview';
+    this.saveError = '';
+    this.importJsonError = '';
+    this.showImportJsonModal = false;
+
+    this.chatHistory = [
+      {
+        role: 'ai',
+        text: `¡Plantilla "${name}" cargada exitosamente desde JSON! Puedes verla en vivo a la derecha, probarla y pedirme cambios o guardarla para tu evento.`,
+        timestamp: new Date()
+      }
+    ];
+
+    return true;
+  }
+
+  applyPastedJson(): void {
+    if (!this.pastedJsonText.trim()) {
+      this.importJsonError = 'Por favor ingresa o pega el código JSON.';
+      return;
+    }
+    this.processAndLoadJson(this.pastedJsonText, 'Plantilla Pegada');
+  }
 
   ngOnInit(): void {
     if (this.invitation?.content?.palette) {
@@ -210,6 +358,7 @@ export class AiTemplateWizardModalComponent implements OnInit {
     this.step = 'generating';
     this.generating = true;
     this.saveError = '';
+    this.lastFailedRawResponse = '';
     this.generationStepText = 'Conectando con Google Gemini AI y analizando estilo...';
 
     const selectedPreset = this.stylePresets.find(s => s.id === this.selectedStyleId);
@@ -240,11 +389,18 @@ export class AiTemplateWizardModalComponent implements OnInit {
         this.generating = false;
         if (res.template && res.template.html) {
           this.generatedResult = res.template;
+          this.lastRawResponse = res.rawResponse || JSON.stringify(res.template, null, 2);
+          this.lastFailedRawResponse = '';
           this.updatePreviewSrcdoc();
+
+          // Descarga automática del JSON generado al terminar
+          const slug = this.getEventSlug();
+          this.downloadJsonFile(res.template, `plantilla-ia-${slug}-${Date.now()}.json`);
+
           this.chatHistory = [
             {
               role: 'ai',
-              text: `¡He creado la plantilla "${res.template.name}" para tu evento! Puedes ver el diseño en vivo a la derecha, probarlo en diferentes dispositivos y pedirme cualquier cambio que desees.`,
+              text: `¡He creado la plantilla "${res.template.name}" para tu evento! Se descargó automáticamente una copia en formato JSON en tu equipo. Puedes probarla en diferentes dispositivos y pedirme cualquier cambio que desees.`,
               timestamp: new Date()
             }
           ];
@@ -258,6 +414,13 @@ export class AiTemplateWizardModalComponent implements OnInit {
         this.generating = false;
         this.step = 'style';
         this.saveError = err?.error?.message || 'Error al conectar con la API de Gemini AI. Verifica la configuración.';
+
+        // Si el backend devolvió el texto crudo recibido de la IA antes del corte/error
+        if (err?.error?.rawResponse) {
+          this.lastFailedRawResponse = err.error.rawResponse;
+          const slug = this.getEventSlug();
+          this.downloadJsonFile(this.lastFailedRawResponse, `respuesta-ia-incompleta-${slug}-${Date.now()}.json`);
+        }
       }
     });
   }
