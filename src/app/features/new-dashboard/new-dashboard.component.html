@@ -35,6 +35,14 @@
         <h1>Dashboard</h1>
         <p>Resumen general de tus eventos e invitaciones</p>
       </div>
+      <button class="nw-btn nw-btn-focus" (click)="showCreateModal = true"
+        style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f5d0a9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Nuevo evento</span>
+      </button>
     </div>
 
     <!-- Loading -->
@@ -255,6 +263,13 @@
         <span class="empty-icon">🎪</span>
         <h3>Sin eventos aún</h3>
         <p>Crea tu primer evento para comenzar a gestionar invitados y mesas.</p>
+        <button class="nw-btn nw-btn-focus nw-btn-sm" style="margin-top: 14px; display: inline-flex; align-items: center; gap: 6px;" (click)="showCreateModal = true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#f5d0a9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Nuevo evento</span>
+        </button>
       </div>
 
       <div class="nw-events-grid" *ngIf="events.length > 0">
@@ -339,5 +354,146 @@
         </div>
       </div>
     </section>
+
+    <!-- Create Modal -->
+    <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="showCreateModal = false">
+      <div class="nw-modal" (click)="$event.stopPropagation()">
+        <h2>Nuevo evento</h2>
+        <p *ngIf="createError" class="nw-alert error" style="margin-bottom: 14px;">{{ createError }}</p>
+        <div class="nw-form-grid">
+          <label class="nw-label nw-form-wide">
+            Título del evento
+            <input class="nw-input" [(ngModel)]="newEvent.title" placeholder="Ej: Boda Ana & Carlos">
+          </label>
+          <label class="nw-label">
+            Modo
+            <select class="nw-select" [(ngModel)]="newEvent.mode">
+              <option value="invitation">Invitación digital completa</option>
+              <option value="external_dashboard">Solo dashboard para evento externo</option>
+            </select>
+          </label>
+          <label class="nw-label">
+            Tipo
+            <select class="nw-select" [(ngModel)]="newEvent.type">
+              <option value="boda">Boda</option>
+              <option value="xv">XV Años</option>
+              <option value="graduacion">Graduación</option>
+              <option value="cumpleanos">Cumpleaños</option>
+              <option value="bautizo">Bautizo</option>
+              <option value="otro">Otro</option>
+            </select>
+          </label>
+          <label class="nw-label">
+            Fecha
+            <input class="nw-input" type="date" [(ngModel)]="newEvent.date">
+          </label>
+          <label class="nw-label">
+            <span style="display: flex; align-items: center; justify-content: space-between;">
+              <span>Hora</span>
+              <small style="font-weight: 400; color: var(--nw-text-3); font-size: 11px;">(opcional)</small>
+            </span>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input #newDashTimeInput class="nw-input" type="time" [(ngModel)]="newEvent.time"
+                (click)="openTimePicker(newDashTimeInput)" style="width: 100%; cursor: pointer; padding-right: 32px;">
+              <button type="button" (click)="openTimePicker(newDashTimeInput)" title="Abrir reloj"
+                style="position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; color: var(--nw-text-3); display: flex; align-items: center; justify-content: center; padding: 2px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </button>
+            </div>
+          </label>
+          <label class="nw-label nw-form-wide">
+            Anfitriones
+            <input class="nw-input" [(ngModel)]="newEvent.hosts" placeholder="Ej: Ana, Carlos">
+          </label>
+          <label class="nw-label" style="position: relative;">
+            <a style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;">
+              Lugar (nombre)
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="display: inline-block; vertical-align: middle; margin-left: 2px; color: var(--nw-text-3);">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </a>
+            <input class="nw-input" [(ngModel)]="newEvent.venueName" (input)="onVenueNameInput(newEvent.venueName)"
+              placeholder="Salón Versalles / Hacienda">
+            <span *ngIf="locationSearchLoading"
+              style="font-size: 11px; color: var(--nw-primary, #2563eb); display: block; margin-top: 2px;">Buscando
+              lugar...</span>
+
+            <ul *ngIf="locationSearchResults?.length"
+              style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #cbd5e1); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); list-style: none; padding: 4px 0; margin: 4px 0 0 0; max-height: 220px; overflow-y: auto;">
+              <li *ngFor="let res of locationSearchResults" (click)="selectVenueSearchResult(res)"
+                style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--nw-border-subtle, #f1f5f9); display: flex; flex-direction: column; text-align: left;">
+                <strong style="font-size: 13px; color: var(--nw-text-1, #1e293b);">{{ res.name }}</strong>
+                <small *ngIf="res.address"
+                  style="font-size: 11px; color: var(--nw-text-3, #64748b); margin-top: 2px;">{{ res.address }}</small>
+              </li>
+            </ul>
+          </label>
+          <label class="nw-label">
+            Dirección
+            <input class="nw-input" [(ngModel)]="newEvent.venueAddress" placeholder="Av. Reforma 123">
+          </label>
+          <label class="nw-label nw-form-wide">
+            <a style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;">
+              Enlace de mapa
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3);">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </a>
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <input class="nw-input" [(ngModel)]="newEvent.mapUrl"
+                placeholder="https://maps.app.goo.gl/... o https://google.com/maps/..." style="flex: 1;">
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="extractInfoFromMapUrl()"
+                [disabled]="!newEvent.mapUrl || locationExtractLoading"
+                style="white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>{{ locationExtractLoading ? 'Extrayendo...' : 'Extraer datos' }}</span>
+              </button>
+            </div>
+            <span style="font-size: 11px; color: var(--nw-text-3); margin-top: 4px; display: block;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="display: inline-block; vertical-align: middle; margin-right: 4px; color: var(--nw-accent);">
+                <path
+                  d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .6 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5">
+                </path>
+                <path d="M9 18h6"></path>
+                <path d="M10 22h4"></path>
+              </svg>
+              Puedes buscar por nombre para autocompletar o pegar un enlace de Google Maps y presionar <strong>Extraer
+                datos</strong>.
+            </span>
+          </label>
+
+          <ng-container *ngIf="newEvent.mode === 'external_dashboard'">
+            <label class="nw-label nw-form-wide">
+              URL de página externa
+              <input class="nw-input" [(ngModel)]="newEvent.externalSiteUrl"
+                placeholder="https://pagina-del-evento.com">
+            </label>
+            <label class="nw-label nw-form-wide">
+              Etiqueta de página externa
+              <input class="nw-input" [(ngModel)]="newEvent.externalSiteLabel" placeholder="Ej: Ver página principal">
+            </label>
+          </ng-container>
+        </div>
+        <div class="nw-modal-actions">
+          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
+          <button class="nw-btn nw-btn-primary" [disabled]="creating" (click)="createEvent()">
+            {{ creating ? 'Creando...' : 'Crear evento' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
 </div>

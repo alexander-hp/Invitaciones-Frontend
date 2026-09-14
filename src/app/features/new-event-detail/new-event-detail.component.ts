@@ -39,10 +39,10 @@ export class NewEventDetailComponent implements OnInit {
 
   showCreateWizardModal = false;
   wizardSections: Record<string, boolean> = {
-    guestAlbum: true,
+    guestAlbum: false,
     gallery: true,
-    songRequests: true,
-    dedications: true,
+    songRequests: false,
+    dedications: false,
     rsvp: true,
     story: true,
     locations: true,
@@ -51,7 +51,7 @@ export class NewEventDetailComponent implements OnInit {
     giftRegistry: true,
     digitalEnvelope: false,
     lodging: false,
-    backgroundMusic: false
+    backgroundMusic: true
   };
 
   wizardSectionDefinitions: WizardSectionDef[] = [
@@ -272,7 +272,26 @@ export class NewEventDetailComponent implements OnInit {
     this.loadMetricsAndCounts();
   }
 
+  resetWizardSectionsToDefault(): void {
+    this.wizardSections = {
+      guestAlbum: false,
+      gallery: true,
+      songRequests: false,
+      dedications: false,
+      rsvp: true,
+      story: true,
+      locations: true,
+      itinerary: true,
+      dressCode: true,
+      giftRegistry: true,
+      digitalEnvelope: false,
+      lodging: false,
+      backgroundMusic: true
+    };
+  }
+
   openCreateInvitationWizard(): void {
+    this.resetWizardSectionsToDefault();
     this.showCreateWizardModal = true;
   }
 
@@ -332,14 +351,43 @@ export class NewEventDetailComponent implements OnInit {
       requireApproval: true
     };
 
+    const content: any = {
+      sectionSettings,
+      giftSettings,
+      dedicationSettings,
+      privateAlbumEnabled: Boolean(this.wizardSections['guestAlbum'])
+    };
+
+    if (this.wizardSections['locations'] && this.event.venue && (this.event.venue.name || this.event.venue.address || this.event.venue.mapUrl)) {
+      content.locations = [{
+        type: 'recepción',
+        name: this.event.venue.name || '',
+        address: this.event.venue.address || '',
+        mapUrl: this.event.venue.mapUrl || '',
+        wazeUrl: '',
+        notes: ''
+      }];
+    }
+
+    if (this.wizardSections['itinerary']) {
+      if (this.event.agenda && this.event.agenda.length > 0) {
+        content.itinerary = this.event.agenda.map(a => ({
+          time: a.time || '',
+          title: a.title || '',
+          description: a.description || ''
+        }));
+      } else if (this.event.time) {
+        content.itinerary = [{
+          time: this.event.time,
+          title: this.getDefaultItineraryTitle(this.event.type),
+          description: this.event.venue?.name ? `En ${this.event.venue.name}` : ''
+        }];
+      }
+    }
+
     const payload: any = {
       event: evId,
-      content: {
-        sectionSettings,
-        giftSettings,
-        dedicationSettings,
-        privateAlbumEnabled: Boolean(this.wizardSections['guestAlbum'])
-      }
+      content
     };
 
     this.apiService.createInvitation(payload).subscribe({
@@ -357,12 +405,12 @@ export class NewEventDetailComponent implements OnInit {
           next: () => {
             this.saving = false;
             this.showCreateWizardModal = false;
-            this.router.navigate(['/new/invitations', invId, 'sections']);
+            this.router.navigate(['/new/invitations', invId, 'editor']);
           },
           error: () => {
             this.saving = false;
             this.showCreateWizardModal = false;
-            this.router.navigate(['/new/invitations', invId, 'sections']);
+            this.router.navigate(['/new/invitations', invId, 'editor']);
           }
         });
       },
@@ -371,5 +419,16 @@ export class NewEventDetailComponent implements OnInit {
         this.saving = false;
       }
     });
+  }
+
+  getDefaultItineraryTitle(eventType?: string): string {
+    switch (eventType) {
+      case 'boda': return 'Ceremonia / Recepción';
+      case 'xv': return 'Recepción de XV Años';
+      case 'graduacion': return 'Recepción de Graduación';
+      case 'bautizo': return 'Ceremonia / Recepción';
+      case 'cumpleanos': return 'Festejo y Recepción';
+      default: return 'Recepción';
+    }
   }
 }

@@ -27,6 +27,7 @@ export class NewEventsComponent implements OnInit {
     type: 'boda' as EventType,
     title: '',
     date: '',
+    time: '',
     hosts: '',
     venueName: '',
     venueAddress: '',
@@ -36,6 +37,19 @@ export class NewEventsComponent implements OnInit {
   };
   creating = false;
   createError = '';
+
+  openTimePicker(inputEl: HTMLInputElement): void {
+    try {
+      const el = inputEl as any;
+      if (el && typeof el.showPicker === 'function') {
+        el.showPicker();
+      } else {
+        inputEl?.focus();
+      }
+    } catch {
+      inputEl?.focus();
+    }
+  }
 
   locationSearchResults: Array<{ name: string; address: string; mapUrl: string; wazeUrl: string }> = [];
   locationSearchLoading = false;
@@ -199,6 +213,7 @@ export class NewEventsComponent implements OnInit {
       type: this.newEvent.type,
       title: this.newEvent.title,
       date: this.newEvent.date,
+      time: this.newEvent.time ? this.newEvent.time.trim() : undefined,
       hosts: this.newEvent.hosts ? this.newEvent.hosts.split(',').map(s => s.trim()) : [],
       venue: { 
         name: this.newEvent.venueName, 

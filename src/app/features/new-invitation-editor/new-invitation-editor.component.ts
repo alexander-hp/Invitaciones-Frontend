@@ -52,8 +52,8 @@ export class NewInvitationEditorComponent implements OnInit {
   locationExtractLoading: Record<number, boolean> = {};
   private searchTimeouts: Record<number, any> = {};
 
-  activeSection = 'plans';
-  activeTab: string = 'plans';
+  activeSection = 'content';
+  activeTab: string = 'content';
   collapsedSections: Record<string, boolean> = {};
 
   showAiWizardModal = false;
@@ -518,6 +518,7 @@ export class NewInvitationEditorComponent implements OnInit {
                   this.invitation.content.sectionSettings.songRequests = Boolean(event.externalContent.songRequestSettings.enabled);
                 }
               }
+              this.ensureContentCollections();
             },
             error: () => { }
           });
@@ -530,7 +531,16 @@ export class NewInvitationEditorComponent implements OnInit {
         this.loadTemplates();
         this.loadPlans();
         this.loadGuestsForEvent();
+        const queryTab = this.route.snapshot.queryParamMap.get('tab');
+        if (queryTab) {
+          this.activeTab = queryTab;
+        } else {
+          this.activeTab = 'content';
+        }
         this.loading = false;
+        setTimeout(() => {
+          this.scrollToEditor();
+        }, 120);
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo cargar la invitación.';
@@ -1480,12 +1490,41 @@ export class NewInvitationEditorComponent implements OnInit {
       songRequests: this.invitation.content.sectionSettings?.songRequests !== false
     };
     if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
-    if (!this.invitation.content.itinerary) this.invitation.content.itinerary = [];
-    if (!this.invitation.content.locations) {
+    
+    // Auto-extraer Ubicación si no existe o está vacía
+    if (!this.invitation.content.locations || this.invitation.content.locations.length === 0) {
       const venue = this.event?.venue;
-      this.invitation.content.locations = venue?.name || venue?.address || venue?.mapUrl
-        ? [{ type: 'principal', name: venue.name || '', address: venue.address || '', mapUrl: venue.mapUrl || '', wazeUrl: '', notes: '' }]
-        : [];
+      if (venue && (venue.name || venue.address || venue.mapUrl)) {
+        this.invitation.content.locations = [{
+          type: 'recepción',
+          name: venue.name || '',
+          address: venue.address || '',
+          mapUrl: venue.mapUrl || '',
+          wazeUrl: '',
+          notes: ''
+        }];
+      } else {
+        this.invitation.content.locations = [];
+      }
+    }
+
+    // Auto-extraer Itinerario si no existe o está vacío
+    if (!this.invitation.content.itinerary || this.invitation.content.itinerary.length === 0) {
+      if (this.event?.agenda && this.event.agenda.length > 0) {
+        this.invitation.content.itinerary = this.event.agenda.map(a => ({
+          time: a.time || '',
+          title: a.title || '',
+          description: a.description || ''
+        }));
+      } else if (this.event?.time) {
+        this.invitation.content.itinerary = [{
+          time: this.event.time,
+          title: this.getDefaultItineraryTitle(this.event.type),
+          description: this.event.venue?.name ? `En ${this.event.venue.name}` : ''
+        }];
+      } else {
+        this.invitation.content.itinerary = [];
+      }
     }
   }
 
@@ -1726,5 +1765,16 @@ export class NewInvitationEditorComponent implements OnInit {
 
   private parseLines(text: string): string[] {
     return text.split('\n').map((value) => value.trim()).filter(Boolean);
+  }
+
+  getDefaultItineraryTitle(eventType?: string): string {
+    switch (eventType) {
+      case 'boda': return 'Ceremonia / Recepción';
+      case 'xv': return 'Recepción de XV Años';
+      case 'graduacion': return 'Recepción de Graduación';
+      case 'bautizo': return 'Ceremonia / Recepción';
+      case 'cumpleanos': return 'Festejo y Recepción';
+      default: return 'Recepción';
+    }
   }
 }

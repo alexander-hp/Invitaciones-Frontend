@@ -15,6 +15,7 @@ export class EventsComponent implements OnInit {
     title: 'Boda de Alex y Tania',
     hosts: 'Alex, Tania',
     date: '2026-11-21',
+    time: '',
     venueName: 'Hacienda Santa Lucia',
     venueAddress: 'Camino Real 120, Guadalajara, Jal.',
     mapUrl: 'https://maps.google.com',
@@ -91,6 +92,19 @@ export class EventsComponent implements OnInit {
     });
   }
 
+  openTimePicker(inputEl: HTMLInputElement): void {
+    try {
+      const el = inputEl as any;
+      if (el && typeof el.showPicker === 'function') {
+        el.showPicker();
+      } else {
+        inputEl?.focus();
+      }
+    } catch {
+      inputEl?.focus();
+    }
+  }
+
   create(): void {
     this.saving = true;
     this.error = '';
@@ -100,6 +114,7 @@ export class EventsComponent implements OnInit {
       title: this.form.title,
       hosts: this.form.hosts.split(',').map((host) => host.trim()).filter(Boolean),
       date: this.form.date,
+      time: this.form.time ? this.form.time.trim() : undefined,
       venue: { name: this.form.venueName, address: this.form.venueAddress, mapUrl: this.form.mapUrl },
       externalSiteUrl: this.form.mode === 'external_dashboard' ? this.form.externalSiteUrl : undefined,
       externalSiteLabel: this.form.mode === 'external_dashboard' ? this.form.externalSiteLabel : undefined

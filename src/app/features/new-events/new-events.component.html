@@ -34,7 +34,14 @@
         <h1>Eventos</h1>
         <p>Gestiona todos tus eventos y sus invitaciones</p>
       </div>
-      <button class="nw-btn nw-btn-primary" (click)="showCreateModal = true">+ Nuevo evento</button>
+      <button class="nw-btn nw-btn-focus" (click)="showCreateModal = true"
+        style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f5d0a9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Nuevo evento</span>
+      </button>
     </div>
 
     <p *ngIf="loading" class="nw-alert info nw-loading">Cargando eventos...</p>
@@ -79,8 +86,13 @@
       <span class="empty-icon">🎪</span>
       <h3>Aún no tienes eventos</h3>
       <p>Crea tu primer evento para comenzar a gestionar invitados, mesas y RSVP.</p>
-      <button class="nw-btn nw-btn-primary" style="margin-top: 16px;" (click)="showCreateModal = true">Crear
-        evento</button>
+      <button class="nw-btn nw-btn-focus nw-btn-sm" style="margin-top: 16px; display: inline-flex; align-items: center; gap: 6px;" (click)="showCreateModal = true">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#f5d0a9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Nuevo evento</span>
+      </button>
     </div>
 
     <div *ngIf="!loading && filteredEvents.length === 0 && events.length > 0" class="nw-empty">
@@ -247,6 +259,23 @@
             <input class="nw-input" type="date" [(ngModel)]="newEvent.date">
           </label>
           <label class="nw-label">
+            <span style="display: flex; align-items: center; justify-content: space-between;">
+              <span>Hora</span>
+              <small style="font-weight: 400; color: var(--nw-text-3); font-size: 11px;">(opcional)</small>
+            </span>
+            <div style="position: relative; display: flex; align-items: center;">
+              <input #newEvTimeInput class="nw-input" type="time" [(ngModel)]="newEvent.time"
+                (click)="openTimePicker(newEvTimeInput)" style="width: 100%; cursor: pointer; padding-right: 32px;">
+              <button type="button" (click)="openTimePicker(newEvTimeInput)" title="Abrir reloj"
+                style="position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; color: var(--nw-text-3); display: flex; align-items: center; justify-content: center; padding: 2px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </button>
+            </div>
+          </label>
+          <label class="nw-label nw-form-wide">
             Anfitriones
             <input class="nw-input" [(ngModel)]="newEvent.hosts" placeholder="Ej: Ana, Carlos">
           </label>

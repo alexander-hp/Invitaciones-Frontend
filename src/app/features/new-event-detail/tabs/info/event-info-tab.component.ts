@@ -41,6 +41,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     title: '',
     type: 'otro' as EventType,
     date: '',
+    time: '',
     hosts: '',
     venueName: '',
     venueAddress: '',
@@ -315,12 +316,26 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     return this.event?.access?.permissions?.includes('edit_event') || false;
   }
 
+  openTimePicker(inputEl: HTMLInputElement): void {
+    try {
+      const el = inputEl as any;
+      if (el && typeof el.showPicker === 'function') {
+        el.showPicker();
+      } else {
+        inputEl?.focus();
+      }
+    } catch {
+      inputEl?.focus();
+    }
+  }
+
   openEditDetails(): void {
     if (!this.event) return;
     this.editDetailsForm = {
       title: this.event.title || '',
       type: (this.event.type as EventType) || 'otro',
       date: this.toDatetimeLocal(this.event.date),
+      time: this.event.time || '',
       hosts: (this.event.hosts || []).join(', '),
       venueName: this.event.venue?.name || '',
       venueAddress: this.event.venue?.address || '',
@@ -351,6 +366,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       title: this.editDetailsForm.title.trim(),
       type: this.editDetailsForm.type,
       hosts: hostsArray,
+      time: this.editDetailsForm.time ? this.editDetailsForm.time.trim() : undefined,
       venue: {
         ...(this.event.venue || {}),
         name: this.editDetailsForm.venueName.trim(),
@@ -372,6 +388,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
           this.event.type = res.event.type;
           this.event.hosts = res.event.hosts;
           this.event.date = res.event.date;
+          this.event.time = res.event.time;
           this.event.venue = res.event.venue;
           this.event.mode = res.event.mode;
         }

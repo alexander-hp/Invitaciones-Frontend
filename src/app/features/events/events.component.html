@@ -28,6 +28,13 @@
         </label>
         <label>Titulo<input name="title" [(ngModel)]="form.title" required></label>
         <label>Fecha<input name="date" type="date" [(ngModel)]="form.date" required></label>
+        <label>
+          <span style="display: flex; justify-content: space-between;">
+            <span>Hora</span>
+            <small style="font-size: 11px; color: #64748b;">(opcional)</small>
+          </span>
+          <input #eventsTimeInput name="time" type="time" [(ngModel)]="form.time" (click)="openTimePicker(eventsTimeInput)" style="cursor: pointer;">
+        </label>
         <label>Anfitriones<input name="hosts" [(ngModel)]="form.hosts"></label>
         <label style="position: relative;">
           Lugar / Buscar 🔍

@@ -741,6 +741,12 @@
   resize: vertical;
 }
 
+.nw-input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
 .nw-label {
   display: grid;
   gap: 6px;

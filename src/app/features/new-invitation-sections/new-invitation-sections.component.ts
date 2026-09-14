@@ -340,4 +340,13 @@ export class NewInvitationSectionsComponent implements OnInit {
       this.router.navigate(['/new/events']);
     }
   }
+
+  goToEditor(): void {
+    const invId = this.getInvitationId(this.invitation);
+    if (invId) {
+      this.router.navigate(['/new/invitations', invId, 'editor']);
+    } else {
+      this.router.navigate(['/new/events']);
+    }
+  }
 }

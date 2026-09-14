@@ -259,6 +259,17 @@
         </p>
       </div>
       <div>
+        <span style="font-size:13px; color:var(--nw-text-3)">Hora del evento</span>
+        <p style="margin:4px 0 0; font-weight:600; display:flex; align-items:center; gap:6px; color:var(--nw-text);">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent); flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>{{ event.time || 'No especificada' }}</span>
+        </p>
+      </div>
+      <div>
         <span style="font-size:13px; color:var(--nw-text-3)">Estado</span>
         <div style="margin-top:6px;">
           <select class="nw-select-status" [class.status-published]="event.status === 'published'"
@@ -310,9 +321,26 @@
 
       <div>
         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--nw-text-2);">
-          Fecha y hora del evento
+          Fecha del evento
         </label>
         <input type="datetime-local" class="nw-input" [(ngModel)]="editDetailsForm.date" style="width:100%; font-size:14px;">
+      </div>
+
+      <div>
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--nw-text-2);">
+          Hora del evento <span style="font-weight: normal; font-size: 11px; color: var(--nw-text-3);">(opcional)</span>
+        </label>
+        <div style="position: relative; display: flex; align-items: center;">
+          <input #editEvTimeInput type="time" class="nw-input" [(ngModel)]="editDetailsForm.time"
+            (click)="openTimePicker(editEvTimeInput)" style="width:100%; font-size:14px; cursor: pointer; padding-right: 32px;">
+          <button type="button" (click)="openTimePicker(editEvTimeInput)" title="Abrir reloj"
+            style="position: absolute; right: 8px; background: transparent; border: none; cursor: pointer; color: var(--nw-text-3); display: flex; align-items: center; justify-content: center; padding: 2px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div style="grid-column: 1 / -1;">

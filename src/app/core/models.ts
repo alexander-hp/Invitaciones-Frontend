@@ -101,6 +101,7 @@ export interface EventModel {
   title: string;
   hosts: string[];
   date: string;
+  time?: string;
   venue: {
     name?: string;
     address?: string;
@@ -154,6 +155,7 @@ export interface EventPayload {
   title: string;
   hosts?: string[];
   date: string;
+  time?: string;
   venue?: {
     name?: string;
     address?: string;
