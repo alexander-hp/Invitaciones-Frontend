@@ -912,50 +912,148 @@ export class NewInvitationEditorComponent implements OnInit {
     window.open(this.publicUrl || `/new/i/${this.invitation.slug}`, '_blank');
   }
 
-  selectAsset(event: Event, folder: AssetFolder): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file || !this.invitation) return;
+  selectAsset(eventOrPayload: any, folderArg?: AssetFolder): void {
+    const folder: AssetFolder = folderArg || eventOrPayload?.folder || 'covers';
+    let files: File[] = [];
 
-    const validationError = this.validateAsset(file, folder);
-    if (validationError) {
-      this.error = validationError;
-      input.value = '';
-      return;
+    if (Array.isArray(eventOrPayload)) {
+      files = eventOrPayload.filter(f => f instanceof File);
+    } else if (eventOrPayload instanceof File) {
+      files = [eventOrPayload];
+    } else if (Array.isArray(eventOrPayload?.files)) {
+      files = eventOrPayload.files.filter((f: any) => f instanceof File);
+    } else if (eventOrPayload?.file instanceof File) {
+      files = [eventOrPayload.file];
+    } else if (eventOrPayload?.target?.files) {
+      files = Array.from(eventOrPayload.target.files as FileList);
+    } else if (eventOrPayload?.event?.target?.files) {
+      files = Array.from(eventOrPayload.event.target.files as FileList);
     }
+
+    if (!files.length || !this.invitation) return;
+
+    this.uploadAssetFiles(files, folder);
+  }
+
+  uploadAssetFiles(files: File[], folder: AssetFolder): void {
+    if (!this.invitation || !files.length) return;
 
     if (folder === 'music' && !this.canUseMusic()) {
       this.error = 'La música requiere Evento Individual o Pro. Actívalo en la sección "Plan del evento".';
-      input.value = '';
       return;
     }
 
     if (folder === 'assets' && !this.canUseGuestAlbum()) {
       this.error = 'El álbum colaborativo requiere Evento Individual o Pro. Actívalo en la sección "Plan del evento".';
-      input.value = '';
       return;
     }
 
+    // Validar archivos
+    const validFiles: File[] = [];
+    for (const file of files) {
+      const valError = this.validateAsset(file, folder);
+      if (valError) {
+        this.error = valError;
+      } else {
+        validFiles.push(file);
+      }
+    }
+
+    if (!validFiles.length) return;
+
+    // Si es galería y son múltiples imágenes, subida secuencial
+    if (folder === 'gallery' && validFiles.length > 1) {
+      this.assetUploading = true;
+      this.error = '';
+      const total = validFiles.length;
+      const uploadedUrls: string[] = [];
+      let currentIdx = 0;
+
+      const uploadNext = () => {
+        if (currentIdx >= total) {
+          if (this.invitation && uploadedUrls.length) {
+            this.invitation.content.gallery = [
+              ...(this.invitation.content.gallery || []),
+              ...uploadedUrls
+            ];
+            this.persistUploadedAsset();
+          }
+          this.assetUploading = false;
+          this.assetMessage = '';
+          this.message = `🎉 ¡${uploadedUrls.length} fotos agregadas a la galería exitosamente!`;
+          return;
+        }
+
+        const currentFile = validFiles[currentIdx];
+        this.assetMessage = `Subiendo foto ${currentIdx + 1} de ${total}...`;
+        this.api.createUploadUrl({
+          fileName: currentFile.name,
+          contentType: currentFile.type,
+          folder,
+          event: this.getEventId(),
+          size: currentFile.size
+        }).subscribe({
+          next: (upload) => {
+            this.api.uploadAsset(upload.uploadUrl, currentFile).subscribe({
+              next: () => {
+                uploadedUrls.push(upload.publicUrl);
+                currentIdx++;
+                uploadNext();
+              },
+              error: () => {
+                this.error = `Error al subir "${currentFile.name}". Se intentará continuar con las siguientes.`;
+                currentIdx++;
+                uploadNext();
+              }
+            });
+          },
+          error: () => {
+            this.error = `No se pudo preparar la URL para "${currentFile.name}".`;
+            currentIdx++;
+            uploadNext();
+          }
+        });
+      };
+
+      uploadNext();
+      return;
+    }
+
+    // Subida de archivo único (covers, music, assets, o 1 sola foto de galería)
+    const file = validFiles[0];
     this.assetUploading = true;
     this.assetMessage = '';
     this.error = '';
-    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder, event: this.getEventId(), size: file.size }).subscribe({
+
+    this.api.createUploadUrl({
+      fileName: file.name,
+      contentType: file.type,
+      folder,
+      event: this.getEventId(),
+      size: file.size
+    }).subscribe({
       next: (upload) => {
         this.api.uploadAsset(upload.uploadUrl, file).subscribe({
           next: () => {
             if (!this.invitation) return;
-            if (folder === 'covers') this.invitation.content.coverImageUrl = upload.publicUrl;
+            if (folder === 'covers') {
+              this.invitation.content.coverImageUrl = upload.publicUrl;
+              this.message = '✅ ¡Foto de portada actualizada exitosamente!';
+            }
             if (folder === 'music') {
               this.invitation.content.musicUrl = upload.publicUrl;
               this.message = '🎉 ¡Archivo de música de fondo subido exitosamente en el servidor (HTTP 200)!';
             }
-            if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
+            if (folder === 'gallery') {
+              this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
+              this.message = '✅ ¡Foto agregada a la galería exitosamente!';
+            }
             if (folder === 'assets') {
               this.invitation.content.privateAlbumEnabled = true;
               this.invitation.content.privateAlbum = [...(this.invitation.content.privateAlbum || []), upload.publicUrl];
             }
             this.persistUploadedAsset();
-            input.value = '';
+            this.assetUploading = false;
           },
           error: () => {
             this.error = 'S3 rechazó la subida. Revisa CORS del bucket, permisos PutObject y que el archivo coincida con el tipo permitido.';
@@ -970,9 +1068,22 @@ export class NewInvitationEditorComponent implements OnInit {
     });
   }
 
-  uploadEnvelopeQr(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+  uploadEnvelopeQr(eventOrPayload: any): void {
+    let file: File | undefined;
+    if (eventOrPayload instanceof File) {
+      file = eventOrPayload;
+    } else if (Array.isArray(eventOrPayload) && eventOrPayload[0] instanceof File) {
+      file = eventOrPayload[0];
+    } else if (eventOrPayload?.file instanceof File) {
+      file = eventOrPayload.file;
+    } else if (Array.isArray(eventOrPayload?.files) && eventOrPayload.files[0] instanceof File) {
+      file = eventOrPayload.files[0];
+    } else if (eventOrPayload?.target?.files?.[0]) {
+      file = eventOrPayload.target.files[0];
+    } else if (eventOrPayload?.event?.target?.files?.[0]) {
+      file = eventOrPayload.event.target.files[0];
+    }
+
     if (!file || !this.invitation) return;
 
     this.assetUploading = true;
@@ -980,7 +1091,7 @@ export class NewInvitationEditorComponent implements OnInit {
     this.error = '';
     this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'covers', event: this.getEventId(), size: file.size }).subscribe({
       next: (upload) => {
-        this.api.uploadAsset(upload.uploadUrl, file).subscribe({
+        this.api.uploadAsset(upload.uploadUrl, file!).subscribe({
           next: () => {
             if (!this.invitation) return;
             if (!this.invitation.content.digitalEnvelope) {
@@ -989,7 +1100,7 @@ export class NewInvitationEditorComponent implements OnInit {
             this.invitation.content.digitalEnvelope.qrImageUrl = upload.publicUrl;
             this.persistUploadedAsset();
             this.message = '✅ Foto de código QR bancario subida exitosamente (HTTP 200).';
-            input.value = '';
+            this.assetUploading = false;
           },
           error: () => {
             this.error = '❌ Error al subir la foto del código QR bancario.';

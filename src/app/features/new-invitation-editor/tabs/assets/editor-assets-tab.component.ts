@@ -25,7 +25,7 @@ export class EditorAssetsTabComponent {
     { key: 'songRequests', label: '🎵 Música & Peticiones al DJ' }
   ];
 
-  @Output() selectAsset = new EventEmitter<{ event: Event; folder: AssetFolder }>();
+  @Output() selectAsset = new EventEmitter<{ event?: Event; file?: File; files?: File[]; folder: AssetFolder }>();
   @Output() removeCover = new EventEmitter<void>();
   @Output() removeMusic = new EventEmitter<void>();
   @Output() removeGalleryImage = new EventEmitter<number>();
@@ -35,6 +35,16 @@ export class EditorAssetsTabComponent {
   @Output() addLodgingItem = new EventEmitter<void>();
   @Output() removeLodgingItem = new EventEmitter<number>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
+
+  onCoverFilesSelected(files: File[]): void {
+    if (!files || !files.length) return;
+    this.selectAsset.emit({ files, folder: 'covers' });
+  }
+
+  onGalleryFilesSelected(files: File[]): void {
+    if (!files || !files.length) return;
+    this.selectAsset.emit({ files, folder: 'gallery' });
+  }
 
   activeUrlInputKey: string | null = null;
   tempInputUrl: string = '';

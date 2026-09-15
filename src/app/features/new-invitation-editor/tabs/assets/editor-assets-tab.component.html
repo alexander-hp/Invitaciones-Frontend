@@ -34,82 +34,53 @@
         </svg>
         <strong style="font-size:15px;">Foto de Portada Principal</strong>
       </div>
-      <p style="font-size:12.5px; color:var(--nw-text-3); margin:0 0 10px 0;">
-        Imagen destacada que se muestra en la apertura y cabecera de la invitación.
+      <p style="font-size:12.5px; color:var(--nw-text-3); margin:0 0 12px 0;">
+        Imagen destacada que se muestra en la apertura y cabecera de la invitación digital.
       </p>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <label class="nw-btn nw-btn-ghost nw-btn-sm"
-          style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <span>{{ invitation.content.coverImageUrl ? 'Cambiar portada' : 'Subir portada' }}</span>
-          <input type="file" accept="image/*" (change)="selectAsset.emit({ event: $event, folder: 'covers' })"
-            [disabled]="assetUploading" style="display:none;">
-        </label>
-        <span *ngIf="assetUploading" style="font-size:13px; color:var(--nw-text-3);">Subiendo archivo...</span>
-      </div>
-      <div *ngIf="invitation.content.coverImageUrl"
-        style="margin-top:12px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:12px; max-width:420px; box-shadow:var(--nw-shadow-sm); overflow:hidden;">
-        <div
-          style="width:100%; height:200px; border-radius:8px; overflow:hidden; border:1px solid var(--nw-border); background:var(--nw-surface-2);">
-          <img [src]="invitation.content.coverImageUrl" alt="Portada" loading="lazy" decoding="async"
-            style="width:100%; height:100%; object-fit:cover; display:block;">
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-          <div style="display:flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--nw-success)" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <span style="font-size:12.5px; font-weight:600; color:var(--nw-text-2);">Imagen de portada activa</span>
-          </div>
-          <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCover.emit()"
-            style="display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-            <span>Quitar portada</span>
-          </button>
-        </div>
-      </div>
+
+      <app-image-dropzone
+        label="Foto de Portada Principal"
+        hint="Arrastra tu foto de portada aquí o presiona"
+        [currentImageUrl]="invitation.content.coverImageUrl"
+        [loading]="assetUploading"
+        [disabled]="assetUploading"
+        [canRemove]="true"
+        iconType="image"
+        (filesSelected)="onCoverFilesSelected($event)"
+        (removeImage)="removeCover.emit()">
+      </app-image-dropzone>
     </div>
 
     <!-- Galería Fotográfica Oficial -->
     <div>
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-          <polyline points="21 15 16 10 5 21"></polyline>
-        </svg>
-        <strong style="font-size:15px;">Galería de Fotos Oficial</strong>
-      </div>
-      <p style="font-size:12.5px; color:var(--nw-text-3); margin:0 0 10px 0;">
-        Fotografías oficiales de los novios o festejados que los invitados podrán explorar.
-      </p>
-      <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-        <label class="nw-btn nw-btn-ghost nw-btn-sm"
-          style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
           </svg>
-          <span>Agregar imagen a la galería</span>
-          <input type="file" accept="image/*" (change)="selectAsset.emit({ event: $event, folder: 'gallery' })"
-            [disabled]="assetUploading" style="display:none;">
-        </label>
-        <span style="font-size:13px; color:var(--nw-text-3);">{{ invitation.content.gallery?.length || 0 }}
-          imágenes</span>
+          <strong style="font-size:15px;">Galería de Fotos Oficial</strong>
+        </div>
+        <span class="nw-pill" style="font-size:11.5px; padding:2px 8px;">
+          {{ invitation.content.gallery?.length || 0 }} {{ (invitation.content.gallery?.length === 1) ? 'imagen' : 'imágenes' }}
+        </span>
       </div>
+      <p style="font-size:12.5px; color:var(--nw-text-3); margin:0 0 12px 0;">
+        Fotografías oficiales que los invitados podrán explorar. Puedes arrastrar una o múltiples fotos juntas o pegarlas con <kbd>Ctrl + V</kbd>.
+      </p>
+
+      <app-image-dropzone
+        label="Agregar fotos a la galería"
+        hint="Arrastra una o varias fotos aquí o presiona"
+        [multiple]="true"
+        [loading]="assetUploading"
+        [disabled]="assetUploading"
+        iconType="gallery"
+        badgeText="Soporta múltiples fotos juntas (JPG, PNG, WEBP, máx. 5MB c/u)"
+        (filesSelected)="onGalleryFilesSelected($event)">
+      </app-image-dropzone>
       <div *ngIf="invitation.content.gallery?.length"
         style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:14px; margin-top:12px;">
         <div *ngFor="let url of invitation.content.gallery; let i = index" class="nw-card-item"

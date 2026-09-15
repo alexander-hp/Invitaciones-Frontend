@@ -1,0 +1,159 @@
+<div class="nw-dropzone-wrapper" [class.compact]="compact">
+  <!-- Input nativo oculto -->
+  <input #fileInput type="file" [accept]="accept" [multiple]="multiple"
+    (change)="onFileInputChange($event)" style="display: none;" [disabled]="disabled || loading">
+
+  <!-- Contenedor Principal de la Zona de Carga -->
+  <div #dropzoneContainer class="nw-dropzone"
+    [class.is-dragging]="isDragging"
+    [class.is-focused]="isFocused"
+    [class.is-loading]="loading"
+    [class.is-disabled]="disabled"
+    [class.has-preview]="!!currentImageUrl"
+    tabindex="0"
+    role="button"
+    [attr.aria-label]="label"
+    (click)="openFileDialog()"
+    (keydown.enter)="openFileDialog()"
+    (dragenter)="onDragEnter($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (paste)="onPaste($event)">
+
+    <!-- Estado: Cargando / Subiendo -->
+    <div *ngIf="loading" class="nw-dropzone-state loading">
+      <div class="nw-dropzone-spinner"></div>
+      <strong class="nw-dropzone-loading-title">{{ loadingText }}</strong>
+      <span class="nw-dropzone-sub">Guardando e integrando tu imagen...</span>
+    </div>
+
+    <!-- Estado: Arrastrando encima (Drag Over) -->
+    <div *ngIf="!loading && isDragging" class="nw-dropzone-state dragging">
+      <div class="nw-dropzone-drag-icon">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <strong class="nw-dropzone-drag-title">¡Suelta tu {{ multiple ? 'fotos' : 'foto' }} aquí!</strong>
+      <span class="nw-dropzone-sub">Se procesará y subirá automáticamente</span>
+    </div>
+
+    <!-- Estado Normal (Inactivo o con Preview) -->
+    <div *ngIf="!loading && !isDragging" class="nw-dropzone-content">
+      
+      <!-- Vista previa existente (si aplica) -->
+      <div *ngIf="currentImageUrl" class="nw-dropzone-preview-container" (click)="$event.stopPropagation()">
+        <div class="nw-dropzone-thumbnail">
+          <img [src]="currentImageUrl" alt="Vista previa" loading="lazy" decoding="async">
+        </div>
+        <div class="nw-dropzone-preview-details">
+          <div class="nw-dropzone-preview-badge">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Foto actual activa</span>
+          </div>
+          <p class="nw-dropzone-preview-hint">
+            Arrastra una nueva imagen aquí o presiona <kbd>Ctrl</kbd> + <kbd>V</kbd> para reemplazarla.
+          </p>
+          <div class="nw-dropzone-actions">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openFileDialog()">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Cambiar foto</span>
+            </button>
+            <button *ngIf="canRemove" type="button" class="nw-btn nw-btn-danger nw-btn-sm"
+              (click)="removeImage.emit()">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Quitar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zona de carga cuando NO hay imagen o en modo galería -->
+      <div *ngIf="!currentImageUrl" class="nw-dropzone-body">
+        <div class="nw-dropzone-icon-box">
+          <!-- Ícono de Galería -->
+          <svg *ngIf="iconType === 'gallery'" viewBox="0 0 24 24" width="28" height="28" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+
+          <!-- Ícono de QR -->
+          <svg *ngIf="iconType === 'qr'" viewBox="0 0 24 24" width="28" height="28" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+
+          <!-- Ícono de Imagen/Portada estándar -->
+          <svg *ngIf="iconType === 'image'" viewBox="0 0 24 24" width="28" height="28" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+
+        <div class="nw-dropzone-text-group">
+          <strong class="nw-dropzone-title">{{ label }}</strong>
+          <p class="nw-dropzone-hint">
+            Arrastra tu {{ multiple ? 'fotos' : 'foto' }} aquí o presiona
+            <span class="nw-dropzone-kbd-combo"><kbd>Ctrl</kbd> + <kbd>V</kbd></span>
+            para pegar desde el portapapeles
+          </p>
+          <div class="nw-dropzone-footer">
+            <button type="button" class="nw-btn nw-btn-sm nw-btn-secondary" (click)="$event.stopPropagation(); openFileDialog()">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>{{ multiple ? 'Seleccionar fotos' : 'Explorar archivos' }}</span>
+            </button>
+            <span class="nw-dropzone-badge">{{ badgeText }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Indicador de foco / listo para pegar con Ctrl + V -->
+    <div *ngIf="isFocused && !loading && !isDragging" class="nw-dropzone-focus-indicator">
+      <span class="nw-pill success" style="font-size: 11px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px;">
+        <span>📋</span> Listo para pegar con <strong>Ctrl + V</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- Alerta de error de validación -->
+  <div *ngIf="validationError" class="nw-dropzone-error" (click)="$event.stopPropagation()">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ validationError }}</span>
+    <button type="button" class="nw-dropzone-error-close" (click)="validationError = ''">✕</button>
+  </div>
+</div>

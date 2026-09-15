@@ -95,6 +95,7 @@ import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.com
 import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
 import { EventHeaderComponent } from './core/event-header/event-header.component';
 import { EventBookWidgetComponent } from './shared/components/event-book-widget/event-book-widget.component';
+import { ImageDropzoneComponent } from './shared/components/image-dropzone/image-dropzone.component';
 
 @NgModule({
   declarations: [
@@ -103,6 +104,7 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
     QrScannerModalComponent,
     EventHeaderComponent,
     EventBookWidgetComponent,
+    ImageDropzoneComponent,
     DocumentationComponent,
     UnauthorizedComponent,
     CheckInStaffComponent,

@@ -742,28 +742,26 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
 
   // --- GESTIÓN DE FOTO PRINCIPAL / PORTADA ---
 
-  uploadCoverImage(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+  uploadCoverFiles(files: File[]): void {
+    if (!files || !files.length) return;
+    const file = files[0];
     const targetEventId = this.event?._id || this.event?.id;
     if (!file || !targetEventId) return;
 
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!validTypes.includes(file.type)) {
-      this.showError('Formato no válido. Sube una imagen (JPG, PNG, WEBP).');
-      input.value = '';
+    if (!validTypes.includes(file.type) && !/\.(jpe?g|png|webp|gif|bmp)$/i.test(file.name)) {
+      this.showError('Formato no válido. Sube una imagen (JPG, PNG, WEBP, GIF).');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       this.showError('La imagen no debe sobrepasar 5MB.');
-      input.value = '';
       return;
     }
 
     this.uploadingCover = true;
     this.apiService.createUploadUrl({
       fileName: file.name,
-      contentType: file.type,
+      contentType: file.type || 'image/png',
       folder: 'covers',
       event: targetEventId,
       size: file.size
@@ -773,21 +771,28 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
           next: () => {
             const publicUrl = upload.publicUrl;
             this.coverImageUrl = publicUrl;
-            this.saveCoverImage(publicUrl, input);
+            this.saveCoverImage(publicUrl);
           },
           error: () => {
             this.showError('Error al subir el archivo de imagen.');
             this.uploadingCover = false;
-            input.value = '';
           }
         });
       },
       error: err => {
         this.showError(err?.error?.message || 'No se pudo preparar la URL de subida.');
         this.uploadingCover = false;
-        input.value = '';
       }
     });
+  }
+
+  uploadCoverImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    if (files.length) {
+      this.uploadCoverFiles(files);
+      input.value = '';
+    }
   }
 
   saveCoverImage(url: string, input?: HTMLInputElement): void {

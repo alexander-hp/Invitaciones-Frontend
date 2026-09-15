@@ -820,7 +820,7 @@
       <app-editor-assets-tab
         *ngIf="activeTab === 'assets' || activeTab === 'gallery' || activeTab === 'lodging' || activeTab === 'backgroundMusic' || activeTab === 'all'"
         [invitation]="invitation" [activeTab]="activeTab" [assetUploading]="assetUploading" [musicError]="musicError"
-        (selectAsset)="selectAsset($event.event, $event.folder)" (removeCover)="removeCover()"
+        (selectAsset)="selectAsset($event, $event.folder)" (removeCover)="removeCover()"
         (removeMusic)="removeMusic()" (removeGalleryImage)="removeGalleryImage($event)"
         (uploadSectionMusic)="uploadSectionMusic($event.event, $event.sectionKey)"
         (removeSectionMusic)="removeSectionMusic($event)" (musicPlaybackError)="onMusicPlaybackError()"

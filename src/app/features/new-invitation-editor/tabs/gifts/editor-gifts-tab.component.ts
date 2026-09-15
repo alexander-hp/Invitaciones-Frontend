@@ -12,8 +12,13 @@ export class EditorGiftsTabComponent {
 
   @Output() addGiftItem = new EventEmitter<void>();
   @Output() removeGiftItem = new EventEmitter<number>();
-  @Output() uploadEnvelopeQr = new EventEmitter<Event>();
+  @Output() uploadEnvelopeQr = new EventEmitter<any>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
+
+  onQrFilesSelected(files: File[]): void {
+    if (!files || !files.length) return;
+    this.uploadEnvelopeQr.emit(files[0]);
+  }
 
   showStoreGuide = false;
 
