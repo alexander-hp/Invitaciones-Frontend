@@ -1,0 +1,1151 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  color: #f5eedc;
+  background-color: #1a0307;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 1. VIDEO INTRO OVERLAY */
+.teatro-video-intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #0d0103;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.teatro-intro-curtain-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.teatro-curtain-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.75) contrast(1.1);
+}
+
+.teatro-intro-content {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+  width: 100%;
+}
+
+.teatro-marquee-badge {
+  background: rgba(18, 2, 5, 0.88);
+  backdrop-filter: blur(10px);
+  border: 2px solid #d4af37;
+  border-radius: 12px;
+  padding: 40px 25px;
+  text-align: center;
+  box-shadow: 0 0 35px rgba(212, 175, 55, 0.35);
+}
+
+.marquee-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: #f3e5ab;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.marquee-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 34px;
+  color: #ffffff;
+  margin: 0 0 10px;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.marquee-date {
+  font-size: 14px;
+  color: #d8c7a6;
+  margin-bottom: 25px;
+}
+
+.teatro-intro-video-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.teatro-fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.teatro-skip-btn {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: #f3e5ab;
+  border: 1px solid #d4af37;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* 2. AUDIO FLOTANTE */
+.teatro-audio-floating {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 999;
+}
+
+.teatro-audio-btn {
+  background: rgba(36, 4, 10, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid #d4af37;
+  padding: 8px 18px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 25px rgba(212, 175, 55, 0.3);
+  cursor: pointer;
+  color: #f3e5ab;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.teatro-audio-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.5);
+}
+
+.teatro-sound-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.teatro-sound-bars span {
+  width: 3px;
+  background: #d4af37;
+  border-radius: 2px;
+  animation: soundBar 1.2s infinite ease-in-out;
+}
+.teatro-sound-bars span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+.teatro-sound-bars span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+.teatro-sound-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+.teatro-sound-bars span:nth-child(4) { height: 80%; animation-delay: 0.4s; }
+
+@keyframes soundBar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+/* 3. PANTALLA SOBRE VIP */
+.teatro-vip-envelope-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at center, #35080f 0%, #110103 100%);
+}
+
+.teatro-vip-card {
+  max-width: 480px;
+  width: 100%;
+  background: #24050a;
+  border: 2px solid #d4af37;
+  border-radius: 14px;
+  padding: 40px 25px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+}
+
+.teatro-wax-seal {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f3e5ab 0%, #d4af37 60%, #8a6c1e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.6);
+}
+
+.seal-icon {
+  font-size: 26px;
+  color: #24050a;
+}
+
+.teatro-vip-desc {
+  font-size: 13px;
+  color: #dfcdb5;
+  margin-bottom: 24px;
+}
+
+.teatro-vip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 4. HERO SECTION */
+.teatro-hero-section {
+  position: relative;
+  min-height: 94vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 80px 20px 60px;
+}
+
+.teatro-hero-stage-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: top center;
+  opacity: 0.45;
+}
+
+.teatro-stage-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center 30%, rgba(212, 175, 55, 0.18) 0%, rgba(26, 3, 7, 0.94) 85%);
+}
+
+.teatro-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.teatro-ticket-ornament {
+  display: inline-block;
+  border: 1px dashed #d4af37;
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #f3e5ab;
+  margin-bottom: 20px;
+  background: rgba(36, 5, 10, 0.7);
+}
+
+.teatro-hero-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 46px;
+  color: #ffffff;
+  margin: 0 0 10px;
+  line-height: 1.15;
+  text-shadow: 0 2px 15px rgba(212, 175, 55, 0.5);
+}
+
+.teatro-hero-subtitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-style: italic;
+  color: #e5d1b3;
+  margin: 0 0 20px;
+}
+
+.teatro-divider-gif {
+  max-width: 160px;
+  height: auto;
+  margin: 10px auto;
+  display: block;
+}
+
+.teatro-date-marquee {
+  margin: 20px 0 30px;
+}
+
+.date-big {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: #f3e5ab;
+  text-transform: uppercase;
+}
+
+/* COUNTDOWN */
+.teatro-countdown-board {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(36, 5, 10, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid #d4af37;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 35px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+.cd-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+
+.cd-val {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #f3e5ab;
+  line-height: 1;
+}
+
+.cd-lbl {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #a8947f;
+  margin-top: 4px;
+}
+
+.cd-sep {
+  font-size: 22px;
+  color: #d4af37;
+}
+
+.teatro-hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* BOTONES */
+.teatro-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 30px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.teatro-btn-gold {
+  background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 50%, #9c7c2b 100%);
+  color: #1a0307;
+  font-weight: 600;
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.4);
+}
+
+.teatro-btn-gold:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #f3e5ab 60%, #d4af37 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.6);
+}
+
+.teatro-btn-outline {
+  background: transparent;
+  color: #f3e5ab;
+  border: 1px solid #d4af37;
+}
+
+.teatro-btn-outline:hover {
+  background: rgba(212, 175, 55, 0.15);
+  transform: translateY(-2px);
+}
+
+.teatro-btn-sm {
+  padding: 8px 18px;
+  font-size: 12px;
+}
+
+.teatro-btn-xs {
+  padding: 4px 12px;
+  font-size: 11px;
+}
+
+/* SECCIONES COMUNES */
+.teatro-section {
+  padding: 70px 20px;
+}
+
+.teatro-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.teatro-section-header {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.section-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #d4af37;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 34px;
+  color: #ffffff;
+  margin: 0 0 10px;
+}
+
+/* 5. BOLETO VIP CONFIRMADO */
+.teatro-ticket-card {
+  background: #25050b;
+  border: 2px solid #d4af37;
+  border-radius: 12px;
+  padding: 35px 25px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.ticket-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #f3e5ab;
+  text-transform: uppercase;
+}
+
+.ticket-info-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 25px 0;
+  flex-wrap: wrap;
+}
+
+.info-item .lbl {
+  font-size: 11px;
+  color: #aa9789;
+}
+
+.info-item .val {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: #f3e5ab;
+  font-weight: 600;
+}
+
+.ticket-qr-wrap {
+  display: inline-block;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.ticket-qr {
+  max-width: 140px;
+  border: 4px solid #d4af37;
+  border-radius: 8px;
+}
+
+.qr-hint {
+  display: block;
+  font-size: 11px;
+  color: #aa9789;
+  margin-top: 6px;
+}
+
+.ticket-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* 6. PLAYBILL CARDS */
+.teatro-playbill-card {
+  background: #24050a;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 14px;
+  padding: 50px 35px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+}
+
+.story-paragraph {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px;
+  color: #f0e2cf;
+  line-height: 1.8;
+  max-width: 680px;
+  margin: 25px auto;
+  font-style: italic;
+}
+
+.teatro-hosts-block {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(212, 175, 55, 0.4);
+}
+
+.hosts-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d4af37;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hosts-list {
+  font-size: 15px;
+  color: #f5eedc;
+}
+
+.sec-music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  background: #35080f;
+  border: 1px solid #d4af37;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #f3e5ab;
+  cursor: pointer;
+}
+
+/* 7. UBICACIONES */
+.teatro-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.teatro-loc-card {
+  background: #24050a;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+.loc-theatre-illustration {
+  max-width: 140px;
+  margin: 0 auto 15px;
+}
+
+.venue-sketch {
+  width: 100%;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+}
+
+.loc-type {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d4af37;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.loc-name {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+
+.loc-address {
+  font-size: 13px;
+  color: #dfcdb5;
+  margin-bottom: 20px;
+}
+
+.loc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 8. ITINERARIO */
+.teatro-timeline {
+  position: relative;
+  max-width: 580px;
+  margin: 30px auto 0;
+}
+
+.teatro-timeline::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 90px;
+  width: 2px;
+  background: #d4af37;
+}
+
+.timeline-act {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.act-time {
+  width: 75px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f3e5ab;
+  text-align: right;
+  padding-top: 2px;
+}
+
+.act-marker {
+  width: 32px;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+}
+
+.gold-star {
+  color: #d4af37;
+  font-size: 16px;
+}
+
+.act-desc {
+  flex: 1;
+  padding-left: 10px;
+  text-align: left;
+}
+
+.act-title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: #ffffff;
+  margin: 0 0 4px;
+}
+
+.act-desc p {
+  font-size: 13px;
+  color: #dfcdb5;
+  margin: 0;
+}
+
+/* 9. DRESS CODE */
+.teatro-dresscode-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.dresscode-sketch {
+  max-width: 120px;
+  opacity: 0.9;
+}
+
+.dress-term {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: #f3e5ab;
+  display: block;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.dress-sub {
+  font-size: 13px;
+  color: #dfcdb5;
+  max-width: 340px;
+}
+
+/* 10. RSVP FORM */
+.teatro-rsvp-card {
+  background: #24050a;
+  border: 1px solid #d4af37;
+  border-radius: 14px;
+  padding: 45px 30px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+.rsvp-deadline {
+  font-size: 13px;
+  color: #dfcdb5;
+  margin: -5px 0 15px;
+}
+
+.teatro-form {
+  max-width: 580px;
+  margin: 30px auto 0;
+  text-align: left;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: #f3e5ab;
+  margin-bottom: 6px;
+}
+
+.teatro-input,
+.teatro-select,
+.teatro-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: #190206;
+  border: 1px solid #7c1a27;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.teatro-input:focus,
+.teatro-select:focus,
+.teatro-textarea:focus {
+  border-color: #d4af37;
+  background: #200308;
+}
+
+.teatro-alert {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-top: 15px;
+}
+
+.teatro-alert.success {
+  background: rgba(30, 70, 32, 0.4);
+  color: #b7dfb9;
+  border: 1px solid #2d6630;
+}
+
+.teatro-alert.error {
+  background: rgba(122, 29, 18, 0.4);
+  color: #f5c4b8;
+  border: 1px solid #7a1d12;
+}
+
+/* 11. GIFTS & SOBRES */
+.teatro-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.teatro-gift-card {
+  background: #24050a;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  padding: 25px 20px;
+  text-align: center;
+}
+
+.gift-icon-wrap {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.store-img {
+  max-height: 40px;
+  max-width: 130px;
+  object-fit: contain;
+}
+
+.store-img.default {
+  filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.4));
+}
+
+.teatro-banking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  max-width: 600px;
+  margin: 25px auto;
+  text-align: left;
+}
+
+.bank-item {
+  background: #190206;
+  border: 1px solid #7c1a27;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.bank-item .lbl {
+  font-size: 11px;
+  color: #aa9789;
+  display: block;
+}
+
+.bank-item .val {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: #f3e5ab;
+  word-break: break-all;
+}
+
+.copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.teatro-copy-btn {
+  background: #35080f;
+  border: 1px solid #d4af37;
+  color: #f3e5ab;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.transfer-qr-box {
+  margin-top: 25px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.transfer-qr-img {
+  max-width: 140px;
+  border: 3px solid #d4af37;
+  border-radius: 8px;
+}
+
+/* 13. LODGING */
+.teatro-lodging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.teatro-lodging-card {
+  background: #24050a;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  padding: 25px 20px;
+  text-align: center;
+}
+
+/* 14. GALERÍA */
+.teatro-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.teatro-gallery-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.teatro-gallery-item:hover .gallery-img {
+  transform: scale(1.06);
+}
+
+.item-hover-glow {
+  position: absolute;
+  inset: 0;
+  background: rgba(36, 5, 10, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.teatro-gallery-item:hover .item-hover-glow {
+  opacity: 1;
+}
+
+/* 15. ZONA INTERACTIVA */
+.teatro-interactive-card {
+  background: #24050a;
+  border: 1px solid #d4af37;
+  border-radius: 14px;
+  padding: 45px 30px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+.interactive-desc {
+  font-size: 14px;
+  color: #dfcdb5;
+  max-width: 540px;
+  margin: 0 auto 25px;
+}
+
+.album-upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.file-input {
+  display: none;
+}
+
+.teatro-album-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.album-photo-card {
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #7c1a27;
+}
+
+.feed-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploader-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.7);
+  color: #f3e5ab;
+  font-size: 10px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+.teatro-dedications-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 15px;
+  margin-top: 30px;
+  text-align: left;
+}
+
+.dedication-card {
+  background: #190206;
+  border: 1px solid #7c1a27;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.ded-body {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  color: #ffffff;
+  font-style: italic;
+  margin: 0 0 8px;
+}
+
+.ded-author {
+  font-size: 11px;
+  color: #d4af37;
+  font-weight: 600;
+  display: block;
+}
+
+.song-search-wrap {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.search-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.song-results-list {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #190206;
+  border: 1px solid #7c1a27;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.song-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.song-details {
+  flex: 1;
+}
+
+.song-details strong {
+  display: block;
+  font-size: 12px;
+  color: #ffffff;
+}
+
+.song-details span {
+  font-size: 11px;
+  color: #aa9789;
+}
+
+.selected-song-box {
+  margin-top: 20px;
+  background: #190206;
+  border: 1px solid #d4af37;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+/* 16. FOOTER */
+.teatro-footer {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: #110103;
+  border-top: 1px solid #d4af37;
+  margin-top: 50px;
+}
+
+.teatro-footer-names {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 28px;
+  color: #f3e5ab;
+  margin: 15px 0 6px;
+}
+
+.teatro-footer-sub {
+  font-size: 13px;
+  color: #aa9789;
+  margin: 0 0 20px;
+}
+
+.teatro-branding {
+  font-size: 11px;
+  color: #7a6a5d;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* REGLA OBLIGATORIA PARA IMPRESIÓN Y CAPTURA */
+@media print {
+  * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+
+  .no-print,
+  .teatro-video-intro-overlay,
+  .teatro-audio-floating,
+  .teatro-vip-envelope-screen,
+  .teatro-hero-stage-bg {
+    display: none !important;
+  }
+
+  .teatro-hero-section {
+    min-height: auto !important;
+    padding: 30px 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}

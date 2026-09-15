@@ -153,6 +153,54 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       description: 'Diseño vanguardista de alta gama en pizarra grafito, verde esmeralda y oro nórdico. Adaptable a cócteles, aniversarios, galas y eventos corporativos.',
       iconKey: 'modern',
       features: ['Sello diamante geométrico', 'Paleta Grafito Slate & Esmeralda', 'Versatilidad corporativa y social', 'Tipografía contemporánea']
+    },
+    {
+      id: 'boda-villa-perle',
+      name: 'Villa Perlè: Apertura de Sobre Animada & Faroles de Ensueño',
+      badge: 'Video Intro &bull; Boda',
+      description: 'Inspirada en Villa Perlè con video interactivo de apertura de sobre con lacre, video de fondo con faroles flotantes, marco floral vintage y música otoñal relajante.',
+      iconKey: 'envelope',
+      features: ['Video de apertura de sobre con lacre', 'Fondo dinámico de faroles flotantes', 'Paleta marfil, verde salvia y oro viejo', 'Reproductor musical con Autumn Wind']
+    },
+    {
+      id: 'boda-teatro',
+      name: 'Gran Teatro: Apertura de Cortinas Cinemáticas & Noche de Gala',
+      badge: 'Video Intro &bull; Teatro',
+      description: 'Apertura cinemática con video de cortinas rojas de terciopelo abriéndose al escenario, marquesina con luces, divisor de rosas rojas y ambiente dramático de ópera.',
+      iconKey: 'classic',
+      features: ['Video cinemático de cortinas teatrales', 'Marquesina luminosa dorada', 'Paleta burdeos borgoña, oro y negro carbón', 'Música introductoria sinfónica']
+    },
+    {
+      id: 'boda-eleganza',
+      name: 'Eleganza Italiana: Lino Toscano, Lago di Como & Cine Clásico',
+      badge: 'Video Intro &bull; Cine',
+      description: 'Inspirada en el romance de las villas italianas en el Lago di Como, con póster de película clásica, video cinemático, textura de lino, boceto de la villa y marco ovalado.',
+      iconKey: 'modern',
+      features: ['Póster y video editorial italiano', 'Textura de lino y boceto de villa', 'Paleta terracota toscana, olivo y lino crema', 'Música clásica Valzer Sentimentale']
+    },
+    {
+      id: 'boda-rosas',
+      name: 'Romance Floral: Pétalos en Movimiento, Rosé & Caligrafía Pinyon',
+      badge: 'Video Intro &bull; Floral',
+      description: 'Romance botánico delicado con video de apertura de rosas, fondo de pétalos flotantes, marco oval floral, torre de champagne para el brindis y tipografía caligráfica Pinyon Script.',
+      iconKey: 'envelope',
+      features: ['Video móvil floral y pétalos', 'Marco oval y esquinas botánicas', 'Torre de champagne para itinerario', 'Música Ballerina y paleta rosa palo']
+    },
+    {
+      id: 'boda-girasoles',
+      name: 'Elegancia Rústica: Girasoles Radiantes, Madera & Anillos Dorados',
+      badge: 'Exclusiva Boda Rústica',
+      description: 'Calidez campestre y rústica iluminada por girasoles dorados, fondo texturizado, emblema de alianzas entrelazadas y canción All of Me de John Legend.',
+      iconKey: 'classic',
+      features: ['Bouquet de girasoles y anillos dorados', 'Paleta amarillo dorado, café madera y salvia', 'Contador rústico y sellos campestres', 'Canción All of Me integrada']
+    },
+    {
+      id: 'boda-navy-blue',
+      name: 'Navy Blue & Gold: Azul Noche, Acuarela & Flores Nobles',
+      badge: 'Exclusiva Gala Nupcial',
+      description: 'Elegancia nocturna con fondo de acuarela azul medianoche, divisores y ornamentos florales bañados en oro fino, tarjetas de cristal oscuro y la canción Perfect de Ed Sheeran.',
+      iconKey: 'modern',
+      features: ['Fondo de acuarela azul noche', 'Divisores florales de oro pulido', 'Tarjetas glassmorphism azul marino', 'Canción Perfect de Ed Sheeran']
     }
   ];
 

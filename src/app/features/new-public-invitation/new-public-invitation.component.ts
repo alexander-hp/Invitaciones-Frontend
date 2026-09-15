@@ -1297,7 +1297,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       !this.isTemplateCumpleanos() &&
       !this.isTemplateBautizo() &&
       !this.isTemplateOtro() &&
-      !this.isMaisonDoreTemplate()
+      !this.isMaisonDoreTemplate() &&
+      !this.isBodaVillaPerleTemplate() &&
+      !this.isBodaTeatroTemplate() &&
+      !this.isBodaEleganzaTemplate() &&
+      !this.isBodaRosasTemplate() &&
+      !this.isBodaGirasolesTemplate() &&
+      !this.isBodaNavyBlueTemplate()
     );
   }
 
@@ -1377,6 +1383,42 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'maison-dore' || t === 'la-maison-dore' || t === 'lamaisondore';
+  }
+
+  isBodaVillaPerleTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-villa-perle' || t === 'villa-perle';
+  }
+
+  isBodaTeatroTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-teatro' || t === 'teatro' || t === 'template-teatro';
+  }
+
+  isBodaEleganzaTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-eleganza' || t === 'eleganza' || t === 'template-eleganza';
+  }
+
+  isBodaRosasTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-rosas' || t === 'rosas' || t === 'rosas-template' || t === 'roses';
+  }
+
+  isBodaGirasolesTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-girasoles' || t === 'girasoles' || t === 'elegancia-girasoles';
+  }
+
+  isBodaNavyBlueTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-navy-blue' || t === 'navy-blue' || t === 'modelo-navy-blue';
   }
 
   get requiresGuestValidation(): boolean {

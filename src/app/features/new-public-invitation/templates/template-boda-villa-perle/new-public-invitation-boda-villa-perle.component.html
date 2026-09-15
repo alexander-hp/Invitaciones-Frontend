@@ -1,0 +1,649 @@
+<!-- PLANTILLA: BODA VILLA PERLE (Quiet Luxury, Perlas & Sobre en Video HD) -->
+<div class="perle-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. VIDEO INTRO OVERLAY (Apertura Cinematográfica de Sobre) -->
+  <div *ngIf="hasVideoIntro && !introFinished" class="perle-video-intro-overlay" [class.playing]="introStarted">
+    <!-- Pantalla Inicial con Sobre Realista y Sello de Perla -->
+    <div *ngIf="!introStarted" class="perle-intro-poster-screen" data-aos="zoom-in">
+      <div class="perle-intro-card">
+        <div class="perle-envelope-preview">
+          <img src="assets/boda-villa-perle/envelope-frame-v3.png" alt="Sobre Villa Perle" class="perle-poster-envelope">
+          <div class="perle-wax-seal" (click)="startVideoIntro()">
+            <div class="seal-inner">
+              <span class="seal-monogram">&#10047;</span>
+            </div>
+            <span class="seal-pulse"></span>
+          </div>
+        </div>
+        <div class="perle-intro-header">
+          <span class="perle-intro-subtitle">Save The Date</span>
+          <h1 class="perle-intro-names">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda' }}</h1>
+          <p class="perle-intro-date">{{ event?.date ? (event?.date | date:'longDate':'':'es') : 'Una fecha inolvidable' }}</p>
+          <button type="button" class="perle-btn perle-btn-gold" (click)="startVideoIntro()">
+            <span>Abrir Invitación</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reproductor de Video de Sobre Abriéndose -->
+    <div *ngIf="introStarted" class="perle-intro-video-container">
+      <video
+        id="perle-intro-video"
+        src="assets/boda-villa-perle/envelope-open-v3.mp4"
+        playsinline
+        webkit-playsinline
+        (ended)="onVideoEnded()"
+        class="perle-fullscreen-video"
+      ></video>
+      <button type="button" class="perle-skip-btn" (click)="skipIntro()">
+        <span>Saltar Introducción</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+          <line x1="19" y1="5" x2="19" y2="19"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="perle-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="perle-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <div class="perle-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="perle-audio-label">{{ isPlayingMusic ? 'Sonando: Autumn Wind' : 'Música' }}</span>
+      <div *ngIf="isPlayingMusic" class="perle-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 3. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA (Solo si requiere validación y no está verificado) -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="perle-vip-envelope-screen">
+    <div class="perle-vip-card" data-aos="fade-up">
+      <div class="perle-vip-envelope-icon">
+        <img src="assets/boda-villa-perle/envelope-frame-v3.png" alt="Sobre Privado" class="vip-env-img">
+        <div class="perle-wax-seal" (click)="onOpenEnvelope()">
+          <span class="seal-monogram">&#9830;</span>
+        </div>
+      </div>
+      <h2>Acceso Privado VIP</h2>
+      <p class="perle-vip-desc">Por favor ingresa tu correo o número de WhatsApp con el que fuiste invitado para desbloquear tu pase personalizado.</p>
+      
+      <div class="perle-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Tu correo o teléfono..."
+          class="perle-input" (keyup.enter)="onOpenEnvelope()">
+        <button type="button" class="perle-btn perle-btn-gold" (click)="onOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Verificar y Entrar</span>
+          <span *ngIf="checkingGuest">Verificando...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="perle-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="perle-invitation-body">
+
+    <!-- 4. PORTADA HERO CON FAROLES & CUENTA REGRESIVA -->
+    <header *ngIf="isSectionActive('hero')" class="perle-hero-section">
+      <!-- Video Loop suave de faroles al atardecer -->
+      <div class="perle-hero-video-bg">
+        <video src="assets/boda-villa-perle/lanterns.mp4" autoplay loop muted playsinline class="perle-bg-video"></video>
+        <div class="perle-hero-overlay"></div>
+      </div>
+
+      <div class="perle-hero-content" data-aos="fade-up">
+        <div class="perle-monogram-wrap">
+          <span class="monogram-letter">{{ invitation?.content?.headline?.charAt(0) || 'N' }}</span>
+          <span class="monogram-amp">&amp;</span>
+          <span class="monogram-letter">{{ invitation?.content?.subheadline?.charAt(0) || 'B' }}</span>
+        </div>
+
+        <span class="perle-tag-top">Nuestra Boda</span>
+        <h1 class="perle-hero-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda' }}</h1>
+        <p class="perle-hero-subtitle">{{ invitation?.content?.subheadline || '¡Nos Casamos!' }}</p>
+
+        <!-- Marco Oval de Perlas con Fecha -->
+        <div class="perle-date-badge">
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+          <span class="hero-date-text">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Próximamente' }}</span>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img flip">
+        </div>
+
+        <!-- CUENTA REGRESIVA EN TIEMPO REAL -->
+        <div *ngIf="isSectionActive('countdown')" class="perle-countdown-board" data-aos="zoom-in" data-aos-delay="200">
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.days }}</span>
+            <span class="cd-lbl">Días</span>
+          </div>
+          <span class="cd-sep">:</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.hours }}</span>
+            <span class="cd-lbl">Horas</span>
+          </div>
+          <span class="cd-sep">:</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.minutes }}</span>
+            <span class="cd-lbl">Min</span>
+          </div>
+          <span class="cd-sep">:</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.seconds }}</span>
+            <span class="cd-lbl">Seg</span>
+          </div>
+        </div>
+
+        <!-- Botones de Acción Rápida -->
+        <div class="perle-hero-actions">
+          <button type="button" class="perle-btn perle-btn-gold" (click)="addToGoogleCalendar()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Guardar en Calendario</span>
+          </button>
+          <button type="button" class="perle-btn perle-btn-outline" (click)="shareOnWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 5. PASE VIP CONFIRMADO CON QR (Si hay invitado verificado) -->
+    <section *ngIf="verifiedGuest" class="perle-section perle-pass-section" data-aos="fade-up">
+      <div class="perle-container">
+        <div class="perle-pass-card">
+          <div class="pass-header">
+            <span class="pass-tag">Pase Personalizado VIP</span>
+            <h3>Bienvenido(a), {{ verifiedGuest.name }}</h3>
+          </div>
+          <div class="pass-body">
+            <div class="pass-info-grid">
+              <div class="info-item" *ngIf="verifiedGuest.tableName">
+                <span class="lbl">Mesa Asignada</span>
+                <strong class="val">{{ verifiedGuest.tableName }}</strong>
+              </div>
+              <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+                <span class="lbl">Asiento</span>
+                <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="lbl">Pases Asignados</span>
+                <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas</strong>
+              </div>
+            </div>
+            <div *ngIf="verifiedGuest.qrCode" class="pass-qr-wrap" (click)="openLightbox(verifiedGuest.qrCode)">
+              <img [src]="verifiedGuest.qrCode" alt="Código QR de Acceso" class="pass-qr">
+              <span class="qr-hint">Toca para ampliar el código QR</span>
+            </div>
+          </div>
+          <div class="pass-footer">
+            <button type="button" class="perle-btn perle-btn-gold perle-btn-sm" (click)="downloadPassOutput.emit()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Descargar Pase</span>
+            </button>
+            <button type="button" class="perle-btn perle-btn-outline perle-btn-sm" (click)="resetGuestOutput.emit()">
+              <span>Cambiar Invitado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. NUESTRA HISTORIA & MENSAJE DE BIENVENIDA -->
+    <section *ngIf="isSectionActive('story')" class="perle-section" data-section-key="story">
+      <div class="perle-container">
+        <div class="perle-editorial-card" data-aos="fade-up">
+          <div class="card-ornament-top">
+            <img src="assets/boda-villa-perle/carriage.png" alt="Carriage" class="perle-carriage-icon">
+          </div>
+          <span class="section-tag">Nuestra Historia</span>
+          <h2 class="section-title">{{ invitation?.content?.storyTitle || 'El Inicio de Nuestro Para Siempre' }}</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+
+          <p class="story-paragraph">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Con inmensa alegría queremos compartir este día tan sagrado y especial con quienes han sido parte de nuestra vida.' }}</p>
+
+          <div *ngIf="event?.hosts?.length" class="perle-hosts-block">
+            <span class="hosts-label">Con la bendición de nuestros amados padres:</span>
+            <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+          </div>
+
+          <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+            <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span>{{ isSectionMusicPlaying('story') ? 'Pausar música de sección' : 'Escuchar melodía' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. UBICACIONES & CÓMO LLEGAR -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="perle-section" data-section-key="locations">
+      <div class="perle-container">
+        <div class="perle-section-header" data-aos="fade-up">
+          <span class="section-tag">Dónde y Cuándo</span>
+          <h2 class="section-title">Ubicaciones del Evento</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+        </div>
+
+        <div class="perle-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="perle-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-oval-frame">
+              <img src="assets/boda-villa-perle/venue-oval-frame.png" alt="Marco" class="oval-frame-asset">
+              <img [src]="loc.notes || 'assets/boda-villa-perle/venue-photo.png'" alt="Lugar" class="oval-venue-img">
+            </div>
+            <span class="loc-type">{{ loc.type || 'Ceremonia & Recepción' }}</span>
+            <h3 class="loc-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+            <div class="loc-actions">
+              <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="perle-btn perle-btn-gold perle-btn-sm">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span>Google Maps</span>
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="perle-btn perle-btn-outline perle-btn-sm">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M8 12h8"></path>
+                </svg>
+                <span>Waze</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. ITINERARIO (TIMELINE) -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="perle-section" data-section-key="itinerary">
+      <div class="perle-container">
+        <div class="perle-itinerary-card" data-aos="fade-up">
+          <div class="itinerary-header">
+            <span class="section-tag">Itinerario</span>
+            <h2 class="section-title">Programa del Día</h2>
+            <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+          </div>
+
+          <div class="perle-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-step" data-aos="fade-up">
+              <div class="step-time">{{ item.time }}</div>
+              <div class="step-dot">
+                <span class="dot-pearl"></span>
+              </div>
+              <div class="step-content">
+                <h4 class="step-title">{{ item.title }}</h4>
+                <p *ngIf="item.description" class="step-desc">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CÓDIGO DE VESTIMENTA (DRESS CODE) -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="perle-section" data-section-key="dressCode">
+      <div class="perle-container">
+        <div class="perle-dresscode-card" data-aos="fade-up">
+          <span class="section-tag">Etiqueta</span>
+          <h2 class="section-title">Código de Vestimenta</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+
+          <div class="dresscode-illustration-row">
+            <img src="assets/boda-villa-perle/dress-code-a.png" alt="Damas" class="dress-illu">
+            <div class="dresscode-badge-main">
+              <span class="badge-title">{{ invitation?.content?.dressCode }}</span>
+            </div>
+            <img src="assets/boda-villa-perle/dress-code-b.png" alt="Caballeros" class="dress-illu">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. CONFIRMACIÓN DE ASISTENCIA (RSVP COMPLETO) -->
+    <section *ngIf="isSectionActive('rsvp')" class="perle-section" data-section-key="rsvp">
+      <div class="perle-container">
+        <div class="perle-rsvp-card" data-aos="fade-up">
+          <span class="section-tag">Confirmación</span>
+          <h2 class="section-title">Confirma tu Asistencia</h2>
+          <p class="rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Agradecemos confirmar antes del: <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+
+          <form (ngSubmit)="onSubmitRsvp()" class="perle-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre Completo *</label>
+                <input type="text" [(ngModel)]="rsvp.name" name="rsvpName" required class="perle-input" placeholder="Tu nombre...">
+              </div>
+              <div class="form-group">
+                <label>Teléfono WhatsApp</label>
+                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="rsvpPhone" class="perle-input" placeholder="3312345678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>¿Nos acompañarás? *</label>
+              <select [(ngModel)]="rsvp.response" name="rsvpResp" class="perle-select">
+                <option value="confirmed">Sí, asistiré con mucho gusto</option>
+                <option value="declined">Lo lamento, no podré asistir</option>
+                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Aún no estoy seguro(a)</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="rsvp.response === 'confirmed'">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Número de Acompañantes</label>
+                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="rsvpComps" class="perle-input">
+                </div>
+                <div class="form-group">
+                  <label>Preferencia de Menú</label>
+                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="rsvpMeal" class="perle-input" placeholder="Pollo, Carne, Vegetariano...">
+                </div>
+              </div>
+
+              <div *ngIf="rsvp.companions > 0" class="form-group">
+                <label>Nombres de tus Acompañantes</label>
+                <textarea [(ngModel)]="companionNamesText" name="rsvpCompNames" rows="2" class="perle-textarea" placeholder="Escribe un nombre por línea"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Restricciones Alimenticias o Alergias</label>
+                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet" class="perle-input" placeholder="Ej: Intolerante a la lactosa, celíaco...">
+              </div>
+            </ng-container>
+
+            <!-- Preguntas Personalizadas Dinámicas -->
+            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
+              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
+                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
+                <input *ngIf="q.type === 'text' || !q.type" type="text" class="perle-input"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
+                <textarea *ngIf="q.type === 'textarea'" class="perle-textarea"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-group">
+              <label>Mensaje para los Novios</label>
+              <textarea [(ngModel)]="rsvp.message" name="rsvpMsg" rows="2" class="perle-textarea" placeholder="Un mensaje con tus buenos deseos..."></textarea>
+            </div>
+
+            <button type="submit" class="perle-btn perle-btn-gold" [disabled]="sending">
+              <span *ngIf="!sending">Enviar Confirmación</span>
+              <span *ngIf="sending">Guardando...</span>
+            </button>
+            <p *ngIf="success" class="perle-alert success">{{ success }}</p>
+            <p *ngIf="error" class="perle-alert error">{{ error }}</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. MESA DE REGALOS -->
+    <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="perle-section" data-section-key="giftRegistry">
+      <div class="perle-container">
+        <div class="perle-section-header" data-aos="fade-up">
+          <span class="section-tag">Mesa de Regalos</span>
+          <h2 class="section-title">Sugerencias de Obsequio</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+        </div>
+
+        <div class="perle-gifts-grid">
+          <article *ngFor="let reg of invitation?.content?.giftRegistry" class="perle-gift-card" data-aos="fade-up">
+            <div class="gift-logo-box">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="store-logo">
+              <span *ngIf="!getStoreLogo(reg)" class="store-text">{{ reg.store || reg.title }}</span>
+            </div>
+            <h4 class="gift-item-title">{{ reg.title || reg.store }}</h4>
+            <p *ngIf="reg.note" class="gift-note">{{ reg.note }}</p>
+            <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="perle-btn perle-btn-gold perle-btn-sm">
+              <span>Ver Mesa de Regalos</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. LLUVIA DE SOBRES / TRANSFERENCIAS -->
+    <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+      class="perle-section" data-section-key="digitalEnvelope">
+      <div class="perle-container">
+        <div class="perle-envelope-card" data-aos="fade-up">
+          <span class="section-tag">Lluvia de Sobres</span>
+          <h2 class="section-title">Aportación para Nuestra Luna de Miel</h2>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="env-note">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+
+          <div class="perle-banking-grid">
+            <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="bank-item">
+              <span class="lbl">Banco</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="bank-item">
+              <span class="lbl">Titular</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="bank-item">
+              <span class="lbl">CLABE Interbancaria</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="perle-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="bank-item">
+              <span class="lbl">No. Cuenta</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="perle-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="transfer-qr-box" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+            <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="QR Transferencia" class="transfer-qr-img">
+            <span>Toca para ampliar el código de transferencia</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. HOSPEDAJE RECOMENDADO -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="perle-section" data-section-key="lodging">
+      <div class="perle-container">
+        <div class="perle-section-header" data-aos="fade-up">
+          <span class="section-tag">Hospedaje</span>
+          <h2 class="section-title">Hoteles Sugeridos</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+        </div>
+
+        <div class="perle-lodging-grid">
+          <article *ngFor="let h of invitation?.content?.lodging" class="perle-lodging-card" data-aos="fade-up">
+            <h3>{{ h.name }}</h3>
+            <p *ngIf="h.description" class="hotel-desc">{{ h.description }}</p>
+            <a *ngIf="h.url" [href]="h.url" target="_blank" rel="noopener noreferrer" class="perle-btn perle-btn-gold perle-btn-sm">
+              <span>Reservar Habitación</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. GALERÍA DE FOTOS -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" class="perle-section" data-section-key="gallery">
+      <div class="perle-container">
+        <div class="perle-section-header" data-aos="fade-up">
+          <span class="section-tag">Galería</span>
+          <h2 class="section-title">Momentos Inolvidables</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+        </div>
+
+        <div class="perle-gallery-grid">
+          <div *ngFor="let photo of invitation?.content?.gallery" class="perle-gallery-item" (click)="openLightbox(photo)" data-aos="zoom-in">
+            <img [src]="photo" alt="Foto Boda" class="gallery-img">
+            <div class="item-hover-glow">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. ZONA INTERACTIVA DE INVITADOS -->
+    <!-- A. Álbum Colectivo en Vivo -->
+    <section *ngIf="isSectionActive('collectiveAlbum')" class="perle-section" data-section-key="collectiveAlbum">
+      <div class="perle-container">
+        <div class="perle-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Álbum Compartido</span>
+          <h2 class="section-title">Captura &amp; Comparte tus Fotos</h2>
+          <p class="interactive-desc">Sube tus fotos tomadas durante la boda para que formen parte de nuestro álbum colectivo en vivo.</p>
+
+          <div class="album-upload-box">
+            <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="perle-album-input" class="file-input">
+            <label for="perle-album-input" class="perle-btn perle-btn-outline">
+              <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Seleccionar Foto del Móvil' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="perle-btn perle-btn-gold" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Subir Foto</span>
+              <span *ngIf="uploadingAlbum">Subiendo...</span>
+            </button>
+          </div>
+          <p *ngIf="albumMessage" class="perle-alert success">{{ albumMessage }}</p>
+
+          <div *ngIf="publicAlbumAssets?.length" class="perle-album-feed">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Foto compartida" class="feed-img">
+              <span *ngIf="asset.uploaderName" class="uploader-tag">Por: {{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B. Muro de Dedicatorias -->
+    <section *ngIf="isSectionActive('dedications')" class="perle-section" data-section-key="dedications">
+      <div class="perle-container">
+        <div class="perle-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Libro de Firmas</span>
+          <h2 class="section-title">Dedicatorias &amp; Deseos</h2>
+          <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+
+          <form (ngSubmit)="onSubmitDedication()" class="perle-form mini">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tu Nombre *</label>
+                <input type="text" [(ngModel)]="dedication.publicName" name="dedName" required class="perle-input" placeholder="Ej: Padrinos de velación...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tu Mensaje o Bendición *</label>
+              <textarea [(ngModel)]="dedication.message" name="dedMsg" rows="2" required class="perle-textarea" placeholder="Escribe tus palabras..."></textarea>
+            </div>
+            <button type="submit" class="perle-btn perle-btn-gold" [disabled]="sending">
+              <span>Publicar Dedicatoria</span>
+            </button>
+            <p *ngIf="dedicationMessage" class="perle-alert success">{{ dedicationMessage }}</p>
+          </form>
+
+          <div *ngIf="dedications?.length" class="perle-dedications-wall">
+            <article *ngFor="let item of dedications" class="dedication-bubble">
+              <p class="ded-body">“{{ item.message }}”</p>
+              <span class="ded-author">— {{ item.publicName }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Peticiones Musicales al DJ -->
+    <section *ngIf="isSectionActive('songRequests')" class="perle-section" data-section-key="songRequests">
+      <div class="perle-container">
+        <div class="perle-interactive-card" data-aos="fade-up">
+          <span class="section-tag">DJ &amp; Fiesta</span>
+          <h2 class="section-title">¿Qué Canción no Puede Faltar?</h2>
+          <p class="interactive-desc">Pide tu canción favorita para escucharla en la pista de baile.</p>
+
+          <div class="song-search-wrap">
+            <div class="search-input-row">
+              <input type="text" [(ngModel)]="songSearchQuery" placeholder="Nombre de la canción o artista..."
+                class="perle-input" (keyup.enter)="onSearchSong()">
+              <button type="button" class="perle-btn perle-btn-gold perle-btn-sm" (click)="onSearchSong()" [disabled]="searchingSongs">
+                <span>{{ searchingSongs ? 'Buscando...' : 'Buscar' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="songSearchResults?.length" class="song-results-list">
+              <div *ngFor="let s of songSearchResults" class="song-item" (click)="onSelectSong(s)">
+                <img [src]="s.thumbnailUrl" alt="Cover" class="song-thumb">
+                <div class="song-details">
+                  <strong>{{ s.title }}</strong>
+                  <span>{{ s.artist }}</span>
+                </div>
+                <button type="button" class="perle-btn perle-btn-outline perle-btn-xs">Elegir</button>
+              </div>
+            </div>
+
+            <div *ngIf="songRequest.title" class="selected-song-box">
+              <span>Canción seleccionada: <strong>{{ songRequest.title }}</strong> ({{ songRequest.artist }})</span>
+              <input type="text" [(ngModel)]="songRequest.dedication" placeholder="¿Quieres dedicársela a alguien?" class="perle-input perle-input-sm">
+              <button type="button" class="perle-btn perle-btn-gold" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                <span>{{ songRequestSending ? 'Enviando...' : 'Confirmar Petición al DJ' }}</span>
+              </button>
+            </div>
+            <p *ngIf="songRequestMessage" class="perle-alert success">{{ songRequestMessage }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16. PIE DE PÁGINA (FOOTER) -->
+    <footer class="perle-footer">
+      <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
+      <div class="perle-footer-names">{{ invitation?.content?.headline || event?.title }}</div>
+      <p class="perle-footer-sub">Gracias por acompañarnos a celebrar este capítulo de amor</p>
+      <div class="perle-branding" *ngIf="!invitation?.content?.hideBranding">
+        <span>Diseñado con distinción</span>
+      </div>
+    </footer>
+
+  </main>
+
+</div>

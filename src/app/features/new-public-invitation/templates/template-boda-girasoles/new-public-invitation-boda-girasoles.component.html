@@ -1,0 +1,575 @@
+<!-- PLANTILLA: BODA GIRASOLES (Elegancia Rústica, Girasoles & Anillos Dorados) -->
+<div class="girasoles-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="girasoles-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="girasoles-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <div class="girasoles-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="girasoles-audio-label">{{ isPlayingMusic ? 'All of Me' : 'Música' }}</span>
+      <div *ngIf="isPlayingMusic" class="girasoles-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 2. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="girasoles-vip-envelope-screen">
+    <div class="girasoles-vip-card" data-aos="fade-up">
+      <div class="girasoles-seal-box">
+        <img src="assets/boda-girasoles/flores-girasoles.webp" alt="Girasol" class="seal-sunflower-img">
+      </div>
+      <h2>Pase de Invitado Especial</h2>
+      <p class="girasoles-vip-desc">Por favor ingresa tu correo electrónico o teléfono registrado para acceder a la invitación.</p>
+      
+      <div class="girasoles-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo o teléfono..."
+          class="girasoles-input" (keyup.enter)="onOpenEnvelope()">
+        <button type="button" class="girasoles-btn girasoles-btn-gold" (click)="onOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Acceder a la Boda</span>
+          <span *ngIf="checkingGuest">Verificando...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="girasoles-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="girasoles-invitation-body">
+
+    <!-- 3. PORTADA HERO RÚSTICA CON GIRASOLES Y ANILLOS -->
+    <header *ngIf="isSectionActive('hero')" class="girasoles-hero-section">
+      <div class="girasoles-hero-bg" style="background-image: url('assets/boda-girasoles/portada-bg.webp');"></div>
+      <div class="girasoles-hero-overlay"></div>
+
+      <div class="girasoles-hero-content" data-aos="fade-up">
+        <!-- Bouquet Superior de Girasoles -->
+        <div class="girasoles-header-bouquet">
+          <img src="assets/boda-girasoles/flores-girasoles.webp" alt="Ramo Girasoles" class="bouquet-img">
+        </div>
+
+        <!-- Anillos Dorados -->
+        <div class="girasoles-rings-box">
+          <img src="assets/boda-girasoles/wedding-rings.png" alt="Anillos de Boda" class="rings-img">
+        </div>
+
+        <span class="girasoles-hero-tag">Nuestra Boda</span>
+        <h1 class="girasoles-hero-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda' }}</h1>
+        <p class="girasoles-hero-subtitle">{{ invitation?.content?.subheadline || 'El amor florece en cada momento' }}</p>
+
+        <div class="girasoles-date-badge">
+          <span class="date-icon">🌻</span>
+          <span class="date-text">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Fecha de Nuestra Boda' }}</span>
+        </div>
+
+        <!-- CUENTA REGRESIVA RÚSTICA -->
+        <div *ngIf="isSectionActive('countdown')" class="girasoles-countdown-board" data-aos="zoom-in" data-aos-delay="200">
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.days }}</span>
+            <span class="cd-lbl">Días</span>
+          </div>
+          <span class="cd-sep">🌻</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.hours }}</span>
+            <span class="cd-lbl">Horas</span>
+          </div>
+          <span class="cd-sep">🌻</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.minutes }}</span>
+            <span class="cd-lbl">Minutos</span>
+          </div>
+          <span class="cd-sep">🌻</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.seconds }}</span>
+            <span class="cd-lbl">Segundos</span>
+          </div>
+        </div>
+
+        <div class="girasoles-hero-actions">
+          <button type="button" class="girasoles-btn girasoles-btn-gold" (click)="addToGoogleCalendar()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Agendar en Calendario</span>
+          </button>
+          <button type="button" class="girasoles-btn girasoles-btn-wood" (click)="shareOnWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4. PASE VIP CONFIRMADO -->
+    <section *ngIf="verifiedGuest" class="girasoles-section" data-aos="fade-up">
+      <div class="girasoles-container">
+        <div class="girasoles-pass-card">
+          <div class="pass-sunflower-icon">🌻</div>
+          <span class="pass-tag">Pase Personal Asignado</span>
+          <h3 class="pass-guest-name">{{ verifiedGuest.name }}</h3>
+
+          <div class="pass-info-grid">
+            <div class="info-item" *ngIf="verifiedGuest.tableName">
+              <span class="lbl">Mesa</span>
+              <strong class="val">{{ verifiedGuest.tableName }}</strong>
+            </div>
+            <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+              <span class="lbl">Asiento</span>
+              <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="lbl">Pases Reservados</span>
+              <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas</strong>
+            </div>
+          </div>
+
+          <div *ngIf="verifiedGuest.qrCode" class="pass-qr-wrap" (click)="openLightbox(verifiedGuest.qrCode)">
+            <img [src]="verifiedGuest.qrCode" alt="QR" class="pass-qr-img">
+            <span class="qr-hint">Toca para ampliar el código de acceso</span>
+          </div>
+
+          <div class="pass-footer">
+            <button type="button" class="girasoles-btn girasoles-btn-gold girasoles-btn-sm" (click)="downloadPassOutput.emit()">
+              <span>Descargar Pase</span>
+            </button>
+            <button type="button" class="girasoles-btn girasoles-btn-outline girasoles-btn-sm" (click)="resetGuestOutput.emit()">
+              <span>Cambiar Invitado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. NUESTRA HISTORIA / PADRES -->
+    <section *ngIf="isSectionActive('story')" class="girasoles-section" data-section-key="story">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Nuestra Historia</span>
+          <h2 class="section-title">{{ invitation?.content?.storyTitle || 'Unidos por el Destino' }}</h2>
+          <div class="girasoles-divider">
+            <span>🌻</span>
+          </div>
+
+          <p class="story-paragraph">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Hoy queremos dar gracias a Dios y a la vida por encontrarnos. Nada nos hace más felices que celebrar nuestro amor contigo.' }}</p>
+
+          <div *ngIf="event?.hosts?.length" class="girasoles-hosts-block">
+            <span class="hosts-label">Con el amor y bendición de nuestros padres:</span>
+            <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+          </div>
+
+          <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+            <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span>{{ isSectionMusicPlaying('story') ? 'Pausa' : 'Escuchar melodía' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. DÓNDE Y CUÁNDO (UBICACIONES) -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="girasoles-section" data-section-key="locations">
+      <div class="girasoles-container">
+        <div class="girasoles-section-header" data-aos="fade-up">
+          <span class="section-tag">Celebración</span>
+          <h2 class="section-title">Dónde y Cuándo</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+        </div>
+
+        <div class="girasoles-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="girasoles-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-sunflower-badge">
+              <span>🌻</span>
+            </div>
+            <span class="loc-type">{{ loc.type || 'Ceremonia & Recepción' }}</span>
+            <h3 class="loc-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+            <div class="loc-actions">
+              <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="girasoles-btn girasoles-btn-gold girasoles-btn-sm">
+                <span>Google Maps</span>
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="girasoles-btn girasoles-btn-outline girasoles-btn-sm">
+                <span>Waze</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. ITINERARIO / TIMELINE -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="girasoles-section" data-section-key="itinerary">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Cronograma</span>
+          <h2 class="section-title">Itinerario del Gran Día</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+
+          <div class="girasoles-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-row" data-aos="fade-up">
+              <div class="row-time">{{ item.time }}</div>
+              <div class="row-marker">
+                <span class="marker-sunflower">🌻</span>
+              </div>
+              <div class="row-content">
+                <h4 class="row-title">{{ item.title }}</h4>
+                <p *ngIf="item.description">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. CÓDIGO DE VESTIMENTA -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="girasoles-section" data-section-key="dressCode">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Código de Vestimenta</span>
+          <h2 class="section-title">¿Cómo Vestir?</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+
+          <div class="girasoles-dresscode-box">
+            <div class="dress-title">{{ invitation?.content?.dressCode }}</div>
+            <p class="dress-notes">Agradecemos lucir elegantes en tonos tierra, beige, terracota o verde bosque. El color blanco se reserva con amor para la novia.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CONFIRMACIÓN RSVP COMPLETO -->
+    <section *ngIf="isSectionActive('rsvp')" class="girasoles-section" data-section-key="rsvp">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">RSVP</span>
+          <h2 class="section-title">Confirmar Asistencia</h2>
+          <p class="rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Por favor confirma antes del: <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <div class="girasoles-divider"><span>🌻</span></div>
+
+          <form (ngSubmit)="onSubmitRsvp()" class="girasoles-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre Completo *</label>
+                <input type="text" [(ngModel)]="rsvp.name" name="girasolName" required class="girasoles-input" placeholder="Tu nombre...">
+              </div>
+              <div class="form-group">
+                <label>Teléfono WhatsApp</label>
+                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="girasolPhone" class="girasoles-input" placeholder="3312345678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>¿Podrás acompañarnos? *</label>
+              <select [(ngModel)]="rsvp.response" name="girasolResp" class="girasoles-select">
+                <option value="confirmed">Sí, confirmo mi asistencia</option>
+                <option value="declined">Lamentablemente no podré ir</option>
+                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Aún no estoy seguro/a</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="rsvp.response === 'confirmed'">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Acompañantes</label>
+                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="girasolComps" class="girasoles-input">
+                </div>
+                <div class="form-group">
+                  <label>Preferencia de Platillo</label>
+                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="girasolMeal" class="girasoles-input" placeholder="Carne, pollo, vegetariano...">
+                </div>
+              </div>
+
+              <div *ngIf="rsvp.companions > 0" class="form-group">
+                <label>Nombres de tus Acompañantes</label>
+                <textarea [(ngModel)]="companionNamesText" name="girasolCompNames" rows="2" class="girasoles-textarea" placeholder="Escribe un nombre por renglón"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Alergias o Restricciones</label>
+                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="girasolDiet" class="girasoles-input" placeholder="Ej. Celiaco, mariscos...">
+              </div>
+            </ng-container>
+
+            <!-- Preguntas Personalizadas Dinámicas -->
+            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
+              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
+                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
+                <input *ngIf="q.type === 'text' || !q.type" type="text" class="girasoles-input"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
+                <textarea *ngIf="q.type === 'textarea'" class="girasoles-textarea"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-group">
+              <label>Un Mensaje para los Novios</label>
+              <textarea [(ngModel)]="rsvp.message" name="girasolMsg" rows="2" class="girasoles-textarea" placeholder="Escribe una felicitación..."></textarea>
+            </div>
+
+            <button type="submit" class="girasoles-btn girasoles-btn-gold" [disabled]="sending">
+              <span *ngIf="!sending">Enviar Confirmación</span>
+              <span *ngIf="sending">Enviando...</span>
+            </button>
+            <p *ngIf="success" class="girasoles-alert success">{{ success }}</p>
+            <p *ngIf="error" class="girasoles-alert error">{{ error }}</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. MESA DE REGALOS -->
+    <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="girasoles-section" data-section-key="giftRegistry">
+      <div class="girasoles-container">
+        <div class="girasoles-section-header" data-aos="fade-up">
+          <span class="section-tag">Regalos</span>
+          <h2 class="section-title">Mesa de Regalos</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+        </div>
+
+        <div class="girasoles-gifts-grid">
+          <article *ngFor="let reg of invitation?.content?.giftRegistry" class="girasoles-gift-card" data-aos="fade-up">
+            <div class="gift-logo-frame">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="store-img">
+              <span *ngIf="!getStoreLogo(reg)" class="store-text">{{ reg.store || reg.title }}</span>
+            </div>
+            <h4>{{ reg.title || reg.store }}</h4>
+            <p *ngIf="reg.note">{{ reg.note }}</p>
+            <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="girasoles-btn girasoles-btn-gold girasoles-btn-sm">
+              <span>Ver Mesa</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. LLUVIA DE SOBRES / DATOS BANCARIOS -->
+    <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+      class="girasoles-section" data-section-key="digitalEnvelope">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Lluvia de Sobres</span>
+          <h2 class="section-title">Muestra de Afecto</h2>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="env-note">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+
+          <div class="girasoles-banking-grid">
+            <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="bank-item">
+              <span class="lbl">Banco</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="bank-item">
+              <span class="lbl">Titular</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="bank-item">
+              <span class="lbl">CLABE Interbancaria</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="girasoles-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="bank-item">
+              <span class="lbl">Cuenta</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="girasoles-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="transfer-qr-box" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+            <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="QR" class="transfer-qr-img">
+            <span>Toca para ampliar el código QR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. HOSPEDAJE -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="girasoles-section" data-section-key="lodging">
+      <div class="girasoles-container">
+        <div class="girasoles-section-header" data-aos="fade-up">
+          <span class="section-tag">Hospedaje</span>
+          <h2 class="section-title">Hoteles Cercanos</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+        </div>
+
+        <div class="girasoles-lodging-grid">
+          <article *ngFor="let h of invitation?.content?.lodging" class="girasoles-lodging-card" data-aos="fade-up">
+            <h3>{{ h.name }}</h3>
+            <p *ngIf="h.description">{{ h.description }}</p>
+            <a *ngIf="h.url" [href]="h.url" target="_blank" rel="noopener noreferrer" class="girasoles-btn girasoles-btn-gold girasoles-btn-sm">
+              <span>Reservar</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. GALERÍA -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" class="girasoles-section" data-section-key="gallery">
+      <div class="girasoles-container">
+        <div class="girasoles-section-header" data-aos="fade-up">
+          <span class="section-tag">Galería</span>
+          <h2 class="section-title">Nuestros Mejores Recuerdos</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+        </div>
+
+        <div class="girasoles-gallery-grid">
+          <div *ngFor="let photo of invitation?.content?.gallery" class="girasoles-gallery-item" (click)="openLightbox(photo)" data-aos="zoom-in">
+            <img [src]="photo" alt="Foto Boda" class="gallery-img">
+            <div class="item-hover-glow">
+              <span class="view-label">Ampliar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. ZONA INTERACTIVA -->
+    <!-- A. Álbum Colectivo en Vivo -->
+    <section *ngIf="isSectionActive('collectiveAlbum')" class="girasoles-section" data-section-key="collectiveAlbum">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Álbum en Vivo</span>
+          <h2 class="section-title">Sube tus Fotos de la Fiesta</h2>
+          <p class="interactive-desc">Comparte con nosotros todas las fotografías que captures durante la boda.</p>
+
+          <div class="album-upload-box">
+            <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="girasol-album-input" class="file-input">
+            <label for="girasol-album-input" class="girasoles-btn girasoles-btn-outline">
+              <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Elegir Foto del Teléfono' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="girasoles-btn girasoles-btn-gold" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Subir Foto</span>
+              <span *ngIf="uploadingAlbum">Subiendo...</span>
+            </button>
+          </div>
+          <p *ngIf="albumMessage" class="girasoles-alert success">{{ albumMessage }}</p>
+
+          <div *ngIf="publicAlbumAssets?.length" class="girasoles-album-feed">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Foto" class="feed-img">
+              <span *ngIf="asset.uploaderName" class="uploader-tag">Por: {{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B. Muro de Dedicatorias -->
+    <section *ngIf="isSectionActive('dedications')" class="girasoles-section" data-section-key="dedications">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Buenos Deseos</span>
+          <h2 class="section-title">Libro de Dedicatorias</h2>
+          <div class="girasoles-divider"><span>🌻</span></div>
+
+          <form (ngSubmit)="onSubmitDedication()" class="girasoles-form mini">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tu Nombre *</label>
+                <input type="text" [(ngModel)]="dedication.publicName" name="dedGirasolName" required class="girasoles-input" placeholder="Tu nombre...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tus Deseos para los Novios *</label>
+              <textarea [(ngModel)]="dedication.message" name="dedGirasolMsg" rows="2" required class="girasoles-textarea" placeholder="Escribe tu dedicatoria..."></textarea>
+            </div>
+            <button type="submit" class="girasoles-btn girasoles-btn-gold" [disabled]="sending">
+              <span>Publicar Mensaje</span>
+            </button>
+            <p *ngIf="dedicationMessage" class="girasoles-alert success">{{ dedicationMessage }}</p>
+          </form>
+
+          <div *ngIf="dedications?.length" class="girasoles-dedications-wall">
+            <article *ngFor="let item of dedications" class="dedication-card">
+              <p class="ded-body">“{{ item.message }}”</p>
+              <span class="ded-author">— {{ item.publicName }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Peticiones Musicales al DJ -->
+    <section *ngIf="isSectionActive('songRequests')" class="girasoles-section" data-section-key="songRequests">
+      <div class="girasoles-container">
+        <div class="girasoles-card" data-aos="fade-up">
+          <span class="section-tag">Pista de Baile</span>
+          <h2 class="section-title">Pide tu Canción al DJ</h2>
+          <p class="interactive-desc">¿Qué tema no puede faltar para bailar contigo toda la noche?</p>
+
+          <div class="song-search-wrap">
+            <div class="search-input-row">
+              <input type="text" [(ngModel)]="songSearchQuery" placeholder="Nombre de canción o artista..."
+                class="girasoles-input" (keyup.enter)="onSearchSong()">
+              <button type="button" class="girasoles-btn girasoles-btn-gold girasoles-btn-sm" (click)="onSearchSong()" [disabled]="searchingSongs">
+                <span>{{ searchingSongs ? 'Buscando...' : 'Buscar' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="songSearchResults?.length" class="song-results-list">
+              <div *ngFor="let s of songSearchResults" class="song-item" (click)="onSelectSong(s)">
+                <img [src]="s.thumbnailUrl" alt="Cover" class="song-thumb">
+                <div class="song-details">
+                  <strong>{{ s.title }}</strong>
+                  <span>{{ s.artist }}</span>
+                </div>
+                <button type="button" class="girasoles-btn girasoles-btn-outline girasoles-btn-xs">Elegir</button>
+              </div>
+            </div>
+
+            <div *ngIf="songRequest.title" class="selected-song-box">
+              <span>Canción elegida: <strong>{{ songRequest.title }}</strong> ({{ songRequest.artist }})</span>
+              <input type="text" [(ngModel)]="songRequest.dedication" placeholder="¿Quieres dedicársela a alguien?" class="girasoles-input girasoles-input-sm">
+              <button type="button" class="girasoles-btn girasoles-btn-gold" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                <span>{{ songRequestSending ? 'Enviando...' : 'Confirmar Canción' }}</span>
+              </button>
+            </div>
+            <p *ngIf="songRequestMessage" class="girasoles-alert success">{{ songRequestMessage }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. PIE DE PÁGINA (FOOTER) -->
+    <footer class="girasoles-footer">
+      <div class="girasoles-footer-bouquet">
+        <img src="assets/boda-girasoles/flores-girasoles.webp" alt="Girasoles" class="footer-bouquet-img">
+      </div>
+      <div class="girasoles-footer-names">{{ invitation?.content?.headline || event?.title }}</div>
+      <p class="girasoles-footer-sub">Gracias por florecer junto a nosotros en este día tan especial</p>
+      <div class="girasoles-branding" *ngIf="!invitation?.content?.hideBranding">
+        <span>Amor Rústico &amp; Radiante</span>
+      </div>
+    </footer>
+
+  </main>
+
+</div>

@@ -1,0 +1,1305 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  color: #3b3633;
+  background-color: #fbf9f5;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 1. VIDEO INTRO OVERLAY */
+.perle-video-intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #141210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.perle-intro-poster-screen {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, #2e2824 0%, #110f0e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.perle-intro-card {
+  max-width: 440px;
+  width: 100%;
+  background: #fbf9f5;
+  border-radius: 12px;
+  padding: 40px 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  text-align: center;
+  border: 1px solid #d8c3a5;
+  position: relative;
+}
+
+.perle-envelope-preview {
+  position: relative;
+  margin-bottom: 25px;
+  display: inline-block;
+}
+
+.perle-poster-envelope {
+  max-width: 240px;
+  width: 100%;
+  border-radius: 6px;
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+}
+
+.perle-wax-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #dfba87 0%, #a67c4e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(194, 166, 136, 0.5);
+  border: 2px solid #fbf9f5;
+  transition: transform 0.3s ease;
+}
+
+.perle-wax-seal:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.seal-monogram {
+  font-family: 'Cinzel', serif;
+  font-size: 24px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.perle-intro-subtitle {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8d755c;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.perle-intro-names {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 34px;
+  font-weight: 600;
+  color: #24211f;
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.perle-intro-date {
+  font-size: 13px;
+  color: #7a6e65;
+  margin-bottom: 25px;
+}
+
+.perle-intro-video-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.perle-fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.perle-skip-btn {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.perle-skip-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* 2. AUDIO FLOTANTE */
+.perle-audio-floating {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 999;
+}
+
+.perle-audio-btn {
+  background: rgba(251, 249, 245, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid #d8c3a5;
+  padding: 8px 16px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(141, 117, 92, 0.25);
+  cursor: pointer;
+  color: #4a3e35;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.perle-audio-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(141, 117, 92, 0.35);
+}
+
+.perle-sound-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.perle-sound-bars span {
+  width: 3px;
+  background: #c2a688;
+  border-radius: 2px;
+  animation: soundBar 1.2s infinite ease-in-out;
+}
+.perle-sound-bars span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+.perle-sound-bars span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+.perle-sound-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+.perle-sound-bars span:nth-child(4) { height: 80%; animation-delay: 0.4s; }
+
+@keyframes soundBar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+/* 3. PANTALLA SOBRE VIP */
+.perle-vip-envelope-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at center, #fbf9f5 0%, #ede6dc 100%);
+}
+
+.perle-vip-card {
+  max-width: 480px;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #dfba87;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(141, 117, 92, 0.15);
+}
+
+.perle-vip-envelope-icon {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.vip-env-img {
+  max-width: 180px;
+  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+}
+
+.perle-vip-desc {
+  font-size: 13px;
+  color: #6d6158;
+  margin-bottom: 24px;
+}
+
+.perle-vip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 4. HERO SECTION */
+.perle-hero-section {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 60px 20px;
+}
+
+.perle-hero-video-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.perle-bg-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.8) brightness(0.95);
+}
+
+.perle-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(251, 249, 245, 0.82) 0%, rgba(247, 243, 238, 0.94) 85%);
+}
+
+.perle-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.perle-monogram-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #d8c3a5;
+  padding: 8px 24px;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.monogram-letter {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  color: #8d755c;
+  font-weight: 600;
+}
+
+.monogram-amp {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-style: italic;
+  color: #c2a688;
+}
+
+.perle-tag-top {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8d755c;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.perle-hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 48px;
+  font-weight: 600;
+  color: #24211f;
+  margin: 0 0 8px;
+  line-height: 1.15;
+}
+
+.perle-hero-subtitle {
+  font-size: 18px;
+  color: #73675e;
+  margin: 0 0 24px;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.perle-date-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.perle-divider-img {
+  max-width: 140px;
+  height: auto;
+  opacity: 0.8;
+}
+
+.perle-divider-img.flip {
+  transform: scaleX(-1);
+}
+
+.hero-date-text {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #594e46;
+  text-transform: uppercase;
+}
+
+/* COUNTDOWN BOARD */
+.perle-countdown-board {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid #d8c3a5;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 35px;
+  box-shadow: 0 8px 25px rgba(141, 117, 92, 0.08);
+}
+
+.cd-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+
+.cd-val {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #8d755c;
+  line-height: 1;
+}
+
+.cd-lbl {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94887f;
+  margin-top: 4px;
+}
+
+.cd-sep {
+  font-size: 20px;
+  color: #c2a688;
+  font-weight: 300;
+}
+
+.perle-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* BOTONES */
+.perle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 30px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+}
+
+.perle-btn-gold {
+  background: linear-gradient(135deg, #d8c3a5 0%, #b89772 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(184, 151, 114, 0.35);
+}
+
+.perle-btn-gold:hover {
+  background: linear-gradient(135deg, #dfba87 0%, #a67c4e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(184, 151, 114, 0.45);
+}
+
+.perle-btn-outline {
+  background: transparent;
+  color: #63544a;
+  border: 1px solid #c2a688;
+}
+
+.perle-btn-outline:hover {
+  background: rgba(194, 166, 136, 0.12);
+  transform: translateY(-2px);
+}
+
+.perle-btn-sm {
+  padding: 8px 18px;
+  font-size: 12px;
+}
+
+.perle-btn-xs {
+  padding: 4px 12px;
+  font-size: 11px;
+}
+
+/* SECCIONES COMUNES */
+.perle-section {
+  padding: 70px 20px;
+}
+
+.perle-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.perle-section-header {
+  text-align: center;
+  margin-bottom: 45px;
+}
+
+.section-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #8d755c;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-weight: 600;
+  color: #24211f;
+  margin: 0 0 10px;
+}
+
+/* 5. PASE VIP CONFIRMADO */
+.perle-pass-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 12px;
+  padding: 35px 25px;
+  box-shadow: 0 12px 35px rgba(141, 117, 92, 0.1);
+  text-align: center;
+}
+
+.pass-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #8d755c;
+  text-transform: uppercase;
+}
+
+.pass-info-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 25px 0;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item .lbl {
+  font-size: 11px;
+  color: #8a7c73;
+}
+
+.info-item .val {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: #3b332d;
+  font-weight: 600;
+}
+
+.pass-qr-wrap {
+  display: inline-block;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.pass-qr {
+  max-width: 140px;
+  border: 4px solid #f7f3ee;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.qr-hint {
+  display: block;
+  font-size: 11px;
+  color: #998a80;
+  margin-top: 6px;
+}
+
+.pass-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 6. NUESTRA HISTORIA */
+.perle-editorial-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 14px;
+  padding: 50px 35px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(141, 117, 92, 0.08);
+}
+
+.perle-carriage-icon {
+  max-width: 90px;
+  opacity: 0.85;
+  margin-bottom: 15px;
+}
+
+.story-paragraph {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: #4a4038;
+  line-height: 1.8;
+  max-width: 680px;
+  margin: 25px auto;
+  font-style: italic;
+}
+
+.perle-hosts-block {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px dashed #d8c3a5;
+}
+
+.hosts-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8d755c;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hosts-list {
+  font-size: 15px;
+  color: #4f433b;
+  font-weight: 500;
+}
+
+.sec-music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  background: #f7f3ee;
+  border: 1px solid #d8c3a5;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #695a4f;
+  cursor: pointer;
+}
+
+/* 7. UBICACIONES */
+.perle-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.perle-loc-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(141, 117, 92, 0.06);
+}
+
+.loc-oval-frame {
+  position: relative;
+  width: 140px;
+  height: 170px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oval-frame-asset {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.oval-venue-img {
+  width: 105px;
+  height: 135px;
+  border-radius: 50% / 50%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.loc-type {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8d755c;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.loc-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #24211f;
+  margin: 0 0 8px;
+}
+
+.loc-address {
+  font-size: 13px;
+  color: #695e56;
+  margin-bottom: 20px;
+}
+
+.loc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 8. ITINERARIO */
+.perle-itinerary-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 14px;
+  padding: 45px 30px;
+  box-shadow: 0 10px 30px rgba(141, 117, 92, 0.06);
+}
+
+.itinerary-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.perle-timeline {
+  position: relative;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.perle-timeline::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 90px;
+  width: 2px;
+  background: #d8c3a5;
+}
+
+.timeline-step {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.step-time {
+  width: 75px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8d755c;
+  text-align: right;
+  padding-top: 2px;
+}
+
+.step-dot {
+  width: 32px;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+}
+
+.dot-pearl {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 30%, #dfba87 100%);
+  border: 2px solid #8d755c;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.step-content {
+  flex: 1;
+  padding-left: 10px;
+}
+
+.step-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #24211f;
+  margin: 0 0 4px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: #695e56;
+  margin: 0;
+}
+
+/* 9. DRESS CODE */
+.perle-dresscode-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 14px;
+  padding: 45px 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(141, 117, 92, 0.06);
+}
+
+.dresscode-illustration-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.dress-illu {
+  max-width: 100px;
+  height: auto;
+  opacity: 0.9;
+}
+
+.dresscode-badge-main {
+  background: #f7f3ee;
+  border: 1px solid #d8c3a5;
+  padding: 12px 28px;
+  border-radius: 30px;
+}
+
+.badge-title {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #594e46;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* 10. RSVP FORM */
+.perle-rsvp-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 14px;
+  padding: 45px 30px;
+  box-shadow: 0 10px 30px rgba(141, 117, 92, 0.06);
+  text-align: center;
+}
+
+.rsvp-deadline {
+  font-size: 13px;
+  color: #7a6e65;
+  margin: -5px 0 15px;
+}
+
+.perle-form {
+  max-width: 580px;
+  margin: 30px auto 0;
+  text-align: left;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #5c4f46;
+  margin-bottom: 6px;
+}
+
+.perle-input,
+.perle-select,
+.perle-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  background: #fdfbf9;
+  border: 1px solid #d8c3a5;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: #3b3633;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.perle-input:focus,
+.perle-select:focus,
+.perle-textarea:focus {
+  border-color: #8d755c;
+  background: #fff;
+}
+
+.perle-alert {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-top: 15px;
+}
+
+.perle-alert.success {
+  background: #edf7ed;
+  color: #1e4620;
+  border: 1px solid #b7dfb9;
+}
+
+.perle-alert.error {
+  background: #fdf0ed;
+  color: #7a1d12;
+  border: 1px solid #f5c4b8;
+}
+
+/* 11. GIFTS & SOBRES */
+.perle-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.perle-gift-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 12px;
+  padding: 25px 20px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(141, 117, 92, 0.05);
+}
+
+.gift-logo-box {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.store-logo {
+  max-height: 40px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
+.gift-item-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: #24211f;
+  margin: 0 0 6px;
+}
+
+.gift-note {
+  font-size: 12px;
+  color: #7a6e65;
+  margin-bottom: 16px;
+}
+
+.perle-envelope-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 14px;
+  padding: 45px 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(141, 117, 92, 0.06);
+}
+
+.perle-banking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  max-width: 600px;
+  margin: 25px auto;
+  text-align: left;
+}
+
+.bank-item {
+  background: #fdfbf9;
+  border: 1px solid #d8c3a5;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.bank-item .lbl {
+  font-size: 11px;
+  color: #8a7c73;
+  display: block;
+}
+
+.bank-item .val {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: #3b332d;
+  word-break: break-all;
+}
+
+.copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.perle-copy-btn {
+  background: #f7f3ee;
+  border: 1px solid #c2a688;
+  color: #594e46;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.transfer-qr-box {
+  margin-top: 25px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.transfer-qr-img {
+  max-width: 140px;
+  border: 3px solid #f7f3ee;
+  border-radius: 8px;
+}
+
+/* 13. LODGING */
+.perle-lodging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.perle-lodging-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 12px;
+  padding: 25px 20px;
+  text-align: center;
+}
+
+.hotel-desc {
+  font-size: 13px;
+  color: #695e56;
+  margin-bottom: 18px;
+}
+
+/* 14. GALERÍA */
+.perle-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.perle-gallery-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.perle-gallery-item:hover .gallery-img {
+  transform: scale(1.06);
+}
+
+.item-hover-glow {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.perle-gallery-item:hover .item-hover-glow {
+  opacity: 1;
+}
+
+/* 15. ZONA INTERACTIVA */
+.perle-interactive-card {
+  background: #ffffff;
+  border: 1px solid #d8c3a5;
+  border-radius: 14px;
+  padding: 45px 30px;
+  box-shadow: 0 10px 30px rgba(141, 117, 92, 0.06);
+  text-align: center;
+}
+
+.interactive-desc {
+  font-size: 14px;
+  color: #695e56;
+  max-width: 540px;
+  margin: 0 auto 25px;
+}
+
+.album-upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.file-input {
+  display: none;
+}
+
+.perle-album-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.album-photo-card {
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+}
+
+.feed-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploader-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+.perle-dedications-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 15px;
+  margin-top: 30px;
+  text-align: left;
+}
+
+.dedication-bubble {
+  background: #fdfbf9;
+  border: 1px solid #d8c3a5;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.ded-body {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  color: #4a4038;
+  font-style: italic;
+  margin: 0 0 8px;
+}
+
+.ded-author {
+  font-size: 11px;
+  color: #8d755c;
+  font-weight: 600;
+  display: block;
+}
+
+.song-search-wrap {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.search-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.song-results-list {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fdfbf9;
+  border: 1px solid #d8c3a5;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.song-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.song-details {
+  flex: 1;
+}
+
+.song-details strong {
+  display: block;
+  font-size: 12px;
+  color: #24211f;
+}
+
+.song-details span {
+  font-size: 11px;
+  color: #7a6e65;
+}
+
+.selected-song-box {
+  margin-top: 20px;
+  background: #f7f3ee;
+  border: 1px solid #d8c3a5;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+/* 16. FOOTER */
+.perle-footer {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: #f4eee6;
+  border-top: 1px solid #d8c3a5;
+  margin-top: 50px;
+}
+
+.perle-footer-names {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  color: #3b332d;
+  font-weight: 600;
+  margin: 15px 0 6px;
+}
+
+.perle-footer-sub {
+  font-size: 13px;
+  color: #7a6e65;
+  margin: 0 0 20px;
+}
+
+.perle-branding {
+  font-size: 11px;
+  color: #a89a8f;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* REGLA OBLIGATORIA PARA IMPRESIÓN Y CAPTURA */
+@media print {
+  * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+
+  .no-print,
+  .perle-video-intro-overlay,
+  .perle-audio-floating,
+  .perle-vip-envelope-screen,
+  .perle-hero-video-bg {
+    display: none !important;
+  }
+
+  .perle-hero-section {
+    min-height: auto !important;
+    padding: 30px 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}

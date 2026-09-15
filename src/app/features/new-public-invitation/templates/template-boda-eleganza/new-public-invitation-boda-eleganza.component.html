@@ -1,0 +1,615 @@
+<!-- PLANTILLA: BODA ELEGANZA (Bella Italia, Lago di Como, Lino & Película Cinemática) -->
+<div class="eleganza-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. VIDEO INTRO OVERLAY (Film Editorial Italiano) -->
+  <div *ngIf="hasVideoIntro && !introFinished" class="eleganza-video-intro-overlay" [class.playing]="introStarted">
+    <!-- Portada Poster de Película Clásica Italiana -->
+    <div *ngIf="!introStarted" class="eleganza-intro-poster-screen" data-aos="zoom-in">
+      <div class="eleganza-intro-card">
+        <div class="eleganza-poster-wrap">
+          <img src="assets/boda-eleganza/eleganza-poster.jpg" alt="Eleganza Poster" class="eleganza-poster-img">
+          <div class="eleganza-wax-seal" (click)="startVideoIntro()">
+            <img src="assets/boda-eleganza/key-tassel.png" alt="Llave" class="tassel-key-img">
+          </div>
+        </div>
+        <div class="eleganza-intro-meta">
+          <span class="eleganza-tag">Invito Ufficiale</span>
+          <h1 class="eleganza-intro-title">{{ invitation?.content?.headline || event?.title || 'Il Nostro Matrimonio' }}</h1>
+          <p class="eleganza-intro-date">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Una historia eterna' }}</p>
+          <button type="button" class="eleganza-btn eleganza-btn-terra" (click)="startVideoIntro()">
+            <span>Entrar / Benvenuti</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Cinemático de Apertura -->
+    <div *ngIf="introStarted" class="eleganza-intro-video-container">
+      <video
+        id="eleganza-intro-video"
+        src="assets/boda-eleganza/eleganza.mp4"
+        playsinline
+        webkit-playsinline
+        (ended)="onVideoEnded()"
+        class="eleganza-fullscreen-video"
+      ></video>
+      <button type="button" class="eleganza-skip-btn" (click)="skipIntro()">
+        <span>Saltar Introducción</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+          <line x1="19" y1="5" x2="19" y2="19"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="eleganza-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="eleganza-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <div class="eleganza-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="eleganza-audio-label">{{ isPlayingMusic ? 'Valzer Sentimentale' : 'Musica' }}</span>
+      <div *ngIf="isPlayingMusic" class="eleganza-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 3. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="eleganza-vip-envelope-screen">
+    <div class="eleganza-vip-card" data-aos="fade-up">
+      <div class="eleganza-tassel-box">
+        <img src="assets/boda-eleganza/key-tassel.png" alt="Llave" class="tassel-key-large">
+      </div>
+      <h2>Invito Privato</h2>
+      <p class="eleganza-vip-desc">Por favor ingresa tu correo o teléfono de WhatsApp con el que fuiste registrado para desbloquear tu pase en la villa.</p>
+      
+      <div class="eleganza-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo o teléfono..."
+          class="eleganza-input" (keyup.enter)="onOpenEnvelope()">
+        <button type="button" class="eleganza-btn eleganza-btn-terra" (click)="onOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Acceder a la Villa</span>
+          <span *ngIf="checkingGuest">Verificando...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="eleganza-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="eleganza-invitation-body">
+
+    <!-- 4. PORTADA HERO VILLA TOSCANA & CUENTA REGRESIVA -->
+    <header *ngIf="isSectionActive('hero')" class="eleganza-hero-section">
+      <div class="eleganza-linen-bg" style="background-image: url('assets/boda-eleganza/programme-linen.png');"></div>
+
+      <div class="eleganza-hero-content" data-aos="fade-up">
+        <div class="eleganza-villa-sketch-box">
+          <img src="assets/boda-eleganza/villa-illustration.png" alt="Villa" class="villa-sketch-img">
+        </div>
+
+        <span class="eleganza-hero-tag">Il Matrimonio di</span>
+        <h1 class="eleganza-hero-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda en Italia' }}</h1>
+        <p class="eleganza-hero-subtitle">{{ invitation?.content?.subheadline || 'Due cuori, una sola vita' }}</p>
+
+        <!-- Marco Ovalado Clásico con Fecha -->
+        <div class="eleganza-oval-date-frame">
+          <img src="assets/boda-eleganza/hero-frame-oval.png" alt="Marco" class="oval-date-img">
+          <span class="oval-date-text">{{ event?.date ? (event?.date | date:'longDate':'':'es') : 'Fecha de la Boda' }}</span>
+        </div>
+
+        <!-- CUENTA REGRESIVA -->
+        <div *ngIf="isSectionActive('countdown')" class="eleganza-countdown-board" data-aos="zoom-in" data-aos-delay="200">
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.days }}</span>
+            <span class="cd-lbl">Giorni</span>
+          </div>
+          <span class="cd-sep">/</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.hours }}</span>
+            <span class="cd-lbl">Ore</span>
+          </div>
+          <span class="cd-sep">/</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.minutes }}</span>
+            <span class="cd-lbl">Minuti</span>
+          </div>
+          <span class="cd-sep">/</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.seconds }}</span>
+            <span class="cd-lbl">Secondi</span>
+          </div>
+        </div>
+
+        <div class="eleganza-hero-actions">
+          <button type="button" class="eleganza-btn eleganza-btn-terra" (click)="addToGoogleCalendar()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Salva la Data</span>
+          </button>
+          <button type="button" class="eleganza-btn eleganza-btn-outline" (click)="shareOnWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Condividi</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 5. PASE VIP CONFIRMADO -->
+    <section *ngIf="verifiedGuest" class="eleganza-section" data-aos="fade-up">
+      <div class="eleganza-container">
+        <div class="eleganza-pass-card">
+          <div class="pass-tassel-ornament">
+            <img src="assets/boda-eleganza/key-tassel.png" alt="Llave" class="pass-key-icon">
+          </div>
+          <span class="pass-tag">Pass di Ospite d'Onore</span>
+          <h3 class="pass-guest-name">{{ verifiedGuest.name }}</h3>
+
+          <div class="pass-info-grid">
+            <div class="info-item" *ngIf="verifiedGuest.tableName">
+              <span class="lbl">Tavolo</span>
+              <strong class="val">{{ verifiedGuest.tableName }}</strong>
+            </div>
+            <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+              <span class="lbl">Posto</span>
+              <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="lbl">Posti Riservati</span>
+              <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} persone</strong>
+            </div>
+          </div>
+
+          <div *ngIf="verifiedGuest.qrCode" class="pass-qr-wrap" (click)="openLightbox(verifiedGuest.qrCode)">
+            <img [src]="verifiedGuest.qrCode" alt="QR" class="pass-qr-img">
+            <span class="qr-hint">Tocca per ingrandire il codice QR</span>
+          </div>
+
+          <div class="pass-footer">
+            <button type="button" class="eleganza-btn eleganza-btn-terra eleganza-btn-sm" (click)="downloadPassOutput.emit()">
+              <span>Scarica Pass Digitale</span>
+            </button>
+            <button type="button" class="eleganza-btn eleganza-btn-outline eleganza-btn-sm" (click)="resetGuestOutput.emit()">
+              <span>Cambia Ospite</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. LA NOSTRA STORIA -->
+    <section *ngIf="isSectionActive('story')" class="eleganza-section" data-section-key="story">
+      <div class="eleganza-container">
+        <div class="eleganza-linen-card" data-aos="fade-up">
+          <span class="section-tag">La Nostra Storia</span>
+          <h2 class="section-title">{{ invitation?.content?.storyTitle || 'Un Amore Che Non Ha Fine' }}</h2>
+          <div class="eleganza-line-sep"></div>
+
+          <p class="story-paragraph">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Con grande gioia vi invitiamo a festeggiare con noi il giorno del nostro matrimonio in una splendida atmosfera toscana.' }}</p>
+
+          <div *ngIf="event?.hosts?.length" class="eleganza-hosts-block">
+            <span class="hosts-label">Con la benedizione dei nostri genitori:</span>
+            <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+          </div>
+
+          <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+            <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span>{{ isSectionMusicPlaying('story') ? 'Pausa' : 'Ascolta la melodia' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. QUANDO E DOVE (UBICACIONES) -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="eleganza-section" data-section-key="locations">
+      <div class="eleganza-container">
+        <div class="eleganza-section-header" data-aos="fade-up">
+          <span class="section-tag">Quando e Dove</span>
+          <h2 class="section-title">I Luoghi della Celebrazione</h2>
+          <div class="eleganza-line-sep"></div>
+        </div>
+
+        <div class="eleganza-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="eleganza-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-villa-frame">
+              <img src="assets/boda-eleganza/when-where-frame.png" alt="Marco" class="where-frame-asset">
+              <img [src]="loc.notes || 'assets/boda-eleganza/venue-villa.png'" alt="Villa" class="villa-img">
+            </div>
+            <span class="loc-type">{{ loc.type || 'Cerimonia & Ricevimento' }}</span>
+            <h3 class="loc-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+            <div class="loc-actions">
+              <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="eleganza-btn eleganza-btn-terra eleganza-btn-sm">
+                <span>Google Maps</span>
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="eleganza-btn eleganza-btn-outline eleganza-btn-sm">
+                <span>Waze</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. PROGRAMMA (ITINERARIO) -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="eleganza-section" data-section-key="itinerary">
+      <div class="eleganza-container">
+        <div class="eleganza-linen-card" data-aos="fade-up">
+          <span class="section-tag">Programma</span>
+          <h2 class="section-title">I Momenti Più Importanti</h2>
+          <div class="eleganza-line-sep"></div>
+
+          <div class="eleganza-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-row" data-aos="fade-up">
+              <div class="row-time">{{ item.time }}</div>
+              <div class="row-marker">
+                <span class="marker-leaf">&#10048;</span>
+              </div>
+              <div class="row-content">
+                <h4 class="row-title">{{ item.title }}</h4>
+                <p *ngIf="item.description">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. DRESS CODE (CODICE DI ABBIGLIAMENTO) -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="eleganza-section" data-section-key="dressCode">
+      <div class="eleganza-container">
+        <div class="eleganza-linen-card" data-aos="fade-up">
+          <span class="section-tag">Eleganza</span>
+          <h2 class="section-title">Codice di Abbigliamento</h2>
+          <div class="eleganza-line-sep"></div>
+
+          <div class="eleganza-dresscode-box">
+            <img src="assets/boda-eleganza/dress-code-frame.png" alt="Dress Code" class="dresscode-frame-img">
+            <div class="dresscode-content">
+              <span class="dress-title">{{ invitation?.content?.dressCode }}</span>
+              <p class="dress-notes">Abiti da cerimonia in tonalità neutre e naturali in armonia con il paesaggio toscano.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. CONFERMA DELLA PRESENZA (RSVP COMPLETO) -->
+    <section *ngIf="isSectionActive('rsvp')" class="eleganza-section" data-section-key="rsvp">
+      <div class="eleganza-container">
+        <div class="eleganza-rsvp-card" data-aos="fade-up">
+          <span class="section-tag">RSVP</span>
+          <h2 class="section-title">Conferma della Presenza</h2>
+          <p class="rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Si prega di confermare entro il: <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <div class="eleganza-line-sep"></div>
+
+          <form (ngSubmit)="onSubmitRsvp()" class="eleganza-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nome e Cognome *</label>
+                <input type="text" [(ngModel)]="rsvp.name" name="eleganzaName" required class="eleganza-input" placeholder="Il tuo nome...">
+              </div>
+              <div class="form-group">
+                <label>Telefono WhatsApp</label>
+                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="eleganzaPhone" class="eleganza-input" placeholder="3312345678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Sarai con noi? *</label>
+              <select [(ngModel)]="rsvp.response" name="eleganzaResp" class="eleganza-select">
+                <option value="confirmed">Sì, sarò presente con piacere</option>
+                <option value="declined">Purtroppo non potrò partecipare</option>
+                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Non sono ancora sicuro/a</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="rsvp.response === 'confirmed'">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Accompagnatori</label>
+                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="eleganzaComps" class="eleganza-input">
+                </div>
+                <div class="form-group">
+                  <label>Preferenza di Menu</label>
+                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="eleganzaMeal" class="eleganza-input" placeholder="Carne, pesce, vegetariano...">
+                </div>
+              </div>
+
+              <div *ngIf="rsvp.companions > 0" class="form-group">
+                <label>Nomi degli Accompagnatori</label>
+                <textarea [(ngModel)]="companionNamesText" name="eleganzaCompNames" rows="2" class="eleganza-textarea" placeholder="Un nome per riga"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Allergie o Intolleranze</label>
+                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="eleganzaDiet" class="eleganza-input" placeholder="Celiachia, intolleranza al lattosio...">
+              </div>
+            </ng-container>
+
+            <!-- Preguntas Personalizadas Dinámicas -->
+            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
+              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
+                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
+                <input *ngIf="q.type === 'text' || !q.type" type="text" class="eleganza-input"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
+                <textarea *ngIf="q.type === 'textarea'" class="eleganza-textarea"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-group">
+              <label>Un Pensiero per gli Sposi</label>
+              <textarea [(ngModel)]="rsvp.message" name="eleganzaMsg" rows="2" class="eleganza-textarea" placeholder="Scrivi il tuo messaggio..."></textarea>
+            </div>
+
+            <button type="submit" class="eleganza-btn eleganza-btn-terra" [disabled]="sending">
+              <span *ngIf="!sending">Invia Conferma</span>
+              <span *ngIf="sending">Invio in corso...</span>
+            </button>
+            <p *ngIf="success" class="eleganza-alert success">{{ success }}</p>
+            <p *ngIf="error" class="eleganza-alert error">{{ error }}</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. LISTA NOZZE (MESA DE REGALOS) -->
+    <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="eleganza-section" data-section-key="giftRegistry">
+      <div class="eleganza-container">
+        <div class="eleganza-section-header" data-aos="fade-up">
+          <span class="section-tag">Lista Nozze</span>
+          <h2 class="section-title">Idee Regalo per gli Sposi</h2>
+          <div class="eleganza-line-sep"></div>
+        </div>
+
+        <div class="eleganza-gifts-grid">
+          <article *ngFor="let reg of invitation?.content?.giftRegistry" class="eleganza-gift-card" data-aos="fade-up">
+            <div class="gift-logo-frame">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="store-img">
+              <span *ngIf="!getStoreLogo(reg)" class="store-text">{{ reg.store || reg.title }}</span>
+            </div>
+            <h4>{{ reg.title || reg.store }}</h4>
+            <p *ngIf="reg.note">{{ reg.note }}</p>
+            <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="eleganza-btn eleganza-btn-terra eleganza-btn-sm">
+              <span>Vedi Lista Nozze</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. BONIFICO BANCARIO (LLUVIA DE SOBRES) -->
+    <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+      class="eleganza-section" data-section-key="digitalEnvelope">
+      <div class="eleganza-container">
+        <div class="eleganza-linen-card" data-aos="fade-up">
+          <span class="section-tag">Luna di Miele</span>
+          <h2 class="section-title">Contributo per il Nostro Viaggio</h2>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="env-note">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+
+          <div class="eleganza-banking-grid">
+            <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="bank-item">
+              <span class="lbl">Banca</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="bank-item">
+              <span class="lbl">Intestatario</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="bank-item">
+              <span class="lbl">IBAN / CLABE</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="eleganza-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? 'Copiato!' : 'Copia' }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="bank-item">
+              <span class="lbl">Conto Corrente</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="eleganza-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? 'Copiato!' : 'Copia' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="transfer-qr-box" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+            <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="QR" class="transfer-qr-img">
+            <span>Tocca per ingrandire il codice QR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. DOVE ALLOGGIARE (HOSPEDAJE) -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="eleganza-section" data-section-key="lodging">
+      <div class="eleganza-container">
+        <div class="eleganza-section-header" data-aos="fade-up">
+          <span class="section-tag">Ospitalità</span>
+          <h2 class="section-title">Alloggi Consigliati</h2>
+          <div class="eleganza-line-sep"></div>
+        </div>
+
+        <div class="eleganza-lodging-grid">
+          <article *ngFor="let h of invitation?.content?.lodging" class="eleganza-lodging-card" data-aos="fade-up">
+            <h3>{{ h.name }}</h3>
+            <p *ngIf="h.description">{{ h.description }}</p>
+            <a *ngIf="h.url" [href]="h.url" target="_blank" rel="noopener noreferrer" class="eleganza-btn eleganza-btn-terra eleganza-btn-sm">
+              <span>Prenota Camera</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. GALLERIA FOTOGRAFICA -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" class="eleganza-section" data-section-key="gallery">
+      <div class="eleganza-container">
+        <div class="eleganza-section-header" data-aos="fade-up">
+          <span class="section-tag">Galleria</span>
+          <h2 class="section-title">Momenti Indimenticabili</h2>
+          <div class="eleganza-line-sep"></div>
+        </div>
+
+        <div class="eleganza-gallery-grid">
+          <div *ngFor="let photo of invitation?.content?.gallery" class="eleganza-gallery-item" (click)="openLightbox(photo)" data-aos="zoom-in">
+            <img [src]="photo" alt="Foto Boda" class="gallery-img">
+            <div class="item-hover-glow">
+              <span class="view-label">Ingrandisci</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. ZONA INTERATTIVA DEGLI OSPITI -->
+    <!-- A. Álbum Colectivo en Vivo -->
+    <section *ngIf="isSectionActive('collectiveAlbum')" class="eleganza-section" data-section-key="collectiveAlbum">
+      <div class="eleganza-container">
+        <div class="eleganza-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Condivisione</span>
+          <h2 class="section-title">Album Collettivo della Villa</h2>
+          <p class="interactive-desc">Carica le tue foto scattate durante la giornata per conservare i momenti più belli insieme.</p>
+
+          <div class="album-upload-box">
+            <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="eleganza-album-input" class="file-input">
+            <label for="eleganza-album-input" class="eleganza-btn eleganza-btn-outline">
+              <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Scegli Foto dal Telefono' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="eleganza-btn eleganza-btn-terra" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Carica Foto</span>
+              <span *ngIf="uploadingAlbum">Caricamento...</span>
+            </button>
+          </div>
+          <p *ngIf="albumMessage" class="eleganza-alert success">{{ albumMessage }}</p>
+
+          <div *ngIf="publicAlbumAssets?.length" class="eleganza-album-feed">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Foto" class="feed-img">
+              <span *ngIf="asset.uploaderName" class="uploader-tag">Da: {{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B. Muro de Dedicatorias -->
+    <section *ngIf="isSectionActive('dedications')" class="eleganza-section" data-section-key="dedications">
+      <div class="eleganza-container">
+        <div class="eleganza-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Auguri</span>
+          <h2 class="section-title">Libro degli Ospiti</h2>
+          <div class="eleganza-line-sep"></div>
+
+          <form (ngSubmit)="onSubmitDedication()" class="eleganza-form mini">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Il Tuo Nome *</label>
+                <input type="text" [(ngModel)]="dedication.publicName" name="dedName" required class="eleganza-input" placeholder="Il tuo nome...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Un Messaggio per gli Sposi *</label>
+              <textarea [(ngModel)]="dedication.message" name="dedMsg" rows="2" required class="eleganza-textarea" placeholder="Scrivi i tuoi auguri..."></textarea>
+            </div>
+            <button type="submit" class="eleganza-btn eleganza-btn-terra" [disabled]="sending">
+              <span>Pubblica Messaggio</span>
+            </button>
+            <p *ngIf="dedicationMessage" class="eleganza-alert success">{{ dedicationMessage }}</p>
+          </form>
+
+          <div *ngIf="dedications?.length" class="eleganza-dedications-wall">
+            <article *ngFor="let item of dedications" class="dedication-card">
+              <p class="ded-body">“{{ item.message }}”</p>
+              <span class="ded-author">— {{ item.publicName }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Peticiones Musicales al DJ -->
+    <section *ngIf="isSectionActive('songRequests')" class="eleganza-section" data-section-key="songRequests">
+      <div class="eleganza-container">
+        <div class="eleganza-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Musica &amp; Ballo</span>
+          <h2 class="section-title">Richiedi una Canzone al DJ</h2>
+          <p class="interactive-desc">Quale brano non può mancare sulla pista da ballo?</p>
+
+          <div class="song-search-wrap">
+            <div class="search-input-row">
+              <input type="text" [(ngModel)]="songSearchQuery" placeholder="Titolo della canzone o artista..."
+                class="eleganza-input" (keyup.enter)="onSearchSong()">
+              <button type="button" class="eleganza-btn eleganza-btn-terra eleganza-btn-sm" (click)="onSearchSong()" [disabled]="searchingSongs">
+                <span>{{ searchingSongs ? 'Cerca...' : 'Cerca' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="songSearchResults?.length" class="song-results-list">
+              <div *ngFor="let s of songSearchResults" class="song-item" (click)="onSelectSong(s)">
+                <img [src]="s.thumbnailUrl" alt="Cover" class="song-thumb">
+                <div class="song-details">
+                  <strong>{{ s.title }}</strong>
+                  <span>{{ s.artist }}</span>
+                </div>
+                <button type="button" class="eleganza-btn eleganza-btn-outline eleganza-btn-xs">Scegli</button>
+              </div>
+            </div>
+
+            <div *ngIf="songRequest.title" class="selected-song-box">
+              <span>Brano selezionato: <strong>{{ songRequest.title }}</strong> ({{ songRequest.artist }})</span>
+              <input type="text" [(ngModel)]="songRequest.dedication" placeholder="Vuoi dedicarla a qualcuno?" class="eleganza-input eleganza-input-sm">
+              <button type="button" class="eleganza-btn eleganza-btn-terra" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                <span>{{ songRequestSending ? 'Invio...' : 'Conferma Richiesta' }}</span>
+              </button>
+            </div>
+            <p *ngIf="songRequestMessage" class="eleganza-alert success">{{ songRequestMessage }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16. PIE DE PÁGINA (FOOTER) -->
+    <footer class="eleganza-footer">
+      <div class="eleganza-footer-names">{{ invitation?.content?.headline || event?.title }}</div>
+      <p class="eleganza-footer-sub">Grazie di cuore per aver condiviso questo giorno con noi</p>
+      <div class="eleganza-branding" *ngIf="!invitation?.content?.hideBranding">
+        <span>Stile &amp; Tradizione Italiana</span>
+      </div>
+    </footer>
+
+  </main>
+
+</div>

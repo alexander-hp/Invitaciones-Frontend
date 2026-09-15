@@ -72,6 +72,12 @@ import { NewPublicInvitationTemplateCumpleanosComponent } from './features/new-p
 import { NewPublicInvitationTemplateBautizoComponent } from './features/new-public-invitation/templates/template-bautizo/new-public-invitation-template-bautizo.component';
 import { NewPublicInvitationTemplateOtroComponent } from './features/new-public-invitation/templates/template-otro/new-public-invitation-template-otro.component';
 import { NewPublicInvitationMaisonDoreComponent } from './features/new-public-invitation/templates/maison-dore/new-public-invitation-maison-dore.component';
+import { NewPublicInvitationBodaVillaPerleComponent } from './features/new-public-invitation/templates/template-boda-villa-perle/new-public-invitation-boda-villa-perle.component';
+import { NewPublicInvitationBodaTeatroComponent } from './features/new-public-invitation/templates/template-boda-teatro/new-public-invitation-boda-teatro.component';
+import { NewPublicInvitationBodaEleganzaComponent } from './features/new-public-invitation/templates/template-boda-eleganza/new-public-invitation-boda-eleganza.component';
+import { NewPublicInvitationBodaRosasComponent } from './features/new-public-invitation/templates/template-boda-rosas/new-public-invitation-boda-rosas.component';
+import { NewPublicInvitationBodaGirasolesComponent } from './features/new-public-invitation/templates/template-boda-girasoles/new-public-invitation-boda-girasoles.component';
+import { NewPublicInvitationBodaNavyBlueComponent } from './features/new-public-invitation/templates/template-boda-navy-blue/new-public-invitation-boda-navy-blue.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
@@ -170,6 +176,12 @@ import { ImageDropzoneComponent } from './shared/components/image-dropzone/image
     NewPublicInvitationTemplateBautizoComponent,
     NewPublicInvitationTemplateOtroComponent,
     NewPublicInvitationMaisonDoreComponent,
+    NewPublicInvitationBodaVillaPerleComponent,
+    NewPublicInvitationBodaTeatroComponent,
+    NewPublicInvitationBodaEleganzaComponent,
+    NewPublicInvitationBodaRosasComponent,
+    NewPublicInvitationBodaGirasolesComponent,
+    NewPublicInvitationBodaNavyBlueComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

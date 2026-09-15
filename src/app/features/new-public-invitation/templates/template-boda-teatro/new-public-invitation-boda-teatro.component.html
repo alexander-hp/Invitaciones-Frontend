@@ -1,0 +1,619 @@
+<!-- PLANTILLA: BODA TEATRO (Teatro Clásico, Terciopelo Burdeos & Apertura de Cortinas de Gala) -->
+<div class="teatro-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. VIDEO INTRO OVERLAY (Apertura de Telón de Teatro) -->
+  <div *ngIf="hasVideoIntro && !introFinished" class="teatro-video-intro-overlay" [class.playing]="introStarted">
+    <!-- Cortina Cerrada de Terciopelo con Monograma Teatral y Botón de Inicio -->
+    <div *ngIf="!introStarted" class="teatro-intro-curtain-screen" data-aos="zoom-in">
+      <div class="teatro-curtain-backdrop" style="background-image: url('assets/boda-teatro/curtain-closed.jpg');"></div>
+      <div class="teatro-intro-content">
+        <div class="teatro-marquee-badge">
+          <span class="marquee-sub">Gran Función de Gala</span>
+          <h1 class="marquee-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda' }}</h1>
+          <p class="marquee-date">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Una noche estelar' }}</p>
+          <button type="button" class="teatro-btn teatro-btn-gold" (click)="startVideoIntro()">
+            <span>Abrir el Telón</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video en Alta Definición de Cortinas Abriéndose -->
+    <div *ngIf="introStarted" class="teatro-intro-video-container">
+      <video
+        id="teatro-intro-video"
+        src="assets/boda-teatro/curtain-video.mp4"
+        playsinline
+        webkit-playsinline
+        (ended)="onVideoEnded()"
+        class="teatro-fullscreen-video"
+      ></video>
+      <button type="button" class="teatro-skip-btn" (click)="skipIntro()">
+        <span>Saltar Introducción</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+          <line x1="19" y1="5" x2="19" y2="19"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="teatro-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="teatro-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <div class="teatro-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="teatro-audio-label">{{ isPlayingMusic ? 'Obertura Sinfónica' : 'Música' }}</span>
+      <div *ngIf="isPlayingMusic" class="teatro-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 3. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="teatro-vip-envelope-screen">
+    <div class="teatro-vip-card" data-aos="fade-up">
+      <div class="teatro-stage-lights">
+        <span class="light-dot"></span><span class="light-dot"></span><span class="light-dot"></span>
+      </div>
+      <div class="teatro-wax-seal" (click)="onOpenEnvelope()">
+        <span class="seal-icon">&#9733;</span>
+      </div>
+      <h2>Pase de Entrada VIP</h2>
+      <p class="teatro-vip-desc">Evento de gala privado. Ingresa tu número de WhatsApp o correo electrónico registrado para acceder al palco de honor.</p>
+      
+      <div class="teatro-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo o teléfono..."
+          class="teatro-input" (keyup.enter)="onOpenEnvelope()">
+        <button type="button" class="teatro-btn teatro-btn-gold" (click)="onOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Acceder a la Gala</span>
+          <span *ngIf="checkingGuest">Validando credencial...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="teatro-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="teatro-invitation-body">
+
+    <!-- 4. PORTADA HERO DE TEATRO & CUENTA REGRESIVA -->
+    <header *ngIf="isSectionActive('hero')" class="teatro-hero-section">
+      <div class="teatro-hero-stage-bg" style="background-image: url('assets/boda-teatro/curtain-open.jpg');"></div>
+      <div class="teatro-stage-glow"></div>
+
+      <div class="teatro-hero-content" data-aos="fade-up">
+        <div class="teatro-ticket-ornament">
+          <span>FUNCIÓN EXCLUSIVA • BUTACA DE HONOR</span>
+        </div>
+
+        <h1 class="teatro-hero-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda de Gala' }}</h1>
+        <p class="teatro-hero-subtitle">{{ invitation?.content?.subheadline || 'Una Historia de Amor en Escena' }}</p>
+
+        <div class="teatro-divider-box">
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Divisor Floral" class="teatro-divider-gif">
+        </div>
+
+        <div class="teatro-date-marquee">
+          <span class="date-big">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Fecha de la Función' }}</span>
+        </div>
+
+        <!-- CUENTA REGRESIVA ESCÉNICA -->
+        <div *ngIf="isSectionActive('countdown')" class="teatro-countdown-board" data-aos="zoom-in" data-aos-delay="200">
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.days }}</span>
+            <span class="cd-lbl">Días</span>
+          </div>
+          <span class="cd-sep">:</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.hours }}</span>
+            <span class="cd-lbl">Horas</span>
+          </div>
+          <span class="cd-sep">:</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.minutes }}</span>
+            <span class="cd-lbl">Min</span>
+          </div>
+          <span class="cd-sep">:</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.seconds }}</span>
+            <span class="cd-lbl">Seg</span>
+          </div>
+        </div>
+
+        <div class="teatro-hero-actions">
+          <button type="button" class="teatro-btn teatro-btn-gold" (click)="addToGoogleCalendar()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Agendar en Calendario</span>
+          </button>
+          <button type="button" class="teatro-btn teatro-btn-outline" (click)="shareOnWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir Cartel</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 5. BOLETO VIP CONFIRMADO CON QR -->
+    <section *ngIf="verifiedGuest" class="teatro-section teatro-ticket-section" data-aos="fade-up">
+      <div class="teatro-container">
+        <div class="teatro-ticket-card">
+          <div class="ticket-header">
+            <span class="ticket-badge">Boleto de Teatro Oficial • Zona VIP</span>
+            <h3>Invitado de Honor: {{ verifiedGuest.name }}</h3>
+          </div>
+          <div class="ticket-body">
+            <div class="ticket-info-grid">
+              <div class="info-item" *ngIf="verifiedGuest.tableName">
+                <span class="lbl">Palco / Mesa</span>
+                <strong class="val">{{ verifiedGuest.tableName }}</strong>
+              </div>
+              <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+                <span class="lbl">Butaca</span>
+                <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="lbl">Boletos Disponibles</span>
+                <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas</strong>
+              </div>
+            </div>
+            <div *ngIf="verifiedGuest.qrCode" class="ticket-qr-wrap" (click)="openLightbox(verifiedGuest.qrCode)">
+              <img [src]="verifiedGuest.qrCode" alt="Código QR" class="ticket-qr">
+              <span class="qr-hint">Escanear en recepción</span>
+            </div>
+          </div>
+          <div class="ticket-footer">
+            <button type="button" class="teatro-btn teatro-btn-gold teatro-btn-sm" (click)="downloadPassOutput.emit()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Descargar Boleto</span>
+            </button>
+            <button type="button" class="teatro-btn teatro-btn-outline teatro-btn-sm" (click)="resetGuestOutput.emit()">
+              <span>Cambiar Boleto</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. NUESTRA HISTORIA & PROGRAMA DE MANO -->
+    <section *ngIf="isSectionActive('story')" class="teatro-section" data-section-key="story">
+      <div class="teatro-container">
+        <div class="teatro-playbill-card" data-aos="fade-up">
+          <span class="section-tag">Argumento &amp; Dedicatoria</span>
+          <h2 class="section-title">{{ invitation?.content?.storyTitle || 'El Primer Acto de Nuestro Amor' }}</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+
+          <p class="story-paragraph">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Hoy abrimos el telón para iniciar la obra más maravillosa: compartir nuestras vidas unidos por siempre.' }}</p>
+
+          <div *ngIf="event?.hosts?.length" class="teatro-hosts-block">
+            <span class="hosts-label">Bajo el auspicio y bendición de nuestros padres:</span>
+            <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+          </div>
+
+          <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+            <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span>{{ isSectionMusicPlaying('story') ? 'Pausar música' : 'Escuchar Obertura' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. UBICACIONES & ESCENARIOS -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="teatro-section" data-section-key="locations">
+      <div class="teatro-container">
+        <div class="teatro-section-header" data-aos="fade-up">
+          <span class="section-tag">Escenarios de la Noche</span>
+          <h2 class="section-title">Dónde Será la Función</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+        </div>
+
+        <div class="teatro-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="teatro-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-theatre-illustration">
+              <img src="assets/boda-teatro/venue-illustration.png" alt="Escenario" class="venue-sketch">
+            </div>
+            <span class="loc-type">{{ loc.type || 'Ceremonia & Fiesta' }}</span>
+            <h3 class="loc-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+            <div class="loc-actions">
+              <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="teatro-btn teatro-btn-gold teatro-btn-sm">
+                <img src="assets/boda-teatro/transport-icon.png" alt="Mapa" width="16">
+                <span>Cómo Llegar</span>
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="teatro-btn teatro-btn-outline teatro-btn-sm">
+                <span>Waze</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. ITINERARIO (TIMELINE) -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="teatro-section" data-section-key="itinerary">
+      <div class="teatro-container">
+        <div class="teatro-playbill-card" data-aos="fade-up">
+          <span class="section-tag">Orden del Día</span>
+          <h2 class="section-title">Programa de Actos</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+
+          <div class="teatro-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-act" data-aos="fade-up">
+              <div class="act-time">{{ item.time }}</div>
+              <div class="act-marker">
+                <span class="gold-star">&#9733;</span>
+              </div>
+              <div class="act-desc">
+                <h4 class="act-title">{{ item.title }}</h4>
+                <p *ngIf="item.description">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CÓDIGO DE VESTIMENTA (DRESS CODE) -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="teatro-section" data-section-key="dressCode">
+      <div class="teatro-container">
+        <div class="teatro-playbill-card" data-aos="fade-up">
+          <span class="section-tag">Código de Vestimenta</span>
+          <h2 class="section-title">Etiqueta Rigurosa de Gala</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+
+          <div class="teatro-dresscode-wrap">
+            <img src="assets/boda-teatro/dresscode-illustration.png" alt="Etiqueta" class="dresscode-sketch">
+            <div class="dresscode-callout">
+              <span class="dress-term">{{ invitation?.content?.dressCode }}</span>
+              <p class="dress-sub">Sugerimos traje formal oscuro para caballeros y vestido largo de noche para damas.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. CONFIRMACIÓN DE ASISTENCIA (RSVP COMPLETO) -->
+    <section *ngIf="isSectionActive('rsvp')" class="teatro-section" data-section-key="rsvp">
+      <div class="teatro-container">
+        <div class="teatro-rsvp-card" data-aos="fade-up">
+          <span class="section-tag">Confirmación</span>
+          <h2 class="section-title">Confirma tu Asistencia a la Gala</h2>
+          <p class="rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Fecha límite de reserva de butacas: <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+
+          <form (ngSubmit)="onSubmitRsvp()" class="teatro-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre del Invitado *</label>
+                <input type="text" [(ngModel)]="rsvp.name" name="teatroName" required class="teatro-input" placeholder="Tu nombre...">
+              </div>
+              <div class="form-group">
+                <label>Teléfono WhatsApp</label>
+                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="teatroPhone" class="teatro-input" placeholder="3312345678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>¿Confirmas tu asistencia? *</label>
+              <select [(ngModel)]="rsvp.response" name="teatroResp" class="teatro-select">
+                <option value="confirmed">Sí, asistiré a la función de gala</option>
+                <option value="declined">Lamentablemente no podré asistir</option>
+                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Pendiente por confirmar</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="rsvp.response === 'confirmed'">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Acompañantes adicionales</label>
+                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="teatroComps" class="teatro-input">
+                </div>
+                <div class="form-group">
+                  <label>Menú de la Cena</label>
+                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="teatroMeal" class="teatro-input" placeholder="Tres tiempos, vegetariano, etc.">
+                </div>
+              </div>
+
+              <div *ngIf="rsvp.companions > 0" class="form-group">
+                <label>Nombres de tus Acompañantes</label>
+                <textarea [(ngModel)]="companionNamesText" name="teatroCompNames" rows="2" class="teatro-textarea" placeholder="Un nombre por línea"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Restricciones Alimenticias o Alergias</label>
+                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="teatroDiet" class="teatro-input" placeholder="Ej: Celíaco, alérgico a nueces...">
+              </div>
+            </ng-container>
+
+            <!-- Preguntas Personalizadas Dinámicas -->
+            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
+              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
+                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
+                <input *ngIf="q.type === 'text' || !q.type" type="text" class="teatro-input"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
+                <textarea *ngIf="q.type === 'textarea'" class="teatro-textarea"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-group">
+              <label>Telegrama / Mensaje para los Novios</label>
+              <textarea [(ngModel)]="rsvp.message" name="teatroMsg" rows="2" class="teatro-textarea" placeholder="Escribe tus palabras..."></textarea>
+            </div>
+
+            <button type="submit" class="teatro-btn teatro-btn-gold" [disabled]="sending">
+              <span *ngIf="!sending">Confirmar Butaca de Honor</span>
+              <span *ngIf="sending">Registrando...</span>
+            </button>
+            <p *ngIf="success" class="teatro-alert success">{{ success }}</p>
+            <p *ngIf="error" class="teatro-alert error">{{ error }}</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. MESA DE REGALOS -->
+    <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="teatro-section" data-section-key="giftRegistry">
+      <div class="teatro-container">
+        <div class="teatro-section-header" data-aos="fade-up">
+          <span class="section-tag">Obsequios</span>
+          <h2 class="section-title">Mesa de Regalos</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+        </div>
+
+        <div class="teatro-gifts-grid">
+          <article *ngFor="let reg of invitation?.content?.giftRegistry" class="teatro-gift-card" data-aos="fade-up">
+            <div class="gift-icon-wrap">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="store-img">
+              <img *ngIf="!getStoreLogo(reg)" src="assets/boda-teatro/gift-icon.png" alt="Regalo" class="store-img default">
+            </div>
+            <h4>{{ reg.title || reg.store }}</h4>
+            <p *ngIf="reg.note">{{ reg.note }}</p>
+            <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="teatro-btn teatro-btn-gold teatro-btn-sm">
+              <span>Ver Mesa de Regalos</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. LLUVIA DE SOBRES / TRANSFERENCIAS -->
+    <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+      class="teatro-section" data-section-key="digitalEnvelope">
+      <div class="teatro-container">
+        <div class="teatro-playbill-card" data-aos="fade-up">
+          <span class="section-tag">Aportaciones</span>
+          <h2 class="section-title">Lluvia de Sobres / Transferencia</h2>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="env-note">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+
+          <div class="teatro-banking-grid">
+            <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="bank-item">
+              <span class="lbl">Banco</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="bank-item">
+              <span class="lbl">Beneficiario</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="bank-item">
+              <span class="lbl">CLABE Interbancaria</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="teatro-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="bank-item">
+              <span class="lbl">Número de Cuenta</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="teatro-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="transfer-qr-box" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+            <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="QR Transferencia" class="transfer-qr-img">
+            <span>Toca para ampliar el código de transferencia</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. HOSPEDAJE RECOMENDADO -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="teatro-section" data-section-key="lodging">
+      <div class="teatro-container">
+        <div class="teatro-section-header" data-aos="fade-up">
+          <span class="section-tag">Alojamiento</span>
+          <h2 class="section-title">Hoteles Recomendados</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+        </div>
+
+        <div class="teatro-lodging-grid">
+          <article *ngFor="let h of invitation?.content?.lodging" class="teatro-lodging-card" data-aos="fade-up">
+            <h3>{{ h.name }}</h3>
+            <p *ngIf="h.description">{{ h.description }}</p>
+            <a *ngIf="h.url" [href]="h.url" target="_blank" rel="noopener noreferrer" class="teatro-btn teatro-btn-gold teatro-btn-sm">
+              <span>Reservar Habitación</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. GALERÍA DE FOTOS -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" class="teatro-section" data-section-key="gallery">
+      <div class="teatro-container">
+        <div class="teatro-section-header" data-aos="fade-up">
+          <span class="section-tag">Fotografías</span>
+          <h2 class="section-title">Galería de la Compañía</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+        </div>
+
+        <div class="teatro-gallery-grid">
+          <div *ngFor="let photo of invitation?.content?.gallery" class="teatro-gallery-item" (click)="openLightbox(photo)" data-aos="zoom-in">
+            <img [src]="photo" alt="Foto Boda" class="gallery-img">
+            <div class="item-hover-glow">
+              <span class="gold-star">&#9733;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. ZONA INTERACTIVA DE INVITADOS -->
+    <!-- A. Álbum Colectivo en Vivo -->
+    <section *ngIf="isSectionActive('collectiveAlbum')" class="teatro-section" data-section-key="collectiveAlbum">
+      <div class="teatro-container">
+        <div class="teatro-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Galería Comunitaria</span>
+          <h2 class="section-title">Fotografías desde tu Butaca</h2>
+          <p class="interactive-desc">Sube tus capturas de la noche para guardarlas en el recuerdo de nuestra gran gala.</p>
+
+          <div class="album-upload-box">
+            <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="teatro-album-input" class="file-input">
+            <label for="teatro-album-input" class="teatro-btn teatro-btn-outline">
+              <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Seleccionar Foto' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="teatro-btn teatro-btn-gold" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Subir Fotografía</span>
+              <span *ngIf="uploadingAlbum">Subiendo...</span>
+            </button>
+          </div>
+          <p *ngIf="albumMessage" class="teatro-alert success">{{ albumMessage }}</p>
+
+          <div *ngIf="publicAlbumAssets?.length" class="teatro-album-feed">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Foto compartida" class="feed-img">
+              <span *ngIf="asset.uploaderName" class="uploader-tag">Por: {{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B. Muro de Dedicatorias -->
+    <section *ngIf="isSectionActive('dedications')" class="teatro-section" data-section-key="dedications">
+      <div class="teatro-container">
+        <div class="teatro-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Muro de Críticas &amp; Aplausos</span>
+          <h2 class="section-title">Dedicatorias de los Espectadores</h2>
+          <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+
+          <form (ngSubmit)="onSubmitDedication()" class="teatro-form mini">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tu Nombre *</label>
+                <input type="text" [(ngModel)]="dedication.publicName" name="dedName" required class="teatro-input" placeholder="Tu nombre...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tus Felicitaciones o Deseos *</label>
+              <textarea [(ngModel)]="dedication.message" name="dedMsg" rows="2" required class="teatro-textarea" placeholder="Escribe tu dedicatoria..."></textarea>
+            </div>
+            <button type="submit" class="teatro-btn teatro-btn-gold" [disabled]="sending">
+              <span>Publicar en el Muro</span>
+            </button>
+            <p *ngIf="dedicationMessage" class="teatro-alert success">{{ dedicationMessage }}</p>
+          </form>
+
+          <div *ngIf="dedications?.length" class="teatro-dedications-wall">
+            <article *ngFor="let item of dedications" class="dedication-card">
+              <p class="ded-body">“{{ item.message }}”</p>
+              <span class="ded-author">— {{ item.publicName }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Peticiones Musicales al DJ -->
+    <section *ngIf="isSectionActive('songRequests')" class="teatro-section" data-section-key="songRequests">
+      <div class="teatro-container">
+        <div class="teatro-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Banda Sonora &amp; Pista de Baile</span>
+          <h2 class="section-title">Pide tu Canción al DJ</h2>
+          <p class="interactive-desc">¿Qué tema te pondrá a bailar después del gran brindis?</p>
+
+          <div class="song-search-wrap">
+            <div class="search-input-row">
+              <input type="text" [(ngModel)]="songSearchQuery" placeholder="Nombre de canción o intérprete..."
+                class="teatro-input" (keyup.enter)="onSearchSong()">
+              <button type="button" class="teatro-btn teatro-btn-gold teatro-btn-sm" (click)="onSearchSong()" [disabled]="searchingSongs">
+                <span>{{ searchingSongs ? 'Buscando...' : 'Buscar' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="songSearchResults?.length" class="song-results-list">
+              <div *ngFor="let s of songSearchResults" class="song-item" (click)="onSelectSong(s)">
+                <img [src]="s.thumbnailUrl" alt="Carátula" class="song-thumb">
+                <div class="song-details">
+                  <strong>{{ s.title }}</strong>
+                  <span>{{ s.artist }}</span>
+                </div>
+                <button type="button" class="teatro-btn teatro-btn-outline teatro-btn-xs">Elegir</button>
+              </div>
+            </div>
+
+            <div *ngIf="songRequest.title" class="selected-song-box">
+              <span>Tema seleccionado: <strong>{{ songRequest.title }}</strong> ({{ songRequest.artist }})</span>
+              <input type="text" [(ngModel)]="songRequest.dedication" placeholder="¿Dedicatoria para alguien?" class="teatro-input teatro-input-sm">
+              <button type="button" class="teatro-btn teatro-btn-gold" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                <span>{{ songRequestSending ? 'Enviando...' : 'Pedir al DJ' }}</span>
+              </button>
+            </div>
+            <p *ngIf="songRequestMessage" class="teatro-alert success">{{ songRequestMessage }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16. PIE DE PÁGINA (FOOTER) -->
+    <footer class="teatro-footer">
+      <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
+      <div class="teatro-footer-names">{{ invitation?.content?.headline || event?.title }}</div>
+      <p class="teatro-footer-sub">Gracias por formar parte de la noche más mágica de nuestras vidas</p>
+      <div class="teatro-branding" *ngIf="!invitation?.content?.hideBranding">
+        <span>Una Producción Inolvidable</span>
+      </div>
+    </footer>
+
+  </main>
+
+</div>

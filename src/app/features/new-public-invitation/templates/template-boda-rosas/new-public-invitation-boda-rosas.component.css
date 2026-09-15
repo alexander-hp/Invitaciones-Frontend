@@ -1,0 +1,1445 @@
+@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  color: #3a272a;
+  background-color: #faf5f5;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.rosas-main-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background-color: #faf5f5;
+  background-image: radial-gradient(circle at 10% 20%, rgba(212, 122, 131, 0.06) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 40%);
+  overflow-x: hidden;
+}
+
+/* 1. VIDEO INTRO OVERLAY */
+.rosas-video-intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #2a1b1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.rosas-intro-poster-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle, #3d2429 0%, #1c0e11 100%);
+}
+
+.rosas-intro-card {
+  position: relative;
+  max-width: 440px;
+  width: 100%;
+  background: #fffdfd;
+  border-radius: 24px;
+  padding: 35px 25px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 122, 131, 0.3);
+}
+
+.rosas-corner-tl {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  transform: rotate(-10deg);
+}
+
+.rosas-corner-br {
+  position: absolute;
+  bottom: -15px;
+  right: -15px;
+  width: 80px;
+  height: 80px;
+  pointer-events: none;
+  transform: rotate(170deg);
+}
+
+.corner-rose-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rosas-poster-wrap {
+  width: 100%;
+  max-height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(58, 39, 42, 0.15);
+}
+
+.rosas-poster-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.rosas-intro-meta .rosas-tag {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: #c56872;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.rosas-intro-title {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 42px;
+  color: #3a272a;
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+
+.rosas-intro-date {
+  font-size: 14px;
+  color: #7d6166;
+  margin-bottom: 22px;
+}
+
+.rosas-intro-video-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.rosas-fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rosas-skip-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 253, 253, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid #d47a83;
+  color: #3a272a;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rosas-skip-btn:hover {
+  background: #d47a83;
+  color: #ffffff;
+}
+
+/* 2. REPRODUCTOR FLOTANTE DE AUDIO */
+.rosas-audio-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+}
+
+.rosas-audio-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #ebd2d4;
+  border-radius: 40px;
+  padding: 8px 16px;
+  box-shadow: 0 6px 20px rgba(212, 122, 131, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.rosas-audio-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 122, 131, 0.25);
+  border-color: #d47a83;
+}
+
+.rosas-audio-icon-wrap {
+  width: 28px;
+  height: 28px;
+  background: #faece9;
+  color: #d47a83;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rosas-audio-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #3a272a;
+}
+
+.rosas-sound-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.rosas-sound-bars span {
+  width: 2px;
+  background: #d47a83;
+  border-radius: 1px;
+  animation: roseSoundBar 1s ease-in-out infinite alternate;
+}
+
+.rosas-sound-bars span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.rosas-sound-bars span:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+.rosas-sound-bars span:nth-child(3) { height: 8px; animation-delay: 0.2s; }
+.rosas-sound-bars span:nth-child(4) { height: 11px; animation-delay: 0.4s; }
+
+@keyframes roseSoundBar {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1); }
+}
+
+/* 3. PANTALLA SOBRE VIP */
+.rosas-vip-envelope-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(42, 27, 30, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.rosas-vip-card {
+  max-width: 440px;
+  width: 100%;
+  background: #fffdfd;
+  border-radius: 24px;
+  padding: 40px 30px;
+  text-align: center;
+  border: 1px solid #ebd2d4;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.rosas-envelope-icon-box {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+}
+
+.vip-envelope-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rosas-vip-card h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  color: #3a272a;
+  margin: 0 0 8px;
+}
+
+.rosas-vip-desc {
+  font-size: 14px;
+  color: #7d6166;
+  margin-bottom: 24px;
+}
+
+.rosas-vip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 4. HERO SECTION FLORAL */
+.rosas-hero-section {
+  position: relative;
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px 60px;
+  overflow: hidden;
+}
+
+.rosas-hero-video-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.rosas-hero-video-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.28;
+}
+
+.rosas-hero-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(250, 245, 245, 0.75) 0%, rgba(250, 245, 245, 0.95) 100%);
+}
+
+.rosas-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.rosas-oval-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-oval-frame {
+  width: 100%;
+  display: block;
+}
+
+.rosas-oval-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+.rosas-hero-tag {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #c56872;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.rosas-hero-title {
+  font-family: 'Pinyon Script', cursive;
+  font-size: clamp(38px, 8vw, 56px);
+  color: #3a272a;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.rosas-hero-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: #7d6166;
+  margin-top: 6px;
+}
+
+.rosas-date-badge {
+  display: inline-block;
+  padding: 8px 24px;
+  background: #ffffff;
+  border-radius: 30px;
+  border: 1px solid #ebd2d4;
+  box-shadow: 0 4px 15px rgba(212, 122, 131, 0.08);
+  margin-bottom: 30px;
+}
+
+.date-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3a272a;
+}
+
+/* CUENTA REGRESIVA */
+.rosas-countdown-board {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #ffffff;
+  padding: 16px 28px;
+  border-radius: 50px;
+  box-shadow: 0 10px 30px rgba(212, 122, 131, 0.1);
+  border: 1px solid #faece9;
+  margin-bottom: 35px;
+}
+
+.cd-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cd-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: #d47a83;
+  line-height: 1;
+}
+
+.cd-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #8c7176;
+  margin-top: 4px;
+}
+
+.cd-sep {
+  font-size: 12px;
+  color: #d47a83;
+  opacity: 0.6;
+}
+
+.rosas-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* BOTONES GLOBALES ROSAS */
+.rosas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 30px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  text-decoration: none;
+}
+
+.rosas-btn-rose {
+  background: #d47a83;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(212, 122, 131, 0.3);
+}
+
+.rosas-btn-rose:hover {
+  background: #c56872;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 122, 131, 0.4);
+}
+
+.rosas-btn-outline {
+  background: #ffffff;
+  color: #3a272a;
+  border: 1px solid #ebd2d4;
+}
+
+.rosas-btn-outline:hover {
+  border-color: #d47a83;
+  color: #d47a83;
+  transform: translateY(-2px);
+}
+
+.rosas-btn-sm {
+  padding: 8px 18px;
+  font-size: 13px;
+}
+
+.rosas-btn-xs {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+/* SECCIONES Y CONTENEDORES */
+.rosas-section {
+  padding: 70px 20px;
+  position: relative;
+}
+
+.rosas-container {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.rosas-section-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.section-tag {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: #c56872;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 4.5vw, 38px);
+  color: #3a272a;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.rosas-flourish-sep {
+  width: 140px;
+  margin: 0 auto;
+}
+
+.flourish-sep-img {
+  width: 100%;
+  display: block;
+}
+
+/* CARDS ROSAS */
+.rosas-card-simple,
+.rosas-itinerary-card,
+.rosas-rsvp-card,
+.rosas-interactive-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 45px 35px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(212, 122, 131, 0.07);
+  border: 1px solid #faece9;
+  position: relative;
+}
+
+/* 5. PASE VIP */
+.rosas-pass-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fff7f7 100%);
+  border-radius: 24px;
+  padding: 40px 30px;
+  text-align: center;
+  border: 1px solid #ebd2d4;
+  box-shadow: 0 15px 40px rgba(212, 122, 131, 0.12);
+  position: relative;
+}
+
+.pass-rose-flourish {
+  max-width: 120px;
+  margin: 0 auto 10px;
+}
+
+.pass-divider-img {
+  width: 100%;
+  display: block;
+}
+
+.pass-tag {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #c56872;
+  text-transform: uppercase;
+}
+
+.pass-guest-name {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 38px;
+  color: #3a272a;
+  margin: 4px 0 16px;
+}
+
+.pass-info-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-top: 1px dashed #ebd2d4;
+  border-bottom: 1px dashed #ebd2d4;
+  margin-bottom: 24px;
+}
+
+.pass-info-grid .info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.pass-info-grid .lbl {
+  font-size: 11px;
+  color: #8c7176;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pass-info-grid .val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: #d47a83;
+}
+
+.pass-qr-wrap {
+  margin: 20px auto;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #faece9;
+  box-shadow: 0 4px 15px rgba(212, 122, 131, 0.08);
+}
+
+.pass-qr-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+}
+
+.qr-hint {
+  font-size: 11px;
+  color: #8c7176;
+  margin-top: 8px;
+}
+
+.pass-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* 6. HISTORIA CON FLORESTAS LATERALES */
+.rosas-story-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 50px 40px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(212, 122, 131, 0.07);
+  border: 1px solid #faece9;
+  overflow: hidden;
+}
+
+.flourish-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.flourish-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 90px;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.flourish-border-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.story-content-box {
+  position: relative;
+  z-index: 2;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.story-paragraph {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: #5a4548;
+  line-height: 1.8;
+  margin: 25px auto;
+}
+
+.rosas-hosts-block {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #faece9;
+}
+
+.hosts-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  color: #c56872;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hosts-list {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: #3a272a;
+  margin: 0;
+}
+
+.section-music-player {
+  margin-top: 25px;
+}
+
+.sec-music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #faece9;
+  border: 1px solid #ebd2d4;
+  border-radius: 30px;
+  padding: 8px 18px;
+  font-size: 13px;
+  color: #3a272a;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.sec-music-btn:hover {
+  border-color: #d47a83;
+  color: #d47a83;
+}
+
+/* 7. UBICACIONES */
+.rosas-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.rosas-loc-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 35px 25px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(212, 122, 131, 0.06);
+  border: 1px solid #faece9;
+}
+
+.loc-badge-flower {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #faece9;
+  color: #d47a83;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.loc-type {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #c56872;
+  text-transform: uppercase;
+}
+
+.loc-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  color: #3a272a;
+  margin: 6px 0 8px;
+}
+
+.loc-address {
+  font-size: 14px;
+  color: #7d6166;
+  margin-bottom: 22px;
+}
+
+.loc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 8. TIMELINE / ITINERARIO */
+.rosas-timeline {
+  margin: 30px auto;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+}
+
+.rosas-timeline::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  bottom: 15px;
+  left: 95px;
+  width: 1px;
+  background: #ebd2d4;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  text-align: left;
+}
+
+.row-time {
+  width: 75px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #d47a83;
+  text-align: right;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.row-marker {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #ffffff;
+  z-index: 2;
+}
+
+.marker-rose {
+  color: #d47a83;
+  font-size: 14px;
+}
+
+.row-content {
+  flex: 1;
+}
+
+.row-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: #3a272a;
+  margin: 0 0 4px;
+}
+
+.row-content p {
+  font-size: 14px;
+  color: #7d6166;
+  margin: 0;
+}
+
+.champagne-ornament-box {
+  margin-top: 35px;
+  padding-top: 25px;
+  border-top: 1px solid #faece9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.champagne-img {
+  width: 90px;
+  height: auto;
+  object-fit: contain;
+}
+
+.champagne-caption {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 24px;
+  color: #c56872;
+}
+
+/* 9. DRESS CODE */
+.dresscode-rose-box {
+  max-width: 440px;
+  margin: 25px auto 0;
+}
+
+.dress-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  color: #d47a83;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dress-desc {
+  font-size: 14px;
+  color: #7d6166;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 10. RSVP */
+.rsvp-envelope-header {
+  width: 90px;
+  margin: 0 auto 12px;
+}
+
+.envelope-art-img {
+  width: 100%;
+  display: block;
+}
+
+.rsvp-deadline {
+  font-size: 13px;
+  color: #c56872;
+  margin: 0 0 16px;
+}
+
+.rosas-form {
+  max-width: 600px;
+  margin: 30px auto 0;
+  text-align: left;
+}
+
+.rosas-form.mini {
+  max-width: 500px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-family: 'Cormorant Garamond', serif;
+  letter-spacing: 1px;
+  color: #7d6166;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.rosas-input,
+.rosas-select,
+.rosas-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid #ebd2d4;
+  border-radius: 12px;
+  background: #fffdfd;
+  color: #3a272a;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rosas-input:focus,
+.rosas-select:focus,
+.rosas-textarea:focus {
+  border-color: #d47a83;
+  box-shadow: 0 0 0 3px rgba(212, 122, 131, 0.15);
+}
+
+.rosas-input-sm {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.rosas-alert {
+  margin-top: 14px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.rosas-alert.success {
+  background: #f0f7ee;
+  color: #3b6b37;
+  border: 1px solid #d2e8cc;
+}
+
+.rosas-alert.error {
+  background: #fdf2f2;
+  color: #9c2727;
+  border: 1px solid #f6cfcf;
+}
+
+/* 11. MESA DE REGALOS */
+.rosas-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.rosas-gift-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px 20px;
+  text-align: center;
+  border: 1px solid #faece9;
+  box-shadow: 0 6px 20px rgba(212, 122, 131, 0.05);
+}
+
+.gift-logo-frame {
+  width: 90px;
+  height: 60px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.store-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.store-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: #d47a83;
+  font-weight: 600;
+}
+
+.rosas-gift-card h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.rosas-gift-card p {
+  font-size: 13px;
+  color: #7d6166;
+  margin-bottom: 16px;
+}
+
+/* 12. LLUVIA DE SOBRES */
+.env-note {
+  font-size: 15px;
+  color: #5a4548;
+  margin: 15px 0 25px;
+}
+
+.rosas-banking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.bank-item {
+  background: #fffdfd;
+  border: 1px solid #faece9;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.bank-item .lbl {
+  font-size: 11px;
+  font-family: 'Cormorant Garamond', serif;
+  color: #c56872;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+}
+
+.bank-item .val {
+  font-size: 14px;
+  color: #3a272a;
+  word-break: break-all;
+}
+
+.copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rosas-copy-btn {
+  background: #ffffff;
+  border: 1px solid #d47a83;
+  color: #d47a83;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rosas-copy-btn:hover {
+  background: #d47a83;
+  color: #ffffff;
+}
+
+.transfer-qr-box {
+  margin: 20px auto 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ebd2d4;
+}
+
+.transfer-qr-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.transfer-qr-box span {
+  font-size: 11px;
+  color: #8c7176;
+  margin-top: 8px;
+}
+
+/* 13. HOSPEDAJE */
+.rosas-lodging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.rosas-lodging-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px 20px;
+  border: 1px solid #faece9;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(212, 122, 131, 0.05);
+}
+
+.rosas-lodging-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.rosas-lodging-card p {
+  font-size: 13px;
+  color: #7d6166;
+  margin-bottom: 18px;
+}
+
+/* 14. GALERÍA */
+.rosas-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.rosas-gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(212, 122, 131, 0.08);
+}
+
+.gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.item-hover-glow {
+  position: absolute;
+  inset: 0;
+  background: rgba(58, 39, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.view-label {
+  color: #ffffff;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.rosas-gallery-item:hover .gallery-img {
+  transform: scale(1.06);
+}
+
+.rosas-gallery-item:hover .item-hover-glow {
+  opacity: 1;
+}
+
+/* 15. ZONA INTERACTIVA */
+.interactive-desc {
+  font-size: 14px;
+  color: #7d6166;
+  max-width: 500px;
+  margin: 10px auto 25px;
+}
+
+.album-upload-box {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.file-input {
+  display: none;
+}
+
+.rosas-album-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.album-photo-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.feed-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploader-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(58, 39, 42, 0.7);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Muro de Dedicatorias */
+.rosas-dedications-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 35px;
+}
+
+.dedication-card {
+  background: #fffdfd;
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #faece9;
+  text-align: left;
+}
+
+.ded-body {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: #3a272a;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.ded-author {
+  display: block;
+  font-family: 'Pinyon Script', cursive;
+  font-size: 18px;
+  color: #c56872;
+  text-align: right;
+}
+
+/* DJ Requests */
+.song-search-wrap {
+  max-width: 500px;
+  margin: 20px auto 0;
+}
+
+.search-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.song-results-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #fffdfd;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid #faece9;
+}
+
+.song-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.song-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.song-details strong {
+  font-size: 13px;
+  color: #3a272a;
+}
+
+.song-details span {
+  font-size: 11px;
+  color: #7d6166;
+}
+
+.selected-song-box {
+  margin-top: 18px;
+  padding: 16px;
+  background: #faece9;
+  border-radius: 12px;
+  border: 1px solid #d47a83;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+/* 16. FOOTER */
+.rosas-footer {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: #2a1b1e;
+  color: #fffdfd;
+}
+
+.rosas-footer-names {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 38px;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.rosas-footer-sub {
+  font-size: 13px;
+  color: #c9b4b7;
+  margin: 0 0 20px;
+}
+
+.rosas-branding span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #d47a83;
+  text-transform: uppercase;
+}
+
+/* REGLA CRÍTICA OBLIGATORIA PARA IMPRESIÓN Y CAPTURA (@media print) */
+@media print {
+  * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+  .no-print,
+  .rosas-video-intro-overlay,
+  .rosas-audio-floating,
+  .rosas-vip-envelope-screen {
+    display: none !important;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .rosas-timeline::before {
+    left: 70px;
+  }
+  .row-time {
+    width: 60px;
+    font-size: 13px;
+  }
+  .rosas-countdown-board {
+    gap: 10px;
+    padding: 12px 18px;
+  }
+  .cd-val {
+    font-size: 22px;
+  }
+  .flourish-left, .flourish-right {
+    display: none;
+  }
+}

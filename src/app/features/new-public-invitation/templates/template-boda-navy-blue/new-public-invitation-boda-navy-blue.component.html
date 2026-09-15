@@ -1,0 +1,590 @@
+<!-- PLANTILLA: BODA NAVY BLUE (Azul Noche, Acuarela, Detalles en Oro & Flores Nobles) -->
+<div class="navy-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="navy-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="navy-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <div class="navy-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="navy-audio-label">{{ isPlayingMusic ? 'Perfect' : 'Música' }}</span>
+      <div *ngIf="isPlayingMusic" class="navy-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 2. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="navy-vip-envelope-screen">
+    <div class="navy-vip-card" data-aos="fade-up">
+      <div class="navy-seal-box">
+        <img src="assets/boda-navy-blue/flor-navy-1.webp" alt="Flor Navy" class="seal-flower-img">
+      </div>
+      <h2>Pase Exclusivo de Boda</h2>
+      <p class="navy-vip-desc">Por favor ingresa tu correo electrónico o teléfono registrado para desbloquear tu acceso personalizado.</p>
+      
+      <div class="navy-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo o teléfono..."
+          class="navy-input" (keyup.enter)="onOpenEnvelope()">
+        <button type="button" class="navy-btn navy-btn-gold" (click)="onOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Acceder a la Boda</span>
+          <span *ngIf="checkingGuest">Verificando...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="navy-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="navy-invitation-body">
+
+    <!-- 3. PORTADA HERO AZUL NOCHE & ORO -->
+    <header *ngIf="isSectionActive('hero')" class="navy-hero-section">
+      <div class="navy-hero-bg" style="background-image: url('assets/boda-navy-blue/watercolor-navy-bg.jpg');"></div>
+      <div class="navy-hero-overlay"></div>
+
+      <div class="navy-hero-content" data-aos="fade-up">
+        <!-- Flor Superior Navy -->
+        <div class="navy-top-flower">
+          <img src="assets/boda-navy-blue/flor-navy-3.webp" alt="Flor" class="top-flower-img">
+        </div>
+
+        <span class="navy-hero-tag">Nuestra Boda</span>
+        <h1 class="navy-hero-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda' }}</h1>
+        <p class="navy-hero-subtitle">{{ invitation?.content?.subheadline || 'Una historia escrita para la eternidad' }}</p>
+
+        <!-- Divisor Dorado Floral -->
+        <div class="navy-gold-divider">
+          <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor Oro" class="gold-divider-img">
+        </div>
+
+        <div class="navy-date-badge">
+          <span class="date-text">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Fecha de Nuestra Boda' }}</span>
+        </div>
+
+        <!-- CUENTA REGRESIVA DORADA -->
+        <div *ngIf="isSectionActive('countdown')" class="navy-countdown-board" data-aos="zoom-in" data-aos-delay="200">
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.days }}</span>
+            <span class="cd-lbl">Días</span>
+          </div>
+          <span class="cd-sep">✦</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.hours }}</span>
+            <span class="cd-lbl">Horas</span>
+          </div>
+          <span class="cd-sep">✦</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.minutes }}</span>
+            <span class="cd-lbl">Minutos</span>
+          </div>
+          <span class="cd-sep">✦</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.seconds }}</span>
+            <span class="cd-lbl">Segundos</span>
+          </div>
+        </div>
+
+        <div class="navy-hero-actions">
+          <button type="button" class="navy-btn navy-btn-gold" (click)="addToGoogleCalendar()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Guardar Fecha</span>
+          </button>
+          <button type="button" class="navy-btn navy-btn-glass" (click)="shareOnWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4. PASE VIP CONFIRMADO -->
+    <section *ngIf="verifiedGuest" class="navy-section" data-aos="fade-up">
+      <div class="navy-container">
+        <div class="navy-pass-card">
+          <div class="pass-sparkle">✦</div>
+          <span class="pass-tag">Pase Personal de Boda</span>
+          <h3 class="pass-guest-name">{{ verifiedGuest.name }}</h3>
+
+          <div class="pass-info-grid">
+            <div class="info-item" *ngIf="verifiedGuest.tableName">
+              <span class="lbl">Mesa</span>
+              <strong class="val">{{ verifiedGuest.tableName }}</strong>
+            </div>
+            <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+              <span class="lbl">Asiento</span>
+              <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="lbl">Lugares Asignados</span>
+              <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas</strong>
+            </div>
+          </div>
+
+          <div *ngIf="verifiedGuest.qrCode" class="pass-qr-wrap" (click)="openLightbox(verifiedGuest.qrCode)">
+            <img [src]="verifiedGuest.qrCode" alt="QR" class="pass-qr-img">
+            <span class="qr-hint">Toca para ampliar el código de acceso</span>
+          </div>
+
+          <div class="pass-footer">
+            <button type="button" class="navy-btn navy-btn-gold navy-btn-sm" (click)="downloadPassOutput.emit()">
+              <span>Descargar Pase</span>
+            </button>
+            <button type="button" class="navy-btn navy-btn-glass navy-btn-sm" (click)="resetGuestOutput.emit()">
+              <span>Cambiar Invitado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. NUESTRA HISTORIA -->
+    <section *ngIf="isSectionActive('story')" class="navy-section" data-section-key="story">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Nuestra Historia</span>
+          <h2 class="section-title">{{ invitation?.content?.storyTitle || 'Un Amor Incondicional' }}</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+
+          <p class="story-paragraph">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Tenemos el honor de invitarte a celebrar con nosotros el día más importante de nuestras vidas. Tu compañía iluminará nuestra noche.' }}</p>
+
+          <div *ngIf="event?.hosts?.length" class="navy-hosts-block">
+            <span class="hosts-label">Con el amor y bendición de nuestros padres:</span>
+            <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+          </div>
+
+          <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+            <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span>{{ isSectionMusicPlaying('story') ? 'Pausa' : 'Escuchar melodía' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. UBICACIONES -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="navy-section" data-section-key="locations">
+      <div class="navy-container">
+        <div class="navy-section-header" data-aos="fade-up">
+          <span class="section-tag">Celebración</span>
+          <h2 class="section-title">Ubicaciones</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+        </div>
+
+        <div class="navy-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="navy-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-flower-icon">
+              <img src="assets/boda-navy-blue/flor-navy-2.webp" alt="Flor" class="loc-icon-img">
+            </div>
+            <span class="loc-type">{{ loc.type || 'Ceremonia & Recepción' }}</span>
+            <h3 class="loc-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+            <div class="loc-actions">
+              <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="navy-btn navy-btn-gold navy-btn-sm">
+                <span>Google Maps</span>
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="navy-btn navy-btn-glass navy-btn-sm">
+                <span>Waze</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. ITINERARIO / TIMELINE -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="navy-section" data-section-key="itinerary">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Itinerario</span>
+          <h2 class="section-title">Momentos de la Noche</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+
+          <div class="navy-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-row" data-aos="fade-up">
+              <div class="row-time">{{ item.time }}</div>
+              <div class="row-marker">
+                <span class="marker-gold">✦</span>
+              </div>
+              <div class="row-content">
+                <h4 class="row-title">{{ item.title }}</h4>
+                <p *ngIf="item.description">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. CÓDIGO DE VESTIMENTA -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="navy-section" data-section-key="dressCode">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Etiqueta</span>
+          <h2 class="section-title">Código de Vestimenta</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+
+          <div class="navy-dresscode-box">
+            <div class="dress-title">{{ invitation?.content?.dressCode }}</div>
+            <p class="dress-notes">Agradecemos vestir de rigurosa etiqueta o formal. Agradecemos evitar tonos blancos reservados exclusivamente para los novios.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CONFIRMACIÓN RSVP COMPLETO -->
+    <section *ngIf="isSectionActive('rsvp')" class="navy-section" data-section-key="rsvp">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">RSVP</span>
+          <h2 class="section-title">Confirmación de Asistencia</h2>
+          <p class="rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Fecha límite de confirmación: <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+
+          <form (ngSubmit)="onSubmitRsvp()" class="navy-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre Completo *</label>
+                <input type="text" [(ngModel)]="rsvp.name" name="navyName" required class="navy-input" placeholder="Tu nombre...">
+              </div>
+              <div class="form-group">
+                <label>Teléfono WhatsApp</label>
+                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="navyPhone" class="navy-input" placeholder="3312345678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>¿Nos acompañarás? *</label>
+              <select [(ngModel)]="rsvp.response" name="navyResp" class="navy-select">
+                <option value="confirmed">Sí, confirmo con honor</option>
+                <option value="declined">Lamentablemente no podré asistir</option>
+                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Aún no estoy seguro/a</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="rsvp.response === 'confirmed'">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Acompañantes</label>
+                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="navyComps" class="navy-input">
+                </div>
+                <div class="form-group">
+                  <label>Preferencia de Menú</label>
+                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="navyMeal" class="navy-input" placeholder="Carne, pescado, vegetariano...">
+                </div>
+              </div>
+
+              <div *ngIf="rsvp.companions > 0" class="form-group">
+                <label>Nombres de los Acompañantes</label>
+                <textarea [(ngModel)]="companionNamesText" name="navyCompNames" rows="2" class="navy-textarea" placeholder="Un nombre por línea"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Alergias o Restricciones</label>
+                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="navyDiet" class="navy-input" placeholder="Ej. Alergia a nueces, celiaco...">
+              </div>
+            </ng-container>
+
+            <!-- Preguntas Personalizadas Dinámicas -->
+            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
+              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
+                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
+                <input *ngIf="q.type === 'text' || !q.type" type="text" class="navy-input"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
+                <textarea *ngIf="q.type === 'textarea'" class="navy-textarea"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-group">
+              <label>Un Mensaje para los Novios</label>
+              <textarea [(ngModel)]="rsvp.message" name="navyMsg" rows="2" class="navy-textarea" placeholder="Escribe tus felicitaciones..."></textarea>
+            </div>
+
+            <button type="submit" class="navy-btn navy-btn-gold" [disabled]="sending">
+              <span *ngIf="!sending">Enviar Confirmación</span>
+              <span *ngIf="sending">Enviando...</span>
+            </button>
+            <p *ngIf="success" class="navy-alert success">{{ success }}</p>
+            <p *ngIf="error" class="navy-alert error">{{ error }}</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. MESA DE REGALOS -->
+    <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="navy-section" data-section-key="giftRegistry">
+      <div class="navy-container">
+        <div class="navy-section-header" data-aos="fade-up">
+          <span class="section-tag">Regalos</span>
+          <h2 class="section-title">Mesa de Regalos</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+        </div>
+
+        <div class="navy-gifts-grid">
+          <article *ngFor="let reg of invitation?.content?.giftRegistry" class="navy-gift-card" data-aos="fade-up">
+            <div class="gift-logo-frame">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="store-img">
+              <span *ngIf="!getStoreLogo(reg)" class="store-text">{{ reg.store || reg.title }}</span>
+            </div>
+            <h4>{{ reg.title || reg.store }}</h4>
+            <p *ngIf="reg.note">{{ reg.note }}</p>
+            <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="navy-btn navy-btn-gold navy-btn-sm">
+              <span>Ver Mesa</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. LLUVIA DE SOBRES / DATOS BANCARIOS -->
+    <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+      class="navy-section" data-section-key="digitalEnvelope">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Lluvia de Sobres</span>
+          <h2 class="section-title">Muestra de Afecto</h2>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="env-note">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+
+          <div class="navy-banking-grid">
+            <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="bank-item">
+              <span class="lbl">Banco</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="bank-item">
+              <span class="lbl">Titular</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="bank-item">
+              <span class="lbl">CLABE Interbancaria</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="navy-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="bank-item">
+              <span class="lbl">Número de Cuenta</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="navy-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="transfer-qr-box" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+            <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="QR" class="transfer-qr-img">
+            <span>Toca para ampliar el código QR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. HOSPEDAJE -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="navy-section" data-section-key="lodging">
+      <div class="navy-container">
+        <div class="navy-section-header" data-aos="fade-up">
+          <span class="section-tag">Hospedaje</span>
+          <h2 class="section-title">Hoteles Recomendados</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+        </div>
+
+        <div class="navy-lodging-grid">
+          <article *ngFor="let h of invitation?.content?.lodging" class="navy-lodging-card" data-aos="fade-up">
+            <h3>{{ h.name }}</h3>
+            <p *ngIf="h.description">{{ h.description }}</p>
+            <a *ngIf="h.url" [href]="h.url" target="_blank" rel="noopener noreferrer" class="navy-btn navy-btn-gold navy-btn-sm">
+              <span>Reservar</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. GALERÍA -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" class="navy-section" data-section-key="gallery">
+      <div class="navy-container">
+        <div class="navy-section-header" data-aos="fade-up">
+          <span class="section-tag">Galería</span>
+          <h2 class="section-title">Nuestros Momentos</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+        </div>
+
+        <div class="navy-gallery-grid">
+          <div *ngFor="let photo of invitation?.content?.gallery" class="navy-gallery-item" (click)="openLightbox(photo)" data-aos="zoom-in">
+            <img [src]="photo" alt="Foto Boda" class="gallery-img">
+            <div class="item-hover-glow">
+              <span class="view-label">Ampliar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. ZONA INTERACTIVA -->
+    <!-- A. Álbum Colectivo en Vivo -->
+    <section *ngIf="isSectionActive('collectiveAlbum')" class="navy-section" data-section-key="collectiveAlbum">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Álbum en Vivo</span>
+          <h2 class="section-title">Comparte tus Fotos</h2>
+          <p class="interactive-desc">Sube tus fotos de la noche y ayúdanos a capturar cada instante inolvidable.</p>
+
+          <div class="album-upload-box">
+            <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="navy-album-input" class="file-input">
+            <label for="navy-album-input" class="navy-btn navy-btn-glass">
+              <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Elegir Foto' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="navy-btn navy-btn-gold" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Subir Foto</span>
+              <span *ngIf="uploadingAlbum">Subiendo...</span>
+            </button>
+          </div>
+          <p *ngIf="albumMessage" class="navy-alert success">{{ albumMessage }}</p>
+
+          <div *ngIf="publicAlbumAssets?.length" class="navy-album-feed">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Foto" class="feed-img">
+              <span *ngIf="asset.uploaderName" class="uploader-tag">Por: {{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B. Muro de Dedicatorias -->
+    <section *ngIf="isSectionActive('dedications')" class="navy-section" data-section-key="dedications">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Libro de Firmas</span>
+          <h2 class="section-title">Dedicatorias &amp; Deseos</h2>
+          <div class="navy-gold-divider mini">
+            <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+          </div>
+
+          <form (ngSubmit)="onSubmitDedication()" class="navy-form mini">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tu Nombre *</label>
+                <input type="text" [(ngModel)]="dedication.publicName" name="dedNavyName" required class="navy-input" placeholder="Tu nombre...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tus Deseos para los Novios *</label>
+              <textarea [(ngModel)]="dedication.message" name="dedNavyMsg" rows="2" required class="navy-textarea" placeholder="Escribe tu dedicatoria..."></textarea>
+            </div>
+            <button type="submit" class="navy-btn navy-btn-gold" [disabled]="sending">
+              <span>Publicar Mensaje</span>
+            </button>
+            <p *ngIf="dedicationMessage" class="navy-alert success">{{ dedicationMessage }}</p>
+          </form>
+
+          <div *ngIf="dedications?.length" class="navy-dedications-wall">
+            <article *ngFor="let item of dedications" class="dedication-card">
+              <p class="ded-body">“{{ item.message }}”</p>
+              <span class="ded-author">— {{ item.publicName }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Peticiones Musicales al DJ -->
+    <section *ngIf="isSectionActive('songRequests')" class="navy-section" data-section-key="songRequests">
+      <div class="navy-container">
+        <div class="navy-glass-card" data-aos="fade-up">
+          <span class="section-tag">Pista de Baile</span>
+          <h2 class="section-title">Pide tu Canción al DJ</h2>
+          <p class="interactive-desc">¿Qué tema no puede faltar para bailar con nosotros toda la noche?</p>
+
+          <div class="song-search-wrap">
+            <div class="search-input-row">
+              <input type="text" [(ngModel)]="songSearchQuery" placeholder="Canción o artista..."
+                class="navy-input" (keyup.enter)="onSearchSong()">
+              <button type="button" class="navy-btn navy-btn-gold navy-btn-sm" (click)="onSearchSong()" [disabled]="searchingSongs">
+                <span>{{ searchingSongs ? 'Buscando...' : 'Buscar' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="songSearchResults?.length" class="song-results-list">
+              <div *ngFor="let s of songSearchResults" class="song-item" (click)="onSelectSong(s)">
+                <img [src]="s.thumbnailUrl" alt="Cover" class="song-thumb">
+                <div class="song-details">
+                  <strong>{{ s.title }}</strong>
+                  <span>{{ s.artist }}</span>
+                </div>
+                <button type="button" class="navy-btn navy-btn-glass navy-btn-xs">Elegir</button>
+              </div>
+            </div>
+
+            <div *ngIf="songRequest.title" class="selected-song-box">
+              <span>Canción elegida: <strong>{{ songRequest.title }}</strong> ({{ songRequest.artist }})</span>
+              <input type="text" [(ngModel)]="songRequest.dedication" placeholder="¿Quieres dedicársela a alguien?" class="navy-input navy-input-sm">
+              <button type="button" class="navy-btn navy-btn-gold" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                <span>{{ songRequestSending ? 'Enviando...' : 'Confirmar Petición' }}</span>
+              </button>
+            </div>
+            <p *ngIf="songRequestMessage" class="navy-alert success">{{ songRequestMessage }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. PIE DE PÁGINA (FOOTER) -->
+    <footer class="navy-footer">
+      <div class="navy-gold-divider mini">
+        <img src="assets/boda-navy-blue/flores-divisor-gold.png" alt="Divisor" class="gold-divider-img">
+      </div>
+      <div class="navy-footer-names">{{ invitation?.content?.headline || event?.title }}</div>
+      <p class="navy-footer-sub">Gracias por iluminar nuestra noche y ser parte de nuestra historia</p>
+      <div class="navy-branding" *ngIf="!invitation?.content?.hideBranding">
+        <span>Elegancia &amp; Distinción</span>
+      </div>
+    </footer>
+
+  </main>
+
+</div>

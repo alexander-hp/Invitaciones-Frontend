@@ -1,0 +1,654 @@
+<!-- PLANTILLA: BODA ROSAS (Romance Floral, Pétalos, Caligrafía Pinyon & Acuarela Rosé) -->
+<div class="rosas-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. VIDEO INTRO OVERLAY (Apertura de Rosas & Pétalos) -->
+  <div *ngIf="hasVideoIntro && !introFinished" class="rosas-video-intro-overlay" [class.playing]="introStarted">
+    <!-- Pantalla Poster Romántica con Rosas -->
+    <div *ngIf="!introStarted" class="rosas-intro-poster-screen" data-aos="zoom-in">
+      <div class="rosas-intro-card">
+        <div class="rosas-corner-tl">
+          <img src="assets/boda-rosas/floral-corner.png" alt="Flores" class="corner-rose-img">
+        </div>
+        <div class="rosas-corner-br">
+          <img src="assets/boda-rosas/floral-corner.png" alt="Flores" class="corner-rose-img">
+        </div>
+
+        <div class="rosas-poster-wrap">
+          <img src="assets/boda-rosas/intro-poster.jpg" alt="Portada Rosas" class="rosas-poster-img">
+        </div>
+
+        <div class="rosas-intro-meta">
+          <span class="rosas-tag">Invitación Exclusiva</span>
+          <h1 class="rosas-intro-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda Soñada' }}</h1>
+          <p class="rosas-intro-date">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'El amor es nuestra mayor aventura' }}</p>
+          <button type="button" class="rosas-btn rosas-btn-rose" (click)="startVideoIntro()">
+            <span>Abrir Invitación</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Introductorio de Pétalos y Rosas -->
+    <div *ngIf="introStarted" class="rosas-intro-video-container">
+      <video
+        id="rosas-intro-video"
+        src="assets/boda-rosas/intro-video-mobile.mp4"
+        playsinline
+        webkit-playsinline
+        (ended)="onVideoEnded()"
+        class="rosas-fullscreen-video"
+      ></video>
+      <button type="button" class="rosas-skip-btn" (click)="skipIntro()">
+        <span>Entrar a la Boda</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+          <line x1="19" y1="5" x2="19" y2="19"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="rosas-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="rosas-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar melodía' : 'Reproducir melodía'">
+      <div class="rosas-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="rosas-audio-label">{{ isPlayingMusic ? 'Ballerina' : 'Música' }}</span>
+      <div *ngIf="isPlayingMusic" class="rosas-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 3. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="rosas-vip-envelope-screen">
+    <div class="rosas-vip-card" data-aos="fade-up">
+      <div class="rosas-envelope-icon-box">
+        <img src="assets/boda-rosas/rsvp-envelope.png" alt="Sobre" class="vip-envelope-img">
+      </div>
+      <h2>Pase Personal Reservado</h2>
+      <p class="rosas-vip-desc">Por favor ingresa el correo o teléfono registrado para desbloquear tus lugares asignados.</p>
+      
+      <div class="rosas-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo o teléfono..."
+          class="rosas-input" (keyup.enter)="onOpenEnvelope()">
+        <button type="button" class="rosas-btn rosas-btn-rose" (click)="onOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Abrir Invitación</span>
+          <span *ngIf="checkingGuest">Comprobando...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="rosas-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="rosas-invitation-body">
+
+    <!-- 4. PORTADA HERO FLORAL & CUENTA REGRESIVA -->
+    <header *ngIf="isSectionActive('hero')" class="rosas-hero-section">
+      <!-- Video hero o fondo sutil de pétalos -->
+      <div class="rosas-hero-video-bg">
+        <video src="assets/boda-rosas/plantilla-floral-hero.mp4" autoplay loop muted playsinline></video>
+        <div class="rosas-hero-backdrop"></div>
+      </div>
+
+      <div class="rosas-hero-content" data-aos="fade-up">
+        <div class="rosas-oval-wrap">
+          <img src="assets/boda-rosas/hero-oval.png" alt="Oval Frame" class="hero-oval-frame">
+          <div class="rosas-oval-inner">
+            <span class="rosas-hero-tag">Nuestra Boda</span>
+            <h1 class="rosas-hero-title">{{ invitation?.content?.headline || event?.title || 'Valentina & Alejandro' }}</h1>
+            <p class="rosas-hero-subtitle">{{ invitation?.content?.subheadline || 'Dos almas, una promesa eterna' }}</p>
+          </div>
+        </div>
+
+        <div class="rosas-date-badge">
+          <span class="date-text">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Fecha de Nuestra Boda' }}</span>
+        </div>
+
+        <!-- CUENTA REGRESIVA FLORAL -->
+        <div *ngIf="isSectionActive('countdown')" class="rosas-countdown-board" data-aos="zoom-in" data-aos-delay="200">
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.days }}</span>
+            <span class="cd-lbl">Días</span>
+          </div>
+          <span class="cd-sep">♥</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.hours }}</span>
+            <span class="cd-lbl">Horas</span>
+          </div>
+          <span class="cd-sep">♥</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.minutes }}</span>
+            <span class="cd-lbl">Minutos</span>
+          </div>
+          <span class="cd-sep">♥</span>
+          <div class="cd-box">
+            <span class="cd-val">{{ countdown.seconds }}</span>
+            <span class="cd-lbl">Segundos</span>
+          </div>
+        </div>
+
+        <div class="rosas-hero-actions">
+          <button type="button" class="rosas-btn rosas-btn-rose" (click)="addToGoogleCalendar()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Guardar en Calendario</span>
+          </button>
+          <button type="button" class="rosas-btn rosas-btn-outline" (click)="shareOnWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 5. PASE VIP CONFIRMADO -->
+    <section *ngIf="verifiedGuest" class="rosas-section" data-aos="fade-up">
+      <div class="rosas-container">
+        <div class="rosas-pass-card">
+          <div class="pass-rose-flourish">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Adorno" class="pass-divider-img">
+          </div>
+          <span class="pass-tag">Pase Exclusivo de Invitado</span>
+          <h3 class="pass-guest-name">{{ verifiedGuest.name }}</h3>
+
+          <div class="pass-info-grid">
+            <div class="info-item" *ngIf="verifiedGuest.tableName">
+              <span class="lbl">Mesa</span>
+              <strong class="val">{{ verifiedGuest.tableName }}</strong>
+            </div>
+            <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+              <span class="lbl">Asiento</span>
+              <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="lbl">Pases Reservados</span>
+              <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas</strong>
+            </div>
+          </div>
+
+          <div *ngIf="verifiedGuest.qrCode" class="pass-qr-wrap" (click)="openLightbox(verifiedGuest.qrCode)">
+            <img [src]="verifiedGuest.qrCode" alt="QR" class="pass-qr-img">
+            <span class="qr-hint">Toca para ampliar el código de acceso</span>
+          </div>
+
+          <div class="pass-footer">
+            <button type="button" class="rosas-btn rosas-btn-rose rosas-btn-sm" (click)="downloadPassOutput.emit()">
+              <span>Descargar Pase</span>
+            </button>
+            <button type="button" class="rosas-btn rosas-btn-outline rosas-btn-sm" (click)="resetGuestOutput.emit()">
+              <span>Cambiar Invitado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. NUESTRA HISTORIA CON BORDES FLORALES -->
+    <section *ngIf="isSectionActive('story')" class="rosas-section" data-section-key="story">
+      <div class="rosas-container">
+        <div class="rosas-story-card" data-aos="fade-up">
+          <div class="flourish-left">
+            <img src="assets/boda-rosas/floral-border-left.png" alt="Flores" class="flourish-border-img">
+          </div>
+          <div class="flourish-right">
+            <img src="assets/boda-rosas/floral-border-right.png" alt="Flores" class="flourish-border-img">
+          </div>
+
+          <div class="story-content-box">
+            <span class="section-tag">Nuestra Historia</span>
+            <h2 class="section-title">{{ invitation?.content?.storyTitle || 'Un Sueño Hecho Realidad' }}</h2>
+            <div class="rosas-flourish-sep">
+              <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+            </div>
+
+            <p class="story-paragraph">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Queremos compartir contigo el comienzo de nuestra vida juntos. Tu presencia hará este día aún más inolvidable.' }}</p>
+
+            <div *ngIf="event?.hosts?.length" class="rosas-hosts-block">
+              <span class="hosts-label">Con el amor y bendición de nuestros padres:</span>
+              <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+            </div>
+
+            <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+              <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                </svg>
+                <span>{{ isSectionMusicPlaying('story') ? 'Pausa' : 'Escuchar melodía' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. UBICACIONES CON ESTILO ROMÁNTICO -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="rosas-section" data-section-key="locations">
+      <div class="rosas-container">
+        <div class="rosas-section-header" data-aos="fade-up">
+          <span class="section-tag">Lugares</span>
+          <h2 class="section-title">Dónde Celebraremos</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+        </div>
+
+        <div class="rosas-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="rosas-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-badge-flower">
+              <span>&#10047;</span>
+            </div>
+            <span class="loc-type">{{ loc.type || 'Ceremonia & Fiesta' }}</span>
+            <h3 class="loc-name">{{ loc.name }}</h3>
+            <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+            <div class="loc-actions">
+              <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="rosas-btn rosas-btn-rose rosas-btn-sm">
+                <span>Ver Mapa</span>
+              </a>
+              <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="rosas-btn rosas-btn-outline rosas-btn-sm">
+                <span>Waze</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. ITINERARIO / TIMELINE CON TORRE DE CHAMPAGNE -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="rosas-section" data-section-key="itinerary">
+      <div class="rosas-container">
+        <div class="rosas-itinerary-card" data-aos="fade-up">
+          <span class="section-tag">Cronograma</span>
+          <h2 class="section-title">Momentos Especiales</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+
+          <div class="rosas-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="timeline-row" data-aos="fade-up">
+              <div class="row-time">{{ item.time }}</div>
+              <div class="row-marker">
+                <span class="marker-rose">♥</span>
+              </div>
+              <div class="row-content">
+                <h4 class="row-title">{{ item.title }}</h4>
+                <p *ngIf="item.description">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="champagne-ornament-box" data-aos="zoom-in">
+            <img src="assets/boda-rosas/champagne-tower.png" alt="Brindis" class="champagne-img">
+            <span class="champagne-caption">¡Brindemos por una vida llena de amor!</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CÓDIGO DE VESTIMENTA -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="rosas-section" data-section-key="dressCode">
+      <div class="rosas-container">
+        <div class="rosas-card-simple" data-aos="fade-up">
+          <span class="section-tag">Protocolo</span>
+          <h2 class="section-title">Código de Vestimenta</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+
+          <div class="dresscode-rose-box">
+            <div class="dress-title">{{ invitation?.content?.dressCode }}</div>
+            <p class="dress-desc">Agradecemos vestir formal en tonos claros, pasteles o neutros. Reservamos el color blanco exclusivamente para la novia.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. CONFIRMACIÓN RSVP COMPLETO -->
+    <section *ngIf="isSectionActive('rsvp')" class="rosas-section" data-section-key="rsvp">
+      <div class="rosas-container">
+        <div class="rosas-rsvp-card" data-aos="fade-up">
+          <div class="rsvp-envelope-header">
+            <img src="assets/boda-rosas/rsvp-envelope.png" alt="Sobre RSVP" class="envelope-art-img">
+          </div>
+          <span class="section-tag">Confirmación</span>
+          <h2 class="section-title">¿Nos Acompañas?</h2>
+          <p class="rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Fecha límite de confirmación: <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+
+          <form (ngSubmit)="onSubmitRsvp()" class="rosas-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre y Apellidos *</label>
+                <input type="text" [(ngModel)]="rsvp.name" name="rosasName" required class="rosas-input" placeholder="Tu nombre completo...">
+              </div>
+              <div class="form-group">
+                <label>Teléfono WhatsApp</label>
+                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="rosasPhone" class="rosas-input" placeholder="3312345678">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>¿Asistirás al evento? *</label>
+              <select [(ngModel)]="rsvp.response" name="rosasResp" class="rosas-select">
+                <option value="confirmed">Sí, confirmo con mucho gusto</option>
+                <option value="declined">Lamentablemente no podré asistir</option>
+                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Aún no estoy seguro/a</option>
+              </select>
+            </div>
+
+            <ng-container *ngIf="rsvp.response === 'confirmed'">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Acompañantes</label>
+                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="rosasComps" class="rosas-input">
+                </div>
+                <div class="form-group">
+                  <label>Preferencia de Platillo</label>
+                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="rosasMeal" class="rosas-input" placeholder="Carne, pollo, vegetariano...">
+                </div>
+              </div>
+
+              <div *ngIf="rsvp.companions > 0" class="form-group">
+                <label>Nombres de los Acompañantes</label>
+                <textarea [(ngModel)]="companionNamesText" name="rosasCompNames" rows="2" class="rosas-textarea" placeholder="Escribe un nombre por renglón"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Alergias o Restricciones Alimentarias</label>
+                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="rosasDiet" class="rosas-input" placeholder="Ej. Vegetariano, alérgico a mariscos...">
+              </div>
+            </ng-container>
+
+            <!-- Preguntas Personalizadas Dinámicas -->
+            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
+              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
+                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
+                <input *ngIf="q.type === 'text' || !q.type" type="text" class="rosas-input"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
+                <textarea *ngIf="q.type === 'textarea'" class="rosas-textarea"
+                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
+              </div>
+            </ng-container>
+
+            <div class="form-group">
+              <label>Mensaje para los Novios</label>
+              <textarea [(ngModel)]="rsvp.message" name="rosasMsg" rows="2" class="rosas-textarea" placeholder="Escribe unas palabras de cariño..."></textarea>
+            </div>
+
+            <button type="submit" class="rosas-btn rosas-btn-rose" [disabled]="sending">
+              <span *ngIf="!sending">Enviar Confirmación</span>
+              <span *ngIf="sending">Enviando...</span>
+            </button>
+            <p *ngIf="success" class="rosas-alert success">{{ success }}</p>
+            <p *ngIf="error" class="rosas-alert error">{{ error }}</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. MESA DE REGALOS -->
+    <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="rosas-section" data-section-key="giftRegistry">
+      <div class="rosas-container">
+        <div class="rosas-section-header" data-aos="fade-up">
+          <span class="section-tag">Regalos</span>
+          <h2 class="section-title">Mesa de Regalos</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+        </div>
+
+        <div class="rosas-gifts-grid">
+          <article *ngFor="let reg of invitation?.content?.giftRegistry" class="rosas-gift-card" data-aos="fade-up">
+            <div class="gift-logo-frame">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="store-img">
+              <span *ngIf="!getStoreLogo(reg)" class="store-text">{{ reg.store || reg.title }}</span>
+            </div>
+            <h4>{{ reg.title || reg.store }}</h4>
+            <p *ngIf="reg.note">{{ reg.note }}</p>
+            <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="rosas-btn rosas-btn-rose rosas-btn-sm">
+              <span>Ver Mesa</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. LLUVIA DE SOBRES / TRANSFERENCIA -->
+    <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+      class="rosas-section" data-section-key="digitalEnvelope">
+      <div class="rosas-container">
+        <div class="rosas-card-simple" data-aos="fade-up">
+          <span class="section-tag">Lluvia de Sobres</span>
+          <h2 class="section-title">Muestra de Afecto</h2>
+          <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="env-note">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+
+          <div class="rosas-banking-grid">
+            <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="bank-item">
+              <span class="lbl">Banco</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="bank-item">
+              <span class="lbl">Titular</span>
+              <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="bank-item">
+              <span class="lbl">CLABE Interbancaria</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="rosas-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+            <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="bank-item">
+              <span class="lbl">Número de Cuenta</span>
+              <div class="copy-row">
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="rosas-copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="transfer-qr-box" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+            <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="QR" class="transfer-qr-img">
+            <span>Toca para ampliar el código QR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. HOSPEDAJE -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="rosas-section" data-section-key="lodging">
+      <div class="rosas-container">
+        <div class="rosas-section-header" data-aos="fade-up">
+          <span class="section-tag">Hospedaje</span>
+          <h2 class="section-title">Hoteles Recomendados</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+        </div>
+
+        <div class="rosas-lodging-grid">
+          <article *ngFor="let h of invitation?.content?.lodging" class="rosas-lodging-card" data-aos="fade-up">
+            <h3>{{ h.name }}</h3>
+            <p *ngIf="h.description">{{ h.description }}</p>
+            <a *ngIf="h.url" [href]="h.url" target="_blank" rel="noopener noreferrer" class="rosas-btn rosas-btn-rose rosas-btn-sm">
+              <span>Reservar</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. GALERÍA DE FOTOS -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" class="rosas-section" data-section-key="gallery">
+      <div class="rosas-container">
+        <div class="rosas-section-header" data-aos="fade-up">
+          <span class="section-tag">Galería</span>
+          <h2 class="section-title">Nuestra Historia en Fotos</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+        </div>
+
+        <div class="rosas-gallery-grid">
+          <div *ngFor="let photo of invitation?.content?.gallery" class="rosas-gallery-item" (click)="openLightbox(photo)" data-aos="zoom-in">
+            <img [src]="photo" alt="Foto Boda" class="gallery-img">
+            <div class="item-hover-glow">
+              <span class="view-label">Ampliar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. ZONA INTERACTIVA -->
+    <!-- A. Álbum Colectivo en Vivo -->
+    <section *ngIf="isSectionActive('collectiveAlbum')" class="rosas-section" data-section-key="collectiveAlbum">
+      <div class="rosas-container">
+        <div class="rosas-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Álbum en Vivo</span>
+          <h2 class="section-title">Comparte tus Fotos de la Boda</h2>
+          <p class="interactive-desc">Sube las fotos que captures durante nuestra fiesta y ayúdanos a revivir cada sonrisa.</p>
+
+          <div class="album-upload-box">
+            <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="rosas-album-input" class="file-input">
+            <label for="rosas-album-input" class="rosas-btn rosas-btn-outline">
+              <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Seleccionar Foto' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="rosas-btn rosas-btn-rose" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Subir al Álbum</span>
+              <span *ngIf="uploadingAlbum">Subiendo...</span>
+            </button>
+          </div>
+          <p *ngIf="albumMessage" class="rosas-alert success">{{ albumMessage }}</p>
+
+          <div *ngIf="publicAlbumAssets?.length" class="rosas-album-feed">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Foto" class="feed-img">
+              <span *ngIf="asset.uploaderName" class="uploader-tag">Por: {{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B. Muro de Dedicatorias -->
+    <section *ngIf="isSectionActive('dedications')" class="rosas-section" data-section-key="dedications">
+      <div class="rosas-container">
+        <div class="rosas-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Libro de Deseos</span>
+          <h2 class="section-title">Dedicatorias de Amor</h2>
+          <div class="rosas-flourish-sep">
+            <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
+          </div>
+
+          <form (ngSubmit)="onSubmitDedication()" class="rosas-form mini">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tu Nombre *</label>
+                <input type="text" [(ngModel)]="dedication.publicName" name="dedName" required class="rosas-input" placeholder="Tu nombre...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tus Deseos para los Novios *</label>
+              <textarea [(ngModel)]="dedication.message" name="dedMsg" rows="2" required class="rosas-textarea" placeholder="Escribe tus buenos deseos..."></textarea>
+            </div>
+            <button type="submit" class="rosas-btn rosas-btn-rose" [disabled]="sending">
+              <span>Publicar Deseo</span>
+            </button>
+            <p *ngIf="dedicationMessage" class="rosas-alert success">{{ dedicationMessage }}</p>
+          </form>
+
+          <div *ngIf="dedications?.length" class="rosas-dedications-wall">
+            <article *ngFor="let item of dedications" class="dedication-card">
+              <p class="ded-body">“{{ item.message }}”</p>
+              <span class="ded-author">— {{ item.publicName }}</span>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- C. Peticiones Musicales al DJ -->
+    <section *ngIf="isSectionActive('songRequests')" class="rosas-section" data-section-key="songRequests">
+      <div class="rosas-container">
+        <div class="rosas-interactive-card" data-aos="fade-up">
+          <span class="section-tag">Pista de Baile</span>
+          <h2 class="section-title">Sugiere una Canción al DJ</h2>
+          <p class="interactive-desc">¿Qué canción te pondrá de pie a bailar con nosotros toda la noche?</p>
+
+          <div class="song-search-wrap">
+            <div class="search-input-row">
+              <input type="text" [(ngModel)]="songSearchQuery" placeholder="Buscar canción o artista..."
+                class="rosas-input" (keyup.enter)="onSearchSong()">
+              <button type="button" class="rosas-btn rosas-btn-rose rosas-btn-sm" (click)="onSearchSong()" [disabled]="searchingSongs">
+                <span>{{ searchingSongs ? 'Buscando...' : 'Buscar' }}</span>
+              </button>
+            </div>
+
+            <div *ngIf="songSearchResults?.length" class="song-results-list">
+              <div *ngFor="let s of songSearchResults" class="song-item" (click)="onSelectSong(s)">
+                <img [src]="s.thumbnailUrl" alt="Cover" class="song-thumb">
+                <div class="song-details">
+                  <strong>{{ s.title }}</strong>
+                  <span>{{ s.artist }}</span>
+                </div>
+                <button type="button" class="rosas-btn rosas-btn-outline rosas-btn-xs">Elegir</button>
+              </div>
+            </div>
+
+            <div *ngIf="songRequest.title" class="selected-song-box">
+              <span>Canción seleccionada: <strong>{{ songRequest.title }}</strong> ({{ songRequest.artist }})</span>
+              <input type="text" [(ngModel)]="songRequest.dedication" placeholder="¿Quieres dedicársela a alguien?" class="rosas-input rosas-input-sm">
+              <button type="button" class="rosas-btn rosas-btn-rose" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                <span>{{ songRequestSending ? 'Enviando...' : 'Confirmar Petición' }}</span>
+              </button>
+            </div>
+            <p *ngIf="songRequestMessage" class="rosas-alert success">{{ songRequestMessage }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16. PIE DE PÁGINA (FOOTER) -->
+    <footer class="rosas-footer">
+      <div class="rosas-footer-names">{{ invitation?.content?.headline || event?.title }}</div>
+      <p class="rosas-footer-sub">Gracias por ser parte de nuestra historia de amor</p>
+      <div class="rosas-branding" *ngIf="!invitation?.content?.hideBranding">
+        <span>Diseñado con Amor &amp; Elegancia</span>
+      </div>
+    </footer>
+
+  </main>
+
+</div>

@@ -1,0 +1,1414 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Italiana&family=Inter:wght@300;400;500;600&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  color: #2d241e;
+  background-color: #fcfaf7;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.eleganza-main-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background-color: #fbf9f5;
+  background-image: radial-gradient(circle at 10% 20%, rgba(210, 154, 67, 0.05) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(185, 96, 65, 0.05) 0%, transparent 40%);
+  overflow-x: hidden;
+}
+
+/* 1. VIDEO INTRO OVERLAY */
+.eleganza-video-intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #1f1a17;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.eleganza-intro-poster-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle, #2d241e 0%, #15110e 100%);
+}
+
+.eleganza-intro-card {
+  max-width: 440px;
+  width: 100%;
+  background: #fdfbf7;
+  border-radius: 20px;
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(210, 154, 67, 0.3);
+}
+
+.eleganza-poster-wrap {
+  position: relative;
+  width: 100%;
+  max-height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.eleganza-poster-img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.eleganza-wax-seal {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #b96041;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(185, 96, 65, 0.5);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.eleganza-wax-seal:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.tassel-key-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.eleganza-intro-meta .eleganza-tag {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #8b6b3e;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.eleganza-intro-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  color: #2d241e;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+
+.eleganza-intro-date {
+  font-size: 14px;
+  color: #6d6257;
+  margin-bottom: 22px;
+}
+
+.eleganza-intro-video-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.eleganza-fullscreen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.eleganza-skip-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(253, 251, 247, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid #b96041;
+  color: #2d241e;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.eleganza-skip-btn:hover {
+  background: #b96041;
+  color: #ffffff;
+}
+
+/* 2. REPRODUCTOR FLOTANTE DE AUDIO */
+.eleganza-audio-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+}
+
+.eleganza-audio-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #d9cbbe;
+  border-radius: 40px;
+  padding: 8px 16px;
+  box-shadow: 0 6px 20px rgba(45, 36, 30, 0.12);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.eleganza-audio-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(185, 96, 65, 0.2);
+  border-color: #b96041;
+}
+
+.eleganza-audio-icon-wrap {
+  width: 28px;
+  height: 28px;
+  background: #f4ede4;
+  color: #b96041;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eleganza-audio-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #2d241e;
+}
+
+.eleganza-sound-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.eleganza-sound-bars span {
+  width: 2px;
+  background: #b96041;
+  border-radius: 1px;
+  animation: soundBar 1s ease-in-out infinite alternate;
+}
+
+.eleganza-sound-bars span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.eleganza-sound-bars span:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+.eleganza-sound-bars span:nth-child(3) { height: 8px; animation-delay: 0.2s; }
+.eleganza-sound-bars span:nth-child(4) { height: 11px; animation-delay: 0.4s; }
+
+@keyframes soundBar {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1); }
+}
+
+/* 3. PANTALLA SOBRE VIP */
+.eleganza-vip-envelope-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(31, 26, 23, 0.88);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.eleganza-vip-card {
+  max-width: 440px;
+  width: 100%;
+  background: #fdfbf7;
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  border: 1px solid #d29a43;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.eleganza-tassel-box {
+  width: 70px;
+  height: 70px;
+  background: #f4ede4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  border: 1px solid #d29a43;
+}
+
+.tassel-key-large {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.eleganza-vip-card h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  color: #2d241e;
+  margin: 0 0 10px;
+}
+
+.eleganza-vip-desc {
+  font-size: 14px;
+  color: #6d6257;
+  margin-bottom: 24px;
+}
+
+.eleganza-vip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 4. HERO SECTION */
+.eleganza-hero-section {
+  position: relative;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px 60px;
+  background: #fcfaf7;
+  overflow: hidden;
+}
+
+.eleganza-linen-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.eleganza-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.eleganza-villa-sketch-box {
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(185, 96, 65, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(210, 154, 67, 0.35);
+}
+
+.villa-sketch-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.eleganza-hero-tag {
+  display: inline-block;
+  font-family: 'Italiana', serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: #8b6b3e;
+  margin-bottom: 8px;
+}
+
+.eleganza-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 6vw, 62px);
+  color: #2d241e;
+  font-weight: 600;
+  margin: 0 0 10px;
+  line-height: 1.15;
+}
+
+.eleganza-hero-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: #7a6e63;
+  text-transform: uppercase;
+  margin-bottom: 30px;
+}
+
+.eleganza-oval-date-frame {
+  position: relative;
+  width: 220px;
+  margin: 0 auto 35px;
+}
+
+.oval-date-img {
+  width: 100%;
+  display: block;
+}
+
+.oval-date-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d241e;
+  text-align: center;
+  padding: 0 20px;
+  letter-spacing: 1px;
+}
+
+/* CUENTA REGRESIVA */
+.eleganza-countdown-board {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #ffffff;
+  padding: 16px 28px;
+  border-radius: 50px;
+  box-shadow: 0 10px 30px rgba(45, 36, 30, 0.08);
+  border: 1px solid #ebdcd0;
+  margin-bottom: 35px;
+}
+
+.cd-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cd-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #b96041;
+  line-height: 1;
+}
+
+.cd-lbl {
+  font-size: 10px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #8c7e72;
+  margin-top: 4px;
+}
+
+.cd-sep {
+  font-size: 18px;
+  color: #d9cbbe;
+  font-weight: 300;
+}
+
+.eleganza-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* BOTONES GLOBALES ELEGANZA */
+.eleganza-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 30px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  text-decoration: none;
+}
+
+.eleganza-btn-terra {
+  background: #b96041;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(185, 96, 65, 0.25);
+}
+
+.eleganza-btn-terra:hover {
+  background: #a25134;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(185, 96, 65, 0.35);
+}
+
+.eleganza-btn-outline {
+  background: #ffffff;
+  color: #2d241e;
+  border: 1px solid #d9cbbe;
+}
+
+.eleganza-btn-outline:hover {
+  border-color: #b96041;
+  color: #b96041;
+  transform: translateY(-2px);
+}
+
+.eleganza-btn-sm {
+  padding: 8px 18px;
+  font-size: 13px;
+}
+
+.eleganza-btn-xs {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+/* SECCIONES Y CONTENEDORES */
+.eleganza-section {
+  padding: 70px 20px;
+  position: relative;
+}
+
+.eleganza-container {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.eleganza-section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.section-tag {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #8b6b3e;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 4vw, 36px);
+  color: #2d241e;
+  margin: 0 0 12px;
+}
+
+.eleganza-line-sep {
+  width: 50px;
+  height: 2px;
+  background: #b96041;
+  margin: 0 auto;
+  border-radius: 2px;
+}
+
+/* TARJETA DE LINO (LINEN CARD) */
+.eleganza-linen-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 45px 35px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(45, 36, 30, 0.05);
+  border: 1px solid #ebe2d8;
+  position: relative;
+}
+
+/* 5. PASE VIP */
+.eleganza-pass-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%);
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  border: 1px solid #d29a43;
+  box-shadow: 0 15px 40px rgba(210, 154, 67, 0.12);
+  position: relative;
+}
+
+.pass-tassel-ornament {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+}
+
+.pass-key-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pass-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8b6b3e;
+  text-transform: uppercase;
+}
+
+.pass-guest-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  color: #2d241e;
+  margin: 6px 0 20px;
+}
+
+.pass-info-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-top: 1px dashed #e2d5c5;
+  border-bottom: 1px dashed #e2d5c5;
+  margin-bottom: 24px;
+}
+
+.pass-info-grid .info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.pass-info-grid .lbl {
+  font-size: 11px;
+  color: #8c7e72;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pass-info-grid .val {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: #b96041;
+}
+
+.pass-qr-wrap {
+  margin: 20px auto;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ebdcd0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+}
+
+.pass-qr-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+}
+
+.qr-hint {
+  font-size: 11px;
+  color: #8c7e72;
+  margin-top: 8px;
+}
+
+.pass-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* 6. HISTORIA */
+.story-paragraph {
+  font-size: 16px;
+  color: #53483f;
+  line-height: 1.8;
+  max-width: 650px;
+  margin: 25px auto;
+}
+
+.eleganza-hosts-block {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #ebe2d8;
+}
+
+.hosts-label {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: #8b6b3e;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.hosts-list {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  color: #2d241e;
+  margin: 0;
+}
+
+.section-music-player {
+  margin-top: 25px;
+}
+
+.sec-music-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fbf8f4;
+  border: 1px solid #d9cbbe;
+  border-radius: 30px;
+  padding: 8px 18px;
+  font-size: 13px;
+  color: #2d241e;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.sec-music-btn:hover {
+  border-color: #b96041;
+  color: #b96041;
+}
+
+/* 7. UBICACIONES */
+.eleganza-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.eleganza-loc-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(45, 36, 30, 0.05);
+  border: 1px solid #ebe2d8;
+}
+
+.loc-villa-frame {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  height: 160px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.where-frame-asset {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.villa-img {
+  width: 80%;
+  height: 80%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.loc-type {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8b6b3e;
+  text-transform: uppercase;
+}
+
+.loc-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: #2d241e;
+  margin: 6px 0 8px;
+}
+
+.loc-address {
+  font-size: 14px;
+  color: #6d6257;
+  margin-bottom: 20px;
+}
+
+.loc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 8. PROGRAMA / TIMELINE */
+.eleganza-timeline {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+}
+
+.eleganza-timeline::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  bottom: 15px;
+  left: 95px;
+  width: 1px;
+  background: #d9cbbe;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  text-align: left;
+}
+
+.row-time {
+  width: 75px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #b96041;
+  text-align: right;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.row-marker {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #ffffff;
+  z-index: 2;
+}
+
+.marker-leaf {
+  color: #d29a43;
+  font-size: 16px;
+}
+
+.row-content {
+  flex: 1;
+}
+
+.row-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: #2d241e;
+  margin: 0 0 4px;
+}
+
+.row-content p {
+  font-size: 14px;
+  color: #6d6257;
+  margin: 0;
+}
+
+/* 9. DRESS CODE */
+.eleganza-dresscode-box {
+  position: relative;
+  max-width: 320px;
+  margin: 30px auto 0;
+  text-align: center;
+}
+
+.dresscode-frame-img {
+  width: 100%;
+  display: block;
+}
+
+.dresscode-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+.dress-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: #2d241e;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.dress-notes {
+  font-size: 12px;
+  color: #6d6257;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 10. RSVP CARD & FORMS */
+.eleganza-rsvp-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 45px 35px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(45, 36, 30, 0.05);
+  border: 1px solid #ebe2d8;
+}
+
+.rsvp-deadline {
+  font-size: 13px;
+  color: #8b6b3e;
+  margin: 0 0 16px;
+}
+
+.eleganza-form {
+  max-width: 600px;
+  margin: 30px auto 0;
+  text-align: left;
+}
+
+.eleganza-form.mini {
+  max-width: 500px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1px;
+  color: #6d6257;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.eleganza-input,
+.eleganza-select,
+.eleganza-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid #d9cbbe;
+  border-radius: 10px;
+  background: #fdfbf7;
+  color: #2d241e;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.eleganza-input:focus,
+.eleganza-select:focus,
+.eleganza-textarea:focus {
+  border-color: #b96041;
+  box-shadow: 0 0 0 3px rgba(185, 96, 65, 0.12);
+}
+
+.eleganza-input-sm {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.eleganza-alert {
+  margin-top: 14px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.eleganza-alert.success {
+  background: #f0f7ee;
+  color: #3b6b37;
+  border: 1px solid #d2e8cc;
+}
+
+.eleganza-alert.error {
+  background: #fdf2f2;
+  color: #9c2727;
+  border: 1px solid #f6cfcf;
+}
+
+/* 11. LISTA NOZZE */
+.eleganza-gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.eleganza-gift-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px 20px;
+  text-align: center;
+  border: 1px solid #ebe2d8;
+  box-shadow: 0 6px 20px rgba(45, 36, 30, 0.04);
+}
+
+.gift-logo-frame {
+  width: 90px;
+  height: 60px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.store-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.store-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  color: #b96041;
+  font-weight: 600;
+}
+
+.eleganza-gift-card h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.eleganza-gift-card p {
+  font-size: 13px;
+  color: #6d6257;
+  margin-bottom: 16px;
+}
+
+/* 12. BONIFICO BANCARIO */
+.env-note {
+  font-size: 15px;
+  color: #53483f;
+  margin: 15px 0 25px;
+}
+
+.eleganza-banking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.bank-item {
+  background: #fdfbf7;
+  border: 1px solid #ebe2d8;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.bank-item .lbl {
+  font-size: 11px;
+  font-family: 'Cinzel', serif;
+  color: #8b6b3e;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+}
+
+.bank-item .val {
+  font-size: 14px;
+  color: #2d241e;
+  word-break: break-all;
+}
+
+.copy-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.eleganza-copy-btn {
+  background: #ffffff;
+  border: 1px solid #b96041;
+  color: #b96041;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.eleganza-copy-btn:hover {
+  background: #b96041;
+  color: #ffffff;
+}
+
+.transfer-qr-box {
+  margin: 20px auto 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ebdcd0;
+}
+
+.transfer-qr-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.transfer-qr-box span {
+  font-size: 11px;
+  color: #8c7e72;
+  margin-top: 8px;
+}
+
+/* 13. HOSPEDAJE */
+.eleganza-lodging-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.eleganza-lodging-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px 20px;
+  border: 1px solid #ebe2d8;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(45, 36, 30, 0.04);
+}
+
+.eleganza-lodging-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.eleganza-lodging-card p {
+  font-size: 13px;
+  color: #6d6257;
+  margin-bottom: 18px;
+}
+
+/* 14. GALLERIA */
+.eleganza-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.eleganza-gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.item-hover-glow {
+  position: absolute;
+  inset: 0;
+  background: rgba(45, 36, 30, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.view-label {
+  color: #ffffff;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.eleganza-gallery-item:hover .gallery-img {
+  transform: scale(1.06);
+}
+
+.eleganza-gallery-item:hover .item-hover-glow {
+  opacity: 1;
+}
+
+/* 15. ZONA INTERATTIVA */
+.eleganza-interactive-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 45px 35px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(45, 36, 30, 0.05);
+  border: 1px solid #ebe2d8;
+}
+
+.interactive-desc {
+  font-size: 14px;
+  color: #6d6257;
+  max-width: 500px;
+  margin: 10px auto 25px;
+}
+
+.album-upload-box {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.file-input {
+  display: none;
+}
+
+.eleganza-album-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.album-photo-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.feed-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploader-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(45, 36, 30, 0.7);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Muro de Dedicatorias */
+.eleganza-dedications-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 35px;
+}
+
+.dedication-card {
+  background: #fdfbf7;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #ebe2d8;
+  text-align: left;
+}
+
+.ded-body {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: #2d241e;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.ded-author {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: #8b6b3e;
+  text-align: right;
+  letter-spacing: 1px;
+}
+
+/* DJ Requests */
+.song-search-wrap {
+  max-width: 500px;
+  margin: 20px auto 0;
+}
+
+.search-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.song-results-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.song-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #fdfbf7;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #ebe2d8;
+}
+
+.song-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.song-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.song-details strong {
+  font-size: 13px;
+  color: #2d241e;
+}
+
+.song-details span {
+  font-size: 11px;
+  color: #6d6257;
+}
+
+.selected-song-box {
+  margin-top: 18px;
+  padding: 16px;
+  background: #fbf8f4;
+  border-radius: 10px;
+  border: 1px solid #d29a43;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+/* 16. FOOTER */
+.eleganza-footer {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: #2d241e;
+  color: #fdfbf7;
+}
+
+.eleganza-footer-names {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  margin-bottom: 8px;
+  color: #fdfbf7;
+}
+
+.eleganza-footer-sub {
+  font-size: 13px;
+  color: #b7a99c;
+  margin: 0 0 20px;
+}
+
+.eleganza-branding span {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #d29a43;
+  text-transform: uppercase;
+}
+
+/* REGLA CRÍTICA OBLIGATORIA PARA IMPRESIÓN Y CAPTURA (@media print) */
+@media print {
+  * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+  .no-print,
+  .eleganza-video-intro-overlay,
+  .eleganza-audio-floating,
+  .eleganza-vip-envelope-screen {
+    display: none !important;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .eleganza-timeline::before {
+    left: 70px;
+  }
+  .row-time {
+    width: 60px;
+    font-size: 12px;
+  }
+  .eleganza-countdown-board {
+    gap: 10px;
+    padding: 12px 18px;
+  }
+  .cd-val {
+    font-size: 20px;
+  }
+}
