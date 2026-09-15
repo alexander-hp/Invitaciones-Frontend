@@ -126,13 +126,23 @@
 .nw-sidebar-brand .nw-brand-icon {
   width: 42px;
   height: 42px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, var(--nw-accent), var(--nw-accent-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #241d17, #130f0c);
+  border: 1px solid rgba(212, 175, 55, 0.4);
   border-radius: 12px;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(192, 156, 120, 0.3);
+  box-shadow: 0 4px 14px rgba(185, 122, 22, 0.22);
   flex-shrink: 0;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.nw-sidebar-brand .nw-brand-icon .nw-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .nw-sidebar-label {

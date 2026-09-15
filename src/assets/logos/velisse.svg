@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Velisse monogram</title>
+  <desc id="desc">Luxury gold V monogram with a flowing ribbon and four-point star.</desc>
+
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFF2B0"/>
+      <stop offset="18%" stop-color="#F4C65B"/>
+      <stop offset="42%" stop-color="#B97A16"/>
+      <stop offset="65%" stop-color="#F7D36B"/>
+      <stop offset="100%" stop-color="#8C5A0A"/>
+    </linearGradient>
+
+    <linearGradient id="goldSoft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFECA0"/>
+      <stop offset="45%" stop-color="#D89A25"/>
+      <stop offset="100%" stop-color="#8B5608"/>
+    </linearGradient>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#6A4308" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- Four-point star -->
+  <path
+    d="M256 42
+       C262 70 272 80 300 86
+       C272 92 262 102 256 130
+       C250 102 240 92 212 86
+       C240 80 250 70 256 42Z"
+    fill="url(#gold)"
+  />
+
+  <!-- Left arm of V -->
+  <path
+    d="M95 150
+       L181 150
+       C187 150 190 154 187 161
+       L255 405
+       C258 414 252 427 244 438
+       L225 463
+       L111 175
+       C107 166 102 158 95 150Z"
+    fill="url(#goldSoft)"
+    filter="url(#softShadow)"
+  />
+
+  <!-- Right arm of V -->
+  <path
+    d="M331 150
+       L417 150
+       C410 158 405 166 401 175
+       L287 463
+       L268 438
+       C260 427 254 414 257 405
+       L325 161
+       C322 154 325 150 331 150Z"
+    fill="url(#gold)"
+    filter="url(#softShadow)"
+  />
+
+  <!-- Flowing central ribbon -->
+  <path
+    d="M180 171
+       C212 181 243 204 265 233
+       C292 269 296 307 277 345
+       C262 374 239 399 214 416
+       C244 384 259 353 258 325
+       C257 291 239 265 214 244
+       C197 230 183 217 171 202
+       C164 194 163 185 168 178
+       C171 174 175 172 180 171Z"
+    fill="url(#gold)"
+  />
+
+  <!-- Inner ribbon highlight -->
+  <path
+    d="M184 184
+       C214 197 239 217 257 241
+       C277 268 283 295 273 320
+       C265 341 249 362 231 378"
+    fill="none"
+    stroke="#FFE99A"
+    stroke-width="6"
+    stroke-linecap="round"
+    opacity="0.72"
+  />
+</svg>

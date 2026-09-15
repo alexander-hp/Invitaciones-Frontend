@@ -16,7 +16,7 @@ export class NewPasswordResetComponent implements OnInit, OnDestroy {
     {
       quote: "Recuperar el acceso a tu cuenta es rápido y seguro para mantener tu evento siempre al día.",
       author: "Atención y Seguridad",
-      event: "Plataforma Invitaciones.mx"
+      event: "Plataforma Velisse"
     },
     {
       quote: "Gestiona confirmaciones (RSVP), mesas y música en un solo panel interactivo.",

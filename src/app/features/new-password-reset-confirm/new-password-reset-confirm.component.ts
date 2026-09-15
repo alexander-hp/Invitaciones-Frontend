@@ -19,7 +19,7 @@ export class NewPasswordResetConfirmComponent implements OnInit, OnDestroy {
     {
       quote: "Tu contraseña ha sido actualizada con éxito y con los estándares más altos de seguridad.",
       author: "Seguridad de la Cuenta",
-      event: "Plataforma Invitaciones.mx"
+      event: "Plataforma Velisse"
     },
     {
       quote: "Gestiona confirmaciones (RSVP), mesas y música en un solo panel interactivo.",

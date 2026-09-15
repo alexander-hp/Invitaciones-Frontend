@@ -44,15 +44,24 @@
 }
 
 .nw-auth-logo {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--nw-accent), var(--nw-accent-2));
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(145deg, #241d17, #130f0c);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  box-shadow: 0 4px 10px rgba(192, 156, 120, 0.2);
+  box-shadow: 0 4px 14px rgba(185, 122, 22, 0.22);
+  padding: 5px;
+  overflow: hidden;
+}
+
+.nw-auth-logo .nw-auth-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .nw-brand-text {
