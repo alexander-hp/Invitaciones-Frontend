@@ -800,6 +800,54 @@
   color: #64748b;
   max-width: 500px;
   margin: auto;
+  line-height: 1.5;
+}
+
+.tbaut-dresscode-img-wrap {
+  margin: 18px auto 8px;
+  max-width: 440px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.tbaut-dresscode-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.tbaut-dresscode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  max-width: 600px;
+  margin: 20px auto 0;
+  text-align: left;
+}
+
+.tbaut-dresscode-item {
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.tbaut-dresscode-item h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #a16207;
+  margin: 0 0 6px;
+}
+
+.tbaut-dresscode-item p {
+  font-size: 13px !important;
+  color: #64748b;
+  margin: 0 !important;
+  line-height: 1.4;
 }
 
 /* ── FORMULARIO RSVP ── */

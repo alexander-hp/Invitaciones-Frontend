@@ -1013,6 +1013,52 @@
   margin: 0;
 }
 
+.dresscode-img-wrap {
+  margin: 10px 0 12px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(197, 155, 108, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.dresscode-img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.dresscode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.dresscode-item-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--theme-accent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.dresscode-item-card h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--theme-primary);
+  margin: 0 0 4px;
+}
+
+.dresscode-item-card p {
+  font-size: 0.76rem;
+  color: var(--theme-text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
 .dresscode-advice-box {
   display: flex;
   align-items: center;
@@ -1023,6 +1069,8 @@
   font-size: 0.8rem;
   color: var(--theme-text-main);
   text-align: left;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dresscode-advice-box svg {

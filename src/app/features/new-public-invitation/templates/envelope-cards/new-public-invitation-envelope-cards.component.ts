@@ -124,7 +124,7 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
     if (this.isSectionActive('itinerary') && this.invitation?.content?.itinerary?.length) {
       cards.push({ key: 'itinerary', title: 'Itinerario', icon: 'itinerary' });
     }
-    if (this.isSectionActive('dressCode') && this.invitation?.content?.dressCode) {
+    if (this.isSectionActive('dressCode') && (this.invitation?.content?.dressCode || this.invitation?.content?.dressCodeOptions?.length)) {
       cards.push({ key: 'dressCode', title: 'Vestimenta', icon: 'dressCode' });
     }
     if (this.isSectionActive('rsvp')) {

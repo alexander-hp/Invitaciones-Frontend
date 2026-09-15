@@ -836,6 +836,54 @@
   color: #4b5563;
   max-width: 500px;
   margin: auto;
+  line-height: 1.5;
+}
+
+.tcum-dresscode-img-wrap {
+  margin: 18px auto 8px;
+  max-width: 440px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.tcum-dresscode-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.tcum-dresscode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  max-width: 600px;
+  margin: 20px auto 0;
+  text-align: left;
+}
+
+.tcum-dresscode-item {
+  background: rgba(236, 72, 153, 0.05);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.tcum-dresscode-item h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ec4899;
+  margin: 0 0 6px;
+}
+
+.tcum-dresscode-item p {
+  font-size: 13px !important;
+  color: #4b5563;
+  margin: 0 !important;
+  line-height: 1.4;
 }
 
 /* ── FORMULARIO RSVP ── */

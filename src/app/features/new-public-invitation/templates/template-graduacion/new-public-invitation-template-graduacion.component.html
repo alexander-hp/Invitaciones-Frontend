@@ -333,17 +333,40 @@
     </section>
 
     <!-- 6. CÓDIGO DE VESTIMENTA -->
-    <section *ngIf="isSectionActive('dressCode') && invitation.content.dressCode"
+    <section *ngIf="isSectionActive('dressCode') && (invitation.content.dressCode || invitation.content.dressCodeOptions?.length)"
       class="tgrad-section-wrap" data-section-key="dressCode">
       <div class="tgrad-container">
         <div class="tgrad-dresscode-card" data-aos="fade-up">
           <span class="tag">Protocolo de Vestimenta</span>
           <h2>Código de Vestimenta</h2>
-          <div class="dresscode-badge">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M20.38 3.46L16 2 12 5.5 8 2l-4.38 1.46a2 2 0 0 0-1.34 1.9v16.14a1 1 0 0 0 1.25.97L8 20.5 12 22l4-1.5 4.47 2.01a1 1 0 0 0 1.25-.97V5.36a2 2 0 0 0-1.34-1.9z"></path>
+          <div class="dresscode-badge" *ngIf="invitation.content.dressCode">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path>
+              <path d="M8 2.5l4 4.5 4-4.5"></path>
+              <path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path>
+              <circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle>
+              <path d="M8 7l-2 5 2 9"></path>
+              <path d="M16 7l2 5-2 9"></path>
+              <path d="M15 13.5h2.5"></path>
+              <circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle>
+              <circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle>
             </svg>
             <span>{{ invitation.content.dressCode }}</span>
+          </div>
+
+          <p *ngIf="invitation.content.dressCodeDescription" class="notes" style="margin-top:12px;">
+            {{ invitation.content.dressCodeDescription }}
+          </p>
+
+          <div *ngIf="invitation.content.dressCodeImageUrl" class="tgrad-dresscode-img-wrap">
+            <img [src]="invitation.content.dressCodeImageUrl" alt="Código de vestimenta" class="tgrad-dresscode-img" loading="lazy">
+          </div>
+
+          <div *ngIf="invitation.content.dressCodeOptions?.length" class="tgrad-dresscode-grid">
+            <div *ngFor="let opt of invitation.content.dressCodeOptions" class="tgrad-dresscode-item">
+              <h4>{{ opt.title }}</h4>
+              <p *ngIf="opt.description">{{ opt.description }}</p>
+            </div>
           </div>
         </div>
       </div>

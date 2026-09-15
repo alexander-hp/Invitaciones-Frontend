@@ -423,7 +423,7 @@
       </section>
 
       <!-- 6. CÓDIGO DE VESTIMENTA (DRESS CODE) -->
-      <section *ngIf="invitation.content.dressCode && isSectionActive('dressCode')"
+      <section *ngIf="(invitation.content.dressCode || invitation.content.dressCodeOptions?.length) && isSectionActive('dressCode')"
         class="bmf-card-section" data-section-key="dressCode" data-aos="fade-up">
         <div class="bmf-card bmf-dresscode-card">
           <div class="bmf-section-title-wrap">
@@ -432,11 +432,35 @@
           </div>
 
           <div class="bmf-dresscode-body">
-            <div class="bmf-dresscode-badge">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+            <div class="bmf-dresscode-badge" *ngIf="invitation.content.dressCode">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path>
+                <path d="M8 2.5l4 4.5 4-4.5"></path>
+                <path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path>
+                <circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle>
+                <path d="M8 7l-2 5 2 9"></path>
+                <path d="M16 7l2 5-2 9"></path>
+                <path d="M15 13.5h2.5"></path>
+                <circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle>
+                <circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle>
               </svg>
               <span>{{ invitation.content.dressCode }}</span>
+            </div>
+
+            <p *ngIf="invitation.content.dressCodeDescription" style="font-size:14px; color:var(--bmf-text-muted, #666); line-height:1.5; margin:10px 0 0; text-align:center;">
+              {{ invitation.content.dressCodeDescription }}
+            </p>
+
+            <div *ngIf="invitation.content.dressCodeImageUrl" style="margin:16px 0 0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,0.08);">
+              <img [src]="invitation.content.dressCodeImageUrl" alt="Código de vestimenta" style="width:100%; height:auto; max-height:320px; object-fit:cover; display:block;" loading="lazy">
+            </div>
+
+            <div *ngIf="invitation.content.dressCodeOptions?.length" style="display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; width:100%;">
+              <div *ngFor="let opt of invitation.content.dressCodeOptions"
+                style="background:rgba(0,0,0,0.02); border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:14px; text-align:left;">
+                <h4 style="font-size:15px; font-weight:700; color:var(--bmf-primary, #1a2744); margin:0 0 4px;">{{ opt.title || 'Etiqueta' }}</h4>
+                <p *ngIf="opt.description" style="font-size:13.5px; color:var(--bmf-text, #333); margin:0; line-height:1.45;">{{ opt.description }}</p>
+              </div>
             </div>
           </div>
         </div>

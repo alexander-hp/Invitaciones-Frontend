@@ -289,23 +289,42 @@
       </section>
 
       <!-- 6. CÓDIGO DE VESTIMENTA -->
-      <section *ngIf="isSectionActive('dressCode') && invitation.content.dressCode"
+      <section *ngIf="isSectionActive('dressCode') && (invitation.content.dressCode || invitation.content.dressCodeOptions?.length)"
         class="bcp-section" data-aos="fade-up">
         <div class="bcp-cathedral-card center-text">
           <div class="bcp-section-header">
             <span class="bcp-eyebrow">Etiqueta de Gala</span>
             <h2 class="bcp-heading">Código de Vestimenta</h2>
-            <div class="bcp-filigree-divider"><span></span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg><span></span></div>
+            <div class="bcp-filigree-divider"><span></span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path><path d="M8 2.5l4 4.5 4-4.5"></path><path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path><circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle><path d="M8 7l-2 5 2 9"></path><path d="M16 7l2 5-2 9"></path><path d="M15 13.5h2.5"></path><circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle><circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle></svg><span></span></div>
           </div>
 
           <div class="bcp-dresscode-display">
             <div class="bcp-dresscode-ornament">
-              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+              <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path>
+                <path d="M8 2.5l4 4.5 4-4.5"></path>
+                <path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path>
+                <circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle>
+                <path d="M8 7l-2 5 2 9"></path>
+                <path d="M16 7l2 5-2 9"></path>
+                <path d="M15 13.5h2.5"></path>
+                <circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle>
+                <circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle>
               </svg>
             </div>
-            <h3 class="bcp-dresscode-val">{{ invitation.content.dressCode }}</h3>
-            <p>Se ruega a nuestros distinguidos invitados vestir acorde a la etiqueta indicada para una noche memorable.</p>
+            <h3 *ngIf="invitation.content.dressCode" class="bcp-dresscode-val">{{ invitation.content.dressCode }}</h3>
+            <p *ngIf="invitation.content.dressCodeDescription" class="bcp-dresscode-desc">{{ invitation.content.dressCodeDescription }}</p>
+
+            <div *ngIf="invitation.content.dressCodeImageUrl" class="bcp-dresscode-img-wrap">
+              <img [src]="invitation.content.dressCodeImageUrl" alt="Código de vestimenta" class="bcp-dresscode-img" loading="lazy">
+            </div>
+
+            <div *ngIf="invitation.content.dressCodeOptions?.length" class="bcp-dresscode-grid">
+              <div *ngFor="let opt of invitation.content.dressCodeOptions" class="bcp-dresscode-item">
+                <h4 class="bcp-dresscode-item-title">{{ opt.title }}</h4>
+                <p class="bcp-dresscode-item-desc" *ngIf="opt.description">{{ opt.description }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

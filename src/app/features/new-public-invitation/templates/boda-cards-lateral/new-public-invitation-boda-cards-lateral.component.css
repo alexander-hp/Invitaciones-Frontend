@@ -581,10 +581,57 @@
   margin: 0 0 8px;
 }
 
-.bcl-dresscode-box p {
+.bcl-dresscode-box p,
+.bcl-dresscode-desc {
   font-size: 13px;
   color: #6b6360;
   margin: 0;
+  line-height: 1.5;
+}
+
+.bcl-dresscode-img-wrap {
+  margin: 16px auto 8px;
+  max-width: 440px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(223, 186, 135, 0.4);
+}
+
+.bcl-dresscode-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.bcl-dresscode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+  text-align: left;
+}
+
+.bcl-dresscode-item {
+  background: #ffffff;
+  border: 1px solid #ebd9bf;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.bcl-dresscode-item h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #a77c38;
+  margin: 0 0 4px;
+}
+
+.bcl-dresscode-item p {
+  font-size: 12px !important;
+  color: #6b6360;
+  margin: 0 !important;
+  line-height: 1.4;
 }
 
 /* ── RSVP & FORMS ── */

@@ -214,15 +214,35 @@
     </section>
 
     <!-- CÓDIGO DE VESTIMENTA -->
-    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="tpl3-section">
+    <section *ngIf="isSectionActive('dressCode') && (invitation?.content?.dressCode || invitation?.content?.dressCodeOptions?.length)" class="tpl3-section">
       <div class="tpl3-card tpl3-card-center">
         <span class="section-icon-large" style="display:inline-block; margin-bottom:12px; color:var(--accent, #c59b6c);">
-          <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+          <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path>
+            <path d="M8 2.5l4 4.5 4-4.5"></path>
+            <path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path>
+            <circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle>
+            <path d="M8 7l-2 5 2 9"></path>
+            <path d="M16 7l2 5-2 9"></path>
+            <path d="M15 13.5h2.5"></path>
+            <circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle>
+            <circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle>
           </svg>
         </span>
         <h2>Código de Vestimenta</h2>
-        <p class="dresscode-text">{{ invitation?.content?.dressCode }}</p>
+        <p *ngIf="invitation?.content?.dressCode" class="dresscode-text">{{ invitation?.content?.dressCode }}</p>
+        <p *ngIf="invitation?.content?.dressCodeDescription" class="tpl3-dresscode-desc">{{ invitation?.content?.dressCodeDescription }}</p>
+
+        <div *ngIf="invitation?.content?.dressCodeImageUrl" class="tpl3-dresscode-img-wrap">
+          <img [src]="invitation?.content?.dressCodeImageUrl" alt="Código de vestimenta" class="tpl3-dresscode-img" loading="lazy">
+        </div>
+
+        <div *ngIf="invitation?.content?.dressCodeOptions?.length" class="tpl3-dresscode-grid">
+          <div *ngFor="let opt of invitation?.content?.dressCodeOptions" class="tpl3-dresscode-item">
+            <h4>{{ opt.title }}</h4>
+            <p *ngIf="opt.description">{{ opt.description }}</p>
+          </div>
+        </div>
       </div>
     </section>
 

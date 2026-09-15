@@ -802,6 +802,59 @@
   margin: auto;
 }
 
+.tboda-dresscode-img-wrap {
+  margin: 20px auto 0;
+  max-width: 480px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(197, 155, 108, 0.3);
+  box-shadow: 0 6px 18px rgba(44, 36, 33, 0.06);
+}
+
+.tboda-dresscode-img {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+  display: block;
+}
+
+.tboda-dresscode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 580px) {
+  .tboda-dresscode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tboda-dresscode-item {
+  background: rgba(197, 155, 108, 0.06);
+  border: 1px solid rgba(197, 155, 108, 0.25);
+  border-radius: 12px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.tboda-dresscode-item h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: #9a6f3b;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.tboda-dresscode-item p {
+  font-size: 14px;
+  color: #635750;
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* ── FORMULARIO RSVP ── */
 .tboda-rsvp-card {
   background: #ffffff;

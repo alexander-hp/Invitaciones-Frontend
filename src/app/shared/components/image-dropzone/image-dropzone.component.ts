@@ -139,6 +139,37 @@ export class ImageDropzoneComponent {
 
     if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
       this.handleFiles(Array.from(event.dataTransfer.files));
+    } else if (event.dataTransfer) {
+      const html = event.dataTransfer.getData('text/html');
+      const uri = event.dataTransfer.getData('text/uri-list') || event.dataTransfer.getData('text/plain');
+      let src = '';
+      if (html) {
+        const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (match) src = match[1];
+      }
+      if (!src && uri && /^(https?:\/\/|data:image\/)/i.test(uri)) {
+        src = uri;
+      }
+      if (src) {
+        this.fetchImageAsFile(src);
+      }
+    }
+  }
+
+  private async fetchImageAsFile(url: string): Promise<void> {
+    try {
+      this.loading = true;
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      if (blob.type.startsWith('image/')) {
+        const ext = blob.type.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+        const file = new File([blob], `imagen_arrastrada_${Date.now()}.${ext}`, { type: blob.type });
+        this.handleFiles([file]);
+      }
+    } catch {
+      // Silencioso si CORS remoto lo restringe
+    } finally {
+      this.loading = false;
     }
   }
 

@@ -267,6 +267,32 @@ export class NewInvitationEditorComponent implements OnInit {
     return !this.dressCodePresets.slice(0, -1).includes(this.invitation.content.dressCode);
   }
 
+  addDressCodeOption(): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+    if (!Array.isArray(this.invitation.content.dressCodeOptions)) {
+      this.invitation.content.dressCodeOptions = [];
+    }
+    this.invitation.content.dressCodeOptions.push({
+      title: `Opción ${this.invitation.content.dressCodeOptions.length + 1}`,
+      description: ''
+    });
+  }
+
+  removeDressCodeOption(index: number): void {
+    if (!this.invitation?.content?.dressCodeOptions) return;
+    if (this.invitation.content.dressCodeOptions.length <= 2) {
+      this.error = 'Se requieren mínimo 2 opciones para el código de vestimenta.';
+      this.clearMessageAfterDelay();
+      return;
+    }
+    this.invitation.content.dressCodeOptions.splice(index, 1);
+  }
+
+  canRemoveDressCodeOption(): boolean {
+    return Boolean(this.invitation?.content?.dressCodeOptions && this.invitation.content.dressCodeOptions.length > 2);
+  }
+
   get activeConfigurableSections() {
     return this.configurableSectionsList.filter(sec => this.isSectionActive(sec.key));
   }
@@ -1115,6 +1141,58 @@ export class NewInvitationEditorComponent implements OnInit {
     });
   }
 
+  uploadDressCodeImage(eventOrPayload: any): void {
+    let file: File | undefined;
+    if (eventOrPayload instanceof File) {
+      file = eventOrPayload;
+    } else if (Array.isArray(eventOrPayload) && eventOrPayload[0] instanceof File) {
+      file = eventOrPayload[0];
+    } else if (eventOrPayload?.file instanceof File) {
+      file = eventOrPayload.file;
+    } else if (Array.isArray(eventOrPayload?.files) && eventOrPayload.files[0] instanceof File) {
+      file = eventOrPayload.files[0];
+    } else if (eventOrPayload?.target?.files?.[0]) {
+      file = eventOrPayload.target.files[0];
+    } else if (eventOrPayload?.event?.target?.files?.[0]) {
+      file = eventOrPayload.event.target.files[0];
+    }
+
+    if (!file || !this.invitation) return;
+
+    this.assetUploading = true;
+    this.assetMessage = '';
+    this.error = '';
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'covers', event: this.getEventId(), size: file.size }).subscribe({
+      next: (upload) => {
+        this.api.uploadAsset(upload.uploadUrl, file!).subscribe({
+          next: () => {
+            if (!this.invitation) return;
+            if (!this.invitation.content) this.invitation.content = {};
+            this.invitation.content.dressCodeImageUrl = upload.publicUrl;
+            this.persistUploadedAsset();
+            this.message = '✅ Foto de código de vestimenta subida exitosamente.';
+            this.assetUploading = false;
+          },
+          error: () => {
+            this.error = '❌ Error al subir la foto de vestimenta.';
+            this.assetUploading = false;
+          }
+        });
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo preparar la URL para subir la foto de vestimenta.';
+        this.assetUploading = false;
+      }
+    });
+  }
+
+  removeDressCodeImage(): void {
+    if (!this.invitation?.content) return;
+    this.invitation.content.dressCodeImageUrl = '';
+    this.assetMessage = 'Foto de código de vestimenta removida. Guarda la invitación para confirmar.';
+    this.clearMessageAfterDelay();
+  }
+
   private validateAsset(file: File, folder: AssetFolder): string {
     const isMusic = folder === 'music';
     const allowedTypes = isMusic ? this.audioTypes : this.imageTypes;
@@ -1602,6 +1680,27 @@ export class NewInvitationEditorComponent implements OnInit {
     };
     if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
     
+    // Mínimo 2 opciones de código de vestimenta
+    if (!Array.isArray(this.invitation.content.dressCodeOptions) || this.invitation.content.dressCodeOptions.length === 0) {
+      this.invitation.content.dressCodeOptions = [
+        {
+          title: this.invitation.content.dressCodeWomen ? 'Damas / Mujeres' : (this.invitation.content.dressCodeOption1 || 'Damas / Mujeres'),
+          description: this.invitation.content.dressCodeWomen || 'Vestido largo formal (se reserva el color blanco para la novia).'
+        },
+        {
+          title: this.invitation.content.dressCodeMen ? 'Caballeros / Hombres' : (this.invitation.content.dressCodeOption2 || 'Caballeros / Hombres'),
+          description: this.invitation.content.dressCodeMen || 'Traje formal oscuro o esmoquin con corbata o pajarita.'
+        }
+      ];
+    } else if (this.invitation.content.dressCodeOptions.length < 2) {
+      while (this.invitation.content.dressCodeOptions.length < 2) {
+        this.invitation.content.dressCodeOptions.push({
+          title: this.invitation.content.dressCodeOptions.length === 0 ? 'Damas / Mujeres' : 'Caballeros / Hombres',
+          description: ''
+        });
+      }
+    }
+    
     // Auto-extraer Ubicación si no existe o está vacía
     if (!this.invitation.content.locations || this.invitation.content.locations.length === 0) {
       const venue = this.event?.venue;
@@ -1716,6 +1815,10 @@ export class NewInvitationEditorComponent implements OnInit {
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),
       giftRegistry: this.cleanGiftRegistry(this.invitation.content.giftRegistry || []),
+      dressCodeOptions: (this.invitation.content.dressCodeOptions || []).map(opt => ({
+        title: String(opt.title || '').trim(),
+        description: String(opt.description || '').trim()
+      })).filter(opt => opt.title || opt.description),
       lodging: (this.invitation.content.lodging || []).filter((item) => item.name || item.description || item.url)
     };
   }

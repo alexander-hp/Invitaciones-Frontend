@@ -387,12 +387,20 @@
         </div>
 
         <!-- CARD 6: CÓDIGO DE VESTIMENTA -->
-        <div class="card-slide" *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode">
+        <div class="card-slide" *ngIf="isSectionActive('dressCode') && (invitation?.content?.dressCode || invitation?.content?.dressCodeOptions?.length)">
           <div class="card-glass dresscode-card-layout">
             <div class="card-top-content">
               <div class="card-header-badge">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path>
+                  <path d="M8 2.5l4 4.5 4-4.5"></path>
+                  <path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path>
+                  <circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle>
+                  <path d="M8 7l-2 5 2 9"></path>
+                  <path d="M16 7l2 5-2 9"></path>
+                  <path d="M15 13.5h2.5"></path>
+                  <circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle>
+                  <circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle>
                 </svg>
                 <span>CÓDIGO DE VESTIMENTA</span>
               </div>
@@ -400,22 +408,41 @@
 
               <div class="dresscode-main-content">
                 <div class="dresscode-icon-box">
-                  <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6">
-                    <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path>
+                  <svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4l4-1.5 4 4 4-4L20 4v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4z"></path>
+                    <path d="M8 2.5l4 4.5 4-4.5"></path>
+                    <path d="M9.5 8l2.5 1.2 2.5-1.2v1.5l-2.5-1.2-2.5 1.2V8z" fill="currentColor"></path>
+                    <circle cx="12" cy="8.6" r="0.8" fill="currentColor"></circle>
+                    <path d="M8 7l-2 5 2 9"></path>
+                    <path d="M16 7l2 5-2 9"></path>
+                    <path d="M15 13.5h2.5"></path>
+                    <circle cx="12" cy="14.5" r="0.6" fill="currentColor"></circle>
+                    <circle cx="12" cy="17.5" r="0.6" fill="currentColor"></circle>
                   </svg>
                 </div>
-                <div class="dresscode-highlight-card">
+                <div class="dresscode-highlight-card" *ngIf="invitation?.content?.dressCode">
                   <span class="dresscode-label">Etiqueta Requerida:</span>
                   <p class="dresscode-highlight">{{ invitation?.content?.dressCode }}</p>
                 </div>
 
-                <div class="dresscode-advice-box">
+                <div *ngIf="invitation?.content?.dressCodeImageUrl" class="dresscode-img-wrap">
+                  <img [src]="invitation?.content?.dressCodeImageUrl" alt="Código de vestimenta" class="dresscode-img" loading="lazy">
+                </div>
+
+                <div *ngIf="invitation?.content?.dressCodeOptions?.length" class="dresscode-grid">
+                  <div *ngFor="let opt of invitation?.content?.dressCodeOptions" class="dresscode-item-card">
+                    <h4>{{ opt.title }}</h4>
+                    <p *ngIf="opt.description">{{ opt.description }}</p>
+                  </div>
+                </div>
+
+                <div class="dresscode-advice-box" *ngIf="invitation?.content?.dressCodeDescription">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
-                  <p>Te sugerimos vestir de acuerdo al código para lograr una atmósfera inolvidable en las fotografías.</p>
+                  <p>{{ invitation?.content?.dressCodeDescription }}</p>
                 </div>
               </div>
             </div>

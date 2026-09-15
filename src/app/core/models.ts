@@ -266,6 +266,13 @@ export interface InvitationContent {
   itinerary?: Array<{ time?: string; title?: string; description?: string }>;
   locations?: InvitationLocation[];
   dressCode?: string;
+  dressCodeDescription?: string;
+  dressCodeImageUrl?: string;
+  dressCodeOptions?: Array<{ title?: string; description?: string }>;
+  dressCodeWomen?: string;
+  dressCodeMen?: string;
+  dressCodeOption1?: string;
+  dressCodeOption2?: string;
   giftRegistry?: GiftRegistryItem[];
   digitalEnvelope?: DigitalEnvelope;
   giftSettings?: GiftSettings;

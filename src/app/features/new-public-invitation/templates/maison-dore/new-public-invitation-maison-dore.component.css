@@ -672,6 +672,45 @@
   line-height: 1.5;
 }
 
+.md-dress-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(200, 169, 110, 0.12);
+  color: var(--md-gold, #c8a96e);
+  margin-bottom: 12px;
+  border: 1px solid rgba(200, 169, 110, 0.3);
+}
+
+.md-dress-desc-general {
+  font-family: var(--md-font-serif);
+  font-size: 1.05rem;
+  color: var(--md-muted);
+  max-width: 560px;
+  margin: 12px auto 0;
+  line-height: 1.6;
+}
+
+.md-dress-image-wrap {
+  margin: 28px auto 0;
+  max-width: 480px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--md-border);
+}
+
+.md-dress-image {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  display: block;
+}
+
 /* ================== HOSPEDAJE RECOMENDADO ================== */
 .md-hotels-section {
   padding: 80px 24px;

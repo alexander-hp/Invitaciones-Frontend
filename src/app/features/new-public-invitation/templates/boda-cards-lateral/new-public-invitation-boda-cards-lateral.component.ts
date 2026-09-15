@@ -222,7 +222,7 @@ export class NewPublicInvitationBodaCardsLateralComponent implements OnInit, OnC
       slides.push({ id: 'itinerary', title: 'Itinerario de la Boda', shortTitle: 'Programa' });
     }
 
-    if (this.isSectionActive('dressCode') && this.invitation?.content?.dressCode) {
+    if (this.isSectionActive('dressCode') && (this.invitation?.content?.dressCode || this.invitation?.content?.dressCodeOptions?.length)) {
       slides.push({ id: 'dressCode', title: 'Código de Vestimenta', shortTitle: 'Etiqueta' });
     }
 
