@@ -10,58 +10,155 @@
     <h3 style="margin:0;">Estilo y Paletas de Colores</h3>
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
-    <p style="font-size: 13px; color: var(--nw-text-3); margin-bottom: 16px;">
-      Personaliza los colores de tu invitación. Toca el recuadro para abrir el selector visual de color o ingresa el código hexadecimal.
+    <p style="font-size: 13px; color: var(--nw-text-2); margin-bottom: 18px;">
+      Personaliza la atmósfera visual de tu invitación. Puedes hacer clic en los recuadros de color para abrir el selector visual, escribir un código hexadecimal o elegir una de las combinaciones recomendadas.
     </p>
 
-    <div class="nw-form-grid" style="gap:16px;" *ngIf="invitation.content.palette as palette">
-      <!-- Color Principal -->
-      <label class="nw-label">Color principal
-        <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-          <input class="nw-input" [(ngModel)]="palette.primary" style="flex:1;" placeholder="#1f2a44">
-          <div style="position:relative; width:38px; height:38px; border-radius:8px; border:1.5px solid var(--nw-border); flex-shrink:0; cursor:pointer; box-shadow: var(--nw-shadow-sm); transition: transform 0.15s ease;"
-            [style.background]="palette.primary" title="Toca para abrir el selector de color">
-            <input type="color" [(ngModel)]="palette.primary" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+    <div *ngIf="invitation.content.palette as palette">
+      <!-- Grid de Configuración de Colores con Explicación -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:24px;">
+        
+        <!-- 1. Color Principal -->
+        <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:12px; height:12px; border-radius:50%; display:inline-block;" [style.background]="palette.primary || '#1f2a44'"></span>
+              <strong style="font-size:13.5px; color:var(--nw-text);">Color Principal</strong>
+            </div>
+            <span class="nw-pill" style="font-size:10.5px; padding:2px 6px;">Títulos y Textos</span>
+          </div>
+          <p style="font-size:12px; color:var(--nw-text-3); margin:0; line-height:1.45;">
+            Define el tono de los <strong>títulos principales, nombres de los festejados y encabezados</strong> de cada sección para asegurar máxima legibilidad y elegancia.
+          </p>
+          <div style="display:flex; gap:8px; align-items:center; margin-top:auto;">
+            <input class="nw-input" [(ngModel)]="palette.primary" style="flex:1; font-family:monospace; font-size:12.5px; height:36px;" placeholder="#1f2a44">
+            <div style="position:relative; width:36px; height:36px; border-radius:8px; border:1.5px solid var(--nw-border); flex-shrink:0; cursor:pointer; box-shadow:var(--nw-shadow-sm); overflow:hidden;"
+              [style.background]="palette.primary || '#1f2a44'" title="Toca para abrir el selector visual">
+              <input type="color" [(ngModel)]="palette.primary" style="position:absolute; top:-10px; left:-10px; width:60px; height:60px; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+            </div>
           </div>
         </div>
-      </label>
 
-      <!-- Color de Fondo -->
-      <label class="nw-label">Color de fondo
-        <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-          <input class="nw-input" [(ngModel)]="palette.secondary" style="flex:1;" placeholder="#f7f2ea">
-          <div style="position:relative; width:38px; height:38px; border-radius:8px; border:1.5px solid var(--nw-border); flex-shrink:0; cursor:pointer; box-shadow: var(--nw-shadow-sm); transition: transform 0.15s ease;"
-            [style.background]="palette.secondary" title="Toca para abrir el selector de color">
-            <input type="color" [(ngModel)]="palette.secondary" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+        <!-- 2. Color de Fondo -->
+        <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:12px; height:12px; border-radius:50%; display:inline-block;" [style.background]="palette.secondary || '#f7f2ea'"></span>
+              <strong style="font-size:13.5px; color:var(--nw-text);">Color de Fondo</strong>
+            </div>
+            <span class="nw-pill" style="font-size:10.5px; padding:2px 6px;">Lienzo y Tarjetas</span>
+          </div>
+          <p style="font-size:12px; color:var(--nw-text-3); margin:0; line-height:1.45;">
+            Es el tono base del <strong>fondo general de la invitación, las tarjetas de contenido y los bloques de información</strong> (blanco puro, crema, marfil o modo noche).
+          </p>
+          <div style="display:flex; gap:8px; align-items:center; margin-top:auto;">
+            <input class="nw-input" [(ngModel)]="palette.secondary" style="flex:1; font-family:monospace; font-size:12.5px; height:36px;" placeholder="#f7f2ea">
+            <div style="position:relative; width:36px; height:36px; border-radius:8px; border:1.5px solid var(--nw-border); flex-shrink:0; cursor:pointer; box-shadow:var(--nw-shadow-sm); overflow:hidden;"
+              [style.background]="palette.secondary || '#f7f2ea'" title="Toca para abrir el selector visual">
+              <input type="color" [(ngModel)]="palette.secondary" style="position:absolute; top:-10px; left:-10px; width:60px; height:60px; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+            </div>
           </div>
         </div>
-      </label>
 
-      <!-- Color de Acento -->
-      <label class="nw-label">Color de acento
-        <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-          <input class="nw-input" [(ngModel)]="palette.accent" style="flex:1;" placeholder="#b67b4b">
-          <div style="position:relative; width:38px; height:38px; border-radius:8px; border:1.5px solid var(--nw-border); flex-shrink:0; cursor:pointer; box-shadow: var(--nw-shadow-sm); transition: transform 0.15s ease;"
-            [style.background]="palette.accent" title="Toca para abrir el selector de color">
-            <input type="color" [(ngModel)]="palette.accent" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+        <!-- 3. Color de Acento -->
+        <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:12px; height:12px; border-radius:50%; display:inline-block;" [style.background]="palette.accent || '#b67b4b'"></span>
+              <strong style="font-size:13.5px; color:var(--nw-text);">Color de Acento</strong>
+            </div>
+            <span class="nw-pill" style="font-size:10.5px; padding:2px 6px;">Botones e Íconos</span>
+          </div>
+          <p style="font-size:12px; color:var(--nw-text-3); margin:0; line-height:1.45;">
+            El toque distintivo (dorado, oro rosa, verde esmeralda, vino) usado en <strong>botones de confirmación (RSVP), enlaces de mapas, íconos y líneas decorativas</strong>.
+          </p>
+          <div style="display:flex; gap:8px; align-items:center; margin-top:auto;">
+            <input class="nw-input" [(ngModel)]="palette.accent" style="flex:1; font-family:monospace; font-size:12.5px; height:36px;" placeholder="#b67b4b">
+            <div style="position:relative; width:36px; height:36px; border-radius:8px; border:1.5px solid var(--nw-border); flex-shrink:0; cursor:pointer; box-shadow:var(--nw-shadow-sm); overflow:hidden;"
+              [style.background]="palette.accent || '#b67b4b'" title="Toca para abrir el selector visual">
+              <input type="color" [(ngModel)]="palette.accent" style="position:absolute; top:-10px; left:-10px; width:60px; height:60px; opacity:0; cursor:pointer; border:none; padding:0; margin:0;">
+            </div>
           </div>
         </div>
-      </label>
-    </div>
 
-    <!-- Presets recomendados -->
-    <div style="margin-top:20px; padding-top:16px; border-top:1px dashed var(--nw-border);">
-      <label class="nw-label" style="margin-bottom:12px; display:block; font-weight:700;">Paletas recomendadas y temáticas</label>
-      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap:10px;">
-        <button *ngFor="let preset of palettePresets" class="nw-btn nw-btn-ghost nw-btn-sm" type="button"
-          (click)="onApplyPalette(preset)" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px; border:1px solid var(--nw-border); border-radius:8px; text-align:left;">
-          <span style="font-size:12px; font-weight:600; color:var(--nw-text);">{{ preset.name }}</span>
-          <span style="display:flex; gap:4px; flex-shrink:0;">
-            <span style="width:14px; height:14px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.25);" [style.background]="preset.primary" [title]="'Principal: ' + preset.primary"></span>
-            <span style="width:14px; height:14px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.25);" [style.background]="preset.secondary" [title]="'Fondo: ' + preset.secondary"></span>
-            <span style="width:14px; height:14px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.25);" [style.background]="preset.accent" [title]="'Acento: ' + preset.accent"></span>
-          </span>
-        </button>
+      </div>
+
+      <!-- Mini-Ejemplo en Vivo (Live Preview Card) -->
+      <div style="margin-bottom:24px; padding:18px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:12px; box-shadow:var(--nw-shadow-sm);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <strong style="font-size:13.5px; color:var(--nw-text);">Mini Ejemplo en Vivo (Cómo interactúan tus colores)</strong>
+          </div>
+          <span style="font-size:11.5px; color:var(--nw-text-3);">Actualización en tiempo real</span>
+        </div>
+
+        <!-- Tarjeta de Demostración Visual con los Colores Seleccionados -->
+        <div style="border-radius:12px; padding:24px 20px; transition:all 0.3s ease; border:1px solid rgba(0,0,0,0.08); box-shadow:0 4px 16px rgba(0,0,0,0.06); display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px;"
+          [style.backgroundColor]="palette.secondary || '#f7f2ea'">
+          
+          <!-- Insignia en Color de Acento -->
+          <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:11.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; transition:all 0.3s ease;"
+            [style.backgroundColor]="getAlphaColor(palette.accent || '#b67b4b', 0.15)"
+            [style.color]="palette.accent || '#b67b4b'"
+            [style.border]="'1px solid ' + getAlphaColor(palette.accent || '#b67b4b', 0.35)">
+            <span>✨</span> NUESTRO EVENTO ESPECIAL
+          </div>
+
+          <!-- Título Principal en Color Principal -->
+          <h4 style="margin:4px 0 0 0; font-size:20px; font-weight:700; letter-spacing:-0.02em; transition:color 0.3s ease; font-family:inherit;"
+            [style.color]="palette.primary || '#1f2a44'">
+            {{ invitation.content.headline || 'Ana & Carlos' }}
+          </h4>
+
+          <!-- Subtítulo en Color Principal con opacidad -->
+          <p style="margin:0; font-size:13px; max-width:380px; opacity:0.8; transition:color 0.3s ease;"
+            [style.color]="palette.primary || '#1f2a44'">
+            {{ invitation.content.subheadline || invitation.content.message || '¡Tenemos el honor de invitarte a celebrar este gran momento con nosotros!' }}
+          </p>
+
+          <!-- Línea divisoria en Color de Acento -->
+          <div style="width:60px; height:2px; border-radius:2px; margin:4px 0; transition:background 0.3s ease;"
+            [style.backgroundColor]="palette.accent || '#b67b4b'"></div>
+
+          <!-- Botones de Demostración -->
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; margin-top:6px;">
+            <!-- Botón Principal en Color de Acento -->
+            <button type="button" class="nw-btn nw-btn-sm"
+              style="font-size:12px; font-weight:600; padding:7px 16px; border-radius:6px; border:none; cursor:default; box-shadow:0 2px 6px rgba(0,0,0,0.15); transition:all 0.3s ease; display:inline-flex; align-items:center; gap:6px;"
+              [style.backgroundColor]="palette.accent || '#b67b4b'"
+              [style.color]="getTextColorForBg(palette.accent || '#b67b4b')">
+              <span>💌</span> Confirmar Asistencia
+            </button>
+
+            <!-- Botón Secundario con Borde en Color Principal -->
+            <button type="button" class="nw-btn nw-btn-sm"
+              style="font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; background:transparent; cursor:default; transition:all 0.3s ease; display:inline-flex; align-items:center; gap:6px;"
+              [style.borderColor]="palette.primary || '#1f2a44'"
+              [style.color]="palette.primary || '#1f2a44'">
+              <span>📍</span> Ver Ubicación
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets recomendados -->
+      <div style="padding-top:16px; border-top:1px dashed var(--nw-border);">
+        <label class="nw-label" style="margin-bottom:12px; display:block; font-weight:700;">Paletas recomendadas y temáticas</label>
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+          <button *ngFor="let preset of palettePresets" class="nw-btn nw-btn-ghost nw-btn-sm" type="button"
+            (click)="onApplyPalette(preset)" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid var(--nw-border); border-radius:8px; text-align:left; background:var(--nw-surface-2);">
+            <span style="font-size:12px; font-weight:600; color:var(--nw-text);">{{ preset.name }}</span>
+            <span style="display:flex; gap:4px; flex-shrink:0;">
+              <span style="width:16px; height:16px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.4);" [style.background]="preset.primary" [title]="'Principal: ' + preset.primary"></span>
+              <span style="width:16px; height:16px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.4);" [style.background]="preset.secondary" [title]="'Fondo: ' + preset.secondary"></span>
+              <span style="width:16px; height:16px; border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.4);" [style.background]="preset.accent" [title]="'Acento: ' + preset.accent"></span>
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

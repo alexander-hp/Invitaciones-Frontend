@@ -18,4 +18,17 @@ export class EditorItineraryTabComponent {
     const settings = this.invitation.content.sectionSettings as any;
     return settings[key] !== false;
   }
+
+  openTimePicker(inputEl: HTMLInputElement): void {
+    try {
+      const el = inputEl as any;
+      if (el && typeof el.showPicker === 'function') {
+        el.showPicker();
+      } else {
+        inputEl?.focus();
+      }
+    } catch {
+      inputEl?.focus();
+    }
+  }
 }
