@@ -950,6 +950,39 @@ export interface EmbedManifestResponse {
   snippets: Record<string, string>;
 }
 
+export type IntegrationTemplateMode = 'widgets' | 'api' | 'mixed';
+export type IntegrationTemplateStack = 'html' | 'react' | 'next' | 'angular' | 'vue' | 'wordpress' | 'webflow' | 'other';
+export type IntegrationTemplateModule = 'event' | 'rsvp' | 'guestPass' | 'gallery' | 'album' | 'map' | 'songRequests' | 'gifts' | 'dedications';
+
+export interface IntegrationTemplateModel {
+  id: string;
+  name: string;
+  description?: string;
+  mode: IntegrationTemplateMode;
+  stack: IntegrationTemplateStack;
+  modules: IntegrationTemplateModule[];
+  instructions?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IntegrationTemplatePayload {
+  name: string;
+  description?: string;
+  mode: IntegrationTemplateMode;
+  stack: IntegrationTemplateStack;
+  modules: IntegrationTemplateModule[];
+  instructions?: string;
+}
+
+export interface IntegrationGuidePreviewResponse {
+  prompt: string;
+  configuration: Omit<IntegrationTemplatePayload, 'name' | 'description'>;
+  event: { id: string; title: string; portalSlug: string };
+  security: { includesSecrets: boolean; integrationTokenPlaceholder: string };
+}
+
 export interface AlbumAssetModel {
   _id?: string;
   id?: string;

@@ -3,7 +3,18 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
-import { EventModel, EmbedManifestResponse, EventAccessLinkModel, EventAccessRole, CustomTemplateSubmission, InvitationModel } from '../../../../core/models';
+import {
+  EventModel,
+  EmbedManifestResponse,
+  EventAccessLinkModel,
+  EventAccessRole,
+  CustomTemplateSubmission,
+  InvitationModel,
+  IntegrationTemplateMode,
+  IntegrationTemplateStack,
+  IntegrationTemplateModule,
+  IntegrationTemplateModel
+} from '../../../../core/models';
 import { environment } from '../../../../../environments/environment';
 
 export interface ApiParameter {
@@ -116,6 +127,46 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
   customPublishSubmitted = false;
   showCustomPagePreviewModal = false;
   customPreviewViewport: 'desktop' | 'tablet' | 'mobile' = 'desktop';
+
+  integrationGuideMode: IntegrationTemplateMode = 'mixed';
+  integrationGuideStack: IntegrationTemplateStack = 'html';
+  integrationGuideModules: IntegrationTemplateModule[] = [
+    'event', 'rsvp', 'guestPass', 'gallery', 'album', 'map', 'songRequests', 'gifts', 'dedications'
+  ];
+  integrationGuideInstructions = '';
+  integrationGuidePrompt = '';
+  generatingIntegrationGuide = false;
+  integrationTemplateName = '';
+  activeIntegrationTemplateId = '';
+  savingIntegrationTemplate = false;
+  integrationTemplates: IntegrationTemplateModel[] = [];
+  loadingIntegrationTemplates = false;
+  readonly integrationGuideModes: Array<{ value: IntegrationTemplateMode; label: string; description: string }> = [
+    { value: 'widgets', label: 'Widgets', description: 'Copiar bloques listos, sin programar formularios.' },
+    { value: 'api', label: 'API directa', description: 'Diseño y formularios completamente personalizados.' },
+    { value: 'mixed', label: 'Mixto', description: 'API para contenido y widgets para acciones complejas.' }
+  ];
+  readonly integrationGuideStacks: Array<{ value: IntegrationTemplateStack; label: string }> = [
+    { value: 'html', label: 'HTML / JavaScript' },
+    { value: 'react', label: 'React' },
+    { value: 'next', label: 'Next.js' },
+    { value: 'angular', label: 'Angular' },
+    { value: 'vue', label: 'Vue' },
+    { value: 'wordpress', label: 'WordPress' },
+    { value: 'webflow', label: 'Webflow' },
+    { value: 'other', label: 'Otra tecnología' }
+  ];
+  readonly integrationGuideModuleOptions: Array<{ value: IntegrationTemplateModule; label: string; description: string }> = [
+    { value: 'event', label: 'Datos del evento', description: 'Contenido, fechas y secciones activas' },
+    { value: 'rsvp', label: 'RSVP', description: 'Identificación y confirmación' },
+    { value: 'guestPass', label: 'Pase QR', description: 'Pase personalizado del invitado' },
+    { value: 'gallery', label: 'Galería', description: 'Fotografías aprobadas' },
+    { value: 'album', label: 'Álbum', description: 'Carga y estado de fotografías' },
+    { value: 'map', label: 'Mapa', description: 'Ubicaciones y cómo llegar' },
+    { value: 'songRequests', label: 'Música y DJ', description: 'Búsqueda y solicitudes' },
+    { value: 'gifts', label: 'Regalos', description: 'Mesa y sobre digital' },
+    { value: 'dedications', label: 'Dedicatorias', description: 'Muro de mensajes' }
+  ];
 
   // Catálogo interactivo de endpoints para construcción de la página de invitación y sus 12 secciones oficiales
   apiEndpoints: ApiEndpoint[] = [
@@ -702,6 +753,7 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
     if (eventId) {
       this.loadAccessLinks(eventId);
       this.loadCustomTemplateSubmission(eventId);
+      this.loadIntegrationTemplates();
     }
 
     const c = this.event.externalContent || {};
@@ -740,6 +792,146 @@ export class EventIntegrationTabComponent implements OnInit, OnChanges {
       },
       error: () => {}
     });
+  }
+
+  loadIntegrationTemplates(): void {
+    this.loadingIntegrationTemplates = true;
+    this.apiService.listIntegrationTemplates().subscribe({
+      next: res => {
+        this.loadingIntegrationTemplates = false;
+        this.integrationTemplates = res.templates || [];
+      },
+      error: () => {
+        this.loadingIntegrationTemplates = false;
+        this.integrationTemplates = [];
+      }
+    });
+  }
+
+  selectIntegrationGuideMode(mode: IntegrationTemplateMode): void {
+    this.integrationGuideMode = mode;
+    this.integrationGuidePrompt = '';
+  }
+
+  isIntegrationGuideModuleSelected(module: IntegrationTemplateModule): boolean {
+    return this.integrationGuideModules.includes(module);
+  }
+
+  toggleIntegrationGuideModule(module: IntegrationTemplateModule): void {
+    if (this.isIntegrationGuideModuleSelected(module)) {
+      if (this.integrationGuideModules.length === 1) {
+        this.showError('Selecciona al menos un módulo para generar las instrucciones.');
+        return;
+      }
+      this.integrationGuideModules = this.integrationGuideModules.filter(item => item !== module);
+    } else {
+      this.integrationGuideModules = [...this.integrationGuideModules, module];
+    }
+    this.integrationGuidePrompt = '';
+  }
+
+  generateIntegrationGuide(): void {
+    const eventId = this.event?._id || this.event?.id;
+    if (!eventId) return;
+    this.generatingIntegrationGuide = true;
+    this.apiService.previewIntegrationGuide({
+      eventId,
+      mode: this.integrationGuideMode,
+      stack: this.integrationGuideStack,
+      modules: this.integrationGuideModules,
+      instructions: this.integrationGuideInstructions.trim()
+    }).subscribe({
+      next: res => {
+        this.generatingIntegrationGuide = false;
+        this.integrationGuidePrompt = res.prompt;
+        this.showSuccess('Instrucciones generadas con los datos reales del evento.');
+      },
+      error: err => {
+        this.generatingIntegrationGuide = false;
+        this.showError(err?.error?.message || 'No se pudieron generar las instrucciones.');
+      }
+    });
+  }
+
+  saveIntegrationTemplate(): void {
+    const name = this.integrationTemplateName.trim();
+    if (name.length < 2) {
+      this.showError('Escribe un nombre para guardar la plantilla.');
+      return;
+    }
+    this.savingIntegrationTemplate = true;
+    const payload = {
+      name,
+      mode: this.integrationGuideMode,
+      stack: this.integrationGuideStack,
+      modules: this.integrationGuideModules,
+      instructions: this.integrationGuideInstructions.trim()
+    };
+    const updating = Boolean(this.activeIntegrationTemplateId);
+    const request = updating
+      ? this.apiService.updateIntegrationTemplate(this.activeIntegrationTemplateId, payload)
+      : this.apiService.createIntegrationTemplate(payload);
+    request.subscribe({
+      next: res => {
+        this.savingIntegrationTemplate = false;
+        this.activeIntegrationTemplateId = res.template.id;
+        this.integrationTemplateName = res.template.name;
+        const remaining = this.integrationTemplates.filter(item => item.id !== res.template.id);
+        this.integrationTemplates = [res.template, ...remaining];
+        this.showSuccess(updating ? 'Plantilla de integración actualizada.' : 'Plantilla de integración creada.');
+      },
+      error: err => {
+        this.savingIntegrationTemplate = false;
+        this.showError(err?.error?.message || 'No se pudo guardar la plantilla.');
+      }
+    });
+  }
+
+  applyIntegrationTemplate(template: IntegrationTemplateModel): void {
+    this.integrationGuideMode = template.mode;
+    this.integrationGuideStack = template.stack;
+    this.integrationGuideModules = [...template.modules];
+    this.integrationGuideInstructions = template.instructions || '';
+    this.integrationTemplateName = template.name;
+    this.activeIntegrationTemplateId = template.id;
+    this.integrationGuidePrompt = '';
+    this.generateIntegrationGuide();
+  }
+
+  deleteIntegrationTemplate(template: IntegrationTemplateModel): void {
+    this.confirmDialogService.confirm({
+      title: 'Eliminar plantilla de integración',
+      message: `Se eliminará "${template.name}". Los eventos donde la hayas usado no se modificarán.`,
+      confirmText: 'Eliminar plantilla',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.apiService.deleteIntegrationTemplate(template.id).subscribe({
+        next: () => {
+          this.integrationTemplates = this.integrationTemplates.filter(item => item.id !== template.id);
+          if (this.activeIntegrationTemplateId === template.id) this.startNewIntegrationTemplate();
+          this.showSuccess('Plantilla eliminada.');
+        },
+        error: err => this.showError(err?.error?.message || 'No se pudo eliminar la plantilla.')
+      });
+    });
+  }
+
+  startNewIntegrationTemplate(): void {
+    this.activeIntegrationTemplateId = '';
+    this.integrationTemplateName = '';
+  }
+
+  downloadIntegrationGuide(): void {
+    if (!this.integrationGuidePrompt) return;
+    const blob = new Blob([this.integrationGuidePrompt], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `kyndrasoft-${this.event?.externalPortalSlug || 'integracion'}.md`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   // Carga y Gestión de Enlaces de Acceso y Tokens Reales del Backend

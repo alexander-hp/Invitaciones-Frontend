@@ -47,6 +47,9 @@ import {
   GuestMessageType,
   GuestPayload,
   ImportGuestsResponse,
+  IntegrationGuidePreviewResponse,
+  IntegrationTemplateModel,
+  IntegrationTemplatePayload,
   InvitationModel,
   InvitationPayload,
   MessageResponse,
@@ -199,6 +202,26 @@ export class ApiService {
 
   getExternalEmbedManifest(portalSlug: string): Observable<EmbedManifestResponse> {
     return this.http.get<EmbedManifestResponse>(`${this.apiUrl}/external/${portalSlug}/embed-manifest`);
+  }
+
+  listIntegrationTemplates(): Observable<{ templates: IntegrationTemplateModel[] }> {
+    return this.http.get<{ templates: IntegrationTemplateModel[] }>(`${this.apiUrl}/integration-templates`);
+  }
+
+  createIntegrationTemplate(payload: IntegrationTemplatePayload): Observable<{ template: IntegrationTemplateModel }> {
+    return this.http.post<{ template: IntegrationTemplateModel }>(`${this.apiUrl}/integration-templates`, payload);
+  }
+
+  updateIntegrationTemplate(id: string, payload: IntegrationTemplatePayload): Observable<{ template: IntegrationTemplateModel }> {
+    return this.http.patch<{ template: IntegrationTemplateModel }>(`${this.apiUrl}/integration-templates/${id}`, payload);
+  }
+
+  deleteIntegrationTemplate(id: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/integration-templates/${id}`);
+  }
+
+  previewIntegrationGuide(payload: Omit<IntegrationTemplatePayload, 'name' | 'description'> & { eventId: string; templateId?: string }): Observable<IntegrationGuidePreviewResponse> {
+    return this.http.post<IntegrationGuidePreviewResponse>(`${this.apiUrl}/integration-templates/preview`, payload);
   }
 
   listSongRequests(eventId: string): Observable<{ songRequests: SongRequestModel[] }> {
