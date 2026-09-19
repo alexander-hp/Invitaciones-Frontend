@@ -404,7 +404,7 @@ export class VisualInvitationEditorComponent implements OnInit {
       name,
       eventType: this.event?.type || 'otro',
       description: `Diseño creado desde ${this.invitation?.content?.headline || this.event?.title || 'una invitación'}`,
-      design: this.clone(this.design)
+      design: this.stripMongoMetadata(this.clone(this.design))
     }).subscribe({
       next: ({ template }) => {
         const index = this.personalTemplates.findIndex((item) => item._id === template._id || item.name === template.name);
@@ -475,8 +475,13 @@ export class VisualInvitationEditorComponent implements OnInit {
   private persistDesign() {
     const id = this.invitation?._id || this.invitation?.id || '';
     this.design.active = true;
+    const content = this.stripMongoMetadata({
+      ...this.invitation?.content,
+      template: 'visual-builder',
+      visualDesign: this.design
+    });
     return this.api.updateInvitation(id, {
-      content: { ...this.invitation?.content, template: 'visual-builder', visualDesign: this.design }
+      content
     });
   }
 
@@ -620,6 +625,16 @@ export class VisualInvitationEditorComponent implements OnInit {
 
   private clone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  private stripMongoMetadata<T>(value: T): T {
+    if (Array.isArray(value)) return value.map((item) => this.stripMongoMetadata(item)) as unknown as T;
+    if (!value || typeof value !== 'object') return value;
+    return Object.entries(value as Record<string, unknown>).reduce((clean, [key, item]) => {
+      if (key === '_id' || key === '__v') return clean;
+      clean[key] = this.stripMongoMetadata(item);
+      return clean;
+    }, {} as Record<string, unknown>) as T;
   }
 
   private bound(value: number, min: number, max: number): number {
