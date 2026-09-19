@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { CdkDragDrop, CdkDragEnd, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, CdkDragEnd, CdkDragMove, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
@@ -10,6 +10,8 @@ import {
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
+type InspectorView = 'properties' | 'layers';
+type DesignMedia = { url: string; type: 'image' | 'video' | 'audio'; label: string };
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -33,6 +35,9 @@ export class VisualInvitationEditorComponent implements OnInit {
   message = '';
   error = '';
   resizing = false;
+  inspectorView: InspectorView = 'properties';
+  guideX: number | null = null;
+  guideY: number | null = null;
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
@@ -98,6 +103,23 @@ export class VisualInvitationEditorComponent implements OnInit {
     return this.device === 'mobile' ? 390 : this.device === 'tablet' ? 768 : 1180;
   }
 
+  get orderedLayers(): VisualInvitationLayer[] {
+    return [...(this.selectedSection?.layers || [])].sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0));
+  }
+
+  get mediaLibrary(): DesignMedia[] {
+    const media = new Map<string, DesignMedia>();
+    for (const section of this.design?.sections || []) {
+      if (section.background?.imageUrl) media.set(section.background.imageUrl, { url: section.background.imageUrl, type: 'image', label: `${section.title || 'Sección'} · fondo` });
+      for (const layer of section.layers) {
+        if (layer.url && ['image', 'video', 'audio'].includes(layer.type)) {
+          media.set(layer.url, { url: layer.url, type: layer.type as DesignMedia['type'], label: this.layerLabel(layer) });
+        }
+      }
+    }
+    return [...media.values()];
+  }
+
   selectSection(section: VisualInvitationSection): void {
     this.selectedSectionId = section.id;
     this.selectedLayerId = '';
@@ -107,6 +129,12 @@ export class VisualInvitationEditorComponent implements OnInit {
     event.stopPropagation();
     this.selectedSectionId = section.id;
     this.selectedLayerId = layer.id;
+    this.inspectorView = 'properties';
+  }
+
+  selectLayerFromPanel(layer: VisualInvitationLayer): void {
+    this.selectedLayerId = layer.id;
+    this.inspectorView = 'properties';
   }
 
   addSection(type: string, title: string): void {
@@ -124,6 +152,7 @@ export class VisualInvitationEditorComponent implements OnInit {
     this.recordHistory();
     const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
     const layer = this.newLayer(type, text, 20, 25, type === 'text' ? 60 : 45, type === 'text' ? 18 : 30);
+    layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
     if (type === 'shape') layer.style = { backgroundColor: '#d88f7d', borderRadius: 8, opacity: 1 };
     section.layers.push(layer);
     this.selectedLayerId = layer.id;
@@ -144,6 +173,7 @@ export class VisualInvitationEditorComponent implements OnInit {
     this.recordHistory();
     const copy = this.clone(layer);
     copy.id = this.uid('layer');
+    copy.name = `${this.layerLabel(layer)} copia`;
     copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
     copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
     copy.zIndex = (copy.zIndex || 1) + 1;
@@ -170,11 +200,23 @@ export class VisualInvitationEditorComponent implements OnInit {
     const canvas = event.source.element.nativeElement.parentElement as HTMLElement;
     if (!canvas) return;
     this.recordHistory();
-    layer.x = this.bound(layer.x + event.distance.x / canvas.clientWidth * 100, 0, 100 - layer.width);
-    layer.y = this.bound(layer.y + event.distance.y / canvas.clientHeight * 100, 0, 100 - layer.height);
+    const snapped = this.snapPosition(layer, section, canvas, event.distance.x, event.distance.y);
+    layer.x = snapped.x;
+    layer.y = snapped.y;
+    this.guideX = null;
+    this.guideY = null;
     event.source.reset();
     this.selectedSectionId = section.id;
     this.selectedLayerId = layer.id;
+  }
+
+  layerMoved(event: CdkDragMove, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
+    if (layer.locked || this.resizing) return;
+    const canvas = event.source.element.nativeElement.parentElement as HTMLElement;
+    if (!canvas) return;
+    const snapped = this.snapPosition(layer, section, canvas, event.distance.x, event.distance.y);
+    this.guideX = snapped.guideX;
+    this.guideY = snapped.guideY;
   }
 
   beginResize(event: PointerEvent, layer: VisualInvitationLayer, corner: ResizeCorner): void {
@@ -214,6 +256,80 @@ export class VisualInvitationEditorComponent implements OnInit {
   endResize(): void {
     this.resizeState = undefined;
     setTimeout(() => { this.resizing = false; });
+  }
+
+  toggleLayerHidden(layer: VisualInvitationLayer, event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.recordHistory();
+    layer.hidden = !layer.hidden;
+  }
+
+  toggleLayerLocked(layer: VisualInvitationLayer, event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.recordHistory();
+    layer.locked = !layer.locked;
+  }
+
+  shiftLayer(layer: VisualInvitationLayer, direction: 1 | -1): void {
+    const section = this.selectedSection;
+    if (!section) return;
+    const ordered = [...section.layers].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+    ordered.forEach((item, index) => { item.zIndex = index + 1; });
+    const index = ordered.findIndex((item) => item.id === layer.id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= ordered.length) return;
+    this.recordHistory();
+    const currentZ = ordered[index].zIndex;
+    ordered[index].zIndex = ordered[target].zIndex;
+    ordered[target].zIndex = currentZ;
+  }
+
+  applyMedia(media: DesignMedia): void {
+    let layer = this.selectedLayer;
+    let created = false;
+    if (!layer || !['image', 'video', 'audio'].includes(layer.type)) {
+      this.addLayer(media.type);
+      layer = this.selectedLayer;
+      created = true;
+    }
+    if (!layer) return;
+    if (!created) this.recordHistory();
+    layer.type = media.type;
+    layer.url = media.url;
+    layer.name = media.label;
+  }
+
+  setSectionBackground(media: DesignMedia): void {
+    if (media.type !== 'image' || !this.selectedSection) return;
+    this.recordHistory();
+    this.selectedSection.background = { ...(this.selectedSection.background || {}), imageUrl: media.url };
+  }
+
+  layerLabel(layer: VisualInvitationLayer): string {
+    if (layer.name?.trim()) return layer.name.trim();
+    if (layer.text?.trim()) return layer.text.trim().slice(0, 32);
+    return this.layerTypeLabel(layer.type);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboard(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName)) return;
+    const modifier = event.ctrlKey || event.metaKey;
+    if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? this.redo() : this.undo(); return; }
+    if (modifier && event.key.toLowerCase() === 'y') { event.preventDefault(); this.redo(); return; }
+    if (modifier && event.key.toLowerCase() === 'd' && this.selectedLayer) { event.preventDefault(); this.duplicateLayer(); return; }
+    if ((event.key === 'Delete' || event.key === 'Backspace') && this.selectedLayer) { event.preventDefault(); this.removeLayer(); return; }
+    if (event.key === 'Escape') { this.selectedLayerId = ''; return; }
+    const layer = this.selectedLayer;
+    if (!layer || layer.locked || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+    event.preventDefault();
+    this.recordHistory();
+    const step = event.shiftKey ? 2 : .25;
+    if (event.key === 'ArrowLeft') layer.x = this.bound(layer.x - step, 0, 100 - layer.width);
+    if (event.key === 'ArrowRight') layer.x = this.bound(layer.x + step, 0, 100 - layer.width);
+    if (event.key === 'ArrowUp') layer.y = this.bound(layer.y - step, 0, 100 - layer.height);
+    if (event.key === 'ArrowDown') layer.y = this.bound(layer.y + step, 0, 100 - layer.height);
   }
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
@@ -421,7 +537,7 @@ export class VisualInvitationEditorComponent implements OnInit {
 
   private newLayer(type: VisualLayerType, text: string, x: number, y: number, width: number, height: number, fontSize = 30): VisualInvitationLayer {
     return {
-      id: this.uid('layer'), type, text, x, y, width, height, rotation: 0, zIndex: 1, locked: false,
+      id: this.uid('layer'), type, name: text.trim().slice(0, 32) || this.layerTypeLabel(type), text, x, y, width, height, rotation: 0, zIndex: 1, locked: false, hidden: false,
       style: { color: '#2d2927', fontFamily: 'Arial, sans-serif', fontSize, fontWeight: type === 'text' ? 600 : 400, textAlign: 'center', borderRadius: 0, opacity: 1 }
     };
   }
@@ -437,6 +553,41 @@ export class VisualInvitationEditorComponent implements OnInit {
 
   private isFunctionalType(type: string): boolean {
     return ['locations', 'itinerary', 'dressCode', 'rsvp', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
+  }
+
+  private layerTypeLabel(type: VisualLayerType): string {
+    return { image: 'Imagen', video: 'Video', audio: 'Audio', button: 'Botón', shape: 'Forma', text: 'Texto' }[type];
+  }
+
+  private snapPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, dx: number, dy: number): { x: number; y: number; guideX: number | null; guideY: number | null } {
+    const rawX = this.bound(layer.x + dx / canvas.clientWidth * 100, 0, 100 - layer.width);
+    const rawY = this.bound(layer.y + dy / canvas.clientHeight * 100, 0, 100 - layer.height);
+    const xTargets = [0, 50, 100];
+    const yTargets = [0, 50, 100];
+    for (const other of section.layers) {
+      if (other.id === layer.id || other.hidden) continue;
+      xTargets.push(other.x, other.x + other.width / 2, other.x + other.width);
+      yTargets.push(other.y, other.y + other.height / 2, other.y + other.height);
+    }
+    const xAnchors = [{ value: rawX, offset: 0 }, { value: rawX + layer.width / 2, offset: layer.width / 2 }, { value: rawX + layer.width, offset: layer.width }];
+    const yAnchors = [{ value: rawY, offset: 0 }, { value: rawY + layer.height / 2, offset: layer.height / 2 }, { value: rawY + layer.height, offset: layer.height }];
+    const snapX = this.closestSnap(xAnchors, xTargets, 800 / Math.max(canvas.clientWidth, 1));
+    const snapY = this.closestSnap(yAnchors, yTargets, 800 / Math.max(canvas.clientHeight, 1));
+    return {
+      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - layer.width),
+      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, 0, 100 - layer.height),
+      guideX: snapX?.target ?? null,
+      guideY: snapY?.target ?? null
+    };
+  }
+
+  private closestSnap(anchors: Array<{ value: number; offset: number }>, targets: number[], threshold: number): { target: number; offset: number } | undefined {
+    let match: { target: number; offset: number; distance: number } | undefined;
+    for (const anchor of anchors) for (const target of targets) {
+      const distance = Math.abs(anchor.value - target);
+      if (distance <= threshold && (!match || distance < match.distance)) match = { target, offset: anchor.offset, distance };
+    }
+    return match;
   }
 
   private confirmReplaceDesign(): boolean {

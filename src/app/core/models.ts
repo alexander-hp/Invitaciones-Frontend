@@ -266,6 +266,7 @@ export interface VisualInvitationLayerStyle {
 export interface VisualInvitationLayer {
   id: string;
   type: VisualLayerType;
+  name?: string;
   text?: string;
   url?: string;
   binding?: string;
@@ -276,6 +277,7 @@ export interface VisualInvitationLayer {
   rotation?: number;
   zIndex?: number;
   locked?: boolean;
+  hidden?: boolean;
   style?: VisualInvitationLayerStyle;
 }
 

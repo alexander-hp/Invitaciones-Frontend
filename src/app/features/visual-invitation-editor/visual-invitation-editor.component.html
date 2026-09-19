@@ -44,6 +44,17 @@
         <button type="button" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
         <button type="button" (click)="addLayer('shape')"><b>●</b><span>Forma</span></button>
       </div>
+      <ng-container *ngIf="mediaLibrary.length">
+        <h2>Archivos del diseño</h2>
+        <div class="media-library">
+          <article *ngFor="let media of mediaLibrary" [title]="media.label">
+            <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="media.label">
+            <video *ngIf="media.type === 'video'" [src]="media.url" muted></video>
+            <span *ngIf="media.type === 'audio'">♪</span>
+            <div><button type="button" title="Usar como elemento" (click)="applyMedia(media)">Usar</button><button *ngIf="media.type === 'image'" type="button" title="Usar como fondo" (click)="setSectionBackground(media)">Fondo</button></div>
+          </article>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -65,7 +76,9 @@
             <div *ngIf="section.layers.length === 0" class="functional-placeholder">
               <strong>{{ section.title }}</strong><span>Módulo funcional conectado con los datos del evento</span>
             </div>
-            <div *ngFor="let layer of section.layers" cdkDrag [cdkDragDisabled]="layer.locked" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [ngStyle]="layerStyle(layer)" (click)="selectLayer(section, layer, $event)" (cdkDragEnded)="layerDropped($event, layer, section)">
+            <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
+            <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
+            <div *ngFor="let layer of section.layers" cdkDrag [cdkDragDisabled]="layer.locked" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [ngStyle]="layerStyle(layer)" (click)="selectLayer(section, layer, $event)" (cdkDragMoved)="layerMoved($event, layer, section)" (cdkDragEnded)="layerDropped($event, layer, section)">
               <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
               <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''">
               <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
@@ -86,8 +99,30 @@
     </main>
 
     <aside class="ve-inspector">
+      <div class="inspector-tabs">
+        <button type="button" [class.active]="inspectorView === 'properties'" (click)="inspectorView='properties'">Propiedades</button>
+        <button type="button" [class.active]="inspectorView === 'layers'" (click)="inspectorView='layers'">Capas</button>
+      </div>
+      <ng-container *ngIf="inspectorView === 'layers'; else propertiesInspector">
+        <div class="layer-panel" *ngIf="selectedSection as section">
+          <div class="layer-panel-title"><strong>{{ section.title || section.type }}</strong><span>{{ section.layers.length }} elementos</span></div>
+          <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
+          <article *ngFor="let item of orderedLayers" [class.active]="item.id === selectedLayerId" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item)">
+            <span class="layer-type">{{ item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : '●' }}</span>
+            <div><strong>{{ layerLabel(item) }}</strong><small>{{ item.type }}</small></div>
+            <div class="layer-actions">
+              <button type="button" [title]="item.hidden ? 'Mostrar' : 'Ocultar'" (click)="toggleLayerHidden(item, $event)">{{ item.hidden ? '○' : '◉' }}</button>
+              <button type="button" [title]="item.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(item, $event)">{{ item.locked ? '▣' : '▢' }}</button>
+              <button type="button" title="Enviar atrás" (click)="$event.stopPropagation(); shiftLayer(item, -1)">↓</button>
+              <button type="button" title="Traer adelante" (click)="$event.stopPropagation(); shiftLayer(item, 1)">↑</button>
+            </div>
+          </article>
+        </div>
+      </ng-container>
+      <ng-template #propertiesInspector>
       <ng-container *ngIf="selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
+        <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
         <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
@@ -107,6 +142,7 @@
           </div>
         </ng-container>
         <label class="toggle"><input [(ngModel)]="layer.locked" type="checkbox"> Bloquear posición</label>
+        <label class="toggle"><input [(ngModel)]="layer.hidden" type="checkbox"> Ocultar elemento</label>
       </ng-container>
       <ng-template #sectionInspector>
         <ng-container *ngIf="selectedSection as section">
@@ -119,6 +155,7 @@
           <label>Oscurecer fondo<input [(ngModel)]="section.background!.overlay" type="range" min="0" max="1" step="0.05"></label>
           <label class="toggle"><input [(ngModel)]="section.enabled" type="checkbox"> Mostrar esta sección</label>
         </ng-container>
+      </ng-template>
       </ng-template>
       <p class="uploading" *ngIf="uploading">Subiendo archivo...</p>
     </aside>
