@@ -62,6 +62,11 @@
       <app-event-header [event]="event" [backUrl]="'/new/events/' + getEventId()"
         [backLabel]="event?.title || 'Detalle del Evento'"></app-event-header>
 
+      <section style="display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0;padding:16px 18px;background:#252220;color:#fff;border-left:4px solid #d9917f;">
+        <div style="display:grid;gap:4px;"><strong>Editor visual</strong><span style="font-size:13px;color:#ddd5d0;">Diseña arrastrando textos, imágenes y secciones sobre una vista real de tu invitación.</span></div>
+        <a [routerLink]="['/new/invitations', invitation._id || invitation.id, 'visual-editor']" style="flex:none;padding:10px 14px;background:#fff;color:#252220;text-decoration:none;font-weight:700;">Abrir editor visual</a>
+      </section>
+
       <!-- Sub-Menú de Secciones Organizado en Grid -->
       <div id="sectionsGridHeader" class="nw-cat-grid-wrapper" style="margin-bottom: 36px;">
         <div class="nw-cat-grid-header">

@@ -250,6 +250,57 @@ export interface SectionMusicSettings {
   [key: string]: string | undefined;
 }
 
+export type VisualLayerType = 'text' | 'image' | 'video' | 'audio' | 'button' | 'shape';
+
+export interface VisualInvitationLayerStyle {
+  color?: string;
+  backgroundColor?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: string | number;
+  textAlign?: string;
+  borderRadius?: number;
+  opacity?: number;
+}
+
+export interface VisualInvitationLayer {
+  id: string;
+  type: VisualLayerType;
+  text?: string;
+  url?: string;
+  binding?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  zIndex?: number;
+  locked?: boolean;
+  style?: VisualInvitationLayerStyle;
+}
+
+export interface VisualInvitationSection {
+  id: string;
+  type: string;
+  title?: string;
+  enabled: boolean;
+  layout: 'flow' | 'canvas';
+  height: number;
+  background?: {
+    color?: string;
+    imageUrl?: string;
+    overlay?: number;
+  };
+  layers: VisualInvitationLayer[];
+}
+
+export interface VisualInvitationDesign {
+  version: number;
+  active: boolean;
+  mode: 'easy' | 'advanced';
+  sections: VisualInvitationSection[];
+}
+
 export interface InvitationContent {
   headline?: string;
   subheadline?: string;
@@ -290,6 +341,7 @@ export interface InvitationContent {
   customPageApproved?: boolean;
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
+  visualDesign?: VisualInvitationDesign;
   editedTexts?: Record<string, string>;
   sourceTemplateKey?: string;
   activeCustomTemplateId?: string;

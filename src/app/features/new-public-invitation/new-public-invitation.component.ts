@@ -1212,6 +1212,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return false;
   }
 
+  isVisualBuilderTemplate(): boolean {
+    return this.currentTemplate === 'visual-builder' && Boolean(this.invitation?.content?.visualDesign?.active);
+  }
+
   get customHtmlContent(): string {
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     if (this.invitation?.content?.customHtml?.trim()) {
@@ -1282,7 +1286,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   isEnvelopeCardsTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isCustomHtmlTemplate() || this.isVisualBuilderTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (
       !this.isClassicVerticalTemplate() &&

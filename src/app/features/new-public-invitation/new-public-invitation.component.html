@@ -52,6 +52,8 @@
     </iframe>
   </div>
 
+  <app-visual-invitation-renderer *ngIf="isVisualBuilderTemplate()" [invitation]="invitation"></app-visual-invitation-renderer>
+
   <!-- PLANTILLA 1: CLÁSICA VERTICAL EDITORIAL -->
   <app-new-public-invitation-classic-vertical
     *ngIf="isClassicVerticalTemplate()"

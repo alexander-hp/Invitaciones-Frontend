@@ -1,0 +1,11 @@
+<main class="visual-invitation" *ngIf="sections.length; else emptyDesign">
+  <section *ngFor="let section of sections" class="visual-section" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
+    <div *ngFor="let layer of section.layers" class="visual-layer" [ngClass]="'layer-' + layer.type" [ngStyle]="layerStyle(layer)">
+      <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
+      <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''">
+      <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline></video>
+      <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
+    </div>
+  </section>
+</main>
+<ng-template #emptyDesign><div class="empty-design">Esta invitación aún no tiene un diseño visual.</div></ng-template>
