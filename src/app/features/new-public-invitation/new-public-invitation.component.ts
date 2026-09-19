@@ -956,6 +956,18 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.submit();
   }
 
+  submitVisualRsvp(data: {
+    name: string;
+    email: string;
+    response: RsvpResponse;
+    companions: number;
+    dietaryRestrictions: string;
+    message: string;
+  }): void {
+    this.rsvp = { ...this.rsvp, ...data };
+    this.submit();
+  }
+
   submitDedicationFromData(data: { publicName: string; message: string }): void {
     this.dedication.publicName = data.publicName;
     this.dedication.message = data.message;
@@ -1810,6 +1822,16 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         this.songRequestSending = false;
       }
     });
+  }
+
+  submitVisualSongRequest(data: {
+    title: string;
+    artist: string;
+    dedication: string;
+    sourceUrl: string;
+  }): void {
+    this.songRequest = { ...data, thumbnailUrl: '' };
+    this.submitSongRequest();
   }
 
   private loadGuestToken(): void {

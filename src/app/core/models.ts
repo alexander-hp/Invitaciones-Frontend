@@ -301,6 +301,25 @@ export interface VisualInvitationDesign {
   sections: VisualInvitationSection[];
 }
 
+export interface VisualDesignTemplateModel {
+  _id: string;
+  name: string;
+  eventType?: string;
+  description?: string;
+  previewImageUrl?: string;
+  design: VisualInvitationDesign;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface VisualDesignTemplatePayload {
+  name: string;
+  eventType?: string;
+  description?: string;
+  previewImageUrl?: string;
+  design: VisualInvitationDesign;
+}
+
 export interface InvitationContent {
   headline?: string;
   subheadline?: string;

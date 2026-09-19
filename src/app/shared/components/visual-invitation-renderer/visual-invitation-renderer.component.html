@@ -1,10 +1,90 @@
 <main class="visual-invitation" *ngIf="sections.length; else emptyDesign">
-  <section *ngFor="let section of sections" class="visual-section" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
+  <section *ngFor="let section of sections" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of section.layers" class="visual-layer" [ngClass]="'layer-' + layer.type" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
       <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''">
       <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline></video>
       <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'locations'">
+      <h2>{{ section.title || 'Ubicaciones' }}</h2>
+      <div class="module-grid">
+        <article *ngFor="let location of invitation?.content?.locations">
+          <h3>{{ location.name || location.type }}</h3><p>{{ location.address }}</p><p>{{ location.notes }}</p>
+          <div class="module-actions"><a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noopener">Google Maps</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'itinerary'">
+      <h2>{{ section.title || 'Itinerario' }}</h2>
+      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div></article></div>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'dressCode'">
+      <h2>{{ section.title || 'Código de vestimenta' }}</h2>
+      <img class="dress-image" *ngIf="invitation?.content?.dressCodeImageUrl" [src]="invitation?.content?.dressCodeImageUrl" alt="Referencia de vestimenta">
+      <h3>{{ invitation?.content?.dressCode }}</h3><p>{{ invitation?.content?.dressCodeDescription }}</p>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'gallery'">
+      <h2>{{ section.title || 'Galería' }}</h2>
+      <div class="gallery-grid"><button *ngFor="let image of invitation?.content?.gallery" type="button" (click)="openLightbox.emit(image)"><img [src]="image" alt="Fotografía del evento"></button></div>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'gifts'">
+      <h2>{{ section.title || 'Mesa de regalos' }}</h2><p>{{ invitation?.content?.giftSettings?.introText }}</p>
+      <div class="module-grid">
+        <article *ngFor="let gift of invitation?.content?.giftRegistry">
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">Abrir mesa</a>
+        </article>
+        <article *ngIf="invitation?.content?.digitalEnvelope as envelope">
+          <h3>Sobre digital</h3><p>{{ envelope.bank }} · {{ envelope.holder }}</p><p *ngIf="envelope.clabe"><strong>CLABE:</strong> {{ envelope.clabe }}</p><p *ngIf="envelope.account"><strong>Cuenta:</strong> {{ envelope.account }}</p><p>{{ envelope.note }}</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'rsvp'">
+      <h2>{{ section.title || 'Confirma tu asistencia' }}</h2>
+      <form *ngIf="requiresGuestValidation && !verifiedGuest; else rsvpForm" (ngSubmit)="identifyGuest()">
+        <p>Confirma que estás en la lista usando tu correo o teléfono.</p>
+        <label>Correo<input [(ngModel)]="guestEmail" name="visualGuestEmail" type="email"></label>
+        <label>Teléfono<input [(ngModel)]="guestPhone" name="visualGuestPhone" type="tel"></label>
+        <button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : 'Continuar' }}</button>
+      </form>
+      <ng-template #rsvpForm>
+        <form (ngSubmit)="sendRsvp()">
+          <p class="verified" *ngIf="verifiedGuest">Pase identificado para {{ verifiedGuest.name }}</p>
+          <label *ngIf="!verifiedGuest">Nombre<input [(ngModel)]="rsvp.name" name="visualRsvpName" required></label>
+          <label *ngIf="!verifiedGuest">Correo<input [(ngModel)]="rsvp.email" name="visualRsvpEmail" type="email"></label>
+          <label>Respuesta<select [(ngModel)]="rsvp.response" name="visualRsvpResponse"><option value="confirmed">Sí asistiré</option><option value="maybe">Tal vez</option><option value="declined">No podré asistir</option></select></label>
+          <label *ngIf="rsvp.response !== 'declined' && maxCompanions > 0">Acompañantes<input [(ngModel)]="rsvp.companions" name="visualRsvpCompanions" type="number" min="0" [max]="maxCompanions"></label>
+          <label>Restricciones alimentarias<textarea [(ngModel)]="rsvp.dietaryRestrictions" name="visualRsvpDietary" rows="2"></textarea></label>
+          <label>Mensaje<textarea [(ngModel)]="rsvp.message" name="visualRsvpMessage" rows="2"></textarea></label>
+          <button type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : 'Enviar confirmación' }}</button>
+        </form>
+      </ng-template>
+      <p class="feedback success" *ngIf="success">{{ success }}</p><p class="feedback error" *ngIf="error">{{ error }}</p>
+    </div>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'album'">
+      <h2>{{ section.title || 'Álbum colectivo' }}</h2><p>Comparte tus mejores momentos con los anfitriones.</p>
+      <label class="file-button">Seleccionar fotografía<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
+      <p class="feedback" *ngIf="albumMessage">{{ albumMessage }}</p>
+      <div class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'"></button></div>
+    </div>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'dedications'">
+      <h2>{{ section.title || 'Dedicatorias' }}</h2>
+      <form (ngSubmit)="sendDedication()"><label>Tu nombre<input [(ngModel)]="dedication.publicName" name="visualDedicationName"></label><label>Mensaje<textarea [(ngModel)]="dedication.message" name="visualDedicationMessage" rows="4" required></textarea></label><button type="submit" [disabled]="sending">Enviar dedicatoria</button></form>
+      <p class="feedback" *ngIf="dedicationMessage">{{ dedicationMessage }}</p>
+      <div class="dedication-list"><blockquote *ngFor="let item of dedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
+    </div>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'songs'">
+      <h2>{{ section.title || 'Pide una canción' }}</h2>
+      <form (ngSubmit)="sendSong()"><label>Canción o enlace<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label>Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label>Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label>Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">Enviar al DJ</button></form>
     </div>
   </section>
 </main>

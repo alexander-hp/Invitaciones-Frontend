@@ -67,6 +67,8 @@ import {
   TemplateModel,
   TemplateTier,
   UploadUrlResponse,
+  VisualDesignTemplateModel,
+  VisualDesignTemplatePayload,
   User,
   WhatsAppBulkResponse,
   WhatsAppMediaInspection,
@@ -81,6 +83,18 @@ export class ApiService {
   private readonly apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
+
+  listVisualDesignTemplates(): Observable<{ templates: VisualDesignTemplateModel[] }> {
+    return this.http.get<{ templates: VisualDesignTemplateModel[] }>(`${this.apiUrl}/visual-design-templates`);
+  }
+
+  createVisualDesignTemplate(payload: VisualDesignTemplatePayload): Observable<{ template: VisualDesignTemplateModel }> {
+    return this.http.post<{ template: VisualDesignTemplateModel }>(`${this.apiUrl}/visual-design-templates`, payload);
+  }
+
+  deleteVisualDesignTemplate(id: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/visual-design-templates/${id}`);
+  }
 
   register(payload: { name: string; email: string; password: string; role?: User['role']; accountType?: User['accountType'] }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, payload);

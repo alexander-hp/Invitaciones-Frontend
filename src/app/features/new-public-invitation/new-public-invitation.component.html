@@ -52,7 +52,28 @@
     </iframe>
   </div>
 
-  <app-visual-invitation-renderer *ngIf="isVisualBuilderTemplate()" [invitation]="invitation"></app-visual-invitation-renderer>
+  <app-visual-invitation-renderer
+    *ngIf="isVisualBuilderTemplate()"
+    [invitation]="invitation"
+    [event]="event"
+    [verifiedGuest]="verifiedGuest"
+    [requiresGuestValidation]="requiresGuestValidation"
+    [sending]="sending"
+    [checkingGuest]="checkingGuest"
+    [uploadingAlbum]="uploadingAlbum"
+    [albumAssets]="allAlbumAssets"
+    [dedications]="dedications"
+    [error]="error"
+    [success]="success"
+    [albumMessage]="albumMessage"
+    [dedicationMessage]="dedicationMessage"
+    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
+    (submitRsvp)="submitVisualRsvp($event)"
+    (uploadPhoto)="onFileSelectedDirect($event)"
+    (submitDedication)="submitDedicationFromData($event)"
+    (requestSong)="submitVisualSongRequest($event)"
+    (openLightbox)="openLightbox($event)">
+  </app-visual-invitation-renderer>
 
   <!-- PLANTILLA 1: CLÁSICA VERTICAL EDITORIAL -->
   <app-new-public-invitation-classic-vertical
