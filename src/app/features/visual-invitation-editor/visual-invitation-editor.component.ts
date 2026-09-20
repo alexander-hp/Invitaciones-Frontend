@@ -16,6 +16,16 @@ type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
 type MediaFilter = 'all' | DesignMedia['type'];
 type VisualTheme = NonNullable<VisualInvitationDesign['theme']>;
+type AuditSeverity = 'critical' | 'warning' | 'suggestion';
+type PublishAuditIssue = {
+  id: string;
+  severity: AuditSeverity;
+  title: string;
+  detail: string;
+  sectionId?: string;
+  layerId?: string;
+  device?: DeviceMode;
+};
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -62,6 +72,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   showGrid = false;
   showSafeMargins = false;
   smartSnapping = true;
+  showPublishAudit = false;
+  publishAuditIssues: PublishAuditIssue[] = [];
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
 
@@ -191,6 +203,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.clipboardLayers.length > 0;
   }
 
+  get criticalAuditCount(): number {
+    return this.publishAuditIssues.filter((issue) => issue.severity === 'critical').length;
+  }
+
+  get warningAuditCount(): number {
+    return this.publishAuditIssues.filter((issue) => issue.severity === 'warning').length;
+  }
+
   get selectedLayout(): VisualInvitationLayerLayout | undefined {
     return this.selectedLayer ? this.editableLayout(this.selectedLayer) : undefined;
   }
@@ -220,6 +240,39 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     this.applyThemeValues(sections);
     this.flash(scope === 'section' ? 'Estilo aplicado a esta sección.' : 'Estilo aplicado a toda la invitación.');
+  }
+
+  beginPropertyEdit(event: FocusEvent): void {
+    const target = event.target as HTMLElement;
+    if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName)) return;
+    if (!target.closest('.ve-inspector,.theme-editor')) return;
+    this.recordHistory();
+  }
+
+  openPublishAudit(): void {
+    this.publishAuditIssues = this.auditDesign();
+    this.showPublishAudit = true;
+  }
+
+  closePublishAudit(): void {
+    if (this.publishing) return;
+    this.showPublishAudit = false;
+  }
+
+  goToAuditIssue(issue: PublishAuditIssue): void {
+    if (issue.device) this.device = issue.device;
+    if (issue.sectionId) this.selectedSectionId = issue.sectionId;
+    if (issue.layerId) this.setLayerSelection([issue.layerId]); else this.clearLayerSelection();
+    this.inspectorView = 'properties';
+    this.showPublishAudit = false;
+    setTimeout(() => {
+      const selector = issue.layerId ? `[data-layer-id="${issue.layerId}"]` : `[data-section-id="${issue.sectionId}"]`;
+      document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  auditSeverityLabel(severity: AuditSeverity): string {
+    return { critical: 'Debes corregir', warning: 'Recomendado', suggestion: 'Mejora opcional' }[severity];
   }
 
   setResponsiveMode(independent: boolean): void {
@@ -911,7 +964,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   startBlankDesign(): void {
     const section = this.makeSection('custom', 'Mi primera sección', '#ffffff', 640);
-    this.design = { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', assets: [], sections: [section] };
+    this.design = { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', theme: this.clone(this.themePresets[0].theme), assets: [], sections: [section] };
     this.selectedSectionId = section.id;
     this.clearLayerSelection();
     this.showOnboarding = false;
@@ -923,6 +976,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     this.design = this.regenerateIds(this.clone(template.design));
     this.design.active = true;
+    this.design.theme = this.design.theme || this.inferTheme();
     this.selectedSectionId = this.design.sections[0]?.id || '';
     this.clearLayerSelection();
   }
@@ -982,6 +1036,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.invitation = invitation;
         this.design = this.clone(revision.design);
         this.design.assets = this.design.assets || [];
+        this.design.theme = this.design.theme || this.inferTheme();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.clearLayerSelection();
         this.undoStack = [];
@@ -1018,12 +1073,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   publish(): void {
-    if (!this.invitation) return;
+    if (!this.invitation || this.criticalAuditCount > 0) return;
     this.publishing = true;
     this.error = '';
     const id = this.invitation._id || this.invitation.id || '';
     this.persistDesign().pipe(switchMap(() => this.api.publishInvitation(id))).subscribe({
-      next: ({ invitation }) => { this.invitation = invitation; this.publishing = false; this.markSaved(); this.flash('Diseño publicado.'); this.openPreview(); },
+      next: ({ invitation }) => { this.invitation = invitation; this.publishing = false; this.showPublishAudit = false; this.markSaved(); this.flash('Diseño publicado.'); this.openPreview(); },
       error: (error) => { this.publishing = false; this.error = error?.error?.message || 'No fue posible publicar.'; }
     });
   }
@@ -1185,6 +1240,83 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!match) return color;
     const value = Number.parseInt(match[1], 16);
     return `rgba(${value >> 16},${(value >> 8) & 255},${value & 255},${alpha})`;
+  }
+
+  private auditDesign(): PublishAuditIssue[] {
+    const issues: PublishAuditIssue[] = [];
+    const add = (severity: AuditSeverity, title: string, detail: string, sectionId?: string, layerId?: string, device?: DeviceMode) => {
+      issues.push({ id: `audit-${issues.length + 1}`, severity, title, detail, sectionId, layerId, device });
+    };
+    const enabledSections = this.design.sections.filter((section) => section.enabled);
+    if (!enabledSections.length) add('critical', 'No hay secciones visibles', 'Activa al menos una sección antes de publicar.');
+    if (!this.event?.date) add('critical', 'Falta la fecha del evento', 'Completa la fecha desde la configuración del evento.');
+    if (!this.event?.venue?.name && !this.event?.venue?.address) add('warning', 'Falta la ubicación principal', 'Agrega nombre o dirección para que los invitados sepan dónde será el evento.');
+
+    const content = this.invitation?.content || {};
+    for (const section of this.design.sections) {
+      if (!section.enabled) {
+        add('suggestion', `Sección oculta: ${section.title || section.type}`, 'No aparecerá en la invitación publicada.', section.id);
+        continue;
+      }
+      if (!section.layers.length && !this.isFunctionalType(section.type)) {
+        add('warning', `Sección vacía: ${section.title || section.type}`, 'Agrega contenido o desactiva esta sección.', section.id);
+      }
+      if (section.type === 'locations' && !content.locations?.length) add('warning', 'Ubicaciones sin datos', 'La sección está activa pero no contiene ubicaciones.', section.id);
+      if (section.type === 'itinerary' && !content.itinerary?.length) add('warning', 'Itinerario vacío', 'Agrega actividades o desactiva esta sección.', section.id);
+      if (section.type === 'gallery' && !content.gallery?.length) add('warning', 'Galería vacía', 'Agrega fotografías o desactiva esta sección.', section.id);
+      if (section.type === 'gifts' && !content.giftRegistry?.length && !content.digitalEnvelope) add('warning', 'Mesa de regalos vacía', 'Agrega una mesa o sobre digital, o desactiva la sección.', section.id);
+
+      for (const layer of section.layers) {
+        if (layer.hidden) {
+          add('suggestion', `Elemento oculto: ${this.layerLabel(layer)}`, 'Este elemento no se mostrará al público.', section.id, layer.id);
+          continue;
+        }
+        if (['image', 'video', 'audio'].includes(layer.type) && !layer.url?.trim()) {
+          add('critical', `${this.layerTypeLabel(layer.type)} sin archivo`, 'Carga un archivo o elimina este elemento.', section.id, layer.id);
+        }
+        if (layer.type === 'button' && !layer.url?.trim() && !layer.binding?.trim()) {
+          add('critical', `Botón sin destino: ${this.layerLabel(layer)}`, 'Agrega una URL o una acción al botón.', section.id, layer.id);
+        }
+        if ((layer.type === 'text' || layer.type === 'button') && !layer.text?.trim()) {
+          add('warning', 'Texto vacío', 'Escribe un texto o elimina el elemento.', section.id, layer.id);
+        }
+        if (layer.type === 'image' && !layer.text?.trim()) {
+          add('suggestion', `Imagen sin descripción: ${this.layerLabel(layer)}`, 'Agrega una descripción breve para accesibilidad.', section.id, layer.id);
+        }
+        const layouts: Array<{ device: DeviceMode; x: number; y: number; width: number; height: number }> = this.design.responsiveMode === 'independent'
+          ? (['mobile', 'tablet', 'desktop'] as DeviceMode[]).map((device) => ({ device, ...(layer.layouts?.[device] || layer) }))
+          : [{ device: 'mobile', ...layer }];
+        for (const layout of layouts) {
+          if (layout.x + layout.width > 100.01 || layout.y + layout.height > 100.01) {
+            add('critical', `Elemento fuera del área en ${this.deviceLabel(layout.device)}`, 'Muévelo o reduce su tamaño para que no se corte.', section.id, layer.id, layout.device);
+            break;
+          }
+        }
+        if (layer.type === 'text' && !section.background?.imageUrl && this.hasLowContrast(String(layer.style?.color || '#000000'), section.background?.color || '#ffffff')) {
+          add('warning', `Contraste bajo: ${this.layerLabel(layer)}`, 'Cambia el color del texto o del fondo para mejorar la lectura.', section.id, layer.id);
+        }
+      }
+    }
+    if (!enabledSections.some((section) => section.type === 'rsvp')) add('suggestion', 'RSVP no incluido', 'Agrega la sección de confirmación si deseas recibir respuestas.');
+    return issues;
+  }
+
+  private hasLowContrast(foreground: string, background: string): boolean {
+    const luminance = (color: string): number | null => {
+      const match = /^#([0-9a-f]{6})$/i.exec(color);
+      if (!match) return null;
+      const value = Number.parseInt(match[1], 16);
+      const channels = [value >> 16, (value >> 8) & 255, value & 255].map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= .03928 ? normalized / 12.92 : ((normalized + .055) / 1.055) ** 2.4;
+      });
+      return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+    };
+    const first = luminance(foreground);
+    const second = luminance(background);
+    if (first === null || second === null) return false;
+    const ratio = (Math.max(first, second) + .05) / (Math.min(first, second) + .05);
+    return ratio < 3;
   }
 
   private regenerateIds(design: VisualInvitationDesign): VisualInvitationDesign {

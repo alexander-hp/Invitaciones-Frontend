@@ -1,5 +1,5 @@
 <div class="ve-loading" *ngIf="loading">Preparando editor visual...</div>
-<div class="visual-editor" *ngIf="!loading && invitation && design">
+<div class="visual-editor" *ngIf="!loading && invitation && design" (focusin)="beginPropertyEdit($event)">
   <header class="ve-topbar">
     <button class="icon-button" type="button" title="Volver" (click)="back()">←</button>
     <div class="ve-title"><strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong><span>Editor visual · {{ autosaving ? 'Guardando...' : (hasUnsavedChanges ? 'Cambios pendientes' : autosaveState) }}</span></div>
@@ -14,10 +14,29 @@
     </div>
     <button class="secondary" type="button" (click)="openPreview()">Vista pública</button>
     <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
-    <button class="publish" type="button" [disabled]="publishing" (click)="publish()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
+    <button class="publish" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
   </header>
 
   <div class="ve-notice error" *ngIf="error">{{ error }}</div><div class="ve-notice success" *ngIf="message">{{ message }}</div>
+  <div class="publish-audit-backdrop" *ngIf="showPublishAudit" (click)="closePublishAudit()">
+    <section class="publish-audit" role="dialog" aria-modal="true" aria-labelledby="publishAuditTitle" (click)="$event.stopPropagation()">
+      <header><div><span>Revisión previa</span><h1 id="publishAuditTitle">Antes de publicar</h1></div><button type="button" title="Cerrar" (click)="closePublishAudit()">×</button></header>
+      <div class="audit-summary">
+        <article [class.ok]="criticalAuditCount === 0"><strong>{{ criticalAuditCount }}</strong><span>Críticos</span></article>
+        <article [class.ok]="warningAuditCount === 0"><strong>{{ warningAuditCount }}</strong><span>Recomendaciones</span></article>
+        <article><strong>{{ publishAuditIssues.length - criticalAuditCount - warningAuditCount }}</strong><span>Opcionales</span></article>
+      </div>
+      <div class="audit-ready" *ngIf="!publishAuditIssues.length"><strong>Todo está listo</strong><span>No encontramos problemas en el diseño ni en los datos esenciales.</span></div>
+      <div class="audit-list" *ngIf="publishAuditIssues.length">
+        <button *ngFor="let issue of publishAuditIssues" type="button" [class]="issue.severity" (click)="goToAuditIssue(issue)">
+          <i>{{ issue.severity === 'critical' ? '!' : issue.severity === 'warning' ? '△' : 'i' }}</i>
+          <span><small>{{ auditSeverityLabel(issue.severity) }}</small><strong>{{ issue.title }}</strong><em>{{ issue.detail }}</em></span>
+          <b *ngIf="issue.sectionId">Ir →</b>
+        </button>
+      </div>
+      <footer><p *ngIf="criticalAuditCount">Corrige los problemas críticos para habilitar la publicación.</p><button type="button" class="audit-cancel" (click)="closePublishAudit()">Seguir editando</button><button type="button" class="audit-publish" [disabled]="criticalAuditCount > 0 || publishing" (click)="publish()">{{ publishing ? 'Publicando...' : 'Publicar ahora' }}</button></footer>
+    </section>
+  </div>
   <div class="onboarding-backdrop" *ngIf="showOnboarding">
     <section class="onboarding-dialog">
       <div><span>Nuevo diseño</span><h1>¿Cómo quieres empezar?</h1></div>
@@ -143,7 +162,7 @@
       <div class="artboard-viewport" [style.width.px]="artboardWidth * canvasZoom" [style.height.px]="artboardHeight * canvasZoom">
       <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
         <div cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list">
-          <section *ngFor="let section of design.sections" cdkDrag class="canvas-section" [class.selected]="section.id === selectedSectionId" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)" (click)="selectSection(section)">
+          <section *ngFor="let section of design.sections" cdkDrag class="canvas-section" [attr.data-section-id]="section.id" [class.selected]="section.id === selectedSectionId" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)" (click)="selectSection(section)">
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
@@ -156,7 +175,7 @@
             <div class="layer-surface" [class.show-grid]="showGrid" [class.show-safe-margins]="showSafeMargins">
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-              <div *ngFor="let layer of section.layers" class="canvas-layer" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)">
+              <div *ngFor="let layer of section.layers" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)">
                 <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
                 <div *ngIf="layer.type === 'image' && layer.url" class="image-frame"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"></div>
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
