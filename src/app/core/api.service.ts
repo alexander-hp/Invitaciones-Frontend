@@ -74,6 +74,7 @@ import {
   WhatsAppBulkResponse,
   WhatsAppMediaInspection,
   WhatsAppMediaAssetModel,
+  WebImageSearchResult,
   WhatsAppMediaPayload,
   WhatsAppSendResponse,
   WhatsAppStatusResponse
@@ -111,6 +112,16 @@ export class ApiService {
 
   deleteVisualDesignRevision(invitationId: string, revisionId: string): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/${invitationId}/visual-revisions/${revisionId}`);
+  }
+
+  searchWebImages(query: string, orientation?: 'landscape' | 'portrait' | 'squarish'): Observable<{ images: WebImageSearchResult[]; total: number; totalPages: number }> {
+    let params = new HttpParams().set('q', query);
+    if (orientation) params = params.set('orientation', orientation);
+    return this.http.get<{ images: WebImageSearchResult[]; total: number; totalPages: number }>(`${this.apiUrl}/assets/search-images`, { params });
+  }
+
+  trackWebImage(downloadLocation: string): Observable<{ tracked: boolean }> {
+    return this.http.post<{ tracked: boolean }>(`${this.apiUrl}/assets/track-web-image`, { downloadLocation });
   }
 
   register(payload: { name: string; email: string; password: string; role?: User['role']; accountType?: User['accountType'] }): Observable<AuthResponse> {

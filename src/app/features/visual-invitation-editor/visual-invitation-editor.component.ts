@@ -6,13 +6,14 @@ import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
   EventModel, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
-  VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationSection, VisualLayerType
+  VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
+  VisualInvitationSection, VisualLayerType, WebImageSearchResult
 } from '../../core/models';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers' | 'history';
-type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean };
+type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
 type MediaFilter = 'all' | DesignMedia['type'];
 
 @Component({
@@ -50,6 +51,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   guideY: number | null = null;
   draggingLayerId = '';
   mediaFilter: MediaFilter = 'all';
+  webImageQuery = '';
+  webImageOrientation: '' | 'landscape' | 'portrait' | 'squarish' = '';
+  webImageResults: WebImageSearchResult[] = [];
+  searchingWebImages = false;
+  webImageError = '';
+  previewAnimationLayerId = '';
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
@@ -198,7 +205,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   get mediaLibrary(): DesignMedia[] {
     const media = new Map<string, DesignMedia>();
     for (const asset of this.design?.assets || []) {
-      media.set(asset.url, { id: asset.id, url: asset.url, type: asset.type, label: asset.name, stored: true });
+      media.set(asset.url, { id: asset.id, url: asset.url, type: asset.type, label: asset.name, stored: true, attribution: asset.attribution, attributionUrl: asset.attributionUrl, sourceUrl: asset.sourceUrl });
     }
     const content = this.invitation?.content;
     if (content?.coverImageUrl) media.set(content.coverImageUrl, { url: content.coverImageUrl, type: 'image', label: 'Portada de la invitación' });
@@ -228,6 +235,67 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   trackMediaByUrl(_index: number, media: DesignMedia): string {
     return media.url;
+  }
+
+  searchWebImages(): void {
+    const query = this.webImageQuery.trim();
+    if (query.length < 2) { this.webImageError = 'Escribe al menos 2 caracteres.'; return; }
+    this.searchingWebImages = true;
+    this.webImageError = '';
+    this.api.searchWebImages(query, this.webImageOrientation || undefined).subscribe({
+      next: ({ images }) => { this.webImageResults = images; this.searchingWebImages = false; },
+      error: (error) => {
+        this.webImageResults = [];
+        this.searchingWebImages = false;
+        this.webImageError = error?.error?.message || 'No fue posible buscar imágenes.';
+      }
+    });
+  }
+
+  addWebImage(image: WebImageSearchResult): void {
+    if ((this.design.assets || []).some((asset) => asset.url === image.url)) {
+      this.flash('La imagen ya está en tu biblioteca.');
+      return;
+    }
+    this.api.trackWebImage(image.downloadLocation).subscribe({
+      next: () => {
+        this.recordHistory();
+        this.design.assets = this.design.assets || [];
+        this.design.assets.push({
+          id: this.uid('asset'), url: image.url, type: 'image', name: image.alt || `Foto de ${image.photographer}`,
+          attribution: `Foto de ${image.photographer} en Unsplash`, attributionUrl: image.photographerUrl,
+          sourceUrl: image.sourceUrl, createdAt: new Date().toISOString()
+        });
+        this.flash('Imagen agregada a tu biblioteca.');
+      },
+      error: (error) => { this.webImageError = error?.error?.message || 'No fue posible agregar la imagen.'; }
+    });
+  }
+
+  previewAnimation(layer: VisualInvitationLayer): void {
+    if (!layer.animation || layer.animation.type === 'none') return;
+    this.previewAnimationLayerId = '';
+    setTimeout(() => { this.previewAnimationLayerId = layer.id; }, 0);
+    const duration = Number(layer.animation.duration || 1) + Number(layer.animation.delay || 0);
+    setTimeout(() => { if (this.previewAnimationLayerId === layer.id) this.previewAnimationLayerId = ''; }, Math.max(1200, duration * 1000 + 200));
+  }
+
+  animationFor(layer: VisualInvitationLayer): NonNullable<VisualInvitationLayer['animation']> {
+    layer.animation = layer.animation || { type: 'none', duration: 1, delay: 0, repeat: false };
+    return layer.animation;
+  }
+
+  editorAnimationClasses(layer: VisualInvitationLayer): Record<string, boolean> {
+    const type = layer.animation?.type || 'none';
+    return {
+      'preview-animation': this.previewAnimationLayerId === layer.id,
+      [`animation-${type}`]: this.previewAnimationLayerId === layer.id && type !== 'none'
+    };
+  }
+
+  toggleTextShadow(layer: VisualInvitationLayer, enabled: boolean): void {
+    layer.style = layer.style || {};
+    layer.style.textShadow = enabled ? '0 2px 8px rgba(0,0,0,.35)' : '';
   }
 
   selectSection(section: VisualInvitationSection): void {
@@ -663,7 +731,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       color: String(s.color || '#2d2927'), backgroundColor: String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(s.fontSize || 30)}px`,
       fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
-      borderRadius: `${Number(s.borderRadius || 0)}px`, opacity: String(s.opacity ?? 1)
+      lineHeight: String(s.lineHeight || 1.2), textTransform: String(s.textTransform || 'none'),
+      textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
+      borderRadius: `${Number(s.borderRadius || 0)}px`, opacity: String(s.opacity ?? 1),
+      animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
+      animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
   }
 
@@ -944,6 +1016,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private newLayer(type: VisualLayerType, text: string, x: number, y: number, width: number, height: number, fontSize = 30): VisualInvitationLayer {
     return {
       id: this.uid('layer'), type, name: text.trim().slice(0, 32) || this.layerTypeLabel(type), text, x, y, width, height, rotation: 0, zIndex: 1, locked: false, hidden: false,
+      animation: { type: 'none', duration: 1, delay: 0, repeat: false },
       style: { color: '#2d2927', fontFamily: 'Arial, sans-serif', fontSize, fontWeight: type === 'text' ? 600 : 400, textAlign: 'center', borderRadius: 0, opacity: 1 }
     };
   }

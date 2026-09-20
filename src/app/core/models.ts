@@ -264,6 +264,10 @@ export interface VisualInvitationLayerStyle {
   objectFit?: 'cover' | 'contain';
   objectPositionX?: number;
   objectPositionY?: number;
+  lineHeight?: number;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  textDecoration?: 'none' | 'underline' | 'line-through';
+  textShadow?: string;
 }
 
 export interface VisualInvitationLayerLayout {
@@ -290,6 +294,12 @@ export interface VisualInvitationLayer {
   zIndex?: number;
   locked?: boolean;
   hidden?: boolean;
+  animation?: {
+    type: 'none' | 'fade' | 'slide-up' | 'slide-left' | 'zoom' | 'float';
+    duration?: number;
+    delay?: number;
+    repeat?: boolean;
+  };
   layouts?: Partial<Record<'mobile' | 'tablet' | 'desktop', VisualInvitationLayerLayout>>;
   style?: VisualInvitationLayerStyle;
 }
@@ -299,7 +309,24 @@ export interface VisualInvitationAsset {
   url: string;
   type: 'image' | 'video' | 'audio';
   name: string;
+  attribution?: string;
+  attributionUrl?: string;
+  sourceUrl?: string;
   createdAt?: string;
+}
+
+export interface WebImageSearchResult {
+  id: string;
+  thumbUrl: string;
+  url: string;
+  width?: number;
+  height?: number;
+  color?: string;
+  alt?: string;
+  photographer: string;
+  photographerUrl: string;
+  sourceUrl: string;
+  downloadLocation: string;
 }
 
 export interface VisualInvitationSection {

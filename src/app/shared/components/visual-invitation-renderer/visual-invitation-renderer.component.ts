@@ -71,8 +71,23 @@ export class VisualInvitationRendererComponent {
       color: String(style.color || '#25211f'), backgroundColor: String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
-      borderRadius: `${Number(style.borderRadius || 0)}px`, opacity: String(style.opacity ?? 1)
+      lineHeight: String(style.lineHeight || 1.2), textTransform: String(style.textTransform || 'none'),
+      textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
+      borderRadius: `${Number(style.borderRadius || 0)}px`, opacity: String(style.opacity ?? 1),
+      animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
+      animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
+  }
+
+  animationClass(layer: VisualInvitationLayer): string[] {
+    const type = layer.animation?.type || 'none';
+    return type === 'none' ? [`layer-${layer.type}`] : [`layer-${layer.type}`, 'animated-layer', `animation-${type}`];
+  }
+
+  assetCredit(url?: string): { label: string; url: string } | undefined {
+    if (!url) return undefined;
+    const asset = this.invitation?.content?.visualDesign?.assets?.find((item) => item.url === url && item.attribution && item.attributionUrl);
+    return asset ? { label: asset.attribution!, url: asset.attributionUrl! } : undefined;
   }
 
   @HostListener('window:resize')
