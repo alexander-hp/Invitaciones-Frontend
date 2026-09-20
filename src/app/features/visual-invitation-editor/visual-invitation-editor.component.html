@@ -172,8 +172,9 @@
             <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state">
               <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>
             </div>
-            <div class="layer-surface" [class.show-grid]="showGrid" [class.show-safe-margins]="showSafeMargins" [class.palette-drop-target]="paletteDropSectionId === section.id" (dragover)="dragPaletteOver($event, section)" (dragleave)="leavePaletteTarget($event, section)" (drop)="dropPaletteItem($event, section)">
+            <div class="layer-surface" [class.show-grid]="showGrid" [class.show-safe-margins]="showSafeMargins" [class.palette-drop-target]="paletteDropSectionId === section.id" [class.marquee-active]="selectionMarquee?.sectionId === section.id" (pointerdown)="beginMarquee($event, section)" (click)="$event.stopPropagation()" (dragover)="dragPaletteOver($event, section)" (dragleave)="leavePaletteTarget($event, section)" (drop)="dropPaletteItem($event, section)">
               <div class="palette-drop-message" *ngIf="paletteDropSectionId === section.id">Suelta aquí</div>
+              <div class="selection-marquee" *ngIf="selectionMarquee as marquee" [class.visible]="marquee.sectionId === section.id" [style.left.%]="marquee.left" [style.top.%]="marquee.top" [style.width.%]="marquee.width" [style.height.%]="marquee.height"></div>
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
               <div *ngFor="let layer of section.layers" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
@@ -227,7 +228,7 @@
         <div class="layer-panel" *ngIf="selectedSection as section">
           <div class="layer-panel-title"><strong>{{ section.title || section.type }}</strong><span>{{ section.layers.length }} elementos</span></div>
           <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
-          <p class="selection-hint">Selecciona varios elementos con Shift + clic.</p>
+          <p class="selection-hint">Usa Shift + clic o arrastra un recuadro sobre el lienzo para seleccionar varios.</p>
           <article *ngFor="let item of orderedLayers" [class.active]="isLayerSelected(item)" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item, $event)">
             <span class="layer-type">{{ item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : '●' }}</span>
             <div><strong>{{ layerLabel(item) }}</strong><small>{{ item.type }}<ng-container *ngIf="item.groupId"> · agrupado</ng-container></small></div>

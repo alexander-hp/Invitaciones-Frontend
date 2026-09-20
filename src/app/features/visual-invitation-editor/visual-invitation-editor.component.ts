@@ -30,6 +30,7 @@ type PublishAuditIssue = {
   layerId?: string;
   device?: DeviceMode;
 };
+type SelectionMarquee = { sectionId: string; left: number; top: number; width: number; height: number };
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -80,6 +81,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   publishAuditIssues: PublishAuditIssue[] = [];
   editingLayerId = '';
   paletteDropSectionId = '';
+  selectionMarquee?: SelectionMarquee;
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
 
@@ -91,6 +93,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private suppressNextLayerClickId = '';
   private inlineEditOriginal = '';
   private paletteDragItem?: PaletteDragItem;
+  private marqueeState?: {
+    section: VisualInvitationSection;
+    canvas: HTMLElement;
+    startX: number;
+    startY: number;
+    baseIds: string[];
+    moved: boolean;
+  };
   private rotationState?: {
     layout: VisualInvitationLayerLayout;
     centerX: number;
@@ -740,6 +750,25 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
+  beginMarquee(event: PointerEvent, section: VisualInvitationSection): void {
+    if (event.button !== 0 || this.paletteDragItem || event.target !== event.currentTarget) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const canvas = event.currentTarget as HTMLElement;
+    const rect = canvas.getBoundingClientRect();
+    const startX = this.bound((event.clientX - rect.left) / rect.width * 100, 0, 100);
+    const startY = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
+    if (this.selectedSectionId !== section.id) {
+      this.selectedSectionId = section.id;
+      this.clearLayerSelection();
+    }
+    const baseIds = event.shiftKey ? [...this.selectedLayerIds] : [];
+    if (!event.shiftKey) this.clearLayerSelection();
+    this.marqueeState = { section, canvas, startX, startY, baseIds, moved: false };
+    this.selectionMarquee = { sectionId: section.id, left: startX, top: startY, width: 0, height: 0 };
+    this.inspectorView = 'properties';
+  }
+
   beginResize(event: PointerEvent, layer: VisualInvitationLayer, corner: ResizeCorner): void {
     if (layer.locked) return;
     event.preventDefault();
@@ -819,6 +848,39 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    const marquee = this.marqueeState;
+    if (marquee) {
+      const rect = marquee.canvas.getBoundingClientRect();
+      const currentX = this.bound((event.clientX - rect.left) / rect.width * 100, 0, 100);
+      const currentY = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
+      const startClientX = rect.left + marquee.startX / 100 * rect.width;
+      const startClientY = rect.top + marquee.startY / 100 * rect.height;
+      if (!marquee.moved && Math.hypot(event.clientX - startClientX, event.clientY - startClientY) < 3) return;
+      event.preventDefault();
+      marquee.moved = true;
+      const left = Math.min(marquee.startX, currentX);
+      const top = Math.min(marquee.startY, currentY);
+      this.selectionMarquee = {
+        sectionId: marquee.section.id,
+        left,
+        top,
+        width: Math.abs(currentX - marquee.startX),
+        height: Math.abs(currentY - marquee.startY)
+      };
+      const right = left + this.selectionMarquee.width;
+      const bottom = top + this.selectionMarquee.height;
+      const intersected = marquee.section.layers.filter((layer) => {
+        if (layer.hidden) return false;
+        const layout = this.layoutFor(layer);
+        return layout.x < right && layout.x + layout.width > left && layout.y < bottom && layout.y + layout.height > top;
+      });
+      const matchedGroups = new Set(intersected.map((layer) => layer.groupId).filter(Boolean) as string[]);
+      const matched = marquee.section.layers.filter((layer) =>
+        intersected.some((item) => item.id === layer.id) || (!!layer.groupId && matchedGroups.has(layer.groupId))
+      ).map((layer) => layer.id);
+      this.setLayerSelection([...marquee.baseIds, ...matched]);
+      return;
+    }
     const rotation = this.rotationState;
     if (rotation) {
       event.preventDefault();
@@ -871,6 +933,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (this.layerDragState?.moved) this.suppressNextLayerClickId = this.layerDragState.layer.id;
     this.resizeState = undefined;
     this.rotationState = undefined;
+    this.marqueeState = undefined;
+    this.selectionMarquee = undefined;
     this.layerDragState = undefined;
     this.draggingLayerId = '';
     this.guideX = null;
