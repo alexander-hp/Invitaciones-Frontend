@@ -533,7 +533,8 @@ export class ApiService {
   }
 
   getPublicInvitation(slug: string): Observable<{ invitation: InvitationModel }> {
-    return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`);
+    const params = new HttpParams().set('_v', Date.now().toString());
+    return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`, { params });
   }
 
   checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<GuestAccessResponse> {

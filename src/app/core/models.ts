@@ -276,6 +276,8 @@ export interface VisualInvitationLayerStyle {
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   textDecoration?: 'none' | 'underline' | 'line-through';
   textShadow?: string;
+  borderColor?: string;
+  borderWidth?: number;
 }
 
 export interface VisualInvitationLayerLayout {
@@ -357,6 +359,17 @@ export interface VisualInvitationDesign {
   active: boolean;
   mode: 'easy' | 'advanced';
   responsiveMode?: 'shared' | 'independent';
+  theme?: {
+    backgroundColor: string;
+    textColor: string;
+    accentColor: string;
+    headingFont: string;
+    bodyFont: string;
+    buttonBackgroundColor: string;
+    buttonTextColor: string;
+    buttonStyle: 'solid' | 'outline' | 'soft';
+    buttonRadius: number;
+  };
   assets?: VisualInvitationAsset[];
   sections: VisualInvitationSection[];
 }

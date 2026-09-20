@@ -15,6 +15,7 @@ type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
 type MediaFilter = 'all' | DesignMedia['type'];
+type VisualTheme = NonNullable<VisualInvitationDesign['theme']>;
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -98,6 +99,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'night', label: 'Noche elegante', colors: ['#171717', '#d6b46c'] }
   ];
 
+  readonly themePresets: Array<{ key: string; label: string; theme: VisualTheme }> = [
+    { key: 'editorial', label: 'Editorial', theme: { backgroundColor: '#f6f1eb', textColor: '#24211f', accentColor: '#b57c62', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#24211f', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 4 } },
+    { key: 'romantic', label: 'Romántico', theme: { backgroundColor: '#fff7f6', textColor: '#56383d', accentColor: '#b96775', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#9f5260', buttonTextColor: '#ffffff', buttonStyle: 'soft', buttonRadius: 18 } },
+    { key: 'garden', label: 'Jardín', theme: { backgroundColor: '#f5f4ec', textColor: '#263c32', accentColor: '#66836f', headingFont: 'Cinzel, serif', bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#385947', buttonTextColor: '#ffffff', buttonStyle: 'outline', buttonRadius: 2 } },
+    { key: 'celebration', label: 'Celebración', theme: { backgroundColor: '#fffaf0', textColor: '#292523', accentColor: '#c04b5c', headingFont: "'Alex Brush', cursive", bodyFont: 'Arial, sans-serif', buttonBackgroundColor: '#167c72', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 24 } },
+    { key: 'night', label: 'Noche', theme: { backgroundColor: '#181715', textColor: '#f5efe4', accentColor: '#d2ad63', headingFont: 'Cinzel, serif', bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#d2ad63', buttonTextColor: '#181715', buttonStyle: 'outline', buttonRadius: 0 } }
+  ];
+
   readonly sectionCatalog = [
     { type: 'custom', label: 'Sección vacía' },
     { type: 'story', label: 'Nuestra historia' }, { type: 'locations', label: 'Ubicaciones' },
@@ -129,6 +138,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design = this.clone(storedDesign?.sections?.length ? storedDesign : this.createDefaultDesign());
         this.design.responsiveMode = this.design.responsiveMode || 'shared';
         this.design.assets = this.design.assets || [];
+        this.design.theme = this.design.theme || this.inferTheme();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
         this.startAutosave();
@@ -195,6 +205,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   setCanvasZoom(value: number | string): void {
     this.canvasZoom = this.bound(Number(value) || 1, .5, 1.5);
+  }
+
+  applyThemePreset(preset: { theme: VisualTheme }): void {
+    this.recordHistory();
+    this.design.theme = this.clone(preset.theme);
+    this.applyThemeValues(this.design.sections);
+    this.flash('Tema aplicado a toda la invitación.');
+  }
+
+  applyCurrentTheme(scope: 'section' | 'all'): void {
+    if (!this.design.theme) return;
+    const sections = scope === 'section' && this.selectedSection ? [this.selectedSection] : this.design.sections;
+    this.recordHistory();
+    this.applyThemeValues(sections);
+    this.flash(scope === 'section' ? 'Estilo aplicado a esta sección.' : 'Estilo aplicado a toda la invitación.');
   }
 
   setResponsiveMode(independent: boolean): void {
@@ -343,7 +368,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, '#ffffff', 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
@@ -357,7 +382,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
     const layer = this.newLayer(type, text, 20, 25, type === 'text' ? 60 : 45, type === 'text' ? 18 : 30);
     layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
-    if (type === 'shape') layer.style = { backgroundColor: '#d88f7d', borderRadius: 8, opacity: 1 };
+    if (type === 'shape') layer.style = { backgroundColor: this.design.theme?.accentColor || '#d88f7d', borderRadius: 8, opacity: 1 };
+    this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
   }
@@ -408,7 +434,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       layers = [divider];
     }
     if (!layers.length) return;
-    layers.forEach((layer, index) => { layer.groupId = layers.length > 1 ? groupId : undefined; layer.zIndex = topZ + index + 1; });
+    layers.forEach((layer, index) => {
+      layer.groupId = layers.length > 1 ? groupId : undefined;
+      layer.zIndex = topZ + index + 1;
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    });
     section.layers.push(...layers);
     this.setLayerSelection(layers.map((layer) => layer.id));
     this.inspectorView = 'properties';
@@ -798,7 +828,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
       lineHeight: String(s.lineHeight || 1.2), textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
-      borderRadius: `${Number(s.borderRadius || 0)}px`, opacity: String(s.opacity ?? 1),
+      borderRadius: `${Number(s.borderRadius || 0)}px`, borderColor: String(s.borderColor || 'transparent'),
+      borderStyle: Number(s.borderWidth || 0) > 0 ? 'solid' : 'none', borderWidth: `${Number(s.borderWidth || 0)}px`, opacity: String(s.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
@@ -1093,7 +1124,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (settings.dedications !== false) sections.push(this.makeSection('dedications', 'Dedicatorias', palette.background, 620));
       if (settings.songRequests !== false) sections.push(this.makeSection('songs', 'Pide una canción', palette.background, 560));
     }
-    return { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', sections };
+    const presetTheme = this.themePresets.find((item) => item.key === key)?.theme || this.themePresets[0].theme;
+    return { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', theme: this.clone(presetTheme), sections };
   }
 
   private makeSection(type: string, title: string, color: string, height: number): VisualInvitationSection {
@@ -1101,11 +1133,58 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private newLayer(type: VisualLayerType, text: string, x: number, y: number, width: number, height: number, fontSize = 30): VisualInvitationLayer {
+    const theme = this.design?.theme || this.themePresets[0].theme;
     return {
       id: this.uid('layer'), type, name: text.trim().slice(0, 32) || this.layerTypeLabel(type), text, x, y, width, height, rotation: 0, zIndex: 1, locked: false, hidden: false,
       animation: { type: 'none', duration: 1, delay: 0, repeat: false },
-      style: { color: '#2d2927', fontFamily: 'Arial, sans-serif', fontSize, fontWeight: type === 'text' ? 600 : 400, textAlign: 'center', borderRadius: 0, opacity: 1 }
+      style: { color: theme.textColor, fontFamily: fontSize >= 30 ? theme.headingFont : theme.bodyFont, fontSize, fontWeight: type === 'text' ? 600 : 400, textAlign: 'center', borderRadius: type === 'button' ? theme.buttonRadius : 0, opacity: 1 }
     };
+  }
+
+  private inferTheme(): VisualTheme {
+    const firstSection = this.design?.sections?.[0];
+    const textLayer = firstSection?.layers?.find((layer) => layer.type === 'text');
+    return {
+      ...this.clone(this.themePresets[0].theme),
+      backgroundColor: firstSection?.background?.color || this.themePresets[0].theme.backgroundColor,
+      textColor: String(textLayer?.style?.color || this.themePresets[0].theme.textColor),
+      headingFont: String(textLayer?.style?.fontFamily || this.themePresets[0].theme.headingFont)
+    };
+  }
+
+  private applyThemeValues(sections: VisualInvitationSection[]): void {
+    const theme = this.design.theme || this.themePresets[0].theme;
+    for (const section of sections) {
+      section.background = { ...(section.background || {}), color: theme.backgroundColor };
+      for (const layer of section.layers) this.applyThemeToLayer(layer, theme);
+    }
+  }
+
+  private applyThemeToLayer(layer: VisualInvitationLayer, theme: VisualTheme): void {
+    layer.style = layer.style || {};
+    if (layer.type === 'text') {
+      const heading = Number(layer.style.fontSize || 0) >= 30;
+      layer.style.fontFamily = heading ? theme.headingFont : theme.bodyFont;
+      layer.style.color = heading ? theme.accentColor : theme.textColor;
+    } else if (layer.type === 'button') {
+      layer.style.fontFamily = theme.bodyFont;
+      layer.style.borderRadius = theme.buttonRadius;
+      layer.style.borderWidth = theme.buttonStyle === 'outline' ? 2 : 0;
+      layer.style.borderColor = theme.buttonBackgroundColor;
+      layer.style.backgroundColor = theme.buttonStyle === 'solid'
+        ? theme.buttonBackgroundColor
+        : theme.buttonStyle === 'soft' ? this.colorWithAlpha(theme.buttonBackgroundColor, .16) : 'transparent';
+      layer.style.color = theme.buttonStyle === 'solid' ? theme.buttonTextColor : theme.buttonBackgroundColor;
+    } else if (layer.type === 'shape') {
+      layer.style.backgroundColor = theme.accentColor;
+    }
+  }
+
+  private colorWithAlpha(color: string, alpha: number): string {
+    const match = /^#([0-9a-f]{6})$/i.exec(color);
+    if (!match) return color;
+    const value = Number.parseInt(match[1], 16);
+    return `rgba(${value >> 16},${(value >> 8) & 255},${value & 255},${alpha})`;
   }
 
   private regenerateIds(design: VisualInvitationDesign): VisualInvitationDesign {

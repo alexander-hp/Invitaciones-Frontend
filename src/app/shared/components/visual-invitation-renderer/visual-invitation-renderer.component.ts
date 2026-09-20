@@ -48,6 +48,22 @@ export class VisualInvitationRendererComponent {
       ?? 0;
   }
 
+  designThemeStyle(): Record<string, string> {
+    const theme = this.invitation?.content?.visualDesign?.theme;
+    if (!theme) return {};
+    return {
+      '--visual-background': theme.backgroundColor,
+      '--visual-text': theme.textColor,
+      '--visual-accent': theme.accentColor,
+      '--visual-heading-font': theme.headingFont,
+      '--visual-body-font': theme.bodyFont,
+      '--visual-button-background': theme.buttonStyle === 'solid' ? theme.buttonBackgroundColor : theme.buttonStyle === 'soft' ? `color-mix(in srgb,${theme.buttonBackgroundColor} 16%,transparent)` : 'transparent',
+      '--visual-button-text': theme.buttonStyle === 'solid' ? theme.buttonTextColor : theme.buttonBackgroundColor,
+      '--visual-button-border': theme.buttonStyle === 'outline' ? `2px solid ${theme.buttonBackgroundColor}` : '0 solid transparent',
+      '--visual-button-radius': `${theme.buttonRadius}px`
+    };
+  }
+
   sectionStyle(section: VisualInvitationSection): Record<string, string> {
     const background = section.background || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
@@ -73,7 +89,8 @@ export class VisualInvitationRendererComponent {
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
       lineHeight: String(style.lineHeight || 1.2), textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
-      borderRadius: `${Number(style.borderRadius || 0)}px`, opacity: String(style.opacity ?? 1),
+      borderRadius: `${Number(style.borderRadius || 0)}px`, borderColor: String(style.borderColor || 'transparent'),
+      borderStyle: Number(style.borderWidth || 0) > 0 ? 'solid' : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`, opacity: String(style.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };

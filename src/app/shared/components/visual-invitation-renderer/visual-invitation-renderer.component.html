@@ -1,4 +1,13 @@
-<main class="visual-invitation" *ngIf="sections.length; else emptyDesign">
+<main class="visual-invitation" *ngIf="sections.length; else emptyDesign"
+  [style.--visual-background]="invitation?.content?.visualDesign?.theme?.backgroundColor"
+  [style.--visual-text]="invitation?.content?.visualDesign?.theme?.textColor"
+  [style.--visual-accent]="invitation?.content?.visualDesign?.theme?.accentColor"
+  [style.--visual-heading-font]="invitation?.content?.visualDesign?.theme?.headingFont"
+  [style.--visual-body-font]="invitation?.content?.visualDesign?.theme?.bodyFont"
+  [style.--visual-button-background]="designThemeStyle()['--visual-button-background']"
+  [style.--visual-button-text]="designThemeStyle()['--visual-button-text']"
+  [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
+  [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
   <section *ngFor="let section of sections" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of section.layers" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>

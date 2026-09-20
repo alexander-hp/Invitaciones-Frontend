@@ -39,6 +39,28 @@
           <span>{{ preset.label }}</span>
         </button>
       </div>
+      <details class="theme-editor" open *ngIf="design.theme as theme">
+        <summary>Estilo global</summary>
+        <p>Cambia colores, tipografías y botones sin mover el contenido.</p>
+        <div class="theme-presets">
+          <button *ngFor="let preset of themePresets" type="button" [title]="'Aplicar tema ' + preset.label" (click)="applyThemePreset(preset)">
+            <span><i [style.background]="preset.theme.backgroundColor"></i><i [style.background]="preset.theme.accentColor"></i><i [style.background]="preset.theme.textColor"></i></span>{{ preset.label }}
+          </button>
+        </div>
+        <div class="theme-colors">
+          <label>Fondo<input [(ngModel)]="theme.backgroundColor" type="color"></label>
+          <label>Texto<input [(ngModel)]="theme.textColor" type="color"></label>
+          <label>Acento<input [(ngModel)]="theme.accentColor" type="color"></label>
+          <label>Botón<input [(ngModel)]="theme.buttonBackgroundColor" type="color"></label>
+        </div>
+        <label>Títulos<select [(ngModel)]="theme.headingFont"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Georgia, serif</option></select></label>
+        <label>Texto general<select [(ngModel)]="theme.bodyFont"><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option></select></label>
+        <div class="theme-button-settings">
+          <label>Botones<select [(ngModel)]="theme.buttonStyle"><option value="solid">Sólido</option><option value="outline">Contorno</option><option value="soft">Suave</option></select></label>
+          <label>Redondeado<input [(ngModel)]="theme.buttonRadius" type="number" min="0" max="100"></label>
+        </div>
+        <div class="theme-apply-actions"><button type="button" (click)="applyCurrentTheme('section')">Esta sección</button><button type="button" (click)="applyCurrentTheme('all')">Toda la invitación</button></div>
+      </details>
       <ng-container *ngIf="personalTemplates.length">
         <h2>Mis plantillas</h2>
         <div class="personal-template-list">
