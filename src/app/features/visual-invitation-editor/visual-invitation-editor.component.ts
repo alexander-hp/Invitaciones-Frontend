@@ -74,6 +74,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   smartSnapping = true;
   showPublishAudit = false;
   publishAuditIssues: PublishAuditIssue[] = [];
+  editingLayerId = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
 
@@ -83,6 +84,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private lastSavedSnapshot = '';
   private suppressNextLayerClickId = '';
+  private inlineEditOriginal = '';
+  private rotationState?: {
+    layout: VisualInvitationLayerLayout;
+    centerX: number;
+    centerY: number;
+    startAngle: number;
+    initialRotation: number;
+  };
   private resizeState?: {
     corner: ResizeCorner;
     layout: VisualInvitationLayerLayout;
@@ -632,7 +641,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   beginLayerDrag(event: PointerEvent, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
-    if (layer.locked || this.resizing || (event.target as HTMLElement).closest('.resize-handle, audio, video, button, input')) return;
+    if (layer.locked || this.resizing || this.editingLayerId === layer.id || (event.target as HTMLElement).closest('.resize-handle, .rotate-handle, .layer-toolbar, .inline-text-editor, audio, video, button, input')) return;
     event.preventDefault();
     event.stopPropagation();
     const canvas = (event.currentTarget as HTMLElement).closest('.layer-surface') as HTMLElement;
@@ -675,8 +684,79 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
+  beginRotate(event: PointerEvent, layer: VisualInvitationLayer): void {
+    if (layer.locked) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const element = (event.currentTarget as HTMLElement).closest('.canvas-layer') as HTMLElement;
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const layout = this.editableLayout(layer);
+    this.recordHistory();
+    this.resizing = true;
+    this.rotationState = {
+      layout,
+      centerX,
+      centerY,
+      startAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
+      initialRotation: Number(layout.rotation || 0)
+    };
+  }
+
+  startInlineEdit(event: MouseEvent, section: VisualInvitationSection, layer: VisualInvitationLayer): void {
+    if (layer.locked || !['text', 'button'].includes(layer.type)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.applyLayerSelection(section, layer, false);
+    this.recordHistory();
+    this.inlineEditOriginal = layer.text || '';
+    this.editingLayerId = layer.id;
+    setTimeout(() => {
+      const editor = document.querySelector(`[data-inline-editor="${layer.id}"]`) as HTMLElement | null;
+      if (!editor) return;
+      editor.focus();
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
+  }
+
+  finishInlineEdit(event: FocusEvent, layer: VisualInvitationLayer): void {
+    if (this.editingLayerId !== layer.id) return;
+    const target = event.target as HTMLElement;
+    layer.text = (target.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+    this.editingLayerId = '';
+  }
+
+  handleInlineKeydown(event: KeyboardEvent, layer: VisualInvitationLayer): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      layer.text = this.inlineEditOriginal;
+      this.editingLayerId = '';
+      (event.target as HTMLElement).blur();
+      return;
+    }
+    if ((layer.type === 'button' && event.key === 'Enter') || ((event.ctrlKey || event.metaKey) && event.key === 'Enter')) {
+      event.preventDefault();
+      (event.target as HTMLElement).blur();
+    }
+  }
+
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    const rotation = this.rotationState;
+    if (rotation) {
+      event.preventDefault();
+      const angle = Math.atan2(event.clientY - rotation.centerY, event.clientX - rotation.centerX) * 180 / Math.PI;
+      let next = rotation.initialRotation + angle - rotation.startAngle;
+      next = event.shiftKey ? Math.round(next / 15) * 15 : Math.round(next);
+      rotation.layout.rotation = ((next + 180) % 360 + 360) % 360 - 180;
+      return;
+    }
     const resize = this.resizeState;
     if (resize) {
       event.preventDefault();
@@ -719,6 +799,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   endPointerInteraction(): void {
     if (this.layerDragState?.moved) this.suppressNextLayerClickId = this.layerDragState.layer.id;
     this.resizeState = undefined;
+    this.rotationState = undefined;
     this.layerDragState = undefined;
     this.draggingLayerId = '';
     this.guideX = null;
