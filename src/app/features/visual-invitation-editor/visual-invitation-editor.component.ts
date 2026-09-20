@@ -26,6 +26,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   templateName = '';
   selectedSectionId = '';
   selectedLayerId = '';
+  selectedLayerIds: string[] = [];
   device: DeviceMode = 'mobile';
   loading = true;
   saving = false;
@@ -46,6 +47,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private redoStack: VisualInvitationDesign[] = [];
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private lastSavedSnapshot = '';
+  private suppressNextLayerClickId = '';
   private resizeState?: {
     corner: ResizeCorner;
     layout: VisualInvitationLayerLayout;
@@ -60,14 +62,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private layerDragState?: {
     layer: VisualInvitationLayer;
     section: VisualInvitationSection;
-    layout: VisualInvitationLayerLayout;
+    items: Array<{ layer: VisualInvitationLayer; layout: VisualInvitationLayerLayout; x: number; y: number; width: number; height: number }>;
     canvas: HTMLElement;
     startX: number;
     startY: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    bounds: { x: number; y: number; width: number; height: number };
     moved: boolean;
   };
 
@@ -123,6 +122,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   get selectedLayer(): VisualInvitationLayer | undefined {
     return this.selectedSection?.layers.find((item) => item.id === this.selectedLayerId);
+  }
+
+  get selectedLayers(): VisualInvitationLayer[] {
+    const ids = new Set(this.selectedLayerIds);
+    return (this.selectedSection?.layers || []).filter((item) => ids.has(item.id));
+  }
+
+  get selectedLayerCount(): number {
+    return this.selectedLayers.length;
   }
 
   get artboardWidth(): number {
@@ -181,18 +189,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   selectSection(section: VisualInvitationSection): void {
     this.selectedSectionId = section.id;
-    this.selectedLayerId = '';
+    this.clearLayerSelection();
   }
 
   selectLayer(section: VisualInvitationSection, layer: VisualInvitationLayer, event: MouseEvent): void {
     event.stopPropagation();
-    this.selectedSectionId = section.id;
-    this.selectedLayerId = layer.id;
+    if (this.suppressNextLayerClickId === layer.id) {
+      this.suppressNextLayerClickId = '';
+      return;
+    }
+    if (this.layerDragState?.moved) return;
+    this.applyLayerSelection(section, layer, event.shiftKey);
     this.inspectorView = 'properties';
   }
 
-  selectLayerFromPanel(layer: VisualInvitationLayer): void {
-    this.selectedLayerId = layer.id;
+  selectLayerFromPanel(layer: VisualInvitationLayer, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!this.selectedSection) return;
+    this.applyLayerSelection(this.selectedSection, layer, event.shiftKey);
     this.inspectorView = 'properties';
   }
 
@@ -202,7 +216,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
-    this.selectedLayerId = section.layers[0]?.id || '';
+    this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
   }
 
   addLayer(type: VisualLayerType): void {
@@ -214,35 +228,41 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
     if (type === 'shape') layer.style = { backgroundColor: '#d88f7d', borderRadius: 8, opacity: 1 };
     section.layers.push(layer);
-    this.selectedLayerId = layer.id;
+    this.setLayerSelection([layer.id]);
   }
 
   removeLayer(): void {
     const section = this.selectedSection;
-    if (!section || !this.selectedLayer) return;
+    const ids = new Set(this.selectedLayerIds);
+    if (!section || !ids.size) return;
     this.recordHistory();
-    section.layers = section.layers.filter((item) => item.id !== this.selectedLayerId);
-    this.selectedLayerId = '';
+    section.layers = section.layers.filter((item) => !ids.has(item.id));
+    this.clearLayerSelection();
   }
 
   duplicateLayer(): void {
     const section = this.selectedSection;
-    const layer = this.selectedLayer;
-    if (!section || !layer) return;
+    const layers = this.selectedLayers;
+    if (!section || !layers.length) return;
     this.recordHistory();
-    const copy = this.clone(layer);
-    copy.id = this.uid('layer');
-    copy.name = `${this.layerLabel(layer)} copia`;
-    copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
-    copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
-    if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
-      if (!layout) return;
-      layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
-      layout.y = this.bound(layout.y + 3, 0, 100 - layout.height);
+    const copiedGroup = layers.length > 1 ? this.uid('group') : undefined;
+    const copies = layers.map((layer) => {
+      const copy = this.clone(layer);
+      copy.id = this.uid('layer');
+      copy.groupId = copiedGroup;
+      copy.name = `${this.layerLabel(layer)} copia`;
+      copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
+      copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
+      if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
+        if (!layout) return;
+        layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
+        layout.y = this.bound(layout.y + 3, 0, 100 - layout.height);
+      });
+      copy.zIndex = (copy.zIndex || 1) + 1;
+      return copy;
     });
-    copy.zIndex = (copy.zIndex || 1) + 1;
-    section.layers.push(copy);
-    this.selectedLayerId = copy.id;
+    section.layers.push(...copies);
+    this.setLayerSelection(copies.map((copy) => copy.id));
   }
 
   removeSection(section: VisualInvitationSection): void {
@@ -250,7 +270,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     this.design.sections = this.design.sections.filter((item) => item.id !== section.id);
     this.selectedSectionId = this.design.sections[0].id;
-    this.selectedLayerId = '';
+    this.clearLayerSelection();
   }
 
   dropSection(event: CdkDragDrop<VisualInvitationSection[]>): void {
@@ -265,14 +285,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     const canvas = (event.currentTarget as HTMLElement).closest('.layer-surface') as HTMLElement;
     if (!canvas) return;
-    const layout = this.editableLayout(layer);
-    this.selectedSectionId = section.id;
-    this.selectedLayerId = layer.id;
+    if (event.shiftKey) {
+      this.applyLayerSelection(section, layer, true);
+      this.suppressNextLayerClickId = layer.id;
+      return;
+    }
+    if (!this.selectedLayerIds.includes(layer.id)) this.applyLayerSelection(section, layer, false);
+    const items = this.selectedLayers.filter((item) => !item.locked).map((item) => {
+      const layout = this.editableLayout(item);
+      return { layer: item, layout, x: layout.x, y: layout.y, width: layout.width, height: layout.height };
+    });
+    if (!items.length) return;
+    const minX = Math.min(...items.map((item) => item.x));
+    const minY = Math.min(...items.map((item) => item.y));
+    const maxX = Math.max(...items.map((item) => item.x + item.width));
+    const maxY = Math.max(...items.map((item) => item.y + item.height));
     this.inspectorView = 'properties';
     this.draggingLayerId = layer.id;
     this.layerDragState = {
-      layer, section, layout, canvas, startX: event.clientX, startY: event.clientY,
-      x: layout.x, y: layout.y, width: layout.width, height: layout.height, moved: false
+      layer, section, items, canvas, startX: event.clientX, startY: event.clientY,
+      bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }, moved: false
     };
   }
 
@@ -317,17 +349,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!drag.moved && Math.hypot(distanceX, distanceY) < 3) return;
     event.preventDefault();
     if (!drag.moved) { this.recordHistory(); drag.moved = true; }
-    const rawX = this.bound(drag.x + distanceX / drag.canvas.clientWidth * 100, 0, 100 - drag.width);
-    const rawY = this.bound(drag.y + distanceY / drag.canvas.clientHeight * 100, 0, 100 - drag.height);
-    const snapped = this.snapRawPosition(drag.layer, drag.section, drag.canvas, rawX, rawY, drag.width, drag.height);
-    drag.layout.x = snapped.x;
-    drag.layout.y = snapped.y;
+    const rawX = this.bound(drag.bounds.x + distanceX / drag.canvas.clientWidth * 100, 0, 100 - drag.bounds.width);
+    const rawY = this.bound(drag.bounds.y + distanceY / drag.canvas.clientHeight * 100, 0, 100 - drag.bounds.height);
+    const ignoredIds = new Set(drag.items.map((item) => item.layer.id));
+    const snapped = this.snapRawPosition(drag.layer, drag.section, drag.canvas, rawX, rawY, drag.bounds.width, drag.bounds.height, ignoredIds);
+    const dx = snapped.x - drag.bounds.x;
+    const dy = snapped.y - drag.bounds.y;
+    for (const item of drag.items) {
+      item.layout.x = this.bound(item.x + dx, 0, 100 - item.width);
+      item.layout.y = this.bound(item.y + dy, 0, 100 - item.height);
+    }
     this.guideX = snapped.guideX;
     this.guideY = snapped.guideY;
   }
 
   @HostListener('document:pointerup')
   endPointerInteraction(): void {
+    if (this.layerDragState?.moved) this.suppressNextLayerClickId = this.layerDragState.layer.id;
     this.resizeState = undefined;
     this.layerDragState = undefined;
     this.draggingLayerId = '';
@@ -360,6 +398,70 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const currentZ = ordered[index].zIndex;
     ordered[index].zIndex = ordered[target].zIndex;
     ordered[target].zIndex = currentZ;
+  }
+
+  isLayerSelected(layer: VisualInvitationLayer): boolean {
+    return this.selectedLayerIds.includes(layer.id);
+  }
+
+  groupSelectedLayers(): void {
+    const layers = this.selectedLayers;
+    if (layers.length < 2) return;
+    this.recordHistory();
+    const groupId = this.uid('group');
+    layers.forEach((layer) => { layer.groupId = groupId; });
+    this.flash(`${layers.length} elementos agrupados.`);
+  }
+
+  ungroupSelectedLayers(): void {
+    const section = this.selectedSection;
+    if (!section) return;
+    const groupIds = new Set(this.selectedLayers.map((layer) => layer.groupId).filter(Boolean) as string[]);
+    if (!groupIds.size) return;
+    this.recordHistory();
+    section.layers.forEach((layer) => { if (layer.groupId && groupIds.has(layer.groupId)) delete layer.groupId; });
+    this.flash('Elementos desagrupados.');
+  }
+
+  alignSelection(mode: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'): void {
+    const layers = this.selectedLayers.filter((layer) => !layer.locked);
+    if (layers.length < 2) return;
+    const layouts = layers.map((layer) => this.editableLayout(layer));
+    const left = Math.min(...layouts.map((layout) => layout.x));
+    const right = Math.max(...layouts.map((layout) => layout.x + layout.width));
+    const top = Math.min(...layouts.map((layout) => layout.y));
+    const bottom = Math.max(...layouts.map((layout) => layout.y + layout.height));
+    const center = (left + right) / 2;
+    const middle = (top + bottom) / 2;
+    this.recordHistory();
+    layouts.forEach((layout) => {
+      if (mode === 'left') layout.x = left;
+      if (mode === 'center') layout.x = this.bound(center - layout.width / 2, 0, 100 - layout.width);
+      if (mode === 'right') layout.x = this.bound(right - layout.width, 0, 100 - layout.width);
+      if (mode === 'top') layout.y = top;
+      if (mode === 'middle') layout.y = this.bound(middle - layout.height / 2, 0, 100 - layout.height);
+      if (mode === 'bottom') layout.y = this.bound(bottom - layout.height, 0, 100 - layout.height);
+    });
+  }
+
+  distributeSelection(axis: 'horizontal' | 'vertical'): void {
+    const layers = this.selectedLayers.filter((layer) => !layer.locked);
+    if (layers.length < 3) return;
+    const entries = layers.map((layer) => ({ layer, layout: this.editableLayout(layer) }));
+    entries.sort((a, b) => axis === 'horizontal' ? a.layout.x - b.layout.x : a.layout.y - b.layout.y);
+    const first = entries[0].layout;
+    const last = entries[entries.length - 1].layout;
+    const start = axis === 'horizontal' ? first.x : first.y;
+    const end = axis === 'horizontal' ? last.x + last.width : last.y + last.height;
+    const occupied = entries.reduce((sum, entry) => sum + (axis === 'horizontal' ? entry.layout.width : entry.layout.height), 0);
+    const gap = (end - start - occupied) / (entries.length - 1);
+    this.recordHistory();
+    let cursor = start;
+    entries.forEach((entry) => {
+      if (axis === 'horizontal') entry.layout.x = this.bound(cursor, 0, 100 - entry.layout.width);
+      else entry.layout.y = this.bound(cursor, 0, 100 - entry.layout.height);
+      cursor += (axis === 'horizontal' ? entry.layout.width : entry.layout.height) + gap;
+    });
   }
 
   applyMedia(media: DesignMedia): void {
@@ -398,17 +500,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (modifier && event.key.toLowerCase() === 'y') { event.preventDefault(); this.redo(); return; }
     if (modifier && event.key.toLowerCase() === 'd' && this.selectedLayer) { event.preventDefault(); this.duplicateLayer(); return; }
     if ((event.key === 'Delete' || event.key === 'Backspace') && this.selectedLayer) { event.preventDefault(); this.removeLayer(); return; }
-    if (event.key === 'Escape') { this.selectedLayerId = ''; return; }
-    const layer = this.selectedLayer;
-    if (!layer || layer.locked || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+    if (event.key === 'Escape') { this.clearLayerSelection(); return; }
+    const layers = this.selectedLayers.filter((layer) => !layer.locked);
+    if (!layers.length || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
     event.preventDefault();
     this.recordHistory();
     const step = event.shiftKey ? 2 : .25;
-    const layout = this.editableLayout(layer);
-    if (event.key === 'ArrowLeft') layout.x = this.bound(layout.x - step, 0, 100 - layout.width);
-    if (event.key === 'ArrowRight') layout.x = this.bound(layout.x + step, 0, 100 - layout.width);
-    if (event.key === 'ArrowUp') layout.y = this.bound(layout.y - step, 0, 100 - layout.height);
-    if (event.key === 'ArrowDown') layout.y = this.bound(layout.y + step, 0, 100 - layout.height);
+    layers.forEach((layer) => {
+      const layout = this.editableLayout(layer);
+      if (event.key === 'ArrowLeft') layout.x = this.bound(layout.x - step, 0, 100 - layout.width);
+      if (event.key === 'ArrowRight') layout.x = this.bound(layout.x + step, 0, 100 - layout.width);
+      if (event.key === 'ArrowUp') layout.y = this.bound(layout.y - step, 0, 100 - layout.height);
+      if (event.key === 'ArrowDown') layout.y = this.bound(layout.y + step, 0, 100 - layout.height);
+    });
   }
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
@@ -464,7 +568,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     this.design = this.buildPreset(key);
     this.selectedSectionId = this.design.sections[0]?.id || '';
-    this.selectedLayerId = '';
+    this.clearLayerSelection();
   }
 
   applyPersonalTemplate(template: VisualDesignTemplateModel): void {
@@ -473,7 +577,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design = this.regenerateIds(this.clone(template.design));
     this.design.active = true;
     this.selectedSectionId = this.design.sections[0]?.id || '';
-    this.selectedLayerId = '';
+    this.clearLayerSelection();
   }
 
   saveAsTemplate(): void {
@@ -628,10 +732,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private regenerateIds(design: VisualInvitationDesign): VisualInvitationDesign {
+    const groupIds = new Map<string, string>();
     design.sections = design.sections.map((section) => ({
       ...section,
       id: this.uid('section'),
-      layers: section.layers.map((layer) => ({ ...layer, id: this.uid('layer') }))
+      layers: section.layers.map((layer) => ({
+        ...layer,
+        id: this.uid('layer'),
+        groupId: layer.groupId ? (groupIds.get(layer.groupId) || (() => {
+          const id = this.uid('group');
+          groupIds.set(layer.groupId as string, id);
+          return id;
+        })()) : undefined
+      }))
     }));
     return design;
   }
@@ -644,11 +757,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return { image: 'Imagen', video: 'Video', audio: 'Audio', button: 'Botón', shape: 'Forma', text: 'Texto' }[type];
   }
 
-  private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number): { x: number; y: number; guideX: number | null; guideY: number | null } {
+  private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number, ignoredIds = new Set<string>([layer.id])): { x: number; y: number; guideX: number | null; guideY: number | null } {
     const xTargets = [0, 50, 100];
     const yTargets = [0, 50, 100];
     for (const other of section.layers) {
-      if (other.id === layer.id || other.hidden) continue;
+      if (ignoredIds.has(other.id) || other.hidden) continue;
       const otherLayout = this.layoutFor(other);
       xTargets.push(otherLayout.x, otherLayout.x + otherLayout.width / 2, otherLayout.x + otherLayout.width);
       yTargets.push(otherLayout.y, otherLayout.y + otherLayout.height / 2, otherLayout.y + otherLayout.height);
@@ -731,7 +844,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.design.sections.some((section) => section.id === this.selectedSectionId)) {
       this.selectedSectionId = this.design.sections[0]?.id || '';
     }
-    if (!this.selectedSection?.layers.some((layer) => layer.id === this.selectedLayerId)) this.selectedLayerId = '';
+    const available = new Set((this.selectedSection?.layers || []).map((layer) => layer.id));
+    this.setLayerSelection(this.selectedLayerIds.filter((id) => available.has(id)));
+  }
+
+  private applyLayerSelection(section: VisualInvitationSection, layer: VisualInvitationLayer, additive: boolean): void {
+    if (this.selectedSectionId !== section.id) {
+      this.selectedSectionId = section.id;
+      this.clearLayerSelection();
+    }
+    if (additive) {
+      const ids = this.selectedLayerIds.includes(layer.id)
+        ? this.selectedLayerIds.filter((id) => id !== layer.id)
+        : [...this.selectedLayerIds, layer.id];
+      this.setLayerSelection(ids);
+      return;
+    }
+    const ids = layer.groupId
+      ? section.layers.filter((item) => item.groupId === layer.groupId).map((item) => item.id)
+      : [layer.id];
+    this.setLayerSelection(ids, layer.id);
+  }
+
+  private setLayerSelection(ids: string[], primaryId?: string): void {
+    this.selectedLayerIds = [...new Set(ids)];
+    this.selectedLayerId = primaryId && this.selectedLayerIds.includes(primaryId)
+      ? primaryId
+      : (this.selectedLayerIds[this.selectedLayerIds.length - 1] || '');
+  }
+
+  private clearLayerSelection(): void {
+    this.selectedLayerIds = [];
+    this.selectedLayerId = '';
   }
 
   private flash(message: string): void {

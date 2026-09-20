@@ -276,6 +276,7 @@ export interface VisualInvitationLayerLayout {
 
 export interface VisualInvitationLayer {
   id: string;
+  groupId?: string;
   type: VisualLayerType;
   name?: string;
   text?: string;

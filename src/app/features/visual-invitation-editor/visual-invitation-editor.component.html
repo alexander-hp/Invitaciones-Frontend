@@ -82,7 +82,7 @@
             <div class="layer-surface">
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-              <div *ngFor="let layer of section.layers" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [class.dragging]="layer.id === draggingLayerId" [class.locked]="layer.locked" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)">
+              <div *ngFor="let layer of section.layers" class="canvas-layer" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)">
                 <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
                 <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
@@ -90,7 +90,7 @@
                 <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
                 <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
                 <div *ngIf="layer.type === 'audio' && !layer.url" class="media-placeholder">Agrega una URL de audio</div>
-                <ng-container *ngIf="layer.id === selectedLayerId && !layer.locked">
+                <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId && !layer.locked">
                   <span class="resize-handle nw" (pointerdown)="beginResize($event, layer, 'nw')"></span>
                   <span class="resize-handle ne" (pointerdown)="beginResize($event, layer, 'ne')"></span>
                   <span class="resize-handle sw" (pointerdown)="beginResize($event, layer, 'sw')"></span>
@@ -121,9 +121,10 @@
         <div class="layer-panel" *ngIf="selectedSection as section">
           <div class="layer-panel-title"><strong>{{ section.title || section.type }}</strong><span>{{ section.layers.length }} elementos</span></div>
           <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
-          <article *ngFor="let item of orderedLayers" [class.active]="item.id === selectedLayerId" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item)">
+          <p class="selection-hint">Selecciona varios elementos con Shift + clic.</p>
+          <article *ngFor="let item of orderedLayers" [class.active]="isLayerSelected(item)" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item, $event)">
             <span class="layer-type">{{ item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : '●' }}</span>
-            <div><strong>{{ layerLabel(item) }}</strong><small>{{ item.type }}</small></div>
+            <div><strong>{{ layerLabel(item) }}</strong><small>{{ item.type }}<ng-container *ngIf="item.groupId"> · agrupado</ng-container></small></div>
             <div class="layer-actions">
               <button type="button" [title]="item.hidden ? 'Mostrar' : 'Ocultar'" (click)="toggleLayerHidden(item, $event)">{{ item.hidden ? '○' : '◉' }}</button>
               <button type="button" [title]="item.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(item, $event)">{{ item.locked ? '▣' : '▢' }}</button>
@@ -134,7 +135,7 @@
         </div>
       </ng-container>
       <ng-template #propertiesInspector>
-      <ng-container *ngIf="selectedLayer as layer; else sectionInspector">
+      <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
         <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
@@ -164,6 +165,32 @@
         <label class="toggle"><input [(ngModel)]="layer.hidden" type="checkbox"> Ocultar elemento</label>
       </ng-container>
       <ng-template #sectionInspector>
+        <ng-container *ngIf="selectedLayerCount > 1; else selectedSectionInspector">
+          <div class="multi-selection-heading">
+            <div><h2>{{ selectedLayerCount }} elementos</h2><p>Muévelos juntos o ajusta su alineación.</p></div>
+            <div><button type="button" title="Duplicar selección" (click)="duplicateLayer()">⧉</button><button type="button" title="Eliminar selección" (click)="removeLayer()">⌫</button></div>
+          </div>
+          <div class="selection-actions">
+            <button type="button" (click)="groupSelectedLayers()">Agrupar</button>
+            <button type="button" (click)="ungroupSelectedLayers()">Desagrupar</button>
+          </div>
+          <h3>Alinear</h3>
+          <div class="alignment-actions">
+            <button type="button" title="Alinear a la izquierda" (click)="alignSelection('left')">Izq.</button>
+            <button type="button" title="Centrar horizontalmente" (click)="alignSelection('center')">Centro</button>
+            <button type="button" title="Alinear a la derecha" (click)="alignSelection('right')">Der.</button>
+            <button type="button" title="Alinear arriba" (click)="alignSelection('top')">Arriba</button>
+            <button type="button" title="Centrar verticalmente" (click)="alignSelection('middle')">Medio</button>
+            <button type="button" title="Alinear abajo" (click)="alignSelection('bottom')">Abajo</button>
+          </div>
+          <h3 *ngIf="selectedLayerCount >= 3">Distribuir</h3>
+          <div *ngIf="selectedLayerCount >= 3" class="selection-actions">
+            <button type="button" (click)="distributeSelection('horizontal')">Horizontal</button>
+            <button type="button" (click)="distributeSelection('vertical')">Vertical</button>
+          </div>
+          <p class="selection-hint">Los elementos bloqueados permanecen en su lugar.</p>
+        </ng-container>
+        <ng-template #selectedSectionInspector>
         <ng-container *ngIf="selectedSection as section">
           <h2>Sección</h2>
           <label>Nombre<input [(ngModel)]="section.title" type="text"></label>
@@ -174,6 +201,7 @@
           <label>Oscurecer fondo<input [(ngModel)]="section.background!.overlay" type="range" min="0" max="1" step="0.05"></label>
           <label class="toggle"><input [(ngModel)]="section.enabled" type="checkbox"> Mostrar esta sección</label>
         </ng-container>
+        </ng-template>
       </ng-template>
       </ng-template>
       <p class="uploading" *ngIf="uploading">Subiendo archivo...</p>
