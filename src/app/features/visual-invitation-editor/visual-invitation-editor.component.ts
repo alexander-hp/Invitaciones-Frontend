@@ -1,5 +1,5 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
-import { CdkDragDrop, CdkDragEnd, CdkDragMove, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
@@ -40,6 +40,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   inspectorView: InspectorView = 'properties';
   guideX: number | null = null;
   guideY: number | null = null;
+  draggingLayerId = '';
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
@@ -56,6 +57,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     width: number;
     height: number;
   };
+  private layerDragState?: {
+    layer: VisualInvitationLayer;
+    section: VisualInvitationSection;
+    layout: VisualInvitationLayerLayout;
+    canvas: HTMLElement;
+    startX: number;
+    startY: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    moved: boolean;
+  };
 
   readonly builtInPresets = [
     { key: 'editorial', label: 'Editorial claro', colors: ['#f6f1eb', '#24211f'] },
@@ -64,6 +78,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   ];
 
   readonly sectionCatalog = [
+    { type: 'custom', label: 'Sección vacía' },
     { type: 'story', label: 'Nuestra historia' }, { type: 'locations', label: 'Ubicaciones' },
     { type: 'itinerary', label: 'Itinerario' }, { type: 'dressCode', label: 'Vestimenta' },
     { type: 'rsvp', label: 'Confirmación RSVP' }, { type: 'gifts', label: 'Mesa de regalos' },
@@ -184,7 +199,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   addSection(type: string, title: string): void {
     this.recordHistory();
     const section = this.makeSection(type, title, '#ffffff', 540);
-    if (!this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
+    if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.selectedLayerId = section.layers[0]?.id || '';
@@ -244,29 +259,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     moveItemInArray(this.design.sections, event.previousIndex, event.currentIndex);
   }
 
-  layerDropped(event: CdkDragEnd, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
-    if (this.resizing) return;
-    const canvas = event.source.element.nativeElement.parentElement as HTMLElement;
+  beginLayerDrag(event: PointerEvent, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
+    if (layer.locked || this.resizing || (event.target as HTMLElement).closest('.resize-handle, audio, video, button, input')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const canvas = (event.currentTarget as HTMLElement).closest('.layer-surface') as HTMLElement;
     if (!canvas) return;
-    this.recordHistory();
-    const snapped = this.snapPosition(layer, section, canvas, event.distance.x, event.distance.y);
     const layout = this.editableLayout(layer);
-    layout.x = snapped.x;
-    layout.y = snapped.y;
-    this.guideX = null;
-    this.guideY = null;
-    event.source.reset();
     this.selectedSectionId = section.id;
     this.selectedLayerId = layer.id;
-  }
-
-  layerMoved(event: CdkDragMove, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
-    if (layer.locked || this.resizing) return;
-    const canvas = event.source.element.nativeElement.parentElement as HTMLElement;
-    if (!canvas) return;
-    const snapped = this.snapPosition(layer, section, canvas, event.distance.x, event.distance.y);
-    this.guideX = snapped.guideX;
-    this.guideY = snapped.guideY;
+    this.inspectorView = 'properties';
+    this.draggingLayerId = layer.id;
+    this.layerDragState = {
+      layer, section, layout, canvas, startX: event.clientX, startY: event.clientY,
+      x: layout.x, y: layout.y, width: layout.width, height: layout.height, moved: false
+    };
   }
 
   beginResize(event: PointerEvent, layer: VisualInvitationLayer, corner: ResizeCorner): void {
@@ -285,27 +292,47 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   @HostListener('document:pointermove', ['$event'])
-  onResizeMove(event: PointerEvent): void {
-    const state = this.resizeState;
-    if (!state) return;
+  onPointerMove(event: PointerEvent): void {
+    const resize = this.resizeState;
+    if (resize) {
+      event.preventDefault();
+      const dx = (event.clientX - resize.startX) / resize.canvas.clientWidth * 100;
+      const dy = (event.clientY - resize.startY) / resize.canvas.clientHeight * 100;
+      const west = resize.corner.includes('w');
+      const north = resize.corner.includes('n');
+      const nextX = west ? resize.x + dx : resize.x;
+      const nextY = north ? resize.y + dy : resize.y;
+      const nextWidth = west ? resize.width - dx : resize.width + dx;
+      const nextHeight = north ? resize.height - dy : resize.height + dy;
+      resize.layout.x = this.bound(nextX, 0, resize.x + resize.width - 4);
+      resize.layout.y = this.bound(nextY, 0, resize.y + resize.height - 4);
+      resize.layout.width = this.bound(nextWidth, 4, 100 - resize.layout.x);
+      resize.layout.height = this.bound(nextHeight, 4, 100 - resize.layout.y);
+      return;
+    }
+    const drag = this.layerDragState;
+    if (!drag) return;
+    const distanceX = event.clientX - drag.startX;
+    const distanceY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(distanceX, distanceY) < 3) return;
     event.preventDefault();
-    const dx = (event.clientX - state.startX) / state.canvas.clientWidth * 100;
-    const dy = (event.clientY - state.startY) / state.canvas.clientHeight * 100;
-    const west = state.corner.includes('w');
-    const north = state.corner.includes('n');
-    const nextX = west ? state.x + dx : state.x;
-    const nextY = north ? state.y + dy : state.y;
-    const nextWidth = west ? state.width - dx : state.width + dx;
-    const nextHeight = north ? state.height - dy : state.height + dy;
-    state.layout.x = this.bound(nextX, 0, state.x + state.width - 4);
-    state.layout.y = this.bound(nextY, 0, state.y + state.height - 4);
-    state.layout.width = this.bound(nextWidth, 4, 100 - state.layout.x);
-    state.layout.height = this.bound(nextHeight, 4, 100 - state.layout.y);
+    if (!drag.moved) { this.recordHistory(); drag.moved = true; }
+    const rawX = this.bound(drag.x + distanceX / drag.canvas.clientWidth * 100, 0, 100 - drag.width);
+    const rawY = this.bound(drag.y + distanceY / drag.canvas.clientHeight * 100, 0, 100 - drag.height);
+    const snapped = this.snapRawPosition(drag.layer, drag.section, drag.canvas, rawX, rawY, drag.width, drag.height);
+    drag.layout.x = snapped.x;
+    drag.layout.y = snapped.y;
+    this.guideX = snapped.guideX;
+    this.guideY = snapped.guideY;
   }
 
   @HostListener('document:pointerup')
-  endResize(): void {
+  endPointerInteraction(): void {
     this.resizeState = undefined;
+    this.layerDragState = undefined;
+    this.draggingLayerId = '';
+    this.guideX = null;
+    this.guideY = null;
     setTimeout(() => { this.resizing = false; });
   }
 
@@ -617,10 +644,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return { image: 'Imagen', video: 'Video', audio: 'Audio', button: 'Botón', shape: 'Forma', text: 'Texto' }[type];
   }
 
-  private snapPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, dx: number, dy: number): { x: number; y: number; guideX: number | null; guideY: number | null } {
-    const layout = this.layoutFor(layer);
-    const rawX = this.bound(layout.x + dx / canvas.clientWidth * 100, 0, 100 - layout.width);
-    const rawY = this.bound(layout.y + dy / canvas.clientHeight * 100, 0, 100 - layout.height);
+  private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number): { x: number; y: number; guideX: number | null; guideY: number | null } {
     const xTargets = [0, 50, 100];
     const yTargets = [0, 50, 100];
     for (const other of section.layers) {
@@ -629,13 +653,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       xTargets.push(otherLayout.x, otherLayout.x + otherLayout.width / 2, otherLayout.x + otherLayout.width);
       yTargets.push(otherLayout.y, otherLayout.y + otherLayout.height / 2, otherLayout.y + otherLayout.height);
     }
-    const xAnchors = [{ value: rawX, offset: 0 }, { value: rawX + layout.width / 2, offset: layout.width / 2 }, { value: rawX + layout.width, offset: layout.width }];
-    const yAnchors = [{ value: rawY, offset: 0 }, { value: rawY + layout.height / 2, offset: layout.height / 2 }, { value: rawY + layout.height, offset: layout.height }];
+    const xAnchors = [{ value: rawX, offset: 0 }, { value: rawX + width / 2, offset: width / 2 }, { value: rawX + width, offset: width }];
+    const yAnchors = [{ value: rawY, offset: 0 }, { value: rawY + height / 2, offset: height / 2 }, { value: rawY + height, offset: height }];
     const snapX = this.closestSnap(xAnchors, xTargets, 800 / Math.max(canvas.clientWidth, 1));
     const snapY = this.closestSnap(yAnchors, yTargets, 800 / Math.max(canvas.clientHeight, 1));
     return {
-      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - layout.width),
-      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, 0, 100 - layout.height),
+      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - width),
+      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, 0, 100 - height),
       guideX: snapX?.target ?? null,
       guideY: snapY?.target ?? null
     };

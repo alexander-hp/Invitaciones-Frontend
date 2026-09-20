@@ -73,13 +73,16 @@
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
-            <div *ngIf="section.layers.length === 0" class="functional-placeholder">
+            <div *ngIf="section.layers.length === 0 && section.type !== 'custom'" class="functional-placeholder">
               <strong>{{ section.title }}</strong><span>Módulo funcional conectado con los datos del evento</span>
             </div>
-            <div class="layer-surface" cdkDropList [cdkDropListData]="section.layers" [cdkDropListSortingDisabled]="true" [cdkDropListAutoScrollDisabled]="true">
+            <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state">
+              <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>
+            </div>
+            <div class="layer-surface">
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-              <div *ngFor="let layer of section.layers" cdkDrag [cdkDragBoundary]="'.layer-surface'" [cdkDragDisabled]="layer.locked" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [ngStyle]="layerStyle(layer)" (click)="selectLayer(section, layer, $event)" (cdkDragMoved)="layerMoved($event, layer, section)" (cdkDragEnded)="layerDropped($event, layer, section)">
+              <div *ngFor="let layer of section.layers" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [class.dragging]="layer.id === draggingLayerId" [class.locked]="layer.locked" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)">
                 <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
                 <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
