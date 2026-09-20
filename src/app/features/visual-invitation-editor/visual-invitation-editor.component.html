@@ -44,17 +44,32 @@
         <button type="button" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
         <button type="button" (click)="addLayer('shape')"><b>●</b><span>Forma</span></button>
       </div>
-      <ng-container *ngIf="mediaLibrary.length">
-        <h2>Archivos del diseño</h2>
+      <h2>Bloques listos</h2>
+      <div class="component-catalog">
+        <button *ngFor="let component of componentCatalog" type="button" (click)="addComponent(component.key)">
+          <b>{{ component.icon }}</b><span>{{ component.label }}</span>
+        </button>
+      </div>
+      <section class="media-section">
+        <div class="media-heading"><h2>Mis archivos</h2><label title="Subir imágenes, videos o audio">+ Subir<input #libraryUpload type="file" accept="image/*,video/*,audio/*" multiple (change)="uploadLibraryFiles(libraryUpload)"></label></div>
+        <div class="media-filters" *ngIf="mediaLibrary.length">
+          <button type="button" [class.active]="mediaFilter === 'all'" (click)="mediaFilter='all'">Todos</button>
+          <button type="button" [class.active]="mediaFilter === 'image'" (click)="mediaFilter='image'">Fotos</button>
+          <button type="button" [class.active]="mediaFilter === 'video'" (click)="mediaFilter='video'">Video</button>
+          <button type="button" [class.active]="mediaFilter === 'audio'" (click)="mediaFilter='audio'">Audio</button>
+        </div>
+        <p class="empty-media" *ngIf="!mediaLibrary.length">Sube una vez tus fotos, videos y canciones para reutilizarlos en cualquier sección.</p>
         <div class="media-library">
-          <article *ngFor="let media of mediaLibrary" [title]="media.label">
+          <article *ngFor="let media of filteredMediaLibrary; trackBy: trackMediaByUrl" [title]="media.label">
             <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="media.label">
             <video *ngIf="media.type === 'video'" [src]="media.url" muted></video>
             <span *ngIf="media.type === 'audio'">♪</span>
+            <small>{{ media.label }}</small>
+            <button *ngIf="media.stored" class="media-remove" type="button" title="Quitar de la biblioteca" (click)="removeLibraryAsset(media, $event)">×</button>
             <div><button type="button" title="Usar como elemento" (click)="applyMedia(media)">Usar</button><button *ngIf="media.type === 'image'" type="button" title="Usar como fondo" (click)="setSectionBackground(media)">Fondo</button></div>
           </article>
         </div>
-      </ng-container>
+      </section>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>

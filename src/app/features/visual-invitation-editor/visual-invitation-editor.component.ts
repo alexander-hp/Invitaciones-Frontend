@@ -1,17 +1,19 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
   EventModel, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
-  VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationSection, VisualLayerType
+  VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationSection, VisualLayerType
 } from '../../core/models';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers';
-type DesignMedia = { url: string; type: 'image' | 'video' | 'audio'; label: string };
+type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean };
+type MediaFilter = 'all' | DesignMedia['type'];
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -42,6 +44,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   guideX: number | null = null;
   guideY: number | null = null;
   draggingLayerId = '';
+  mediaFilter: MediaFilter = 'all';
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
@@ -85,6 +88,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { type: 'dedications', label: 'Dedicatorias' }, { type: 'songs', label: 'Peticiones al DJ' }
   ];
 
+  readonly componentCatalog = [
+    { key: 'hero', icon: 'Aa', label: 'Portada' },
+    { key: 'heading', icon: 'T', label: 'Título' },
+    { key: 'imageCaption', icon: '▧', label: 'Foto + texto' },
+    { key: 'quote', icon: '“”', label: 'Cita' },
+    { key: 'cta', icon: '→', label: 'Botón CTA' },
+    { key: 'divider', icon: '—', label: 'Separador' }
+  ];
+
   constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
 
   ngOnInit(): void {
@@ -93,8 +105,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       next: ({ invitations }) => {
         this.invitation = invitations.find((item) => (item._id || item.id) === id);
         if (!this.invitation) return this.fail('Invitación no encontrada.');
-        this.design = this.clone(this.invitation.content?.visualDesign || this.createDefaultDesign());
+        const storedDesign = this.invitation.content?.visualDesign;
+        this.design = this.clone(storedDesign?.sections?.length ? storedDesign : this.createDefaultDesign());
         this.design.responsiveMode = this.design.responsiveMode || 'shared';
+        this.design.assets = this.design.assets || [];
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
         this.startAutosave();
@@ -176,6 +190,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   get mediaLibrary(): DesignMedia[] {
     const media = new Map<string, DesignMedia>();
+    for (const asset of this.design?.assets || []) {
+      media.set(asset.url, { id: asset.id, url: asset.url, type: asset.type, label: asset.name, stored: true });
+    }
+    const content = this.invitation?.content;
+    if (content?.coverImageUrl) media.set(content.coverImageUrl, { url: content.coverImageUrl, type: 'image', label: 'Portada de la invitación' });
+    for (const [index, url] of (content?.gallery || []).entries()) {
+      if (url) media.set(url, { url, type: 'image', label: `Galería ${index + 1}` });
+    }
+    if (content?.musicUrl) media.set(content.musicUrl, { url: content.musicUrl, type: 'audio', label: 'Música principal' });
+    const external = this.event?.externalContent;
+    const externalImages = [external?.coverImageUrl, external?.heroImageUrl, ...(external?.carousel || []), ...(external?.gallery || []), ...(external?.spectacularImages || [])];
+    externalImages.filter(Boolean).forEach((url, index) => media.set(url as string, { url: url as string, type: 'image', label: `Archivo del evento ${index + 1}` }));
+    if (external?.musicUrl) media.set(external.musicUrl, { url: external.musicUrl, type: 'audio', label: 'Audio del evento' });
+    for (const audio of external?.audioSections || []) if (audio.url) media.set(audio.url, { url: audio.url, type: 'audio', label: audio.title || 'Audio de sección' });
     for (const section of this.design?.sections || []) {
       if (section.background?.imageUrl) media.set(section.background.imageUrl, { url: section.background.imageUrl, type: 'image', label: `${section.title || 'Sección'} · fondo` });
       for (const layer of section.layers) {
@@ -185,6 +213,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
     }
     return [...media.values()];
+  }
+
+  get filteredMediaLibrary(): DesignMedia[] {
+    return this.mediaFilter === 'all' ? this.mediaLibrary : this.mediaLibrary.filter((media) => media.type === this.mediaFilter);
+  }
+
+  trackMediaByUrl(_index: number, media: DesignMedia): string {
+    return media.url;
   }
 
   selectSection(section: VisualInvitationSection): void {
@@ -229,6 +265,102 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'shape') layer.style = { backgroundColor: '#d88f7d', borderRadius: 8, opacity: 1 };
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
+  }
+
+  addComponent(key: string): void {
+    const section = this.selectedSection;
+    if (!section) { this.error = 'Selecciona una sección para agregar el bloque.'; return; }
+    this.recordHistory();
+    const groupId = this.uid('group');
+    const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
+    let layers: VisualInvitationLayer[] = [];
+    if (key === 'hero') {
+      const eyebrow = this.newLayer('text', 'CELEBREMOS JUNTOS', 15, 18, 70, 8, 13);
+      const title = this.newLayer('text', this.invitation?.content?.headline || this.event?.title || 'Nuestra celebración', 8, 29, 84, 20, 48);
+      const subtitle = this.newLayer('text', this.invitation?.content?.subheadline || 'Una fecha para recordar', 15, 53, 70, 10, 19);
+      eyebrow.style = { ...eyebrow.style, color: '#9b6655', fontWeight: 700 };
+      title.style = { ...title.style, fontFamily: 'Georgia, serif', fontWeight: 600 };
+      subtitle.style = { ...subtitle.style, fontFamily: 'Georgia, serif', fontWeight: 400 };
+      layers = [eyebrow, title, subtitle];
+    } else if (key === 'heading') {
+      const title = this.newLayer('text', 'Título de la sección', 12, 15, 76, 15, 38);
+      title.style = { ...title.style, fontFamily: 'Georgia, serif' };
+      layers = [title];
+    } else if (key === 'imageCaption') {
+      const image = this.newLayer('image', '', 10, 18, 80, 50);
+      image.name = 'Fotografía';
+      image.style = { ...image.style, borderRadius: 4, objectFit: 'cover', objectPositionX: 50, objectPositionY: 50 };
+      const caption = this.newLayer('text', 'Escribe una descripción especial para esta fotografía', 15, 71, 70, 12, 18);
+      caption.style = { ...caption.style, fontFamily: 'Georgia, serif', fontWeight: 400 };
+      layers = [image, caption];
+    } else if (key === 'quote') {
+      const mark = this.newLayer('text', '“', 42, 18, 16, 16, 70);
+      const quote = this.newLayer('text', 'Aquí comienza una historia que siempre querremos recordar.', 12, 35, 76, 25, 28);
+      const author = this.newLayer('text', '— Los anfitriones', 25, 65, 50, 8, 14);
+      mark.style = { ...mark.style, color: '#b57c62', fontFamily: 'Georgia, serif' };
+      quote.style = { ...quote.style, fontFamily: 'Georgia, serif', fontWeight: 400 };
+      author.style = { ...author.style, color: '#7a6f68', fontWeight: 400 };
+      layers = [mark, quote, author];
+    } else if (key === 'cta') {
+      const button = this.newLayer('button', 'Confirmar asistencia', 25, 38, 50, 13, 17);
+      button.name = 'Llamada a la acción';
+      button.style = { ...button.style, color: '#ffffff', backgroundColor: '#262321', borderRadius: 4, fontWeight: 700 };
+      layers = [button];
+    } else if (key === 'divider') {
+      const divider = this.newLayer('shape', '', 15, 48, 70, 1);
+      divider.name = 'Separador';
+      divider.style = { backgroundColor: '#b99482', borderRadius: 0, opacity: 1 };
+      layers = [divider];
+    }
+    if (!layers.length) return;
+    layers.forEach((layer, index) => { layer.groupId = layers.length > 1 ? groupId : undefined; layer.zIndex = topZ + index + 1; });
+    section.layers.push(...layers);
+    this.setLayerSelection(layers.map((layer) => layer.id));
+    this.inspectorView = 'properties';
+    this.flash('Bloque agregado. Puedes moverlo y personalizarlo.');
+  }
+
+  uploadLibraryFiles(fileInput: HTMLInputElement): void {
+    const eventId = this.invitation && (typeof this.invitation.event === 'string'
+      ? this.invitation.event
+      : (this.invitation.event._id || this.invitation.event.id));
+    const files = Array.from(fileInput.files || []).filter((file) => /^(image|video|audio)\//.test(file.type));
+    if (!eventId || !files.length) return;
+    this.uploading = true;
+    this.error = '';
+    const uploads = files.map((file) => {
+      const type = file.type.split('/')[0] as DesignMedia['type'];
+      const folder = type === 'audio' ? 'music' : 'assets';
+      return this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder, event: eventId, size: file.size }).pipe(
+        switchMap(({ uploadUrl, publicUrl }) => this.api.uploadAsset(uploadUrl, file).pipe(map(() => ({ file, publicUrl, type }))))
+      );
+    });
+    forkJoin(uploads).subscribe({
+      next: (results) => {
+        this.recordHistory();
+        this.design.assets = this.design.assets || [];
+        const knownUrls = new Set(this.design.assets.map((asset) => asset.url));
+        const assets: VisualInvitationAsset[] = results.filter((result) => !knownUrls.has(result.publicUrl)).map((result) => ({
+          id: this.uid('asset'), url: result.publicUrl, type: result.type, name: result.file.name, createdAt: new Date().toISOString()
+        }));
+        this.design.assets.push(...assets);
+        this.uploading = false;
+        fileInput.value = '';
+        this.flash(`${assets.length} archivo${assets.length === 1 ? '' : 's'} agregado${assets.length === 1 ? '' : 's'} a la biblioteca.`);
+      },
+      error: (error) => {
+        this.uploading = false;
+        fileInput.value = '';
+        this.error = error?.error?.message || 'No fue posible subir uno de los archivos.';
+      }
+    });
+  }
+
+  removeLibraryAsset(media: DesignMedia, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!media.id || !media.stored) return;
+    this.recordHistory();
+    this.design.assets = (this.design.assets || []).filter((asset) => asset.id !== media.id);
   }
 
   removeLayer(): void {

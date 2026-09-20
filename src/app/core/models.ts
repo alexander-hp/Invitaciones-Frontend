@@ -294,6 +294,14 @@ export interface VisualInvitationLayer {
   style?: VisualInvitationLayerStyle;
 }
 
+export interface VisualInvitationAsset {
+  id: string;
+  url: string;
+  type: 'image' | 'video' | 'audio';
+  name: string;
+  createdAt?: string;
+}
+
 export interface VisualInvitationSection {
   id: string;
   type: string;
@@ -314,6 +322,7 @@ export interface VisualInvitationDesign {
   active: boolean;
   mode: 'easy' | 'advanced';
   responsiveMode?: 'shared' | 'independent';
+  assets?: VisualInvitationAsset[];
   sections: VisualInvitationSection[];
 }
 
