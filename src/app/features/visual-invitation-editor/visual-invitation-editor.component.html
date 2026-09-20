@@ -18,6 +18,18 @@
   </header>
 
   <div class="ve-notice error" *ngIf="error">{{ error }}</div><div class="ve-notice success" *ngIf="message">{{ message }}</div>
+  <div class="onboarding-backdrop" *ngIf="showOnboarding">
+    <section class="onboarding-dialog">
+      <div><span>Nuevo diseño</span><h1>¿Cómo quieres empezar?</h1></div>
+      <div class="onboarding-options">
+        <button *ngFor="let preset of builtInPresets" type="button" (click)="chooseStartingDesign(preset.key)">
+          <span class="preset-preview"><i [style.background]="preset.colors[0]"></i><i [style.background]="preset.colors[1]"></i></span>
+          <strong>{{ preset.label }}</strong>
+        </button>
+        <button type="button" (click)="startBlankDesign()"><span class="blank-preview">+</span><strong>Empezar en blanco</strong></button>
+      </div>
+    </section>
+  </div>
   <div class="ve-workspace">
     <aside class="ve-tools">
       <h2>Diseños iniciales</h2>
@@ -131,8 +143,9 @@
       <div class="inspector-tabs">
         <button type="button" [class.active]="inspectorView === 'properties'" (click)="inspectorView='properties'">Propiedades</button>
         <button type="button" [class.active]="inspectorView === 'layers'" (click)="inspectorView='layers'">Capas</button>
+        <button type="button" [class.active]="inspectorView === 'history'" (click)="inspectorView='history'">Versiones</button>
       </div>
-      <ng-container *ngIf="inspectorView === 'layers'; else propertiesInspector">
+      <ng-container *ngIf="inspectorView === 'layers'; else nonLayerInspector">
         <div class="layer-panel" *ngIf="selectedSection as section">
           <div class="layer-panel-title"><strong>{{ section.title || section.type }}</strong><span>{{ section.layers.length }} elementos</span></div>
           <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
@@ -148,6 +161,24 @@
             </div>
           </article>
         </div>
+      </ng-container>
+      <ng-template #nonLayerInspector>
+      <ng-container *ngIf="inspectorView === 'history'; else propertiesInspector">
+        <section class="revision-panel">
+          <h2>Historial de versiones</h2>
+          <p>Guarda un punto de recuperación antes de hacer cambios importantes.</p>
+          <label>Nombre de la versión<input [(ngModel)]="revisionLabel" type="text" maxlength="120" placeholder="Ej. Portada aprobada"></label>
+          <button class="revision-save" type="button" [disabled]="savingRevision" (click)="createRevision()">{{ savingRevision ? 'Guardando...' : 'Guardar versión actual' }}</button>
+          <div class="revision-list">
+            <p *ngIf="loadingRevisions" class="empty-layers">Cargando versiones...</p>
+            <p *ngIf="!loadingRevisions && !revisions.length" class="empty-layers">Aún no hay versiones guardadas.</p>
+            <article *ngFor="let revision of revisions">
+              <div><strong>{{ revision.label }}</strong><small>{{ revisionDate(revision.createdAt) }}</small></div>
+              <div><button type="button" (click)="restoreRevision(revision)">Restaurar</button><button type="button" title="Eliminar versión" (click)="deleteRevision(revision, $event)">×</button></div>
+            </article>
+          </div>
+          <p class="revision-limit">Se conservan las 20 versiones más recientes.</p>
+        </section>
       </ng-container>
       <ng-template #propertiesInspector>
       <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
@@ -217,6 +248,7 @@
           <label class="toggle"><input [(ngModel)]="section.enabled" type="checkbox"> Mostrar esta sección</label>
         </ng-container>
         </ng-template>
+      </ng-template>
       </ng-template>
       </ng-template>
       <p class="uploading" *ngIf="uploading">Subiendo archivo...</p>

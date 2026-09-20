@@ -6,12 +6,12 @@ import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
   EventModel, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
-  VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationSection, VisualLayerType
+  VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationSection, VisualLayerType
 } from '../../core/models';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
-type InspectorView = 'properties' | 'layers';
+type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean };
 type MediaFilter = 'all' | DesignMedia['type'];
 
@@ -25,7 +25,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   event?: EventModel;
   design!: VisualInvitationDesign;
   personalTemplates: VisualDesignTemplateModel[] = [];
+  revisions: VisualDesignRevisionModel[] = [];
   templateName = '';
+  revisionLabel = '';
   selectedSectionId = '';
   selectedLayerId = '';
   selectedLayerIds: string[] = [];
@@ -35,6 +37,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   publishing = false;
   uploading = false;
   savingTemplate = false;
+  savingRevision = false;
+  loadingRevisions = false;
+  showOnboarding = false;
   autosaving = false;
   autosaveState = 'Guardado';
   message = '';
@@ -106,6 +111,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.invitation = invitations.find((item) => (item._id || item.id) === id);
         if (!this.invitation) return this.fail('Invitación no encontrada.');
         const storedDesign = this.invitation.content?.visualDesign;
+        this.showOnboarding = !storedDesign?.sections?.length;
         this.design = this.clone(storedDesign?.sections?.length ? storedDesign : this.createDefaultDesign());
         this.design.responsiveMode = this.design.responsiveMode || 'shared';
         this.design.assets = this.design.assets || [];
@@ -113,6 +119,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.lastSavedSnapshot = this.designSnapshot();
         this.startAutosave();
         this.loadPersonalTemplates();
+        this.loadRevisions();
         const eventId = typeof this.invitation.event === 'string'
           ? this.invitation.event
           : (this.invitation.event._id || this.invitation.event.id || '');
@@ -703,6 +710,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.clearLayerSelection();
   }
 
+  chooseStartingDesign(key: string): void {
+    this.design = this.buildPreset(key);
+    this.design.assets = [];
+    this.selectedSectionId = this.design.sections[0]?.id || '';
+    this.clearLayerSelection();
+    this.showOnboarding = false;
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  startBlankDesign(): void {
+    const section = this.makeSection('custom', 'Mi primera sección', '#ffffff', 640);
+    this.design = { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', assets: [], sections: [section] };
+    this.selectedSectionId = section.id;
+    this.clearLayerSelection();
+    this.showOnboarding = false;
+    this.autosaveState = 'Cambios pendientes';
+  }
+
   applyPersonalTemplate(template: VisualDesignTemplateModel): void {
     if (!this.confirmReplaceDesign()) return;
     this.recordHistory();
@@ -740,6 +765,56 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       next: () => { this.personalTemplates = this.personalTemplates.filter((item) => item._id !== template._id); },
       error: () => { this.error = 'No fue posible eliminar la plantilla.'; }
     });
+  }
+
+  createRevision(): void {
+    const invitationId = this.invitation?._id || this.invitation?.id || '';
+    if (!invitationId || this.savingRevision) return;
+    const label = this.revisionLabel.trim() || `Versión ${new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}`;
+    this.savingRevision = true;
+    this.api.createVisualDesignRevision(invitationId, { label, design: this.stripMongoMetadata(this.clone(this.design)) }).subscribe({
+      next: ({ revision }) => {
+        this.revisions.unshift(revision);
+        this.revisions = this.revisions.slice(0, 20);
+        this.revisionLabel = '';
+        this.savingRevision = false;
+        this.flash('Versión guardada.');
+      },
+      error: (error) => { this.savingRevision = false; this.error = error?.error?.message || 'No fue posible guardar la versión.'; }
+    });
+  }
+
+  restoreRevision(revision: VisualDesignRevisionModel): void {
+    const invitationId = this.invitation?._id || this.invitation?.id || '';
+    if (!invitationId || !window.confirm(`¿Restaurar "${revision.label}"? El diseño actual quedará en el historial solo si antes guardaste una versión.`)) return;
+    this.api.restoreVisualDesignRevision(invitationId, revision._id).subscribe({
+      next: ({ invitation }) => {
+        this.invitation = invitation;
+        this.design = this.clone(revision.design);
+        this.design.assets = this.design.assets || [];
+        this.selectedSectionId = this.design.sections[0]?.id || '';
+        this.clearLayerSelection();
+        this.undoStack = [];
+        this.redoStack = [];
+        this.markSaved();
+        this.flash(`Versión "${revision.label}" restaurada.`);
+      },
+      error: (error) => { this.error = error?.error?.message || 'No fue posible restaurar la versión.'; }
+    });
+  }
+
+  deleteRevision(revision: VisualDesignRevisionModel, event: MouseEvent): void {
+    event.stopPropagation();
+    const invitationId = this.invitation?._id || this.invitation?.id || '';
+    if (!invitationId || !window.confirm(`¿Eliminar la versión "${revision.label}"?`)) return;
+    this.api.deleteVisualDesignRevision(invitationId, revision._id).subscribe({
+      next: () => { this.revisions = this.revisions.filter((item) => item._id !== revision._id); },
+      error: () => { this.error = 'No fue posible eliminar la versión.'; }
+    });
+  }
+
+  revisionDate(value: string): string {
+    return new Date(value).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
   save(): void {
@@ -805,6 +880,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.api.listVisualDesignTemplates().subscribe({
       next: ({ templates }) => { this.personalTemplates = templates; },
       error: () => { this.personalTemplates = []; }
+    });
+  }
+
+  private loadRevisions(): void {
+    const invitationId = this.invitation?._id || this.invitation?.id || '';
+    if (!invitationId) return;
+    this.loadingRevisions = true;
+    this.api.listVisualDesignRevisions(invitationId).subscribe({
+      next: ({ revisions }) => { this.revisions = revisions; this.loadingRevisions = false; },
+      error: () => { this.revisions = []; this.loadingRevisions = false; }
     });
   }
 

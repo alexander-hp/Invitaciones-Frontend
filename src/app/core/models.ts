@@ -345,6 +345,14 @@ export interface VisualDesignTemplatePayload {
   design: VisualInvitationDesign;
 }
 
+export interface VisualDesignRevisionModel {
+  _id: string;
+  label: string;
+  design: VisualInvitationDesign;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface InvitationContent {
   headline?: string;
   subheadline?: string;

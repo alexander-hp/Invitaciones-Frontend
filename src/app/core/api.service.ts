@@ -69,6 +69,7 @@ import {
   UploadUrlResponse,
   VisualDesignTemplateModel,
   VisualDesignTemplatePayload,
+  VisualDesignRevisionModel,
   User,
   WhatsAppBulkResponse,
   WhatsAppMediaInspection,
@@ -94,6 +95,22 @@ export class ApiService {
 
   deleteVisualDesignTemplate(id: string): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/visual-design-templates/${id}`);
+  }
+
+  listVisualDesignRevisions(invitationId: string): Observable<{ revisions: VisualDesignRevisionModel[] }> {
+    return this.http.get<{ revisions: VisualDesignRevisionModel[] }>(`${this.apiUrl}/invitations/${invitationId}/visual-revisions`);
+  }
+
+  createVisualDesignRevision(invitationId: string, payload: { label: string; design: VisualDesignRevisionModel['design'] }): Observable<{ revision: VisualDesignRevisionModel }> {
+    return this.http.post<{ revision: VisualDesignRevisionModel }>(`${this.apiUrl}/invitations/${invitationId}/visual-revisions`, payload);
+  }
+
+  restoreVisualDesignRevision(invitationId: string, revisionId: string): Observable<{ invitation: InvitationModel; revision: VisualDesignRevisionModel }> {
+    return this.http.post<{ invitation: InvitationModel; revision: VisualDesignRevisionModel }>(`${this.apiUrl}/invitations/${invitationId}/visual-revisions/${revisionId}/restore`, {});
+  }
+
+  deleteVisualDesignRevision(invitationId: string, revisionId: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/${invitationId}/visual-revisions/${revisionId}`);
   }
 
   register(payload: { name: string; email: string; password: string; role?: User['role']; accountType?: User['accountType'] }): Observable<AuthResponse> {
