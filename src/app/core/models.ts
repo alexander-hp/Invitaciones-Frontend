@@ -264,6 +264,14 @@ export interface VisualInvitationLayerStyle {
   objectFit?: 'cover' | 'contain';
   objectPositionX?: number;
   objectPositionY?: number;
+  imageScale?: number;
+  imageRotation?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+  brightness?: number;
+  contrast?: number;
+  saturation?: number;
+  blur?: number;
   lineHeight?: number;
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   textDecoration?: 'none' | 'underline' | 'line-through';

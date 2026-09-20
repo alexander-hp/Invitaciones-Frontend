@@ -107,7 +107,19 @@
     </aside>
 
     <main class="ve-stage">
-      <div class="artboard-shell" [style.width.px]="artboardWidth">
+      <div class="canvas-toolbar" aria-label="Controles del lienzo">
+        <button type="button" [class.active]="showGrid" title="Mostrar cuadrícula" (click)="showGrid=!showGrid">▦</button>
+        <button type="button" [class.active]="smartSnapping" title="Ajuste inteligente" (click)="smartSnapping=!smartSnapping">⌁</button>
+        <button type="button" [class.active]="showSafeMargins" title="Mostrar márgenes seguros" (click)="showSafeMargins=!showSafeMargins">▣</button>
+        <span class="toolbar-divider"></span>
+        <button type="button" [disabled]="!selectedLayerCount" title="Copiar" (click)="copySelectedLayers()">⧉</button>
+        <button type="button" [disabled]="!selectedLayerCount" title="Cortar" (click)="cutSelectedLayers()">✂</button>
+        <button type="button" [disabled]="!hasClipboardLayers" title="Pegar en la sección seleccionada" (click)="pasteLayers()">▤</button>
+        <span class="toolbar-divider"></span>
+        <select [ngModel]="canvasZoom" (ngModelChange)="setCanvasZoom($event)" aria-label="Zoom del lienzo"><option *ngFor="let zoom of zoomOptions" [ngValue]="zoom">{{ zoom * 100 }}%</option></select>
+      </div>
+      <div class="artboard-viewport" [style.width.px]="artboardWidth * canvasZoom" [style.height.px]="artboardHeight * canvasZoom">
+      <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
         <div cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list">
           <section *ngFor="let section of design.sections" cdkDrag class="canvas-section" [class.selected]="section.id === selectedSectionId" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)" (click)="selectSection(section)">
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
@@ -119,12 +131,12 @@
             <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state">
               <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>
             </div>
-            <div class="layer-surface">
+            <div class="layer-surface" [class.show-grid]="showGrid" [class.show-safe-margins]="showSafeMargins">
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
               <div *ngFor="let layer of section.layers" class="canvas-layer" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)">
                 <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
-                <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
+                <div *ngIf="layer.type === 'image' && layer.url" class="image-frame"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"></div>
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
                 <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls></video>
                 <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
@@ -140,6 +152,7 @@
             </div>
           </section>
         </div>
+      </div>
       </div>
     </main>
 
@@ -225,9 +238,17 @@
             <label class="toggle"><input type="checkbox" [checked]="!!style.textShadow" (change)="toggleTextShadow(layer, $any($event.target).checked)"> Sombra de texto</label>
           </div>
           <div *ngIf="layer.type === 'image'" class="image-framing">
+            <div class="inspector-heading"><h3>Encuadre y ajustes</h3><button type="button" (click)="resetImageAdjustments(layer)">Restablecer</button></div>
             <label>Encuadre<select [(ngModel)]="style.objectFit"><option value="cover">Llenar marco</option><option value="contain">Mostrar completa</option></select></label>
             <label>Posición horizontal<input [(ngModel)]="style.objectPositionX" type="range" min="0" max="100"></label>
             <label>Posición vertical<input [(ngModel)]="style.objectPositionY" type="range" min="0" max="100"></label>
+            <label>Zoom de imagen<input [ngModel]="style.imageScale ?? 1" (ngModelChange)="style.imageScale=$event" type="range" min="0.5" max="3" step="0.05"><span>{{ style.imageScale || 1 }}×</span></label>
+            <label>Giro interno<input [ngModel]="style.imageRotation ?? 0" (ngModelChange)="style.imageRotation=$event" type="range" min="-180" max="180" step="1"><span>{{ style.imageRotation || 0 }}°</span></label>
+            <div class="image-flip-actions"><button type="button" [class.active]="style.flipX" (click)="style.flipX=!style.flipX">Voltear horizontal</button><button type="button" [class.active]="style.flipY" (click)="style.flipY=!style.flipY">Voltear vertical</button></div>
+            <label>Brillo<input [ngModel]="style.brightness ?? 100" (ngModelChange)="style.brightness=$event" type="range" min="25" max="200" step="5"><span>{{ style.brightness ?? 100 }}%</span></label>
+            <label>Contraste<input [ngModel]="style.contrast ?? 100" (ngModelChange)="style.contrast=$event" type="range" min="25" max="200" step="5"><span>{{ style.contrast ?? 100 }}%</span></label>
+            <label>Saturación<input [ngModel]="style.saturation ?? 100" (ngModelChange)="style.saturation=$event" type="range" min="0" max="200" step="5"><span>{{ style.saturation ?? 100 }}%</span></label>
+            <label>Desenfoque<input [ngModel]="style.blur ?? 0" (ngModelChange)="style.blur=$event" type="range" min="0" max="12" step="0.5"><span>{{ style.blur || 0 }} px</span></label>
           </div>
         </ng-container>
         <ng-container *ngIf="animationFor(layer) as animation">

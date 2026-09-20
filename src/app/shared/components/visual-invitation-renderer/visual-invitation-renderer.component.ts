@@ -84,6 +84,17 @@ export class VisualInvitationRendererComponent {
     return type === 'none' ? [`layer-${layer.type}`] : [`layer-${layer.type}`, 'animated-layer', `animation-${type}`];
   }
 
+  imageStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const style = layer.style || {};
+    const scale = Number(style.imageScale || 1);
+    return {
+      objectFit: style.objectFit || 'cover',
+      objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
+      transform: `scale(${scale * (style.flipX ? -1 : 1)},${scale * (style.flipY ? -1 : 1)}) rotate(${Number(style.imageRotation || 0)}deg)`,
+      filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
+    };
+  }
+
   assetCredit(url?: string): { label: string; url: string } | undefined {
     if (!url) return undefined;
     const asset = this.invitation?.content?.visualDesign?.assets?.find((item) => item.url === url && item.attribution && item.attributionUrl);

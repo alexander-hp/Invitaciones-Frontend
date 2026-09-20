@@ -57,9 +57,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   searchingWebImages = false;
   webImageError = '';
   previewAnimationLayerId = '';
+  canvasZoom = 1;
+  showGrid = false;
+  showSafeMargins = false;
+  smartSnapping = true;
+
+  readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
+  private clipboardLayers: VisualInvitationLayer[] = [];
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private lastSavedSnapshot = '';
   private suppressNextLayerClickId = '';
@@ -165,6 +172,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.device === 'mobile' ? 390 : this.device === 'tablet' ? 768 : 1180;
   }
 
+  get artboardHeight(): number {
+    const sections = this.design?.sections || [];
+    return sections.reduce((total, section) => total + Number(section.height || 0), 0) + Math.max(0, sections.length - 1) * 22;
+  }
+
+  get hasClipboardLayers(): boolean {
+    return this.clipboardLayers.length > 0;
+  }
+
   get selectedLayout(): VisualInvitationLayerLayout | undefined {
     return this.selectedLayer ? this.editableLayout(this.selectedLayer) : undefined;
   }
@@ -175,6 +191,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   setDevice(device: DeviceMode): void {
     this.device = device;
+  }
+
+  setCanvasZoom(value: number | string): void {
+    this.canvasZoom = this.bound(Number(value) || 1, .5, 1.5);
   }
 
   setResponsiveMode(independent: boolean): void {
@@ -472,6 +492,48 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection(copies.map((copy) => copy.id));
   }
 
+  copySelectedLayers(): void {
+    if (!this.selectedLayers.length) return;
+    this.clipboardLayers = this.clone(this.selectedLayers);
+    this.flash(`${this.clipboardLayers.length} elemento${this.clipboardLayers.length === 1 ? '' : 's'} copiado${this.clipboardLayers.length === 1 ? '' : 's'}.`);
+  }
+
+  cutSelectedLayers(): void {
+    if (!this.selectedLayers.length) return;
+    this.clipboardLayers = this.clone(this.selectedLayers);
+    this.removeLayer();
+    this.flash('Elementos cortados. Selecciona otra sección y pégalos.');
+  }
+
+  pasteLayers(): void {
+    const section = this.selectedSection;
+    if (!section || !this.clipboardLayers.length) return;
+    this.recordHistory();
+    const groupIds = new Map<string, string>();
+    const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
+    const copies = this.clipboardLayers.map((source, index) => {
+      const copy = this.clone(source);
+      copy.id = this.uid('layer');
+      if (copy.groupId) {
+        if (!groupIds.has(copy.groupId)) groupIds.set(copy.groupId, this.uid('group'));
+        copy.groupId = groupIds.get(copy.groupId);
+      }
+      copy.name = `${this.layerLabel(source)} copia`;
+      copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
+      copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
+      if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
+        if (!layout) return;
+        layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
+        layout.y = this.bound(layout.y + 3, 0, 100 - layout.height);
+      });
+      copy.zIndex = topZ + index + 1;
+      return copy;
+    });
+    section.layers.push(...copies);
+    this.setLayerSelection(copies.map((copy) => copy.id));
+    this.flash(`${copies.length} elemento${copies.length === 1 ? '' : 's'} pegado${copies.length === 1 ? '' : 's'}.`);
+  }
+
   removeSection(section: VisualInvitationSection): void {
     if (this.design.sections.length <= 1) return;
     this.recordHistory();
@@ -705,6 +767,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const modifier = event.ctrlKey || event.metaKey;
     if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? this.redo() : this.undo(); return; }
     if (modifier && event.key.toLowerCase() === 'y') { event.preventDefault(); this.redo(); return; }
+    if (modifier && event.key.toLowerCase() === 'c' && this.selectedLayerCount) { event.preventDefault(); this.copySelectedLayers(); return; }
+    if (modifier && event.key.toLowerCase() === 'x' && this.selectedLayerCount) { event.preventDefault(); this.cutSelectedLayers(); return; }
+    if (modifier && event.key.toLowerCase() === 'v' && this.hasClipboardLayers) { event.preventDefault(); this.pasteLayers(); return; }
     if (modifier && event.key.toLowerCase() === 'd' && this.selectedLayer) { event.preventDefault(); this.duplicateLayer(); return; }
     if ((event.key === 'Delete' || event.key === 'Backspace') && this.selectedLayer) { event.preventDefault(); this.removeLayer(); return; }
     if (event.key === 'Escape') { this.clearLayerSelection(); return; }
@@ -736,6 +801,28 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       borderRadius: `${Number(s.borderRadius || 0)}px`, opacity: String(s.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
+    };
+  }
+
+  imageStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const style = layer.style || {};
+    const scale = Number(style.imageScale || 1);
+    const scaleX = scale * (style.flipX ? -1 : 1);
+    const scaleY = scale * (style.flipY ? -1 : 1);
+    return {
+      objectFit: style.objectFit || 'cover',
+      objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
+      transform: `scale(${scaleX},${scaleY}) rotate(${Number(style.imageRotation || 0)}deg)`,
+      filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
+    };
+  }
+
+  resetImageAdjustments(layer: VisualInvitationLayer): void {
+    this.recordHistory();
+    layer.style = {
+      ...(layer.style || {}), objectFit: 'cover', objectPositionX: 50, objectPositionY: 50,
+      imageScale: 1, imageRotation: 0, flipX: false, flipY: false,
+      brightness: 100, contrast: 100, saturation: 100, blur: 0
     };
   }
 
@@ -1048,6 +1135,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number, ignoredIds = new Set<string>([layer.id])): { x: number; y: number; guideX: number | null; guideY: number | null } {
+    if (!this.smartSnapping) {
+      return { x: this.bound(rawX, 0, 100 - width), y: this.bound(rawY, 0, 100 - height), guideX: null, guideY: null };
+    }
     const xTargets = [0, 50, 100];
     const yTargets = [0, 50, 100];
     for (const other of section.layers) {
