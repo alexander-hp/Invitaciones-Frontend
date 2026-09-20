@@ -76,22 +76,24 @@
             <div *ngIf="section.layers.length === 0" class="functional-placeholder">
               <strong>{{ section.title }}</strong><span>Módulo funcional conectado con los datos del evento</span>
             </div>
-            <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
-            <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-            <div *ngFor="let layer of section.layers" cdkDrag [cdkDragDisabled]="layer.locked" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [ngStyle]="layerStyle(layer)" (click)="selectLayer(section, layer, $event)" (cdkDragMoved)="layerMoved($event, layer, section)" (cdkDragEnded)="layerDropped($event, layer, section)">
-              <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
-              <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
-              <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
-              <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls></video>
-              <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
-              <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
-              <div *ngIf="layer.type === 'audio' && !layer.url" class="media-placeholder">Agrega una URL de audio</div>
-              <ng-container *ngIf="layer.id === selectedLayerId && !layer.locked">
-                <span class="resize-handle nw" (pointerdown)="beginResize($event, layer, 'nw')"></span>
-                <span class="resize-handle ne" (pointerdown)="beginResize($event, layer, 'ne')"></span>
-                <span class="resize-handle sw" (pointerdown)="beginResize($event, layer, 'sw')"></span>
-                <span class="resize-handle se" (pointerdown)="beginResize($event, layer, 'se')"></span>
-              </ng-container>
+            <div class="layer-surface" cdkDropList [cdkDropListData]="section.layers" [cdkDropListSortingDisabled]="true" [cdkDropListAutoScrollDisabled]="true">
+              <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
+              <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
+              <div *ngFor="let layer of section.layers" cdkDrag [cdkDragBoundary]="'.layer-surface'" [cdkDragDisabled]="layer.locked" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [ngStyle]="layerStyle(layer)" (click)="selectLayer(section, layer, $event)" (cdkDragMoved)="layerMoved($event, layer, section)" (cdkDragEnded)="layerDropped($event, layer, section)">
+                <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
+                <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
+                <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
+                <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls></video>
+                <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
+                <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
+                <div *ngIf="layer.type === 'audio' && !layer.url" class="media-placeholder">Agrega una URL de audio</div>
+                <ng-container *ngIf="layer.id === selectedLayerId && !layer.locked">
+                  <span class="resize-handle nw" (pointerdown)="beginResize($event, layer, 'nw')"></span>
+                  <span class="resize-handle ne" (pointerdown)="beginResize($event, layer, 'ne')"></span>
+                  <span class="resize-handle sw" (pointerdown)="beginResize($event, layer, 'sw')"></span>
+                  <span class="resize-handle se" (pointerdown)="beginResize($event, layer, 'se')"></span>
+                </ng-container>
+              </div>
             </div>
           </section>
         </div>
