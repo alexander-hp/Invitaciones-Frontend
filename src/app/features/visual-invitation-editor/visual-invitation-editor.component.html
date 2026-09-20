@@ -90,16 +90,16 @@
       </ng-container>
       <h2>Agregar</h2>
       <div class="tool-grid">
-        <button type="button" (click)="addLayer('text')"><b>T</b><span>Texto</span></button>
-        <button type="button" (click)="addLayer('image')"><b>▧</b><span>Imagen</span></button>
-        <button type="button" (click)="addLayer('video')"><b>▶</b><span>Video</span></button>
-        <button type="button" (click)="addLayer('audio')"><b>♪</b><span>Audio</span></button>
-        <button type="button" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
-        <button type="button" (click)="addLayer('shape')"><b>●</b><span>Forma</span></button>
+        <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'text'})" (dragend)="endPaletteDrag()" (click)="addLayer('text')"><b>T</b><span>Texto</span></button>
+        <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'image'})" (dragend)="endPaletteDrag()" (click)="addLayer('image')"><b>▧</b><span>Imagen</span></button>
+        <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'video'})" (dragend)="endPaletteDrag()" (click)="addLayer('video')"><b>▶</b><span>Video</span></button>
+        <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'audio'})" (dragend)="endPaletteDrag()" (click)="addLayer('audio')"><b>♪</b><span>Audio</span></button>
+        <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'button'})" (dragend)="endPaletteDrag()" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
+        <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'shape'})" (dragend)="endPaletteDrag()" (click)="addLayer('shape')"><b>●</b><span>Forma</span></button>
       </div>
       <h2>Bloques listos</h2>
       <div class="component-catalog">
-        <button *ngFor="let component of componentCatalog" type="button" (click)="addComponent(component.key)">
+        <button *ngFor="let component of componentCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'component', key:component.key})" (dragend)="endPaletteDrag()" (click)="addComponent(component.key)">
           <b>{{ component.icon }}</b><span>{{ component.label }}</span>
         </button>
       </div>
@@ -125,7 +125,7 @@
         </div>
         <p class="empty-media" *ngIf="!mediaLibrary.length">Sube una vez tus fotos, videos y canciones para reutilizarlos en cualquier sección.</p>
         <div class="media-library">
-          <article *ngFor="let media of filteredMediaLibrary; trackBy: trackMediaByUrl" [title]="media.label">
+          <article *ngFor="let media of filteredMediaLibrary; trackBy: trackMediaByUrl" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'media', media:media})" (dragend)="endPaletteDrag()" [title]="media.label">
             <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="media.label">
             <video *ngIf="media.type === 'video'" [src]="media.url" muted></video>
             <span *ngIf="media.type === 'audio'">♪</span>
@@ -172,7 +172,8 @@
             <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state">
               <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>
             </div>
-            <div class="layer-surface" [class.show-grid]="showGrid" [class.show-safe-margins]="showSafeMargins">
+            <div class="layer-surface" [class.show-grid]="showGrid" [class.show-safe-margins]="showSafeMargins" [class.palette-drop-target]="paletteDropSectionId === section.id" (dragover)="dragPaletteOver($event, section)" (dragleave)="leavePaletteTarget($event, section)" (drop)="dropPaletteItem($event, section)">
+              <div class="palette-drop-message" *ngIf="paletteDropSectionId === section.id">Suelta aquí</div>
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
               <div *ngFor="let layer of section.layers" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">

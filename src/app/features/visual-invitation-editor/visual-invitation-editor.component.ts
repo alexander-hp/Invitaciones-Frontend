@@ -16,6 +16,10 @@ type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
 type MediaFilter = 'all' | DesignMedia['type'];
 type VisualTheme = NonNullable<VisualInvitationDesign['theme']>;
+type PaletteDragItem =
+  | { kind: 'layer'; type: VisualLayerType }
+  | { kind: 'component'; key: string }
+  | { kind: 'media'; media: DesignMedia };
 type AuditSeverity = 'critical' | 'warning' | 'suggestion';
 type PublishAuditIssue = {
   id: string;
@@ -75,6 +79,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   showPublishAudit = false;
   publishAuditIssues: PublishAuditIssue[] = [];
   editingLayerId = '';
+  paletteDropSectionId = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
 
@@ -85,6 +90,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private lastSavedSnapshot = '';
   private suppressNextLayerClickId = '';
   private inlineEditOriginal = '';
+  private paletteDragItem?: PaletteDragItem;
   private rotationState?: {
     layout: VisualInvitationLayerLayout;
     centerX: number;
@@ -505,6 +511,71 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection(layers.map((layer) => layer.id));
     this.inspectorView = 'properties';
     this.flash('Bloque agregado. Puedes moverlo y personalizarlo.');
+  }
+
+  beginPaletteDrag(event: DragEvent, item: PaletteDragItem): void {
+    this.paletteDragItem = item;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', 'kyndra-visual-element');
+    }
+  }
+
+  endPaletteDrag(): void {
+    this.paletteDragItem = undefined;
+    this.paletteDropSectionId = '';
+  }
+
+  dragPaletteOver(event: DragEvent, section: VisualInvitationSection): void {
+    if (!this.paletteDragItem) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.paletteDropSectionId = section.id;
+  }
+
+  leavePaletteTarget(event: DragEvent, section: VisualInvitationSection): void {
+    const target = event.currentTarget as HTMLElement;
+    if (event.relatedTarget instanceof Node && target.contains(event.relatedTarget)) return;
+    if (this.paletteDropSectionId === section.id) this.paletteDropSectionId = '';
+  }
+
+  dropPaletteItem(event: DragEvent, section: VisualInvitationSection): void {
+    const item = this.paletteDragItem;
+    if (!item) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const surface = event.currentTarget as HTMLElement;
+    const rect = surface.getBoundingClientRect();
+    const x = this.bound((event.clientX - rect.left) / rect.width * 100, 0, 100);
+    const y = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
+    this.selectedSectionId = section.id;
+
+    if (item.kind === 'component') {
+      this.addComponent(item.key);
+      this.centerLayersAt(this.selectedLayers, x, y);
+    } else {
+      this.recordHistory();
+      const type = item.kind === 'media' ? item.media.type : item.type;
+      const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
+      const width = type === 'text' ? 60 : type === 'shape' ? 36 : 45;
+      const height = type === 'text' ? 18 : type === 'button' ? 13 : type === 'shape' ? 22 : 30;
+      const layer = this.newLayer(type, text, 0, 0, width, height);
+      layer.x = this.bound(x - width / 2, 0, 100 - width);
+      layer.y = this.bound(y - height / 2, 0, 100 - height);
+      layer.zIndex = Math.max(0, ...section.layers.map((entry) => entry.zIndex || 0)) + 1;
+      if (item.kind === 'media') {
+        layer.url = item.media.url;
+        layer.name = item.media.label;
+      }
+      if (type === 'shape') layer.style = { backgroundColor: this.design.theme?.accentColor || '#d88f7d', borderRadius: 8, opacity: 1 };
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      section.layers.push(layer);
+      this.setLayerSelection([layer.id]);
+    }
+    this.inspectorView = 'properties';
+    this.endPaletteDrag();
+    this.flash('Elemento agregado en el lienzo.');
   }
 
   uploadLibraryFiles(fileInput: HTMLInputElement): void {
@@ -1548,6 +1619,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private clearLayerSelection(): void {
     this.selectedLayerIds = [];
     this.selectedLayerId = '';
+  }
+
+  private centerLayersAt(layers: VisualInvitationLayer[], x: number, y: number): void {
+    if (!layers.length) return;
+    const layouts = layers.map((layer) => this.editableLayout(layer));
+    const minX = Math.min(...layouts.map((layout) => layout.x));
+    const minY = Math.min(...layouts.map((layout) => layout.y));
+    const maxX = Math.max(...layouts.map((layout) => layout.x + layout.width));
+    const maxY = Math.max(...layouts.map((layout) => layout.y + layout.height));
+    const dx = this.bound(x - (maxX - minX) / 2, 0, 100 - (maxX - minX)) - minX;
+    const dy = this.bound(y - (maxY - minY) / 2, 0, 100 - (maxY - minY)) - minY;
+    layouts.forEach((layout) => {
+      layout.x = this.bound(layout.x + dx, 0, 100 - layout.width);
+      layout.y = this.bound(layout.y + dy, 0, 100 - layout.height);
+    });
   }
 
   private flash(message: string): void {
