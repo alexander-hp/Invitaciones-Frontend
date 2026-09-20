@@ -82,6 +82,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   editingLayerId = '';
   paletteDropSectionId = '';
   selectionMarquee?: SelectionMarquee;
+  croppingLayerId = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
 
@@ -100,6 +101,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     startY: number;
     baseIds: string[];
     moved: boolean;
+  };
+  private cropPanState?: {
+    layer: VisualInvitationLayer;
+    frame: HTMLElement;
+    startX: number;
+    startY: number;
+    positionX: number;
+    positionY: number;
   };
   private rotationState?: {
     layout: VisualInvitationLayerLayout;
@@ -422,6 +431,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   selectSection(section: VisualInvitationSection): void {
+    this.croppingLayerId = '';
     this.selectedSectionId = section.id;
     this.clearLayerSelection();
   }
@@ -433,6 +443,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.layerDragState?.moved) return;
+    if (event.detail >= 2 && layer.type === 'image') { this.startImageCrop(event, section, layer); return; }
+    if (event.detail >= 2 && ['text', 'button'].includes(layer.type)) { this.startInlineEdit(event, section, layer); return; }
+    if (this.croppingLayerId && this.croppingLayerId !== layer.id) this.croppingLayerId = '';
     this.applyLayerSelection(section, layer, event.shiftKey);
     this.inspectorView = 'properties';
   }
@@ -722,7 +735,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   beginLayerDrag(event: PointerEvent, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
-    if (layer.locked || this.resizing || this.editingLayerId === layer.id || (event.target as HTMLElement).closest('.resize-handle, .rotate-handle, .layer-toolbar, .inline-text-editor, audio, video, button, input')) return;
+    if (layer.locked || this.resizing || this.editingLayerId === layer.id || this.croppingLayerId === layer.id || (event.target as HTMLElement).closest('.resize-handle, .rotate-handle, .layer-toolbar, .inline-text-editor, .crop-toolbar, audio, video, button, input')) return;
     event.preventDefault();
     event.stopPropagation();
     const canvas = (event.currentTarget as HTMLElement).closest('.layer-surface') as HTMLElement;
@@ -825,6 +838,51 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     });
   }
 
+  startImageCrop(event: MouseEvent, section: VisualInvitationSection, layer: VisualInvitationLayer): void {
+    if (layer.locked || layer.type !== 'image' || !layer.url) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.applyLayerSelection(section, layer, false);
+    layer.style = {
+      ...(layer.style || {}),
+      objectFit: 'cover',
+      objectPositionX: layer.style?.objectPositionX ?? 50,
+      objectPositionY: layer.style?.objectPositionY ?? 50,
+      imageScale: layer.style?.imageScale ?? 1
+    };
+    this.croppingLayerId = layer.id;
+    this.inspectorView = 'properties';
+  }
+
+  finishImageCrop(): void {
+    this.cropPanState = undefined;
+    this.croppingLayerId = '';
+  }
+
+  beginImageCropPan(event: PointerEvent, layer: VisualInvitationLayer): void {
+    if (this.croppingLayerId !== layer.id || layer.locked) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const frame = event.currentTarget as HTMLElement;
+    this.recordHistory();
+    layer.style = layer.style || {};
+    this.cropPanState = {
+      layer,
+      frame,
+      startX: event.clientX,
+      startY: event.clientY,
+      positionX: Number(layer.style.objectPositionX ?? 50),
+      positionY: Number(layer.style.objectPositionY ?? 50)
+    };
+  }
+
+  adjustImageCropZoom(layer: VisualInvitationLayer, delta: number): void {
+    if (layer.locked) return;
+    this.recordHistory();
+    layer.style = layer.style || {};
+    layer.style.imageScale = this.bound(Number(layer.style.imageScale || 1) + delta, .5, 3);
+  }
+
   finishInlineEdit(event: FocusEvent, layer: VisualInvitationLayer): void {
     if (this.editingLayerId !== layer.id) return;
     const target = event.target as HTMLElement;
@@ -848,6 +906,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    const crop = this.cropPanState;
+    if (crop) {
+      event.preventDefault();
+      const width = Math.max(1, crop.frame.clientWidth);
+      const height = Math.max(1, crop.frame.clientHeight);
+      crop.layer.style = crop.layer.style || {};
+      crop.layer.style.objectPositionX = this.bound(crop.positionX - (event.clientX - crop.startX) / width * 100, 0, 100);
+      crop.layer.style.objectPositionY = this.bound(crop.positionY - (event.clientY - crop.startY) / height * 100, 0, 100);
+      return;
+    }
     const marquee = this.marqueeState;
     if (marquee) {
       const rect = marquee.canvas.getBoundingClientRect();
@@ -935,6 +1003,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.rotationState = undefined;
     this.marqueeState = undefined;
     this.selectionMarquee = undefined;
+    this.cropPanState = undefined;
     this.layerDragState = undefined;
     this.draggingLayerId = '';
     this.guideX = null;
@@ -1071,6 +1140,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (modifier && event.key.toLowerCase() === 'v' && this.hasClipboardLayers) { event.preventDefault(); this.pasteLayers(); return; }
     if (modifier && event.key.toLowerCase() === 'd' && this.selectedLayer) { event.preventDefault(); this.duplicateLayer(); return; }
     if ((event.key === 'Delete' || event.key === 'Backspace') && this.selectedLayer) { event.preventDefault(); this.removeLayer(); return; }
+    if (event.key === 'Escape' && this.croppingLayerId) { this.finishImageCrop(); return; }
     if (event.key === 'Escape') { this.clearLayerSelection(); return; }
     const layers = this.selectedLayers.filter((layer) => !layer.locked);
     if (!layers.length || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;

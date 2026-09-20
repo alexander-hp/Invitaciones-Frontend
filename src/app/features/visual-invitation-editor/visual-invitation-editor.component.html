@@ -180,14 +180,21 @@
               <div *ngFor="let layer of section.layers" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ layer.text }}</div>
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
-                <div *ngIf="layer.type === 'image' && layer.url" class="image-frame"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"></div>
+                <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"></div>
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
                 <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls></video>
                 <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
                 <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
                 <div *ngIf="layer.type === 'audio' && !layer.url" class="media-placeholder">Agrega una URL de audio</div>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
+                  <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
+                    <span>Arrastra para encuadrar</span>
+                    <button type="button" title="Alejar imagen" (click)="adjustImageCropZoom(layer, -.1)">−</button>
+                    <button type="button" title="Acercar imagen" (click)="adjustImageCropZoom(layer, .1)">+</button>
+                    <button type="button" title="Terminar encuadre" (click)="finishImageCrop()">Listo</button>
+                  </div>
                   <div class="layer-toolbar" (pointerdown)="$event.stopPropagation()">
+                    <button *ngIf="layer.type === 'image' && layer.url && !layer.locked" type="button" title="Encuadrar imagen" (click)="startImageCrop($event, section, layer)">⌗</button>
                     <button type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button>
                     <button type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer, $event)">{{ layer.locked ? '▣' : '▢' }}</button>
                     <button type="button" title="Eliminar" (click)="removeLayer()">⌫</button>
@@ -292,6 +299,7 @@
           </div>
           <div *ngIf="layer.type === 'image'" class="image-framing">
             <div class="inspector-heading"><h3>Encuadre y ajustes</h3><button type="button" (click)="resetImageAdjustments(layer)">Restablecer</button></div>
+            <p class="crop-hint">También puedes hacer doble clic sobre la foto y arrastrarla directamente.</p>
             <label>Encuadre<select [(ngModel)]="style.objectFit"><option value="cover">Llenar marco</option><option value="contain">Mostrar completa</option></select></label>
             <label>Posición horizontal<input [(ngModel)]="style.objectPositionX" type="range" min="0" max="100"></label>
             <label>Posición vertical<input [(ngModel)]="style.objectPositionY" type="range" min="0" max="100"></label>
