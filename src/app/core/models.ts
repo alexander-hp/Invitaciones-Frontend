@@ -261,6 +261,17 @@ export interface VisualInvitationLayerStyle {
   textAlign?: string;
   borderRadius?: number;
   opacity?: number;
+  objectFit?: 'cover' | 'contain';
+  objectPositionX?: number;
+  objectPositionY?: number;
+}
+
+export interface VisualInvitationLayerLayout {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
 }
 
 export interface VisualInvitationLayer {
@@ -278,6 +289,7 @@ export interface VisualInvitationLayer {
   zIndex?: number;
   locked?: boolean;
   hidden?: boolean;
+  layouts?: Partial<Record<'mobile' | 'tablet' | 'desktop', VisualInvitationLayerLayout>>;
   style?: VisualInvitationLayerStyle;
 }
 
@@ -300,6 +312,7 @@ export interface VisualInvitationDesign {
   version: number;
   active: boolean;
   mode: 'easy' | 'advanced';
+  responsiveMode?: 'shared' | 'independent';
   sections: VisualInvitationSection[];
 }
 

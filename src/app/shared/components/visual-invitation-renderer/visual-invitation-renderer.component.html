@@ -2,7 +2,7 @@
   <section *ngFor="let section of sections" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of section.layers" class="visual-layer" [hidden]="layer.hidden" [ngClass]="'layer-' + layer.type" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
-      <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''">
+      <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
       <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline></video>
       <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
     </div>

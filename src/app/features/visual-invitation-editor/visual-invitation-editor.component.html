@@ -2,15 +2,15 @@
 <div class="visual-editor" *ngIf="!loading && invitation && design">
   <header class="ve-topbar">
     <button class="icon-button" type="button" title="Volver" (click)="back()">←</button>
-    <div class="ve-title"><strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong><span>Editor visual</span></div>
+    <div class="ve-title"><strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong><span>Editor visual · {{ autosaving ? 'Guardando...' : (hasUnsavedChanges ? 'Cambios pendientes' : autosaveState) }}</span></div>
     <div class="ve-history">
       <button class="icon-button" type="button" title="Deshacer" (click)="undo()">↶</button>
       <button class="icon-button" type="button" title="Rehacer" (click)="redo()">↷</button>
     </div>
     <div class="segmented" aria-label="Vista por dispositivo">
-      <button type="button" [class.active]="device === 'mobile'" (click)="device='mobile'">Celular</button>
-      <button type="button" [class.active]="device === 'tablet'" (click)="device='tablet'">Tablet</button>
-      <button type="button" [class.active]="device === 'desktop'" (click)="device='desktop'">Escritorio</button>
+      <button type="button" [class.active]="device === 'mobile'" (click)="setDevice('mobile')">Celular</button>
+      <button type="button" [class.active]="device === 'tablet'" (click)="setDevice('tablet')">Tablet</button>
+      <button type="button" [class.active]="device === 'desktop'" (click)="setDevice('desktop')">Escritorio</button>
     </div>
     <button class="secondary" type="button" (click)="openPreview()">Vista pública</button>
     <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
@@ -80,7 +80,7 @@
             <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
             <div *ngFor="let layer of section.layers" cdkDrag [cdkDragDisabled]="layer.locked" class="canvas-layer" [class.selected]="layer.id === selectedLayerId" [class.layer-hidden]="layer.hidden" [ngStyle]="layerStyle(layer)" (click)="selectLayer(section, layer, $event)" (cdkDragMoved)="layerMoved($event, layer, section)" (cdkDragEnded)="layerDropped($event, layer, section)">
               <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
-              <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''">
+              <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [style.object-fit]="layer.style?.objectFit || 'cover'" [style.object-position]="(layer.style?.objectPositionX ?? 50) + '% ' + (layer.style?.objectPositionY ?? 50) + '%'">
               <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
               <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls></video>
               <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
@@ -99,6 +99,15 @@
     </main>
 
     <aside class="ve-inspector">
+      <div class="responsive-settings">
+        <label class="toggle"><input type="checkbox" [ngModel]="design.responsiveMode === 'independent'" (ngModelChange)="setResponsiveMode($event)"> Ajustar cada dispositivo</label>
+        <p>{{ design.responsiveMode === 'independent' ? 'Los cambios de posición y tamaño solo afectan esta vista.' : 'La misma distribución se usa en celular, tablet y escritorio.' }}</p>
+        <div *ngIf="design.responsiveMode === 'independent'" class="copy-layout-actions">
+          <button *ngIf="device !== 'mobile'" type="button" (click)="copyCurrentLayoutTo('mobile')">Copiar a celular</button>
+          <button *ngIf="device !== 'tablet'" type="button" (click)="copyCurrentLayoutTo('tablet')">Copiar a tablet</button>
+          <button *ngIf="device !== 'desktop'" type="button" (click)="copyCurrentLayoutTo('desktop')">Copiar a escritorio</button>
+        </div>
+      </div>
       <div class="inspector-tabs">
         <button type="button" [class.active]="inspectorView === 'properties'" (click)="inspectorView='properties'">Propiedades</button>
         <button type="button" [class.active]="inspectorView === 'layers'" (click)="inspectorView='layers'">Capas</button>
@@ -126,10 +135,10 @@
         <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
-        <div class="two-columns">
-          <label>Ancho<input [(ngModel)]="layer.width" type="number" min="1" max="100"></label>
-          <label>Alto<input [(ngModel)]="layer.height" type="number" min="1" max="100"></label>
-          <label>Giro<input [(ngModel)]="layer.rotation" type="number" min="-360" max="360"></label>
+        <div class="two-columns" *ngIf="selectedLayout as layout">
+          <label>Ancho<input [(ngModel)]="layout.width" type="number" min="1" max="100"></label>
+          <label>Alto<input [(ngModel)]="layout.height" type="number" min="1" max="100"></label>
+          <label>Giro<input [(ngModel)]="layout.rotation" type="number" min="-360" max="360"></label>
           <label>Capa<input [(ngModel)]="layer.zIndex" type="number" min="0" max="1000"></label>
         </div>
         <ng-container *ngIf="layer.style as style">
@@ -139,6 +148,11 @@
             <label>Color<input [(ngModel)]="style.color" type="color"></label>
             <label>Fondo<input [(ngModel)]="style.backgroundColor" type="color"></label>
             <label>Opacidad<input [(ngModel)]="style.opacity" type="number" min="0" max="1" step="0.1"></label>
+          </div>
+          <div *ngIf="layer.type === 'image'" class="image-framing">
+            <label>Encuadre<select [(ngModel)]="style.objectFit"><option value="cover">Llenar marco</option><option value="contain">Mostrar completa</option></select></label>
+            <label>Posición horizontal<input [(ngModel)]="style.objectPositionX" type="range" min="0" max="100"></label>
+            <label>Posición vertical<input [(ngModel)]="style.objectPositionY" type="range" min="0" max="100"></label>
           </div>
         </ng-container>
         <label class="toggle"><input [(ngModel)]="layer.locked" type="checkbox"> Bloquear posición</label>

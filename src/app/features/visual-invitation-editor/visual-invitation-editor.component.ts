@@ -1,11 +1,11 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CdkDragDrop, CdkDragEnd, CdkDragMove, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
   EventModel, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
-  VisualInvitationLayer, VisualInvitationSection, VisualLayerType
+  VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationSection, VisualLayerType
 } from '../../core/models';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
@@ -18,7 +18,7 @@ type DesignMedia = { url: string; type: 'image' | 'video' | 'audio'; label: stri
   templateUrl: './visual-invitation-editor.component.html',
   styleUrls: ['./visual-invitation-editor.component.css']
 })
-export class VisualInvitationEditorComponent implements OnInit {
+export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   invitation?: InvitationModel;
   event?: EventModel;
   design!: VisualInvitationDesign;
@@ -32,6 +32,8 @@ export class VisualInvitationEditorComponent implements OnInit {
   publishing = false;
   uploading = false;
   savingTemplate = false;
+  autosaving = false;
+  autosaveState = 'Guardado';
   message = '';
   error = '';
   resizing = false;
@@ -41,9 +43,11 @@ export class VisualInvitationEditorComponent implements OnInit {
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
+  private autosaveHandle?: ReturnType<typeof setInterval>;
+  private lastSavedSnapshot = '';
   private resizeState?: {
     corner: ResizeCorner;
-    layer: VisualInvitationLayer;
+    layout: VisualInvitationLayerLayout;
     canvas: HTMLElement;
     startX: number;
     startY: number;
@@ -76,7 +80,10 @@ export class VisualInvitationEditorComponent implements OnInit {
         this.invitation = invitations.find((item) => (item._id || item.id) === id);
         if (!this.invitation) return this.fail('Invitación no encontrada.');
         this.design = this.clone(this.invitation.content?.visualDesign || this.createDefaultDesign());
+        this.design.responsiveMode = this.design.responsiveMode || 'shared';
         this.selectedSectionId = this.design.sections[0]?.id || '';
+        this.lastSavedSnapshot = this.designSnapshot();
+        this.startAutosave();
         this.loadPersonalTemplates();
         const eventId = typeof this.invitation.event === 'string'
           ? this.invitation.event
@@ -91,6 +98,10 @@ export class VisualInvitationEditorComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    if (this.autosaveHandle) clearInterval(this.autosaveHandle);
+  }
+
   get selectedSection(): VisualInvitationSection | undefined {
     return this.design?.sections.find((item) => item.id === this.selectedSectionId);
   }
@@ -101,6 +112,39 @@ export class VisualInvitationEditorComponent implements OnInit {
 
   get artboardWidth(): number {
     return this.device === 'mobile' ? 390 : this.device === 'tablet' ? 768 : 1180;
+  }
+
+  get selectedLayout(): VisualInvitationLayerLayout | undefined {
+    return this.selectedLayer ? this.editableLayout(this.selectedLayer) : undefined;
+  }
+
+  get hasUnsavedChanges(): boolean {
+    return !!this.design && this.designSnapshot() !== this.lastSavedSnapshot;
+  }
+
+  setDevice(device: DeviceMode): void {
+    this.device = device;
+  }
+
+  setResponsiveMode(independent: boolean): void {
+    const next = independent ? 'independent' : 'shared';
+    if (this.design.responsiveMode === next) return;
+    if (!independent && this.design.sections.some((section) => section.layers.some((layer) => layer.layouts && Object.keys(layer.layouts).length))) {
+      if (!window.confirm('Al usar un solo diseño se conservará la distribución base y se dejarán de usar los ajustes por dispositivo.')) return;
+    }
+    this.recordHistory();
+    this.design.responsiveMode = next;
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  copyCurrentLayoutTo(target: DeviceMode): void {
+    if (this.design.responsiveMode !== 'independent' || target === this.device) return;
+    this.recordHistory();
+    for (const section of this.design.sections) for (const layer of section.layers) {
+      layer.layouts = layer.layouts || {};
+      layer.layouts[target] = this.clone(this.layoutFor(layer));
+    }
+    this.flash(`Diseño de ${this.deviceLabel(this.device)} copiado a ${this.deviceLabel(target)}.`);
   }
 
   get orderedLayers(): VisualInvitationLayer[] {
@@ -176,6 +220,11 @@ export class VisualInvitationEditorComponent implements OnInit {
     copy.name = `${this.layerLabel(layer)} copia`;
     copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
     copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
+    if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
+      if (!layout) return;
+      layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
+      layout.y = this.bound(layout.y + 3, 0, 100 - layout.height);
+    });
     copy.zIndex = (copy.zIndex || 1) + 1;
     section.layers.push(copy);
     this.selectedLayerId = copy.id;
@@ -201,8 +250,9 @@ export class VisualInvitationEditorComponent implements OnInit {
     if (!canvas) return;
     this.recordHistory();
     const snapped = this.snapPosition(layer, section, canvas, event.distance.x, event.distance.y);
-    layer.x = snapped.x;
-    layer.y = snapped.y;
+    const layout = this.editableLayout(layer);
+    layout.x = snapped.x;
+    layout.y = snapped.y;
     this.guideX = null;
     this.guideY = null;
     event.source.reset();
@@ -227,9 +277,10 @@ export class VisualInvitationEditorComponent implements OnInit {
     if (!canvas) return;
     this.recordHistory();
     this.resizing = true;
+    const layout = this.editableLayout(layer);
     this.resizeState = {
-      corner, layer, canvas, startX: event.clientX, startY: event.clientY,
-      x: layer.x, y: layer.y, width: layer.width, height: layer.height
+      corner, layout, canvas, startX: event.clientX, startY: event.clientY,
+      x: layout.x, y: layout.y, width: layout.width, height: layout.height
     };
   }
 
@@ -246,10 +297,10 @@ export class VisualInvitationEditorComponent implements OnInit {
     const nextY = north ? state.y + dy : state.y;
     const nextWidth = west ? state.width - dx : state.width + dx;
     const nextHeight = north ? state.height - dy : state.height + dy;
-    state.layer.x = this.bound(nextX, 0, state.x + state.width - 4);
-    state.layer.y = this.bound(nextY, 0, state.y + state.height - 4);
-    state.layer.width = this.bound(nextWidth, 4, 100 - state.layer.x);
-    state.layer.height = this.bound(nextHeight, 4, 100 - state.layer.y);
+    state.layout.x = this.bound(nextX, 0, state.x + state.width - 4);
+    state.layout.y = this.bound(nextY, 0, state.y + state.height - 4);
+    state.layout.width = this.bound(nextWidth, 4, 100 - state.layout.x);
+    state.layout.height = this.bound(nextHeight, 4, 100 - state.layout.y);
   }
 
   @HostListener('document:pointerup')
@@ -326,17 +377,19 @@ export class VisualInvitationEditorComponent implements OnInit {
     event.preventDefault();
     this.recordHistory();
     const step = event.shiftKey ? 2 : .25;
-    if (event.key === 'ArrowLeft') layer.x = this.bound(layer.x - step, 0, 100 - layer.width);
-    if (event.key === 'ArrowRight') layer.x = this.bound(layer.x + step, 0, 100 - layer.width);
-    if (event.key === 'ArrowUp') layer.y = this.bound(layer.y - step, 0, 100 - layer.height);
-    if (event.key === 'ArrowDown') layer.y = this.bound(layer.y + step, 0, 100 - layer.height);
+    const layout = this.editableLayout(layer);
+    if (event.key === 'ArrowLeft') layout.x = this.bound(layout.x - step, 0, 100 - layout.width);
+    if (event.key === 'ArrowRight') layout.x = this.bound(layout.x + step, 0, 100 - layout.width);
+    if (event.key === 'ArrowUp') layout.y = this.bound(layout.y - step, 0, 100 - layout.height);
+    if (event.key === 'ArrowDown') layout.y = this.bound(layout.y + step, 0, 100 - layout.height);
   }
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const s = layer.style || {};
+    const layout = this.layoutFor(layer);
     return {
-      left: `${layer.x}%`, top: `${layer.y}%`, width: `${layer.width}%`, height: `${layer.height}%`,
-      transform: `rotate(${layer.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
+      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
+      transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(s.color || '#2d2927'), backgroundColor: String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(s.fontSize || 30)}px`,
       fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
@@ -431,7 +484,7 @@ export class VisualInvitationEditorComponent implements OnInit {
     this.saving = true;
     this.error = '';
     this.persistDesign().subscribe({
-      next: ({ invitation }) => { this.invitation = invitation; this.saving = false; this.flash('Diseño guardado.'); },
+      next: ({ invitation }) => { this.invitation = invitation; this.saving = false; this.markSaved(); this.flash('Diseño guardado.'); },
       error: (error) => { this.saving = false; this.error = error?.error?.message || 'No fue posible guardar el diseño.'; }
     });
   }
@@ -442,7 +495,7 @@ export class VisualInvitationEditorComponent implements OnInit {
     this.error = '';
     const id = this.invitation._id || this.invitation.id || '';
     this.persistDesign().pipe(switchMap(() => this.api.publishInvitation(id))).subscribe({
-      next: ({ invitation }) => { this.invitation = invitation; this.publishing = false; this.flash('Diseño publicado.'); this.openPreview(); },
+      next: ({ invitation }) => { this.invitation = invitation; this.publishing = false; this.markSaved(); this.flash('Diseño publicado.'); this.openPreview(); },
       error: (error) => { this.publishing = false; this.error = error?.error?.message || 'No fue posible publicar.'; }
     });
   }
@@ -533,7 +586,7 @@ export class VisualInvitationEditorComponent implements OnInit {
       if (settings.dedications !== false) sections.push(this.makeSection('dedications', 'Dedicatorias', palette.background, 620));
       if (settings.songRequests !== false) sections.push(this.makeSection('songs', 'Pide una canción', palette.background, 560));
     }
-    return { version: 1, active: false, mode: 'easy', sections };
+    return { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', sections };
   }
 
   private makeSection(type: string, title: string, color: string, height: number): VisualInvitationSection {
@@ -565,22 +618,24 @@ export class VisualInvitationEditorComponent implements OnInit {
   }
 
   private snapPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, dx: number, dy: number): { x: number; y: number; guideX: number | null; guideY: number | null } {
-    const rawX = this.bound(layer.x + dx / canvas.clientWidth * 100, 0, 100 - layer.width);
-    const rawY = this.bound(layer.y + dy / canvas.clientHeight * 100, 0, 100 - layer.height);
+    const layout = this.layoutFor(layer);
+    const rawX = this.bound(layout.x + dx / canvas.clientWidth * 100, 0, 100 - layout.width);
+    const rawY = this.bound(layout.y + dy / canvas.clientHeight * 100, 0, 100 - layout.height);
     const xTargets = [0, 50, 100];
     const yTargets = [0, 50, 100];
     for (const other of section.layers) {
       if (other.id === layer.id || other.hidden) continue;
-      xTargets.push(other.x, other.x + other.width / 2, other.x + other.width);
-      yTargets.push(other.y, other.y + other.height / 2, other.y + other.height);
+      const otherLayout = this.layoutFor(other);
+      xTargets.push(otherLayout.x, otherLayout.x + otherLayout.width / 2, otherLayout.x + otherLayout.width);
+      yTargets.push(otherLayout.y, otherLayout.y + otherLayout.height / 2, otherLayout.y + otherLayout.height);
     }
-    const xAnchors = [{ value: rawX, offset: 0 }, { value: rawX + layer.width / 2, offset: layer.width / 2 }, { value: rawX + layer.width, offset: layer.width }];
-    const yAnchors = [{ value: rawY, offset: 0 }, { value: rawY + layer.height / 2, offset: layer.height / 2 }, { value: rawY + layer.height, offset: layer.height }];
+    const xAnchors = [{ value: rawX, offset: 0 }, { value: rawX + layout.width / 2, offset: layout.width / 2 }, { value: rawX + layout.width, offset: layout.width }];
+    const yAnchors = [{ value: rawY, offset: 0 }, { value: rawY + layout.height / 2, offset: layout.height / 2 }, { value: rawY + layout.height, offset: layout.height }];
     const snapX = this.closestSnap(xAnchors, xTargets, 800 / Math.max(canvas.clientWidth, 1));
     const snapY = this.closestSnap(yAnchors, yTargets, 800 / Math.max(canvas.clientHeight, 1));
     return {
-      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - layer.width),
-      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, 0, 100 - layer.height),
+      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - layout.width),
+      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, 0, 100 - layout.height),
       guideX: snapX?.target ?? null,
       guideY: snapY?.target ?? null
     };
@@ -593,6 +648,47 @@ export class VisualInvitationEditorComponent implements OnInit {
       if (distance <= threshold && (!match || distance < match.distance)) match = { target, offset: anchor.offset, distance };
     }
     return match;
+  }
+
+  private layoutFor(layer: VisualInvitationLayer): VisualInvitationLayerLayout {
+    if (this.design.responsiveMode === 'independent' && layer.layouts?.[this.device]) return layer.layouts[this.device] as VisualInvitationLayerLayout;
+    return { x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotation: layer.rotation || 0 };
+  }
+
+  private editableLayout(layer: VisualInvitationLayer): VisualInvitationLayerLayout {
+    if (this.design.responsiveMode !== 'independent') return layer;
+    layer.layouts = layer.layouts || {};
+    if (!layer.layouts[this.device]) layer.layouts[this.device] = this.clone({ x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotation: layer.rotation || 0 });
+    return layer.layouts[this.device] as VisualInvitationLayerLayout;
+  }
+
+  private deviceLabel(device: DeviceMode): string {
+    return { mobile: 'celular', tablet: 'tablet', desktop: 'escritorio' }[device];
+  }
+
+  private startAutosave(): void {
+    if (this.autosaveHandle) clearInterval(this.autosaveHandle);
+    this.autosaveHandle = setInterval(() => this.autoSave(), 5000);
+  }
+
+  private autoSave(): void {
+    if (!this.hasUnsavedChanges || this.saving || this.publishing || this.autosaving || this.uploading) return;
+    this.autosaving = true;
+    this.autosaveState = 'Guardando...';
+    this.persistDesign().subscribe({
+      next: ({ invitation }) => { this.invitation = invitation; this.autosaving = false; this.markSaved(); },
+      error: () => { this.autosaving = false; this.autosaveState = 'No se pudo guardar'; }
+    });
+  }
+
+  private markSaved(): void {
+    this.lastSavedSnapshot = this.designSnapshot();
+    this.autosaveState = 'Guardado';
+    this.error = '';
+  }
+
+  private designSnapshot(): string {
+    return JSON.stringify(this.stripMongoMetadata(this.design));
   }
 
   private confirmReplaceDesign(): boolean {

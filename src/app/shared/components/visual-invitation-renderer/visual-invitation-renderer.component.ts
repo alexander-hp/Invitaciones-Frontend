@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import {
   DedicationModel, EventModel, GuestAccessResponse, InvitationModel,
   VisualInvitationLayer, VisualInvitationSection
@@ -10,6 +10,7 @@ import {
   styleUrls: ['./visual-invitation-renderer.component.css']
 })
 export class VisualInvitationRendererComponent {
+  device: 'mobile' | 'tablet' | 'desktop' = this.detectDevice();
   @Input() invitation?: InvitationModel;
   @Input() event?: EventModel;
   @Input() verifiedGuest?: GuestAccessResponse['guest'];
@@ -61,14 +62,22 @@ export class VisualInvitationRendererComponent {
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const style = layer.style || {};
+    const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
+      ? layer.layouts[this.device]!
+      : layer;
     return {
-      left: `${layer.x}%`, top: `${layer.y}%`, width: `${layer.width}%`, height: `${layer.height}%`,
-      transform: `rotate(${layer.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
+      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
+      transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(style.color || '#25211f'), backgroundColor: String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
       borderRadius: `${Number(style.borderRadius || 0)}px`, opacity: String(style.opacity ?? 1)
     };
+  }
+
+  @HostListener('window:resize')
+  onViewportResize(): void {
+    this.device = this.detectDevice();
   }
 
   identifyGuest(): void {
@@ -93,5 +102,10 @@ export class VisualInvitationRendererComponent {
   sendSong(): void {
     if (!this.song.title.trim() && !this.song.sourceUrl.trim()) return;
     this.requestSong.emit({ ...this.song });
+  }
+
+  private detectDevice(): 'mobile' | 'tablet' | 'desktop' {
+    const width = typeof window === 'undefined' ? 390 : window.innerWidth;
+    return width <= 600 ? 'mobile' : width <= 1024 ? 'tablet' : 'desktop';
   }
 }
