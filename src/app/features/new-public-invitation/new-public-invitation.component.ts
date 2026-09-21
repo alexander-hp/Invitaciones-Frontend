@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
-import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
+import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
 @Component({
@@ -34,6 +34,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   private isYtApiLoaded = false;
   private isYtReady = false;
   private pendingYtVideoId?: string;
+  private firstInteractionHandler?: (event: Event) => void;
   private observer?: IntersectionObserver;
   private timerInterval?: any;
   private editedTextsApplied = false;
@@ -151,6 +152,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.iframeBridgeListener) {
       window.removeEventListener('message', this.iframeBridgeListener);
     }
+    this.removeFirstInteractionPlayback();
   }
 
   handleIframeBridgeMessage(event: MessageEvent): void {
@@ -290,6 +292,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.loadDedications();
     this.startCountdown();
     this.initAudio();
+    this.setupFirstInteractionPlayback();
     this.setupSectionObserver();
     this.loadEditedTexts(slug);
     this.updateAllAlbumAssets();
@@ -409,6 +412,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const runtimeScript = generateInteractiveRuntimeScript({
       slug: this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '',
       musicUrl: this.invitation?.content?.musicUrl || this.getAudioUrlForSection('hero'),
+      musicSettings: this.invitation?.content?.musicSettings,
       eventDate: this.event?.date ? new Date(this.event.date).toISOString() : undefined,
       headline: this.invitation?.content?.headline,
       subheadline: this.invitation?.content?.subheadline,
@@ -527,6 +531,49 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return Boolean(typeof secMusic === 'object' && Object.values(secMusic).some(Boolean));
   }
 
+  private getMusicSettings(): MusicPlaybackSettings {
+    return {
+      playbackMode: 'first_interaction', sectionChangeMode: 'automatic', loop: true,
+      volume: 0.7, startSeconds: 0, ...(this.invitation?.content?.musicSettings || {})
+    };
+  }
+
+  private getMusicCue(sectionKey: string): MusicCueSettings {
+    const settings = this.getMusicSettings();
+    const sectionCue = this.invitation?.content?.sectionMusicCues?.[sectionKey] || {};
+    const startSeconds = Math.max(0, Number(sectionCue.startSeconds ?? settings.startSeconds ?? 0));
+    const rawEnd = sectionCue.endSeconds ?? settings.endSeconds;
+    const endSeconds = rawEnd !== undefined && Number(rawEnd) > startSeconds ? Number(rawEnd) : undefined;
+    return {
+      startSeconds,
+      endSeconds,
+      volume: Math.min(1, Math.max(0, Number(sectionCue.volume ?? settings.volume ?? 0.7))),
+      loop: sectionCue.loop ?? settings.loop ?? true
+    };
+  }
+
+  private setupFirstInteractionPlayback(): void {
+    this.removeFirstInteractionPlayback();
+    if (typeof document === 'undefined' || this.getMusicSettings().playbackMode !== 'first_interaction' || !this.hasMusicTrack()) return;
+    if (this.requiresGuestValidation && !this.verifiedGuest) return;
+    this.firstInteractionHandler = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('.nw-pub-audio-btn, [aria-label*="música"], [aria-label*="Música"]')) return;
+      this.removeFirstInteractionPlayback();
+      const url = this.getAudioUrlForSection(this.currentActiveSection);
+      if (url && !this.isPlayingMusic) this.playTrackUrl(url, true, this.currentActiveSection);
+    };
+    document.addEventListener('pointerdown', this.firstInteractionHandler, true);
+    document.addEventListener('keydown', this.firstInteractionHandler, true);
+  }
+
+  private removeFirstInteractionPlayback(): void {
+    if (!this.firstInteractionHandler || typeof document === 'undefined') return;
+    document.removeEventListener('pointerdown', this.firstInteractionHandler, true);
+    document.removeEventListener('keydown', this.firstInteractionHandler, true);
+    this.firstInteractionHandler = undefined;
+  }
+
   getSectionSpecificMusicUrl(sectionKey: string): string {
     const secMusic = this.invitation?.content?.sectionMusic;
     if (secMusic) {
@@ -624,8 +671,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
             } else if (event.data === 2) {
               this.isPlayingMusic = false;
             } else if (event.data === 0) {
-              if (this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+              const cue = this.getMusicCue(this.currentActiveSection);
+              if (cue.loop && this.ytPlayer && typeof this.ytPlayer.seekTo === 'function') {
+                this.ytPlayer.seekTo(cue.startSeconds || 0, true);
                 this.ytPlayer.playVideo();
+              } else {
+                this.isPlayingMusic = false;
               }
             }
           },
@@ -639,7 +690,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
   }
 
-  private playYouTubeVideo(videoId: string, forcePlay: boolean = false): void {
+  private playYouTubeVideo(videoId: string, forcePlay: boolean = false, sectionKey = this.currentActiveSection): void {
     if (!this.isYtReady || !this.ytPlayer || typeof this.ytPlayer.loadVideoById !== 'function') {
       this.pendingYtVideoId = videoId;
       if (!this.isYtApiLoaded) {
@@ -649,7 +700,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
 
     try {
-      this.ytPlayer.loadVideoById({ videoId, startSeconds: 0 });
+      const cue = this.getMusicCue(sectionKey);
+      this.ytPlayer.setVolume(Math.round((cue.volume ?? 0.7) * 100));
+      this.ytPlayer.loadVideoById({ videoId, startSeconds: cue.startSeconds || 0, endSeconds: cue.endSeconds });
       if (forcePlay || this.isPlayingMusic) {
         this.ytPlayer.playVideo();
         this.isPlayingMusic = true;
@@ -682,7 +735,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return;
     }
 
-    this.playTrackUrl(targetUrl, true);
+    this.playTrackUrl(targetUrl, true, sectionKey);
   }
 
   getAudioUrlForSection(sectionKey: string): string {
@@ -708,7 +761,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
     this.currentPlayingTrackUrl = initialUrl;
     this.audioRef = new Audio(initialUrl);
-    this.audioRef.loop = true;
+    this.configureHtmlAudio('hero', true);
     this.audioRef.onerror = () => {
       this.isPlayingMusic = false;
     };
@@ -737,13 +790,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   onSectionFocusChange(sectionKey: string): void {
     if (!this.invitation || !this.isPlayingMusic) return;
+    if (this.getMusicSettings().sectionChangeMode === 'manual') return;
     const targetUrl = this.getAudioUrlForSection(sectionKey);
-    if (targetUrl && targetUrl !== this.currentPlayingTrackUrl) {
-      this.playTrackUrl(targetUrl);
-    }
+    if (targetUrl) this.playTrackUrl(targetUrl, false, sectionKey);
   }
 
-  playTrackUrl(url: string, forcePlay: boolean = false): void {
+  playTrackUrl(url: string, forcePlay: boolean = false, sectionKey = this.currentActiveSection): void {
     if (!url) return;
     this.currentPlayingTrackUrl = url;
 
@@ -752,7 +804,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       if (this.audioRef) {
         this.audioRef.pause();
       }
-      this.playYouTubeVideo(ytId, forcePlay);
+      this.playYouTubeVideo(ytId, forcePlay, sectionKey);
       return;
     }
 
@@ -762,14 +814,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
     if (!this.audioRef) {
       this.audioRef = new Audio(url);
-      this.audioRef.loop = true;
       this.audioRef.onerror = () => { this.isPlayingMusic = false; };
-    } else {
+    } else if (this.audioRef.src !== url) {
       this.audioRef.pause();
       this.audioRef.src = url;
-      this.audioRef.currentTime = 0;
       this.audioRef.load();
     }
+    this.configureHtmlAudio(sectionKey, true);
 
     const shouldPlay = forcePlay || this.isPlayingMusic;
     if (shouldPlay) {
@@ -781,9 +832,38 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
   }
 
+  private configureHtmlAudio(sectionKey: string, resetPosition: boolean): void {
+    if (!this.audioRef) return;
+    const cue = this.getMusicCue(sectionKey);
+    this.audioRef.volume = cue.volume ?? 0.7;
+    this.audioRef.loop = Boolean(cue.loop && cue.endSeconds === undefined);
+    const seekToStart = () => {
+      if (!this.audioRef || !resetPosition) return;
+      try { this.audioRef.currentTime = cue.startSeconds || 0; } catch { }
+    };
+    if (this.audioRef.readyState >= 1) seekToStart();
+    else this.audioRef.onloadedmetadata = seekToStart;
+    this.audioRef.ontimeupdate = () => {
+      if (!this.audioRef || cue.endSeconds === undefined || this.audioRef.currentTime < cue.endSeconds) return;
+      if (cue.loop) {
+        this.audioRef.currentTime = cue.startSeconds || 0;
+        void this.audioRef.play();
+      } else {
+        this.audioRef.pause();
+        this.isPlayingMusic = false;
+      }
+    };
+    this.audioRef.onended = () => { if (!cue.loop) this.isPlayingMusic = false; };
+  }
+
   toggleMusic(): void {
     const targetUrl = this.getAudioUrlForSection(this.currentActiveSection) || this.invitation?.content.musicUrl || '';
     if (!targetUrl) return;
+    this.removeFirstInteractionPlayback();
+    if (this.currentPlayingTrackUrl !== targetUrl) {
+      this.playTrackUrl(targetUrl, true, this.currentActiveSection);
+      return;
+    }
 
     const ytId = this.extractYouTubeVideoId(targetUrl);
     if (ytId) {
@@ -923,7 +1003,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
           // Attempt music playback on user gesture if available
           if (this.hasMusicTrack() && !this.isPlayingMusic) {
-            this.toggleMusic();
+            if (this.getMusicSettings().playbackMode === 'after_access') this.toggleMusic();
+            else this.setupFirstInteractionPlayback();
           }
         }, 600);
       },

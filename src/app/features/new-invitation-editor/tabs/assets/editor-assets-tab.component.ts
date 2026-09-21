@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { InvitationModel, AssetFolder } from '../../../../core/models';
+import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
+import { InvitationModel, AssetFolder, MusicCueSettings, MusicPlaybackSettings } from '../../../../core/models';
 
 @Component({
   selector: 'app-editor-assets-tab',
   templateUrl: './editor-assets-tab.component.html'
 })
-export class EditorAssetsTabComponent {
+export class EditorAssetsTabComponent implements OnChanges {
   @Input() invitation!: InvitationModel;
   @Input() activeTab = 'all';
   @Input() assetUploading = false;
@@ -35,6 +35,46 @@ export class EditorAssetsTabComponent {
   @Output() addLodgingItem = new EventEmitter<void>();
   @Output() removeLodgingItem = new EventEmitter<number>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
+
+  ngOnChanges(): void {
+    this.ensureMusicConfiguration();
+  }
+
+  get musicSettings(): MusicPlaybackSettings {
+    this.ensureMusicConfiguration();
+    return this.invitation.content.musicSettings!;
+  }
+
+  sectionCue(sectionKey: string): MusicCueSettings {
+    this.ensureMusicConfiguration();
+    return this.invitation.content.sectionMusicCues?.[sectionKey] || {};
+  }
+
+  setSectionCueNumber(sectionKey: string, field: 'startSeconds' | 'endSeconds' | 'volume', value: string | number | null): void {
+    this.ensureMusicConfiguration();
+    const cue = { ...(this.invitation.content.sectionMusicCues?.[sectionKey] || {}) };
+    const parsed = value === '' || value === null ? undefined : Number(value);
+    if (parsed === undefined || !Number.isFinite(parsed)) delete cue[field];
+    else cue[field] = field === 'volume' ? Math.min(1, Math.max(0, parsed)) : Math.max(0, parsed);
+    this.invitation.content.sectionMusicCues![sectionKey] = cue;
+  }
+
+  setSectionCueLoop(sectionKey: string, value: boolean): void {
+    this.ensureMusicConfiguration();
+    this.invitation.content.sectionMusicCues![sectionKey] = {
+      ...(this.invitation.content.sectionMusicCues?.[sectionKey] || {}),
+      loop: value
+    };
+  }
+
+  private ensureMusicConfiguration(): void {
+    if (!this.invitation?.content) return;
+    this.invitation.content.musicSettings = {
+      playbackMode: 'first_interaction', sectionChangeMode: 'automatic', loop: true,
+      volume: 0.7, startSeconds: 0, ...(this.invitation.content.musicSettings || {})
+    };
+    this.invitation.content.sectionMusicCues = this.invitation.content.sectionMusicCues || {};
+  }
 
   onCoverFilesSelected(files: File[]): void {
     if (!files || !files.length) return;

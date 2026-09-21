@@ -1785,6 +1785,37 @@ export class NewInvitationEditorComponent implements OnInit {
     return cleaned;
   }
 
+  private cleanSectionMusicCues(mapObj?: any): Record<string, { startSeconds?: number; endSeconds?: number; volume?: number; loop?: boolean }> {
+    const source = mapObj && typeof mapObj.entries === 'function' ? Object.fromEntries(mapObj.entries()) : (mapObj || {});
+    return Object.entries(source).reduce((cleaned, [key, raw]) => {
+      const cue = (raw || {}) as any;
+      const startSeconds = Math.max(0, Number(cue.startSeconds || 0));
+      const endValue = cue.endSeconds === '' || cue.endSeconds === undefined || cue.endSeconds === null ? undefined : Number(cue.endSeconds);
+      cleaned[key] = {
+        startSeconds,
+        ...(Number.isFinite(endValue) && Number(endValue) > startSeconds ? { endSeconds: Number(endValue) } : {}),
+        ...(Number.isFinite(Number(cue.volume)) ? { volume: Math.min(1, Math.max(0, Number(cue.volume))) } : {}),
+        ...(typeof cue.loop === 'boolean' ? { loop: cue.loop } : {})
+      };
+      return cleaned;
+    }, {} as Record<string, { startSeconds?: number; endSeconds?: number; volume?: number; loop?: boolean }>);
+  }
+
+  private cleanMusicSettings(): { playbackMode: 'manual' | 'first_interaction' | 'after_access'; sectionChangeMode: 'automatic' | 'manual'; loop: boolean; volume: number; startSeconds: number; endSeconds?: number } {
+    const settings = this.invitation?.content?.musicSettings || {};
+    const startSeconds = Math.max(0, Number(settings.startSeconds || 0));
+    const rawEnd = settings.endSeconds as number | string | null | undefined;
+    const endValue = rawEnd === undefined || rawEnd === null || rawEnd === '' ? undefined : Number(rawEnd);
+    return {
+      playbackMode: settings.playbackMode || 'first_interaction',
+      sectionChangeMode: settings.sectionChangeMode || 'automatic',
+      loop: settings.loop !== false,
+      volume: Math.min(1, Math.max(0, Number(settings.volume ?? 0.7))),
+      startSeconds,
+      ...(Number.isFinite(endValue) && Number(endValue) > startSeconds ? { endSeconds: Number(endValue) } : {})
+    };
+  }
+
   private getCleanSongRequestSettings(): SongRequestSettings {
     const djSettings = (this.event?.externalContent?.songRequestSettings || this.invitation?.content?.songRequestSettings || {}) as any;
     const songEnabled = this.invitation?.content?.sectionSettings?.songRequests !== false;
@@ -1819,7 +1850,9 @@ export class NewInvitationEditorComponent implements OnInit {
       ...rawContent,
       template: activeTemplateKey,
       songRequestSettings: this.getCleanSongRequestSettings(),
+      musicSettings: this.cleanMusicSettings(),
       sectionMusic: this.cleanSectionMusic(this.invitation.content.sectionMusic || {}),
+      sectionMusicCues: this.cleanSectionMusicCues(this.invitation.content.sectionMusicCues || {}),
       itinerary: this.cleanItinerary(this.invitation.content.itinerary || []),
       locations: this.cleanLocations(this.invitation.content.locations || []),
       giftRegistry: this.cleanGiftRegistry(this.invitation.content.giftRegistry || []),

@@ -136,6 +136,34 @@
       Asigna una canción global o reproduce canciones específicas automáticamente cuando el invitado llega a cada sección (Focus).
     </p>
 
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-bottom:16px; padding:12px; border:1px solid var(--nw-border); border-radius:8px; background:var(--nw-surface);">
+      <label style="font-size:12px;">Cuándo iniciar
+        <select class="nw-input" [(ngModel)]="musicSettings.playbackMode">
+          <option value="first_interaction">Al primer toque del invitado</option>
+          <option value="after_access">Después de validar su acceso</option>
+          <option value="manual">Solo al pulsar reproducir</option>
+        </select>
+      </label>
+      <label style="font-size:12px;">Cambio entre secciones
+        <select class="nw-input" [(ngModel)]="musicSettings.sectionChangeMode">
+          <option value="automatic">Automático al desplazarse</option>
+          <option value="manual">Manual desde cada sección</option>
+        </select>
+      </label>
+      <label style="font-size:12px;">Volumen general: {{ ((musicSettings.volume ?? 0.7) * 100) | number:'1.0-0' }}%
+        <input type="range" min="0" max="1" step="0.05" [(ngModel)]="musicSettings.volume" style="width:100%;">
+      </label>
+      <label class="check-row" style="align-self:end; min-height:38px;">
+        <input type="checkbox" [(ngModel)]="musicSettings.loop"> Repetir al terminar
+      </label>
+      <label style="font-size:12px;">Iniciar en el segundo
+        <input class="nw-input" type="number" min="0" step="1" [(ngModel)]="musicSettings.startSeconds">
+      </label>
+      <label style="font-size:12px;">Finalizar en el segundo <small>(opcional)</small>
+        <input class="nw-input" type="number" [min]="(musicSettings.startSeconds || 0) + 1" step="1" [(ngModel)]="musicSettings.endSeconds" placeholder="Hasta el final">
+      </label>
+    </div>
+
     <!-- Música Global -->
     <div
       style="margin-bottom:16px; background:var(--nw-surface-2); padding:12px 14px; border-radius:8px; border:1px solid var(--nw-border); display:flex; flex-direction:column; gap:8px;">
@@ -312,6 +340,25 @@
             *ngIf="invitation.content.sectionMusic?.[sec.key] && isYouTubeUrl(invitation.content.sectionMusic?.[sec.key])"
             style="font-size:11px; color:var(--nw-text-3); padding:3px 6px; background:var(--nw-surface); border-radius:4px;">
             <span>▶ Audio de YouTube asignado</span>
+          </div>
+          <div *ngIf="invitation.content.sectionMusic?.[sec.key]"
+            style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; padding-top:4px; border-top:1px solid var(--nw-border);">
+            <label style="font-size:11px;">Inicio (segundos)
+              <input class="nw-input" type="number" min="0" step="1" [ngModel]="sectionCue(sec.key).startSeconds ?? 0"
+                (ngModelChange)="setSectionCueNumber(sec.key, 'startSeconds', $event)">
+            </label>
+            <label style="font-size:11px;">Fin <small>(opcional)</small>
+              <input class="nw-input" type="number" [min]="(sectionCue(sec.key).startSeconds || 0) + 1" step="1"
+                [ngModel]="sectionCue(sec.key).endSeconds ?? ''" (ngModelChange)="setSectionCueNumber(sec.key, 'endSeconds', $event)" placeholder="Final">
+            </label>
+            <label style="font-size:11px; grid-column:1/-1;">Volumen de esta sección: {{ ((sectionCue(sec.key).volume ?? musicSettings.volume ?? 0.7) * 100) | number:'1.0-0' }}%
+              <input type="range" min="0" max="1" step="0.05" [ngModel]="sectionCue(sec.key).volume ?? musicSettings.volume ?? 0.7"
+                (ngModelChange)="setSectionCueNumber(sec.key, 'volume', $event)" style="width:100%;">
+            </label>
+            <label class="check-row" style="font-size:11px; grid-column:1/-1;">
+              <input type="checkbox" [ngModel]="sectionCue(sec.key).loop ?? musicSettings.loop ?? true"
+                (ngModelChange)="setSectionCueLoop(sec.key, $event)"> Repetir este fragmento
+            </label>
           </div>
         </div>
       </div>

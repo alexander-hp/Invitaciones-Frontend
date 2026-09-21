@@ -22,6 +22,13 @@
 export interface RuntimeOptions {
   slug: string;
   musicUrl?: string;
+  musicSettings?: {
+    playbackMode?: 'manual' | 'first_interaction' | 'after_access';
+    loop?: boolean;
+    volume?: number;
+    startSeconds?: number;
+    endSeconds?: number;
+  };
   eventDate?: string;
   apiUrl?: string;
   headline?: string;
@@ -37,6 +44,10 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
   const configJson = JSON.stringify({
     slug: options.slug || '',
     musicUrl: options.musicUrl || '',
+    musicSettings: {
+      playbackMode: 'first_interaction', loop: true, volume: 0.7, startSeconds: 0,
+      ...(options.musicSettings || {})
+    },
     eventDate: options.eventDate || '',
     apiUrl: options.apiUrl || window.location.origin + '/api',
     accentColor: options.palette?.accent || '#c59b6c',
@@ -83,13 +94,44 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
     if (!CONFIG.musicUrl) return;
     try {
       audioElement = new Audio(CONFIG.musicUrl);
-      audioElement.loop = true;
+      var settings = CONFIG.musicSettings || {};
+      var start = Math.max(0, Number(settings.startSeconds || 0));
+      var end = Number(settings.endSeconds || 0);
+      audioElement.volume = Math.min(1, Math.max(0, Number(settings.volume == null ? 0.7 : settings.volume)));
+      audioElement.loop = Boolean(settings.loop !== false && !end);
+      audioElement.addEventListener('loadedmetadata', function() { if (start) audioElement.currentTime = start; }, { once: true });
+      audioElement.addEventListener('timeupdate', function() {
+        if (!end || audioElement.currentTime < end) return;
+        if (settings.loop !== false) {
+          audioElement.currentTime = start;
+          audioElement.play().catch(function() {});
+        } else {
+          audioElement.pause();
+          isPlayingMusic = false;
+          updateMusicButtons();
+        }
+      });
       audioElement.onerror = function() { isPlayingMusic = false; updateMusicButtons(); };
     } catch(e) { console.warn('[Runtime] Audio init error:', e); }
   }
 
+  function enableFirstInteractionPlayback() {
+    var settings = CONFIG.musicSettings || {};
+    if (!CONFIG.musicUrl || settings.playbackMode !== 'first_interaction') return;
+    var start = function(event) {
+      if (event.target && event.target.closest && event.target.closest('.nw-pub-audio-btn, .audio-btn, .music-btn, [data-action="toggle-music"]')) return;
+      document.removeEventListener('pointerdown', start, true);
+      document.removeEventListener('keydown', start, true);
+      if (!isPlayingMusic) toggleMusic();
+    };
+    document.addEventListener('pointerdown', start, true);
+    document.addEventListener('keydown', start, true);
+  }
+
   function toggleMusic() {
+    var delegatedToParent = window.parent && window.parent !== window;
     sendToParent('INV_TOGGLE_MUSIC');
+    if (delegatedToParent) return;
     if (!audioElement && CONFIG.musicUrl) initAudio();
     if (!audioElement) return;
 
@@ -463,10 +505,12 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
     document.addEventListener('DOMContentLoaded', function() {
       initCountdown();
       attachListeners();
+      enableFirstInteractionPlayback();
     });
   } else {
     initCountdown();
     attachListeners();
+    enableFirstInteractionPlayback();
   }
   window.addEventListener('load', attachListeners);
 })();

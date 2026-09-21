@@ -228,7 +228,10 @@ export interface ExternalContent {
   carousel?: string[];
   spectacularImages?: string[];
   musicUrl?: string;
+  musicSettings?: MusicPlaybackSettings;
   audioSections?: Array<{ title?: string; url: string; description?: string }>;
+  sectionMusic?: SectionMusicSettings;
+  sectionMusicCues?: SectionMusicCueSettings;
   locations?: InvitationLocation[];
   sections?: Array<{
     key?: string;
@@ -269,6 +272,22 @@ export interface SectionMusicSettings {
   lodging?: string;
   itinerary?: string;
   [key: string]: string | undefined;
+}
+
+export interface MusicCueSettings {
+  startSeconds?: number;
+  endSeconds?: number;
+  volume?: number;
+  loop?: boolean;
+}
+
+export interface MusicPlaybackSettings extends MusicCueSettings {
+  playbackMode?: 'manual' | 'first_interaction' | 'after_access';
+  sectionChangeMode?: 'automatic' | 'manual';
+}
+
+export interface SectionMusicCueSettings {
+  [key: string]: MusicCueSettings | undefined;
 }
 
 export interface InvitationModerationSettings {
@@ -497,7 +516,9 @@ export interface InvitationContent {
     accent?: string;
   };
   musicUrl?: string;
+  musicSettings?: MusicPlaybackSettings;
   sectionMusic?: SectionMusicSettings;
+  sectionMusicCues?: SectionMusicCueSettings;
   coverImageUrl?: string;
   gallery?: string[];
   galleryItems?: InvitationGalleryItem[];
