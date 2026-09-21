@@ -11,7 +11,8 @@
   <section *ngFor="let section of sections" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of section.layers" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
-      <img *ngIf="layer.type === 'image' && layer.url" [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)">
+      <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"></div>
+      <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
       <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline></video>
       <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
       <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>

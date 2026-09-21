@@ -16,8 +16,11 @@ type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
 type MediaFilter = 'all' | DesignMedia['type'];
 type VisualTheme = NonNullable<VisualInvitationDesign['theme']>;
+type ImageMask = NonNullable<NonNullable<VisualInvitationLayer['style']>['imageMask']>;
+type ShapeKind = NonNullable<NonNullable<VisualInvitationLayer['style']>['shapeKind']>;
 type PaletteDragItem =
   | { kind: 'layer'; type: VisualLayerType }
+  | { kind: 'shape'; shape: ShapeKind }
   | { kind: 'component'; key: string }
   | { kind: 'media'; media: DesignMedia };
 type AuditSeverity = 'critical' | 'warning' | 'suggestion';
@@ -86,6 +89,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   croppingLayerId = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
+  readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
+    { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
+    { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
+    { key: 'diamond', label: 'Rombo', icon: '◆' }, { key: 'hexagon', label: 'Hexágono', icon: '⬢' },
+    { key: 'ticket', label: 'Recorte', icon: '◫' }
+  ];
+  readonly shapeCatalog: Array<{ key: ShapeKind; label: string; icon: string }> = [
+    { key: 'rectangle', label: 'Rectángulo', icon: '■' }, { key: 'circle', label: 'Círculo', icon: '●' },
+    { key: 'ellipse', label: 'Óvalo', icon: '⬭' }, { key: 'triangle', label: 'Triángulo', icon: '▲' },
+    { key: 'diamond', label: 'Rombo', icon: '◆' }, { key: 'star', label: 'Estrella', icon: '★' },
+    { key: 'hexagon', label: 'Hexágono', icon: '⬢' }, { key: 'line', label: 'Línea', icon: '━' }
+  ];
   readonly previewDevices: Array<{ key: DeviceMode; label: string; width: number; scale: number }> = [
     { key: 'mobile', label: 'Celular', width: 390, scale: .62 },
     { key: 'tablet', label: 'Tablet', width: 768, scale: .315 },
@@ -282,19 +297,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
     const style = layer.style || {};
+    const shape = layer.type === 'shape';
     const layout = this.design.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
     return {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
-      color: String(style.color || '#2d2927'), backgroundColor: String(style.backgroundColor || 'transparent'),
+      color: String(style.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
       lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${Number(style.letterSpacing || 0)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
-      borderRadius: `${Number(style.borderRadius || 0)}px`, borderColor: String(style.borderColor || 'transparent'),
-      borderStyle: Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`,
-      backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
-      boxShadow: String(style.boxShadow || 'none'),
+      borderRadius: shape ? '0' : `${Number(style.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
+      borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(style.borderWidth || 0)}px`,
+      backgroundImage: !shape && style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
+      boxShadow: shape ? 'none' : String(style.boxShadow || 'none'),
       opacity: layer.hidden ? '0' : String(style.opacity ?? 1)
     };
   }
@@ -531,16 +547,30 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addLayer(type: VisualLayerType): void {
+    if (type === 'shape') { this.addShape('rectangle'); return; }
     const section = this.selectedSection;
     if (!section) return;
     this.recordHistory();
     const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
     const layer = this.newLayer(type, text, 20, 25, type === 'text' ? 60 : 45, type === 'text' ? 18 : 30);
     layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
-    if (type === 'shape') layer.style = { backgroundColor: this.design.theme?.accentColor || '#d88f7d', borderRadius: 8, opacity: 1 };
     this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
+  }
+
+  addShape(kind: ShapeKind): void {
+    const section = this.selectedSection;
+    if (!section) return;
+    this.recordHistory();
+    const dimensions = this.shapeDimensions(kind);
+    const layer = this.newLayer('shape', '', 20, 25, dimensions.width, dimensions.height);
+    layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
+    this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    this.applyShapePreset(layer, kind);
+    section.layers.push(layer);
+    this.setLayerSelection([layer.id]);
+    this.inspectorView = 'properties';
   }
 
   addComponent(key: string): void {
@@ -643,10 +673,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.centerLayersAt(this.selectedLayers, x, y);
     } else {
       this.recordHistory();
-      const type = item.kind === 'media' ? item.media.type : item.type;
+      const type = item.kind === 'media' ? item.media.type : item.kind === 'shape' ? 'shape' : item.type;
       const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
-      const width = type === 'text' ? 60 : type === 'shape' ? 36 : 45;
-      const height = type === 'text' ? 18 : type === 'button' ? 13 : type === 'shape' ? 22 : 30;
+      const shapeDimensions = item.kind === 'shape' ? this.shapeDimensions(item.shape) : undefined;
+      const width = shapeDimensions?.width || (type === 'text' ? 60 : type === 'shape' ? 36 : 45);
+      const height = shapeDimensions?.height || (type === 'text' ? 18 : type === 'button' ? 13 : type === 'shape' ? 22 : 30);
       const layer = this.newLayer(type, text, 0, 0, width, height);
       layer.x = this.bound(x - width / 2, 0, 100 - width);
       layer.y = this.bound(y - height / 2, 0, 100 - height);
@@ -655,8 +686,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         layer.url = item.media.url;
         layer.name = item.media.label;
       }
-      if (type === 'shape') layer.style = { backgroundColor: this.design.theme?.accentColor || '#d88f7d', borderRadius: 8, opacity: 1 };
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (type === 'shape') this.applyShapePreset(layer, item.kind === 'shape' ? item.shape : 'rectangle');
       section.layers.push(layer);
       this.setLayerSelection([layer.id]);
     }
@@ -1222,19 +1253,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const s = layer.style || {};
+    const shape = layer.type === 'shape';
     const layout = this.layoutFor(layer);
     return {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
-      color: String(s.color || '#2d2927'), backgroundColor: String(s.backgroundColor || 'transparent'),
+      color: String(s.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(s.fontSize || 30)}px`,
       fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
       lineHeight: String(s.lineHeight || 1.2), letterSpacing: `${Number(s.letterSpacing || 0)}px`, textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
-      borderRadius: `${Number(s.borderRadius || 0)}px`, borderColor: String(s.borderColor || 'transparent'),
-      borderStyle: Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: `${Number(s.borderWidth || 0)}px`,
-      backgroundImage: s.gradientEnabled ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})` : 'none',
-      boxShadow: String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
+      borderRadius: shape ? '0' : `${Number(s.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
+      borderStyle: !shape && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(s.borderWidth || 0)}px`,
+      backgroundImage: !shape && s.gradientEnabled ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})` : 'none',
+      boxShadow: shape ? 'none' : String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
@@ -1253,12 +1285,71 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
+  imageMaskStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const mask = layer.style?.imageMask || 'none';
+    return { clipPath: this.maskClipPath(mask), borderRadius: mask === 'rounded' ? '12%' : '0' };
+  }
+
+  setImageMask(layer: VisualInvitationLayer, mask: ImageMask): void {
+    layer.style = layer.style || {};
+    if ((layer.style.imageMask || 'none') === mask) return;
+    this.recordHistory();
+    layer.style.imageMask = mask;
+  }
+
+  shapeContentStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const style = layer.style || {};
+    return {
+      width: '100%', height: '100%',
+      backgroundColor: String(style.backgroundColor || this.design.theme?.accentColor || '#d88f7d'),
+      backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
+      border: `${Number(style.borderWidth || 0)}px ${String(style.borderStyle || 'solid')} ${String(style.borderColor || 'transparent')}`,
+      borderRadius: `${Number(style.borderRadius || 0)}px`, boxShadow: String(style.boxShadow || 'none'),
+      clipPath: this.shapeClipPath(style.shapeKind || 'rectangle')
+    };
+  }
+
   resetImageAdjustments(layer: VisualInvitationLayer): void {
     this.recordHistory();
     layer.style = {
       ...(layer.style || {}), objectFit: 'cover', objectPositionX: 50, objectPositionY: 50,
       imageScale: 1, imageRotation: 0, flipX: false, flipY: false,
-      brightness: 100, contrast: 100, saturation: 100, blur: 0
+      brightness: 100, contrast: 100, saturation: 100, blur: 0, imageMask: 'none'
+    };
+  }
+
+  private maskClipPath(mask: ImageMask): string {
+    const masks: Record<ImageMask, string> = {
+      none: 'none', circle: 'circle(50% at 50% 50%)', rounded: 'inset(0 round 12%)',
+      arch: 'inset(0 round 50% 50% 10% 10%)', diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
+      hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',
+      ticket: 'polygon(0 0,100% 0,100% 38%,92% 50%,100% 62%,100% 100%,0 100%,0 62%,8% 50%,0 38%)'
+    };
+    return masks[mask];
+  }
+
+  private shapeClipPath(kind: ShapeKind): string {
+    const shapes: Record<ShapeKind, string> = {
+      rectangle: 'none', circle: 'circle(50% at 50% 50%)', ellipse: 'ellipse(50% 42% at 50% 50%)',
+      triangle: 'polygon(50% 0,100% 100%,0 100%)', diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
+      star: 'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 93%,50% 72%,21% 93%,32% 57%,2% 35%,39% 35%)',
+      hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)', line: 'inset(42% 0)'
+    };
+    return shapes[kind];
+  }
+
+  private shapeDimensions(kind: ShapeKind): { width: number; height: number } {
+    if (kind === 'line') return { width: 58, height: 4 };
+    if (kind === 'ellipse') return { width: 42, height: 24 };
+    return { width: 30, height: 30 };
+  }
+
+  private applyShapePreset(layer: VisualInvitationLayer, kind: ShapeKind): void {
+    layer.name = this.shapeCatalog.find((item) => item.key === kind)?.label || 'Forma';
+    layer.style = {
+      ...(layer.style || {}), shapeKind: kind,
+      backgroundColor: this.design.theme?.accentColor || '#d88f7d',
+      borderRadius: kind === 'rectangle' ? 8 : 0, opacity: 1
     };
   }
 

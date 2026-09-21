@@ -285,6 +285,8 @@ export interface VisualInvitationLayerStyle {
   gradientStart?: string;
   gradientEnd?: string;
   gradientAngle?: number;
+  imageMask?: 'none' | 'circle' | 'rounded' | 'arch' | 'diamond' | 'hexagon' | 'ticket';
+  shapeKind?: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line';
 }
 
 export interface VisualInvitationLayerLayout {
