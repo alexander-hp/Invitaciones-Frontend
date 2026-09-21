@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
-import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
 
 @Component({ selector: 'app-new-invitation-editor', templateUrl: './new-invitation-editor.component.html' })
@@ -47,7 +47,7 @@ export class NewInvitationEditorComponent implements OnInit {
   allowedGroupsText = '';
   allowedEmailsText = '';
   allowedPhonesText = '';
-  locationSearchResults: Record<number, Array<{ name: string; address: string; lat: number; lon: number; mapUrl: string; wazeUrl: string }>> = {};
+  locationSearchResults: Record<number, PlaceSearchResult[]> = {};
   locationSearchLoading: Record<number, boolean> = {};
   locationExtractLoading: Record<number, boolean> = {};
   private searchTimeouts: Record<number, any> = {};
@@ -1301,7 +1301,7 @@ export class NewInvitationEditorComponent implements OnInit {
   addLocation(): void {
     if (!this.invitation) return;
     this.ensureContentCollections();
-    this.invitation.content.locations!.push({ type: 'recepción', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '' });
+    this.invitation.content.locations!.push({ type: 'recepción', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '', schedule: [], priority: this.invitation.content.locations!.length });
   }
 
   removeLocation(index: number): void {
@@ -1335,13 +1335,18 @@ export class NewInvitationEditorComponent implements OnInit {
     }, 450);
   }
 
-  selectLocationSearchResult(index: number, result: { name: string; address: string; mapUrl: string; wazeUrl: string }): void {
+  selectLocationSearchResult(index: number, result: PlaceSearchResult): void {
     if (!this.invitation?.content.locations?.[index]) return;
     const loc = this.invitation.content.locations[index];
     if (result.name) loc.name = result.name;
     if (result.address) loc.address = result.address;
     if (result.mapUrl) loc.mapUrl = result.mapUrl;
     if (result.wazeUrl) loc.wazeUrl = result.wazeUrl;
+    loc.lat = result.lat; loc.lon = result.lon;
+    if (result.type) loc.type = result.type;
+    if (result.phone) loc.phone = result.phone;
+    if (result.websiteUrl) loc.websiteUrl = result.websiteUrl;
+    if (result.schedule?.length) loc.schedule = result.schedule;
     this.locationSearchResults[index] = [];
   }
 
@@ -1355,7 +1360,10 @@ export class NewInvitationEditorComponent implements OnInit {
       const parsed = await this.api.parseGoogleMapsUrl(loc.mapUrl);
       if (parsed.name) loc.name = parsed.name;
       if (parsed.address) loc.address = parsed.address;
+      if (parsed.mapUrl) loc.mapUrl = parsed.mapUrl;
       if (parsed.wazeUrl) loc.wazeUrl = parsed.wazeUrl;
+      if (parsed.lat !== undefined) loc.lat = parsed.lat;
+      if (parsed.lon !== undefined) loc.lon = parsed.lon;
       this.message = 'Información extraída del enlace de Google Maps.';
     } catch (e) {
       this.error = 'No se pudo extraer la información del enlace.';
@@ -1946,9 +1954,15 @@ export class NewInvitationEditorComponent implements OnInit {
         address: String(item.address || '').trim(),
         mapUrl: String(item.mapUrl || '').trim(),
         wazeUrl: String(item.wazeUrl || '').trim(),
-        notes: String(item.notes || '').trim()
+        notes: String(item.notes || '').trim(),
+        lat: item.lat === undefined || item.lat === null ? undefined : Number(item.lat),
+        lon: item.lon === undefined || item.lon === null ? undefined : Number(item.lon),
+        phone: String(item.phone || '').trim(), websiteUrl: String(item.websiteUrl || '').trim(),
+        schedule: (item.schedule || []).map((value) => String(value).trim()).filter(Boolean),
+        parking: String(item.parking || '').trim(), transport: String(item.transport || '').trim(),
+        accessibility: String(item.accessibility || '').trim(), priority: Number(item.priority || 0)
       }))
-      .filter((item) => item.type || item.name || item.address || item.mapUrl || item.wazeUrl || item.notes);
+      .filter((item) => item.type || item.name || item.address || item.mapUrl || item.wazeUrl || item.notes || item.phone || item.websiteUrl);
   }
 
   private cleanGiftRegistry(values: any[] = []) {

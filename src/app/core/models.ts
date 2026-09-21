@@ -85,6 +85,27 @@ export interface InvitationLocation {
   mapUrl?: string;
   wazeUrl?: string;
   notes?: string;
+  lat?: number;
+  lon?: number;
+  phone?: string;
+  websiteUrl?: string;
+  schedule?: string[];
+  parking?: string;
+  transport?: string;
+  accessibility?: string;
+  priority?: number;
+  time?: string;
+}
+
+export interface PlaceSearchResult extends InvitationLocation {
+  provider: 'google' | 'openstreetmap';
+  externalId?: string;
+  name: string;
+  address: string;
+  lat: number;
+  lon: number;
+  mapUrl: string;
+  wazeUrl: string;
 }
 
 export interface EventModel {

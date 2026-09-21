@@ -294,6 +294,11 @@
               </label>
 
               <label>Waze 🚗<input [name]="'locationWazeUrl' + i" [(ngModel)]="location.wazeUrl" placeholder="https://waze.com/..."></label>
+              <label>Teléfono<input [name]="'locationPhone' + i" [(ngModel)]="location.phone" type="tel"></label>
+              <label>Sitio web<input [name]="'locationWebsite' + i" [(ngModel)]="location.websiteUrl" type="url" placeholder="https://..."></label>
+              <label>Estacionamiento<input [name]="'locationParking' + i" [(ngModel)]="location.parking"></label>
+              <label>Transporte<input [name]="'locationTransport' + i" [(ngModel)]="location.transport"></label>
+              <label class="wide">Accesibilidad<input [name]="'locationAccessibility' + i" [(ngModel)]="location.accessibility"></label>
               <label class="wide">Notas<input [name]="'locationNotes' + i" [(ngModel)]="location.notes" placeholder="Entrada por avenida principal"></label>
             </div>
             <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">

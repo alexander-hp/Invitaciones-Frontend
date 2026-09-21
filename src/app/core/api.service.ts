@@ -55,6 +55,7 @@ import {
   MessageResponse,
   PaymentPackage,
   PaymentStatusResponse,
+  PlaceSearchResult,
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
@@ -995,167 +996,31 @@ export class ApiService {
     return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/rsvps/public-event/${portalSlug}`, payload);
   }
 
-  searchPlaces(query: string): Observable<Array<{ name: string; address: string; lat: number; lon: number; mapUrl: string; wazeUrl: string }>> {
+  searchPlaces(query: string): Observable<PlaceSearchResult[]> {
     const trimmed = query.trim();
-    if (!trimmed || trimmed.length < 2) return of([]);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmed)}&addressdetails=1&limit=5`;
-    return this.http.get<any[]>(url).pipe(
-      map(results => results.map(item => {
-        const addressObj = item.address || {};
-        const rawName = item.name || (item.display_name ? item.display_name.split(',')[0] : trimmed);
-        const name = rawName.trim();
-        const parts = [
-          addressObj.road || addressObj.pedestrian || addressObj.suburb,
-          addressObj.city || addressObj.town || addressObj.village || addressObj.county,
-          addressObj.state,
-          addressObj.country
-        ].filter(Boolean);
-        const address = parts.join(', ') || item.display_name || '';
-        const lat = parseFloat(item.lat);
-        const lon = parseFloat(item.lon);
-        return {
-          name,
-          address,
-          lat,
-          lon,
-          mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`,
-          wazeUrl: `https://waze.com/ul?ll=${lat},${lon}&navigate=yes`
-        };
-      })),
+    if (trimmed.length < 3) return of([]);
+    return this.http.get<{ places: PlaceSearchResult[] }>(`${this.apiUrl}/locations/search`, { params: new HttpParams().set('q', trimmed) }).pipe(
+      map(({ places }) => places || []),
       catchError(() => of([]))
     );
   }
 
   reverseGeocode(lat: number, lon: number): Observable<{ name?: string; address: string }> {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-    return this.http.get<any>(url).pipe(
-      map(item => {
-        const addressObj = item.address || {};
-        const name = item.name || addressObj.amenity || addressObj.building || addressObj.tourism || '';
-        const parts = [
-          addressObj.road || addressObj.pedestrian,
-          addressObj.suburb,
-          addressObj.city || addressObj.town || addressObj.village,
-          addressObj.state,
-          addressObj.country
-        ].filter(Boolean);
-        const address = parts.join(', ') || item.display_name || '';
-        return { name, address };
-      }),
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+    return this.http.post<{ location: { name?: string; address?: string } }>(`${this.apiUrl}/locations/inspect-map-url`, { url }).pipe(
+      map(({ location }) => ({ name: location?.name, address: location?.address || '' })),
       catchError(() => of({ address: '' }))
     );
   }
 
-  async parseGoogleMapsUrl(mapUrl: string): Promise<{ name?: string; address?: string; lat?: number; lon?: number; wazeUrl?: string }> {
+  async parseGoogleMapsUrl(mapUrl: string): Promise<{ name?: string; address?: string; lat?: number; lon?: number; mapUrl?: string; wazeUrl?: string }> {
     const trimmed = mapUrl.trim();
     if (!trimmed) return {};
-
-    let targetUrl = trimmed;
-    let htmlContent = '';
-
-    // Check if shortened link maps.app.goo.gl or goo.gl/maps
-    if (trimmed.includes('goo.gl') || trimmed.includes('maps.app.goo.gl')) {
-      try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(trimmed)}`;
-        const res = await fetch(proxyUrl);
-        if (res.ok) {
-          const data = await res.json();
-          htmlContent = data.contents || '';
-
-          const ogUrlMatch = htmlContent.match(/property="og:url"\s+content="([^"]+)"/i) ||
-                             htmlContent.match(/content="([^"]+)"\s+property="og:url"/i) ||
-                             htmlContent.match(/href="(https:\/\/[^"]*google\.com\/maps[^"]*)"/i) ||
-                             htmlContent.match(/(https:\/\/[^"]*google\.com\/maps\/place\/[^"'\s]+)/i);
-          if (ogUrlMatch && ogUrlMatch[1]) {
-            targetUrl = ogUrlMatch[1];
-          }
-        }
-      } catch (e) {
-        try {
-          const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(trimmed)}`);
-          if (res.ok) {
-            htmlContent = await res.text();
-            const ogUrlMatch = htmlContent.match(/href="(https:\/\/[^"]*google\.com\/maps[^"]*)"/i) ||
-                               htmlContent.match(/(https:\/\/[^"]*google\.com\/maps\/place\/[^"'\s]+)/i);
-            if (ogUrlMatch && ogUrlMatch[1]) {
-              targetUrl = ogUrlMatch[1];
-            }
-          }
-        } catch (err) {}
-      }
-    }
-
-    let lat: number | undefined;
-    let lon: number | undefined;
-    let name: string | undefined;
-
-    // Extract exact pin coordinates !3dLAT!4dLON from URL or HTML content
-    const dataPinMatch = (targetUrl + ' ' + htmlContent).match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    if (dataPinMatch) {
-      lat = parseFloat(dataPinMatch[1]);
-      lon = parseFloat(dataPinMatch[2]);
-    }
-
-    // Pattern 1: /place/Nombre+Lugar/@19.4326,-99.1332
-    const placeMatch = targetUrl.match(/\/place\/([^/]+)\/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (placeMatch) {
-      name = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-      if (lat === undefined || lon === undefined) {
-        lat = parseFloat(placeMatch[2]);
-        lon = parseFloat(placeMatch[3]);
-      }
-    } else {
-      // Pattern 2: @19.4326,-99.1332
-      if (lat === undefined || lon === undefined) {
-        const atMatch = targetUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-        if (atMatch) {
-          lat = parseFloat(atMatch[1]);
-          lon = parseFloat(atMatch[2]);
-        } else {
-          // Pattern 3: query=19.4326,-99.1332
-          const qMatch = targetUrl.match(/(?:query|q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-          if (qMatch) {
-            lat = parseFloat(qMatch[1]);
-            lon = parseFloat(qMatch[2]);
-          }
-        }
-      }
-
-      const nameMatch = targetUrl.match(/\/place\/([^/@?]+)/);
-      if (nameMatch) {
-        name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
-      }
-    }
-
-    // If name not extracted from path, try og:title or <title> in HTML content
-    if (!name && htmlContent) {
-      const ogTitleMatch = htmlContent.match(/property="og:title"\s+content="([^"]+)"/i) ||
-                           htmlContent.match(/content="([^"]+)"\s+property="og:title"/i) ||
-                           htmlContent.match(/<title>([^<]+)<\/title>/i);
-      if (ogTitleMatch && ogTitleMatch[1]) {
-        const extractedTitle = ogTitleMatch[1].split('·')[0].split('-')[0].replace(/Google Maps/i, '').trim();
-        if (extractedTitle && extractedTitle.length > 1) {
-          name = extractedTitle;
-        }
-      }
-    }
-
-    let address: string | undefined;
-    if (lat !== undefined && lon !== undefined) {
-      try {
-        const rev = await this.reverseGeocode(lat, lon).toPromise();
-        if (rev) {
-          address = rev.address;
-          if (!name && rev.name) name = rev.name;
-        }
-      } catch (e) {}
-    }
-
-    const wazeUrl = (lat !== undefined && lon !== undefined)
-      ? `https://waze.com/ul?ll=${lat},${lon}&navigate=yes`
-      : undefined;
-
-    return { name, address, lat, lon, wazeUrl };
+    const response = await this.http.post<{ location: { name?: string; address?: string; lat?: number; lon?: number; mapUrl?: string; wazeUrl?: string } }>(
+      `${this.apiUrl}/locations/inspect-map-url`,
+      { url: trimmed }
+    ).toPromise();
+    return response?.location || {};
   }
 }
 

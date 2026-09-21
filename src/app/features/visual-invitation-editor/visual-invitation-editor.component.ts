@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, InvitationContent, InvitationGalleryItem, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, RsvpSettings,
+  EventModel, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, WebImageSearchResult
@@ -69,6 +69,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   autosaveState = 'Guardado';
   message = '';
   error = '';
+  locationSearchResults: Record<number, PlaceSearchResult[]> = {};
+  locationSearchLoading: Record<number, boolean> = {};
+  locationExtractLoading: Record<number, boolean> = {};
   resizing = false;
   inspectorView: InspectorView = 'properties';
   guideX: number | null = null;
@@ -121,6 +124,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private clipboardLayers: VisualInvitationLayer[] = [];
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private touchZoomHideHandle?: ReturnType<typeof setTimeout>;
+  private locationSearchTimeouts: Record<number, ReturnType<typeof setTimeout>> = {};
   private lastSavedSnapshot = '';
   private suppressNextLayerClickId = '';
   private inlineEditOriginal = '';
@@ -310,6 +314,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.autosaveHandle) clearInterval(this.autosaveHandle);
     if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
+    Object.values(this.locationSearchTimeouts).forEach((handle) => clearTimeout(handle));
     this.detachStageGestureListeners();
   }
 
@@ -1735,10 +1740,64 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     item.services = [...new Set(value.split(/[;,\n]/).map((service) => service.trim()).filter(Boolean))];
   }
 
+  locationSchedule(location: InvitationLocation): string {
+    return (location.schedule || []).join('\n');
+  }
+
+  setLocationSchedule(location: InvitationLocation, value: string): void {
+    location.schedule = value.split('\n').map((line) => line.trim()).filter(Boolean);
+  }
+
+  searchLocation(index: number, query: string): void {
+    if (this.locationSearchTimeouts[index]) clearTimeout(this.locationSearchTimeouts[index]);
+    const trimmed = query.trim();
+    if (trimmed.length < 3) { this.locationSearchResults[index] = []; this.locationSearchLoading[index] = false; return; }
+    this.locationSearchLoading[index] = true;
+    this.locationSearchTimeouts[index] = setTimeout(() => {
+      this.api.searchPlaces(trimmed).subscribe({
+        next: (places) => { this.locationSearchResults[index] = places; this.locationSearchLoading[index] = false; },
+        error: () => { this.locationSearchResults[index] = []; this.locationSearchLoading[index] = false; }
+      });
+    }, 450);
+  }
+
+  selectLocation(index: number, place: PlaceSearchResult): void {
+    const location = this.invitation?.content.locations?.[index];
+    if (!location) return;
+    this.recordHistory();
+    Object.assign(location, {
+      type: place.type || location.type, name: place.name, address: place.address,
+      mapUrl: place.mapUrl, wazeUrl: place.wazeUrl, lat: place.lat, lon: place.lon,
+      phone: place.phone || location.phone, websiteUrl: place.websiteUrl || location.websiteUrl,
+      schedule: place.schedule?.length ? place.schedule : location.schedule
+    });
+    this.locationSearchResults[index] = [];
+  }
+
+  async inspectLocationUrl(index: number): Promise<void> {
+    const location = this.invitation?.content.locations?.[index];
+    if (!location?.mapUrl) return;
+    this.locationExtractLoading[index] = true;
+    try {
+      const parsed = await this.api.parseGoogleMapsUrl(location.mapUrl);
+      this.recordHistory();
+      Object.assign(location, {
+        name: parsed.name || location.name, address: parsed.address || location.address,
+        mapUrl: parsed.mapUrl || location.mapUrl, wazeUrl: parsed.wazeUrl || location.wazeUrl,
+        lat: parsed.lat ?? location.lat, lon: parsed.lon ?? location.lon
+      });
+      this.flash('Ubicación actualizada desde Google Maps.');
+    } catch {
+      this.error = 'No fue posible extraer los datos del enlace de Google Maps.';
+    } finally {
+      this.locationExtractLoading[index] = false;
+    }
+  }
+
   addContentItem(key: ContentListKey): void {
     if (!this.invitation) return;
     this.recordHistory();
-    if (key === 'locations') this.invitation.content.locations!.push({ type: 'venue', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '' });
+    if (key === 'locations') this.invitation.content.locations!.push({ type: 'venue', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '', schedule: [], priority: this.invitation.content.locations!.length });
     if (key === 'itinerary') this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
     if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
@@ -1753,6 +1812,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, itemIndex) => { item.priority = itemIndex; });
     if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, itemIndex) => { item.priority = itemIndex; });
+    if (key === 'locations') this.invitation?.content.locations?.forEach((item, itemIndex) => { item.priority = itemIndex; });
   }
 
   dropContentItem(event: { previousIndex: number; currentIndex: number }, key: ContentListKey): void {
@@ -1762,6 +1822,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, index) => { item.priority = index; });
     if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, index) => { item.priority = index; });
+    if (key === 'locations') this.invitation?.content.locations?.forEach((item, index) => { item.priority = index; });
   }
 
   uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift' | 'lodging', index = -1): void {
@@ -2372,7 +2433,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private normalizeInvitationContent(): void {
     if (!this.invitation) return;
     const content = this.invitation.content;
-    content.locations = content.locations || [];
+    content.locations = (content.locations || []).map((item, priority) => ({ ...item, schedule: item.schedule || [], priority }));
     content.itinerary = content.itinerary || [];
     const savedItems = content.galleryItems || [];
     const galleryUrls = (content.gallery?.length ? content.gallery : savedItems.map((item) => item.url)).filter(Boolean);

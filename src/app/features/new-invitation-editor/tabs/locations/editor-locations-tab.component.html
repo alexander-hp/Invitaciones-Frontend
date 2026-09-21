@@ -78,6 +78,30 @@
             <input class="nw-input" [(ngModel)]="location.wazeUrl" placeholder="https://waze.com/...">
           </label>
 
+          <label class="nw-label">Teléfono del lugar
+            <input class="nw-input" [(ngModel)]="location.phone" type="tel" placeholder="+52 55 1234 5678">
+          </label>
+
+          <label class="nw-label">Sitio web
+            <input class="nw-input" [(ngModel)]="location.websiteUrl" type="url" placeholder="https://lugar.com">
+          </label>
+
+          <label class="nw-label nw-form-wide">Horarios
+            <textarea class="nw-input" [ngModel]="scheduleValue(i)" (ngModelChange)="setSchedule(i, $event)" rows="3" placeholder="Sábado: acceso desde 16:00&#10;Ceremonia: 18:00"></textarea>
+          </label>
+
+          <label class="nw-label">Estacionamiento
+            <input class="nw-input" [(ngModel)]="location.parking" placeholder="Valet parking y estacionamiento gratuito">
+          </label>
+
+          <label class="nw-label">Transporte
+            <input class="nw-input" [(ngModel)]="location.transport" placeholder="Salida del hotel a las 17:00">
+          </label>
+
+          <label class="nw-label nw-form-wide">Accesibilidad
+            <input class="nw-input" [(ngModel)]="location.accessibility" placeholder="Acceso para silla de ruedas, elevador...">
+          </label>
+
           <label class="nw-label nw-form-wide">Notas e indicaciones
             <input class="nw-input" [(ngModel)]="location.notes" placeholder="Entrada por avenida principal / Estacionamiento disponible">
           </label>

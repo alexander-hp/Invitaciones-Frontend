@@ -28,7 +28,9 @@
       <div class="module-grid">
         <article *ngFor="let location of invitation?.content?.locations">
           <h3>{{ location.name || location.type }}</h3><p>{{ location.address }}</p><p>{{ location.notes }}</p>
-          <div class="module-actions"><a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noopener">Google Maps</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a></div>
+          <p *ngIf="location.parking"><strong>Estacionamiento:</strong> {{ location.parking }}</p><p *ngIf="location.transport"><strong>Transporte:</strong> {{ location.transport }}</p><p *ngIf="location.accessibility"><strong>Accesibilidad:</strong> {{ location.accessibility }}</p>
+          <div class="location-schedule" *ngIf="location.schedule?.length"><span *ngFor="let line of location.schedule">{{ line }}</span></div>
+          <div class="module-actions"><a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noopener">Google Maps</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a><a *ngIf="location.phone" [href]="'tel:' + location.phone">Llamar</a><a *ngIf="location.websiteUrl" [href]="location.websiteUrl" target="_blank" rel="noopener">Sitio web</a></div>
         </article>
       </div>
     </div>

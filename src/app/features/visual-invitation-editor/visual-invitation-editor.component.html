@@ -523,10 +523,17 @@
                 <div cdkDropList [cdkDropListData]="currentInvitation.content.locations" (cdkDropListDropped)="dropContentItem($event, 'locations')" class="content-list">
                   <article *ngFor="let location of currentInvitation.content.locations; let index=index" cdkDrag>
                     <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Ubicación {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('locations', index)">×</button></header>
-                    <label>Nombre<input [(ngModel)]="location.name" (focus)="beginContentEdit()" type="text" placeholder="Ceremonia, recepción..."></label>
+                    <label>Nombre / Buscar lugar<input [(ngModel)]="location.name" (ngModelChange)="searchLocation(index, $event)" (focus)="beginContentEdit()" type="text" placeholder="Ceremonia, recepción..."><small *ngIf="locationSearchLoading[index]">Buscando...</small></label>
+                    <div *ngIf="locationSearchResults[index]?.length" class="content-list"><button *ngFor="let place of locationSearchResults[index]" type="button" class="content-add" (click)="selectLocation(index, place)"><strong>{{ place.name }}</strong>&nbsp; {{ place.address }}</button></div>
                     <label>Dirección<textarea [(ngModel)]="location.address" (focus)="beginContentEdit()" rows="2"></textarea></label>
-                    <label>Google Maps<input [(ngModel)]="location.mapUrl" (focus)="beginContentEdit()" type="url" placeholder="https://maps.google.com/..."></label>
+                    <label>Google Maps<input [(ngModel)]="location.mapUrl" (focus)="beginContentEdit()" type="url" placeholder="https://maps.google.com/..."><button type="button" class="content-add" [disabled]="!location.mapUrl || locationExtractLoading[index]" (click)="inspectLocationUrl(index)">{{ locationExtractLoading[index] ? 'Extrayendo...' : 'Extraer datos' }}</button></label>
                     <label>Waze<input [(ngModel)]="location.wazeUrl" (focus)="beginContentEdit()" type="url" placeholder="https://waze.com/..."></label>
+                    <label>Teléfono<input [(ngModel)]="location.phone" (focus)="beginContentEdit()" type="tel"></label>
+                    <label>Sitio web<input [(ngModel)]="location.websiteUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                    <label>Estacionamiento<input [(ngModel)]="location.parking" (focus)="beginContentEdit()" type="text"></label>
+                    <label>Transporte<input [(ngModel)]="location.transport" (focus)="beginContentEdit()" type="text"></label>
+                    <label>Accesibilidad<input [(ngModel)]="location.accessibility" (focus)="beginContentEdit()" type="text"></label>
+                    <label>Horarios<textarea [ngModel]="locationSchedule(location)" (ngModelChange)="setLocationSchedule(location, $event)" (focus)="beginContentEdit()" rows="3" placeholder="Sábado: acceso desde 16:00"></textarea></label>
                     <label>Notas<textarea [(ngModel)]="location.notes" (focus)="beginContentEdit()" rows="2" placeholder="Estacionamiento, acceso, referencias..."></textarea></label>
                   </article>
                 </div>
