@@ -5,7 +5,8 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, InvitationContent, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
+  EventModel, InvitationContent, InvitationModel, InvitationModerationSettings, RsvpSettings,
+  VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, WebImageSearchResult
 } from '../../core/models';
@@ -36,7 +37,8 @@ type PublishAuditIssue = {
 };
 type SelectionMarquee = { sectionId: string; left: number; top: number; width: number; height: number };
 type ContentListKey = 'locations' | 'itinerary' | 'gallery' | 'giftRegistry';
-type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent };
+type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent; rsvpSettings: RsvpSettings };
+type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApproveEmails' | 'autoApprovePhones';
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -482,6 +484,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   get hasUnsavedChanges(): boolean {
     return !!this.design && this.designSnapshot() !== this.lastSavedSnapshot;
+  }
+
+  get rsvpDeadlineDate(): string {
+    const value = this.invitation?.rsvpSettings?.deadline;
+    return value ? String(value).slice(0, 10) : '';
   }
 
   setDevice(device: DeviceMode): void {
@@ -1672,6 +1679,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
   }
 
+  setRsvpDeadlineDate(value: string): void {
+    if (!this.invitation?.rsvpSettings) return;
+    this.invitation.rsvpSettings.deadline = value ? `${value}T23:59:59.000Z` : undefined;
+  }
+
+  identityMethodEnabled(method: 'email' | 'phone'): boolean {
+    return this.invitation?.rsvpSettings?.identityMethods?.includes(method) !== false;
+  }
+
+  setIdentityMethod(method: 'email' | 'phone', enabled: boolean): void {
+    if (!this.invitation?.rsvpSettings) return;
+    const methods = new Set<'email' | 'phone'>(this.invitation.rsvpSettings.identityMethods || ['email', 'phone']);
+    if (enabled) methods.add(method); else if (methods.size > 1) methods.delete(method);
+    this.invitation.rsvpSettings.identityMethods = Array.from(methods);
+  }
+
+  moderationListValue(key: ModerationListKey): string {
+    return (this.invitation?.content.moderationSettings?.[key] || []).join(', ');
+  }
+
+  setModerationList(key: ModerationListKey, value: string): void {
+    const settings = this.invitation?.content.moderationSettings;
+    if (!settings) return;
+    settings[key] = [...new Set(value.split(/[\n,]/).map((item) => item.trim()).filter(Boolean))];
+  }
+
+  isModeratedModule(type: string): boolean {
+    return ['album', 'dedications', 'songs'].includes(type);
+  }
+
   updateStoryContent(field: 'storyTitle' | 'storyBody', value: string): void {
     if (!this.invitation) return;
     this.invitation.content[field] = value;
@@ -1897,7 +1934,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!previous) return;
     this.redoStack.push(this.editorHistoryState());
     this.design = previous.design;
-    if (this.invitation) this.invitation.content = previous.content;
+    if (this.invitation) {
+      this.invitation.content = previous.content;
+      this.invitation.rsvpSettings = previous.rsvpSettings;
+    }
     this.restoreSelection();
   }
 
@@ -1906,7 +1946,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!next) return;
     this.undoStack.push(this.editorHistoryState());
     this.design = next.design;
-    if (this.invitation) this.invitation.content = next.content;
+    if (this.invitation) {
+      this.invitation.content = next.content;
+      this.invitation.rsvpSettings = next.rsvpSettings;
+    }
     this.restoreSelection();
   }
 
@@ -1928,7 +1971,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       visualDesign: this.design
     });
     return this.api.updateInvitation(id, {
-      content
+      content,
+      rsvpSettings: this.stripMongoMetadata(this.invitation?.rsvpSettings || {})
     });
   }
 
@@ -2246,7 +2290,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private designSnapshot(): string {
     const content = { ...(this.invitation?.content || {}) };
     delete content.visualDesign;
-    return JSON.stringify(this.stripMongoMetadata({ design: this.design, content }));
+    return JSON.stringify(this.stripMongoMetadata({ design: this.design, content, rsvpSettings: this.invitation?.rsvpSettings || {} }));
   }
 
   private confirmReplaceDesign(): boolean {
@@ -2262,7 +2306,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private editorHistoryState(): EditorHistoryState {
-    return { design: this.clone(this.design), content: this.clone(this.invitation?.content || {}) };
+    return {
+      design: this.clone(this.design),
+      content: this.clone(this.invitation?.content || {}),
+      rsvpSettings: this.clone(this.invitation?.rsvpSettings || {})
+    };
   }
 
   private contentList(key: ContentListKey): unknown[] {
@@ -2279,6 +2327,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     content.giftRegistry = content.giftRegistry || [];
     content.giftSettings = { enabled: true, showRegistry: true, showEnvelope: true, ...(content.giftSettings || {}) };
     content.digitalEnvelope = content.digitalEnvelope || {};
+    content.dedicationSettings = { enabled: true, requireApproval: true, ...(content.dedicationSettings || {}) };
+    content.songRequestSettings = { enabled: true, maxRequestsPerGuest: 3, allowDedications: true, requireApproval: true, ...(content.songRequestSettings || {}) };
+    content.moderationSettings = {
+      notifyOnReview: true,
+      autoApproveRoles: [], autoApproveGroups: [], autoApproveEmails: [], autoApprovePhones: [],
+      autoApproveAlbum: false, autoApproveSongs: false, autoApproveDedications: false,
+      ...(content.moderationSettings || {})
+    } as InvitationModerationSettings;
+    this.invitation.rsvpSettings = {
+      allowMaybe: true, allowChangesUntilDeadline: true, declineRequiresConfirmation: true,
+      reminderDaysBeforeDeadline: 3, identityMethods: ['email', 'phone'],
+      allowCompanionsDefault: false, defaultAllowedCompanions: 0,
+      ...(this.invitation.rsvpSettings || {})
+    };
   }
 
   private restoreSelection(): void {

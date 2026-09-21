@@ -517,8 +517,6 @@ export class ApiService {
       delete cleanContent.activeCustomTemplateId;
       delete cleanContent.sourceTemplateKey;
       delete cleanContent.editedTexts;
-      delete cleanContent.storyTitle;
-      delete cleanContent.storyBody;
       cleaned.content = cleanContent;
     }
     return cleaned as T;

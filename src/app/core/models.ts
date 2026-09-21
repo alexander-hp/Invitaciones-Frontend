@@ -250,6 +250,17 @@ export interface SectionMusicSettings {
   [key: string]: string | undefined;
 }
 
+export interface InvitationModerationSettings {
+  notifyOnReview?: boolean;
+  autoApproveRoles?: string[];
+  autoApproveGroups?: string[];
+  autoApproveEmails?: string[];
+  autoApprovePhones?: string[];
+  autoApproveAlbum?: boolean;
+  autoApproveSongs?: boolean;
+  autoApproveDedications?: boolean;
+}
+
 export type VisualLayerType = 'text' | 'image' | 'video' | 'audio' | 'button' | 'shape';
 
 export interface VisualInvitationLayerStyle {
@@ -447,6 +458,7 @@ export interface InvitationContent {
   giftSettings?: GiftSettings;
   dedicationSettings?: DedicationSettings;
   songRequestSettings?: SongRequestSettings;
+  moderationSettings?: InvitationModerationSettings;
   sectionSettings?: SectionSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;

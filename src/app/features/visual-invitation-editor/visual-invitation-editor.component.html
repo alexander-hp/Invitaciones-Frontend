@@ -581,7 +581,50 @@
                 <div class="content-add-row"><button type="button" class="content-add" (click)="addContentItem('gallery')">+ Agregar URL</button><label class="content-upload">Subir imagen<input #galleryUpload type="file" accept="image/*" (change)="uploadContentImage(galleryUpload, 'gallery')"></label></div>
               </div>
 
+              <div *ngSwitchCase="'rsvp'" class="content-fields">
+                <label>Fecha límite de confirmación<input [ngModel]="rsvpDeadlineDate" (ngModelChange)="setRsvpDeadlineDate($event)" (focus)="beginContentEdit()" type="date"></label>
+                <label>Cupo máximo total<input [(ngModel)]="currentInvitation.rsvpSettings!.maxAttendees" (focus)="beginContentEdit()" type="number" min="1" max="10000" placeholder="Sin límite"></label>
+                <label>Días antes para recordatorio<input [(ngModel)]="currentInvitation.rsvpSettings!.reminderDaysBeforeDeadline" (focus)="beginContentEdit()" type="number" min="0" max="60"></label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.rsvpSettings!.allowMaybe" (click)="beginContentEdit()" type="checkbox"> Permitir respuesta “Tal vez”</label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.rsvpSettings!.allowChangesUntilDeadline" (click)="beginContentEdit()" type="checkbox"> Permitir cambiar respuesta hasta la fecha límite</label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.rsvpSettings!.allowCompanionsDefault" (click)="beginContentEdit()" type="checkbox"> Permitir acompañantes por defecto</label>
+                <label *ngIf="currentInvitation.rsvpSettings?.allowCompanionsDefault">Máximo de acompañantes por defecto<input [(ngModel)]="currentInvitation.rsvpSettings!.defaultAllowedCompanions" (focus)="beginContentEdit()" type="number" min="0" max="50"></label>
+                <h4>Identificación del invitado</h4>
+                <label class="toggle"><input [checked]="identityMethodEnabled('email')" (click)="beginContentEdit()" (change)="setIdentityMethod('email', $any($event.target).checked)" type="checkbox"> Confirmar por correo</label>
+                <label class="toggle"><input [checked]="identityMethodEnabled('phone')" (click)="beginContentEdit()" (change)="setIdentityMethod('phone', $any($event.target).checked)" type="checkbox"> Confirmar por teléfono</label>
+              </div>
+
+              <div *ngSwitchCase="'album'" class="content-fields">
+                <p>Las fotografías nuevas pueden quedar pendientes o aprobarse automáticamente para invitados confiables.</p>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.moderationSettings!.autoApproveAlbum" (click)="beginContentEdit()" type="checkbox"> Autoaprobar fotos de segmentos confiables</label>
+              </div>
+
+              <div *ngSwitchCase="'dedications'" class="content-fields">
+                <label>Mensaje de introducción<textarea [(ngModel)]="currentInvitation.content.dedicationSettings!.introText" (focus)="beginContentEdit()" rows="3" placeholder="Déjanos unas palabras para recordar..."></textarea></label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.dedicationSettings!.enabled" (click)="beginContentEdit()" type="checkbox"> Permitir nuevas dedicatorias</label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.dedicationSettings!.requireApproval" (click)="beginContentEdit()" type="checkbox"> Revisar antes de publicar</label>
+                <label class="toggle" *ngIf="currentInvitation.content.dedicationSettings?.requireApproval"><input [(ngModel)]="currentInvitation.content.moderationSettings!.autoApproveDedications" (click)="beginContentEdit()" type="checkbox"> Autoaprobar dedicatorias de segmentos confiables</label>
+              </div>
+
+              <div *ngSwitchCase="'songs'" class="content-fields">
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.songRequestSettings!.enabled" (click)="beginContentEdit()" type="checkbox"> Permitir solicitudes al DJ</label>
+                <label>Máximo por invitado<input [(ngModel)]="currentInvitation.content.songRequestSettings!.maxRequestsPerGuest" (focus)="beginContentEdit()" type="number" min="1" max="20"></label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.songRequestSettings!.allowDedications" (click)="beginContentEdit()" type="checkbox"> Permitir dedicatorias en canciones</label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.songRequestSettings!.requireApproval" (click)="beginContentEdit()" type="checkbox"> Revisar solicitudes antes de agregarlas</label>
+                <label class="toggle" *ngIf="currentInvitation.content.songRequestSettings?.requireApproval"><input [(ngModel)]="currentInvitation.content.moderationSettings!.autoApproveSongs" (click)="beginContentEdit()" type="checkbox"> Autoaprobar canciones de segmentos confiables</label>
+              </div>
+
               <p *ngSwitchDefault class="content-managed-note">Este módulo usa información operativa del evento. Aquí puedes ajustar su presentación y título; los envíos se administran desde el dashboard.</p>
+
+              <div *ngIf="isModeratedModule(section.type)" class="content-fields">
+                <h4>Segmentos confiables</h4>
+                <p>Si activas la autoaprobación del módulo, cualquier coincidencia en estas listas se aprobará sin revisión manual.</p>
+                <label>Roles<input [ngModel]="moderationListValue('autoApproveRoles')" (ngModelChange)="setModerationList('autoApproveRoles', $event)" (focus)="beginContentEdit()" type="text" placeholder="familia, vip, padrino"></label>
+                <label>Grupos<input [ngModel]="moderationListValue('autoApproveGroups')" (ngModelChange)="setModerationList('autoApproveGroups', $event)" (focus)="beginContentEdit()" type="text" placeholder="Familia, Mesa principal"></label>
+                <label>Correos<input [ngModel]="moderationListValue('autoApproveEmails')" (ngModelChange)="setModerationList('autoApproveEmails', $event)" (focus)="beginContentEdit()" type="text" placeholder="persona@correo.com"></label>
+                <label>Teléfonos<input [ngModel]="moderationListValue('autoApprovePhones')" (ngModelChange)="setModerationList('autoApprovePhones', $event)" (focus)="beginContentEdit()" type="text" placeholder="2727088143"></label>
+                <label class="toggle"><input [(ngModel)]="currentInvitation.content.moderationSettings!.notifyOnReview" (click)="beginContentEdit()" type="checkbox"> Avisar por correo al aprobar, rechazar o marcar como tocada</label>
+              </div>
             </section>
           </ng-container>
           <label class="toggle"><input [(ngModel)]="section.enabled" type="checkbox"> Mostrar esta sección</label>
