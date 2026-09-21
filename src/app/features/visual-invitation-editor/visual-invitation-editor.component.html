@@ -178,7 +178,8 @@
       </div>
     </aside>
 
-    <main class="ve-stage">
+    <main #editorStage class="ve-stage" [class.touch-gesturing]="touchGestureActive">
+      <div class="touch-zoom-indicator" *ngIf="touchZoomVisible">{{ canvasZoom * 100 | number:'1.0-0' }}%</div>
       <div class="canvas-toolbar" aria-label="Controles del lienzo">
         <button type="button" [class.active]="showGrid" title="Mostrar cuadrícula" (click)="showGrid=!showGrid">▦</button>
         <button type="button" [class.active]="smartSnapping" title="Ajuste inteligente" (click)="smartSnapping=!smartSnapping">⌁</button>

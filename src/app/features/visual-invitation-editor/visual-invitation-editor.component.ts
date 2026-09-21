@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -89,6 +89,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectionMarquee?: SelectionMarquee;
   croppingLayerId = '';
   mobilePanel: MobileEditorPanel = 'canvas';
+  touchZoomVisible = false;
+  touchGestureActive = false;
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
@@ -113,6 +115,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private redoStack: VisualInvitationDesign[] = [];
   private clipboardLayers: VisualInvitationLayer[] = [];
   private autosaveHandle?: ReturnType<typeof setInterval>;
+  private touchZoomHideHandle?: ReturnType<typeof setTimeout>;
   private lastSavedSnapshot = '';
   private suppressNextLayerClickId = '';
   private inlineEditOriginal = '';
@@ -161,6 +164,30 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     bounds: { x: number; y: number; width: number; height: number };
     moved: boolean;
   };
+  private stageElement?: HTMLElement;
+  private touchPointers = new Map<number, { x: number; y: number }>();
+  private canvasGesture?: {
+    startDistance: number;
+    startZoom: number;
+    startCenterX: number;
+    startCenterY: number;
+    startScrollLeft: number;
+    startScrollTop: number;
+    stageLeft: number;
+    stageTop: number;
+  };
+  private readonly stagePointerDown = (event: PointerEvent) => this.trackCanvasPointerDown(event);
+  private readonly stagePointerMove = (event: PointerEvent) => this.trackCanvasPointerMove(event);
+  private readonly stagePointerEnd = (event: PointerEvent) => this.trackCanvasPointerEnd(event);
+
+  @ViewChild('editorStage')
+  set editorStage(ref: ElementRef<HTMLElement> | undefined) {
+    const nextStage = ref?.nativeElement;
+    if (nextStage === this.stageElement) return;
+    this.detachStageGestureListeners();
+    this.stageElement = nextStage;
+    this.attachStageGestureListeners();
+  }
 
   readonly builtInPresets = [
     { key: 'editorial', label: 'Editorial claro', colors: ['#f6f1eb', '#24211f'] },
@@ -194,7 +221,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'divider', icon: '—', label: 'Separador' }
   ];
 
-  constructor(private route: ActivatedRoute, private router: Router, private api: ApiService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private api: ApiService
+  ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id') || '';
@@ -227,8 +258,102 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     });
   }
 
+  private attachStageGestureListeners(): void {
+    this.stageElement?.addEventListener('pointerdown', this.stagePointerDown, { capture: true, passive: false });
+    this.stageElement?.addEventListener('pointermove', this.stagePointerMove, { capture: true, passive: false });
+    this.stageElement?.addEventListener('pointerup', this.stagePointerEnd, { capture: true, passive: false });
+    this.stageElement?.addEventListener('pointercancel', this.stagePointerEnd, { capture: true, passive: false });
+  }
+
+  private detachStageGestureListeners(): void {
+    this.stageElement?.removeEventListener('pointerdown', this.stagePointerDown, true);
+    this.stageElement?.removeEventListener('pointermove', this.stagePointerMove, true);
+    this.stageElement?.removeEventListener('pointerup', this.stagePointerEnd, true);
+    this.stageElement?.removeEventListener('pointercancel', this.stagePointerEnd, true);
+  }
+
   ngOnDestroy(): void {
     if (this.autosaveHandle) clearInterval(this.autosaveHandle);
+    if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
+    this.detachStageGestureListeners();
+  }
+
+  private trackCanvasPointerDown(event: PointerEvent): void {
+    if (event.pointerType !== 'touch') return;
+    this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (this.touchPointers.size !== 2 || !this.stageElement) return;
+
+    const [first, second] = Array.from(this.touchPointers.values());
+    const rect = this.stageElement.getBoundingClientRect();
+    this.cancelCanvasInteraction();
+    this.canvasGesture = {
+      startDistance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+      startZoom: this.canvasZoom,
+      startCenterX: (first.x + second.x) / 2,
+      startCenterY: (first.y + second.y) / 2,
+      startScrollLeft: this.stageElement.scrollLeft,
+      startScrollTop: this.stageElement.scrollTop,
+      stageLeft: rect.left,
+      stageTop: rect.top
+    };
+    this.touchGestureActive = true;
+    this.showTouchZoom();
+    event.preventDefault();
+  }
+
+  private trackCanvasPointerMove(event: PointerEvent): void {
+    if (event.pointerType !== 'touch' || !this.touchPointers.has(event.pointerId)) return;
+    this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (!this.canvasGesture || this.touchPointers.size < 2 || !this.stageElement) return;
+
+    event.preventDefault();
+    const [first, second] = Array.from(this.touchPointers.values());
+    const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+    const centerX = (first.x + second.x) / 2;
+    const centerY = (first.y + second.y) / 2;
+    const nextZoom = this.bound(this.canvasGesture.startZoom * distance / this.canvasGesture.startDistance, .5, 1.5);
+    const zoomRatio = nextZoom / this.canvasGesture.startZoom;
+    const localStartX = this.canvasGesture.startCenterX - this.canvasGesture.stageLeft;
+    const localStartY = this.canvasGesture.startCenterY - this.canvasGesture.stageTop;
+    const localCurrentX = centerX - this.canvasGesture.stageLeft;
+    const localCurrentY = centerY - this.canvasGesture.stageTop;
+
+    this.canvasZoom = nextZoom;
+    this.stageElement.scrollLeft = (this.canvasGesture.startScrollLeft + localStartX) * zoomRatio - localCurrentX;
+    this.stageElement.scrollTop = (this.canvasGesture.startScrollTop + localStartY) * zoomRatio - localCurrentY;
+    this.showTouchZoom();
+  }
+
+  private trackCanvasPointerEnd(event: PointerEvent): void {
+    if (event.pointerType !== 'touch') return;
+    this.touchPointers.delete(event.pointerId);
+    if (this.touchPointers.size >= 2) return;
+    this.canvasGesture = undefined;
+    this.touchGestureActive = false;
+    this.scheduleTouchZoomHide();
+  }
+
+  private cancelCanvasInteraction(): void {
+    this.resizeState = undefined;
+    this.rotationState = undefined;
+    this.marqueeState = undefined;
+    this.selectionMarquee = undefined;
+    this.cropPanState = undefined;
+    this.layerDragState = undefined;
+    this.draggingLayerId = '';
+    this.guideX = null;
+    this.guideY = null;
+    this.resizing = false;
+  }
+
+  private showTouchZoom(): void {
+    if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
+    this.touchZoomVisible = true;
+  }
+
+  private scheduleTouchZoomHide(): void {
+    if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
+    this.touchZoomHideHandle = setTimeout(() => { this.touchZoomVisible = false; }, 650);
   }
 
   get selectedSection(): VisualInvitationSection | undefined {
@@ -1025,6 +1150,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    if (this.canvasGesture) {
+      event.preventDefault();
+      return;
+    }
     const crop = this.cropPanState;
     if (crop) {
       event.preventDefault();
