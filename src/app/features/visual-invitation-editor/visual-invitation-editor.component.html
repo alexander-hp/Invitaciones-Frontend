@@ -179,7 +179,7 @@
     </aside>
 
     <main #editorStage class="ve-stage" [class.touch-gesturing]="touchGestureActive">
-      <div class="touch-zoom-indicator" *ngIf="touchZoomVisible">{{ canvasZoom * 100 | number:'1.0-0' }}%</div>
+      <div class="touch-zoom-indicator" *ngIf="touchZoomVisible">{{ touchGestureLabel }}</div>
       <div class="canvas-toolbar" aria-label="Controles del lienzo">
         <button type="button" [class.active]="showGrid" title="Mostrar cuadrícula" (click)="showGrid=!showGrid">▦</button>
         <button type="button" [class.active]="smartSnapping" title="Ajuste inteligente" (click)="smartSnapping=!smartSnapping">⌁</button>
@@ -433,6 +433,7 @@
     </header>
     <div>
       <button type="button" title="Editar propiedades" (click)="openMobileInspector()"><b>✎</b><span>Editar</span></button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" [hidden]="layer.type !== 'image' || !layer.url || layer.locked" type="button" [title]="croppingLayerId === layer.id ? 'Terminar encuadre' : 'Encuadrar imagen'" (click)="croppingLayerId === layer.id ? finishImageCrop() : startMobileImageCrop(layer)"><b>{{ croppingLayerId === layer.id ? '✓' : '⌗' }}</b><span>{{ croppingLayerId === layer.id ? 'Listo' : 'Encuadrar' }}</span></button>
       <button type="button" title="Duplicar" (click)="duplicateLayer()"><b>⧉</b><span>Duplicar</span></button>
       <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer)"><b>{{ layer.locked ? '▣' : '▢' }}</b><span>{{ layer.locked ? 'Desbloquear' : 'Bloquear' }}</span></button>
       <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Enviar atrás" (click)="shiftLayer(layer, -1)"><b>↓</b><span>Atrás</span></button>

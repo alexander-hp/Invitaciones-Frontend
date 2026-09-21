@@ -91,6 +91,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   mobilePanel: MobileEditorPanel = 'canvas';
   touchZoomVisible = false;
   touchGestureActive = false;
+  touchGestureLabel = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
@@ -165,7 +166,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     moved: boolean;
   };
   private stageElement?: HTMLElement;
-  private touchPointers = new Map<number, { x: number; y: number }>();
+  private touchPointers = new Map<number, { x: number; y: number; cropFrame?: HTMLElement }>();
   private canvasGesture?: {
     startDistance: number;
     startZoom: number;
@@ -175,6 +176,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     startScrollTop: number;
     stageLeft: number;
     stageTop: number;
+  };
+  private imageCropGesture?: {
+    layer: VisualInvitationLayer;
+    frame: HTMLElement;
+    startDistance: number;
+    startCenterX: number;
+    startCenterY: number;
+    startScale: number;
+    startPositionX: number;
+    startPositionY: number;
   };
   private readonly stagePointerDown = (event: PointerEvent) => this.trackCanvasPointerDown(event);
   private readonly stagePointerMove = (event: PointerEvent) => this.trackCanvasPointerMove(event);
@@ -280,10 +291,31 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private trackCanvasPointerDown(event: PointerEvent): void {
     if (event.pointerType !== 'touch') return;
-    this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const cropFrame = (event.target as HTMLElement).closest('.image-frame.crop-active') as HTMLElement | null;
+    this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY, cropFrame: cropFrame || undefined });
     if (this.touchPointers.size !== 2 || !this.stageElement) return;
 
     const [first, second] = Array.from(this.touchPointers.values());
+    if (first.cropFrame && first.cropFrame === second.cropFrame && this.selectedLayer?.id === this.croppingLayerId) {
+      const layer = this.selectedLayer;
+      layer.style = layer.style || {};
+      this.cropPanState = undefined;
+      this.imageCropGesture = {
+        layer,
+        frame: first.cropFrame,
+        startDistance: Math.max(1, Math.hypot(second.x - first.x, second.y - first.y)),
+        startCenterX: (first.x + second.x) / 2,
+        startCenterY: (first.y + second.y) / 2,
+        startScale: Number(layer.style.imageScale ?? 1),
+        startPositionX: Number(layer.style.objectPositionX ?? 50),
+        startPositionY: Number(layer.style.objectPositionY ?? 50)
+      };
+      this.touchGestureActive = true;
+      this.showTouchZoom(`${this.imageCropGesture.startScale.toFixed(2)}×`);
+      event.preventDefault();
+      return;
+    }
+
     const rect = this.stageElement.getBoundingClientRect();
     this.cancelCanvasInteraction();
     this.canvasGesture = {
@@ -297,13 +329,31 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       stageTop: rect.top
     };
     this.touchGestureActive = true;
-    this.showTouchZoom();
+    this.showTouchZoom(`${Math.round(this.canvasZoom * 100)}%`);
     event.preventDefault();
   }
 
   private trackCanvasPointerMove(event: PointerEvent): void {
     if (event.pointerType !== 'touch' || !this.touchPointers.has(event.pointerId)) return;
-    this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const current = this.touchPointers.get(event.pointerId)!;
+    this.touchPointers.set(event.pointerId, { ...current, x: event.clientX, y: event.clientY });
+    if (this.imageCropGesture && this.touchPointers.size >= 2) {
+      event.preventDefault();
+      const [first, second] = Array.from(this.touchPointers.values());
+      const gesture = this.imageCropGesture;
+      const distance = Math.max(1, Math.hypot(second.x - first.x, second.y - first.y));
+      const centerX = (first.x + second.x) / 2;
+      const centerY = (first.y + second.y) / 2;
+      const nextScale = this.bound(gesture.startScale * distance / gesture.startDistance, .5, 3);
+      const frameWidth = Math.max(1, gesture.frame.clientWidth);
+      const frameHeight = Math.max(1, gesture.frame.clientHeight);
+      gesture.layer.style = gesture.layer.style || {};
+      gesture.layer.style.imageScale = Math.round(nextScale * 100) / 100;
+      gesture.layer.style.objectPositionX = this.bound(gesture.startPositionX - (centerX - gesture.startCenterX) / frameWidth * 100, 0, 100);
+      gesture.layer.style.objectPositionY = this.bound(gesture.startPositionY - (centerY - gesture.startCenterY) / frameHeight * 100, 0, 100);
+      this.showTouchZoom(`${gesture.layer.style.imageScale.toFixed(2)}×`);
+      return;
+    }
     if (!this.canvasGesture || this.touchPointers.size < 2 || !this.stageElement) return;
 
     event.preventDefault();
@@ -321,7 +371,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.canvasZoom = nextZoom;
     this.stageElement.scrollLeft = (this.canvasGesture.startScrollLeft + localStartX) * zoomRatio - localCurrentX;
     this.stageElement.scrollTop = (this.canvasGesture.startScrollTop + localStartY) * zoomRatio - localCurrentY;
-    this.showTouchZoom();
+    this.showTouchZoom(`${Math.round(nextZoom * 100)}%`);
   }
 
   private trackCanvasPointerEnd(event: PointerEvent): void {
@@ -329,6 +379,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.touchPointers.delete(event.pointerId);
     if (this.touchPointers.size >= 2) return;
     this.canvasGesture = undefined;
+    this.imageCropGesture = undefined;
     this.touchGestureActive = false;
     this.scheduleTouchZoomHide();
   }
@@ -346,14 +397,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.resizing = false;
   }
 
-  private showTouchZoom(): void {
+  private showTouchZoom(label: string): void {
     if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
+    this.touchGestureLabel = label;
     this.touchZoomVisible = true;
   }
 
   private scheduleTouchZoomHide(): void {
     if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
-    this.touchZoomHideHandle = setTimeout(() => { this.touchZoomVisible = false; }, 650);
+    this.touchZoomHideHandle = setTimeout(() => {
+      this.touchZoomVisible = false;
+      this.touchGestureLabel = '';
+    }, 650);
   }
 
   get selectedSection(): VisualInvitationSection | undefined {
@@ -1106,9 +1161,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   startImageCrop(event: MouseEvent, section: VisualInvitationSection, layer: VisualInvitationLayer): void {
-    if (layer.locked || layer.type !== 'image' || !layer.url) return;
     event.preventDefault();
     event.stopPropagation();
+    this.activateImageCrop(section, layer);
+  }
+
+  startMobileImageCrop(layer: VisualInvitationLayer): void {
+    const section = this.selectedSection;
+    if (!section) return;
+    this.activateImageCrop(section, layer);
+  }
+
+  private activateImageCrop(section: VisualInvitationSection, layer: VisualInvitationLayer): void {
+    if (layer.locked || layer.type !== 'image' || !layer.url) return;
     this.applyLayerSelection(section, layer, false);
     layer.style = {
       ...(layer.style || {}),
@@ -1123,11 +1188,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   finishImageCrop(): void {
     this.cropPanState = undefined;
+    this.imageCropGesture = undefined;
+    this.touchGestureActive = false;
     this.croppingLayerId = '';
   }
 
   beginImageCropPan(event: PointerEvent, layer: VisualInvitationLayer): void {
-    if (this.croppingLayerId !== layer.id || layer.locked) return;
+    if (this.croppingLayerId !== layer.id || layer.locked || this.imageCropGesture) return;
     event.preventDefault();
     event.stopPropagation();
     const frame = event.currentTarget as HTMLElement;
@@ -1173,7 +1240,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
-    if (this.canvasGesture) {
+    if (this.canvasGesture || this.imageCropGesture) {
       event.preventDefault();
       return;
     }
