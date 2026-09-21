@@ -8,13 +8,13 @@
   [style.--visual-button-text]="designThemeStyle()['--visual-button-text']"
   [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
-  <section *ngFor="let section of sections" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
-    <div *ngFor="let layer of section.layers" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+  <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
+    <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
-      <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"></div>
+      <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
       <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-      <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline></video>
-      <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls></audio>
+      <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline preload="metadata"></video>
+      <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls preload="metadata"></audio>
       <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>
     </div>
 
@@ -41,14 +41,14 @@
 
     <div class="functional-module" *ngIf="section.type === 'gallery'">
       <h2>{{ section.title || 'Galería' }}</h2>
-      <div class="gallery-grid"><button *ngFor="let image of invitation?.content?.gallery" type="button" (click)="openLightbox.emit(image)"><img [src]="image" alt="Fotografía del evento"></button></div>
+      <div class="gallery-grid"><button *ngFor="let image of invitation?.content?.gallery" type="button" (click)="openLightbox.emit(image)"><img [src]="image" alt="Fotografía del evento" loading="lazy" decoding="async"></button></div>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'gifts'">
       <h2>{{ section.title || 'Mesa de regalos' }}</h2><p>{{ invitation?.content?.giftSettings?.introText }}</p>
       <div class="module-grid">
         <article *ngFor="let gift of invitation?.content?.giftRegistry">
-          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">Abrir mesa</a>
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" loading="lazy" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">Abrir mesa</a>
         </article>
         <article *ngIf="invitation?.content?.digitalEnvelope as envelope">
           <h3>Sobre digital</h3><p>{{ envelope.bank }} · {{ envelope.holder }}</p><p *ngIf="envelope.clabe"><strong>CLABE:</strong> {{ envelope.clabe }}</p><p *ngIf="envelope.account"><strong>Cuenta:</strong> {{ envelope.account }}</p><p>{{ envelope.note }}</p>
@@ -83,7 +83,7 @@
       <h2>{{ section.title || 'Álbum colectivo' }}</h2><p>Comparte tus mejores momentos con los anfitriones.</p>
       <label class="file-button">Seleccionar fotografía<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
       <p class="feedback" *ngIf="albumMessage">{{ albumMessage }}</p>
-      <div class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'"></button></div>
+      <div class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button></div>
     </div>
 
     <div class="functional-module form-module" *ngIf="section.type === 'dedications'">

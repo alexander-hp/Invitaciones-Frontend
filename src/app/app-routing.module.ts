@@ -38,7 +38,6 @@ import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.
 import { DocumentationComponent } from './features/documentation/documentation.component';
 import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
-import { VisualInvitationEditorComponent } from './features/visual-invitation-editor/visual-invitation-editor.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
@@ -73,7 +72,11 @@ const routes: Routes = [
   { path: 'new/custom-templates', component: NewCustomTemplatesComponent, canActivate: [AdminGuard] },
   { path: 'new/admin/templates', redirectTo: 'new/custom-templates' },
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
-  { path: 'new/invitations/:id/visual-editor', component: VisualInvitationEditorComponent, canActivate: [AuthGuard] },
+  {
+    path: 'new/invitations/:id/visual-editor',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./features/visual-invitation-editor/visual-invitation-editor.module').then((module) => module.VisualInvitationEditorModule)
+  },
   { path: 'new/invitations/:id/sections', component: NewInvitationSectionsComponent, canActivate: [AuthGuard] },
   { path: 'new/external-access/:token', component: NewEventAccessComponent },
   { path: 'new/dj/:token', component: NewEventAccessComponent },

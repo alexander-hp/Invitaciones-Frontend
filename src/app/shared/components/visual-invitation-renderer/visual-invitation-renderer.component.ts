@@ -48,6 +48,10 @@ export class VisualInvitationRendererComponent {
       ?? 0;
   }
 
+  trackVisualById(index: number, item: VisualInvitationSection | VisualInvitationLayer): string | number {
+    return item.id || index;
+  }
+
   designThemeStyle(): Record<string, string> {
     const theme = this.invitation?.content?.visualDesign?.theme;
     if (!theme) return {};

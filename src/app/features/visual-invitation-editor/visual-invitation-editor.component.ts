@@ -423,6 +423,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return media.url;
   }
 
+  trackVisualById(index: number, item: VisualInvitationSection | VisualInvitationLayer): string | number {
+    return item.id || index;
+  }
+
   searchWebImages(): void {
     const query = this.webImageQuery.trim();
     if (query.length < 2) { this.webImageError = 'Escribe al menos 2 caracteres.'; return; }
