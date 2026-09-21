@@ -79,12 +79,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   smartSnapping = true;
   showPublishAudit = false;
   publishAuditIssues: PublishAuditIssue[] = [];
+  showResponsivePreview = false;
   editingLayerId = '';
   paletteDropSectionId = '';
   selectionMarquee?: SelectionMarquee;
   croppingLayerId = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
+  readonly previewDevices: Array<{ key: DeviceMode; label: string; width: number; scale: number }> = [
+    { key: 'mobile', label: 'Celular', width: 390, scale: .62 },
+    { key: 'tablet', label: 'Tablet', width: 768, scale: .315 },
+    { key: 'desktop', label: 'Escritorio', width: 1180, scale: .205 }
+  ];
 
   private undoStack: VisualInvitationDesign[] = [];
   private redoStack: VisualInvitationDesign[] = [];
@@ -259,6 +265,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   setCanvasZoom(value: number | string): void {
     this.canvasZoom = this.bound(Number(value) || 1, .5, 1.5);
+  }
+
+  openResponsivePreview(): void {
+    this.publishAuditIssues = this.auditDesign();
+    this.showResponsivePreview = true;
+  }
+
+  closeResponsivePreview(): void {
+    this.showResponsivePreview = false;
+  }
+
+  responsiveIssueCount(device: DeviceMode): number {
+    return this.publishAuditIssues.filter((issue) => issue.device === device).length;
+  }
+
+  responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
+    const style = layer.style || {};
+    const layout = this.design.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
+    return {
+      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
+      transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
+      color: String(style.color || '#2d2927'), backgroundColor: String(style.backgroundColor || 'transparent'),
+      fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
+      fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
+      lineHeight: String(style.lineHeight || 1.2), textTransform: String(style.textTransform || 'none'),
+      textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
+      borderRadius: `${Number(style.borderRadius || 0)}px`, borderColor: String(style.borderColor || 'transparent'),
+      borderStyle: Number(style.borderWidth || 0) > 0 ? 'solid' : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`,
+      opacity: layer.hidden ? '0' : String(style.opacity ?? 1)
+    };
   }
 
   applyThemePreset(preset: { theme: VisualTheme }): void {
@@ -1359,7 +1395,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   publish(): void {
-    if (!this.invitation || this.criticalAuditCount > 0) return;
+    if (!this.invitation) return;
     this.publishing = true;
     this.error = '';
     const id = this.invitation._id || this.invitation.id || '';
