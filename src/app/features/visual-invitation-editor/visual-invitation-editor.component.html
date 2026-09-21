@@ -502,6 +502,87 @@
             </label>
             <label>Separación<input [ngModel]="section.moduleStyle?.gap" (ngModelChange)="setModuleStyle(section, 'gap', +$event)" type="range" min="4" max="32" step="1"><span>{{ section.moduleStyle?.gap }} px</span></label>
             <label class="toggle"><input [ngModel]="section.moduleStyle?.showTitle" (ngModelChange)="setModuleStyle(section, 'showTitle', $event)" type="checkbox"> Mostrar título del módulo</label>
+            <section class="module-content-editor" *ngIf="invitation as currentInvitation" [ngSwitch]="section.type">
+              <h3>Contenido del módulo</h3>
+
+              <div *ngSwitchCase="'story'" class="content-fields">
+                <label>Título<input [ngModel]="currentInvitation.content.storyTitle" (ngModelChange)="updateStoryContent('storyTitle', $event)" (focus)="beginContentEdit()" type="text" placeholder="Nuestra historia"></label>
+                <label>Mensaje<textarea [ngModel]="currentInvitation.content.storyBody" (ngModelChange)="updateStoryContent('storyBody', $event)" (focus)="beginContentEdit()" rows="5" placeholder="Cuenta cómo comenzó esta historia..."></textarea></label>
+              </div>
+
+              <div *ngSwitchCase="'locations'">
+                <div cdkDropList [cdkDropListData]="currentInvitation.content.locations" (cdkDropListDropped)="dropContentItem($event, 'locations')" class="content-list">
+                  <article *ngFor="let location of currentInvitation.content.locations; let index=index" cdkDrag>
+                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Ubicación {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('locations', index)">×</button></header>
+                    <label>Nombre<input [(ngModel)]="location.name" (focus)="beginContentEdit()" type="text" placeholder="Ceremonia, recepción..."></label>
+                    <label>Dirección<textarea [(ngModel)]="location.address" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                    <label>Google Maps<input [(ngModel)]="location.mapUrl" (focus)="beginContentEdit()" type="url" placeholder="https://maps.google.com/..."></label>
+                    <label>Waze<input [(ngModel)]="location.wazeUrl" (focus)="beginContentEdit()" type="url" placeholder="https://waze.com/..."></label>
+                    <label>Notas<textarea [(ngModel)]="location.notes" (focus)="beginContentEdit()" rows="2" placeholder="Estacionamiento, acceso, referencias..."></textarea></label>
+                  </article>
+                </div>
+                <button type="button" class="content-add" (click)="addContentItem('locations')">+ Agregar ubicación</button>
+              </div>
+
+              <div *ngSwitchCase="'itinerary'">
+                <div cdkDropList [cdkDropListData]="currentInvitation.content.itinerary" (cdkDropListDropped)="dropContentItem($event, 'itinerary')" class="content-list">
+                  <article *ngFor="let item of currentInvitation.content.itinerary; let index=index" cdkDrag>
+                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Actividad {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('itinerary', index)">×</button></header>
+                    <label>Hora<input [(ngModel)]="item.time" (focus)="beginContentEdit()" type="time"></label>
+                    <label>Actividad<input [(ngModel)]="item.title" (focus)="beginContentEdit()" type="text" placeholder="Ceremonia"></label>
+                    <label>Descripción<textarea [(ngModel)]="item.description" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                  </article>
+                </div>
+                <button type="button" class="content-add" (click)="addContentItem('itinerary')">+ Agregar actividad</button>
+              </div>
+
+              <div *ngSwitchCase="'dressCode'" class="content-fields">
+                <label>Vestimenta<input [(ngModel)]="currentInvitation.content.dressCode" (focus)="beginContentEdit()" type="text" placeholder="Formal, etiqueta, casual..."></label>
+                <label>Recomendaciones<textarea [(ngModel)]="currentInvitation.content.dressCodeDescription" (focus)="beginContentEdit()" rows="3"></textarea></label>
+                <label>Imagen de referencia<input [(ngModel)]="currentInvitation.content.dressCodeImageUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                <label>Subir referencia<input #dressCodeUpload type="file" accept="image/*" (change)="uploadContentImage(dressCodeUpload, 'dressCode')"></label>
+                <img *ngIf="currentInvitation.content.dressCodeImageUrl" class="content-image-preview" [src]="currentInvitation.content.dressCodeImageUrl" alt="Referencia de vestimenta">
+              </div>
+
+              <div *ngSwitchCase="'gifts'">
+                <div class="content-fields">
+                  <label>Mensaje de introducción<textarea [(ngModel)]="currentInvitation.content.giftSettings!.introText" (focus)="beginContentEdit()" rows="3"></textarea></label>
+                </div>
+                <div cdkDropList [cdkDropListData]="currentInvitation.content.giftRegistry" (cdkDropListDropped)="dropContentItem($event, 'giftRegistry')" class="content-list">
+                  <article *ngFor="let gift of currentInvitation.content.giftRegistry; let index=index" cdkDrag>
+                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Mesa {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('giftRegistry', index)">×</button></header>
+                    <label>Título<input [(ngModel)]="gift.title" (focus)="beginContentEdit()" type="text" placeholder="Liverpool, Amazon..."></label>
+                    <label>Tienda<input [(ngModel)]="gift.store" (focus)="beginContentEdit()" type="text"></label>
+                    <label>Enlace<input [(ngModel)]="gift.url" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                    <label>Imagen o logo<input [(ngModel)]="gift.imageUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                    <label>Subir logo<input #giftUpload type="file" accept="image/*" (change)="uploadContentImage(giftUpload, 'gift', index)"></label>
+                    <label>Nota<textarea [(ngModel)]="gift.note" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                  </article>
+                </div>
+                <button type="button" class="content-add" (click)="addContentItem('giftRegistry')">+ Agregar mesa de regalos</button>
+                <h4>Sobre digital</h4>
+                <div class="content-fields two-columns">
+                  <label>Banco<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.bank" (focus)="beginContentEdit()" type="text"></label>
+                  <label>Titular<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.holder" (focus)="beginContentEdit()" type="text"></label>
+                  <label>Cuenta<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.account" (focus)="beginContentEdit()" type="text"></label>
+                  <label>CLABE<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.clabe" (focus)="beginContentEdit()" type="text"></label>
+                  <label>Nota<textarea [(ngModel)]="currentInvitation.content.digitalEnvelope!.note" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                </div>
+              </div>
+
+              <div *ngSwitchCase="'gallery'">
+                <div cdkDropList [cdkDropListData]="currentInvitation.content.gallery" (cdkDropListDropped)="dropContentItem($event, 'gallery')" class="content-list gallery-content-list">
+                  <article *ngFor="let image of currentInvitation.content.gallery; let index=index" cdkDrag>
+                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Imagen {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('gallery', index)">×</button></header>
+                    <img *ngIf="image" [src]="image" alt="Imagen de la galería">
+                    <label>URL<input [(ngModel)]="currentInvitation.content.gallery![index]" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                  </article>
+                </div>
+                <div class="content-add-row"><button type="button" class="content-add" (click)="addContentItem('gallery')">+ Agregar URL</button><label class="content-upload">Subir imagen<input #galleryUpload type="file" accept="image/*" (change)="uploadContentImage(galleryUpload, 'gallery')"></label></div>
+              </div>
+
+              <p *ngSwitchDefault class="content-managed-note">Este módulo usa información operativa del evento. Aquí puedes ajustar su presentación y título; los envíos se administran desde el dashboard.</p>
+            </section>
           </ng-container>
           <label class="toggle"><input [(ngModel)]="section.enabled" type="checkbox"> Mostrar esta sección</label>
         </ng-container>

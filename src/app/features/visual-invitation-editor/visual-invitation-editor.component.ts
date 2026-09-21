@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
+  EventModel, InvitationContent, InvitationModel, VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, WebImageSearchResult
 } from '../../core/models';
@@ -35,6 +35,8 @@ type PublishAuditIssue = {
   device?: DeviceMode;
 };
 type SelectionMarquee = { sectionId: string; left: number; top: number; width: number; height: number };
+type ContentListKey = 'locations' | 'itinerary' | 'gallery' | 'giftRegistry';
+type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent };
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -112,8 +114,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'desktop', label: 'Escritorio', width: 1180, scale: .205 }
   ];
 
-  private undoStack: VisualInvitationDesign[] = [];
-  private redoStack: VisualInvitationDesign[] = [];
+  private undoStack: EditorHistoryState[] = [];
+  private redoStack: EditorHistoryState[] = [];
   private clipboardLayers: VisualInvitationLayer[] = [];
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private touchZoomHideHandle?: ReturnType<typeof setTimeout>;
@@ -268,6 +270,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.responsiveMode = this.design.responsiveMode || 'shared';
         this.design.assets = this.design.assets || [];
         this.design.theme = this.design.theme || this.inferTheme();
+        this.normalizeInvitationContent();
         this.normalizeModuleStyles();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
@@ -1665,6 +1668,64 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}), [key]: value } as NonNullable<VisualInvitationSection['moduleStyle']>;
   }
 
+  beginContentEdit(): void {
+    this.recordHistory();
+  }
+
+  updateStoryContent(field: 'storyTitle' | 'storyBody', value: string): void {
+    if (!this.invitation) return;
+    this.invitation.content[field] = value;
+    if (this.selectedSection?.type !== 'story') return;
+    const textLayers = this.selectedSection.layers.filter((layer) => layer.type === 'text');
+    const target = field === 'storyTitle' ? textLayers[0] : textLayers[1];
+    if (target) target.text = value;
+  }
+
+  addContentItem(key: ContentListKey): void {
+    if (!this.invitation) return;
+    this.recordHistory();
+    if (key === 'locations') this.invitation.content.locations!.push({ type: 'venue', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '' });
+    if (key === 'itinerary') this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
+    if (key === 'gallery') this.invitation.content.gallery!.push('');
+    if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
+  }
+
+  removeContentItem(key: ContentListKey, index: number): void {
+    const items = this.contentList(key);
+    if (index < 0 || index >= items.length) return;
+    this.recordHistory();
+    items.splice(index, 1);
+    if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, itemIndex) => { item.priority = itemIndex; });
+  }
+
+  dropContentItem(event: { previousIndex: number; currentIndex: number }, key: ContentListKey): void {
+    if (event.previousIndex === event.currentIndex) return;
+    this.recordHistory();
+    moveItemInArray(this.contentList(key), event.previousIndex, event.currentIndex);
+    if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, index) => { item.priority = index; });
+  }
+
+  uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift', index = -1): void {
+    const file = fileInput.files?.[0];
+    if (!file || !this.invitation) return;
+    const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event._id || this.invitation.event.id);
+    this.uploading = true;
+    this.error = '';
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'assets', event: eventId, size: file.size }).pipe(
+      switchMap(({ uploadUrl, publicUrl }) => this.api.uploadAsset(uploadUrl, file).pipe(map(() => publicUrl)))
+    ).subscribe({
+      next: (publicUrl) => {
+        this.recordHistory();
+        if (target === 'gallery') this.invitation!.content.gallery!.push(publicUrl);
+        if (target === 'dressCode') this.invitation!.content.dressCodeImageUrl = publicUrl;
+        if (target === 'gift' && this.invitation!.content.giftRegistry?.[index]) this.invitation!.content.giftRegistry[index].imageUrl = publicUrl;
+        this.uploading = false;
+        fileInput.value = '';
+      },
+      error: () => { this.uploading = false; this.error = 'No fue posible subir la imagen del módulo.'; }
+    });
+  }
+
   uploadImage(fileInput: HTMLInputElement, target: 'layer' | 'background'): void {
     const file = fileInput.files?.[0];
     if (!file || !this.invitation) return;
@@ -1834,16 +1895,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   undo(): void {
     const previous = this.undoStack.pop();
     if (!previous) return;
-    this.redoStack.push(this.clone(this.design));
-    this.design = previous;
+    this.redoStack.push(this.editorHistoryState());
+    this.design = previous.design;
+    if (this.invitation) this.invitation.content = previous.content;
     this.restoreSelection();
   }
 
   redo(): void {
     const next = this.redoStack.pop();
     if (!next) return;
-    this.undoStack.push(this.clone(this.design));
-    this.design = next;
+    this.undoStack.push(this.editorHistoryState());
+    this.design = next.design;
+    if (this.invitation) this.invitation.content = next.content;
     this.restoreSelection();
   }
 
@@ -2181,7 +2244,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private designSnapshot(): string {
-    return JSON.stringify(this.stripMongoMetadata(this.design));
+    const content = { ...(this.invitation?.content || {}) };
+    delete content.visualDesign;
+    return JSON.stringify(this.stripMongoMetadata({ design: this.design, content }));
   }
 
   private confirmReplaceDesign(): boolean {
@@ -2191,9 +2256,29 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private recordHistory(): void {
     if (!this.design) return;
-    this.undoStack.push(this.clone(this.design));
+    this.undoStack.push(this.editorHistoryState());
     if (this.undoStack.length > 30) this.undoStack.shift();
     this.redoStack = [];
+  }
+
+  private editorHistoryState(): EditorHistoryState {
+    return { design: this.clone(this.design), content: this.clone(this.invitation?.content || {}) };
+  }
+
+  private contentList(key: ContentListKey): unknown[] {
+    if (!this.invitation) return [];
+    return this.invitation.content[key] as unknown[];
+  }
+
+  private normalizeInvitationContent(): void {
+    if (!this.invitation) return;
+    const content = this.invitation.content;
+    content.locations = content.locations || [];
+    content.itinerary = content.itinerary || [];
+    content.gallery = content.gallery || [];
+    content.giftRegistry = content.giftRegistry || [];
+    content.giftSettings = { enabled: true, showRegistry: true, showEnvelope: true, ...(content.giftSettings || {}) };
+    content.digitalEnvelope = content.digitalEnvelope || {};
   }
 
   private restoreSelection(): void {
