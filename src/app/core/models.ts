@@ -261,6 +261,25 @@ export interface InvitationModerationSettings {
   autoApproveDedications?: boolean;
 }
 
+export interface InvitationGalleryItem {
+  id?: string;
+  url: string;
+  title?: string;
+  description?: string;
+  dedication?: string;
+  alt?: string;
+  fit?: 'cover' | 'contain';
+  focalX?: number;
+  focalY?: number;
+}
+
+export interface InvitationGallerySettings {
+  displayMode?: 'grid' | 'list' | 'carousel';
+  showCaptions?: boolean;
+  autoplay?: boolean;
+  intervalSeconds?: number;
+}
+
 export type VisualLayerType = 'text' | 'image' | 'video' | 'audio' | 'button' | 'shape';
 
 export interface VisualInvitationLayerStyle {
@@ -443,6 +462,8 @@ export interface InvitationContent {
   sectionMusic?: SectionMusicSettings;
   coverImageUrl?: string;
   gallery?: string[];
+  galleryItems?: InvitationGalleryItem[];
+  gallerySettings?: InvitationGallerySettings;
   itinerary?: Array<{ time?: string; title?: string; description?: string }>;
   locations?: InvitationLocation[];
   dressCode?: string;

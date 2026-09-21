@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, InvitationContent, InvitationModel, InvitationModerationSettings, RsvpSettings,
+  EventModel, InvitationContent, InvitationGalleryItem, InvitationModel, InvitationModerationSettings, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, WebImageSearchResult
@@ -36,7 +36,7 @@ type PublishAuditIssue = {
   device?: DeviceMode;
 };
 type SelectionMarquee = { sectionId: string; left: number; top: number; width: number; height: number };
-type ContentListKey = 'locations' | 'itinerary' | 'gallery' | 'giftRegistry';
+type ContentListKey = 'locations' | 'itinerary' | 'galleryItems' | 'giftRegistry';
 type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent; rsvpSettings: RsvpSettings };
 type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApproveEmails' | 'autoApprovePhones';
 
@@ -1718,12 +1718,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (target) target.text = value;
   }
 
+  updateGalleryItemUrl(item: InvitationGalleryItem, value: string): void {
+    item.url = value;
+    this.syncLegacyGallery();
+  }
+
+  galleryCaption(item: InvitationGalleryItem): string {
+    return [item.title, item.description, item.dedication].filter(Boolean).join(' · ');
+  }
+
   addContentItem(key: ContentListKey): void {
     if (!this.invitation) return;
     this.recordHistory();
     if (key === 'locations') this.invitation.content.locations!.push({ type: 'venue', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '' });
     if (key === 'itinerary') this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
-    if (key === 'gallery') this.invitation.content.gallery!.push('');
+    if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
   }
 
@@ -1732,6 +1741,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (index < 0 || index >= items.length) return;
     this.recordHistory();
     items.splice(index, 1);
+    if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, itemIndex) => { item.priority = itemIndex; });
   }
 
@@ -1739,6 +1749,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (event.previousIndex === event.currentIndex) return;
     this.recordHistory();
     moveItemInArray(this.contentList(key), event.previousIndex, event.currentIndex);
+    if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, index) => { item.priority = index; });
   }
 
@@ -1753,7 +1764,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (publicUrl) => {
         this.recordHistory();
-        if (target === 'gallery') this.invitation!.content.gallery!.push(publicUrl);
+        if (target === 'gallery') {
+          this.invitation!.content.galleryItems!.push({ ...this.emptyGalleryItem(), url: publicUrl, alt: file.name });
+          this.syncLegacyGallery();
+        }
         if (target === 'dressCode') this.invitation!.content.dressCodeImageUrl = publicUrl;
         if (target === 'gift' && this.invitation!.content.giftRegistry?.[index]) this.invitation!.content.giftRegistry[index].imageUrl = publicUrl;
         this.uploading = false;
@@ -1965,8 +1979,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private persistDesign() {
     const id = this.invitation?._id || this.invitation?.id || '';
     this.design.active = true;
+    this.syncLegacyGallery();
     const content = this.stripMongoMetadata({
       ...this.invitation?.content,
+      galleryItems: (this.invitation?.content.galleryItems || []).filter((item) => item.url.trim()),
       template: 'visual-builder',
       visualDesign: this.design
     });
@@ -2318,12 +2334,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.invitation.content[key] as unknown[];
   }
 
+  private emptyGalleryItem(index = 0): InvitationGalleryItem {
+    return {
+      id: this.uid(`gallery-${index + 1}`), url: '', title: '', description: '', dedication: '', alt: '',
+      fit: 'cover', focalX: 50, focalY: 50
+    };
+  }
+
+  private syncLegacyGallery(): void {
+    if (!this.invitation) return;
+    this.invitation.content.gallery = (this.invitation.content.galleryItems || [])
+      .map((item) => item.url.trim())
+      .filter(Boolean);
+  }
+
   private normalizeInvitationContent(): void {
     if (!this.invitation) return;
     const content = this.invitation.content;
     content.locations = content.locations || [];
     content.itinerary = content.itinerary || [];
-    content.gallery = content.gallery || [];
+    const savedItems = content.galleryItems || [];
+    const galleryUrls = (content.gallery?.length ? content.gallery : savedItems.map((item) => item.url)).filter(Boolean);
+    content.galleryItems = galleryUrls.map((url, index) => {
+      const saved = savedItems.find((item) => item.url === url);
+      return { ...this.emptyGalleryItem(index), ...(saved || {}), url };
+    });
+    content.gallerySettings = { displayMode: 'grid', showCaptions: true, autoplay: false, intervalSeconds: 5, ...(content.gallerySettings || {}) };
+    this.syncLegacyGallery();
     content.giftRegistry = content.giftRegistry || [];
     content.giftSettings = { enabled: true, showRegistry: true, showEnvelope: true, ...(content.giftSettings || {}) };
     content.digitalEnvelope = content.digitalEnvelope || {};

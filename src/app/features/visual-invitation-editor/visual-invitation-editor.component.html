@@ -238,7 +238,9 @@
 
                 <div *ngSwitchCase="'gallery'">
                   <small>Momentos</small><h2>{{ section.title || 'Galería' }}</h2>
-                  <div class="preview-gallery" *ngIf="invitation?.content?.gallery?.length; else sampleGallery"><img *ngFor="let image of invitation?.content?.gallery?.slice(0, 6)" [src]="image" alt="Fotografía del evento" loading="lazy"></div>
+                  <div class="preview-gallery" *ngIf="invitation?.content?.galleryItems?.length; else sampleGallery" [style.grid-template-columns]="invitation?.content?.gallerySettings?.displayMode === 'list' ? '1fr' : null" [style.display]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? 'block' : null" [style.max-width]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? '520px' : null" [style.margin]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? 'auto' : null">
+                    <article *ngFor="let image of invitation?.content?.galleryItems?.slice(0, invitation?.content?.gallerySettings?.displayMode === 'carousel' ? 1 : 6)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [style.object-fit]="image.fit || 'cover'" [style.object-position]="(image.focalX || 50) + '% ' + (image.focalY || 50) + '%'" [style.height.px]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? 250 : 112" loading="lazy"><p *ngIf="invitation?.content?.gallerySettings?.showCaptions !== false && galleryCaption(image)">{{ galleryCaption(image) }}</p></article>
+                  </div>
                   <ng-template #sampleGallery><div class="preview-gallery sample"><i *ngFor="let slot of previewGallerySlots">▧</i></div></ng-template>
                 </div>
 
@@ -571,14 +573,29 @@
               </div>
 
               <div *ngSwitchCase="'gallery'">
-                <div cdkDropList [cdkDropListData]="currentInvitation.content.gallery" (cdkDropListDropped)="dropContentItem($event, 'gallery')" class="content-list gallery-content-list">
-                  <article *ngFor="let image of currentInvitation.content.gallery; let index=index" cdkDrag>
-                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Imagen {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('gallery', index)">×</button></header>
-                    <img *ngIf="image" [src]="image" alt="Imagen de la galería">
-                    <label>URL<input [(ngModel)]="currentInvitation.content.gallery![index]" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                <div class="content-fields two-columns">
+                  <label>Presentación<select [(ngModel)]="currentInvitation.content.gallerySettings!.displayMode" (focus)="beginContentEdit()"><option value="grid">Cuadrícula</option><option value="list">Lista</option><option value="carousel">Carrusel</option></select></label>
+                  <label class="toggle"><input [(ngModel)]="currentInvitation.content.gallerySettings!.showCaptions" (click)="beginContentEdit()" type="checkbox"> Mostrar textos de las imágenes</label>
+                  <label class="toggle" *ngIf="currentInvitation.content.gallerySettings?.displayMode === 'carousel'"><input [(ngModel)]="currentInvitation.content.gallerySettings!.autoplay" (click)="beginContentEdit()" type="checkbox"> Reproducir carrusel automáticamente</label>
+                  <label *ngIf="currentInvitation.content.gallerySettings?.displayMode === 'carousel' && currentInvitation.content.gallerySettings?.autoplay">Segundos por imagen<input [(ngModel)]="currentInvitation.content.gallerySettings!.intervalSeconds" (focus)="beginContentEdit()" type="number" min="2" max="30"></label>
+                </div>
+                <div cdkDropList [cdkDropListData]="currentInvitation.content.galleryItems" (cdkDropListDropped)="dropContentItem($event, 'galleryItems')" class="content-list gallery-content-list">
+                  <article *ngFor="let image of currentInvitation.content.galleryItems; let index=index" cdkDrag>
+                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Imagen {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('galleryItems', index)">×</button></header>
+                    <img *ngIf="image.url" [src]="image.url" [alt]="image.alt || image.title || 'Imagen de la galería'" [style.object-fit]="image.fit || 'cover'" [style.object-position]="(image.focalX || 50) + '% ' + (image.focalY || 50) + '%'">
+                    <div class="content-fields two-columns">
+                      <label>URL<input [ngModel]="image.url" (ngModelChange)="updateGalleryItemUrl(image, $event)" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                      <label>Título<input [(ngModel)]="image.title" (focus)="beginContentEdit()" type="text" maxlength="160"></label>
+                      <label>Descripción<textarea [(ngModel)]="image.description" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                      <label>Dedicatoria<textarea [(ngModel)]="image.dedication" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                      <label>Texto alternativo<input [(ngModel)]="image.alt" (focus)="beginContentEdit()" type="text" maxlength="240" placeholder="Describe la fotografía"></label>
+                      <label>Ajuste<select [(ngModel)]="image.fit" (focus)="beginContentEdit()"><option value="cover">Llenar espacio</option><option value="contain">Mostrar completa</option></select></label>
+                      <label>Foco horizontal<input [(ngModel)]="image.focalX" (focus)="beginContentEdit()" type="range" min="0" max="100"></label>
+                      <label>Foco vertical<input [(ngModel)]="image.focalY" (focus)="beginContentEdit()" type="range" min="0" max="100"></label>
+                    </div>
                   </article>
                 </div>
-                <div class="content-add-row"><button type="button" class="content-add" (click)="addContentItem('gallery')">+ Agregar URL</button><label class="content-upload">Subir imagen<input #galleryUpload type="file" accept="image/*" (change)="uploadContentImage(galleryUpload, 'gallery')"></label></div>
+                <div class="content-add-row"><button type="button" class="content-add" (click)="addContentItem('galleryItems')">+ Agregar imagen por URL</button><label class="content-upload">Subir imagen<input #galleryUpload type="file" accept="image/*" (change)="uploadContentImage(galleryUpload, 'gallery')"></label></div>
               </div>
 
               <div *ngSwitchCase="'rsvp'" class="content-fields">

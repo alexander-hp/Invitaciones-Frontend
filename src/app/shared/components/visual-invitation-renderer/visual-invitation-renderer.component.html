@@ -46,7 +46,15 @@
 
     <div class="functional-module" *ngIf="section.type === 'gallery'">
       <h2>{{ section.title || 'Galería' }}</h2>
-      <div class="gallery-grid"><button *ngFor="let image of invitation?.content?.gallery" type="button" (click)="openLightbox.emit(image)"><img [src]="image" alt="Fotografía del evento" loading="lazy" decoding="async"></button></div>
+      <div class="gallery-grid" *ngIf="galleryDisplayMode !== 'carousel'" [class.gallery-list]="galleryDisplayMode === 'list'">
+        <figure *ngFor="let image of galleryItems"><button type="button" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" loading="lazy" decoding="async"></button><figcaption *ngIf="invitation?.content?.gallerySettings?.showCaptions !== false && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
+      </div>
+      <div class="gallery-carousel" *ngIf="galleryDisplayMode === 'carousel' && galleryItems[galleryIndex] as image">
+        <button type="button" class="gallery-arrow previous" aria-label="Fotografía anterior" (click)="moveGallery(-1)">‹</button>
+        <figure><button type="button" class="gallery-current" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" decoding="async"></button><figcaption *ngIf="invitation?.content?.gallerySettings?.showCaptions !== false && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
+        <button type="button" class="gallery-arrow next" aria-label="Fotografía siguiente" (click)="moveGallery(1)">›</button>
+        <span class="gallery-count">{{ galleryIndex + 1 }} / {{ galleryItems.length }}</span>
+      </div>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'gifts'">

@@ -1,6 +1,6 @@
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import {
-  DedicationModel, EventModel, GuestAccessResponse, InvitationModel,
+  DedicationModel, EventModel, GuestAccessResponse, InvitationGalleryItem, InvitationModel,
   VisualInvitationLayer, VisualInvitationSection
 } from '../../../core/models';
 
@@ -9,7 +9,7 @@ import {
   templateUrl: './visual-invitation-renderer.component.html',
   styleUrls: ['./visual-invitation-renderer.component.css']
 })
-export class VisualInvitationRendererComponent {
+export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   device: 'mobile' | 'tablet' | 'desktop' = this.detectDevice();
   @Input() invitation?: InvitationModel;
   @Input() event?: EventModel;
@@ -37,6 +37,8 @@ export class VisualInvitationRendererComponent {
   rsvp = { name: '', email: '', response: 'confirmed', companions: 0, dietaryRestrictions: '', message: '' };
   dedication = { publicName: '', message: '' };
   song = { title: '', artist: '', dedication: '', sourceUrl: '' };
+  galleryIndex = 0;
+  private galleryTimer?: ReturnType<typeof setInterval>;
 
   get sections(): VisualInvitationSection[] {
     return (this.invitation?.content?.visualDesign?.sections || []).filter((section) => section.enabled);
@@ -46,6 +48,38 @@ export class VisualInvitationRendererComponent {
     return this.verifiedGuest?.allowedCompanions
       ?? this.invitation?.rsvpSettings?.defaultAllowedCompanions
       ?? 0;
+  }
+
+  get galleryItems(): InvitationGalleryItem[] {
+    const content = this.invitation?.content;
+    if (content?.galleryItems?.length) return content.galleryItems.filter((item) => item.url);
+    return (content?.gallery || []).filter(Boolean).map((url, index) => ({ id: `legacy-${index}`, url, fit: 'cover', focalX: 50, focalY: 50 }));
+  }
+
+  get galleryDisplayMode(): 'grid' | 'list' | 'carousel' {
+    return this.invitation?.content?.gallerySettings?.displayMode || 'grid';
+  }
+
+  ngOnChanges(): void {
+    this.galleryIndex = Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
+    this.configureGalleryTimer();
+  }
+
+  ngOnDestroy(): void {
+    this.clearGalleryTimer();
+  }
+
+  galleryCaption(item: InvitationGalleryItem): string {
+    return [item.title, item.description, item.dedication].filter(Boolean).join(' · ');
+  }
+
+  galleryImageStyle(item: InvitationGalleryItem): Record<string, string> {
+    return { objectFit: item.fit || 'cover', objectPosition: `${item.focalX ?? 50}% ${item.focalY ?? 50}%` };
+  }
+
+  moveGallery(direction: number): void {
+    if (!this.galleryItems.length) return;
+    this.galleryIndex = (this.galleryIndex + direction + this.galleryItems.length) % this.galleryItems.length;
   }
 
   trackVisualById(index: number, item: VisualInvitationSection | VisualInvitationLayer): string | number {
@@ -199,5 +233,18 @@ export class VisualInvitationRendererComponent {
   private detectDevice(): 'mobile' | 'tablet' | 'desktop' {
     const width = typeof window === 'undefined' ? 390 : window.innerWidth;
     return width <= 600 ? 'mobile' : width <= 1024 ? 'tablet' : 'desktop';
+  }
+
+  private configureGalleryTimer(): void {
+    this.clearGalleryTimer();
+    const settings = this.invitation?.content?.gallerySettings;
+    if (this.galleryDisplayMode !== 'carousel' || !settings?.autoplay || this.galleryItems.length < 2) return;
+    const seconds = Math.max(2, Math.min(30, Number(settings.intervalSeconds || 5)));
+    this.galleryTimer = setInterval(() => this.moveGallery(1), seconds * 1000);
+  }
+
+  private clearGalleryTimer(): void {
+    if (this.galleryTimer) clearInterval(this.galleryTimer);
+    this.galleryTimer = undefined;
   }
 }
