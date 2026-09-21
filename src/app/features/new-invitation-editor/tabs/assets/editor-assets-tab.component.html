@@ -362,14 +362,44 @@
           <label class="nw-label">Nombre del hotel / hospedaje
             <input class="nw-input" [(ngModel)]="item.name" placeholder="Hotel Gran Plaza">
           </label>
-          <label class="nw-label">Descripción / Tarifa preferente
-            <input class="nw-input" [(ngModel)]="item.description" placeholder="15% desc. con código BODA2026">
+          <label class="nw-label">¿Por qué lo recomiendas?
+            <input class="nw-input" [(ngModel)]="item.description" placeholder="Cerca del evento, transporte incluido...">
           </label>
-          <label class="nw-label nw-form-wide">Enlace / Mapa del hotel (URL)
-            <input class="nw-input" [(ngModel)]="item.url" placeholder="https://maps.google.com/...">
+          <label class="nw-label">Imagen del hospedaje (URL)
+            <input class="nw-input" [(ngModel)]="item.imageUrl" type="url" placeholder="https://.../hotel.jpg">
+          </label>
+          <label class="nw-label">Dirección
+            <input class="nw-input" [(ngModel)]="item.address" placeholder="Av. Principal 123, Centro">
+          </label>
+          <label class="nw-label">Teléfono
+            <input class="nw-input" [(ngModel)]="item.phone" type="tel" placeholder="+52 55 1234 5678">
+          </label>
+          <label class="nw-label">Mapa (URL)
+            <input class="nw-input" [(ngModel)]="item.mapUrl" type="url" placeholder="https://maps.google.com/..."></label>
+          <label class="nw-label">Enlace de reservación
+            <input class="nw-input" [(ngModel)]="item.url" type="url" placeholder="https://hotel.com/reservar">
+          </label>
+          <label class="nw-label">Nombre del convenio
+            <input class="nw-input" [(ngModel)]="item.agreementLabel" placeholder="Convenio Boda Ana y Luis">
+          </label>
+          <label class="nw-label">Código de descuento
+            <input class="nw-input" [(ngModel)]="item.discountCode" placeholder="BODA2026">
+          </label>
+          <label class="nw-label">Beneficio o descuento
+            <input class="nw-input" [(ngModel)]="item.discountDescription" placeholder="15% de descuento y desayuno incluido">
+          </label>
+          <label class="nw-label">Tarifa orientativa
+            <input class="nw-input" [(ngModel)]="item.priceLabel" placeholder="Desde $1,450 MXN por noche">
+          </label>
+          <label class="nw-label nw-form-wide">Servicios incluidos
+            <input class="nw-input" [ngModel]="lodgingServices(i)" (ngModelChange)="setLodgingServices(i, $event)" placeholder="Desayuno, estacionamiento, transporte">
+          </label>
+          <label class="nw-label nw-form-wide">Notas para reservar
+            <textarea class="nw-input" [(ngModel)]="item.notes" rows="2" placeholder="Reserva antes del 10 de noviembre y menciona el evento."></textarea>
           </label>
         </div>
-        <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+        <div style="margin-top:10px; display:flex; justify-content:space-between; gap:8px;">
+          <div style="display:flex; gap:6px;"><button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" [disabled]="i === 0" (click)="moveLodgingItem(i, -1)" title="Mover arriba">↑</button><button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" [disabled]="i === (invitation.content.lodging?.length || 0) - 1" (click)="moveLodgingItem(i, 1)" title="Mover abajo">↓</button></div>
           <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeLodgingItem.emit(i)"
             style="display:inline-flex; align-items:center; gap:6px;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"

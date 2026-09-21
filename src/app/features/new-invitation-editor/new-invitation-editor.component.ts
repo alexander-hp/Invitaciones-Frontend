@@ -1819,7 +1819,9 @@ export class NewInvitationEditorComponent implements OnInit {
         title: String(opt.title || '').trim(),
         description: String(opt.description || '').trim()
       })).filter(opt => opt.title || opt.description),
-      lodging: (this.invitation.content.lodging || []).filter((item) => item.name || item.description || item.url)
+      lodging: (this.invitation.content.lodging || [])
+        .filter((item) => item.name || item.description || item.url || item.imageUrl || item.address || item.phone || item.mapUrl || item.agreementLabel || item.discountCode || item.discountDescription || item.priceLabel || item.services?.length || item.notes)
+        .map((item, priority) => ({ ...item, services: (item.services || []).map((service) => service.trim()).filter(Boolean), priority }))
     };
   }
 
@@ -1842,7 +1844,11 @@ export class NewInvitationEditorComponent implements OnInit {
   addLodgingItem(): void {
     if (!this.invitation) return;
     if (!this.invitation.content.lodging) this.invitation.content.lodging = [];
-    this.invitation.content.lodging.push({ name: '', description: '', url: '' });
+    this.invitation.content.lodging.push({
+      name: '', description: '', url: '', imageUrl: '', address: '', phone: '', mapUrl: '',
+      agreementLabel: '', discountCode: '', discountDescription: '', priceLabel: '', services: [], notes: '',
+      priority: this.invitation.content.lodging.length
+    });
   }
 
   removeLodgingItem(index: number): void {
@@ -1958,9 +1964,13 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   private parseLodging() {
-    return this.lodgingText.split('\n').map((line) => {
+    const existing = this.invitation?.content.lodging || [];
+    return this.lodgingText.split('\n').map((line, priority) => {
       const [name, description, url] = line.split('|').map((part) => part.trim());
-      return { name, description, url };
+      const saved = existing.find((item) => (url && item.url === url) || (name && item.name === name)) || {};
+      const metadata = { ...saved } as typeof saved & { _id?: string };
+      delete metadata._id;
+      return { ...metadata, name, description, url, priority };
     }).filter((item) => item.name || item.description || item.url);
   }
 

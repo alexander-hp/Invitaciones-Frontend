@@ -236,6 +236,13 @@
                   </div>
                 </div>
 
+                <div *ngSwitchCase="'lodging'">
+                  <small>Para invitados foráneos</small><h2>{{ section.title || 'Hospedaje recomendado' }}</h2>
+                  <div class="preview-card-grid">
+                    <article *ngFor="let hotel of invitation?.content?.lodging?.slice(0, 4)"><img *ngIf="hotel.imageUrl" class="preview-dress-image" [src]="hotel.imageUrl" [alt]="hotel.name || 'Hospedaje'" loading="lazy"><b *ngIf="!hotel.imageUrl">⌂</b><h3>{{ hotel.name || 'Hotel recomendado' }}</h3><p>{{ hotel.description }}</p><span *ngIf="hotel.priceLabel">{{ hotel.priceLabel }}</span><p *ngIf="hotel.agreementLabel || hotel.discountCode">{{ hotel.agreementLabel }}<ng-container *ngIf="hotel.discountCode"> · Código {{ hotel.discountCode }}</ng-container></p><i class="preview-button">Reservar</i></article>
+                  </div>
+                </div>
+
                 <div *ngSwitchCase="'gallery'">
                   <small>Momentos</small><h2>{{ section.title || 'Galería' }}</h2>
                   <div class="preview-gallery" *ngIf="invitation?.content?.galleryItems?.length; else sampleGallery" [style.grid-template-columns]="invitation?.content?.gallerySettings?.displayMode === 'list' ? '1fr' : null" [style.display]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? 'block' : null" [style.max-width]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? '520px' : null" [style.margin]="invitation?.content?.gallerySettings?.displayMode === 'carousel' ? 'auto' : null">
@@ -570,6 +577,32 @@
                   <label>CLABE<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.clabe" (focus)="beginContentEdit()" type="text"></label>
                   <label>Nota<textarea [(ngModel)]="currentInvitation.content.digitalEnvelope!.note" (focus)="beginContentEdit()" rows="2"></textarea></label>
                 </div>
+              </div>
+
+              <div *ngSwitchCase="'lodging'">
+                <div cdkDropList [cdkDropListData]="currentInvitation.content.lodging" (cdkDropListDropped)="dropContentItem($event, 'lodging')" class="content-list">
+                  <article *ngFor="let hotel of currentInvitation.content.lodging; let index=index" cdkDrag>
+                    <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Hospedaje {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('lodging', index)">×</button></header>
+                    <img *ngIf="hotel.imageUrl" class="content-image-preview" [src]="hotel.imageUrl" [alt]="hotel.name || 'Hospedaje'">
+                    <div class="content-fields two-columns">
+                      <label>Nombre<input [(ngModel)]="hotel.name" (focus)="beginContentEdit()" type="text" placeholder="Hotel Gran Plaza"></label>
+                      <label>¿Por qué lo recomiendas?<input [(ngModel)]="hotel.description" (focus)="beginContentEdit()" type="text" placeholder="Cerca del evento, transporte incluido..."></label>
+                      <label>Imagen (URL)<input [(ngModel)]="hotel.imageUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                      <label>Subir imagen<input #lodgingUpload type="file" accept="image/*" (change)="uploadContentImage(lodgingUpload, 'lodging', index)"></label>
+                      <label>Dirección<input [(ngModel)]="hotel.address" (focus)="beginContentEdit()" type="text"></label>
+                      <label>Teléfono<input [(ngModel)]="hotel.phone" (focus)="beginContentEdit()" type="tel"></label>
+                      <label>Mapa<input [(ngModel)]="hotel.mapUrl" (focus)="beginContentEdit()" type="url" placeholder="https://maps.google.com/..."></label>
+                      <label>Reservación<input [(ngModel)]="hotel.url" (focus)="beginContentEdit()" type="url" placeholder="https://hotel.com/reservar"></label>
+                      <label>Convenio<input [(ngModel)]="hotel.agreementLabel" (focus)="beginContentEdit()" type="text"></label>
+                      <label>Código<input [(ngModel)]="hotel.discountCode" (focus)="beginContentEdit()" type="text"></label>
+                      <label>Beneficio<input [(ngModel)]="hotel.discountDescription" (focus)="beginContentEdit()" type="text" placeholder="15% de descuento"></label>
+                      <label>Tarifa<input [(ngModel)]="hotel.priceLabel" (focus)="beginContentEdit()" type="text" placeholder="Desde $1,450 MXN"></label>
+                      <label>Servicios<input [ngModel]="lodgingServices(hotel)" (ngModelChange)="setLodgingServices(hotel, $event)" (focus)="beginContentEdit()" type="text" placeholder="Desayuno, estacionamiento, transporte"></label>
+                      <label>Notas<textarea [(ngModel)]="hotel.notes" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                    </div>
+                  </article>
+                </div>
+                <button type="button" class="content-add" (click)="addContentItem('lodging')">+ Agregar hospedaje</button>
               </div>
 
               <div *ngSwitchCase="'gallery'">

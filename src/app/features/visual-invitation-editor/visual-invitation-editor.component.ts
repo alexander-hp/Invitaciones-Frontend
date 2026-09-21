@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, InvitationContent, InvitationGalleryItem, InvitationModel, InvitationModerationSettings, RsvpSettings,
+  EventModel, InvitationContent, InvitationGalleryItem, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, WebImageSearchResult
@@ -36,7 +36,7 @@ type PublishAuditIssue = {
   device?: DeviceMode;
 };
 type SelectionMarquee = { sectionId: string; left: number; top: number; width: number; height: number };
-type ContentListKey = 'locations' | 'itinerary' | 'galleryItems' | 'giftRegistry';
+type ContentListKey = 'locations' | 'itinerary' | 'galleryItems' | 'giftRegistry' | 'lodging';
 type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent; rsvpSettings: RsvpSettings };
 type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApproveEmails' | 'autoApprovePhones';
 
@@ -222,7 +222,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { type: 'custom', label: 'Sección vacía' },
     { type: 'story', label: 'Nuestra historia' }, { type: 'locations', label: 'Ubicaciones' },
     { type: 'itinerary', label: 'Itinerario' }, { type: 'dressCode', label: 'Vestimenta' },
-    { type: 'rsvp', label: 'Confirmación RSVP' }, { type: 'gifts', label: 'Mesa de regalos' },
+    { type: 'rsvp', label: 'Confirmación RSVP' }, { type: 'gifts', label: 'Mesa de regalos' }, { type: 'lodging', label: 'Hospedaje recomendado' },
     { type: 'gallery', label: 'Galería' }, { type: 'album', label: 'Álbum colectivo' },
     { type: 'dedications', label: 'Dedicatorias' }, { type: 'songs', label: 'Peticiones al DJ' }
   ];
@@ -1727,6 +1727,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return [item.title, item.description, item.dedication].filter(Boolean).join(' · ');
   }
 
+  lodgingServices(item: InvitationLodgingItem): string {
+    return (item.services || []).join(', ');
+  }
+
+  setLodgingServices(item: InvitationLodgingItem, value: string): void {
+    item.services = [...new Set(value.split(/[;,\n]/).map((service) => service.trim()).filter(Boolean))];
+  }
+
   addContentItem(key: ContentListKey): void {
     if (!this.invitation) return;
     this.recordHistory();
@@ -1734,6 +1742,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'itinerary') this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
     if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
+    if (key === 'lodging') this.invitation.content.lodging!.push(this.emptyLodgingItem(this.invitation.content.lodging!.length));
   }
 
   removeContentItem(key: ContentListKey, index: number): void {
@@ -1743,6 +1752,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     items.splice(index, 1);
     if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, itemIndex) => { item.priority = itemIndex; });
+    if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, itemIndex) => { item.priority = itemIndex; });
   }
 
   dropContentItem(event: { previousIndex: number; currentIndex: number }, key: ContentListKey): void {
@@ -1751,9 +1761,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     moveItemInArray(this.contentList(key), event.previousIndex, event.currentIndex);
     if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, index) => { item.priority = index; });
+    if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, index) => { item.priority = index; });
   }
 
-  uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift', index = -1): void {
+  uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift' | 'lodging', index = -1): void {
     const file = fileInput.files?.[0];
     if (!file || !this.invitation) return;
     const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event._id || this.invitation.event.id);
@@ -1770,6 +1781,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
         if (target === 'dressCode') this.invitation!.content.dressCodeImageUrl = publicUrl;
         if (target === 'gift' && this.invitation!.content.giftRegistry?.[index]) this.invitation!.content.giftRegistry[index].imageUrl = publicUrl;
+        if (target === 'lodging' && this.invitation!.content.lodging?.[index]) this.invitation!.content.lodging[index].imageUrl = publicUrl;
         this.uploading = false;
         fileInput.value = '';
       },
@@ -2045,6 +2057,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (settings.itinerary !== false && content.itinerary?.length) sections.push(this.makeSection('itinerary', 'Itinerario', palette.background, 620));
       if (settings.gallery !== false && content.gallery?.length) sections.push(this.makeSection('gallery', 'Galería', palette.background, 620));
       if (settings.giftRegistry !== false || settings.digitalEnvelope !== false) sections.push(this.makeSection('gifts', 'Mesa de regalos', palette.background, 620));
+      if (settings.lodging !== false && content.lodging?.length) sections.push(this.makeSection('lodging', 'Hospedaje recomendado', palette.background, 650));
       if (settings.rsvp !== false) sections.push(this.makeSection('rsvp', 'Confirma tu asistencia', palette.background, 700));
       if (settings.guestAlbum !== false) sections.push(this.makeSection('album', 'Álbum colectivo', palette.background, 520));
       if (settings.dedications !== false) sections.push(this.makeSection('dedications', 'Dedicatorias', palette.background, 620));
@@ -2153,6 +2166,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (section.type === 'itinerary' && !content.itinerary?.length) add('warning', 'Itinerario vacío', 'Agrega actividades o desactiva esta sección.', section.id);
       if (section.type === 'gallery' && !content.gallery?.length) add('warning', 'Galería vacía', 'Agrega fotografías o desactiva esta sección.', section.id);
       if (section.type === 'gifts' && !content.giftRegistry?.length && !content.digitalEnvelope) add('warning', 'Mesa de regalos vacía', 'Agrega una mesa o sobre digital, o desactiva la sección.', section.id);
+      if (section.type === 'lodging' && !content.lodging?.length) add('warning', 'Hospedaje vacío', 'Agrega por lo menos una recomendación o elimina esta sección.', section.id);
 
       for (const layer of section.layers) {
         if (layer.hidden) {
@@ -2341,6 +2355,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
+  private emptyLodgingItem(priority = 0): InvitationLodgingItem {
+    return {
+      name: '', description: '', url: '', imageUrl: '', address: '', phone: '', mapUrl: '',
+      agreementLabel: '', discountCode: '', discountDescription: '', priceLabel: '', services: [], notes: '', priority
+    };
+  }
+
   private syncLegacyGallery(): void {
     if (!this.invitation) return;
     this.invitation.content.gallery = (this.invitation.content.galleryItems || [])
@@ -2362,6 +2383,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     content.gallerySettings = { displayMode: 'grid', showCaptions: true, autoplay: false, intervalSeconds: 5, ...(content.gallerySettings || {}) };
     this.syncLegacyGallery();
     content.giftRegistry = content.giftRegistry || [];
+    content.lodging = (content.lodging || []).map((item, priority) => ({ ...this.emptyLodgingItem(priority), ...item, services: item.services || [], priority }));
     content.giftSettings = { enabled: true, showRegistry: true, showEnvelope: true, ...(content.giftSettings || {}) };
     content.digitalEnvelope = content.digitalEnvelope || {};
     content.dedicationSettings = { enabled: true, requireApproval: true, ...(content.dedicationSettings || {}) };

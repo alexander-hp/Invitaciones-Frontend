@@ -754,9 +754,13 @@ export class InvitationEditorComponent implements OnInit {
   }
 
   private parseLodging() {
-    return this.lodgingText.split('\n').map((line) => {
+    const existing = this.invitation?.content.lodging || [];
+    return this.lodgingText.split('\n').map((line, priority) => {
       const [name, description, url] = line.split('|').map((part) => part.trim());
-      return { name, description, url };
+      const saved = existing.find((item) => (url && item.url === url) || (name && item.name === name)) || {};
+      const metadata = { ...saved } as typeof saved & { _id?: string };
+      delete metadata._id;
+      return { ...metadata, name, description, url, priority };
     }).filter((item) => item.name || item.description || item.url);
   }
 

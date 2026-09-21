@@ -57,6 +57,24 @@ export class EditorAssetsTabComponent {
     return settings[key] !== false;
   }
 
+  lodgingServices(index: number): string {
+    return (this.invitation.content.lodging?.[index]?.services || []).join(', ');
+  }
+
+  setLodgingServices(index: number, value: string): void {
+    const item = this.invitation.content.lodging?.[index];
+    if (!item) return;
+    item.services = [...new Set(value.split(/[;,\n]/).map((service) => service.trim()).filter(Boolean))];
+  }
+
+  moveLodgingItem(index: number, direction: number): void {
+    const items = this.invitation.content.lodging || [];
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    [items[index], items[target]] = [items[target], items[index]];
+    items.forEach((item, priority) => { item.priority = priority; });
+  }
+
   openUrlInput(target: string): void {
     this.activeUrlInputKey = target;
     if (target === 'global') {

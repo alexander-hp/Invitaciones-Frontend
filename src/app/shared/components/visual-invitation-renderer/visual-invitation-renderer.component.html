@@ -69,6 +69,23 @@
       </div>
     </div>
 
+    <div class="functional-module" *ngIf="section.type === 'lodging'">
+      <h2>{{ section.title || 'Hospedaje recomendado' }}</h2>
+      <div class="module-grid lodging-grid">
+        <article *ngFor="let hotel of invitation?.content?.lodging">
+          <img *ngIf="hotel.imageUrl" [src]="hotel.imageUrl" [alt]="hotel.name || 'Hospedaje recomendado'" loading="lazy" decoding="async">
+          <h3>{{ hotel.name || 'Hospedaje recomendado' }}</h3>
+          <p *ngIf="hotel.description">{{ hotel.description }}</p><p *ngIf="hotel.address">{{ hotel.address }}</p>
+          <p *ngIf="hotel.priceLabel"><strong>{{ hotel.priceLabel }}</strong></p>
+          <p *ngIf="hotel.agreementLabel || hotel.discountCode"><strong>{{ hotel.agreementLabel }}</strong><ng-container *ngIf="hotel.discountCode"> · Código {{ hotel.discountCode }}</ng-container></p>
+          <p *ngIf="hotel.discountDescription">{{ hotel.discountDescription }}</p>
+          <div class="lodging-services" *ngIf="hotel.services?.length"><span *ngFor="let service of hotel.services">{{ service }}</span></div>
+          <p *ngIf="hotel.notes">{{ hotel.notes }}</p>
+          <div class="module-actions"><a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noopener">Reservar</a><a *ngIf="hotel.mapUrl" [href]="hotel.mapUrl" target="_blank" rel="noopener">Mapa</a><a *ngIf="hotel.phone" [href]="'tel:' + hotel.phone">Llamar</a></div>
+        </article>
+      </div>
+    </div>
+
     <div class="functional-module form-module" *ngIf="section.type === 'rsvp'">
       <h2>{{ section.title || 'Confirma tu asistencia' }}</h2>
       <form *ngIf="requiresGuestValidation && !verifiedGuest; else rsvpForm" (ngSubmit)="identifyGuest()">

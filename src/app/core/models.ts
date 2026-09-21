@@ -280,6 +280,23 @@ export interface InvitationGallerySettings {
   intervalSeconds?: number;
 }
 
+export interface InvitationLodgingItem {
+  name?: string;
+  description?: string;
+  url?: string;
+  imageUrl?: string;
+  address?: string;
+  phone?: string;
+  mapUrl?: string;
+  agreementLabel?: string;
+  discountCode?: string;
+  discountDescription?: string;
+  priceLabel?: string;
+  services?: string[];
+  notes?: string;
+  priority?: number;
+}
+
 export type VisualLayerType = 'text' | 'image' | 'video' | 'audio' | 'button' | 'shape';
 
 export interface VisualInvitationLayerStyle {
@@ -483,7 +500,7 @@ export interface InvitationContent {
   sectionSettings?: SectionSettings;
   brandLogoUrl?: string;
   hideBranding?: boolean;
-  lodging?: Array<{ name?: string; description?: string; url?: string }>;
+  lodging?: InvitationLodgingItem[];
   storyTitle?: string;
   storyBody?: string;
   template?: string;
