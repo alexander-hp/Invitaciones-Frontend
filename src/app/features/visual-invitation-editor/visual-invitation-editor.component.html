@@ -76,7 +76,7 @@
       </div>
     </section>
   </div>
-  <div class="ve-workspace">
+  <div class="ve-workspace" [class.mobile-tools-open]="mobilePanel === 'tools'" [class.mobile-canvas-open]="mobilePanel === 'canvas'" [class.mobile-inspector-open]="mobilePanel === 'inspector'">
     <aside class="ve-tools">
       <h2>Diseños iniciales</h2>
       <div class="preset-list">
@@ -420,4 +420,9 @@
       <p class="uploading" *ngIf="uploading">Subiendo archivo...</p>
     </aside>
   </div>
+  <nav class="mobile-editor-nav" aria-label="Editor móvil">
+    <button type="button" [class.active]="mobilePanel === 'tools'" (click)="setMobilePanel('tools')"><b>+</b><span>Agregar</span></button>
+    <button type="button" [class.active]="mobilePanel === 'canvas'" (click)="setMobilePanel('canvas')"><b>▱</b><span>Lienzo</span></button>
+    <button type="button" [class.active]="mobilePanel === 'inspector'" (click)="setMobilePanel('inspector')"><b>≡</b><span>Editar</span><i *ngIf="selectedLayerCount">{{ selectedLayerCount }}</i></button>
+  </nav>
 </div>

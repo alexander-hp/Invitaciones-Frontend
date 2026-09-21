@@ -11,6 +11,7 @@ import {
 } from '../../core/models';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
+type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
@@ -87,6 +88,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   paletteDropSectionId = '';
   selectionMarquee?: SelectionMarquee;
   croppingLayerId = '';
+  mobilePanel: MobileEditorPanel = 'canvas';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
@@ -208,6 +210,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.theme = this.design.theme || this.inferTheme();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
+        setTimeout(() => this.fitCanvasToViewport());
         this.startAutosave();
         this.loadPersonalTemplates();
         this.loadRevisions();
@@ -276,6 +279,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   setDevice(device: DeviceMode): void {
     this.device = device;
+    setTimeout(() => this.fitCanvasToViewport());
+  }
+
+  setMobilePanel(panel: MobileEditorPanel): void {
+    this.mobilePanel = panel;
+    if (panel === 'canvas') setTimeout(() => this.fitCanvasToViewport());
+  }
+
+  fitCanvasToViewport(): void {
+    if (typeof window === 'undefined' || window.innerWidth > 700) return;
+    const availableWidth = Math.max(240, window.innerWidth - 20);
+    this.canvasZoom = this.bound(availableWidth / this.artboardWidth, .5, 1);
+  }
+
+  @HostListener('window:resize')
+  handleViewportResize(): void {
+    if (this.mobilePanel === 'canvas') this.fitCanvasToViewport();
   }
 
   setCanvasZoom(value: number | string): void {
