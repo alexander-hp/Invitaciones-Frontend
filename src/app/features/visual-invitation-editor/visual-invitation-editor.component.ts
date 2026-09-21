@@ -289,10 +289,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       color: String(style.color || '#2d2927'), backgroundColor: String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
-      lineHeight: String(style.lineHeight || 1.2), textTransform: String(style.textTransform || 'none'),
+      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${Number(style.letterSpacing || 0)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
       borderRadius: `${Number(style.borderRadius || 0)}px`, borderColor: String(style.borderColor || 'transparent'),
-      borderStyle: Number(style.borderWidth || 0) > 0 ? 'solid' : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`,
+      borderStyle: Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`,
+      backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
+      boxShadow: String(style.boxShadow || 'none'),
       opacity: layer.hidden ? '0' : String(style.opacity ?? 1)
     };
   }
@@ -464,6 +466,32 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   toggleTextShadow(layer: VisualInvitationLayer, enabled: boolean): void {
     layer.style = layer.style || {};
     layer.style.textShadow = enabled ? '0 2px 8px rgba(0,0,0,.35)' : '';
+  }
+
+  toggleLayerGradient(layer: VisualInvitationLayer, enabled: boolean): void {
+    layer.style = layer.style || {};
+    layer.style.gradientEnabled = enabled;
+    if (!enabled) return;
+    const backgroundColor = layer.style.backgroundColor;
+    layer.style.gradientStart ||= backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : '#ffffff';
+    layer.style.gradientEnd ||= this.design.theme?.accentColor || '#000000';
+    layer.style.gradientAngle ??= 90;
+  }
+
+  resetLayerAppearance(layer: VisualInvitationLayer): void {
+    this.recordHistory();
+    layer.style = {
+      ...(layer.style || {}),
+      borderWidth: 0,
+      borderStyle: 'solid',
+      borderColor: '#000000',
+      borderRadius: 0,
+      boxShadow: 'none',
+      gradientEnabled: false,
+      gradientStart: '#ffffff',
+      gradientEnd: this.design.theme?.accentColor || '#000000',
+      gradientAngle: 90
+    };
   }
 
   selectSection(section: VisualInvitationSection): void {
@@ -1201,10 +1229,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       color: String(s.color || '#2d2927'), backgroundColor: String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(s.fontSize || 30)}px`,
       fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
-      lineHeight: String(s.lineHeight || 1.2), textTransform: String(s.textTransform || 'none'),
+      lineHeight: String(s.lineHeight || 1.2), letterSpacing: `${Number(s.letterSpacing || 0)}px`, textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
       borderRadius: `${Number(s.borderRadius || 0)}px`, borderColor: String(s.borderColor || 'transparent'),
-      borderStyle: Number(s.borderWidth || 0) > 0 ? 'solid' : 'none', borderWidth: `${Number(s.borderWidth || 0)}px`, opacity: String(s.opacity ?? 1),
+      borderStyle: Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: `${Number(s.borderWidth || 0)}px`,
+      backgroundImage: s.gradientEnabled ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})` : 'none',
+      boxShadow: String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };

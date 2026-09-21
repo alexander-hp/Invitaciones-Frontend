@@ -273,11 +273,18 @@ export interface VisualInvitationLayerStyle {
   saturation?: number;
   blur?: number;
   lineHeight?: number;
+  letterSpacing?: number;
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   textDecoration?: 'none' | 'underline' | 'line-through';
   textShadow?: string;
   borderColor?: string;
   borderWidth?: number;
+  borderStyle?: 'solid' | 'dashed' | 'dotted';
+  boxShadow?: string;
+  gradientEnabled?: boolean;
+  gradientStart?: string;
+  gradientEnd?: string;
+  gradientAngle?: number;
 }
 
 export interface VisualInvitationLayerLayout {

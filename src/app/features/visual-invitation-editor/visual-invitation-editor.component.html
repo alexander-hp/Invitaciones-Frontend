@@ -317,11 +317,28 @@
           <div *ngIf="layer.type === 'text' || layer.type === 'button'" class="typography-settings">
             <div class="two-columns">
               <label>Interlineado<input [(ngModel)]="style.lineHeight" type="number" min="0.8" max="3" step="0.1"></label>
+              <label>Espaciado<input [(ngModel)]="style.letterSpacing" type="number" min="-5" max="30" step="0.5"></label>
               <label>Alineación<select [(ngModel)]="style.textAlign"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
               <label>Mayúsculas<select [(ngModel)]="style.textTransform"><option value="none">Sin cambio</option><option value="uppercase">MAYÚSCULAS</option><option value="lowercase">minúsculas</option><option value="capitalize">Iniciales</option></select></label>
               <label>Decoración<select [(ngModel)]="style.textDecoration"><option value="none">Ninguna</option><option value="underline">Subrayado</option><option value="line-through">Tachado</option></select></label>
             </div>
             <label class="toggle"><input type="checkbox" [checked]="!!style.textShadow" (change)="toggleTextShadow(layer, $any($event.target).checked)"> Sombra de texto</label>
+          </div>
+          <div class="appearance-settings">
+            <div class="inspector-heading"><h3>Apariencia</h3><button type="button" (click)="resetLayerAppearance(layer)">Restablecer</button></div>
+            <div class="two-columns">
+              <label>Grosor borde<input [(ngModel)]="style.borderWidth" type="number" min="0" max="20" step="1"></label>
+              <label>Tipo de borde<select [(ngModel)]="style.borderStyle"><option value="solid">Sólido</option><option value="dashed">Guiones</option><option value="dotted">Puntos</option></select></label>
+              <label>Color borde<input [(ngModel)]="style.borderColor" type="color"></label>
+              <label>Redondeado<input [(ngModel)]="style.borderRadius" type="number" min="0" max="200" step="1"></label>
+            </div>
+            <label>Sombra<select [(ngModel)]="style.boxShadow"><option value="none">Sin sombra</option><option value="0 4px 12px rgba(0,0,0,.18)">Suave</option><option value="0 10px 28px rgba(0,0,0,.28)">Profunda</option><option value="0 0 18px rgba(255,255,255,.75)">Resplandor claro</option><option value="0 0 18px rgba(0,0,0,.45)">Resplandor oscuro</option></select></label>
+            <label class="toggle"><input [checked]="!!style.gradientEnabled" (change)="toggleLayerGradient(layer, $any($event.target).checked)" type="checkbox"> Usar degradado de fondo</label>
+            <div class="gradient-settings" *ngIf="style.gradientEnabled">
+              <label>Color inicial<input [(ngModel)]="style.gradientStart" type="color"></label>
+              <label>Color final<input [(ngModel)]="style.gradientEnd" type="color"></label>
+              <label>Dirección<input [(ngModel)]="style.gradientAngle" type="range" min="0" max="360" step="5"><span>{{ style.gradientAngle || 0 }}°</span></label>
+            </div>
           </div>
           <div *ngIf="layer.type === 'image'" class="image-framing">
             <div class="inspector-heading"><h3>Encuadre y ajustes</h3><button type="button" (click)="resetImageAdjustments(layer)">Restablecer</button></div>

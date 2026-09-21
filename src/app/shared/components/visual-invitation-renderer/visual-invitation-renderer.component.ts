@@ -87,10 +87,12 @@ export class VisualInvitationRendererComponent {
       color: String(style.color || '#25211f'), backgroundColor: String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
-      lineHeight: String(style.lineHeight || 1.2), textTransform: String(style.textTransform || 'none'),
+      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${Number(style.letterSpacing || 0)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
       borderRadius: `${Number(style.borderRadius || 0)}px`, borderColor: String(style.borderColor || 'transparent'),
-      borderStyle: Number(style.borderWidth || 0) > 0 ? 'solid' : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`, opacity: String(style.opacity ?? 1),
+      borderStyle: Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: `${Number(style.borderWidth || 0)}px`,
+      backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
+      boxShadow: String(style.boxShadow || 'none'), opacity: String(style.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
