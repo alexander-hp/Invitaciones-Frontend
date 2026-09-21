@@ -441,6 +441,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.canvasZoom = this.bound(Number(value) || 1, .5, 1.5);
   }
 
+  normalizeLayerTransform(layer: VisualInvitationLayer, layout: VisualInvitationLayerLayout): void {
+    layout.width = this.bound(Number(layout.width) || 4, 4, 100);
+    layout.height = this.bound(Number(layout.height) || 4, 4, 100);
+    layout.x = this.bound(Number(layout.x) || 0, 0, 100 - layout.width);
+    layout.y = this.bound(Number(layout.y) || 0, 0, 100 - layout.height);
+    layout.rotation = this.bound(Number(layout.rotation) || 0, -180, 180);
+    layer.zIndex = Math.round(this.bound(Number(layer.zIndex) || 0, 0, 1000));
+  }
+
   openResponsivePreview(): void {
     this.publishAuditIssues = this.auditDesign();
     this.showResponsivePreview = true;
@@ -1231,10 +1240,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const nextY = north ? resize.y + dy : resize.y;
       const nextWidth = west ? resize.width - dx : resize.width + dx;
       const nextHeight = north ? resize.height - dy : resize.height + dy;
-      resize.layout.x = this.bound(nextX, 0, resize.x + resize.width - 4);
-      resize.layout.y = this.bound(nextY, 0, resize.y + resize.height - 4);
-      resize.layout.width = this.bound(nextWidth, 4, 100 - resize.layout.x);
-      resize.layout.height = this.bound(nextHeight, 4, 100 - resize.layout.y);
+      const precision = event.pointerType === 'touch' ? 2 : 100;
+      const round = (value: number) => Math.round(value * precision) / precision;
+      resize.layout.x = round(this.bound(nextX, 0, resize.x + resize.width - 4));
+      resize.layout.y = round(this.bound(nextY, 0, resize.y + resize.height - 4));
+      resize.layout.width = round(this.bound(nextWidth, 4, 100 - resize.layout.x));
+      resize.layout.height = round(this.bound(nextHeight, 4, 100 - resize.layout.y));
       return;
     }
     const drag = this.layerDragState;

@@ -306,11 +306,16 @@
         <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
-        <div class="two-columns" *ngIf="selectedLayout as layout">
-          <label>Ancho<input [(ngModel)]="layout.width" type="number" min="1" max="100"></label>
-          <label>Alto<input [(ngModel)]="layout.height" type="number" min="1" max="100"></label>
-          <label>Giro<input [(ngModel)]="layout.rotation" type="number" min="-360" max="360"></label>
-          <label>Capa<input [(ngModel)]="layer.zIndex" type="number" min="0" max="1000"></label>
+        <div class="transform-settings" *ngIf="selectedLayout as layout">
+          <h3>Posición y tamaño</h3>
+          <div class="two-columns">
+            <label>Posición X<input [(ngModel)]="layout.x" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" [max]="100 - layout.width" step="0.5"></label>
+            <label>Posición Y<input [(ngModel)]="layout.y" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" [max]="100 - layout.height" step="0.5"></label>
+            <label>Ancho<input [(ngModel)]="layout.width" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" [max]="100 - layout.x" step="0.5"></label>
+            <label>Alto<input [(ngModel)]="layout.height" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" [max]="100 - layout.y" step="0.5"></label>
+            <label>Giro<input [(ngModel)]="layout.rotation" (change)="normalizeLayerTransform(layer, layout)" type="number" min="-180" max="180" step="1"></label>
+            <label>Capa<input [(ngModel)]="layer.zIndex" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" max="1000" step="1"></label>
+          </div>
         </div>
         <ng-container *ngIf="layer.style as style">
           <label *ngIf="layer.type === 'text' || layer.type === 'button'">Tipografía<select [(ngModel)]="style.fontFamily"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Times New Roman', serif</option><option>Verdana, sans-serif</option></select></label>
