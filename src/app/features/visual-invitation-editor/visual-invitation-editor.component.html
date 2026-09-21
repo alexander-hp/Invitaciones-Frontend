@@ -198,8 +198,74 @@
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
-            <div *ngIf="section.layers.length === 0 && section.type !== 'custom'" class="functional-placeholder">
-              <strong>{{ section.title }}</strong><span>Módulo funcional conectado con los datos del evento</span>
+            <div *ngIf="section.type !== 'custom' && section.type !== 'hero'" class="functional-preview" [ngStyle]="functionalPreviewStyle()">
+              <ng-container [ngSwitch]="section.type">
+                <div *ngSwitchCase="'story'" class="preview-centered">
+                  <small>Nuestra historia</small>
+                  <h2>{{ invitation?.content?.storyTitle || section.title || 'Un momento para recordar' }}</h2>
+                  <p>{{ invitation?.content?.storyBody || invitation?.content?.message || 'Comparte aquí la historia, el mensaje o las palabras especiales de los anfitriones.' }}</p>
+                </div>
+
+                <div *ngSwitchCase="'locations'">
+                  <small>Cómo llegar</small><h2>{{ section.title || 'Ubicaciones' }}</h2>
+                  <div class="preview-card-grid">
+                    <article *ngFor="let location of (invitation?.content?.locations?.length ? invitation?.content?.locations : previewLocations)">
+                      <b>⌖</b><h3>{{ location.name || location.type || event?.venue?.name || 'Ubicación' }}</h3><p>{{ location.address || event?.venue?.address }}</p><span>{{ location.notes }}</span>
+                      <div class="preview-actions"><i>Google Maps</i><i>Waze</i></div>
+                    </article>
+                  </div>
+                </div>
+
+                <div *ngSwitchCase="'itinerary'">
+                  <small>Programa</small><h2>{{ section.title || 'Itinerario' }}</h2>
+                  <div class="preview-timeline"><article *ngFor="let item of (invitation?.content?.itinerary?.length ? invitation?.content?.itinerary : previewItinerary)"><time>{{ item.time || '00:00' }}</time><div><h3>{{ item.title || 'Actividad' }}</h3><p>{{ item.description }}</p></div></article></div>
+                </div>
+
+                <div *ngSwitchCase="'dressCode'" class="preview-centered">
+                  <small>Vestimenta</small><h2>{{ section.title || 'Código de vestimenta' }}</h2>
+                  <img *ngIf="invitation?.content?.dressCodeImageUrl" class="preview-dress-image" [src]="invitation?.content?.dressCodeImageUrl" alt="Referencia de vestimenta">
+                  <div *ngIf="!invitation?.content?.dressCodeImageUrl" class="preview-dress-icon">♢</div>
+                  <h3>{{ invitation?.content?.dressCode || 'Formal' }}</h3><p>{{ invitation?.content?.dressCodeDescription || 'Agrega recomendaciones, colores o prendas sugeridas.' }}</p>
+                </div>
+
+                <div *ngSwitchCase="'gifts'">
+                  <small>Un detalle opcional</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="preview-intro">{{ invitation?.content?.giftSettings?.introText || 'Tu presencia es lo más importante para nosotros.' }}</p>
+                  <div class="preview-card-grid gifts">
+                    <article *ngFor="let gift of (invitation?.content?.giftRegistry?.length ? invitation?.content?.giftRegistry : previewGifts)"><b>⌑</b><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><i class="preview-button">Abrir mesa</i></article>
+                    <article *ngIf="invitation?.content?.digitalEnvelope as envelope"><b>▣</b><h3>Sobre digital</h3><p>{{ envelope.bank || 'Datos bancarios' }} · {{ envelope.holder || 'Titular' }}</p><span *ngIf="envelope.clabe">CLABE {{ envelope.clabe }}</span><i class="preview-button">Copiar datos</i></article>
+                  </div>
+                </div>
+
+                <div *ngSwitchCase="'gallery'">
+                  <small>Momentos</small><h2>{{ section.title || 'Galería' }}</h2>
+                  <div class="preview-gallery" *ngIf="invitation?.content?.gallery?.length; else sampleGallery"><img *ngFor="let image of invitation?.content?.gallery?.slice(0, 6)" [src]="image" alt="Fotografía del evento" loading="lazy"></div>
+                  <ng-template #sampleGallery><div class="preview-gallery sample"><i *ngFor="let slot of previewGallerySlots">▧</i></div></ng-template>
+                </div>
+
+                <div *ngSwitchCase="'rsvp'" class="preview-form">
+                  <small>Confirmación</small><h2>{{ section.title || 'Confirma tu asistencia' }}</h2>
+                  <div class="preview-fields"><label>Nombre<span>Nombre del invitado</span></label><label>Correo o teléfono<span>contacto@ejemplo.com</span></label><label>Respuesta<span>Sí asistiré⌄</span></label><label>Acompañantes<span>{{ invitation?.rsvpSettings?.defaultAllowedCompanions || 0 }}</span></label></div>
+                  <i class="preview-button">Enviar confirmación</i>
+                </div>
+
+                <div *ngSwitchCase="'album'" class="preview-form">
+                  <small>Álbum colectivo</small><h2>{{ section.title || 'Comparte tus fotografías' }}</h2><p class="preview-intro">Los invitados podrán subir sus mejores momentos.</p>
+                  <div class="preview-upload"><b>＋</b><span>Seleccionar fotografía</span></div><div class="preview-gallery sample compact"><i>▧</i><i>▧</i><i>▧</i></div>
+                </div>
+
+                <div *ngSwitchCase="'dedications'" class="preview-form">
+                  <small>Libro de mensajes</small><h2>{{ section.title || 'Dedicatorias' }}</h2>
+                  <div class="preview-fields"><label>Tu nombre<span>Nombre</span></label><label>Mensaje<span>Escribe una dedicatoria...</span></label></div><i class="preview-button">Enviar dedicatoria</i>
+                  <div class="preview-quotes"><blockquote *ngFor="let item of previewDedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
+                </div>
+
+                <div *ngSwitchCase="'songs'" class="preview-form">
+                  <small>Música</small><h2>{{ section.title || 'Pide una canción al DJ' }}</h2>
+                  <div class="preview-fields"><label>Canción o enlace<span>Spotify, YouTube o nombre</span></label><label>Artista<span>Nombre del artista</span></label><label>Dedicatoria<span>Mensaje opcional</span></label></div><i class="preview-button">Enviar al DJ</i>
+                </div>
+
+                <div *ngSwitchDefault class="preview-centered"><small>Módulo del evento</small><h2>{{ section.title }}</h2><p>Esta sección utilizará los datos configurados en la invitación.</p></div>
+              </ng-container>
             </div>
             <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state">
               <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>

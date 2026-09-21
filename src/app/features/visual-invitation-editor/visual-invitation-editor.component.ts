@@ -232,6 +232,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'divider', icon: '—', label: 'Separador' }
   ];
 
+  readonly previewLocations = [
+    { name: 'Ceremonia', address: 'Ubicación principal del evento', notes: 'Consulta indicaciones y horario.' },
+    { name: 'Recepción', address: 'Salón de celebración', notes: 'Acceso disponible para invitados.' }
+  ];
+  readonly previewItinerary = [
+    { time: '17:00', title: 'Ceremonia', description: 'Inicio del evento' },
+    { time: '19:00', title: 'Recepción', description: 'Cena y celebración' },
+    { time: '21:00', title: 'Fiesta', description: 'Música y baile' }
+  ];
+  readonly previewGifts = [
+    { title: 'Mesa de regalos', store: 'Tienda seleccionada', note: 'Tu presencia es nuestro mejor regalo.' }
+  ];
+  readonly previewDedications = [
+    { publicName: 'Familia y amigos', message: 'Que esta nueva etapa esté llena de momentos inolvidables.' },
+    { publicName: 'Tus invitados', message: 'Gracias por permitirnos acompañarlos en este día.' }
+  ];
+  readonly previewGallerySlots = [0, 1, 2, 3, 4, 5];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -1604,6 +1622,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return {
       height: `${section.height}px`, backgroundColor: bg.color || '#fff',
       backgroundImage: bg.imageUrl ? `linear-gradient(#000000${alpha},#000000${alpha}),url("${bg.imageUrl}")` : 'none'
+    };
+  }
+
+  functionalPreviewStyle(): Record<string, string> {
+    const theme = this.design.theme || this.themePresets[0].theme;
+    const buttonStyle = theme.buttonStyle || 'solid';
+    const buttonColor = String(theme.buttonBackgroundColor || '#292523');
+    return {
+      '--module-background': String(theme.backgroundColor || '#ffffff'),
+      '--module-text': String(theme.textColor || '#292523'),
+      '--module-accent': String(theme.accentColor || '#9a6754'),
+      '--module-heading-font': String(theme.headingFont || 'Georgia, serif'),
+      '--module-body-font': String(theme.bodyFont || 'Arial, sans-serif'),
+      '--module-button-background': buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent',
+      '--module-button-text': buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor,
+      '--module-button-border': buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent',
+      '--module-button-radius': `${Number(theme.buttonRadius || 0)}px`
     };
   }
 
