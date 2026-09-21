@@ -1,5 +1,5 @@
 <div class="ve-loading" *ngIf="loading">Preparando editor visual...</div>
-<div class="visual-editor" *ngIf="!loading && invitation && design" (focusin)="beginPropertyEdit($event)">
+<div class="visual-editor" *ngIf="!loading && invitation && design" [class.mobile-has-selection]="mobilePanel === 'canvas' && selectedLayerCount" (focusin)="beginPropertyEdit($event)">
   <header class="ve-topbar">
     <button class="icon-button" type="button" title="Volver" (click)="back()">←</button>
     <div class="ve-title"><strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong><span>Editor visual · {{ autosaving ? 'Guardando...' : (hasUnsavedChanges ? 'Cambios pendientes' : autosaveState) }}</span></div>
@@ -421,6 +421,20 @@
       <p class="uploading" *ngIf="uploading">Subiendo archivo...</p>
     </aside>
   </div>
+  <section class="mobile-selection-bar" *ngIf="mobilePanel === 'canvas' && selectedLayerCount" aria-label="Acciones del elemento seleccionado">
+    <header>
+      <strong>{{ mobileSelectionLabel }}</strong>
+      <button type="button" title="Cerrar acciones" aria-label="Cerrar acciones" (click)="clearMobileSelection()">×</button>
+    </header>
+    <div>
+      <button type="button" title="Editar propiedades" (click)="openMobileInspector()"><b>✎</b><span>Editar</span></button>
+      <button type="button" title="Duplicar" (click)="duplicateLayer()"><b>⧉</b><span>Duplicar</span></button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer)"><b>{{ layer.locked ? '▣' : '▢' }}</b><span>{{ layer.locked ? 'Desbloquear' : 'Bloquear' }}</span></button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Enviar atrás" (click)="shiftLayer(layer, -1)"><b>↓</b><span>Atrás</span></button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Traer adelante" (click)="shiftLayer(layer, 1)"><b>↑</b><span>Adelante</span></button>
+      <button class="danger" type="button" title="Eliminar" (click)="removeLayer()"><b>⌫</b><span>Eliminar</span></button>
+    </div>
+  </section>
   <nav class="mobile-editor-nav" aria-label="Editor móvil">
     <button type="button" [class.active]="mobilePanel === 'tools'" (click)="setMobilePanel('tools')"><b>+</b><span>Agregar</span></button>
     <button type="button" [class.active]="mobilePanel === 'canvas'" (click)="setMobilePanel('canvas')"><b>▱</b><span>Lienzo</span></button>

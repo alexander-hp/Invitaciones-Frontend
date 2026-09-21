@@ -373,6 +373,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.selectedLayers.length;
   }
 
+  get mobileSelectionLabel(): string {
+    if (this.selectedLayerCount > 1) return `${this.selectedLayerCount} elementos`;
+    return this.selectedLayer ? this.layerLabel(this.selectedLayer) : 'Elemento';
+  }
+
   get artboardWidth(): number {
     return this.device === 'mobile' ? 390 : this.device === 'tablet' ? 768 : 1180;
   }
@@ -410,6 +415,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   setMobilePanel(panel: MobileEditorPanel): void {
     this.mobilePanel = panel;
     if (panel === 'canvas') setTimeout(() => this.fitCanvasToViewport());
+  }
+
+  openMobileInspector(): void {
+    this.inspectorView = 'properties';
+    this.setMobilePanel('inspector');
+  }
+
+  clearMobileSelection(): void {
+    this.clearLayerSelection();
   }
 
   fitCanvasToViewport(): void {
