@@ -198,7 +198,7 @@
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
-            <div *ngIf="section.type !== 'custom' && section.type !== 'hero'" class="functional-preview" [ngStyle]="functionalPreviewStyle()">
+            <div *ngIf="section.type !== 'custom' && section.type !== 'hero'" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
               <ng-container [ngSwitch]="section.type">
                 <div *ngSwitchCase="'story'" class="preview-centered">
                   <small>Nuestra historia</small>
@@ -483,6 +483,26 @@
           <label>Imagen de fondo<input [(ngModel)]="section.background!.imageUrl" type="url" placeholder="https://..."></label>
           <label>Subir fondo<input #backgroundUpload type="file" accept="image/*" (change)="uploadImage(backgroundUpload, 'background')"></label>
           <label>Oscurecer fondo<input [(ngModel)]="section.background!.overlay" type="range" min="0" max="1" step="0.05"></label>
+          <ng-container *ngIf="section.type !== 'hero' && section.type !== 'custom'">
+            <h3>Diseño del módulo</h3>
+            <label>Distribución
+              <select [ngModel]="section.moduleStyle?.layout" (ngModelChange)="setModuleStyle(section, 'layout', $event)"><option value="grid">Cuadrícula</option><option value="list">Lista</option></select>
+            </label>
+            <label>Columnas
+              <select [ngModel]="section.moduleStyle?.columns" (ngModelChange)="setModuleStyle(section, 'columns', +$event)" [disabled]="section.moduleStyle?.layout === 'list'"><option [ngValue]="1">1 columna</option><option [ngValue]="2">2 columnas</option><option [ngValue]="3">3 columnas</option></select>
+            </label>
+            <label>Alineación
+              <select [ngModel]="section.moduleStyle?.alignment" (ngModelChange)="setModuleStyle(section, 'alignment', $event)"><option value="left">Izquierda</option><option value="center">Centrada</option></select>
+            </label>
+            <label>Fondo del contenido
+              <select [ngModel]="section.moduleStyle?.surface" (ngModelChange)="setModuleStyle(section, 'surface', $event)"><option value="solid">Sólido</option><option value="soft">Suave</option><option value="transparent">Transparente</option></select>
+            </label>
+            <label>Estilo de tarjetas
+              <select [ngModel]="section.moduleStyle?.cardStyle" (ngModelChange)="setModuleStyle(section, 'cardStyle', $event)"><option value="bordered">Con borde</option><option value="elevated">Con sombra</option><option value="none">Sin contenedor</option></select>
+            </label>
+            <label>Separación<input [ngModel]="section.moduleStyle?.gap" (ngModelChange)="setModuleStyle(section, 'gap', +$event)" type="range" min="4" max="32" step="1"><span>{{ section.moduleStyle?.gap }} px</span></label>
+            <label class="toggle"><input [ngModel]="section.moduleStyle?.showTitle" (ngModelChange)="setModuleStyle(section, 'showTitle', $event)" type="checkbox"> Mostrar título del módulo</label>
+          </ng-container>
           <label class="toggle"><input [(ngModel)]="section.enabled" type="checkbox"> Mostrar esta sección</label>
         </ng-container>
         </ng-template>

@@ -268,6 +268,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.responsiveMode = this.design.responsiveMode || 'shared';
         this.design.assets = this.design.assets || [];
         this.design.theme = this.design.theme || this.inferTheme();
+        this.normalizeModuleStyles();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
         setTimeout(() => this.fitCanvasToViewport());
@@ -1625,8 +1626,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
-  functionalPreviewStyle(): Record<string, string> {
+  functionalPreviewStyle(section: VisualInvitationSection): Record<string, string> {
     const theme = this.design.theme || this.themePresets[0].theme;
+    const moduleStyle = section.moduleStyle || {};
     const buttonStyle = theme.buttonStyle || 'solid';
     const buttonColor = String(theme.buttonBackgroundColor || '#292523');
     return {
@@ -1638,8 +1640,29 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       '--module-button-background': buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent',
       '--module-button-text': buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor,
       '--module-button-border': buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent',
-      '--module-button-radius': `${Number(theme.buttonRadius || 0)}px`
+      '--module-button-radius': `${Number(theme.buttonRadius || 0)}px`,
+      '--module-columns': String(moduleStyle.columns || 2),
+      '--module-gap': `${Number(moduleStyle.gap ?? 11)}px`
     };
+  }
+
+  moduleClasses(section: VisualInvitationSection): string[] {
+    const style = section.moduleStyle || {};
+    return [
+      `module-layout-${style.layout || 'grid'}`,
+      `module-align-${style.alignment || 'center'}`,
+      `module-surface-${style.surface || 'solid'}`,
+      `module-cards-${style.cardStyle || 'bordered'}`,
+      style.showTitle === false ? 'module-title-hidden' : 'module-title-visible'
+    ];
+  }
+
+  setModuleStyle(
+    section: VisualInvitationSection,
+    key: keyof NonNullable<VisualInvitationSection['moduleStyle']>,
+    value: string | number | boolean
+  ): void {
+    section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}), [key]: value } as NonNullable<VisualInvitationSection['moduleStyle']>;
   }
 
   uploadImage(fileInput: HTMLInputElement, target: 'layer' | 'background'): void {
@@ -1700,6 +1723,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design = this.regenerateIds(this.clone(template.design));
     this.design.active = true;
     this.design.theme = this.design.theme || this.inferTheme();
+    this.normalizeModuleStyles();
     this.selectedSectionId = this.design.sections[0]?.id || '';
     this.clearLayerSelection();
   }
@@ -1760,6 +1784,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design = this.clone(revision.design);
         this.design.assets = this.design.assets || [];
         this.design.theme = this.design.theme || this.inferTheme();
+        this.normalizeModuleStyles();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.clearLayerSelection();
         this.undoStack = [];
@@ -1907,7 +1932,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private makeSection(type: string, title: string, color: string, height: number): VisualInvitationSection {
-    return { id: this.uid('section'), type, title, enabled: true, layout: 'canvas', height, background: { color, overlay: 0 }, layers: [] };
+    return {
+      id: this.uid('section'), type, title, enabled: true, layout: 'canvas', height,
+      background: { color, overlay: 0 },
+      moduleStyle: type === 'hero' || type === 'custom' ? undefined : this.defaultModuleStyle(),
+      layers: []
+    };
+  }
+
+  private defaultModuleStyle(): NonNullable<VisualInvitationSection['moduleStyle']> {
+    return { layout: 'grid', columns: 2, alignment: 'center', surface: 'solid', cardStyle: 'bordered', gap: 11, showTitle: true };
+  }
+
+  private normalizeModuleStyles(): void {
+    for (const section of this.design.sections) {
+      section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
+      if (section.type === 'hero' || section.type === 'custom') continue;
+      section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}) };
+    }
   }
 
   private newLayer(type: VisualLayerType, text: string, x: number, y: number, width: number, height: number, fontSize = 30): VisualInvitationLayer {

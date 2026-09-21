@@ -360,6 +360,15 @@ export interface VisualInvitationSection {
     imageUrl?: string;
     overlay?: number;
   };
+  moduleStyle?: {
+    layout?: 'list' | 'grid';
+    columns?: 1 | 2 | 3;
+    alignment?: 'left' | 'center';
+    surface?: 'transparent' | 'solid' | 'soft';
+    cardStyle?: 'none' | 'bordered' | 'elevated';
+    gap?: number;
+    showTitle?: boolean;
+  };
   layers: VisualInvitationLayer[];
 }
 

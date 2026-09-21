@@ -70,14 +70,28 @@ export class VisualInvitationRendererComponent {
 
   sectionStyle(section: VisualInvitationSection): Record<string, string> {
     const background = section.background || {};
+    const moduleStyle = section.moduleStyle || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
     return {
       height: `${section.height}px`,
       backgroundColor: background.color || '#fff',
       backgroundImage: background.imageUrl
         ? `linear-gradient(#000000${overlay},#000000${overlay}),url("${background.imageUrl}")`
-        : 'none'
+        : 'none',
+      '--module-columns': String(moduleStyle.columns || 2),
+      '--module-gap': `${Number(moduleStyle.gap ?? 14)}px`
     };
+  }
+
+  moduleClasses(section: VisualInvitationSection): string[] {
+    const style = section.moduleStyle || {};
+    return [
+      `module-layout-${style.layout || 'grid'}`,
+      `module-align-${style.alignment || 'center'}`,
+      `module-surface-${style.surface || 'solid'}`,
+      `module-cards-${style.cardStyle || 'bordered'}`,
+      style.showTitle === false ? 'module-title-hidden' : 'module-title-visible'
+    ];
   }
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {

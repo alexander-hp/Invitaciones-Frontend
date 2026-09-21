@@ -8,7 +8,7 @@
   [style.--visual-button-text]="designThemeStyle()['--visual-button-text']"
   [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
-  <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero' && section.type !== 'story'" [attr.data-section]="section.type" [ngStyle]="sectionStyle(section)">
+  <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
       <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
@@ -16,6 +16,11 @@
       <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline preload="metadata"></video>
       <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls preload="metadata"></audio>
       <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>
+    </div>
+
+    <div class="functional-module story-module" *ngIf="section.type === 'story' && !section.layers.length">
+      <h2>{{ invitation?.content?.storyTitle || section.title || 'Nuestra historia' }}</h2>
+      <p>{{ invitation?.content?.storyBody || invitation?.content?.message }}</p>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'locations'">
