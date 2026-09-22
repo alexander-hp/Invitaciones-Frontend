@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/cor
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../../../core/api.service';
-import { SongRequestModel, SongRequestStatus } from '../../../../core/models';
+import { SongPromotionPayload, SongPromotionTarget, SongRequestModel, SongRequestStatus } from '../../../../core/models';
 
 export interface YouTubeSearchResult {
   title: string;
@@ -19,6 +19,7 @@ export interface YouTubeSearchResult {
 })
 export class EventDjTabComponent implements OnInit, OnChanges {
   @Input() eventId!: string;
+  @Input() canEditInvitation = false;
 
   songRequests: SongRequestModel[] = [];
   loadingDj = false;
@@ -41,6 +42,33 @@ export class EventDjTabComponent implements OnInit, OnChanges {
     sourceUrl: '',
     dedication: ''
   };
+
+  promotionInvitations: Array<{ _id: string; slug: string; status: string; content?: { headline?: string } }> = [];
+  promotionSongId = '';
+  promoting = false;
+  promotionForm: SongPromotionPayload = {
+    invitationId: '',
+    target: 'global',
+    startSeconds: 0,
+    volume: 0.7,
+    loop: true
+  };
+  readonly promotionTargets: Array<{ value: SongPromotionTarget; label: string }> = [
+    { value: 'global', label: 'Toda la invitación' },
+    { value: 'hero', label: 'Portada' },
+    { value: 'story', label: 'Nuestra historia' },
+    { value: 'locations', label: 'Ubicaciones' },
+    { value: 'itinerary', label: 'Itinerario' },
+    { value: 'dressCode', label: 'Vestimenta' },
+    { value: 'rsvp', label: 'Confirmación RSVP' },
+    { value: 'giftRegistry', label: 'Mesa de regalos' },
+    { value: 'digitalEnvelope', label: 'Sobre digital' },
+    { value: 'lodging', label: 'Hospedaje' },
+    { value: 'gallery', label: 'Galería' },
+    { value: 'guestAlbum', label: 'Álbum colectivo' },
+    { value: 'dedications', label: 'Dedicatorias' },
+    { value: 'songRequests', label: 'Peticiones al DJ' }
+  ];
 
   get filteredSongRequests(): SongRequestModel[] {
     const requests = this.songRequests || [];
@@ -355,13 +383,30 @@ export class EventDjTabComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     if (this.eventId) {
       this.loadSongRequests();
+      if (this.canEditInvitation) this.loadPromotionOptions();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['eventId'] && !changes['eventId'].firstChange && this.eventId) {
       this.loadSongRequests();
+      if (this.canEditInvitation) this.loadPromotionOptions();
     }
+    if (changes['canEditInvitation'] && this.canEditInvitation && this.eventId) {
+      this.loadPromotionOptions();
+    }
+  }
+
+  loadPromotionOptions(): void {
+    this.apiService.getSongPromotionOptions(this.eventId).subscribe({
+      next: ({ invitations }) => {
+        this.promotionInvitations = invitations || [];
+        if (!this.promotionForm.invitationId && this.promotionInvitations.length) {
+          this.promotionForm.invitationId = this.promotionInvitations[0]._id;
+        }
+      },
+      error: () => this.promotionInvitations = []
+    });
   }
 
   loadSongRequests(): void {
@@ -409,6 +454,68 @@ export class EventDjTabComponent implements OnInit, OnChanges {
         this.showErrorToast(err?.error?.message || 'Error al actualizar estado de la canción');
       }
     });
+  }
+
+  canUseAsInvitationMusic(song: SongRequestModel): boolean {
+    const url = String(song.sourceUrl || '').trim();
+    return Boolean(
+      this.canEditInvitation &&
+      song.status === 'approved' &&
+      url &&
+      song.sourceProvider !== 'spotify' &&
+      !/spotify\.com|youtube\.com\/results|[?&]search_query=/i.test(url)
+    );
+  }
+
+  openPromotion(song: SongRequestModel): void {
+    const songId = song._id || song.id || '';
+    if (!songId) return;
+    this.promotionSongId = this.promotionSongId === songId ? '' : songId;
+    this.promotionForm = {
+      invitationId: this.promotionForm.invitationId || this.promotionInvitations[0]?._id || '',
+      target: 'global',
+      startSeconds: 0,
+      volume: 0.7,
+      loop: true
+    };
+  }
+
+  promoteToInvitation(song: SongRequestModel): void {
+    const songId = song._id || song.id;
+    if (!songId || !this.promotionForm.invitationId) {
+      this.showErrorToast('Selecciona una invitación para publicar la canción.');
+      return;
+    }
+    const startSeconds = Number(this.promotionForm.startSeconds || 0);
+    const endSeconds = this.promotionForm.endSeconds === undefined || this.promotionForm.endSeconds === null
+      ? undefined
+      : Number(this.promotionForm.endSeconds);
+    if (endSeconds !== undefined && endSeconds <= startSeconds) {
+      this.showErrorToast('El segundo final debe ser mayor que el inicial.');
+      return;
+    }
+    this.promoting = true;
+    this.apiService.promoteSongToInvitation(this.eventId, songId, {
+      ...this.promotionForm,
+      startSeconds,
+      endSeconds,
+      volume: Number(this.promotionForm.volume ?? 0.7)
+    }).subscribe({
+      next: ({ songRequest, invitation }) => {
+        this.songRequests = this.songRequests.map((item) => (item._id || item.id) === songId ? songRequest : item);
+        this.promoting = false;
+        this.promotionSongId = '';
+        this.showSuccessToast(`"${song.title}" ya se usa en ${this.promotionTargetLabel(songRequest.promotedTarget)} (${invitation.slug}).`);
+      },
+      error: (err) => {
+        this.promoting = false;
+        this.showErrorToast(err?.error?.message || 'No se pudo usar la canción en la invitación.');
+      }
+    });
+  }
+
+  promotionTargetLabel(target?: SongPromotionTarget): string {
+    return this.promotionTargets.find((option) => option.value === target)?.label || 'la invitación';
   }
 
   moveSongRequest(sr: SongRequestModel, direction: number): void {

@@ -63,6 +63,7 @@ import {
   SongRequestPayload,
   SongRequestModel,
   SongRequestStatus,
+  SongPromotionPayload,
   SongLookupResponse,
   StaffCheckInSession,
   TemplateModel,
@@ -323,6 +324,14 @@ export class ApiService {
   updateSongRequest(eventId: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
     const body = typeof payload === 'string' ? { status: payload } : payload;
     return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, body);
+  }
+
+  getSongPromotionOptions(eventId: string): Observable<{ invitations: Array<{ _id: string; slug: string; status: string; content?: { headline?: string } }> }> {
+    return this.http.get<{ invitations: Array<{ _id: string; slug: string; status: string; content?: { headline?: string } }> }>(`${this.apiUrl}/events/${eventId}/song-requests/promotion-options`);
+  }
+
+  promoteSongToInvitation(eventId: string, songRequestId: string, payload: SongPromotionPayload): Observable<{ songRequest: SongRequestModel; invitation: { id: string; slug: string; status: string } }> {
+    return this.http.post<{ songRequest: SongRequestModel; invitation: { id: string; slug: string; status: string } }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}/promote`, payload);
   }
 
   listDedications(eventId: string): Observable<{ dedications: DedicationModel[] }> {

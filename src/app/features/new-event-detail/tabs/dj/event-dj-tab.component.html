@@ -587,6 +587,18 @@
           Escuchar
         </button>
 
+        <button *ngIf="canUseAsInvitationMusic(song)" type="button" class="nw-btn nw-btn-primary nw-btn-sm"
+          (click)="openPromotion(song)"
+          style="font-size: 11px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1 1 150px; box-sizing: border-box;">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+          {{ promotionSongId === (song._id || song.id) ? 'Cerrar configuración' : 'Usar en invitación' }}
+        </button>
+
         <!-- Botón Marcar como reproducida -->
         <button *ngIf="song.status !== 'played'" type="button" class="nw-btn nw-btn-ghost nw-btn-sm"
           (click)="updateSongRequest(song, 'played')"
@@ -599,6 +611,77 @@
           </svg>
           <span>Marcar reproducida</span>
         </button>
+      </div>
+
+      <div *ngIf="song.promotedAt"
+        style="margin-top: 8px; padding: 7px 10px; border-radius: 8px; background: #eef8f1; color: #24633c; font-size: 11.5px; font-weight: 650;">
+        Música publicada en: {{ promotionTargetLabel(song.promotedTarget) }}.
+      </div>
+
+      <div *ngIf="canEditInvitation && song.status === 'approved' && !canUseAsInvitationMusic(song)"
+        style="margin-top: 8px; padding: 7px 10px; border-radius: 8px; background: #fff7e8; color: #7a5313; font-size: 11.5px;">
+        Para usarla como música de la invitación selecciona un video concreto de YouTube o sube un archivo de audio. Los enlaces de Spotify solo sirven como referencia para el DJ.
+      </div>
+
+      <div *ngIf="promotionSongId === (song._id || song.id)"
+        style="margin-top: 10px; padding: 14px; border: 1px solid var(--nw-border); border-radius: 10px; background: var(--nw-surface, #fff);">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:12px;">
+          <div>
+            <strong style="display:block; font-size:13px; color:var(--nw-text);">Publicar como música oficial</strong>
+            <span style="font-size:11.5px; color:var(--nw-text-3);">Elige dónde sonará y qué fragmento se reproducirá.</span>
+          </div>
+          <span class="nw-pill success" style="font-size:10px;">{{ song.title }}</span>
+        </div>
+
+        <div *ngIf="!promotionInvitations.length" class="nw-alert warning" style="margin:0; font-size:12px;">
+          Este evento todavía no tiene una invitación disponible.
+        </div>
+
+        <div *ngIf="promotionInvitations.length" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:10px;">
+          <label class="nw-label" style="margin:0;">
+            Invitación
+            <select class="nw-select" [(ngModel)]="promotionForm.invitationId" [name]="'promotionInvitation' + (song._id || song.id)">
+              <option *ngFor="let invitation of promotionInvitations" [value]="invitation._id">
+                {{ invitation.content?.headline || invitation.slug }} · {{ invitation.status === 'published' ? 'Publicada' : 'Borrador' }}
+              </option>
+            </select>
+          </label>
+          <label class="nw-label" style="margin:0;">
+            Sección donde sonará
+            <select class="nw-select" [(ngModel)]="promotionForm.target" [name]="'promotionTarget' + (song._id || song.id)">
+              <option *ngFor="let target of promotionTargets" [value]="target.value">{{ target.label }}</option>
+            </select>
+          </label>
+          <label class="nw-label" style="margin:0;">
+            Inicia en (segundos)
+            <input class="nw-input" type="number" min="0" max="86400" step="1" [(ngModel)]="promotionForm.startSeconds"
+              [name]="'promotionStart' + (song._id || song.id)">
+          </label>
+          <label class="nw-label" style="margin:0;">
+            Termina en (opcional)
+            <input class="nw-input" type="number" min="0" max="86400" step="1" [(ngModel)]="promotionForm.endSeconds"
+              [name]="'promotionEnd' + (song._id || song.id)" placeholder="Canción completa">
+          </label>
+          <label class="nw-label" style="margin:0; grid-column:span 2;">
+            Volumen: {{ ((promotionForm.volume ?? 0.7) * 100) | number:'1.0-0' }}%
+            <input type="range" min="0" max="1" step="0.05" [(ngModel)]="promotionForm.volume"
+              [name]="'promotionVolume' + (song._id || song.id)" style="width:100%; accent-color:var(--nw-primary);">
+          </label>
+        </div>
+
+        <div *ngIf="promotionInvitations.length" style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap;">
+          <label class="checkline" style="margin:0; font-size:12px;">
+            <input type="checkbox" [(ngModel)]="promotionForm.loop" [name]="'promotionLoop' + (song._id || song.id)">
+            Repetir fragmento
+          </label>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="promotionSongId = ''">Cancelar</button>
+            <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" [disabled]="promoting || !promotionForm.invitationId"
+              (click)="promoteToInvitation(song)">
+              {{ promoting ? 'Publicando...' : 'Usar esta canción' }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

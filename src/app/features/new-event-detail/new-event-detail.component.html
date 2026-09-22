@@ -265,7 +265,7 @@
 
       <app-event-communication-tab *ngIf="activeTab === 'communication'" [event]="event" [guests]="guests"></app-event-communication-tab>
 
-      <app-event-dj-tab *ngIf="activeTab === 'dj'" [eventId]="eventId"></app-event-dj-tab>
+      <app-event-dj-tab *ngIf="activeTab === 'dj'" [eventId]="eventId" [canEditInvitation]="can('edit_event')"></app-event-dj-tab>
 
       <app-event-dedications-tab *ngIf="activeTab === 'dedications'" [eventId]="eventId"></app-event-dedications-tab>
 

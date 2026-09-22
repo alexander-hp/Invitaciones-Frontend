@@ -909,6 +909,16 @@ export interface GuestAccessResponse {
 }
 
 export type SongRequestStatus = 'pending' | 'approved' | 'rejected' | 'played';
+export type SongPromotionTarget = 'global' | 'hero' | 'story' | 'locations' | 'itinerary' | 'dressCode' | 'rsvp' | 'giftRegistry' | 'digitalEnvelope' | 'lodging' | 'gallery' | 'guestAlbum' | 'dedications' | 'songRequests';
+
+export interface SongPromotionPayload {
+  invitationId: string;
+  target: SongPromotionTarget;
+  startSeconds?: number;
+  endSeconds?: number;
+  volume?: number;
+  loop?: boolean;
+}
 
 export interface SongRequestModel {
   _id?: string;
@@ -930,6 +940,10 @@ export interface SongRequestModel {
   status: SongRequestStatus;
   reviewedAt?: string;
   playedAt?: string;
+  promotedAt?: string;
+  promotedBy?: string;
+  promotedInvitation?: string;
+  promotedTarget?: SongPromotionTarget;
   createdAt?: string;
   updatedAt?: string;
 }
