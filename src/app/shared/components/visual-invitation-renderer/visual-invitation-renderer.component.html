@@ -25,13 +25,13 @@
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'locations'">
-      <h2>{{ section.title || 'Ubicaciones' }}</h2>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Cómo llegar') }}</small><h2>{{ section.title || 'Ubicaciones' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="module-grid">
-        <article *ngFor="let location of invitation?.content?.locations">
+        <article *ngFor="let location of locationsFor(section)">
           <h3>{{ location.name || location.type }}</h3><p>{{ location.address }}</p><p>{{ location.notes }}</p>
           <p *ngIf="location.parking"><strong>Estacionamiento:</strong> {{ location.parking }}</p><p *ngIf="location.transport"><strong>Transporte:</strong> {{ location.transport }}</p><p *ngIf="location.accessibility"><strong>Accesibilidad:</strong> {{ location.accessibility }}</p>
           <div class="location-schedule" *ngIf="location.schedule?.length"><span *ngFor="let line of location.schedule">{{ line }}</span></div>
-          <div class="module-actions"><a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noopener">Google Maps</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a><a *ngIf="location.phone" [href]="'tel:' + location.phone">Llamar</a><a *ngIf="location.websiteUrl" [href]="location.websiteUrl" target="_blank" rel="noopener">Sitio web</a></div>
+          <div class="module-actions"><a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mapa') }}</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a><a *ngIf="location.phone" [href]="'tel:' + location.phone">Llamar</a><a *ngIf="location.websiteUrl" [href]="location.websiteUrl" target="_blank" rel="noopener">Sitio web</a></div>
         </article>
       </div>
     </div>
@@ -90,12 +90,12 @@
     </div>
 
     <div class="functional-module form-module" *ngIf="section.type === 'rsvp'">
-      <h2>{{ section.title || 'Confirma tu asistencia' }}</h2>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Confirmación') }}</small><h2>{{ section.title || 'Confirma tu asistencia' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <form *ngIf="requiresGuestValidation && !verifiedGuest; else rsvpForm" (ngSubmit)="identifyGuest()">
         <p>Confirma que estás en la lista usando tu correo o teléfono.</p>
         <label>Correo<input [(ngModel)]="guestEmail" name="visualGuestEmail" type="email"></label>
         <label>Teléfono<input [(ngModel)]="guestPhone" name="visualGuestPhone" type="tel"></label>
-        <button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : 'Continuar' }}</button>
+        <button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : pluginSetting(section, 'identifyButtonText', 'Continuar') }}</button>
       </form>
       <ng-template #rsvpForm>
         <form (ngSubmit)="sendRsvp()">
@@ -104,12 +104,26 @@
           <label *ngIf="!verifiedGuest">Correo<input [(ngModel)]="rsvp.email" name="visualRsvpEmail" type="email"></label>
           <label>Respuesta<select [(ngModel)]="rsvp.response" name="visualRsvpResponse"><option value="confirmed">Sí asistiré</option><option value="maybe">Tal vez</option><option value="declined">No podré asistir</option></select></label>
           <label *ngIf="rsvp.response !== 'declined' && maxCompanions > 0">Acompañantes<input [(ngModel)]="rsvp.companions" name="visualRsvpCompanions" type="number" min="0" [max]="maxCompanions"></label>
-          <label>Restricciones alimentarias<textarea [(ngModel)]="rsvp.dietaryRestrictions" name="visualRsvpDietary" rows="2"></textarea></label>
-          <label>Mensaje<textarea [(ngModel)]="rsvp.message" name="visualRsvpMessage" rows="2"></textarea></label>
-          <button type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : 'Enviar confirmación' }}</button>
+          <label *ngIf="pluginSetting(section, 'showDietary', true)">Restricciones alimentarias<textarea [(ngModel)]="rsvp.dietaryRestrictions" name="visualRsvpDietary" rows="2"></textarea></label>
+          <label *ngIf="pluginSetting(section, 'showMessage', true)">Mensaje<textarea [(ngModel)]="rsvp.message" name="visualRsvpMessage" rows="2"></textarea></label>
+          <button type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : pluginSetting(section, 'primaryButtonText', 'Enviar confirmación') }}</button>
         </form>
       </ng-template>
       <p class="feedback success" *ngIf="success">{{ success }}</p><p class="feedback error" *ngIf="error">{{ error }}</p>
+    </div>
+
+    <div class="functional-module form-module guest-pass-module" *ngIf="section.type === 'guestPass'">
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Acceso personal') }}</small><h2>{{ section.title || 'Mi mesa y pase' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <form *ngIf="!verifiedGuest" (ngSubmit)="identifyGuest()"><p>Identifícate con tu correo o teléfono para consultar tus datos.</p><label>Correo<input [(ngModel)]="guestEmail" name="visualPassEmail" type="email"></label><label>Teléfono<input [(ngModel)]="guestPhone" name="visualPassPhone" type="tel"></label><button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : pluginSetting(section, 'identifyButtonText', 'Ver mi pase') }}</button></form>
+      <div *ngIf="verifiedGuest as guest" class="guest-pass-card">
+        <button *ngIf="pluginSetting(section, 'showQr', true) && guestQrUrl" type="button" class="guest-pass-qr" (click)="openLightbox.emit(guestQrUrl)"><img [src]="guestQrUrl" alt="Código QR de acceso"></button>
+        <div><h3 *ngIf="pluginSetting(section, 'showGuestName', true)">{{ guest.name }}</h3><p *ngIf="pluginSetting(section, 'showGroup', true) && (guest.group || guest.relationshipLabel)">{{ guest.group || guest.relationshipLabel }}</p><strong *ngIf="pluginSetting(section, 'showTable', true)">{{ guest.tableName || 'Mesa por asignar' }}</strong><span *ngIf="pluginSetting(section, 'showSeat', true) && guest.seatLabel">Lugar {{ guest.seatLabel }}</span><span *ngIf="pluginSetting(section, 'showCompanions', true)">{{ guest.allowedCompanions || 0 }} acompañante(s)</span></div>
+      </div><p class="feedback error" *ngIf="error">{{ error }}</p>
+    </div>
+
+    <div class="functional-module countdown-module" *ngIf="section.type === 'countdown'">
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Falta poco') }}</small><h2>{{ section.title || 'Cuenta regresiva' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <div *ngIf="!countdown.isOver; else countdownOver" class="public-countdown"><span><b>{{ countdown.days }}</b>Días</span><span><b>{{ countdown.hours }}</b>Horas</span><span><b>{{ countdown.minutes }}</b>Minutos</span><span><b>{{ countdown.seconds }}</b>Segundos</span></div><ng-template #countdownOver><strong class="countdown-over">{{ pluginSetting(section, 'expiredText', 'El gran día llegó') }}</strong></ng-template>
     </div>
 
     <div class="functional-module form-module" *ngIf="section.type === 'album'">

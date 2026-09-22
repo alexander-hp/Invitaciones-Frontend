@@ -173,6 +173,10 @@
           </article>
         </div>
       </section>
+      <h2>Funciones</h2>
+      <div class="plugin-catalog">
+        <button *ngFor="let plugin of pluginCatalog" type="button" (click)="addSection(plugin.type, plugin.label)"><b>{{ plugin.icon }}</b><span>{{ plugin.label }}</span><i>Agregar</i></button>
+      </div>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -213,11 +217,11 @@
                 </div>
 
                 <div *ngSwitchCase="'locations'">
-                  <small>Cómo llegar</small><h2>{{ section.title || 'Ubicaciones' }}</h2>
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Cómo llegar' }}</small><h2>{{ section.title || 'Ubicaciones' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
                   <div class="preview-card-grid">
                     <article *ngFor="let location of (invitation?.content?.locations?.length ? invitation?.content?.locations : previewLocations)">
                       <b>⌖</b><h3>{{ location.name || location.type || event?.venue?.name || 'Ubicación' }}</h3><p>{{ location.address || event?.venue?.address }}</p><span>{{ location.notes }}</span>
-                      <div class="preview-actions"><i>Google Maps</i><i>Waze</i></div>
+                      <div class="preview-actions"><i>{{ pluginSetting(section, 'primaryButtonText') || 'Abrir mapa' }}</i><i>Waze</i></div>
                     </article>
                   </div>
                 </div>
@@ -258,9 +262,20 @@
                 </div>
 
                 <div *ngSwitchCase="'rsvp'" class="preview-form">
-                  <small>Confirmación</small><h2>{{ section.title || 'Confirma tu asistencia' }}</h2>
-                  <div class="preview-fields"><label>Nombre<span>Nombre del invitado</span></label><label>Correo o teléfono<span>contacto@ejemplo.com</span></label><label>Respuesta<span>Sí asistiré⌄</span></label><label>Acompañantes<span>{{ invitation?.rsvpSettings?.defaultAllowedCompanions || 0 }}</span></label></div>
-                  <i class="preview-button">Enviar confirmación</i>
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Confirmación' }}</small><h2>{{ section.title || 'Confirma tu asistencia' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+                  <div class="preview-fields"><label>Nombre<span>Nombre del invitado</span></label><label>Correo o teléfono<span>contacto@ejemplo.com</span></label><label>Respuesta<span>Sí asistiré⌄</span></label><label>Acompañantes<span>{{ invitation?.rsvpSettings?.defaultAllowedCompanions || 0 }}</span></label><label *ngIf="pluginSetting(section, 'showDietary')">Alimentación<span>Restricciones</span></label><label *ngIf="pluginSetting(section, 'showMessage')">Mensaje<span>Mensaje opcional</span></label></div>
+                  <i class="preview-button">{{ pluginSetting(section, 'primaryButtonText') || 'Enviar confirmación' }}</i>
+                </div>
+
+                <div *ngSwitchCase="'guestPass'" class="preview-form preview-guest-pass">
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Acceso personal' }}</small><h2>{{ section.title || 'Mi mesa y pase' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+                  <div class="preview-pass-card"><div *ngIf="pluginSetting(section, 'showQr')" class="preview-qr">▦</div><div><h3 *ngIf="pluginSetting(section, 'showGuestName')">{{ previewGuest.name }}</h3><p *ngIf="pluginSetting(section, 'showGroup')">{{ previewGuest.group }}</p><strong *ngIf="pluginSetting(section, 'showTable')">{{ previewGuest.tableName }}</strong><span *ngIf="pluginSetting(section, 'showSeat')">Lugar {{ previewGuest.seatLabel }}</span><span *ngIf="pluginSetting(section, 'showCompanions')">{{ previewGuest.allowedCompanions }} acompañantes</span></div></div>
+                </div>
+
+                <div *ngSwitchCase="'countdown'" class="preview-countdown">
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Falta poco' }}</small><h2>{{ section.title || 'Cuenta regresiva' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+                  <div *ngIf="!countdownPreview.isOver; else editorCountdownOver" class="countdown-cells"><span><b>{{ countdownPreview.days }}</b>Días</span><span><b>{{ countdownPreview.hours }}</b>Horas</span><span><b>{{ countdownPreview.minutes }}</b>Minutos</span><span><b>{{ countdownPreview.seconds }}</b>Segundos</span></div>
+                  <ng-template #editorCountdownOver><strong class="countdown-over">{{ pluginSetting(section, 'expiredText') || 'El gran día llegó' }}</strong></ng-template>
                 </div>
 
                 <div *ngSwitchCase="'album'" class="preview-form">
@@ -525,6 +540,30 @@
             </label>
             <label>Separación<input [ngModel]="section.moduleStyle?.gap" (ngModelChange)="setModuleStyle(section, 'gap', +$event)" type="range" min="4" max="32" step="1"><span>{{ section.moduleStyle?.gap }} px</span></label>
             <label class="toggle"><input [ngModel]="section.moduleStyle?.showTitle" (ngModelChange)="setModuleStyle(section, 'showTitle', $event)" type="checkbox"> Mostrar título del módulo</label>
+            <section class="plugin-settings" *ngIf="isConfigurablePlugin(section.type)">
+              <h3>Personalización de la función</h3>
+              <label>Texto superior<input [ngModel]="pluginSetting(section, 'eyebrow')" (ngModelChange)="setPluginSetting(section, 'eyebrow', $event)" type="text" maxlength="80"></label>
+              <label>Introducción<textarea [ngModel]="pluginSetting(section, 'introText')" (ngModelChange)="setPluginSetting(section, 'introText', $event)" rows="3"></textarea></label>
+              <ng-container [ngSwitch]="section.type">
+                <ng-container *ngSwitchCase="'rsvp'">
+                  <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
+                  <label>Botón de confirmación<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showDietary')" (ngModelChange)="setPluginSetting(section, 'showDietary', $event)" type="checkbox"> Mostrar restricciones alimentarias</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showMessage')" (ngModelChange)="setPluginSetting(section, 'showMessage', $event)" type="checkbox"> Mostrar mensaje del invitado</label>
+                </ng-container>
+                <ng-container *ngSwitchCase="'guestPass'">
+                  <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showGuestName')" (ngModelChange)="setPluginSetting(section, 'showGuestName', $event)" type="checkbox"> Mostrar nombre</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showGroup')" (ngModelChange)="setPluginSetting(section, 'showGroup', $event)" type="checkbox"> Mostrar grupo</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showTable')" (ngModelChange)="setPluginSetting(section, 'showTable', $event)" type="checkbox"> Mostrar mesa</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showSeat')" (ngModelChange)="setPluginSetting(section, 'showSeat', $event)" type="checkbox"> Mostrar asiento</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showCompanions')" (ngModelChange)="setPluginSetting(section, 'showCompanions', $event)" type="checkbox"> Mostrar acompañantes</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showQr')" (ngModelChange)="setPluginSetting(section, 'showQr', $event)" type="checkbox"> Mostrar código QR</label>
+                </ng-container>
+                <ng-container *ngSwitchCase="'countdown'"><label>Mensaje al finalizar<input [ngModel]="pluginSetting(section, 'expiredText')" (ngModelChange)="setPluginSetting(section, 'expiredText', $event)" type="text" maxlength="120"></label></ng-container>
+                <ng-container *ngSwitchCase="'locations'"><label>Texto del botón<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label>Máximo de ubicaciones<input [ngModel]="pluginSetting(section, 'locationLimit')" (ngModelChange)="setPluginSetting(section, 'locationLimit', +$event)" type="number" min="0" max="20"><span>0 muestra todas</span></label></ng-container>
+              </ng-container>
+            </section>
             <section class="module-content-editor" *ngIf="invitation as currentInvitation" [ngSwitch]="section.type">
               <h3>Contenido del módulo</h3>
 

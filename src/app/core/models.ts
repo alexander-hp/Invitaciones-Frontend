@@ -456,6 +456,7 @@ export interface VisualInvitationSection {
     gap?: number;
     showTitle?: boolean;
   };
+  pluginSettings?: Record<string, string | number | boolean>;
   layers: VisualInvitationLayer[];
 }
 

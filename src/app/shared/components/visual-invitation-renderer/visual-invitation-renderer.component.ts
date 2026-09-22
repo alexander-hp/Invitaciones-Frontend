@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import {
-  DedicationModel, EventModel, GuestAccessResponse, InvitationGalleryItem, InvitationModel,
+  DedicationModel, EventModel, GuestAccessResponse, InvitationGalleryItem, InvitationLocation, InvitationModel,
   VisualInvitationLayer, VisualInvitationSection
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
@@ -39,7 +39,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   dedication = { publicName: '', message: '' };
   song = { title: '', artist: '', dedication: '', sourceUrl: '' };
   galleryIndex = 0;
+  countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: false };
   private galleryTimer?: ReturnType<typeof setInterval>;
+  private countdownTimer?: ReturnType<typeof setInterval>;
 
   get sections(): VisualInvitationSection[] {
     return (this.invitation?.content?.visualDesign?.sections || []).filter((section) => section.enabled);
@@ -64,10 +66,12 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   ngOnChanges(): void {
     this.galleryIndex = Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
     this.configureGalleryTimer();
+    this.configureCountdownTimer();
   }
 
   ngOnDestroy(): void {
     this.clearGalleryTimer();
+    this.clearCountdownTimer();
   }
 
   galleryCaption(item: InvitationGalleryItem): string {
@@ -85,6 +89,24 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   trackVisualById(index: number, item: VisualInvitationSection | VisualInvitationLayer): string | number {
     return item.id || index;
+  }
+
+  pluginSetting(section: VisualInvitationSection, key: string, fallback: string | number | boolean = ''): string | number | boolean {
+    return section.pluginSettings?.[key] ?? fallback;
+  }
+
+  locationsFor(section: VisualInvitationSection): InvitationLocation[] {
+    const configured = this.invitation?.content?.locations || [];
+    const locations: InvitationLocation[] = configured.length ? configured : (this.event?.venue?.name || this.event?.venue?.address || this.event?.venue?.mapUrl ? [{
+      type: 'principal', name: this.event?.venue?.name || 'Lugar del evento', address: this.event?.venue?.address || '', mapUrl: this.event?.venue?.mapUrl || ''
+    }] : []);
+    const limit = Number(this.pluginSetting(section, 'locationLimit', 0));
+    return limit > 0 ? locations.slice(0, limit) : locations;
+  }
+
+  get guestQrUrl(): string {
+    const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
+    return value ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(value)}` : '';
   }
 
   resolveLayerText(layer: VisualInvitationLayer): string {
@@ -286,8 +308,37 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     this.galleryTimer = setInterval(() => this.moveGallery(1), seconds * 1000);
   }
 
+  private configureCountdownTimer(): void {
+    this.clearCountdownTimer();
+    this.updateCountdown();
+    if (this.event?.date && !this.countdown.isOver) this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+  }
+
+  private updateCountdown(): void {
+    if (!this.event?.date) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    const dateOnly = this.event.date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const target = dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12)
+      : new Date(this.event.date);
+    if (this.event.time && /^\d{2}:\d{2}/.test(this.event.time)) {
+      const [hours, minutes] = this.event.time.split(':').map(Number);
+      target.setHours(hours, minutes, 0, 0);
+    }
+    const distance = target.getTime() - Date.now();
+    if (Number.isNaN(distance) || distance <= 0) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    this.countdown = {
+      days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
+      minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
+    };
+  }
+
   private clearGalleryTimer(): void {
     if (this.galleryTimer) clearInterval(this.galleryTimer);
     this.galleryTimer = undefined;
+  }
+
+  private clearCountdownTimer(): void {
+    if (this.countdownTimer) clearInterval(this.countdownTimer);
+    this.countdownTimer = undefined;
   }
 }

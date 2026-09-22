@@ -225,11 +225,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   readonly sectionCatalog = [
     { type: 'custom', label: 'Sección vacía' },
-    { type: 'story', label: 'Nuestra historia' }, { type: 'locations', label: 'Ubicaciones' },
+    { type: 'story', label: 'Nuestra historia' },
     { type: 'itinerary', label: 'Itinerario' }, { type: 'dressCode', label: 'Vestimenta' },
-    { type: 'rsvp', label: 'Confirmación RSVP' }, { type: 'gifts', label: 'Mesa de regalos' }, { type: 'lodging', label: 'Hospedaje recomendado' },
+    { type: 'gifts', label: 'Mesa de regalos' }, { type: 'lodging', label: 'Hospedaje recomendado' },
     { type: 'gallery', label: 'Galería' }, { type: 'album', label: 'Álbum colectivo' },
     { type: 'dedications', label: 'Dedicatorias' }, { type: 'songs', label: 'Peticiones al DJ' }
+  ];
+
+  readonly pluginCatalog = [
+    { type: 'rsvp', icon: '✓', label: 'Confirmación RSVP' },
+    { type: 'guestPass', icon: '▦', label: 'Mi mesa y pase' },
+    { type: 'countdown', icon: '◷', label: 'Cuenta regresiva' },
+    { type: 'locations', icon: '⌖', label: 'Ubicación y mapa' }
   ];
 
   readonly componentCatalog = [
@@ -253,6 +260,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   readonly buttonActions = [
     { value: '', label: 'Enlace personalizado' },
     { value: 'section:rsvp', label: 'Ir a confirmación RSVP' },
+    { value: 'section:guestPass', label: 'Ir a mi mesa y pase' },
+    { value: 'section:countdown', label: 'Ir a cuenta regresiva' },
+    { value: 'section:locations', label: 'Ir a ubicación y mapa' },
     { value: 'section:album', label: 'Ir al álbum colectivo' },
     { value: 'section:dedications', label: 'Ir a dedicatorias' },
     { value: 'section:songs', label: 'Ir a peticiones al DJ' },
@@ -277,6 +287,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { publicName: 'Tus invitados', message: 'Gracias por permitirnos acompañarlos en este día.' }
   ];
   readonly previewGallerySlots = [0, 1, 2, 3, 4, 5];
+  readonly previewGuest = { name: 'Invitado de ejemplo', group: 'Familia', tableName: 'Mesa 5', seatLabel: 'A-12', allowedCompanions: 2 };
 
   constructor(
     private route: ActivatedRoute,
@@ -1741,6 +1752,29 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}), [key]: value } as NonNullable<VisualInvitationSection['moduleStyle']>;
   }
 
+  pluginSetting(section: VisualInvitationSection, key: string): string | number | boolean {
+    return section.pluginSettings?.[key] ?? this.defaultPluginSettings(section.type)[key] ?? '';
+  }
+
+  setPluginSetting(section: VisualInvitationSection, key: string, value: string | number | boolean): void {
+    section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}), [key]: value };
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  isConfigurablePlugin(type: string): boolean {
+    return ['rsvp', 'guestPass', 'countdown', 'locations'].includes(type);
+  }
+
+  get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
+    const target = this.event?.date ? new Date(this.event.date) : new Date(Date.now() + 38 * 24 * 60 * 60 * 1000);
+    const distance = target.getTime() - Date.now();
+    if (Number.isNaN(distance) || distance <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
+    return {
+      days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
+      minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
+    };
+  }
+
   beginContentEdit(): void {
     this.recordHistory();
   }
@@ -2194,6 +2228,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       id: this.uid('section'), type, title, enabled: true, layout: 'canvas', height,
       background: { color, overlay: 0 },
       moduleStyle: type === 'hero' || type === 'custom' ? undefined : this.defaultModuleStyle(),
+      pluginSettings: this.isConfigurablePlugin(type) ? this.defaultPluginSettings(type) : undefined,
       layers: []
     };
   }
@@ -2207,7 +2242,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
       if (section.type === 'hero' || section.type === 'custom') continue;
       section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}) };
+      if (this.isConfigurablePlugin(section.type)) section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
     }
+  }
+
+  private defaultPluginSettings(type: string): Record<string, string | number | boolean> {
+    const common: Record<string, string | number | boolean> = { eyebrow: '', introText: '', primaryButtonText: '' };
+    if (type === 'rsvp') return { ...common, eyebrow: 'Confirmación', introText: '', primaryButtonText: 'Enviar confirmación', identifyButtonText: 'Continuar', showDietary: true, showMessage: true };
+    if (type === 'guestPass') return { ...common, eyebrow: 'Acceso personal', introText: 'Presenta este pase al ingresar.', identifyButtonText: 'Ver mi pase', showGuestName: true, showGroup: true, showTable: true, showSeat: true, showCompanions: true, showQr: true };
+    if (type === 'countdown') return { ...common, eyebrow: 'Falta poco', introText: '', expiredText: 'El gran día llegó' };
+    if (type === 'locations') return { ...common, eyebrow: 'Cómo llegar', introText: '', primaryButtonText: 'Abrir mapa', locationLimit: 0 };
+    return {};
   }
 
   private newLayer(type: VisualLayerType, text: string, x: number, y: number, width: number, height: number, fontSize = 30): VisualInvitationLayer {
@@ -2362,7 +2407,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private isFunctionalType(type: string): boolean {
-    return ['locations', 'itinerary', 'dressCode', 'rsvp', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
+    return ['locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
   }
 
   private layerTypeLabel(type: VisualLayerType): string {
