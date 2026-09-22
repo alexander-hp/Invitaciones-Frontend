@@ -1,0 +1,29 @@
+<main class="activity-page">
+  <header>
+    <a [routerLink]="['/new/i', slug]" aria-label="Volver a la invitación">←</a>
+    <div><small>Centro del invitado</small><h1>{{ invitation?.event && $any(invitation?.event).title || invitation?.content?.headline || 'Mi actividad' }}</h1></div>
+    <button *ngIf="activity" type="button" (click)="closeSession()">Cambiar invitado</button>
+  </header>
+
+  <p *ngIf="loading" class="notice">Cargando...</p>
+  <p *ngIf="error" class="notice error">{{ error }}</p>
+
+  <section *ngIf="!loading && !activity" class="identify-panel">
+    <small>Acceso personal</small><h2>Consulta tu pase y tus envíos</h2>
+    <p>Usa el correo o teléfono registrado en la lista del evento.</p>
+    <form (ngSubmit)="identify()"><input [(ngModel)]="identity" name="identity" autocomplete="email" placeholder="Correo o teléfono" required><button type="submit" [disabled]="identifying">{{ identifying ? 'Validando...' : 'Continuar' }}</button></form>
+  </section>
+
+  <ng-container *ngIf="activity as current">
+    <section class="guest-heading"><div><small>Invitado</small><h2>{{ current.guest.name }}</h2><p>{{ current.guest.group || current.guest.relationshipLabel }}</p></div><div class="rsvp-state"><span>RSVP</span><strong>{{ rsvpLabel() }}</strong></div></section>
+    <section class="activity-grid">
+      <article class="pass-card">
+        <h3>Mi pase</h3><img *ngIf="qrUrl" [src]="qrUrl" alt="Código QR de acceso"><p><strong>Mesa:</strong> {{ current.guest.tableName || 'Pendiente de asignación' }}</p><p *ngIf="current.guest.seatLabel"><strong>Asiento:</strong> {{ current.guest.seatLabel }}</p><p><strong>Acompañantes permitidos:</strong> {{ current.guest.allowedCompanions || 0 }}</p>
+      </article>
+      <article><h3>Mis fotografías</h3><p *ngIf="!current.albumUploads.length" class="empty">Aún no has enviado fotografías.</p><div class="photo-list"><figure *ngFor="let photo of current.albumUploads"><img [src]="photo.url" alt="Fotografía enviada"><figcaption><span [attr.data-status]="photo.status">{{ statusLabel(photo.status) }}</span></figcaption></figure></div></article>
+      <article><h3>Mis canciones</h3><p *ngIf="!current.songRequests.length" class="empty">Aún no has solicitado canciones.</p><div class="item-list"><div *ngFor="let song of current.songRequests"><strong>{{ song.title }}</strong><small>{{ song.artist }}</small><span [attr.data-status]="song.status">{{ statusLabel(song.status) }}</span></div></div></article>
+      <article><h3>Mis dedicatorias</h3><p *ngIf="!current.dedications?.length" class="empty">Aún no has enviado dedicatorias.</p><div class="item-list"><div *ngFor="let dedication of current.dedications"><p>{{ dedication.message }}</p><span [attr.data-status]="dedication.status">{{ statusLabel(dedication.status) }}</span></div></div></article>
+    </section>
+    <p class="updated-note">Los cambios de aprobación se actualizan automáticamente.</p>
+  </ng-container>
+</main>

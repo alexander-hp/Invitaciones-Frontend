@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import {
-  DedicationModel, EventModel, GuestAccessResponse, InvitationGalleryItem, InvitationLocation, InvitationModel,
+  DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, InvitationGalleryItem, InvitationLocation, InvitationModel,
   VisualInvitationLayer, VisualInvitationSection
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
@@ -15,6 +15,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Input() invitation?: InvitationModel;
   @Input() event?: EventModel;
   @Input() verifiedGuest?: GuestAccessResponse['guest'];
+  @Input() guestActivity?: ExternalGuestStatusResponse;
+  @Input() guestActivityLoading = false;
   @Input() requiresGuestValidation = false;
   @Input() sending = false;
   @Input() checkingGuest = false;
@@ -33,6 +35,18 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Output() submitDedication = new EventEmitter<{ publicName: string; message: string }>();
   @Output() requestSong = new EventEmitter<{ title: string; artist: string; dedication: string; sourceUrl: string }>();
   @Output() openLightbox = new EventEmitter<string>();
+  @Output() openGuestActivity = new EventEmitter<void>();
+
+  activityCount(kind: 'album' | 'songs' | 'dedications'): number {
+    if (kind === 'album') return this.guestActivity?.albumUploads?.length || 0;
+    if (kind === 'songs') return this.guestActivity?.songRequests?.length || 0;
+    return this.guestActivity?.dedications?.length || 0;
+  }
+
+  activityRsvpLabel(): string {
+    const response = this.guestActivity?.rsvp?.response;
+    return response === 'confirmed' ? 'Asistencia confirmada' : response === 'declined' ? 'No asistiré' : response === 'maybe' ? 'Tal vez asistiré' : 'Sin confirmar';
+  }
 
   guestEmail = '';
   guestPhone = '';

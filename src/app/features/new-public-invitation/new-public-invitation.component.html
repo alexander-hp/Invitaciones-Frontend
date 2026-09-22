@@ -57,6 +57,8 @@
     [invitation]="invitation"
     [event]="event"
     [verifiedGuest]="verifiedGuest"
+    [guestActivity]="guestActivity"
+    [guestActivityLoading]="guestActivityLoading"
     [requiresGuestValidation]="requiresGuestValidation"
     [sending]="sending"
     [checkingGuest]="checkingGuest"
@@ -73,6 +75,7 @@
     (uploadPhoto)="onFileSelectedDirect($event)"
     (submitDedication)="submitDedicationFromData($event)"
     (requestSong)="submitVisualSongRequest($event)"
+    (openGuestActivity)="openGuestActivity()"
     (openLightbox)="openLightbox($event)">
   </app-visual-invitation-renderer>
 

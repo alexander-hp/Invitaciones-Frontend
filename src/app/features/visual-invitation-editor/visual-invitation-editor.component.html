@@ -272,6 +272,12 @@
                   <div class="preview-pass-card"><div *ngIf="pluginSetting(section, 'showQr')" class="preview-qr">▦</div><div><h3 *ngIf="pluginSetting(section, 'showGuestName')">{{ previewGuest.name }}</h3><p *ngIf="pluginSetting(section, 'showGroup')">{{ previewGuest.group }}</p><strong *ngIf="pluginSetting(section, 'showTable')">{{ previewGuest.tableName }}</strong><span *ngIf="pluginSetting(section, 'showSeat')">Lugar {{ previewGuest.seatLabel }}</span><span *ngIf="pluginSetting(section, 'showCompanions')">{{ previewGuest.allowedCompanions }} acompañantes</span></div></div>
                 </div>
 
+                <div *ngSwitchCase="'guestActivity'" class="preview-form">
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Tu espacio' }}</small><h2>{{ section.title || 'Mi pase y actividad' }}</h2><p class="preview-intro">{{ pluginSetting(section, 'introText') }}</p>
+                  <div class="preview-gallery sample compact"><i *ngIf="pluginSetting(section, 'showRsvp')">RSVP<br>Confirmado</i><i *ngIf="pluginSetting(section, 'showPass')">Pase<br>Mesa 5</i><i *ngIf="pluginSetting(section, 'showAlbum')">Fotos<br>2</i><i *ngIf="pluginSetting(section, 'showSongs')">Canciones<br>1</i><i *ngIf="pluginSetting(section, 'showDedications')">Mensajes<br>1</i></div>
+                  <i class="preview-button">{{ pluginSetting(section, 'primaryButtonText') || 'Ver toda mi actividad' }}</i>
+                </div>
+
                 <div *ngSwitchCase="'countdown'" class="preview-countdown">
                   <small>{{ pluginSetting(section, 'eyebrow') || 'Falta poco' }}</small><h2>{{ section.title || 'Cuenta regresiva' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
                   <div *ngIf="!countdownPreview.isOver; else editorCountdownOver" class="countdown-cells"><span><b>{{ countdownPreview.days }}</b>Días</span><span><b>{{ countdownPreview.hours }}</b>Horas</span><span><b>{{ countdownPreview.minutes }}</b>Minutos</span><span><b>{{ countdownPreview.seconds }}</b>Segundos</span></div>
@@ -559,6 +565,15 @@
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showSeat')" (ngModelChange)="setPluginSetting(section, 'showSeat', $event)" type="checkbox"> Mostrar asiento</label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showCompanions')" (ngModelChange)="setPluginSetting(section, 'showCompanions', $event)" type="checkbox"> Mostrar acompañantes</label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showQr')" (ngModelChange)="setPluginSetting(section, 'showQr', $event)" type="checkbox"> Mostrar código QR</label>
+                </ng-container>
+                <ng-container *ngSwitchCase="'guestActivity'">
+                  <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
+                  <label>Botón del centro completo<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showRsvp')" (ngModelChange)="setPluginSetting(section, 'showRsvp', $event)" type="checkbox"> Mostrar RSVP</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showPass')" (ngModelChange)="setPluginSetting(section, 'showPass', $event)" type="checkbox"> Mostrar pase y mesa</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showAlbum')" (ngModelChange)="setPluginSetting(section, 'showAlbum', $event)" type="checkbox"> Mostrar fotografías</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showSongs')" (ngModelChange)="setPluginSetting(section, 'showSongs', $event)" type="checkbox"> Mostrar canciones</label>
+                  <label class="toggle"><input [ngModel]="pluginSetting(section, 'showDedications')" (ngModelChange)="setPluginSetting(section, 'showDedications', $event)" type="checkbox"> Mostrar dedicatorias</label>
                 </ng-container>
                 <ng-container *ngSwitchCase="'countdown'"><label>Mensaje al finalizar<input [ngModel]="pluginSetting(section, 'expiredText')" (ngModelChange)="setPluginSetting(section, 'expiredText', $event)" type="text" maxlength="120"></label></ng-container>
                 <ng-container *ngSwitchCase="'locations'"><label>Texto del botón<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label>Máximo de ubicaciones<input [ngModel]="pluginSetting(section, 'locationLimit')" (ngModelChange)="setPluginSetting(section, 'locationLimit', +$event)" type="number" min="0" max="20"><span>0 muestra todas</span></label></ng-container>

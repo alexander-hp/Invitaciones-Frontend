@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
-import { DedicationModel, EventModel, GuestAccessResponse, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
+import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
 @Component({
@@ -68,6 +68,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
+  guestActivity?: ExternalGuestStatusResponse;
+  guestActivityLoading = false;
+  private guestSessionToken = '';
+  private guestActivityTimer?: ReturnType<typeof setInterval>;
   companionNamesText = '';
   customAnswers: Record<string, string | boolean> = {};
   dedication = { publicName: '', message: '', type: 'dedication' };
@@ -135,6 +139,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
+    if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
     if (this.audioRef) {
       this.audioRef.pause();
     }
@@ -238,6 +243,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.invitation = invitation;
     if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
     this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
+    this.restoreGuestActivitySession(slug);
 
     //console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
     //console.log('🎵 [PublicInvitation] content:', invitation?.content);
@@ -987,10 +993,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.error = '';
     this.success = '';
     this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
-      next: ({ guest }) => {
+      next: ({ guest, guestSessionToken }) => {
         this.isOpeningVipEnvelope = true;
         setTimeout(() => {
           this.verifiedGuest = guest;
+          this.setGuestActivitySession(this.invitation!.slug, guestSessionToken);
           this.rsvp.name = guest.name;
           this.rsvp.email = guest.email || this.guestAccessEmail;
           if (!guest.email && this.guestAccessPhone) this.rsvp.phoneNationalNumber = this.guestAccessPhone.replace(/\D/g, '');
@@ -1019,6 +1026,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   resetGuestAccess(): void {
+    if (this.invitation) sessionStorage.removeItem(this.guestSessionStorageKey(this.invitation.slug));
+    if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
+    this.guestSessionToken = '';
+    this.guestActivity = undefined;
     this.verifiedGuest = undefined;
     this.guestAccessPhone = '';
     this.guestAccessEmail = '';
@@ -1035,6 +1046,54 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   submitRsvp(): void {
     this.submit();
+  }
+
+  openGuestActivity(): void {
+    if (!this.invitation) return;
+    window.location.assign(`/new/i/${encodeURIComponent(this.invitation.slug)}/my-activity`);
+  }
+
+  private guestSessionStorageKey(slug: string): string {
+    return `kyndra_guest_session_${slug}`;
+  }
+
+  private setGuestActivitySession(slug: string, token?: string): void {
+    if (!token) return;
+    this.guestSessionToken = token;
+    sessionStorage.setItem(this.guestSessionStorageKey(slug), token);
+    this.loadGuestActivity();
+    if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
+    this.guestActivityTimer = setInterval(() => this.loadGuestActivity(false), 15000);
+  }
+
+  private restoreGuestActivitySession(slug: string): void {
+    const token = sessionStorage.getItem(this.guestSessionStorageKey(slug)) || '';
+    if (!token) return;
+    this.guestSessionToken = token;
+    this.loadGuestActivity();
+    if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
+    this.guestActivityTimer = setInterval(() => this.loadGuestActivity(false), 15000);
+  }
+
+  private loadGuestActivity(showLoading = true): void {
+    if (!this.invitation || !this.guestSessionToken) return;
+    if (showLoading) this.guestActivityLoading = true;
+    this.api.getInvitationGuestStatus(this.invitation.slug, this.guestSessionToken).subscribe({
+      next: (activity) => {
+        this.guestActivity = activity;
+        this.verifiedGuest = activity.guest;
+        this.guestActivityLoading = false;
+      },
+      error: (error) => {
+        this.guestActivityLoading = false;
+        if (error.status === 401 || error.status === 403) {
+          sessionStorage.removeItem(this.guestSessionStorageKey(this.invitation!.slug));
+          this.guestSessionToken = '';
+          this.guestActivity = undefined;
+          if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
+        }
+      }
+    });
   }
 
   submitVisualRsvp(data: {
@@ -1920,8 +1979,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (!this.invitation || !token) return;
     this.checkingGuest = true;
     this.api.getGuestByToken(this.invitation.slug, token).subscribe({
-      next: ({ guest }) => {
+      next: ({ guest, guestSessionToken }) => {
         this.verifiedGuest = guest;
+        this.setGuestActivitySession(this.invitation!.slug, guestSessionToken);
         this.rsvp.name = guest.name;
         this.rsvp.email = guest.email || '';
         this.success = `¡Hola ${guest.name}! Tu pase personalizado está listo.`;

@@ -38,6 +38,7 @@ import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.
 import { DocumentationComponent } from './features/documentation/documentation.component';
 import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
+import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
@@ -84,6 +85,7 @@ const routes: Routes = [
   { path: 'new/check-in/:token', component: NewCheckInStaffComponent },
   { path: 'new/embed/:portalSlug/:widget', component: NewExternalEmbedComponent },
   { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
+  { path: 'new/i/:slug/my-activity', component: GuestActivityComponent },
   { path: 'new/i/:slug', component: NewPublicInvitationComponent },
   { path: 'new/guia', component: NewUserGuideComponent, canActivate: [AuthGuard] },
   { path: 'new/documentacion', component: DocumentationComponent, canActivate: [AdminGuard] },

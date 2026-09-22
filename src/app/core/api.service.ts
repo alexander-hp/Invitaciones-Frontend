@@ -550,6 +550,12 @@ export class ApiService {
     return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 
+  getInvitationGuestStatus(slug: string, guestSessionToken: string): Observable<ExternalGuestStatusResponse> {
+    return this.http.get<ExternalGuestStatusResponse>(`${this.apiUrl}/invitations/public/${slug}/my-status`, {
+      headers: { Authorization: `Bearer ${guestSessionToken}` }
+    });
+  }
+
   getGuestByToken(slug: string, token: string): Observable<GuestAccessResponse> {
     return this.http.get<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-token/${encodeURIComponent(token)}`);
   }

@@ -103,6 +103,7 @@ import { EventHeaderComponent } from './core/event-header/event-header.component
 import { EventBookWidgetComponent } from './shared/components/event-book-widget/event-book-widget.component';
 import { ImageDropzoneComponent } from './shared/components/image-dropzone/image-dropzone.component';
 import { VisualInvitationRendererComponent } from './shared/components/visual-invitation-renderer/visual-invitation-renderer.component';
+import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
 
 @NgModule({
   declarations: [
@@ -113,6 +114,7 @@ import { VisualInvitationRendererComponent } from './shared/components/visual-in
     EventBookWidgetComponent,
     ImageDropzoneComponent,
     VisualInvitationRendererComponent,
+    GuestActivityComponent,
     DocumentationComponent,
     UnauthorizedComponent,
     CheckInStaffComponent,

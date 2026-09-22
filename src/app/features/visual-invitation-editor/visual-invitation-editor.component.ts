@@ -231,6 +231,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   readonly pluginCatalog = [
     { type: 'rsvp', icon: '✓', label: 'Confirmación RSVP' },
     { type: 'guestPass', icon: '▦', label: 'Mi mesa y pase' },
+    { type: 'guestActivity', icon: '◎', label: 'Mi pase y actividad' },
     { type: 'countdown', icon: '◷', label: 'Cuenta regresiva' },
     { type: 'locations', icon: '⌖', label: 'Ubicación y mapa' },
     { type: 'gifts', icon: '⌑', label: 'Mesa de regalos' },
@@ -265,6 +266,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { value: '', label: 'Enlace personalizado' },
     { value: 'section:rsvp', label: 'Ir a confirmación RSVP' },
     { value: 'section:guestPass', label: 'Ir a mi mesa y pase' },
+    { value: 'section:guestActivity', label: 'Ir a mi actividad' },
     { value: 'section:countdown', label: 'Ir a cuenta regresiva' },
     { value: 'section:locations', label: 'Ir a ubicación y mapa' },
     { value: 'section:gifts', label: 'Ir a mesa de regalos' },
@@ -1778,7 +1780,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isConfigurablePlugin(type: string): boolean {
-    return ['rsvp', 'guestPass', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs', 'gallery', 'itinerary', 'dressCode', 'lodging'].includes(type);
+    return ['rsvp', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs', 'gallery', 'itinerary', 'dressCode', 'lodging'].includes(type);
   }
 
   get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
@@ -2266,6 +2268,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const common: Record<string, string | number | boolean> = { eyebrow: '', introText: '', primaryButtonText: '' };
     if (type === 'rsvp') return { ...common, eyebrow: 'Confirmación', introText: '', primaryButtonText: 'Enviar confirmación', identifyButtonText: 'Continuar', showDietary: true, showMessage: true };
     if (type === 'guestPass') return { ...common, eyebrow: 'Acceso personal', introText: 'Presenta este pase al ingresar.', identifyButtonText: 'Ver mi pase', showGuestName: true, showGroup: true, showTable: true, showSeat: true, showCompanions: true, showQr: true };
+    if (type === 'guestActivity') return { ...common, eyebrow: 'Tu espacio', introText: 'Consulta tu confirmación, pase y envíos sin salir de la invitación.', identifyButtonText: 'Ver mi actividad', primaryButtonText: 'Ver toda mi actividad', showRsvp: true, showPass: true, showAlbum: true, showSongs: true, showDedications: true };
     if (type === 'countdown') return { ...common, eyebrow: 'Falta poco', introText: '', expiredText: 'El gran día llegó' };
     if (type === 'locations') return { ...common, eyebrow: 'Cómo llegar', introText: '', primaryButtonText: 'Abrir mapa', locationLimit: 0 };
     if (type === 'gifts') return { ...common, eyebrow: 'Un detalle opcional', introText: '', primaryButtonText: 'Abrir mesa', envelopeButtonText: 'Copiar datos', showRegistry: true, showEnvelope: true };
@@ -2431,7 +2434,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private isFunctionalType(type: string): boolean {
-    return ['locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
+    return ['locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
   }
 
   private layerTypeLabel(type: VisualLayerType): string {

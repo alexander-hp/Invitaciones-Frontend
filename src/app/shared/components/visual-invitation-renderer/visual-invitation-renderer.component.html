@@ -146,6 +146,30 @@
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Música') }}</small><h2>{{ section.title || 'Pide una canción' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <form (ngSubmit)="sendSong()"><label>{{ pluginSetting(section, 'songLabel', 'Canción o enlace') }}<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label *ngIf="pluginSetting(section, 'showSourceUrl', true)">Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label *ngIf="pluginSetting(section, 'showArtist', true)">Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label *ngIf="pluginSetting(section, 'showDedication', true)">Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">{{ pluginSetting(section, 'primaryButtonText', 'Enviar al DJ') }}</button></form><p class="feedback" *ngIf="songRequestMessage">{{ songRequestMessage }}</p>
     </div>
+
+    <div class="functional-module activity-module" *ngIf="section.type === 'guestActivity'">
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Tu espacio') }}</small>
+      <h2>{{ section.title || 'Mi pase y actividad' }}</h2>
+      <p class="module-intro">{{ pluginSetting(section, 'introText', 'Consulta tu confirmación, pase y envíos sin salir de la invitación.') }}</p>
+      <ng-container *ngIf="verifiedGuest; else activityIdentification">
+        <p class="verified">Hola, <strong>{{ verifiedGuest.name }}</strong></p>
+        <div class="activity-summary" [class.is-loading]="guestActivityLoading">
+          <article *ngIf="pluginSetting(section, 'showRsvp', true)"><span>RSVP</span><strong>{{ activityRsvpLabel() }}</strong></article>
+          <article *ngIf="pluginSetting(section, 'showPass', true)"><span>Pase</span><strong>{{ verifiedGuest.tableName || 'Sin mesa asignada' }}</strong></article>
+          <article *ngIf="pluginSetting(section, 'showAlbum', true)"><span>Fotografías</span><strong>{{ activityCount('album') }}</strong></article>
+          <article *ngIf="pluginSetting(section, 'showSongs', true)"><span>Canciones</span><strong>{{ activityCount('songs') }}</strong></article>
+          <article *ngIf="pluginSetting(section, 'showDedications', true)"><span>Dedicatorias</span><strong>{{ activityCount('dedications') }}</strong></article>
+        </div>
+        <button type="button" (click)="openGuestActivity.emit()">{{ pluginSetting(section, 'primaryButtonText', 'Ver toda mi actividad') }}</button>
+      </ng-container>
+      <ng-template #activityIdentification>
+        <form (ngSubmit)="verifyGuestAccess.emit({email: guestEmail, phone: guestPhone})">
+          <label>Correo<input [(ngModel)]="guestEmail" name="activityGuestEmail" type="email"></label>
+          <label>Teléfono<input [(ngModel)]="guestPhone" name="activityGuestPhone" type="tel"></label>
+          <button type="submit" [disabled]="checkingGuest">{{ pluginSetting(section, 'identifyButtonText', 'Ver mi actividad') }}</button>
+        </form>
+      </ng-template>
+    </div>
   </section>
 </main>
 <ng-template #emptyDesign><div class="empty-design">Esta invitación aún no tiene un diseño visual.</div></ng-template>
