@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AlbumAssetModel, EventAccessSession, GuestModel, SongRequestModel, SongRequestStatus } from '../../core/models';
+import { AlbumAssetModel, EventAccessSession, GuestModel, SongRequestModel, SongRequestPriority, SongRequestStatus } from '../../core/models';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 
 @Component({
@@ -95,9 +95,6 @@ export class NewEventAccessComponent implements OnInit {
     this.error = '';
     this.api.getEventAccessSession(this.token).subscribe({
       next: (session) => {
-        if (session && session.songRequests) {
-          session.songRequests.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
-        }
         this.session = session;
         this.loading = false;
       },
@@ -333,6 +330,18 @@ export class NewEventAccessComponent implements OnInit {
         }
         this.message = `Estado actualizado a ${status}.`;
       }
+    });
+  }
+
+  updateSongPriority(request: SongRequestModel, priority: SongRequestPriority): void {
+    const requestId = request._id || request.id || '';
+    if (!requestId) return;
+    this.api.updateEventAccessSong(this.token, requestId, { priority }).subscribe({
+      next: () => {
+        this.showSuccess(`Prioridad de "${request.title}" actualizada.`);
+        this.load();
+      },
+      error: (err) => this.showError(err.error?.message || 'No se pudo actualizar la prioridad.')
     });
   }
 

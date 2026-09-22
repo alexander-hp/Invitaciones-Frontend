@@ -909,6 +909,7 @@ export interface GuestAccessResponse {
 }
 
 export type SongRequestStatus = 'pending' | 'approved' | 'rejected' | 'played';
+export type SongRequestPriority = 'high' | 'normal';
 export type SongPromotionTarget = 'global' | 'hero' | 'story' | 'locations' | 'itinerary' | 'dressCode' | 'rsvp' | 'giftRegistry' | 'digitalEnvelope' | 'lodging' | 'gallery' | 'guestAlbum' | 'dedications' | 'songRequests';
 
 export interface SongPromotionPayload {
@@ -937,6 +938,10 @@ export interface SongRequestModel {
   previewUrl?: string;
   durationMs?: number;
   sortOrder?: number;
+  priority?: SongRequestPriority;
+  prioritySource?: 'auto' | 'manual';
+  priorityReason?: string;
+  queuePosition?: number;
   status: SongRequestStatus;
   reviewedAt?: string;
   playedAt?: string;

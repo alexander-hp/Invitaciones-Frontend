@@ -62,6 +62,7 @@ import {
   SocialLoginPayload,
   SongRequestPayload,
   SongRequestModel,
+  SongRequestPriority,
   SongRequestStatus,
   SongPromotionPayload,
   SongLookupResponse,
@@ -321,7 +322,7 @@ export class ApiService {
     );
   }
 
-  updateSongRequest(eventId: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
+  updateSongRequest(eventId: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number; priority?: SongRequestPriority }): Observable<{ songRequest: SongRequestModel }> {
     const body = typeof payload === 'string' ? { status: payload } : payload;
     return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/events/${eventId}/song-requests/${songRequestId}`, body);
   }
@@ -443,7 +444,7 @@ export class ApiService {
     return this.http.post<{ asset: AlbumAssetModel }>(`${this.apiUrl}/event-access/${token}/album`, formData);
   }
 
-  updateEventAccessSong(token: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number }): Observable<{ songRequest: SongRequestModel }> {
+  updateEventAccessSong(token: string, songRequestId: string, payload: SongRequestStatus | { status?: SongRequestStatus; sortOrder?: number; priority?: SongRequestPriority }): Observable<{ songRequest: SongRequestModel }> {
     const body = typeof payload === 'string' ? { status: payload } : payload;
     return this.http.patch<{ songRequest: SongRequestModel }>(`${this.apiUrl}/event-access/${token}/song-requests/${songRequestId}`, body);
   }

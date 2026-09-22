@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/cor
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../../../core/api.service';
-import { SongPromotionPayload, SongPromotionTarget, SongRequestModel, SongRequestStatus } from '../../../../core/models';
+import { SongPromotionPayload, SongPromotionTarget, SongRequestModel, SongRequestPriority, SongRequestStatus } from '../../../../core/models';
 
 export interface YouTubeSearchResult {
   title: string;
@@ -453,6 +453,18 @@ export class EventDjTabComponent implements OnInit, OnChanges {
       error: err => {
         this.showErrorToast(err?.error?.message || 'Error al actualizar estado de la canción');
       }
+    });
+  }
+
+  updateSongPriority(sr: SongRequestModel, priority: SongRequestPriority): void {
+    const srId = sr._id || sr.id;
+    if (!srId) return;
+    this.apiService.updateSongRequest(this.eventId, srId, { priority }).subscribe({
+      next: () => {
+        this.showSuccessToast(`Prioridad de "${sr.title}" actualizada.`);
+        this.loadSongRequests();
+      },
+      error: err => this.showErrorToast(err?.error?.message || 'No se pudo actualizar la prioridad.')
     });
   }
 

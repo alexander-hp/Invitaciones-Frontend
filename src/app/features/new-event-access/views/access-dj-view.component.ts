@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../../core/api.service';
-import { EventAccessSession, SongRequestModel, SongRequestStatus } from '../../../core/models';
+import { EventAccessSession, SongRequestModel, SongRequestPriority, SongRequestStatus } from '../../../core/models';
 
 export interface YouTubeSearchResult {
   title: string;
@@ -20,6 +20,7 @@ export class AccessDjViewComponent implements OnChanges {
   @Input() session!: EventAccessSession;
   @Output() playSongEvent = new EventEmitter<SongRequestModel | YouTubeSearchResult>();
   @Output() updateSongEvent = new EventEmitter<{ song: SongRequestModel; status: SongRequestStatus }>();
+  @Output() prioritySongEvent = new EventEmitter<{ song: SongRequestModel; priority: SongRequestPriority }>();
   @Output() moveSongEvent = new EventEmitter<{ song: SongRequestModel; direction: -1 | 1 }>();
   @Output() addSongEvent = new EventEmitter<{ title: string; artist: string; sourceUrl: string; dedication: string }>();
 
@@ -351,6 +352,10 @@ export class AccessDjViewComponent implements OnChanges {
 
   updateSongStatus(song: SongRequestModel, status: SongRequestStatus): void {
     this.updateSongEvent.emit({ song, status });
+  }
+
+  updateSongPriority(song: SongRequestModel, priority: SongRequestPriority): void {
+    this.prioritySongEvent.emit({ song, priority });
   }
 
   moveSong(song: SongRequestModel, direction: -1 | 1): void {

@@ -65,6 +65,7 @@
         [session]="session"
         (playSongEvent)="playSong($event)"
         (updateSongEvent)="updateSongRequest($event.song, $event.status)"
+        (prioritySongEvent)="updateSongPriority($event.song, $event.priority)"
         (moveSongEvent)="moveSong($event.song, $event.direction)"
         (addSongEvent)="addSong($event)">
       </app-access-dj-view>
