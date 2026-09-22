@@ -37,24 +37,24 @@
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'itinerary'">
-      <h2>{{ section.title || 'Itinerario' }}</h2>
-      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p>{{ item.description }}</p></div></article></div>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Programa') }}</small><h2>{{ section.title || 'Itinerario' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ item.description }}</p></div></article></div>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'dressCode'">
-      <h2>{{ section.title || 'Código de vestimenta' }}</h2>
-      <img class="dress-image" *ngIf="invitation?.content?.dressCodeImageUrl" [src]="invitation?.content?.dressCodeImageUrl" alt="Referencia de vestimenta">
-      <h3>{{ invitation?.content?.dressCode }}</h3><p>{{ invitation?.content?.dressCodeDescription }}</p>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Vestimenta') }}</small><h2>{{ section.title || 'Código de vestimenta' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <img class="dress-image" *ngIf="pluginSetting(section, 'showImage', true) && invitation?.content?.dressCodeImageUrl" [src]="invitation?.content?.dressCodeImageUrl" alt="Referencia de vestimenta">
+      <h3>{{ invitation?.content?.dressCode }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ invitation?.content?.dressCodeDescription }}</p>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'gallery'">
-      <h2>{{ section.title || 'Galería' }}</h2>
-      <div class="gallery-grid" *ngIf="galleryDisplayMode !== 'carousel'" [class.gallery-list]="galleryDisplayMode === 'list'">
-        <figure *ngFor="let image of galleryItems"><button type="button" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" loading="lazy" decoding="async"></button><figcaption *ngIf="invitation?.content?.gallerySettings?.showCaptions !== false && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Momentos') }}</small><h2>{{ section.title || 'Galería' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <div class="gallery-grid" *ngIf="galleryDisplayModeFor(section) !== 'carousel'" [class.gallery-list]="galleryDisplayModeFor(section) === 'list'">
+        <figure *ngFor="let image of galleryItems"><button type="button" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" [style.height.px]="galleryImageHeight(section)" loading="lazy" decoding="async"></button><figcaption *ngIf="galleryCaptionsFor(section) && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
       </div>
-      <div class="gallery-carousel" *ngIf="galleryDisplayMode === 'carousel' && galleryItems[galleryIndex] as image">
+      <div class="gallery-carousel" *ngIf="galleryDisplayModeFor(section) === 'carousel' && galleryItems[galleryIndex] as image">
         <button type="button" class="gallery-arrow previous" aria-label="Fotografía anterior" (click)="moveGallery(-1)">‹</button>
-        <figure><button type="button" class="gallery-current" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" decoding="async"></button><figcaption *ngIf="invitation?.content?.gallerySettings?.showCaptions !== false && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
+        <figure><button type="button" class="gallery-current" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" [style.height.px]="galleryImageHeight(section)" decoding="async"></button><figcaption *ngIf="galleryCaptionsFor(section) && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
         <button type="button" class="gallery-arrow next" aria-label="Fotografía siguiente" (click)="moveGallery(1)">›</button>
         <span class="gallery-count">{{ galleryIndex + 1 }} / {{ galleryItems.length }}</span>
       </div>
@@ -75,18 +75,18 @@
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'lodging'">
-      <h2>{{ section.title || 'Hospedaje recomendado' }}</h2>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Para invitados foráneos') }}</small><h2>{{ section.title || 'Hospedaje recomendado' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="module-grid lodging-grid">
         <article *ngFor="let hotel of invitation?.content?.lodging">
           <img *ngIf="hotel.imageUrl" [src]="hotel.imageUrl" [alt]="hotel.name || 'Hospedaje recomendado'" loading="lazy" decoding="async">
           <h3>{{ hotel.name || 'Hospedaje recomendado' }}</h3>
           <p *ngIf="hotel.description">{{ hotel.description }}</p><p *ngIf="hotel.address">{{ hotel.address }}</p>
-          <p *ngIf="hotel.priceLabel"><strong>{{ hotel.priceLabel }}</strong></p>
-          <p *ngIf="hotel.agreementLabel || hotel.discountCode"><strong>{{ hotel.agreementLabel }}</strong><ng-container *ngIf="hotel.discountCode"> · Código {{ hotel.discountCode }}</ng-container></p>
-          <p *ngIf="hotel.discountDescription">{{ hotel.discountDescription }}</p>
-          <div class="lodging-services" *ngIf="hotel.services?.length"><span *ngFor="let service of hotel.services">{{ service }}</span></div>
+          <p *ngIf="pluginSetting(section, 'showPrice', true) && hotel.priceLabel"><strong>{{ hotel.priceLabel }}</strong></p>
+          <p *ngIf="pluginSetting(section, 'showDiscount', true) && (hotel.agreementLabel || hotel.discountCode)"><strong>{{ hotel.agreementLabel }}</strong><ng-container *ngIf="hotel.discountCode"> · Código {{ hotel.discountCode }}</ng-container></p>
+          <p *ngIf="pluginSetting(section, 'showDiscount', true) && hotel.discountDescription">{{ hotel.discountDescription }}</p>
+          <div class="lodging-services" *ngIf="pluginSetting(section, 'showServices', true) && hotel.services?.length"><span *ngFor="let service of hotel.services">{{ service }}</span></div>
           <p *ngIf="hotel.notes">{{ hotel.notes }}</p>
-          <div class="module-actions"><a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noopener">Reservar</a><a *ngIf="hotel.mapUrl" [href]="hotel.mapUrl" target="_blank" rel="noopener">Mapa</a><a *ngIf="hotel.phone" [href]="'tel:' + hotel.phone">Llamar</a></div>
+          <div class="module-actions"><a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Reservar') }}</a><a *ngIf="pluginSetting(section, 'showMap', true) && hotel.mapUrl" [href]="hotel.mapUrl" target="_blank" rel="noopener">Mapa</a><a *ngIf="pluginSetting(section, 'showPhone', true) && hotel.phone" [href]="'tel:' + hotel.phone">Llamar</a></div>
         </article>
       </div>
     </div>

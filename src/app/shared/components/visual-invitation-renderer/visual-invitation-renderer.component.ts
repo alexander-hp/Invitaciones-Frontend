@@ -65,6 +65,20 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     return this.invitation?.content?.gallerySettings?.displayMode || 'grid';
   }
 
+  galleryDisplayModeFor(section: VisualInvitationSection): 'grid' | 'list' | 'carousel' {
+    const mode = String(this.pluginSetting(section, 'displayMode', 'inherit'));
+    return mode === 'grid' || mode === 'list' || mode === 'carousel' ? mode : this.galleryDisplayMode;
+  }
+
+  galleryCaptionsFor(section: VisualInvitationSection): boolean {
+    const configured = section.pluginSettings?.['showCaptions'];
+    return configured === undefined ? this.invitation?.content?.gallerySettings?.showCaptions !== false : Boolean(configured);
+  }
+
+  galleryImageHeight(section: VisualInvitationSection): number {
+    return Math.max(100, Math.min(480, Number(this.pluginSetting(section, 'imageHeight', 170)) || 170));
+  }
+
   ngOnChanges(): void {
     this.galleryIndex = Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
     this.configureGalleryTimer();
@@ -321,7 +335,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   private configureGalleryTimer(): void {
     this.clearGalleryTimer();
     const settings = this.invitation?.content?.gallerySettings;
-    if (this.galleryDisplayMode !== 'carousel' || !settings?.autoplay || this.galleryItems.length < 2) return;
+    const carouselEnabled = this.sections.some((section) => section.type === 'gallery' && this.galleryDisplayModeFor(section) === 'carousel');
+    if (!carouselEnabled || !settings?.autoplay || this.galleryItems.length < 2) return;
     const seconds = Math.max(2, Math.min(30, Number(settings.intervalSeconds || 5)));
     this.galleryTimer = setInterval(() => this.moveGallery(1), seconds * 1000);
   }

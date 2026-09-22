@@ -225,9 +225,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   readonly sectionCatalog = [
     { type: 'custom', label: 'Sección vacía' },
-    { type: 'story', label: 'Nuestra historia' },
-    { type: 'itinerary', label: 'Itinerario' }, { type: 'dressCode', label: 'Vestimenta' },
-    { type: 'lodging', label: 'Hospedaje recomendado' }, { type: 'gallery', label: 'Galería' }
+    { type: 'story', label: 'Nuestra historia' }
   ];
 
   readonly pluginCatalog = [
@@ -238,7 +236,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { type: 'gifts', icon: '⌑', label: 'Mesa de regalos' },
     { type: 'album', icon: '▧', label: 'Álbum colectivo' },
     { type: 'dedications', icon: '“”', label: 'Dedicatorias' },
-    { type: 'songs', icon: '♪', label: 'Peticiones al DJ' }
+    { type: 'songs', icon: '♪', label: 'Peticiones al DJ' },
+    { type: 'gallery', icon: '▥', label: 'Galería' },
+    { type: 'itinerary', icon: '≡', label: 'Itinerario' },
+    { type: 'dressCode', icon: '♢', label: 'Vestimenta' },
+    { type: 'lodging', icon: '⌂', label: 'Hospedaje' }
   ];
 
   readonly componentCatalog = [
@@ -266,6 +268,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { value: 'section:countdown', label: 'Ir a cuenta regresiva' },
     { value: 'section:locations', label: 'Ir a ubicación y mapa' },
     { value: 'section:gifts', label: 'Ir a mesa de regalos' },
+    { value: 'section:gallery', label: 'Ir a galería' },
+    { value: 'section:itinerary', label: 'Ir a itinerario' },
+    { value: 'section:dressCode', label: 'Ir a vestimenta' },
+    { value: 'section:lodging', label: 'Ir a hospedaje' },
     { value: 'section:album', label: 'Ir al álbum colectivo' },
     { value: 'section:dedications', label: 'Ir a dedicatorias' },
     { value: 'section:songs', label: 'Ir a peticiones al DJ' },
@@ -1764,8 +1770,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.autosaveState = 'Cambios pendientes';
   }
 
+  galleryPreviewMode(section: VisualInvitationSection): 'grid' | 'list' | 'carousel' {
+    const configured = String(this.pluginSetting(section, 'displayMode'));
+    return configured === 'grid' || configured === 'list' || configured === 'carousel'
+      ? configured
+      : (this.invitation?.content?.gallerySettings?.displayMode || 'grid');
+  }
+
   isConfigurablePlugin(type: string): boolean {
-    return ['rsvp', 'guestPass', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs'].includes(type);
+    return ['rsvp', 'guestPass', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs', 'gallery', 'itinerary', 'dressCode', 'lodging'].includes(type);
   }
 
   get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
@@ -2259,6 +2272,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'album') return { ...common, eyebrow: 'Álbum colectivo', introText: 'Comparte tus mejores momentos con los anfitriones.', primaryButtonText: 'Seleccionar fotografía', showGallery: true };
     if (type === 'dedications') return { ...common, eyebrow: 'Libro de mensajes', introText: '', primaryButtonText: 'Enviar dedicatoria', publicNameLabel: 'Tu nombre', messageLabel: 'Mensaje', showWall: true };
     if (type === 'songs') return { ...common, eyebrow: 'Música', introText: '', primaryButtonText: 'Enviar al DJ', songLabel: 'Canción o enlace', showSourceUrl: true, showArtist: true, showDedication: true };
+    if (type === 'gallery') return { ...common, eyebrow: 'Momentos', introText: '', displayMode: 'inherit', showCaptions: true, imageHeight: 170 };
+    if (type === 'itinerary') return { ...common, eyebrow: 'Programa', introText: '', showDescription: true };
+    if (type === 'dressCode') return { ...common, eyebrow: 'Vestimenta', introText: '', showImage: true, showDescription: true };
+    if (type === 'lodging') return { ...common, eyebrow: 'Para invitados foráneos', introText: '', primaryButtonText: 'Reservar', showPrice: true, showDiscount: true, showServices: true, showMap: true, showPhone: true };
     return {};
   }
 
