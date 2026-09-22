@@ -61,15 +61,17 @@
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'gifts'">
-      <h2>{{ section.title || 'Mesa de regalos' }}</h2><p>{{ invitation?.content?.giftSettings?.introText }}</p>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Un detalle opcional') }}</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText') || invitation?.content?.giftSettings?.introText }}</p>
       <div class="module-grid">
-        <article *ngFor="let gift of invitation?.content?.giftRegistry">
-          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" loading="lazy" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">Abrir mesa</a>
-        </article>
-        <article *ngIf="invitation?.content?.digitalEnvelope as envelope">
+        <ng-container *ngIf="pluginSetting(section, 'showRegistry', true)"><article *ngFor="let gift of invitation?.content?.giftRegistry">
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" loading="lazy" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mesa') }}</a>
+        </article></ng-container>
+        <article *ngIf="pluginSetting(section, 'showEnvelope', true) && invitation?.content?.digitalEnvelope as envelope">
           <h3>Sobre digital</h3><p>{{ envelope.bank }} · {{ envelope.holder }}</p><p *ngIf="envelope.clabe"><strong>CLABE:</strong> {{ envelope.clabe }}</p><p *ngIf="envelope.account"><strong>Cuenta:</strong> {{ envelope.account }}</p><p>{{ envelope.note }}</p>
+          <button *ngIf="envelope.clabe || envelope.account" type="button" (click)="copyGiftValue(envelope.clabe || envelope.account)">{{ pluginSetting(section, 'envelopeButtonText', 'Copiar datos') }}</button>
         </article>
       </div>
+      <p class="feedback success" *ngIf="giftCopyMessage">{{ giftCopyMessage }}</p>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'lodging'">
@@ -127,22 +129,22 @@
     </div>
 
     <div class="functional-module form-module" *ngIf="section.type === 'album'">
-      <h2>{{ section.title || 'Álbum colectivo' }}</h2><p>Comparte tus mejores momentos con los anfitriones.</p>
-      <label class="file-button">Seleccionar fotografía<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Álbum colectivo') }}</small><h2>{{ section.title || 'Álbum colectivo' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText', 'Comparte tus mejores momentos con los anfitriones.') }}</p>
+      <label class="file-button">{{ pluginSetting(section, 'primaryButtonText', 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
       <p class="feedback" *ngIf="albumMessage">{{ albumMessage }}</p>
-      <div class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button></div>
+      <div *ngIf="pluginSetting(section, 'showGallery', true)" class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button></div>
     </div>
 
     <div class="functional-module form-module" *ngIf="section.type === 'dedications'">
-      <h2>{{ section.title || 'Dedicatorias' }}</h2>
-      <form (ngSubmit)="sendDedication()"><label>Tu nombre<input [(ngModel)]="dedication.publicName" name="visualDedicationName"></label><label>Mensaje<textarea [(ngModel)]="dedication.message" name="visualDedicationMessage" rows="4" required></textarea></label><button type="submit" [disabled]="sending">Enviar dedicatoria</button></form>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Libro de mensajes') }}</small><h2>{{ section.title || 'Dedicatorias' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <form (ngSubmit)="sendDedication()"><label>{{ pluginSetting(section, 'publicNameLabel', 'Tu nombre') }}<input [(ngModel)]="dedication.publicName" name="visualDedicationName"></label><label>{{ pluginSetting(section, 'messageLabel', 'Mensaje') }}<textarea [(ngModel)]="dedication.message" name="visualDedicationMessage" rows="4" required></textarea></label><button type="submit" [disabled]="sending">{{ pluginSetting(section, 'primaryButtonText', 'Enviar dedicatoria') }}</button></form>
       <p class="feedback" *ngIf="dedicationMessage">{{ dedicationMessage }}</p>
-      <div class="dedication-list"><blockquote *ngFor="let item of dedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
+      <div *ngIf="pluginSetting(section, 'showWall', true)" class="dedication-list"><blockquote *ngFor="let item of dedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
     </div>
 
     <div class="functional-module form-module" *ngIf="section.type === 'songs'">
-      <h2>{{ section.title || 'Pide una canción' }}</h2>
-      <form (ngSubmit)="sendSong()"><label>Canción o enlace<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label>Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label>Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label>Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">Enviar al DJ</button></form>
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Música') }}</small><h2>{{ section.title || 'Pide una canción' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+      <form (ngSubmit)="sendSong()"><label>{{ pluginSetting(section, 'songLabel', 'Canción o enlace') }}<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label *ngIf="pluginSetting(section, 'showSourceUrl', true)">Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label *ngIf="pluginSetting(section, 'showArtist', true)">Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label *ngIf="pluginSetting(section, 'showDedication', true)">Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">{{ pluginSetting(section, 'primaryButtonText', 'Enviar al DJ') }}</button></form><p class="feedback" *ngIf="songRequestMessage">{{ songRequestMessage }}</p>
     </div>
   </section>
 </main>

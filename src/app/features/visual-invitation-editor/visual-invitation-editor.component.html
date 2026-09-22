@@ -239,10 +239,10 @@
                 </div>
 
                 <div *ngSwitchCase="'gifts'">
-                  <small>Un detalle opcional</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="preview-intro">{{ invitation?.content?.giftSettings?.introText || 'Tu presencia es lo más importante para nosotros.' }}</p>
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Un detalle opcional' }}</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="preview-intro">{{ pluginSetting(section, 'introText') || invitation?.content?.giftSettings?.introText || 'Tu presencia es lo más importante para nosotros.' }}</p>
                   <div class="preview-card-grid gifts">
-                    <article *ngFor="let gift of (invitation?.content?.giftRegistry?.length ? invitation?.content?.giftRegistry : previewGifts)"><b>⌑</b><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><i class="preview-button">Abrir mesa</i></article>
-                    <article *ngIf="invitation?.content?.digitalEnvelope as envelope"><b>▣</b><h3>Sobre digital</h3><p>{{ envelope.bank || 'Datos bancarios' }} · {{ envelope.holder || 'Titular' }}</p><span *ngIf="envelope.clabe">CLABE {{ envelope.clabe }}</span><i class="preview-button">Copiar datos</i></article>
+                    <ng-container *ngIf="pluginSetting(section, 'showRegistry')"><article *ngFor="let gift of (invitation?.content?.giftRegistry?.length ? invitation?.content?.giftRegistry : previewGifts)"><b>⌑</b><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><i class="preview-button">{{ pluginSetting(section, 'primaryButtonText') || 'Abrir mesa' }}</i></article></ng-container>
+                    <article *ngIf="pluginSetting(section, 'showEnvelope') && invitation?.content?.digitalEnvelope as envelope"><b>▣</b><h3>Sobre digital</h3><p>{{ envelope.bank || 'Datos bancarios' }} · {{ envelope.holder || 'Titular' }}</p><span *ngIf="envelope.clabe">CLABE {{ envelope.clabe }}</span><i class="preview-button">{{ pluginSetting(section, 'envelopeButtonText') || 'Copiar datos' }}</i></article>
                   </div>
                 </div>
 
@@ -279,19 +279,19 @@
                 </div>
 
                 <div *ngSwitchCase="'album'" class="preview-form">
-                  <small>Álbum colectivo</small><h2>{{ section.title || 'Comparte tus fotografías' }}</h2><p class="preview-intro">Los invitados podrán subir sus mejores momentos.</p>
-                  <div class="preview-upload"><b>＋</b><span>Seleccionar fotografía</span></div><div class="preview-gallery sample compact"><i>▧</i><i>▧</i><i>▧</i></div>
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Álbum colectivo' }}</small><h2>{{ section.title || 'Comparte tus fotografías' }}</h2><p class="preview-intro">{{ pluginSetting(section, 'introText') }}</p>
+                  <div class="preview-upload"><b>＋</b><span>{{ pluginSetting(section, 'primaryButtonText') || 'Seleccionar fotografía' }}</span></div><div *ngIf="pluginSetting(section, 'showGallery')" class="preview-gallery sample compact"><i>▧</i><i>▧</i><i>▧</i></div>
                 </div>
 
                 <div *ngSwitchCase="'dedications'" class="preview-form">
-                  <small>Libro de mensajes</small><h2>{{ section.title || 'Dedicatorias' }}</h2>
-                  <div class="preview-fields"><label>Tu nombre<span>Nombre</span></label><label>Mensaje<span>Escribe una dedicatoria...</span></label></div><i class="preview-button">Enviar dedicatoria</i>
-                  <div class="preview-quotes"><blockquote *ngFor="let item of previewDedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Libro de mensajes' }}</small><h2>{{ section.title || 'Dedicatorias' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+                  <div class="preview-fields"><label>{{ pluginSetting(section, 'publicNameLabel') || 'Tu nombre' }}<span>Nombre</span></label><label>{{ pluginSetting(section, 'messageLabel') || 'Mensaje' }}<span>Escribe una dedicatoria...</span></label></div><i class="preview-button">{{ pluginSetting(section, 'primaryButtonText') || 'Enviar dedicatoria' }}</i>
+                  <div *ngIf="pluginSetting(section, 'showWall')" class="preview-quotes"><blockquote *ngFor="let item of previewDedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
                 </div>
 
                 <div *ngSwitchCase="'songs'" class="preview-form">
-                  <small>Música</small><h2>{{ section.title || 'Pide una canción al DJ' }}</h2>
-                  <div class="preview-fields"><label>Canción o enlace<span>Spotify, YouTube o nombre</span></label><label>Artista<span>Nombre del artista</span></label><label>Dedicatoria<span>Mensaje opcional</span></label></div><i class="preview-button">Enviar al DJ</i>
+                  <small>{{ pluginSetting(section, 'eyebrow') || 'Música' }}</small><h2>{{ section.title || 'Pide una canción al DJ' }}</h2><p class="preview-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
+                  <div class="preview-fields"><label>{{ pluginSetting(section, 'songLabel') || 'Canción o enlace' }}<span>Spotify, YouTube o nombre</span></label><label *ngIf="pluginSetting(section, 'showArtist')">Artista<span>Nombre del artista</span></label><label *ngIf="pluginSetting(section, 'showDedication')">Dedicatoria<span>Mensaje opcional</span></label></div><i class="preview-button">{{ pluginSetting(section, 'primaryButtonText') || 'Enviar al DJ' }}</i>
                 </div>
 
                 <div *ngSwitchDefault class="preview-centered"><small>Módulo del evento</small><h2>{{ section.title }}</h2><p>Esta sección utilizará los datos configurados en la invitación.</p></div>
@@ -562,6 +562,10 @@
                 </ng-container>
                 <ng-container *ngSwitchCase="'countdown'"><label>Mensaje al finalizar<input [ngModel]="pluginSetting(section, 'expiredText')" (ngModelChange)="setPluginSetting(section, 'expiredText', $event)" type="text" maxlength="120"></label></ng-container>
                 <ng-container *ngSwitchCase="'locations'"><label>Texto del botón<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label>Máximo de ubicaciones<input [ngModel]="pluginSetting(section, 'locationLimit')" (ngModelChange)="setPluginSetting(section, 'locationLimit', +$event)" type="number" min="0" max="20"><span>0 muestra todas</span></label></ng-container>
+                <ng-container *ngSwitchCase="'gifts'"><label>Botón de la mesa<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label>Botón del sobre<input [ngModel]="pluginSetting(section, 'envelopeButtonText')" (ngModelChange)="setPluginSetting(section, 'envelopeButtonText', $event)" type="text" maxlength="80"></label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showRegistry')" (ngModelChange)="setPluginSetting(section, 'showRegistry', $event)" type="checkbox"> Mostrar mesas de regalos</label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showEnvelope')" (ngModelChange)="setPluginSetting(section, 'showEnvelope', $event)" type="checkbox"> Mostrar sobre digital</label></ng-container>
+                <ng-container *ngSwitchCase="'album'"><label>Botón para subir<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showGallery')" (ngModelChange)="setPluginSetting(section, 'showGallery', $event)" type="checkbox"> Mostrar fotografías aprobadas</label></ng-container>
+                <ng-container *ngSwitchCase="'dedications'"><label>Etiqueta de nombre<input [ngModel]="pluginSetting(section, 'publicNameLabel')" (ngModelChange)="setPluginSetting(section, 'publicNameLabel', $event)" type="text" maxlength="80"></label><label>Etiqueta de mensaje<input [ngModel]="pluginSetting(section, 'messageLabel')" (ngModelChange)="setPluginSetting(section, 'messageLabel', $event)" type="text" maxlength="80"></label><label>Botón para enviar<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showWall')" (ngModelChange)="setPluginSetting(section, 'showWall', $event)" type="checkbox"> Mostrar muro aprobado</label></ng-container>
+                <ng-container *ngSwitchCase="'songs'"><label>Etiqueta de canción<input [ngModel]="pluginSetting(section, 'songLabel')" (ngModelChange)="setPluginSetting(section, 'songLabel', $event)" type="text" maxlength="80"></label><label>Botón para enviar<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showSourceUrl')" (ngModelChange)="setPluginSetting(section, 'showSourceUrl', $event)" type="checkbox"> Mostrar enlace Spotify/YouTube</label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showArtist')" (ngModelChange)="setPluginSetting(section, 'showArtist', $event)" type="checkbox"> Mostrar artista</label><label class="toggle"><input [ngModel]="pluginSetting(section, 'showDedication')" (ngModelChange)="setPluginSetting(section, 'showDedication', $event)" type="checkbox"> Mostrar dedicatoria</label></ng-container>
               </ng-container>
             </section>
             <section class="module-content-editor" *ngIf="invitation as currentInvitation" [ngSwitch]="section.type">

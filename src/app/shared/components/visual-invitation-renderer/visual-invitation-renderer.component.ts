@@ -25,6 +25,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Input() success = '';
   @Input() albumMessage = '';
   @Input() dedicationMessage = '';
+  @Input() songRequestMessage = '';
 
   @Output() verifyGuestAccess = new EventEmitter<{ email: string; phone: string }>();
   @Output() submitRsvp = new EventEmitter<any>();
@@ -38,6 +39,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   rsvp = { name: '', email: '', response: 'confirmed', companions: 0, dietaryRestrictions: '', message: '' };
   dedication = { publicName: '', message: '' };
   song = { title: '', artist: '', dedication: '', sourceUrl: '' };
+  giftCopyMessage = '';
   galleryIndex = 0;
   countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: false };
   private galleryTimer?: ReturnType<typeof setInterval>;
@@ -293,6 +295,22 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   sendSong(): void {
     if (!this.song.title.trim() && !this.song.sourceUrl.trim()) return;
     this.requestSong.emit({ ...this.song });
+  }
+
+  copyGiftValue(value?: string): void {
+    if (!value) return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(value).then(() => { this.giftCopyMessage = 'Datos copiados.'; }).catch(() => { this.giftCopyMessage = 'No fue posible copiar automáticamente.'; });
+      return;
+    }
+    const input = document.createElement('textarea');
+    input.value = value;
+    input.style.position = 'fixed';
+    input.style.opacity = '0';
+    document.body.appendChild(input);
+    input.select();
+    this.giftCopyMessage = document.execCommand('copy') ? 'Datos copiados.' : 'No fue posible copiar automáticamente.';
+    input.remove();
   }
 
   private detectDevice(): 'mobile' | 'tablet' | 'desktop' {

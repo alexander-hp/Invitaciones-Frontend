@@ -227,16 +227,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { type: 'custom', label: 'Sección vacía' },
     { type: 'story', label: 'Nuestra historia' },
     { type: 'itinerary', label: 'Itinerario' }, { type: 'dressCode', label: 'Vestimenta' },
-    { type: 'gifts', label: 'Mesa de regalos' }, { type: 'lodging', label: 'Hospedaje recomendado' },
-    { type: 'gallery', label: 'Galería' }, { type: 'album', label: 'Álbum colectivo' },
-    { type: 'dedications', label: 'Dedicatorias' }, { type: 'songs', label: 'Peticiones al DJ' }
+    { type: 'lodging', label: 'Hospedaje recomendado' }, { type: 'gallery', label: 'Galería' }
   ];
 
   readonly pluginCatalog = [
     { type: 'rsvp', icon: '✓', label: 'Confirmación RSVP' },
     { type: 'guestPass', icon: '▦', label: 'Mi mesa y pase' },
     { type: 'countdown', icon: '◷', label: 'Cuenta regresiva' },
-    { type: 'locations', icon: '⌖', label: 'Ubicación y mapa' }
+    { type: 'locations', icon: '⌖', label: 'Ubicación y mapa' },
+    { type: 'gifts', icon: '⌑', label: 'Mesa de regalos' },
+    { type: 'album', icon: '▧', label: 'Álbum colectivo' },
+    { type: 'dedications', icon: '“”', label: 'Dedicatorias' },
+    { type: 'songs', icon: '♪', label: 'Peticiones al DJ' }
   ];
 
   readonly componentCatalog = [
@@ -263,6 +265,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { value: 'section:guestPass', label: 'Ir a mi mesa y pase' },
     { value: 'section:countdown', label: 'Ir a cuenta regresiva' },
     { value: 'section:locations', label: 'Ir a ubicación y mapa' },
+    { value: 'section:gifts', label: 'Ir a mesa de regalos' },
     { value: 'section:album', label: 'Ir al álbum colectivo' },
     { value: 'section:dedications', label: 'Ir a dedicatorias' },
     { value: 'section:songs', label: 'Ir a peticiones al DJ' },
@@ -1762,7 +1765,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isConfigurablePlugin(type: string): boolean {
-    return ['rsvp', 'guestPass', 'countdown', 'locations'].includes(type);
+    return ['rsvp', 'guestPass', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs'].includes(type);
   }
 
   get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
@@ -2252,6 +2255,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'guestPass') return { ...common, eyebrow: 'Acceso personal', introText: 'Presenta este pase al ingresar.', identifyButtonText: 'Ver mi pase', showGuestName: true, showGroup: true, showTable: true, showSeat: true, showCompanions: true, showQr: true };
     if (type === 'countdown') return { ...common, eyebrow: 'Falta poco', introText: '', expiredText: 'El gran día llegó' };
     if (type === 'locations') return { ...common, eyebrow: 'Cómo llegar', introText: '', primaryButtonText: 'Abrir mapa', locationLimit: 0 };
+    if (type === 'gifts') return { ...common, eyebrow: 'Un detalle opcional', introText: '', primaryButtonText: 'Abrir mesa', envelopeButtonText: 'Copiar datos', showRegistry: true, showEnvelope: true };
+    if (type === 'album') return { ...common, eyebrow: 'Álbum colectivo', introText: 'Comparte tus mejores momentos con los anfitriones.', primaryButtonText: 'Seleccionar fotografía', showGallery: true };
+    if (type === 'dedications') return { ...common, eyebrow: 'Libro de mensajes', introText: '', primaryButtonText: 'Enviar dedicatoria', publicNameLabel: 'Tu nombre', messageLabel: 'Mensaje', showWall: true };
+    if (type === 'songs') return { ...common, eyebrow: 'Música', introText: '', primaryButtonText: 'Enviar al DJ', songLabel: 'Canción o enlace', showSourceUrl: true, showArtist: true, showDedication: true };
     return {};
   }
 
