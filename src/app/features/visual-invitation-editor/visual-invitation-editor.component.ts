@@ -10,6 +10,7 @@ import {
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, WebImageSearchResult
 } from '../../core/models';
+import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -238,6 +239,25 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'quote', icon: '“”', label: 'Cita' },
     { key: 'cta', icon: '→', label: 'Botón CTA' },
     { key: 'divider', icon: '—', label: 'Separador' }
+  ];
+
+  readonly dynamicVariables = VISUAL_TEMPLATE_VARIABLES;
+  readonly smartComponentCatalog = [
+    { key: 'smartGreeting', icon: 'Aa', label: 'Saludo personal' },
+    { key: 'smartPass', icon: '#', label: 'Mesa y pase' },
+    { key: 'smartEvent', icon: '◷', label: 'Fecha y lugar' },
+    { key: 'smartRsvp', icon: '✓', label: 'Botón RSVP' },
+    { key: 'smartMap', icon: '⌖', label: 'Botón mapa' },
+    { key: 'smartCalendar', icon: '▦', label: 'Agendar evento' }
+  ];
+  readonly buttonActions = [
+    { value: '', label: 'Enlace personalizado' },
+    { value: 'section:rsvp', label: 'Ir a confirmación RSVP' },
+    { value: 'section:album', label: 'Ir al álbum colectivo' },
+    { value: 'section:dedications', label: 'Ir a dedicatorias' },
+    { value: 'section:songs', label: 'Ir a peticiones al DJ' },
+    { value: 'map', label: 'Abrir ubicación principal' },
+    { value: 'calendar', label: 'Agregar al calendario' }
   ];
 
   readonly previewLocations = [
@@ -871,7 +891,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     } else if (key === 'cta') {
       const button = this.newLayer('button', 'Confirmar asistencia', 25, 38, 50, 13, 17);
       button.name = 'Llamada a la acción';
+      button.binding = 'section:rsvp';
       button.style = { ...button.style, color: '#ffffff', backgroundColor: '#262321', borderRadius: 4, fontWeight: 700 };
+      layers = [button];
+    } else if (key === 'smartGreeting') {
+      const greeting = this.newLayer('text', 'Hola, {{guest.name}}', 10, 30, 80, 15, 34);
+      greeting.name = 'Saludo personalizado';
+      layers = [greeting];
+    } else if (key === 'smartPass') {
+      const table = this.newLayer('text', '{{guest.table}} · Lugar {{guest.seat}}', 13, 35, 74, 10, 20);
+      const companions = this.newLayer('text', 'Pase para {{guest.companions}} acompañante(s)', 18, 49, 64, 8, 14);
+      table.name = 'Mesa y lugar';
+      companions.name = 'Acompañantes permitidos';
+      layers = [table, companions];
+    } else if (key === 'smartEvent') {
+      const date = this.newLayer('text', '{{event.date}} · {{event.time}}', 12, 31, 76, 10, 22);
+      const venue = this.newLayer('text', '{{event.venue}}\n{{event.address}}', 15, 45, 70, 16, 16);
+      date.name = 'Fecha y hora del evento';
+      venue.name = 'Lugar del evento';
+      layers = [date, venue];
+    } else if (key === 'smartRsvp' || key === 'smartMap' || key === 'smartCalendar') {
+      const definitions: Record<string, { text: string; name: string; binding: string }> = {
+        smartRsvp: { text: 'Confirmar asistencia', name: 'Botón RSVP', binding: 'section:rsvp' },
+        smartMap: { text: 'Cómo llegar', name: 'Botón de ubicación', binding: 'map' },
+        smartCalendar: { text: 'Agregar al calendario', name: 'Botón de calendario', binding: 'calendar' }
+      };
+      const definition = definitions[key];
+      const button = this.newLayer('button', definition.text, 24, 40, 52, 12, 16);
+      button.name = definition.name;
+      button.binding = definition.binding;
       layers = [button];
     } else if (key === 'divider') {
       const divider = this.newLayer('shape', '', 15, 48, 70, 1);
@@ -889,6 +937,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection(layers.map((layer) => layer.id));
     this.inspectorView = 'properties';
     this.flash('Bloque agregado. Puedes moverlo y personalizarlo.');
+  }
+
+  resolveLayerText(layer: VisualInvitationLayer): string {
+    return resolveVisualTemplateText(layer.text, visualTemplateContext(this.invitation, this.event, undefined, true));
+  }
+
+  insertDynamicVariable(layer: VisualInvitationLayer, token: string): void {
+    if (!['text', 'button'].includes(layer.type)) return;
+    this.recordHistory();
+    const value = `{{${token}}}`;
+    const current = String(layer.text || '');
+    layer.text = current ? `${current}${/\s$/.test(current) ? '' : ' '}${value}` : value;
+    this.autosaveState = 'Cambios pendientes';
   }
 
   beginPaletteDrag(event: DragEvent, item: PaletteDragItem): void {

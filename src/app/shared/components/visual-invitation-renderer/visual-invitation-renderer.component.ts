@@ -3,6 +3,7 @@ import {
   DedicationModel, EventModel, GuestAccessResponse, InvitationGalleryItem, InvitationModel,
   VisualInvitationLayer, VisualInvitationSection
 } from '../../../core/models';
+import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
 
 @Component({
   selector: 'app-visual-invitation-renderer',
@@ -84,6 +85,48 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   trackVisualById(index: number, item: VisualInvitationSection | VisualInvitationLayer): string | number {
     return item.id || index;
+  }
+
+  resolveLayerText(layer: VisualInvitationLayer): string {
+    return resolveVisualTemplateText(layer.text, visualTemplateContext(this.invitation, this.event, this.verifiedGuest));
+  }
+
+  handleLayerAction(layer: VisualInvitationLayer): void {
+    const action = String(layer.binding || '');
+    if (action.startsWith('section:')) {
+      const target = action.slice('section:'.length);
+      document.querySelector(`[data-section="${target}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (action === 'map') {
+      const location = this.invitation?.content?.locations?.find((item) => item.mapUrl)?.mapUrl || this.event?.venue?.mapUrl;
+      if (location) window.open(location, '_blank', 'noopener');
+      return;
+    }
+    if (action === 'calendar') {
+      const url = this.calendarUrl();
+      if (url) window.open(url, '_blank', 'noopener');
+      return;
+    }
+    if (/^https?:\/\//i.test(String(layer.url || ''))) window.open(layer.url, '_blank', 'noopener');
+  }
+
+  private calendarUrl(): string {
+    if (!this.event?.date) return '';
+    const dateOnly = this.event.date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const start = dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12)
+      : new Date(this.event.date);
+    if (this.event.time && /^\d{2}:\d{2}/.test(this.event.time)) {
+      const [hours, minutes] = this.event.time.split(':').map(Number);
+      start.setHours(hours, minutes, 0, 0);
+    }
+    if (Number.isNaN(start.getTime())) return '';
+    const end = new Date(start.getTime() + 4 * 60 * 60 * 1000);
+    const pad = (value: number) => String(value).padStart(2, '0');
+    const format = (date: Date) => `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+    const location = [this.event.venue?.name, this.event.venue?.address].filter(Boolean).join(', ');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(this.event.title)}&dates=${format(start)}/${format(end)}&location=${encodeURIComponent(location)}`;
   }
 
   designThemeStyle(): Record<string, string> {

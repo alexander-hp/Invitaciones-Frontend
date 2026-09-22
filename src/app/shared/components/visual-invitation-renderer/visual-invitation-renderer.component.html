@@ -10,7 +10,8 @@
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
   <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
-      <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
+      <div *ngIf="layer.type === 'text'">{{ resolveLayerText(layer) }}</div>
+      <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
       <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
       <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
       <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline preload="metadata"></video>

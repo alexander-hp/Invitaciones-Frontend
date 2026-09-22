@@ -30,7 +30,7 @@
               <section *ngFor="let section of design.sections; trackBy: trackVisualById" class="responsive-preview-section" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)">
                 <div *ngIf="section.layers.length === 0" class="responsive-module-placeholder"><strong>{{ section.title }}</strong><span>{{ section.type === 'custom' ? 'Sección vacía' : 'Módulo del evento' }}</span></div>
                 <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="responsive-preview-layer" [ngStyle]="responsivePreviewLayerStyle(layer, preview.key)">
-                  <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ layer.text }}</div>
+                  <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ resolveLayerText(layer) }}</div>
                   <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                   <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Imagen</div>
                   <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
@@ -131,6 +131,12 @@
       <h2>Bloques listos</h2>
       <div class="component-catalog">
         <button *ngFor="let component of componentCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'component', key:component.key})" (dragend)="endPaletteDrag()" (click)="addComponent(component.key)">
+          <b>{{ component.icon }}</b><span>{{ component.label }}</span>
+        </button>
+      </div>
+      <h2>Datos inteligentes</h2>
+      <div class="component-catalog smart-component-catalog">
+        <button *ngFor="let component of smartComponentCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'component', key:component.key})" (dragend)="endPaletteDrag()" (click)="addComponent(component.key)">
           <b>{{ component.icon }}</b><span>{{ component.label }}</span>
         </button>
       </div>
@@ -285,7 +291,7 @@
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
               <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
-                <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ layer.text }}</div>
+                <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ resolveLayerText(layer) }}</div>
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
                 <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
@@ -379,6 +385,14 @@
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
         <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
+        <div *ngIf="layer.type === 'text' || layer.type === 'button'" class="dynamic-variable-picker">
+          <span>Insertar dato</span>
+          <div><button *ngFor="let variable of dynamicVariables" type="button" [title]="variable.group + ': ' + variable.example" (click)="insertDynamicVariable(layer, variable.token)">{{ variable.label }}</button></div>
+        </div>
+        <ng-container *ngIf="layer.type === 'button'">
+          <label>Acción<select [(ngModel)]="layer.binding"><option *ngFor="let action of buttonActions" [value]="action.value">{{ action.label }}</option></select></label>
+          <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
+        </ng-container>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
         <div class="transform-settings" *ngIf="selectedLayout as layout">
