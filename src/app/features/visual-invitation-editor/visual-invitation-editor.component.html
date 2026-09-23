@@ -240,6 +240,13 @@
           <button *ngFor="let control of giftControlCatalog(giftSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'itinerary' && selectedSection as itinerarySection">
+        <h2>Piezas del itinerario</h2>
+        <p class="hint">Cada actividad conserva su hora, texto y enlace configurado. Puedes mover, ocultar o estilizar cada pieza sin perder la acción de ubicación.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of itineraryControlCatalog(itinerarySection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -748,8 +755,11 @@
                   <article *ngFor="let item of currentInvitation.content.itinerary; let index=index" cdkDrag>
                     <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Actividad {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('itinerary', index)">×</button></header>
                     <label>Hora<input [(ngModel)]="item.time" (focus)="beginContentEdit()" type="time"></label>
+                    <label>Icono<input [(ngModel)]="item.icon" (focus)="beginContentEdit()" type="text" maxlength="80" placeholder="Ej. 💍, ♪ o Cena"></label>
                     <label>Actividad<input [(ngModel)]="item.title" (focus)="beginContentEdit()" type="text" placeholder="Ceremonia"></label>
                     <label>Descripción<textarea [(ngModel)]="item.description" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                    <label>Texto de ubicación<input [(ngModel)]="item.locationLabel" (focus)="beginContentEdit()" type="text" maxlength="160" placeholder="Ver ceremonia en el mapa"></label>
+                    <label>Enlace de ubicación<input [(ngModel)]="item.locationUrl" (focus)="beginContentEdit()" type="url" placeholder="https://maps.google.com/..."></label>
                   </article>
                 </div>
                 <button type="button" class="content-add" (click)="addContentItem('itinerary')">+ Agregar actividad</button>

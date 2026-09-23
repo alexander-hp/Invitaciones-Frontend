@@ -925,6 +925,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'countdown') this.ensureCountdownCanvasLayers(section);
     if (type === 'locations') this.ensureLocationCanvasLayers(section);
     if (type === 'gifts') this.ensureGiftCanvasLayers(section);
+    if (type === 'itinerary') this.ensureItineraryCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -2019,7 +2020,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.');
     });
   }
 
@@ -2047,7 +2048,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('itinerary.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
   }
 
   isDynamicImageOutputLayer(layer: VisualInvitationLayer): boolean {
@@ -2063,6 +2064,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   editorLayerText(layer: VisualInvitationLayer): string {
     const binding = String(layer.binding || '');
+    const itineraryMatch = binding.match(/^itinerary\.(\d+)\.(icon|time|title|description)$/);
+    if (itineraryMatch) {
+      const item = this.itinerarySourceData()[Number(itineraryMatch[1])];
+      const key = itineraryMatch[2] as 'icon' | 'time' | 'title' | 'description';
+      return item?.[key] || layer.text || '';
+    }
     const locationMatch = binding.match(/^location\.(\d+)\.(name|address|notes|details)$/);
     if (locationMatch) {
       const location = this.locationSourceData()[Number(locationMatch[1])];
@@ -2108,7 +2115,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2153,10 +2160,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createLocationLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'gifts') {
       const definition = this.giftLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createGiftLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.itineraryLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createItineraryLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2208,6 +2220,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.giftLayerDefinitions(section)
       .filter((definition) => /^(gift\.\d+\.(image|title|store|note|open)|envelope\.(bank|holder|account|clabe|note|qr|copyAccount|copyClabe|feedback))$/.test(definition.binding))
       .map((definition) => ({ binding: definition.binding, label: definition.label, icon: definition.type === 'image' ? '▧' : definition.type === 'button' ? '→' : 'Aa' }));
+  }
+
+  itineraryControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+    const icons: Record<string, string> = { icon: '★', time: '◷', title: 'Aa', description: '≡', location: '⌖' };
+    return this.itineraryLayerDefinitions(section)
+      .filter((definition) => /^itinerary\.\d+\.(icon|time|title|description|location)$/.test(definition.binding))
+      .map((definition) => {
+        const match = definition.binding.match(/^itinerary\.(\d+)\.([^.]+)$/);
+        return { binding: definition.binding, label: `Actividad ${Number(match?.[1] || 0) + 1}: ${definition.label}`, icon: icons[match?.[2] || 'title'] || '+' };
+      });
   }
 
   beginContentEdit(): void {
@@ -2333,7 +2355,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const section = this.design.sections.find((item) => item.type === 'locations');
       if (section && this.hasNativeFunctionalLayers(section)) this.ensureLocationCanvasLayers(section, [index]);
     }
-    if (key === 'itinerary') this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
+    if (key === 'itinerary') {
+      const index = this.invitation.content.itinerary!.length;
+      this.invitation.content.itinerary!.push({ time: '', title: '', description: '', icon: '', locationLabel: '', locationUrl: '' });
+      const section = this.design.sections.find((item) => item.type === 'itinerary');
+      if (section && this.hasNativeFunctionalLayers(section)) this.ensureItineraryCanvasLayers(section, [index]);
+    }
     if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
     if (key === 'lodging') this.invitation.content.lodging!.push(this.emptyLodgingItem(this.invitation.content.lodging!.length));
@@ -2725,6 +2752,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       if (section.type === 'gifts') {
         this.ensureGiftCanvasLayers(section);
+      }
+      if (section.type === 'itinerary') {
+        this.ensureItineraryCanvasLayers(section);
       }
     }
   }
@@ -3180,6 +3210,63 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = zIndex;
     if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#ffffff', borderRadius: 8 };
+    if (definition.type === 'shape') {
+      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    return layer;
+  }
+
+  private itinerarySourceData(): Array<{ time?: string; title?: string; description?: string; icon?: string; locationLabel?: string; locationUrl?: string }> {
+    const configured = this.invitation?.content?.itinerary || [];
+    return configured.length ? configured : this.previewItinerary;
+  }
+
+  private itineraryLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const itinerary = this.itinerarySourceData();
+    const requiredHeight = Math.max(760, 220 + Math.max(1, itinerary.length) * 190);
+    const pct = (pixels: number) => pixels / requiredHeight * 100;
+    const definitions: Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
+      { type: 'text', binding: 'display.itinerary.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Programa'), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
+      { type: 'text', binding: 'display.itinerary.title', label: section.title || 'Itinerario', x: 10, y: pct(68), width: 80, height: pct(64), fontSize: 34 },
+      { type: 'text', binding: 'display.itinerary.intro', label: String(this.pluginSetting(section, 'introText') || 'Estos son los momentos principales de nuestra celebración.'), x: 12, y: pct(136), width: 76, height: pct(42), fontSize: 14 }
+    ];
+    itinerary.forEach((item, index) => {
+      const topPx = 200 + index * 190;
+      const prefix = `itinerary.${index}`;
+      definitions.push(
+        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de actividad ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(160), fontSize: 14 },
+        { type: 'text', binding: `${prefix}.icon`, label: item.icon || '•', x: 12, y: pct(topPx + 22), width: 8, height: pct(40), fontSize: 25 },
+        { type: 'text', binding: `${prefix}.time`, label: item.time || 'Hora', x: 22, y: pct(topPx + 20), width: 18, height: pct(32), fontSize: 15 },
+        { type: 'text', binding: `${prefix}.title`, label: item.title || `Actividad ${index + 1}`, x: 42, y: pct(topPx + 18), width: 44, height: pct(38), fontSize: 21 },
+        { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción de la actividad', x: 22, y: pct(topPx + 66), width: 64, height: pct(42), fontSize: 13 },
+        { type: 'button', binding: `${prefix}.location`, label: item.locationLabel || 'Ver ubicación', x: 60, y: pct(topPx + 112), width: 26, height: pct(34), fontSize: 12 }
+      );
+    });
+    return definitions;
+  }
+
+  private ensureItineraryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
+    const hasItineraryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('display.itinerary.'));
+    if (!indexes?.length && hasItineraryLayers) return;
+    const requiredHeight = Math.max(760, 220 + Math.max(1, this.itinerarySourceData().length) * 190);
+    if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    const definitions = this.itineraryLayerDefinitions(section).filter((definition) => {
+      if (existing.has(definition.binding)) return false;
+      if (!indexes?.length) return true;
+      const match = definition.binding.match(/^itinerary\.(\d+)\./);
+      return Boolean(match && indexes.includes(Number(match[1])));
+    });
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...definitions.map((definition) => this.createItineraryLayer(definition, ++topZ)));
+  }
+
+  private createItineraryLayer(definition: ReturnType<typeof this.itineraryLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding;
+    layer.zIndex = zIndex;
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     if (definition.type === 'shape') {
       layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       layer.zIndex = Math.max(1, zIndex - 1);

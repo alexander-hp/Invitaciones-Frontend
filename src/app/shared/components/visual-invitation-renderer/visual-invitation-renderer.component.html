@@ -46,9 +46,19 @@
       </div>
     </div>
 
-    <div class="functional-module" *ngIf="section.type === 'itinerary'">
+    <div *ngIf="hasItineraryCanvasLayers(section)" class="rsvp-layer-form itinerary-layer-form">
+      <ng-container *ngFor="let layer of itineraryCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderItineraryLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.itinerary.')">{{ resolveLayerText(layer) }}</div>
+          <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('itinerary.')">{{ itineraryLayerText(layer) }}</div>
+          <a *ngIf="layer.binding?.endsWith('.location')" class="visual-action-button" [href]="itineraryLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'itinerary' && !hasItineraryCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Programa') }}</small><h2>{{ section.title || 'Itinerario' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
-      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ item.description }}</p></div></article></div>
+      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><span *ngIf="item.icon">{{ item.icon }}</span><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ item.description }}</p><a *ngIf="item.locationUrl" [href]="item.locationUrl" target="_blank" rel="noopener">{{ item.locationLabel || 'Ver ubicación' }}</a></div></article></div>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'dressCode'">

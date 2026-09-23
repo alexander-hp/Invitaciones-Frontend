@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -539,6 +539,48 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   private hasDigitalEnvelopeData(): boolean {
     const envelope = this.invitation?.content?.digitalEnvelope;
     return Boolean(envelope && (envelope.bank || envelope.holder || envelope.account || envelope.clabe || envelope.note || envelope.qrImageUrl));
+  }
+
+  itineraryCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('display.itinerary.'));
+  }
+
+  hasItineraryCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'itinerary' && this.itineraryCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderItineraryLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.itinerary.')) return true;
+    const parsed = this.itineraryLayerParts(binding);
+    const item = parsed ? this.invitation?.content?.itinerary?.[parsed.index] : undefined;
+    if (!parsed || !item) return false;
+    if (parsed.key === 'card') return true;
+    if (parsed.key === 'description' && this.pluginSetting(section, 'showDescription', true) === false) return false;
+    if (parsed.key === 'location') return Boolean(item.locationUrl);
+    return Boolean(this.itineraryLayerText(layer));
+  }
+
+  itineraryLayerText(layer: VisualInvitationLayer): string {
+    const parsed = this.itineraryLayerParts(String(layer.binding || ''));
+    const item = parsed ? this.invitation?.content?.itinerary?.[parsed.index] : undefined;
+    if (!parsed || !item) return '';
+    if (parsed.key === 'icon') return item.icon || '';
+    if (parsed.key === 'time') return item.time || '';
+    if (parsed.key === 'title') return item.title || '';
+    if (parsed.key === 'description') return item.description || '';
+    return layer.text || '';
+  }
+
+  itineraryLayerHref(layer: VisualInvitationLayer): string {
+    const parsed = this.itineraryLayerParts(String(layer.binding || ''));
+    return parsed?.key === 'location' ? this.invitation?.content?.itinerary?.[parsed.index]?.locationUrl || '' : '';
+  }
+
+  private itineraryLayerParts(binding: string): { index: number; key: string } | null {
+    const match = binding.match(/^itinerary\.(\d+)\.([^.]+)$/);
+    return match ? { index: Number(match[1]), key: match[2] } : null;
   }
 
   rsvpControlName(layer: VisualInvitationLayer): string {

@@ -561,7 +561,7 @@ export interface InvitationContent {
   gallery?: string[];
   galleryItems?: InvitationGalleryItem[];
   gallerySettings?: InvitationGallerySettings;
-  itinerary?: Array<{ time?: string; title?: string; description?: string }>;
+  itinerary?: Array<{ time?: string; title?: string; description?: string; icon?: string; locationLabel?: string; locationUrl?: string }>;
   locations?: InvitationLocation[];
   dressCode?: string;
   dressCodeDescription?: string;
