@@ -140,7 +140,21 @@
       </ng-template>
     </div>
 
-    <div class="functional-module form-module guest-pass-module" *ngIf="section.type === 'guestPass'">
+    <form *ngIf="hasGuestPassCanvasLayers(section)" class="rsvp-layer-form guest-pass-layer-form" (ngSubmit)="identifyGuest()">
+      <ng-container *ngFor="let layer of guestPassCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderGuestPassLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.guestPass.')">{{ resolveLayerText(layer) }}</div>
+          <label *ngIf="layer.binding === 'pass.email'" class="rsvp-layer-control"><input [(ngModel)]="guestEmail" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'correo@ejemplo.com')"></label>
+          <label *ngIf="layer.binding === 'pass.phone'" class="rsvp-layer-control"><input [(ngModel)]="guestPhone" [name]="rsvpControlName(layer)" type="tel" [attr.aria-label]="layer.text || 'Teléfono de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Número de teléfono')"></label>
+          <button *ngIf="layer.binding === 'pass.identify'" type="submit" class="visual-action-button" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : (layer.text || 'Ver mi pase') }}</button>
+          <button *ngIf="layer.binding === 'pass.qr'" type="button" class="native-pass-qr" (click)="openLightbox.emit(guestQrUrl)"><img [src]="guestQrUrl" alt="Código QR de acceso"></button>
+          <div *ngIf="['pass.name', 'pass.group', 'pass.table', 'pass.seat', 'pass.companions'].includes(layer.binding || '')">{{ guestPassLayerText(layer) }}</div>
+          <div *ngIf="layer.binding === 'pass.feedback'" class="rsvp-layer-feedback error">{{ error }}</div>
+        </div>
+      </ng-container>
+    </form>
+
+    <div class="functional-module form-module guest-pass-module" *ngIf="section.type === 'guestPass' && !hasGuestPassCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Acceso personal') }}</small><h2>{{ section.title || 'Mi mesa y pase' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <form *ngIf="!verifiedGuest" (ngSubmit)="identifyGuest()"><p>Identifícate con tu correo o teléfono para consultar tus datos.</p><label>Correo<input [(ngModel)]="guestEmail" name="visualPassEmail" type="email"></label><label>Teléfono<input [(ngModel)]="guestPhone" name="visualPassPhone" type="tel"></label><button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : pluginSetting(section, 'identifyButtonText', 'Ver mi pase') }}</button></form>
       <div *ngIf="verifiedGuest as guest" class="guest-pass-card">

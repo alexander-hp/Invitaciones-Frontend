@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -307,6 +307,40 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (layer.binding === 'album.feedback') return Boolean(this.albumMessage);
     if (layer.binding === 'album.gallery') return this.pluginSetting(section, 'showGallery', true) !== false;
     return true;
+  }
+
+  guestPassCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('display.guestPass.'));
+  }
+
+  hasGuestPassCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'guestPass' && this.guestPassCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderGuestPassLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.guestPass.')) return true;
+    if (binding === 'pass.feedback') return Boolean(this.error);
+    if (!this.verifiedGuest) return ['pass.email', 'pass.phone', 'pass.identify'].includes(binding);
+    if (binding === 'pass.name') return this.pluginSetting(section, 'showGuestName', true) !== false;
+    if (binding === 'pass.group') return this.pluginSetting(section, 'showGroup', true) !== false && Boolean(this.verifiedGuest.group || this.verifiedGuest.relationshipLabel);
+    if (binding === 'pass.table') return this.pluginSetting(section, 'showTable', true) !== false;
+    if (binding === 'pass.seat') return this.pluginSetting(section, 'showSeat', true) !== false && Boolean(this.verifiedGuest.seatLabel);
+    if (binding === 'pass.companions') return this.pluginSetting(section, 'showCompanions', true) !== false;
+    if (binding === 'pass.qr') return this.pluginSetting(section, 'showQr', true) !== false && Boolean(this.guestQrUrl);
+    return false;
+  }
+
+  guestPassLayerText(layer: VisualInvitationLayer): string {
+    const guest = this.verifiedGuest;
+    if (!guest) return '';
+    if (layer.binding === 'pass.name') return guest.name;
+    if (layer.binding === 'pass.group') return guest.group || guest.relationshipLabel || '';
+    if (layer.binding === 'pass.table') return guest.tableName || 'Mesa por asignar';
+    if (layer.binding === 'pass.seat') return guest.seatLabel ? `Lugar ${guest.seatLabel}` : '';
+    if (layer.binding === 'pass.companions') return `${guest.allowedCompanions || 0} acompañante(s)`;
+    return '';
   }
 
   rsvpControlName(layer: VisualInvitationLayer): string {
