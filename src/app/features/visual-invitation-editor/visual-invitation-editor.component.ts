@@ -923,6 +923,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'guestPass') this.ensureGuestPassCanvasLayers(section);
     if (type === 'guestActivity') this.ensureGuestActivityCanvasLayers(section);
     if (type === 'countdown') this.ensureCountdownCanvasLayers(section);
+    if (type === 'locations') this.ensureLocationCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -2017,7 +2018,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.');
     });
   }
 
@@ -2045,7 +2046,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
@@ -2064,7 +2065,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2099,10 +2100,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createGuestActivityLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'countdown') {
       const definition = this.countdownLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createCountdownLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.locationLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createLocationLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2136,6 +2142,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
       minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
     };
+  }
+
+  locationControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+    const icons: Record<string, string> = { name: 'Aa', address: '⌖', notes: '≡', details: '☰', map: '⌖', waze: 'W', phone: '☎', website: '↗' };
+    return this.locationLayerDefinitions(section)
+      .filter((definition) => /^location\.\d+\.(name|address|notes|details|map|waze|phone|website)$/.test(definition.binding))
+      .map((definition) => {
+        const match = definition.binding.match(/^location\.(\d+)\.([^.]+)$/);
+        const index = Number(match?.[1] || 0);
+        const key = match?.[2] || 'name';
+        return { binding: definition.binding, label: `Ubicación ${index + 1}: ${definition.label}`, icon: icons[key] || '+' };
+      });
   }
 
   beginContentEdit(): void {
@@ -2255,7 +2273,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   addContentItem(key: ContentListKey): void {
     if (!this.invitation) return;
     this.recordHistory();
-    if (key === 'locations') this.invitation.content.locations!.push({ type: 'venue', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '', schedule: [], priority: this.invitation.content.locations!.length });
+    if (key === 'locations') {
+      const index = this.invitation.content.locations!.length;
+      this.invitation.content.locations!.push({ type: 'venue', name: '', address: '', mapUrl: '', wazeUrl: '', notes: '', schedule: [], priority: index });
+      const section = this.design.sections.find((item) => item.type === 'locations');
+      if (section && this.hasNativeFunctionalLayers(section)) this.ensureLocationCanvasLayers(section, [index]);
+    }
     if (key === 'itinerary') this.invitation.content.itinerary!.push({ time: '', title: '', description: '' });
     if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
@@ -2637,6 +2660,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         section.height = Math.max(section.height, 760);
         this.ensureCountdownCanvasLayers(section);
       }
+      if (section.type === 'locations') {
+        this.ensureLocationCanvasLayers(section);
+      }
     }
   }
 
@@ -2941,6 +2967,88 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
+  private locationSourceData(): InvitationLocation[] {
+    const configured = this.invitation?.content?.locations || [];
+    if (configured.length) return configured;
+    if (this.event?.venue?.name || this.event?.venue?.address || this.event?.venue?.mapUrl) {
+      return [{ name: this.event.venue.name || 'Lugar del evento', address: this.event.venue.address || '', mapUrl: this.event.venue.mapUrl || '' }];
+    }
+    return this.previewLocations;
+  }
+
+  private locationLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const locations = this.locationSourceData();
+    const rows = Math.max(1, Math.ceil(locations.length / 2));
+    const requiredHeight = Math.max(760, 250 + rows * 300);
+    const pct = (pixels: number) => pixels / requiredHeight * 100;
+    const definitions: Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
+      { type: 'text', binding: 'display.locations.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Cómo llegar'), x: 15, y: pct(30), width: 70, height: pct(34), fontSize: 11 },
+      { type: 'text', binding: 'display.locations.title', label: section.title || 'Ubicaciones', x: 10, y: pct(72), width: 80, height: pct(70), fontSize: 34 },
+      { type: 'text', binding: 'display.locations.intro', label: String(this.pluginSetting(section, 'introText') || 'Consulta los datos y abre tu aplicación de navegación preferida.'), x: 12, y: pct(145), width: 76, height: pct(42), fontSize: 14 }
+    ];
+    locations.forEach((location, index) => {
+      const left = index % 2 === 0 ? 4 : 52;
+      const topPx = 210 + Math.floor(index / 2) * 300;
+      const prefix = `location.${index}`;
+      definitions.push(
+        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(270), fontSize: 14 },
+        { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 3, y: pct(topPx + 20), width: 38, height: pct(38), fontSize: 22 },
+        { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 64), width: 38, height: pct(38), fontSize: 13 },
+        { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 105), width: 38, height: pct(32), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.details`, label: 'Estacionamiento, transporte y horarios', x: left + 3, y: pct(topPx + 140), width: 38, height: pct(45), fontSize: 11 },
+        { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mapa'), x: left + 3, y: pct(topPx + 205), width: 17, height: pct(38), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 22, y: pct(topPx + 205), width: 9, height: pct(38), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 33, y: pct(topPx + 205), width: 8, height: pct(38), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.website`, label: 'Sitio web', x: left + 22, y: pct(topPx + 248), width: 19, height: pct(18), fontSize: 10 }
+      );
+    });
+    return definitions;
+  }
+
+  private ensureLocationCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
+    const hasLocationLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('display.locations.'));
+    if (!indexes?.length && hasLocationLayers) return;
+    const rows = Math.max(1, Math.ceil(this.locationSourceData().length / 2));
+    const requiredHeight = Math.max(760, 250 + rows * 300);
+    if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    const definitions = this.locationLayerDefinitions(section).filter((definition) => {
+      if (existing.has(definition.binding)) return false;
+      if (!indexes?.length) return true;
+      const match = definition.binding.match(/^location\.(\d+)\./);
+      return Boolean(match && indexes.includes(Number(match[1])));
+    });
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...definitions.map((definition) => this.createLocationLayer(definition, ++topZ)));
+  }
+
+  private resizeSectionPreservingLayerPixels(section: VisualInvitationSection, nextHeight: number): void {
+    const previousHeight = Math.max(1, section.height);
+    if (nextHeight === previousHeight) return;
+    const ratio = previousHeight / nextHeight;
+    for (const layer of section.layers) {
+      layer.y *= ratio;
+      layer.height *= ratio;
+      for (const layout of Object.values(layer.layouts || {})) {
+        if (!layout) continue;
+        layout.y *= ratio;
+        layout.height *= ratio;
+      }
+    }
+    section.height = nextHeight;
+  }
+
+  private createLocationLayer(definition: ReturnType<typeof this.locationLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding; layer.zIndex = zIndex;
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'shape') {
+      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    return layer;
+  }
+
   private createRsvpLayer(
     section: VisualInvitationSection,
     definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
@@ -3066,6 +3174,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         add('warning', `Sección vacía: ${section.title || section.type}`, 'Agrega contenido o desactiva esta sección.', section.id);
       }
       if (section.type === 'locations' && !content.locations?.length) add('warning', 'Ubicaciones sin datos', 'La sección está activa pero no contiene ubicaciones.', section.id);
+      if (section.type === 'locations' && content.locations?.length && content.locations.every((location) => !location.mapUrl && !location.wazeUrl)) add('warning', 'Ubicaciones sin navegación', 'Agrega un enlace de Google Maps o Waze para mostrar cómo llegar.', section.id);
       if (section.type === 'itinerary' && !content.itinerary?.length) add('warning', 'Itinerario vacío', 'Agrega actividades o desactiva esta sección.', section.id);
       if (section.type === 'gallery' && !content.gallery?.length) add('warning', 'Galería vacía', 'Agrega fotografías o desactiva esta sección.', section.id);
       if (section.type === 'gifts' && !content.giftRegistry?.length && !content.digitalEnvelope) add('warning', 'Mesa de regalos vacía', 'Agrega una mesa o sobre digital, o desactiva la sección.', section.id);

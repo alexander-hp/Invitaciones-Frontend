@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -401,6 +401,64 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (layer.binding === 'countdown.minutes') return String(this.countdown.minutes).padStart(2, '0');
     if (layer.binding === 'countdown.seconds') return String(this.countdown.seconds).padStart(2, '0');
     return this.resolveLayerText(layer);
+  }
+
+  locationCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('display.locations.'));
+  }
+
+  hasLocationCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'locations' && this.locationCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderLocationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.locations.')) return true;
+    const parsed = this.locationLayerParts(binding);
+    const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
+    if (!parsed || !location) return false;
+    if (parsed.key === 'card') return true;
+    if (parsed.key === 'details') return Boolean(location.parking || location.transport || location.accessibility || location.schedule?.length);
+    if (parsed.key === 'map') return Boolean(location.mapUrl);
+    if (parsed.key === 'waze') return Boolean(location.wazeUrl);
+    if (parsed.key === 'phone') return Boolean(location.phone);
+    if (parsed.key === 'website') return Boolean(location.websiteUrl);
+    return Boolean(this.locationLayerText(section, layer));
+  }
+
+  locationLayerText(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
+    const parsed = this.locationLayerParts(String(layer.binding || ''));
+    const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
+    if (!parsed || !location) return '';
+    if (parsed.key === 'name') return location.name || location.type || `Ubicación ${parsed.index + 1}`;
+    if (parsed.key === 'address') return location.address || '';
+    if (parsed.key === 'notes') return location.notes || '';
+    if (parsed.key === 'details') {
+      return [
+        location.parking ? `Estacionamiento: ${location.parking}` : '',
+        location.transport ? `Transporte: ${location.transport}` : '',
+        location.accessibility ? `Accesibilidad: ${location.accessibility}` : '',
+        ...(location.schedule || [])
+      ].filter(Boolean).join('\n');
+    }
+    return layer.text || '';
+  }
+
+  locationLayerHref(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
+    const parsed = this.locationLayerParts(String(layer.binding || ''));
+    const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
+    if (!parsed || !location) return '';
+    if (parsed.key === 'map') return location.mapUrl || '';
+    if (parsed.key === 'waze') return location.wazeUrl || '';
+    if (parsed.key === 'phone') return location.phone ? `tel:${location.phone}` : '';
+    if (parsed.key === 'website') return location.websiteUrl || '';
+    return '';
+  }
+
+  private locationLayerParts(binding: string): { index: number; key: string } | null {
+    const match = binding.match(/^location\.(\d+)\.([^.]+)$/);
+    return match ? { index: Number(match[1]), key: match[2] } : null;
   }
 
   rsvpControlName(layer: VisualInvitationLayer): string {

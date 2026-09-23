@@ -24,7 +24,17 @@
       <p>{{ invitation?.content?.storyBody || invitation?.content?.message }}</p>
     </div>
 
-    <div class="functional-module" *ngIf="section.type === 'locations'">
+    <div *ngIf="hasLocationCanvasLayers(section)" class="rsvp-layer-form location-layer-form">
+      <ng-container *ngFor="let layer of locationCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderLocationLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.locations.')">{{ resolveLayerText(layer) }}</div>
+          <div *ngIf="layer.binding?.endsWith('.name') || layer.binding?.endsWith('.address') || layer.binding?.endsWith('.notes') || layer.binding?.endsWith('.details')" class="native-location-text">{{ locationLayerText(section, layer) }}</div>
+          <a *ngIf="layer.type === 'button'" class="visual-action-button" [href]="locationLayerHref(section, layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'locations' && !hasLocationCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Cómo llegar') }}</small><h2>{{ section.title || 'Ubicaciones' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="module-grid">
         <article *ngFor="let location of locationsFor(section)">
