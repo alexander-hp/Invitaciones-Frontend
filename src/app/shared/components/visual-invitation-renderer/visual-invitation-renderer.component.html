@@ -61,10 +61,21 @@
       <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><span *ngIf="item.icon">{{ item.icon }}</span><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ item.description }}</p><a *ngIf="item.locationUrl" [href]="item.locationUrl" target="_blank" rel="noopener">{{ item.locationLabel || 'Ver ubicación' }}</a></div></article></div>
     </div>
 
-    <div class="functional-module" *ngIf="section.type === 'dressCode'">
+    <div *ngIf="hasDressCodeCanvasLayers(section)" class="rsvp-layer-form dress-code-layer-form">
+      <ng-container *ngFor="let layer of dressCodeCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderDressCodeLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="dressCodeLayerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.dressCode.')">{{ resolveLayerText(layer) }}</div>
+          <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('dress.')">{{ dressCodeLayerText(layer) }}</div>
+          <img *ngIf="layer.binding === 'dress.image'" [src]="dressCodeLayerImageUrl(layer)" alt="Referencia de vestimenta" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'dressCode' && !hasDressCodeCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Vestimenta') }}</small><h2>{{ section.title || 'Código de vestimenta' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <img class="dress-image" *ngIf="pluginSetting(section, 'showImage', true) && invitation?.content?.dressCodeImageUrl" [src]="invitation?.content?.dressCodeImageUrl" alt="Referencia de vestimenta">
       <h3>{{ invitation?.content?.dressCode }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ invitation?.content?.dressCodeDescription }}</p>
+      <div class="module-grid" *ngIf="invitation?.content?.dressCodeOptions?.length"><article *ngFor="let option of invitation?.content?.dressCodeOptions"><i *ngIf="option.color" [style.background]="option.color" class="dress-color-reference"></i><h3>{{ option.title }}</h3><p>{{ option.description }}</p></article></div>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'gallery'">

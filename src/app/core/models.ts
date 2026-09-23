@@ -566,7 +566,7 @@ export interface InvitationContent {
   dressCode?: string;
   dressCodeDescription?: string;
   dressCodeImageUrl?: string;
-  dressCodeOptions?: Array<{ title?: string; description?: string }>;
+  dressCodeOptions?: Array<{ title?: string; description?: string; color?: string }>;
   dressCodeWomen?: string;
   dressCodeMen?: string;
   dressCodeOption1?: string;

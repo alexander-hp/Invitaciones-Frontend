@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -580,6 +580,56 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   private itineraryLayerParts(binding: string): { index: number; key: string } | null {
     const match = binding.match(/^itinerary\.(\d+)\.([^.]+)$/);
+    return match ? { index: Number(match[1]), key: match[2] } : null;
+  }
+
+  dressCodeCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('display.dressCode.'));
+  }
+
+  hasDressCodeCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'dressCode' && this.dressCodeCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderDressCodeLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.dressCode.')) return true;
+    if (binding === 'dress.image') return this.pluginSetting(section, 'showImage', true) !== false && Boolean(this.invitation?.content?.dressCodeImageUrl);
+    if (binding === 'dress.code') return Boolean(this.invitation?.content?.dressCode);
+    if (binding === 'dress.description') return this.pluginSetting(section, 'showDescription', true) !== false && Boolean(this.invitation?.content?.dressCodeDescription);
+    const parsed = this.dressCodeOptionLayerParts(binding);
+    const option = parsed ? this.invitation?.content?.dressCodeOptions?.[parsed.index] : undefined;
+    if (!parsed || !option) return false;
+    if (parsed.key === 'card') return true;
+    if (parsed.key === 'color') return Boolean(option.color);
+    return Boolean(this.dressCodeLayerText(layer));
+  }
+
+  dressCodeLayerText(layer: VisualInvitationLayer): string {
+    if (layer.binding === 'dress.code') return this.invitation?.content?.dressCode || '';
+    if (layer.binding === 'dress.description') return this.invitation?.content?.dressCodeDescription || '';
+    const parsed = this.dressCodeOptionLayerParts(String(layer.binding || ''));
+    const option = parsed ? this.invitation?.content?.dressCodeOptions?.[parsed.index] : undefined;
+    if (!parsed || !option) return '';
+    if (parsed.key === 'title') return option.title || '';
+    if (parsed.key === 'description') return option.description || '';
+    return layer.text || '';
+  }
+
+  dressCodeLayerImageUrl(layer: VisualInvitationLayer): string {
+    return layer.binding === 'dress.image' ? this.invitation?.content?.dressCodeImageUrl || '' : '';
+  }
+
+  dressCodeLayerStyle(layer: VisualInvitationLayer): Record<string, string | number | null | undefined> {
+    const style = this.layerStyle(layer);
+    const parsed = this.dressCodeOptionLayerParts(String(layer.binding || ''));
+    const color = parsed?.key === 'color' ? this.invitation?.content?.dressCodeOptions?.[parsed.index]?.color : '';
+    return color ? { ...style, backgroundColor: color } : style;
+  }
+
+  private dressCodeOptionLayerParts(binding: string): { index: number; key: string } | null {
+    const match = binding.match(/^dress\.option\.(\d+)\.([^.]+)$/);
     return match ? { index: Number(match[1]), key: match[2] } : null;
   }
 

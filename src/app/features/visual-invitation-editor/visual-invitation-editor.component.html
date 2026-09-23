@@ -247,6 +247,13 @@
           <button *ngFor="let control of itineraryControlCatalog(itinerarySection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'dressCode' && selectedSection as dressCodeSection">
+        <h2>Piezas de vestimenta</h2>
+        <p class="hint">La imagen, los textos y cada referencia de color son capas independientes. El contenido seguirá vinculado a la configuración de la invitación.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of dressCodeControlCatalog(dressCodeSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -771,6 +778,15 @@
                 <label>Imagen de referencia<input [(ngModel)]="currentInvitation.content.dressCodeImageUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
                 <label>Subir referencia<input #dressCodeUpload type="file" accept="image/*" (change)="uploadContentImage(dressCodeUpload, 'dressCode')"></label>
                 <img *ngIf="currentInvitation.content.dressCodeImageUrl" class="content-image-preview" [src]="currentInvitation.content.dressCodeImageUrl" alt="Referencia de vestimenta">
+                <div class="content-list">
+                  <article *ngFor="let option of currentInvitation.content.dressCodeOptions; let index=index">
+                    <header><strong>Referencia {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeDressCodeOption(index)">×</button></header>
+                    <label>Nombre<input [(ngModel)]="option.title" (focus)="beginContentEdit()" type="text" placeholder="Tonos claros, formal, sombrero..."></label>
+                    <label>Descripción<textarea [(ngModel)]="option.description" (focus)="beginContentEdit()" rows="2" placeholder="Explica qué prendas o tonos recomiendas."></textarea></label>
+                    <label>Color de referencia<input [ngModel]="option.color || '#d9c2b0'" (focus)="beginContentEdit()" (ngModelChange)="updateDressCodeOptionColor(index, $event)" type="color"></label>
+                  </article>
+                </div>
+                <button type="button" class="content-add" (click)="addDressCodeOption()">+ Agregar referencia de vestimenta</button>
               </div>
 
               <div *ngSwitchCase="'gifts'">
