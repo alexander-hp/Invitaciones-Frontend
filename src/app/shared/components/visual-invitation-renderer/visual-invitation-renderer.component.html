@@ -78,7 +78,19 @@
       <div class="module-grid" *ngIf="invitation?.content?.dressCodeOptions?.length"><article *ngFor="let option of invitation?.content?.dressCodeOptions"><i *ngIf="option.color" [style.background]="option.color" class="dress-color-reference"></i><h3>{{ option.title }}</h3><p>{{ option.description }}</p></article></div>
     </div>
 
-    <div class="functional-module" *ngIf="section.type === 'gallery'">
+    <div *ngIf="hasGalleryCanvasLayers(section)" class="rsvp-layer-form gallery-layer-form">
+      <ng-container *ngFor="let layer of galleryCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderGalleryLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.gallery.')">{{ resolveLayerText(layer) }}</div>
+          <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('gallery.')">{{ galleryLayerText(layer) }}</div>
+          <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" loading="lazy" decoding="async"></button>
+          <button *ngIf="layer.binding === 'gallery.carousel.previous'" type="button" class="visual-action-button" aria-label="Fotografía anterior" (click)="moveGallery(-1)">{{ layer.text }}</button>
+          <button *ngIf="layer.binding === 'gallery.carousel.next'" type="button" class="visual-action-button" aria-label="Fotografía siguiente" (click)="moveGallery(1)">{{ layer.text }}</button>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'gallery' && !hasGalleryCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Momentos') }}</small><h2>{{ section.title || 'Galería' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="gallery-grid" *ngIf="galleryDisplayModeFor(section) !== 'carousel'" [class.gallery-list]="galleryDisplayModeFor(section) === 'list'">
         <figure *ngFor="let image of galleryItems"><button type="button" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" [style.height.px]="galleryImageHeight(section)" loading="lazy" decoding="async"></button><figcaption *ngIf="galleryCaptionsFor(section) && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>

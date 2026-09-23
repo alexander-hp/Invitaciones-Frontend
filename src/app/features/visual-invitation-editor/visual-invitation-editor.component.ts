@@ -928,6 +928,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'itinerary') this.ensureItineraryCanvasLayers(section);
     if (type === 'dressCode') this.ensureDressCodeCanvasLayers(section);
     if (type === 'lodging') this.ensureLodgingCanvasLayers(section);
+    if (type === 'gallery') this.ensureGalleryCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -2022,7 +2023,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.') || binding.startsWith('gallery.') || binding.startsWith('display.gallery.');
     });
   }
 
@@ -2050,14 +2051,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('lodging.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('lodging.') || String(layer.binding || '').startsWith('gallery.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
   }
 
   isDynamicImageOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'image' && (/^gift\.\d+\.image$/.test(String(layer.binding || '')) || /^lodging\.\d+\.image$/.test(String(layer.binding || '')) || layer.binding === 'envelope.qr' || layer.binding === 'dress.image');
+    return layer.type === 'image' && (/^gift\.\d+\.image$/.test(String(layer.binding || '')) || /^lodging\.\d+\.image$/.test(String(layer.binding || '')) || /^gallery\.item\.\d+\.image$/.test(String(layer.binding || '')) || layer.binding === 'gallery.carousel.image' || layer.binding === 'envelope.qr' || layer.binding === 'dress.image');
   }
 
   boundImageUrl(layer: VisualInvitationLayer): string {
+    if (layer.binding === 'gallery.carousel.image') return this.invitation?.content?.galleryItems?.[0]?.url || layer.url || '';
+    const galleryImageMatch = String(layer.binding || '').match(/^gallery\.item\.(\d+)\.image$/);
+    if (galleryImageMatch) return this.invitation?.content?.galleryItems?.[Number(galleryImageMatch[1])]?.url || layer.url || '';
     if (layer.binding === 'dress.image') return this.invitation?.content?.dressCodeImageUrl || layer.url || '';
     const lodgingImageMatch = String(layer.binding || '').match(/^lodging\.(\d+)\.image$/);
     if (lodgingImageMatch) return this.invitation?.content?.lodging?.[Number(lodgingImageMatch[1])]?.imageUrl || layer.url || '';
@@ -2069,6 +2073,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   editorLayerText(layer: VisualInvitationLayer): string {
     const binding = String(layer.binding || '');
+    if (binding === 'gallery.carousel.counter') return `1 / ${Math.max(1, this.invitation?.content?.galleryItems?.length || 0)}`;
+    const galleryCarouselMatch = binding.match(/^gallery\.carousel\.(title|description|dedication)$/);
+    if (galleryCarouselMatch) return this.invitation?.content?.galleryItems?.[0]?.[galleryCarouselMatch[1] as 'title' | 'description' | 'dedication'] || layer.text || '';
+    const galleryItemMatch = binding.match(/^gallery\.item\.(\d+)\.(title|description|dedication)$/);
+    if (galleryItemMatch) return this.invitation?.content?.galleryItems?.[Number(galleryItemMatch[1])]?.[galleryItemMatch[2] as 'title' | 'description' | 'dedication'] || layer.text || '';
     const lodgingMatch = binding.match(/^lodging\.(\d+)\.(name|description|address|price|agreement|discount|services|notes)$/);
     if (lodgingMatch) {
       const hotel = this.invitation?.content?.lodging?.[Number(lodgingMatch[1])];
@@ -2141,7 +2150,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode', 'lodging'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode', 'lodging', 'gallery'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2201,10 +2210,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createDressCodeLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'lodging') {
       const definition = this.lodgingLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createLodgingLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.galleryLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createGalleryLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2319,6 +2333,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const match = definition.binding.match(/^lodging\.(\d+)\.([^.]+)$/);
         return { binding: definition.binding, label: `Hospedaje ${Number(match?.[1] || 0) + 1}: ${definition.label}`, icon: icons[match?.[2] || 'name'] || '+' };
       });
+  }
+
+  galleryControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+    const mode = this.galleryPreviewMode(section);
+    return this.galleryLayerDefinitions(section)
+      .filter((definition) => mode === 'carousel'
+        ? definition.binding.startsWith('gallery.carousel.')
+        : /^gallery\.item\.\d+\.(image|title|description|dedication)$/.test(definition.binding))
+      .map((definition) => ({
+        binding: definition.binding,
+        label: definition.label,
+        icon: definition.type === 'image' ? '▧' : definition.type === 'button' ? '→' : 'Aa'
+      }));
+  }
+
+  shouldRenderEditorLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (section.type !== 'gallery') return true;
+    const binding = String(layer.binding || '');
+    if (!binding.startsWith('gallery.')) return true;
+    const carousel = this.galleryPreviewMode(section) === 'carousel';
+    return carousel ? binding.startsWith('gallery.carousel.') : binding.startsWith('gallery.item.');
   }
 
   beginContentEdit(): void {
@@ -2450,7 +2485,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const section = this.design.sections.find((item) => item.type === 'itinerary');
       if (section && this.hasNativeFunctionalLayers(section)) this.ensureItineraryCanvasLayers(section, [index]);
     }
-    if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
+    if (key === 'galleryItems') {
+      const index = this.invitation.content.galleryItems!.length;
+      this.invitation.content.galleryItems!.push(this.emptyGalleryItem(index));
+      const section = this.design.sections.find((item) => item.type === 'gallery');
+      if (section && this.hasNativeFunctionalLayers(section)) this.ensureGalleryCanvasLayers(section, [index]);
+    }
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
     if (key === 'lodging') {
       const index = this.invitation.content.lodging!.length;
@@ -2471,7 +2511,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     items.splice(index, 1);
     if (key === 'lodging') this.removeIndexedNativeLayers('lodging', index);
-    if (key === 'galleryItems') this.syncLegacyGallery();
+    if (key === 'galleryItems') { this.removeIndexedNativeLayers('gallery', index, 'gallery.item'); this.syncLegacyGallery(); }
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, itemIndex) => { item.priority = itemIndex; });
     if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, itemIndex) => { item.priority = itemIndex; });
     if (key === 'locations') this.invitation?.content.locations?.forEach((item, itemIndex) => { item.priority = itemIndex; });
@@ -2487,13 +2527,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'locations') this.invitation?.content.locations?.forEach((item, index) => { item.priority = index; });
   }
 
-  private removeIndexedNativeLayers(sectionType: string, index: number): void {
+  private removeIndexedNativeLayers(sectionType: string, index: number, bindingPrefix = sectionType): void {
     const section = this.design.sections.find((item) => item.type === sectionType);
     if (!section) return;
-    section.layers = section.layers.filter((layer) => !String(layer.binding || '').startsWith(`${sectionType}.${index}.`));
+    section.layers = section.layers.filter((layer) => !String(layer.binding || '').startsWith(`${bindingPrefix}.${index}.`));
+    const escapedPrefix = bindingPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     for (const layer of section.layers) {
-      const match = String(layer.binding || '').match(new RegExp(`^${sectionType}\\.(\\d+)\\.(.+)$`));
-      if (match && Number(match[1]) > index) layer.binding = `${sectionType}.${Number(match[1]) - 1}.${match[2]}`;
+      const match = String(layer.binding || '').match(new RegExp(`^${escapedPrefix}\\.(\\d+)\\.(.+)$`));
+      if (match && Number(match[1]) > index) layer.binding = `${bindingPrefix}.${Number(match[1]) - 1}.${match[2]}`;
     }
     this.restoreSelection();
   }
@@ -2510,7 +2551,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       next: (publicUrl) => {
         this.recordHistory();
         if (target === 'gallery') {
-          this.invitation!.content.galleryItems!.push({ ...this.emptyGalleryItem(), url: publicUrl, alt: file.name });
+          const index = this.invitation!.content.galleryItems!.length;
+          this.invitation!.content.galleryItems!.push({ ...this.emptyGalleryItem(index), url: publicUrl, alt: file.name });
+          const section = this.design.sections.find((item) => item.type === 'gallery');
+          if (section && this.hasNativeFunctionalLayers(section)) this.ensureGalleryCanvasLayers(section, [index]);
           this.syncLegacyGallery();
         }
         if (target === 'dressCode') this.invitation!.content.dressCodeImageUrl = publicUrl;
@@ -2867,6 +2911,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       if (section.type === 'lodging') {
         this.ensureLodgingCanvasLayers(section);
+      }
+      if (section.type === 'gallery') {
+        this.ensureGalleryCanvasLayers(section);
       }
     }
   }
@@ -3504,6 +3551,72 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
     if (definition.type === 'shape') {
       layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    return layer;
+  }
+
+  private galleryLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const items = this.invitation?.content?.galleryItems || [];
+    const rows = Math.max(1, Math.ceil(items.length / 2));
+    const requiredHeight = Math.max(760, 220 + rows * 330);
+    const pct = (pixels: number) => pixels / requiredHeight * 100;
+    const definitions: Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
+      { type: 'text', binding: 'display.gallery.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Momentos'), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
+      { type: 'text', binding: 'display.gallery.title', label: section.title || 'Galería', x: 10, y: pct(66), width: 80, height: pct(62), fontSize: 34 },
+      { type: 'text', binding: 'display.gallery.intro', label: String(this.pluginSetting(section, 'introText') || 'Una selección de momentos especiales.'), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 }
+    ];
+    items.forEach((item, index) => {
+      const left = index % 2 === 0 ? 5 : 52;
+      const topPx = 200 + Math.floor(index / 2) * 330;
+      const prefix = `gallery.item.${index}`;
+      definitions.push(
+        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(300), fontSize: 12 },
+        { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || '', x: left + 3, y: pct(topPx + 16), width: 37, height: pct(185), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.title`, label: item.title || `Fotografía ${index + 1}`, x: left + 3, y: pct(topPx + 210), width: 37, height: pct(28), fontSize: 17 },
+        { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción', x: left + 3, y: pct(topPx + 241), width: 37, height: pct(25), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.dedication`, label: item.dedication || 'Dedicatoria', x: left + 3, y: pct(topPx + 270), width: 37, height: pct(22), fontSize: 11 }
+      );
+    });
+    const first = items[0];
+    definitions.push(
+      { type: 'image', binding: 'gallery.carousel.image', label: 'Fotografía actual', url: first?.url || '', x: 15, y: pct(205), width: 70, height: pct(340), fontSize: 12 },
+      { type: 'text', binding: 'gallery.carousel.title', label: first?.title || 'Título de fotografía', x: 20, y: pct(565), width: 60, height: pct(38), fontSize: 22 },
+      { type: 'text', binding: 'gallery.carousel.description', label: first?.description || 'Descripción', x: 20, y: pct(610), width: 60, height: pct(32), fontSize: 13 },
+      { type: 'text', binding: 'gallery.carousel.dedication', label: first?.dedication || 'Dedicatoria', x: 20, y: pct(648), width: 60, height: pct(28), fontSize: 12 },
+      { type: 'button', binding: 'gallery.carousel.previous', label: 'Anterior', x: 5, y: pct(350), width: 9, height: pct(48), fontSize: 18 },
+      { type: 'button', binding: 'gallery.carousel.next', label: 'Siguiente', x: 86, y: pct(350), width: 9, height: pct(48), fontSize: 18 },
+      { type: 'text', binding: 'gallery.carousel.counter', label: `1 / ${Math.max(1, items.length)}`, x: 42, y: pct(690), width: 16, height: pct(28), fontSize: 12 }
+    );
+    return definitions;
+  }
+
+  private ensureGalleryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
+    const hasGalleryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gallery.') || String(layer.binding || '').startsWith('display.gallery.'));
+    if (!indexes?.length && hasGalleryLayers) return;
+    const rows = Math.max(1, Math.ceil((this.invitation?.content?.galleryItems?.length || 0) / 2));
+    const requiredHeight = Math.max(760, 220 + rows * 330);
+    if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    const definitions = this.galleryLayerDefinitions(section).filter((definition) => {
+      if (existing.has(definition.binding)) return false;
+      if (!indexes?.length) return true;
+      const match = definition.binding.match(/^gallery\.item\.(\d+)\./);
+      return Boolean(match && indexes.includes(Number(match[1])));
+    });
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...definitions.map((definition) => this.createGalleryLayer(definition, ++topZ)));
+  }
+
+  private createGalleryLayer(definition: ReturnType<typeof this.galleryLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding;
+    layer.url = definition.url;
+    layer.zIndex = zIndex;
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 4 };
+    if (definition.type === 'shape') {
+      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 4, boxShadow: '0 8px 24px #00000012' };
       layer.zIndex = Math.max(1, zIndex - 1);
     }
     return layer;

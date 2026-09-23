@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.') || binding.startsWith('gallery.') || binding.startsWith('display.gallery.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -691,6 +691,72 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   private lodgingLayerParts(binding: string): { index: number; key: string } | null {
     const match = binding.match(/^lodging\.(\d+)\.([^.]+)$/);
+    return match ? { index: Number(match[1]), key: match[2] } : null;
+  }
+
+  galleryCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('gallery.') || String(layer.binding || '').startsWith('display.gallery.'));
+  }
+
+  hasGalleryCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'gallery' && this.galleryCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderGalleryLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.gallery.')) return true;
+    const carousel = this.galleryDisplayModeFor(section) === 'carousel';
+    if (binding.startsWith('gallery.carousel.')) {
+      if (!carousel || !this.galleryItems.length) return false;
+      if (binding === 'gallery.carousel.previous' || binding === 'gallery.carousel.next') return this.galleryItems.length > 1;
+      if (binding === 'gallery.carousel.counter' || binding === 'gallery.carousel.image') return true;
+      return this.galleryCaptionsFor(section) && Boolean(this.galleryLayerText(layer));
+    }
+    if (carousel) return false;
+    const parsed = this.galleryItemLayerParts(binding);
+    const item = parsed ? this.invitation?.content?.galleryItems?.[parsed.index] : undefined;
+    if (!parsed || !item?.url) return false;
+    if (parsed.key === 'card' || parsed.key === 'image') return true;
+    return this.galleryCaptionsFor(section) && Boolean(this.galleryLayerText(layer));
+  }
+
+  galleryLayerText(layer: VisualInvitationLayer): string {
+    const binding = String(layer.binding || '');
+    if (binding === 'gallery.carousel.counter') return `${this.galleryIndex + 1} / ${this.galleryItems.length}`;
+    const carouselMatch = binding.match(/^gallery\.carousel\.(title|description|dedication)$/);
+    if (carouselMatch) return this.galleryItems[this.galleryIndex]?.[carouselMatch[1] as 'title' | 'description' | 'dedication'] || '';
+    const parsed = this.galleryItemLayerParts(binding);
+    const item = parsed ? this.invitation?.content?.galleryItems?.[parsed.index] : undefined;
+    if (!parsed || !item) return '';
+    if (parsed.key === 'title') return item.title || '';
+    if (parsed.key === 'description') return item.description || '';
+    if (parsed.key === 'dedication') return item.dedication || '';
+    return layer.text || '';
+  }
+
+  galleryLayerImageUrl(layer: VisualInvitationLayer): string {
+    if (layer.binding === 'gallery.carousel.image') return this.galleryItems[this.galleryIndex]?.url || '';
+    const parsed = this.galleryItemLayerParts(String(layer.binding || ''));
+    return parsed?.key === 'image' ? this.invitation?.content?.galleryItems?.[parsed.index]?.url || '' : '';
+  }
+
+  galleryNativeImageStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const base = this.imageStyle(layer);
+    const parsed = this.galleryItemLayerParts(String(layer.binding || ''));
+    const item = layer.binding === 'gallery.carousel.image'
+      ? this.galleryItems[this.galleryIndex]
+      : parsed ? this.invitation?.content?.galleryItems?.[parsed.index] : undefined;
+    return item ? { ...base, objectFit: item.fit || base['objectFit'], objectPosition: `${item.focalX ?? 50}% ${item.focalY ?? 50}%` } : base;
+  }
+
+  openGalleryLayer(layer: VisualInvitationLayer): void {
+    const url = this.galleryLayerImageUrl(layer);
+    if (url) this.openLightbox.emit(url);
+  }
+
+  private galleryItemLayerParts(binding: string): { index: number; key: string } | null {
+    const match = binding.match(/^gallery\.item\.(\d+)\.([^.]+)$/);
     return match ? { index: Number(match[1]), key: match[2] } : null;
   }
 
