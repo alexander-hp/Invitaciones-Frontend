@@ -156,6 +156,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'activity.dedications', label: 'Total de dedicatorias', icon: '✎' }, { binding: 'activity.manage', label: 'Abrir centro rápido', icon: '⚙' },
     { binding: 'activity.full', label: 'Abrir centro completo', icon: '↗' }
   ];
+  readonly countdownControlCatalog = [
+    { binding: 'countdown.days', label: 'Número de días', icon: '00' }, { binding: 'display.countdown.daysLabel', label: 'Etiqueta Días', icon: 'Aa' },
+    { binding: 'countdown.hours', label: 'Número de horas', icon: '00' }, { binding: 'display.countdown.hoursLabel', label: 'Etiqueta Horas', icon: 'Aa' },
+    { binding: 'countdown.minutes', label: 'Número de minutos', icon: '00' }, { binding: 'display.countdown.minutesLabel', label: 'Etiqueta Minutos', icon: 'Aa' },
+    { binding: 'countdown.seconds', label: 'Número de segundos', icon: '00' }, { binding: 'display.countdown.secondsLabel', label: 'Etiqueta Segundos', icon: 'Aa' },
+    { binding: 'countdown.expired', label: 'Mensaje al finalizar', icon: '★' }
+  ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
@@ -907,7 +914,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs', 'album', 'guestPass', 'guestActivity'].includes(type) ? 760 : 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown'].includes(type) ? 760 : 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     if (type === 'rsvp') { this.ensureRsvpPluginDesign(section); this.ensureRsvpCanvasLayers(section); this.ensureSeparatedRsvpFieldParts(section); }
     if (type === 'dedications') this.ensureDedicationCanvasLayers(section);
@@ -915,6 +922,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'album') this.ensureAlbumCanvasLayers(section);
     if (type === 'guestPass') this.ensureGuestPassCanvasLayers(section);
     if (type === 'guestActivity') this.ensureGuestActivityCanvasLayers(section);
+    if (type === 'countdown') this.ensureCountdownCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -2009,7 +2017,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.');
     });
   }
 
@@ -2037,7 +2045,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || layer.binding === 'activity.greeting');
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
@@ -2056,7 +2064,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2086,10 +2094,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createGuestPassLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'guestActivity') {
       const definition = this.guestActivityLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createGuestActivityLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.countdownLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createCountdownLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2620,6 +2633,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         section.height = Math.max(section.height, 760);
         this.ensureGuestActivityCanvasLayers(section);
       }
+      if (section.type === 'countdown') {
+        section.height = Math.max(section.height, 760);
+        this.ensureCountdownCanvasLayers(section);
+      }
     }
   }
 
@@ -2892,6 +2909,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
+  private countdownLayerDefinitions(section: VisualInvitationSection): Array<{ binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    return [
+      { binding: 'display.countdown.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Falta poco'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+      { binding: 'display.countdown.title', label: section.title || 'Cuenta regresiva', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
+      { binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada vez falta menos para celebrar juntos.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
+      { binding: 'countdown.days', label: String(this.countdownPreview.days), x: 7, y: 37, width: 18, height: 14, fontSize: 44 },
+      { binding: 'display.countdown.daysLabel', label: 'Días', x: 7, y: 52, width: 18, height: 5, fontSize: 12 },
+      { binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 29, y: 37, width: 18, height: 14, fontSize: 44 },
+      { binding: 'display.countdown.hoursLabel', label: 'Horas', x: 29, y: 52, width: 18, height: 5, fontSize: 12 },
+      { binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 53, y: 37, width: 18, height: 14, fontSize: 44 },
+      { binding: 'display.countdown.minutesLabel', label: 'Minutos', x: 53, y: 52, width: 18, height: 5, fontSize: 12 },
+      { binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 75, y: 37, width: 18, height: 14, fontSize: 44 },
+      { binding: 'display.countdown.secondsLabel', label: 'Segundos', x: 75, y: 52, width: 18, height: 5, fontSize: 12 },
+      { binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 68, width: 70, height: 12, fontSize: 30 }
+    ];
+  }
+
+  private ensureCountdownCanvasLayers(section: VisualInvitationSection): void {
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('countdown.') || String(layer.binding || '').startsWith('display.countdown.'))) return;
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...this.countdownLayerDefinitions(section).map((definition) => this.createCountdownLayer(definition, ++topZ)));
+  }
+
+  private createCountdownLayer(definition: ReturnType<typeof this.countdownLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer('text', definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding; layer.zIndex = zIndex;
+    if (definition.binding.startsWith('countdown.') && definition.binding !== 'countdown.expired') {
+      layer.style = { ...(layer.style || {}), fontWeight: 600, textAlign: 'center' };
+    }
+    return layer;
+  }
+
   private createRsvpLayer(
     section: VisualInvitationSection,
     definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
@@ -3055,6 +3104,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (!visibleBindings.includes('activity.email') && !visibleBindings.includes('activity.phone')) add('critical', 'Actividad sin dato de acceso', 'Muestra correo o teléfono para que el invitado pueda identificarse.', section.id);
         if (!visibleBindings.includes('activity.identify')) add('critical', 'Actividad sin botón de identificación', 'Restaura el botón para consultar la actividad del invitado.', section.id);
         if (!visibleBindings.includes('activity.manage') && !visibleBindings.includes('activity.full')) add('critical', 'Actividad sin acción', 'Muestra el centro rápido o el centro completo para administrar los envíos.', section.id);
+      }
+      if (section.type === 'countdown' && this.hasNativeFunctionalLayers(section)) {
+        const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
+        const liveValues = ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'];
+        if (!liveValues.some((binding) => visibleBindings.includes(binding))) add('critical', 'Cuenta regresiva sin contador', 'Muestra al menos uno de los valores de tiempo.', section.id);
+        if (!visibleBindings.includes('countdown.expired')) add('warning', 'Cuenta regresiva sin mensaje final', 'Agrega un mensaje para mostrar cuando llegue la fecha del evento.', section.id);
       }
 
       for (const layer of section.layers) {

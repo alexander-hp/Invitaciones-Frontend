@@ -163,7 +163,15 @@
       </div><p class="feedback error" *ngIf="error">{{ error }}</p>
     </div>
 
-    <div class="functional-module countdown-module" *ngIf="section.type === 'countdown'">
+    <div *ngIf="hasCountdownCanvasLayers(section)" class="rsvp-layer-form countdown-layer-form">
+      <ng-container *ngFor="let layer of countdownCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderCountdownLayer(layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.countdown.') || layer.binding?.startsWith('countdown.')">{{ countdownLayerText(layer) }}</div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module countdown-module" *ngIf="section.type === 'countdown' && !hasCountdownCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Falta poco') }}</small><h2>{{ section.title || 'Cuenta regresiva' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div *ngIf="!countdown.isOver; else countdownOver" class="public-countdown"><span><b>{{ countdown.days }}</b>Días</span><span><b>{{ countdown.hours }}</b>Horas</span><span><b>{{ countdown.minutes }}</b>Minutos</span><span><b>{{ countdown.seconds }}</b>Segundos</span></div><ng-template #countdownOver><strong class="countdown-over">{{ pluginSetting(section, 'expiredText', 'El gran día llegó') }}</strong></ng-template>
     </div>

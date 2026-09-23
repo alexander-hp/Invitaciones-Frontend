@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -376,6 +376,31 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (layer.binding === 'activity.songs') return `Canciones\n${this.activityCount('songs')}`;
     if (layer.binding === 'activity.dedications') return `Dedicatorias\n${this.activityCount('dedications')}`;
     return '';
+  }
+
+  countdownCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('countdown.') || String(layer.binding || '').startsWith('display.countdown.'));
+  }
+
+  hasCountdownCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'countdown' && this.countdownCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderCountdownLayer(layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding === 'countdown.expired') return this.countdown.isOver;
+    if (binding.startsWith('countdown.')) return !this.countdown.isOver;
+    if (['display.countdown.daysLabel', 'display.countdown.hoursLabel', 'display.countdown.minutesLabel', 'display.countdown.secondsLabel'].includes(binding)) return !this.countdown.isOver;
+    return true;
+  }
+
+  countdownLayerText(layer: VisualInvitationLayer): string {
+    if (layer.binding === 'countdown.days') return String(this.countdown.days);
+    if (layer.binding === 'countdown.hours') return String(this.countdown.hours).padStart(2, '0');
+    if (layer.binding === 'countdown.minutes') return String(this.countdown.minutes).padStart(2, '0');
+    if (layer.binding === 'countdown.seconds') return String(this.countdown.seconds).padStart(2, '0');
+    return this.resolveLayerText(layer);
   }
 
   rsvpControlName(layer: VisualInvitationLayer): string {
