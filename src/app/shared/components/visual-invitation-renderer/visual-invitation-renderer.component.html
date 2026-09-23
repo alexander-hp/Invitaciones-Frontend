@@ -154,7 +154,18 @@
       <div *ngIf="!countdown.isOver; else countdownOver" class="public-countdown"><span><b>{{ countdown.days }}</b>Días</span><span><b>{{ countdown.hours }}</b>Horas</span><span><b>{{ countdown.minutes }}</b>Minutos</span><span><b>{{ countdown.seconds }}</b>Segundos</span></div><ng-template #countdownOver><strong class="countdown-over">{{ pluginSetting(section, 'expiredText', 'El gran día llegó') }}</strong></ng-template>
     </div>
 
-    <div class="functional-module form-module" *ngIf="section.type === 'album'">
+    <div *ngIf="hasAlbumCanvasLayers(section)" class="rsvp-layer-form album-layer-form">
+      <ng-container *ngFor="let layer of albumCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderAlbumLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.album.')">{{ resolveLayerText(layer) }}</div>
+          <label *ngIf="layer.binding === 'album.upload'" class="visual-action-button native-file-button">{{ uploadingAlbum ? 'Subiendo...' : (layer.text || 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
+          <div *ngIf="layer.binding === 'album.feedback'" class="rsvp-layer-feedback">{{ albumMessage }}</div>
+          <div *ngIf="layer.binding === 'album.gallery'" class="native-album-gallery"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button><p *ngIf="!albumAssets.length">Las fotografías aprobadas aparecerán aquí.</p></div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'album' && !hasAlbumCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Álbum colectivo') }}</small><h2>{{ section.title || 'Álbum colectivo' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText', 'Comparte tus mejores momentos con los anfitriones.') }}</p>
       <label class="file-button">{{ pluginSetting(section, 'primaryButtonText', 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
       <p class="feedback" *ngIf="albumMessage">{{ albumMessage }}</p>

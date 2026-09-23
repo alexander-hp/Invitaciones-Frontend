@@ -137,6 +137,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'song.dedication', label: 'Dedicatoria', icon: '✎' },
     { binding: 'song.submit', label: 'Enviar al DJ', icon: '→' }
   ];
+  readonly albumControlCatalog = [
+    { binding: 'album.upload', label: 'Subir fotografía', icon: '＋' },
+    { binding: 'album.gallery', label: 'Galería aprobada', icon: '▧' }
+  ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
@@ -888,11 +892,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs'].includes(type) ? 760 : 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs', 'album'].includes(type) ? 760 : 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     if (type === 'rsvp') { this.ensureRsvpPluginDesign(section); this.ensureRsvpCanvasLayers(section); this.ensureSeparatedRsvpFieldParts(section); }
     if (type === 'dedications') this.ensureDedicationCanvasLayers(section);
     if (type === 'songs') this.ensureSongCanvasLayers(section);
+    if (type === 'album') this.ensureAlbumCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -1987,7 +1992,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.');
     });
   }
 
@@ -1998,9 +2003,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   rsvpFieldPreview(layer: VisualInvitationLayer): string {
     if (layer.style?.showPlaceholder === false) return '';
     if (layer.binding === 'dedication.wall') return '“Que esta etapa esté llena de momentos inolvidables.”';
+    if (layer.binding === 'album.gallery') return '▧  ▧  ▧  Fotografías aprobadas';
     if (layer.binding === 'rsvp.response') return 'Sí asistiré';
     if (layer.binding === 'rsvp.companions') return '0';
     return layer.placeholder || 'Escribe aquí';
+  }
+
+  isDynamicOutputLayer(layer: VisualInvitationLayer): boolean {
+    return ['dedication.wall', 'album.gallery'].includes(layer.binding || '');
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
@@ -2019,7 +2029,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2034,10 +2044,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createDedicationLayer(section, definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'songs') {
       const definition = this.songLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createSongLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.albumLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createAlbumLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2556,6 +2571,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         section.height = Math.max(section.height, 760);
         this.ensureSongCanvasLayers(section);
       }
+      if (section.type === 'album') {
+        section.height = Math.max(section.height, 760);
+        this.ensureAlbumCanvasLayers(section);
+      }
     }
   }
 
@@ -2725,6 +2744,32 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
+  private albumLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    return [
+      { type: 'text', binding: 'display.album.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Álbum colectivo'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+      { type: 'text', binding: 'display.album.title', label: section.title || 'Comparte tus fotografías', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
+      { type: 'text', binding: 'display.album.intro', label: String(this.pluginSetting(section, 'introText') || 'Comparte tus mejores momentos con los anfitriones.'), x: 12, y: 24, width: 76, height: 7, fontSize: 14 },
+      { type: 'button', binding: 'album.upload', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Seleccionar fotografía'), x: 28, y: 36, width: 44, height: 10, fontSize: 14 },
+      { type: 'text', binding: 'album.feedback', label: 'Aquí aparecerá el estado de la fotografía', x: 20, y: 49, width: 60, height: 6, fontSize: 12 },
+      { type: 'field', binding: 'album.gallery', label: 'Fotografías aprobadas', x: 8, y: 59, width: 84, height: 34, fontSize: 13 }
+    ];
+  }
+
+  private ensureAlbumCanvasLayers(section: VisualInvitationSection): void {
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('album.') || String(layer.binding || '').startsWith('display.album.'))) return;
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...this.albumLayerDefinitions(section).map((definition) => this.createAlbumLayer(definition, ++topZ)));
+  }
+
+  private createAlbumLayer(definition: ReturnType<typeof this.albumLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
+    layer.binding = definition.binding;
+    layer.zIndex = zIndex;
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.binding === 'album.gallery') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
+    return layer;
+  }
+
   private createRsvpLayer(
     section: VisualInvitationSection,
     definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
@@ -2872,6 +2917,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
         if (!visibleBindings.includes('song.title') && !visibleBindings.includes('song.sourceUrl')) add('critical', 'DJ sin canción o enlace', 'Muestra al menos el campo de canción o el enlace para recibir solicitudes.', section.id);
         if (!visibleBindings.includes('song.submit')) add('critical', 'DJ sin botón de envío', 'Restaura el botón para enviar solicitudes al DJ.', section.id);
+      }
+      if (section.type === 'album' && this.hasNativeFunctionalLayers(section)) {
+        const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
+        if (!visibleBindings.includes('album.upload')) add('critical', 'Álbum sin selector de fotografía', 'Restaura el botón para que los invitados puedan subir imágenes.', section.id);
       }
 
       for (const layer of section.layers) {

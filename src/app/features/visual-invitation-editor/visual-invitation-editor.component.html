@@ -198,6 +198,13 @@
           <button *ngFor="let control of songControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'album'">
+        <h2>Controles del álbum</h2>
+        <p class="hint">El botón abre el selector real de archivos y la galería muestra únicamente fotografías aprobadas.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of albumControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -449,11 +456,11 @@
           <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         </ng-container>
         <ng-container *ngIf="layer.type === 'field'">
-          <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>{{ layer.binding === 'dedication.wall' ? 'Muestra las dedicatorias aprobadas. Puedes cambiar su tamaño y posición sin convertirlo en un campo de captura.' : 'Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear cualquier composición.' }}</span></aside>
-          <label *ngIf="layer.binding !== 'dedication.wall'">Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
-          <label *ngIf="layer.binding !== 'dedication.wall'" class="toggle"><input [ngModel]="layer.style?.showPlaceholder !== false" (ngModelChange)="layer.style!.showPlaceholder=$event" type="checkbox"> Mostrar texto de ejemplo</label>
+          <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>{{ isDynamicOutputLayer(layer) ? 'Este elemento muestra contenido dinámico aprobado. Puedes cambiar su tamaño y posición sin convertirlo en un campo de captura.' : 'Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear cualquier composición.' }}</span></aside>
+          <label *ngIf="!isDynamicOutputLayer(layer)">Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
+          <label *ngIf="!isDynamicOutputLayer(layer)" class="toggle"><input [ngModel]="layer.style?.showPlaceholder !== false" (ngModelChange)="layer.style!.showPlaceholder=$event" type="checkbox"> Mostrar texto de ejemplo</label>
           <label *ngIf="layer.binding === 'rsvp.response'">Presentación<select [ngModel]="layer.style?.controlVariant || 'default'" (ngModelChange)="setLayerControlStyle(layer, 'controlVariant', $event)"><option value="default">Selector</option><option value="cards">Tarjetas</option></select></label>
-          <button *ngIf="layer.binding !== 'dedication.wall'" type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
+          <button *ngIf="!isDynamicOutputLayer(layer)" type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
         </ng-container>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
