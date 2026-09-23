@@ -1053,6 +1053,50 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     window.location.assign(`/new/i/${encodeURIComponent(this.invitation.slug)}/my-activity`);
   }
 
+  updateGuestActivityRsvp(payload: { response: RsvpResponse; companions: number; companionNames: string[]; message: string; declineConfirmed?: boolean }): void {
+    if (!this.invitation || !this.guestSessionToken) return;
+    this.runGuestActivityAction(
+      this.api.updateInvitationGuestRsvp(this.invitation.slug, this.guestSessionToken, payload),
+      'Tu confirmación fue actualizada.'
+    );
+  }
+
+  removeGuestActivityItem(item: { kind: 'album' | 'song' | 'dedication'; id: string }): void {
+    if (!this.invitation || !this.guestSessionToken || !item.id) return;
+    const label = item.kind === 'album' ? 'fotografía' : item.kind === 'song' ? 'solicitud de canción' : 'dedicatoria';
+    if (!window.confirm(`¿Retirar esta ${label} pendiente?`)) return;
+    const request = item.kind === 'album'
+      ? this.api.removeInvitationGuestPhoto(this.invitation.slug, item.id, this.guestSessionToken)
+      : item.kind === 'song'
+        ? this.api.removeInvitationGuestSong(this.invitation.slug, item.id, this.guestSessionToken)
+        : this.api.removeInvitationGuestDedication(this.invitation.slug, item.id, this.guestSessionToken);
+    this.runGuestActivityAction(request, `${label.charAt(0).toUpperCase()}${label.slice(1)} retirada.`);
+  }
+
+  updateGuestActivityDedication(payload: { id: string; publicName?: string; message: string; visibility?: 'public' | 'hosts_only' }): void {
+    if (!this.invitation || !this.guestSessionToken) return;
+    this.runGuestActivityAction(
+      this.api.updateInvitationGuestDedication(this.invitation.slug, payload.id, this.guestSessionToken, payload),
+      'Dedicatoria actualizada.'
+    );
+  }
+
+  private runGuestActivityAction(request: { subscribe: Function }, message: string): void {
+    this.sending = true;
+    this.error = '';
+    request.subscribe({
+      next: () => {
+        this.sending = false;
+        this.success = message;
+        this.loadGuestActivity(false);
+      },
+      error: (error: any) => {
+        this.sending = false;
+        this.error = error.error?.message || 'No se pudo completar la acción.';
+      }
+    });
+  }
+
   private guestSessionStorageKey(slug: string): string {
     return `kyndra_guest_session_${slug}`;
   }
@@ -1148,6 +1192,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         this.selectedAlbumFile = undefined;
         this.uploadingAlbum = false;
         this.showToast('Foto enviada con éxito');
+        this.loadGuestActivity(false);
       },
       error: (error) => {
         this.error = error.error?.message || 'No se pudo subir la foto.';

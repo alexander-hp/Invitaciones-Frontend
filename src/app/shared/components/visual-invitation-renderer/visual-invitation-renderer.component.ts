@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import {
-  DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, InvitationGalleryItem, InvitationLocation, InvitationModel,
+  DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
   VisualInvitationLayer, VisualInvitationSection
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
@@ -36,6 +36,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Output() requestSong = new EventEmitter<{ title: string; artist: string; dedication: string; sourceUrl: string }>();
   @Output() openLightbox = new EventEmitter<string>();
   @Output() openGuestActivity = new EventEmitter<void>();
+  @Output() updateActivityRsvp = new EventEmitter<{ response: RsvpResponse; companions: number; companionNames: string[]; message: string; declineConfirmed?: boolean }>();
+  @Output() removeActivityItem = new EventEmitter<{ kind: 'album' | 'song' | 'dedication'; id: string }>();
+  @Output() updateActivityDedication = new EventEmitter<{ id: string; publicName?: string; message: string; visibility?: 'public' | 'hosts_only' }>();
+
+  activityPanelOpen = false;
+  quickRsvp = { response: 'confirmed' as RsvpResponse, companions: 0, companionNames: '', message: '' };
+  editingActivityDedicationId = '';
+  activityDedicationDraft = '';
 
   activityCount(kind: 'album' | 'songs' | 'dedications'): number {
     if (kind === 'album') return this.guestActivity?.albumUploads?.length || 0;
@@ -46,6 +54,37 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   activityRsvpLabel(): string {
     const response = this.guestActivity?.rsvp?.response;
     return response === 'confirmed' ? 'Asistencia confirmada' : response === 'declined' ? 'No asistiré' : response === 'maybe' ? 'Tal vez asistiré' : 'Sin confirmar';
+  }
+
+  openActivityPanel(): void {
+    this.activityPanelOpen = true;
+  }
+
+  closeActivityPanel(): void {
+    this.activityPanelOpen = false;
+    this.editingActivityDedicationId = '';
+  }
+
+  saveQuickRsvp(): void {
+    this.updateActivityRsvp.emit({
+      response: this.quickRsvp.response,
+      companions: this.quickRsvp.response === 'confirmed' ? Number(this.quickRsvp.companions || 0) : 0,
+      companionNames: this.quickRsvp.response === 'confirmed' ? this.quickRsvp.companionNames.split(',').map((name) => name.trim()).filter(Boolean) : [],
+      message: this.quickRsvp.message,
+      declineConfirmed: this.quickRsvp.response === 'declined'
+    });
+  }
+
+  startActivityDedicationEdit(item: DedicationModel): void {
+    this.editingActivityDedicationId = item.id || item._id || '';
+    this.activityDedicationDraft = item.message;
+  }
+
+  saveActivityDedication(item: DedicationModel): void {
+    const id = item.id || item._id;
+    if (!id || !this.activityDedicationDraft.trim()) return;
+    this.updateActivityDedication.emit({ id, publicName: item.publicName, message: this.activityDedicationDraft.trim(), visibility: item.visibility });
+    this.editingActivityDedicationId = '';
   }
 
   guestEmail = '';
@@ -97,6 +136,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     this.galleryIndex = Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
     this.configureGalleryTimer();
     this.configureCountdownTimer();
+    if (this.guestActivity?.rsvp && !this.activityPanelOpen) {
+      this.quickRsvp = {
+        response: this.guestActivity.rsvp.response,
+        companions: Number(this.guestActivity.rsvp.companions || 0),
+        companionNames: (this.guestActivity.rsvp.companionNames || []).join(', '),
+        message: this.guestActivity.rsvp.message || ''
+      };
+    }
   }
 
   ngOnDestroy(): void {
@@ -299,6 +346,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @HostListener('window:resize')
   onViewportResize(): void {
     this.device = this.detectDevice();
+  }
+
+  @HostListener('document:keydown.escape')
+  closeActivityOnEscape(): void {
+    if (this.activityPanelOpen) this.closeActivityPanel();
   }
 
   identifyGuest(): void {
