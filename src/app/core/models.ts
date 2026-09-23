@@ -435,6 +435,36 @@ export interface WebImageSearchResult {
   downloadLocation: string;
 }
 
+export interface VisualPluginPartDesign {
+  label?: string;
+  placeholder?: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number;
+  color?: string;
+  backgroundColor?: string;
+  backgroundImageUrl?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  borderRadius?: number;
+  padding?: number;
+  textAlign?: 'left' | 'center' | 'right';
+  boxShadow?: string;
+  shape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
+  variant?: 'default' | 'cards';
+  hidden?: boolean;
+}
+
+export interface VisualPluginDesign {
+  layout?: 'flow' | 'free';
+  minHeight?: number;
+  parts?: Record<string, VisualPluginPartDesign>;
+}
+
 export interface VisualInvitationSection {
   id: string;
   type: string;
@@ -457,6 +487,7 @@ export interface VisualInvitationSection {
     showTitle?: boolean;
   };
   pluginSettings?: Record<string, string | number | boolean>;
+  pluginDesign?: VisualPluginDesign;
   layers: VisualInvitationLayer[];
 }
 

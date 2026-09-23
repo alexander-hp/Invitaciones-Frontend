@@ -8,7 +8,7 @@ import {
   EventModel, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
-  VisualInvitationSection, VisualLayerType, WebImageSearchResult
+  VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
 } from '../../core/models';
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 
@@ -40,6 +40,7 @@ type SelectionMarquee = { sectionId: string; left: number; top: number; width: n
 type ContentListKey = 'locations' | 'itinerary' | 'galleryItems' | 'giftRegistry' | 'lodging';
 type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent; rsvpSettings: RsvpSettings };
 type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApproveEmails' | 'autoApprovePhones';
+type RsvpPartKey = 'eyebrow' | 'title' | 'intro' | 'name' | 'contact' | 'response' | 'companions' | 'dietary' | 'message' | 'submit' | 'feedback';
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -57,6 +58,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectedSectionId = '';
   selectedLayerId = '';
   selectedLayerIds: string[] = [];
+  selectedPluginPartKey = '';
   device: DeviceMode = 'mobile';
   loading = true;
   saving = false;
@@ -102,6 +104,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   touchGestureLabel = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
+  readonly rsvpParts: Array<{ key: RsvpPartKey; label: string; binding: string; purpose: string }> = [
+    { key: 'eyebrow', label: 'Texto superior', binding: 'display.rsvp.eyebrow', purpose: 'Presentación visual' },
+    { key: 'title', label: 'Título', binding: 'display.rsvp.title', purpose: 'Presentación visual' },
+    { key: 'intro', label: 'Introducción', binding: 'display.rsvp.intro', purpose: 'Presentación visual' },
+    { key: 'name', label: 'Nombre', binding: 'rsvp.name', purpose: 'Guarda el nombre del invitado' },
+    { key: 'contact', label: 'Correo', binding: 'rsvp.email', purpose: 'Identifica y contacta al invitado' },
+    { key: 'response', label: 'Respuesta', binding: 'rsvp.response', purpose: 'Guarda si asistirá, tal vez o no asistirá' },
+    { key: 'companions', label: 'Acompañantes', binding: 'rsvp.companions', purpose: 'Respeta el máximo permitido' },
+    { key: 'dietary', label: 'Alimentación', binding: 'rsvp.dietaryRestrictions', purpose: 'Guarda restricciones alimentarias' },
+    { key: 'message', label: 'Mensaje', binding: 'rsvp.message', purpose: 'Guarda un mensaje opcional' },
+    { key: 'submit', label: 'Botón enviar', binding: 'rsvp.submit', purpose: 'Valida y envía la confirmación' },
+    { key: 'feedback', label: 'Respuesta del sistema', binding: 'rsvp.feedback', purpose: 'Muestra éxito o error del envío' }
+  ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
@@ -172,6 +187,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     startX: number;
     startY: number;
     bounds: { x: number; y: number; width: number; height: number };
+    moved: boolean;
+  };
+  private pluginPartDragState?: {
+    section: VisualInvitationSection;
+    part: VisualPluginPartDesign;
+    canvas: HTMLElement;
+    startX: number;
+    startY: number;
+    x: number;
+    y: number;
     moved: boolean;
   };
   private stageElement?: HTMLElement;
@@ -816,6 +841,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectSection(section: VisualInvitationSection): void {
     this.croppingLayerId = '';
     this.selectedSectionId = section.id;
+    this.selectedPluginPartKey = '';
     this.clearLayerSelection();
   }
 
@@ -842,7 +868,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
@@ -1361,6 +1387,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       event.preventDefault();
       return;
     }
+    const pluginDrag = this.pluginPartDragState;
+    if (pluginDrag) {
+      const distanceX = event.clientX - pluginDrag.startX;
+      const distanceY = event.clientY - pluginDrag.startY;
+      if (!pluginDrag.moved && Math.hypot(distanceX, distanceY) < 3) return;
+      event.preventDefault();
+      if (!pluginDrag.moved) { this.recordHistory(); pluginDrag.moved = true; }
+      const width = Number(pluginDrag.part.width || 20);
+      const height = Number(pluginDrag.part.height || 8);
+      pluginDrag.part.x = Math.round(this.bound(pluginDrag.x + distanceX / Math.max(1, pluginDrag.canvas.clientWidth) * 100, 0, 100 - width) * 10) / 10;
+      pluginDrag.part.y = Math.round(this.bound(pluginDrag.y + distanceY / Math.max(1, pluginDrag.canvas.clientHeight) * 100, 0, 100 - height) * 10) / 10;
+      this.autosaveState = 'Cambios pendientes';
+      return;
+    }
     const crop = this.cropPanState;
     if (crop) {
       event.preventDefault();
@@ -1461,6 +1501,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.marqueeState = undefined;
     this.selectionMarquee = undefined;
     this.cropPanState = undefined;
+    this.pluginPartDragState = undefined;
     this.layerDragState = undefined;
     this.draggingLayerId = '';
     this.guideX = null;
@@ -1761,6 +1802,133 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     value: string | number | boolean
   ): void {
     section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}), [key]: value } as NonNullable<VisualInvitationSection['moduleStyle']>;
+  }
+
+  selectPluginPart(section: VisualInvitationSection, key: RsvpPartKey, event: Event): void {
+    event.stopPropagation();
+    this.selectedSectionId = section.id;
+    this.clearLayerSelection();
+    this.selectedPluginPartKey = key;
+    this.inspectorView = 'properties';
+  }
+
+  rsvpPart(key: string): { key: RsvpPartKey; label: string; binding: string; purpose: string } | undefined {
+    return this.rsvpParts.find((part) => part.key === key);
+  }
+
+  pluginPartDesign(section: VisualInvitationSection, key: string): VisualPluginPartDesign {
+    return section.pluginDesign?.parts?.[key] || this.defaultRsvpPluginDesign().parts?.[key] || {};
+  }
+
+  pluginPartLabel(section: VisualInvitationSection, key: RsvpPartKey): string {
+    const configured = this.pluginPartDesign(section, key).label;
+    if (configured) return configured;
+    const labels: Record<RsvpPartKey, string> = {
+      eyebrow: String(this.pluginSetting(section, 'eyebrow') || 'Confirmación'),
+      title: section.title || 'Confirma tu asistencia',
+      intro: String(this.pluginSetting(section, 'introText') || 'Nos encantará contar contigo.'),
+      name: 'Nombre', contact: 'Correo', response: 'Respuesta', companions: 'Acompañantes',
+      dietary: 'Restricciones alimentarias', message: 'Mensaje',
+      submit: String(this.pluginSetting(section, 'primaryButtonText') || 'Enviar confirmación'),
+      feedback: 'Aquí aparecerá la confirmación del envío'
+    };
+    return labels[key];
+  }
+
+  pluginPartPlaceholder(section: VisualInvitationSection, key: RsvpPartKey): string {
+    const configured = this.pluginPartDesign(section, key).placeholder;
+    if (configured) return configured;
+    const placeholders: Partial<Record<RsvpPartKey, string>> = {
+      name: 'Nombre del invitado', contact: 'contacto@ejemplo.com', response: 'Sí asistiré', companions: '0',
+      dietary: 'Vegetariano, alergias...', message: 'Mensaje opcional'
+    };
+    return placeholders[key] || '';
+  }
+
+  pluginPartClasses(section: VisualInvitationSection, key: string): string[] {
+    const design = this.pluginPartDesign(section, key);
+    return [`plugin-part-${key}`, `plugin-shape-${design.shape || 'rectangle'}`, design.variant === 'cards' ? 'plugin-variant-cards' : 'plugin-variant-default'];
+  }
+
+  pluginPartStyle(section: VisualInvitationSection, key: string): Record<string, string> {
+    const part = this.pluginPartDesign(section, key);
+    const free = section.pluginDesign?.layout === 'free';
+    return {
+      position: free ? 'absolute' : 'relative',
+      left: free ? `${part.x ?? 5}%` : 'auto', top: free ? `${part.y ?? 5}%` : 'auto',
+      width: free ? `${part.width ?? 90}%` : 'auto', minHeight: free ? `${part.height ?? 8}%` : '0',
+      color: String(part.color || 'var(--module-text)'), backgroundColor: String(part.backgroundColor || 'transparent'),
+      backgroundImage: part.backgroundImageUrl ? `url("${part.backgroundImageUrl}")` : 'none',
+      fontFamily: String(part.fontFamily || 'var(--module-body-font)'), fontSize: `${Number(part.fontSize || 14)}px`,
+      fontWeight: String(part.fontWeight || 500), textAlign: String(part.textAlign || 'left'),
+      borderColor: String(part.borderColor || 'transparent'), borderWidth: `${Number(part.borderWidth || 0)}px`,
+      borderStyle: Number(part.borderWidth || 0) ? 'solid' : 'none', borderRadius: `${Number(part.borderRadius || 0)}px`,
+      padding: `${Number(part.padding ?? 8)}px`, boxShadow: String(part.boxShadow || 'none'),
+      backgroundSize: 'cover', backgroundPosition: 'center', boxSizing: 'border-box'
+    };
+  }
+
+  rsvpDesignCanvasStyle(section: VisualInvitationSection): Record<string, string> {
+    return { minHeight: section.pluginDesign?.layout === 'free' ? `${Number(section.pluginDesign?.minHeight || 560)}px` : '0' };
+  }
+
+  setRsvpDesignLayout(section: VisualInvitationSection, layout: 'flow' | 'free'): void {
+    this.recordHistory();
+    this.ensureRsvpPluginDesign(section);
+    section.pluginDesign!.layout = layout;
+    section.height = Math.max(section.height, layout === 'free' ? Number(section.pluginDesign!.minHeight || 560) + 150 : 820);
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  setRsvpDesignHeight(section: VisualInvitationSection, value: number): void {
+    this.ensureRsvpPluginDesign(section);
+    section.pluginDesign!.minHeight = Math.max(240, Math.min(1600, Number(value) || 560));
+    section.height = Math.max(section.height, section.pluginDesign!.minHeight + 150);
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  setPluginPartDesign(section: VisualInvitationSection, key: string, property: keyof VisualPluginPartDesign, value: string | number | boolean): void {
+    this.ensureRsvpPluginDesign(section);
+    section.pluginDesign!.parts![key] = { ...section.pluginDesign!.parts![key], [property]: value };
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  applyPluginPartPreset(section: VisualInvitationSection, key: string, preset: 'minimal' | 'pill' | 'cloud' | 'notebook'): void {
+    this.recordHistory();
+    this.ensureRsvpPluginDesign(section);
+    const accent = this.design.theme?.accentColor || '#9a6754';
+    const presets: Record<typeof preset, Partial<VisualPluginPartDesign>> = {
+      minimal: { shape: 'rectangle', backgroundColor: '#ffffff', borderColor: '#d7cec7', borderWidth: 1, borderRadius: 4, boxShadow: 'none' },
+      pill: { shape: 'pill', backgroundColor: '#ffffff', borderColor: accent, borderWidth: 1, borderRadius: 999, boxShadow: 'none' },
+      cloud: { shape: 'cloud', backgroundColor: '#ffffff', borderColor: accent, borderWidth: 1, borderRadius: 48, boxShadow: '0 10px 24px rgba(64,53,47,.12)' },
+      notebook: { shape: 'notebook', backgroundColor: '#fffdf8', borderColor: '#d9cec3', borderWidth: 1, borderRadius: 3, boxShadow: '0 8px 18px rgba(64,53,47,.12)' }
+    };
+    section.pluginDesign!.parts![key] = { ...section.pluginDesign!.parts![key], ...presets[preset] };
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  beginPluginPartDrag(event: PointerEvent, section: VisualInvitationSection, key: RsvpPartKey, canvas: HTMLElement): void {
+    this.selectPluginPart(section, key, event);
+    if (section.pluginDesign?.layout !== 'free' || event.button !== 0) return;
+    const part = this.pluginPartDesign(section, key);
+    this.ensureRsvpPluginDesign(section);
+    this.pluginPartDragState = {
+      section, part: section.pluginDesign!.parts![key], canvas,
+      startX: event.clientX, startY: event.clientY, x: Number(part.x || 0), y: Number(part.y || 0), moved: false
+    };
+  }
+
+  uploadPluginPartBackground(fileInput: HTMLInputElement, section: VisualInvitationSection, key: string): void {
+    const file = fileInput.files?.[0];
+    if (!file || !this.invitation) return;
+    const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event._id || this.invitation.event.id);
+    this.uploading = true;
+    this.api.createUploadUrl({ fileName: file.name, contentType: file.type, folder: 'assets', event: eventId, size: file.size }).pipe(
+      switchMap(({ uploadUrl, publicUrl }) => this.api.uploadAsset(uploadUrl, file).pipe(map(() => publicUrl)))
+    ).subscribe({
+      next: (publicUrl) => { this.recordHistory(); this.setPluginPartDesign(section, key, 'backgroundImageUrl', publicUrl); this.uploading = false; fileInput.value = ''; },
+      error: () => { this.uploading = false; this.error = 'No fue posible subir el fondo del control.'; }
+    });
   }
 
   pluginSetting(section: VisualInvitationSection, key: string): string | number | boolean {
@@ -2247,6 +2415,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       background: { color, overlay: 0 },
       moduleStyle: type === 'hero' || type === 'custom' ? undefined : this.defaultModuleStyle(),
       pluginSettings: this.isConfigurablePlugin(type) ? this.defaultPluginSettings(type) : undefined,
+      pluginDesign: type === 'rsvp' ? this.defaultRsvpPluginDesign() : undefined,
       layers: []
     };
   }
@@ -2261,7 +2430,41 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (section.type === 'hero' || section.type === 'custom') continue;
       section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}) };
       if (this.isConfigurablePlugin(section.type)) section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
+      if (section.type === 'rsvp') {
+        this.ensureRsvpPluginDesign(section);
+        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820);
+      }
     }
+  }
+
+  private ensureRsvpPluginDesign(section: VisualInvitationSection): void {
+    const defaults = this.defaultRsvpPluginDesign();
+    const existing = section.pluginDesign || {};
+    const existingParts = existing.parts || {};
+    const parts: Record<string, VisualPluginPartDesign> = {};
+    for (const [key, value] of Object.entries(defaults.parts || {})) parts[key] = { ...value, ...(existingParts[key] || {}) };
+    for (const [key, value] of Object.entries(existingParts)) if (!parts[key]) parts[key] = { ...value };
+    section.pluginDesign = { ...defaults, ...existing, parts };
+  }
+
+  private defaultRsvpPluginDesign(): NonNullable<VisualInvitationSection['pluginDesign']> {
+    const base = (x: number, y: number, width: number, height: number, extras: Partial<VisualPluginPartDesign> = {}): VisualPluginPartDesign => ({
+      x, y, width, height, fontFamily: this.design?.theme?.bodyFont || 'Arial, sans-serif', fontSize: 14, fontWeight: 500,
+      color: this.design?.theme?.textColor || '#292523', backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1,
+      borderRadius: 8, padding: 10, textAlign: 'left', shape: 'rectangle', ...extras
+    });
+    return {
+      layout: 'flow', minHeight: 560,
+      parts: {
+        eyebrow: base(15, 2, 70, 6, { fontSize: 11, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 2 }),
+        title: base(10, 9, 80, 10, { fontFamily: this.design?.theme?.headingFont || 'Georgia, serif', fontSize: 34, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 3 }),
+        intro: base(12, 20, 76, 8, { textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 3 }),
+        name: base(5, 31, 42, 13), contact: base(53, 31, 42, 13), response: base(5, 47, 42, 13), companions: base(53, 47, 42, 13),
+        dietary: base(5, 63, 42, 15), message: base(53, 63, 42, 15),
+        submit: base(30, 82, 40, 10, { textAlign: 'center', fontWeight: 700, color: this.design?.theme?.buttonTextColor || '#ffffff', backgroundColor: this.design?.theme?.buttonBackgroundColor || '#292523', borderWidth: 0, borderRadius: this.design?.theme?.buttonRadius || 6 }),
+        feedback: base(15, 94, 70, 7, { textAlign: 'center', backgroundColor: '#edf5fb', borderWidth: 0, fontSize: 12 })
+      }
+    };
   }
 
   private defaultPluginSettings(type: string): Record<string, string | number | boolean> {

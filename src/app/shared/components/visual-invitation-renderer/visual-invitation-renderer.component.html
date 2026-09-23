@@ -91,27 +91,34 @@
       </div>
     </div>
 
-    <div class="functional-module form-module" *ngIf="section.type === 'rsvp'">
-      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Confirmación') }}</small><h2>{{ section.title || 'Confirma tu asistencia' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
-      <form *ngIf="requiresGuestValidation && !verifiedGuest; else rsvpForm" (ngSubmit)="identifyGuest()">
-        <p>Confirma que estás en la lista usando tu correo o teléfono.</p>
+    <div class="functional-module form-module rsvp-module" *ngIf="section.type === 'rsvp'">
+      <form *ngIf="requiresGuestValidation && !verifiedGuest; else rsvpForm" class="rsvp-identify-form" (ngSubmit)="identifyGuest()">
+        <h2>Identifica tu invitación</h2><p>Confirma que estás en la lista usando tu correo o teléfono.</p>
         <label>Correo<input [(ngModel)]="guestEmail" name="visualGuestEmail" type="email"></label>
         <label>Teléfono<input [(ngModel)]="guestPhone" name="visualGuestPhone" type="tel"></label>
         <button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : pluginSetting(section, 'identifyButtonText', 'Continuar') }}</button>
       </form>
       <ng-template #rsvpForm>
-        <form (ngSubmit)="sendRsvp()">
-          <p class="verified" *ngIf="verifiedGuest">Pase identificado para {{ verifiedGuest.name }}</p>
-          <label *ngIf="!verifiedGuest">Nombre<input [(ngModel)]="rsvp.name" name="visualRsvpName" required></label>
-          <label *ngIf="!verifiedGuest">Correo<input [(ngModel)]="rsvp.email" name="visualRsvpEmail" type="email"></label>
-          <label>Respuesta<select [(ngModel)]="rsvp.response" name="visualRsvpResponse"><option value="confirmed">Sí asistiré</option><option value="maybe">Tal vez</option><option value="declined">No podré asistir</option></select></label>
-          <label *ngIf="rsvp.response !== 'declined' && maxCompanions > 0">Acompañantes<input [(ngModel)]="rsvp.companions" name="visualRsvpCompanions" type="number" min="0" [max]="maxCompanions"></label>
-          <label *ngIf="pluginSetting(section, 'showDietary', true)">Restricciones alimentarias<textarea [(ngModel)]="rsvp.dietaryRestrictions" name="visualRsvpDietary" rows="2"></textarea></label>
-          <label *ngIf="pluginSetting(section, 'showMessage', true)">Mensaje<textarea [(ngModel)]="rsvp.message" name="visualRsvpMessage" rows="2"></textarea></label>
-          <button type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : pluginSetting(section, 'primaryButtonText', 'Enviar confirmación') }}</button>
-        </form>
+        <div class="rsvp-plugin-canvas" [class.free-layout]="section.pluginDesign?.layout === 'free'" [ngStyle]="rsvpDesignCanvasStyle(section)">
+          <small *ngIf="!pluginPartDesign(section, 'eyebrow').hidden" class="rsvp-plugin-part module-eyebrow" [ngClass]="pluginPartClasses(section, 'eyebrow')" [ngStyle]="pluginPartStyle(section, 'eyebrow')">{{ pluginPartLabel(section, 'eyebrow', '' + pluginSetting(section, 'eyebrow', 'Confirmación')) }}</small>
+          <h2 *ngIf="!pluginPartDesign(section, 'title').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'title')" [ngStyle]="pluginPartStyle(section, 'title')">{{ pluginPartLabel(section, 'title', section.title || 'Confirma tu asistencia') }}</h2>
+          <p *ngIf="!pluginPartDesign(section, 'intro').hidden" class="rsvp-plugin-part module-intro" [ngClass]="pluginPartClasses(section, 'intro')" [ngStyle]="pluginPartStyle(section, 'intro')">{{ pluginPartLabel(section, 'intro', '' + pluginSetting(section, 'introText', 'Nos encantará contar contigo.')) }}</p>
+          <form class="rsvp-custom-form" (ngSubmit)="sendRsvp()">
+            <p class="verified" *ngIf="verifiedGuest">Pase identificado para {{ verifiedGuest.name }}</p>
+            <label *ngIf="!verifiedGuest && !pluginPartDesign(section, 'name').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'name')" [ngStyle]="pluginPartStyle(section, 'name')">{{ pluginPartLabel(section, 'name', 'Nombre') }}<input [(ngModel)]="rsvp.name" name="visualRsvpName" required [placeholder]="pluginPartPlaceholder(section, 'name', 'Nombre del invitado')"></label>
+            <label *ngIf="!verifiedGuest && !pluginPartDesign(section, 'contact').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'contact')" [ngStyle]="pluginPartStyle(section, 'contact')">{{ pluginPartLabel(section, 'contact', 'Correo') }}<input [(ngModel)]="rsvp.email" name="visualRsvpEmail" type="email" [placeholder]="pluginPartPlaceholder(section, 'contact', 'contacto@ejemplo.com')"></label>
+            <label *ngIf="!pluginPartDesign(section, 'response').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'response')" [ngStyle]="pluginPartStyle(section, 'response')">{{ pluginPartLabel(section, 'response', 'Respuesta') }}
+              <select *ngIf="pluginPartDesign(section, 'response').variant !== 'cards'" [(ngModel)]="rsvp.response" name="visualRsvpResponse"><option value="confirmed">Sí asistiré</option><option *ngIf="invitation?.rsvpSettings?.allowMaybe !== false" value="maybe">Tal vez</option><option value="declined">No podré asistir</option></select>
+              <span *ngIf="pluginPartDesign(section, 'response').variant === 'cards'" class="rsvp-response-cards"><button type="button" [class.active]="rsvp.response === 'confirmed'" (click)="rsvp.response='confirmed'">Sí asistiré</button><button *ngIf="invitation?.rsvpSettings?.allowMaybe !== false" type="button" [class.active]="rsvp.response === 'maybe'" (click)="rsvp.response='maybe'">Tal vez</button><button type="button" [class.active]="rsvp.response === 'declined'" (click)="rsvp.response='declined'">No asistiré</button></span>
+            </label>
+            <label *ngIf="rsvp.response !== 'declined' && maxCompanions > 0 && !pluginPartDesign(section, 'companions').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'companions')" [ngStyle]="pluginPartStyle(section, 'companions')">{{ pluginPartLabel(section, 'companions', 'Acompañantes') }}<input [(ngModel)]="rsvp.companions" name="visualRsvpCompanions" type="number" min="0" [max]="maxCompanions"></label>
+            <label *ngIf="pluginSetting(section, 'showDietary', true) && !pluginPartDesign(section, 'dietary').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'dietary')" [ngStyle]="pluginPartStyle(section, 'dietary')">{{ pluginPartLabel(section, 'dietary', 'Restricciones alimentarias') }}<textarea [(ngModel)]="rsvp.dietaryRestrictions" name="visualRsvpDietary" rows="2" [placeholder]="pluginPartPlaceholder(section, 'dietary', 'Vegetariano, alergias...')"></textarea></label>
+            <label *ngIf="pluginSetting(section, 'showMessage', true) && !pluginPartDesign(section, 'message').hidden" class="rsvp-plugin-part" [ngClass]="pluginPartClasses(section, 'message')" [ngStyle]="pluginPartStyle(section, 'message')">{{ pluginPartLabel(section, 'message', 'Mensaje') }}<textarea [(ngModel)]="rsvp.message" name="visualRsvpMessage" rows="2" [placeholder]="pluginPartPlaceholder(section, 'message', 'Mensaje opcional')"></textarea></label>
+            <button *ngIf="!pluginPartDesign(section, 'submit').hidden" type="submit" class="rsvp-plugin-part rsvp-submit" [ngClass]="pluginPartClasses(section, 'submit')" [ngStyle]="pluginPartStyle(section, 'submit')" [disabled]="sending">{{ sending ? 'Enviando...' : pluginPartLabel(section, 'submit', '' + pluginSetting(section, 'primaryButtonText', 'Enviar confirmación')) }}</button>
+          </form>
+          <div *ngIf="(success || error) && !pluginPartDesign(section, 'feedback').hidden" class="rsvp-plugin-part feedback" [class.success]="success" [class.error]="error" [ngClass]="pluginPartClasses(section, 'feedback')" [ngStyle]="pluginPartStyle(section, 'feedback')">{{ success || error }}</div>
+        </div>
       </ng-template>
-      <p class="feedback success" *ngIf="success">{{ success }}</p><p class="feedback error" *ngIf="error">{{ error }}</p>
     </div>
 
     <div class="functional-module form-module guest-pass-module" *ngIf="section.type === 'guestPass'">

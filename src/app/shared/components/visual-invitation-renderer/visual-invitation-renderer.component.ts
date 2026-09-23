@@ -1,7 +1,7 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import {
   DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
-  VisualInvitationLayer, VisualInvitationSection
+  VisualInvitationLayer, VisualInvitationSection, VisualPluginPartDesign
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
 
@@ -178,6 +178,50 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     return section.pluginSettings?.[key] ?? fallback;
   }
 
+  pluginPartDesign(section: VisualInvitationSection, key: string): VisualPluginPartDesign {
+    const theme = this.invitation?.content?.visualDesign?.theme;
+    const displayPart = ['eyebrow', 'title', 'intro'].includes(key);
+    const defaults: VisualPluginPartDesign = displayPart
+      ? { backgroundColor: 'transparent', borderWidth: 0, padding: 3, textAlign: 'center', fontSize: key === 'title' ? 34 : key === 'eyebrow' ? 11 : 14 }
+      : { backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderRadius: 8, padding: 10, textAlign: key === 'submit' || key === 'feedback' ? 'center' : 'left', fontSize: 14 };
+    if (key === 'title') defaults.fontFamily = theme?.headingFont || 'Georgia, serif';
+    if (key === 'submit') Object.assign(defaults, { backgroundColor: theme?.buttonBackgroundColor || '#292523', color: theme?.buttonTextColor || '#ffffff', borderWidth: 0, fontWeight: 700 });
+    if (key === 'feedback') Object.assign(defaults, { backgroundColor: '#edf5fb', borderWidth: 0, fontSize: 12 });
+    return { ...defaults, ...(section.pluginDesign?.parts?.[key] || {}) };
+  }
+
+  pluginPartLabel(section: VisualInvitationSection, key: string, fallback: string): string {
+    return this.pluginPartDesign(section, key).label || fallback;
+  }
+
+  pluginPartPlaceholder(section: VisualInvitationSection, key: string, fallback: string): string {
+    return this.pluginPartDesign(section, key).placeholder || fallback;
+  }
+
+  pluginPartClasses(section: VisualInvitationSection, key: string): string[] {
+    const design = this.pluginPartDesign(section, key);
+    return [`plugin-part-${key}`, `plugin-shape-${design.shape || 'rectangle'}`, design.variant === 'cards' ? 'plugin-variant-cards' : 'plugin-variant-default'];
+  }
+
+  pluginPartStyle(section: VisualInvitationSection, key: string): Record<string, string> {
+    const part = this.pluginPartDesign(section, key);
+    const free = section.pluginDesign?.layout === 'free';
+    return {
+      position: free ? 'absolute' : 'relative', left: free ? `${part.x ?? 5}%` : 'auto', top: free ? `${part.y ?? 5}%` : 'auto',
+      width: free ? `${part.width ?? 90}%` : 'auto', minHeight: free ? `${part.height ?? 8}%` : '0',
+      color: String(part.color || 'var(--visual-text)'), backgroundColor: String(part.backgroundColor || 'transparent'),
+      backgroundImage: part.backgroundImageUrl ? `url("${part.backgroundImageUrl}")` : 'none',
+      fontFamily: String(part.fontFamily || 'var(--visual-body-font)'), fontSize: `${Number(part.fontSize || 14)}px`, fontWeight: String(part.fontWeight || 500),
+      textAlign: String(part.textAlign || 'left'), borderColor: String(part.borderColor || 'transparent'), borderWidth: `${Number(part.borderWidth || 0)}px`,
+      borderStyle: Number(part.borderWidth || 0) ? 'solid' : 'none', borderRadius: `${Number(part.borderRadius || 0)}px`, padding: `${Number(part.padding ?? 8)}px`,
+      boxShadow: String(part.boxShadow || 'none'), backgroundSize: 'cover', backgroundPosition: 'center', boxSizing: 'border-box'
+    };
+  }
+
+  rsvpDesignCanvasStyle(section: VisualInvitationSection): Record<string, string> {
+    return { minHeight: section.pluginDesign?.layout === 'free' ? `${Number(section.pluginDesign?.minHeight || 560)}px` : '0' };
+  }
+
   locationsFor(section: VisualInvitationSection): InvitationLocation[] {
     const configured = this.invitation?.content?.locations || [];
     const locations: InvitationLocation[] = configured.length ? configured : (this.event?.venue?.name || this.event?.venue?.address || this.event?.venue?.mapUrl ? [{
@@ -254,8 +298,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const background = section.background || {};
     const moduleStyle = section.moduleStyle || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
+    const height = section.type === 'rsvp'
+      ? Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820)
+      : section.height;
     return {
-      height: `${section.height}px`,
+      height: `${height}px`,
       backgroundColor: background.color || '#fff',
       backgroundImage: background.imageUrl
         ? `linear-gradient(#000000${overlay},#000000${overlay}),url("${background.imageUrl}")`
