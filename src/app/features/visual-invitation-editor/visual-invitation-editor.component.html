@@ -254,6 +254,13 @@
           <button *ngFor="let control of dressCodeControlCatalog(dressCodeSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'lodging' && selectedSection as lodgingSection">
+        <h2>Piezas de hospedaje</h2>
+        <p class="hint">Cada dato conserva la información del hotel. Los botones públicos solo aparecen cuando existe reservación, mapa o teléfono.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of lodgingControlCatalog(lodgingSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>

@@ -118,7 +118,18 @@
       <p class="feedback success" *ngIf="giftCopyMessage">{{ giftCopyMessage }}</p>
     </div>
 
-    <div class="functional-module" *ngIf="section.type === 'lodging'">
+    <div *ngIf="hasLodgingCanvasLayers(section)" class="rsvp-layer-form lodging-layer-form">
+      <ng-container *ngFor="let layer of lodgingCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderLodgingLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.lodging.')">{{ resolveLayerText(layer) }}</div>
+          <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('lodging.')">{{ lodgingLayerText(layer) }}</div>
+          <img *ngIf="layer.binding?.endsWith('.image')" [src]="lodgingLayerImageUrl(layer)" [alt]="lodgingLayerText(layer) || 'Hospedaje recomendado'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
+          <a *ngIf="layer.type === 'button'" class="visual-action-button" [href]="lodgingLayerHref(layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'lodging' && !hasLodgingCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Para invitados foráneos') }}</small><h2>{{ section.title || 'Hospedaje recomendado' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="module-grid lodging-grid">
         <article *ngFor="let hotel of invitation?.content?.lodging">

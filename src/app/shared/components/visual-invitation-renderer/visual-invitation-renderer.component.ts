@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -630,6 +630,67 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   private dressCodeOptionLayerParts(binding: string): { index: number; key: string } | null {
     const match = binding.match(/^dress\.option\.(\d+)\.([^.]+)$/);
+    return match ? { index: Number(match[1]), key: match[2] } : null;
+  }
+
+  lodgingCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('lodging.') || String(layer.binding || '').startsWith('display.lodging.'));
+  }
+
+  hasLodgingCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'lodging' && this.lodgingCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderLodgingLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.lodging.')) return true;
+    const parsed = this.lodgingLayerParts(binding);
+    const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
+    if (!parsed || !hotel) return false;
+    if (parsed.key === 'card') return true;
+    if (parsed.key === 'image') return Boolean(hotel.imageUrl);
+    if (parsed.key === 'price') return this.pluginSetting(section, 'showPrice', true) !== false && Boolean(hotel.priceLabel);
+    if (parsed.key === 'agreement' || parsed.key === 'discount') return this.pluginSetting(section, 'showDiscount', true) !== false && Boolean(this.lodgingLayerText(layer));
+    if (parsed.key === 'services') return this.pluginSetting(section, 'showServices', true) !== false && Boolean(hotel.services?.length);
+    if (parsed.key === 'reserve') return Boolean(hotel.url);
+    if (parsed.key === 'map') return this.pluginSetting(section, 'showMap', true) !== false && Boolean(hotel.mapUrl);
+    if (parsed.key === 'phone') return this.pluginSetting(section, 'showPhone', true) !== false && Boolean(hotel.phone);
+    return Boolean(this.lodgingLayerText(layer));
+  }
+
+  lodgingLayerText(layer: VisualInvitationLayer): string {
+    const parsed = this.lodgingLayerParts(String(layer.binding || ''));
+    const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
+    if (!parsed || !hotel) return '';
+    if (parsed.key === 'name') return hotel.name || '';
+    if (parsed.key === 'description') return hotel.description || '';
+    if (parsed.key === 'address') return hotel.address || '';
+    if (parsed.key === 'price') return hotel.priceLabel || '';
+    if (parsed.key === 'agreement') return hotel.agreementLabel || '';
+    if (parsed.key === 'discount') return [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ');
+    if (parsed.key === 'services') return (hotel.services || []).join(' · ');
+    if (parsed.key === 'notes') return hotel.notes || '';
+    return layer.text || '';
+  }
+
+  lodgingLayerImageUrl(layer: VisualInvitationLayer): string {
+    const parsed = this.lodgingLayerParts(String(layer.binding || ''));
+    return parsed?.key === 'image' ? this.invitation?.content?.lodging?.[parsed.index]?.imageUrl || '' : '';
+  }
+
+  lodgingLayerHref(layer: VisualInvitationLayer): string {
+    const parsed = this.lodgingLayerParts(String(layer.binding || ''));
+    const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
+    if (!parsed || !hotel) return '';
+    if (parsed.key === 'reserve') return hotel.url || '';
+    if (parsed.key === 'map') return hotel.mapUrl || '';
+    if (parsed.key === 'phone') return hotel.phone ? `tel:${hotel.phone}` : '';
+    return '';
+  }
+
+  private lodgingLayerParts(binding: string): { index: number; key: string } | null {
+    const match = binding.match(/^lodging\.(\d+)\.([^.]+)$/);
     return match ? { index: Number(match[1]), key: match[2] } : null;
   }
 

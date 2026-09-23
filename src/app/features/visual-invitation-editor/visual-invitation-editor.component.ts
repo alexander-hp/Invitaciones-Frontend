@@ -927,6 +927,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'gifts') this.ensureGiftCanvasLayers(section);
     if (type === 'itinerary') this.ensureItineraryCanvasLayers(section);
     if (type === 'dressCode') this.ensureDressCodeCanvasLayers(section);
+    if (type === 'lodging') this.ensureLodgingCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -2021,7 +2022,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.');
     });
   }
 
@@ -2049,15 +2050,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('dress.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('lodging.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
   }
 
   isDynamicImageOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'image' && (/^gift\.\d+\.image$/.test(String(layer.binding || '')) || layer.binding === 'envelope.qr' || layer.binding === 'dress.image');
+    return layer.type === 'image' && (/^gift\.\d+\.image$/.test(String(layer.binding || '')) || /^lodging\.\d+\.image$/.test(String(layer.binding || '')) || layer.binding === 'envelope.qr' || layer.binding === 'dress.image');
   }
 
   boundImageUrl(layer: VisualInvitationLayer): string {
     if (layer.binding === 'dress.image') return this.invitation?.content?.dressCodeImageUrl || layer.url || '';
+    const lodgingImageMatch = String(layer.binding || '').match(/^lodging\.(\d+)\.image$/);
+    if (lodgingImageMatch) return this.invitation?.content?.lodging?.[Number(lodgingImageMatch[1])]?.imageUrl || layer.url || '';
     const giftMatch = String(layer.binding || '').match(/^gift\.(\d+)\.image$/);
     if (giftMatch) return this.invitation?.content?.giftRegistry?.[Number(giftMatch[1])]?.imageUrl || layer.url || '';
     if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
@@ -2066,6 +2069,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   editorLayerText(layer: VisualInvitationLayer): string {
     const binding = String(layer.binding || '');
+    const lodgingMatch = binding.match(/^lodging\.(\d+)\.(name|description|address|price|agreement|discount|services|notes)$/);
+    if (lodgingMatch) {
+      const hotel = this.invitation?.content?.lodging?.[Number(lodgingMatch[1])];
+      if (!hotel) return layer.text || '';
+      const key = lodgingMatch[2];
+      if (key === 'name') return hotel.name || layer.text || '';
+      if (key === 'description') return hotel.description || layer.text || '';
+      if (key === 'address') return hotel.address || layer.text || '';
+      if (key === 'price') return hotel.priceLabel || layer.text || '';
+      if (key === 'agreement') return hotel.agreementLabel || layer.text || '';
+      if (key === 'discount') return [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ') || layer.text || '';
+      if (key === 'services') return (hotel.services || []).join(' · ') || layer.text || '';
+      return hotel.notes || layer.text || '';
+    }
     if (binding === 'dress.code') return this.invitation?.content?.dressCode || layer.text || '';
     if (binding === 'dress.description') return this.invitation?.content?.dressCodeDescription || layer.text || '';
     const dressOptionMatch = binding.match(/^dress\.option\.(\d+)\.(title|description)$/);
@@ -2124,7 +2141,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode', 'lodging'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2179,10 +2196,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createItineraryLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'dressCode') {
       const definition = this.dressCodeLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createDressCodeLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.lodgingLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createLodgingLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2287,6 +2309,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     option.color = color;
     const layer = this.design.sections.find((item) => item.type === 'dressCode')?.layers.find((item) => item.binding === `dress.option.${index}.color`);
     if (layer) layer.style = { ...(layer.style || {}), backgroundColor: color };
+  }
+
+  lodgingControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+    const icons: Record<string, string> = { image: '▧', name: 'Aa', description: '≡', address: '⌖', price: '$', agreement: '%', discount: '%', services: '+', notes: '≡', reserve: '→', map: '⌖', phone: '☎' };
+    return this.lodgingLayerDefinitions(section)
+      .filter((definition) => /^lodging\.\d+\.(image|name|description|address|price|agreement|discount|services|notes|reserve|map|phone)$/.test(definition.binding))
+      .map((definition) => {
+        const match = definition.binding.match(/^lodging\.(\d+)\.([^.]+)$/);
+        return { binding: definition.binding, label: `Hospedaje ${Number(match?.[1] || 0) + 1}: ${definition.label}`, icon: icons[match?.[2] || 'name'] || '+' };
+      });
   }
 
   beginContentEdit(): void {
@@ -2420,7 +2452,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
-    if (key === 'lodging') this.invitation.content.lodging!.push(this.emptyLodgingItem(this.invitation.content.lodging!.length));
+    if (key === 'lodging') {
+      const index = this.invitation.content.lodging!.length;
+      this.invitation.content.lodging!.push(this.emptyLodgingItem(index));
+      const section = this.design.sections.find((item) => item.type === 'lodging');
+      if (section && this.hasNativeFunctionalLayers(section)) this.ensureLodgingCanvasLayers(section, [index]);
+    }
     if (key === 'giftRegistry') {
       const index = this.invitation.content.giftRegistry!.length - 1;
       const section = this.design.sections.find((item) => item.type === 'gifts');
@@ -2433,6 +2470,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (index < 0 || index >= items.length) return;
     this.recordHistory();
     items.splice(index, 1);
+    if (key === 'lodging') this.removeIndexedNativeLayers('lodging', index);
     if (key === 'galleryItems') this.syncLegacyGallery();
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, itemIndex) => { item.priority = itemIndex; });
     if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, itemIndex) => { item.priority = itemIndex; });
@@ -2447,6 +2485,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'giftRegistry') this.invitation?.content.giftRegistry?.forEach((item, index) => { item.priority = index; });
     if (key === 'lodging') this.invitation?.content.lodging?.forEach((item, index) => { item.priority = index; });
     if (key === 'locations') this.invitation?.content.locations?.forEach((item, index) => { item.priority = index; });
+  }
+
+  private removeIndexedNativeLayers(sectionType: string, index: number): void {
+    const section = this.design.sections.find((item) => item.type === sectionType);
+    if (!section) return;
+    section.layers = section.layers.filter((layer) => !String(layer.binding || '').startsWith(`${sectionType}.${index}.`));
+    for (const layer of section.layers) {
+      const match = String(layer.binding || '').match(new RegExp(`^${sectionType}\\.(\\d+)\\.(.+)$`));
+      if (match && Number(match[1]) > index) layer.binding = `${sectionType}.${Number(match[1]) - 1}.${match[2]}`;
+    }
+    this.restoreSelection();
   }
 
   uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift' | 'lodging' | 'envelopeQr', index = -1): void {
@@ -2815,6 +2864,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       if (section.type === 'dressCode') {
         this.ensureDressCodeCanvasLayers(section);
+      }
+      if (section.type === 'lodging') {
+        this.ensureLodgingCanvasLayers(section);
       }
     }
   }
@@ -3392,6 +3444,67 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         boxShadow: isColor ? 'none' : '0 8px 24px #00000012'
       };
       if (!isColor) layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    return layer;
+  }
+
+  private lodgingLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const hotels = this.invitation?.content?.lodging || [];
+    const requiredHeight = Math.max(760, 220 + Math.max(1, hotels.length) * 420);
+    const pct = (pixels: number) => pixels / requiredHeight * 100;
+    const definitions: Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
+      { type: 'text', binding: 'display.lodging.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Para invitados foráneos'), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
+      { type: 'text', binding: 'display.lodging.title', label: section.title || 'Hospedaje recomendado', x: 10, y: pct(66), width: 80, height: pct(62), fontSize: 34 },
+      { type: 'text', binding: 'display.lodging.intro', label: String(this.pluginSetting(section, 'introText') || 'Opciones seleccionadas para hacer más cómoda tu estancia.'), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 }
+    ];
+    hotels.forEach((hotel, index) => {
+      const topPx = 200 + index * 420;
+      const prefix = `lodging.${index}`;
+      definitions.push(
+        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de hospedaje ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(390), fontSize: 12 },
+        { type: 'image', binding: `${prefix}.image`, label: 'Imagen', url: hotel.imageUrl || '', x: 12, y: pct(topPx + 20), width: 28, height: pct(150), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.name`, label: hotel.name || `Hospedaje ${index + 1}`, x: 44, y: pct(topPx + 18), width: 43, height: pct(38), fontSize: 23 },
+        { type: 'text', binding: `${prefix}.description`, label: hotel.description || 'Motivo de recomendación', x: 44, y: pct(topPx + 62), width: 43, height: pct(42), fontSize: 13 },
+        { type: 'text', binding: `${prefix}.address`, label: hotel.address || 'Dirección', x: 44, y: pct(topPx + 112), width: 43, height: pct(34), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.price`, label: hotel.priceLabel || 'Tarifa', x: 12, y: pct(topPx + 190), width: 22, height: pct(30), fontSize: 13 },
+        { type: 'text', binding: `${prefix}.agreement`, label: hotel.agreementLabel || 'Convenio', x: 37, y: pct(topPx + 190), width: 23, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.discount`, label: [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ') || 'Descuento', x: 63, y: pct(topPx + 190), width: 24, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.services`, label: (hotel.services || []).join(' · ') || 'Servicios', x: 12, y: pct(topPx + 232), width: 75, height: pct(34), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.notes`, label: hotel.notes || 'Notas adicionales', x: 12, y: pct(topPx + 274), width: 75, height: pct(34), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.reserve`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Reservar'), x: 16, y: pct(topPx + 330), width: 24, height: pct(38), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.map`, label: 'Abrir mapa', x: 42, y: pct(topPx + 330), width: 20, height: pct(38), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: 64, y: pct(topPx + 330), width: 20, height: pct(38), fontSize: 12 }
+      );
+    });
+    return definitions;
+  }
+
+  private ensureLodgingCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
+    const hasLodgingLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('lodging.') || String(layer.binding || '').startsWith('display.lodging.'));
+    if (!indexes?.length && hasLodgingLayers) return;
+    const requiredHeight = Math.max(760, 220 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 420);
+    if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    const definitions = this.lodgingLayerDefinitions(section).filter((definition) => {
+      if (existing.has(definition.binding)) return false;
+      if (!indexes?.length) return true;
+      const match = definition.binding.match(/^lodging\.(\d+)\./);
+      return Boolean(match && indexes.includes(Number(match[1])));
+    });
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...definitions.map((definition) => this.createLodgingLayer(definition, ++topZ)));
+  }
+
+  private createLodgingLayer(definition: ReturnType<typeof this.lodgingLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding;
+    layer.url = definition.url;
+    layer.zIndex = zIndex;
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
+    if (definition.type === 'shape') {
+      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      layer.zIndex = Math.max(1, zIndex - 1);
     }
     return layer;
   }
