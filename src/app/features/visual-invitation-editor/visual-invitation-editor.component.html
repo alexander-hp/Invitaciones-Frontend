@@ -184,6 +184,13 @@
           <button *ngFor="let control of rsvpControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addRsvpControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'dedications'">
+        <h2>Campos de dedicatorias</h2>
+        <p class="hint">Agrega controles funcionales o el muro; los textos visibles siguen siendo capas independientes.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of dedicationControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -215,7 +222,7 @@
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
-            <div *ngIf="section.type !== 'custom' && section.type !== 'hero' && !hasRsvpCanvasLayers(section)" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
+            <div *ngIf="section.type !== 'custom' && section.type !== 'hero' && !hasNativeFunctionalLayers(section)" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
               <ng-container [ngSwitch]="section.type">
                 <div *ngSwitchCase="'story'" class="preview-centered">
                   <small>Nuestra historia</small>
@@ -435,11 +442,11 @@
           <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         </ng-container>
         <ng-container *ngIf="layer.type === 'field'">
-          <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear nubes, tarjetas o cualquier composición.</span></aside>
-          <label>Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
-          <label class="toggle"><input [ngModel]="layer.style?.showPlaceholder !== false" (ngModelChange)="layer.style!.showPlaceholder=$event" type="checkbox"> Mostrar texto de ejemplo</label>
+          <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>{{ layer.binding === 'dedication.wall' ? 'Muestra las dedicatorias aprobadas. Puedes cambiar su tamaño y posición sin convertirlo en un campo de captura.' : 'Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear cualquier composición.' }}</span></aside>
+          <label *ngIf="layer.binding !== 'dedication.wall'">Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
+          <label *ngIf="layer.binding !== 'dedication.wall'" class="toggle"><input [ngModel]="layer.style?.showPlaceholder !== false" (ngModelChange)="layer.style!.showPlaceholder=$event" type="checkbox"> Mostrar texto de ejemplo</label>
           <label *ngIf="layer.binding === 'rsvp.response'">Presentación<select [ngModel]="layer.style?.controlVariant || 'default'" (ngModelChange)="setLayerControlStyle(layer, 'controlVariant', $event)"><option value="default">Selector</option><option value="cards">Tarjetas</option></select></label>
-          <button type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
+          <button *ngIf="layer.binding !== 'dedication.wall'" type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
         </ng-container>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>

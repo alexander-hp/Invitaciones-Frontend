@@ -241,7 +241,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   visualLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return section.layers.filter((layer) => !this.isRsvpFunctionalLayer(layer));
+    return section.layers.filter((layer) => !this.isNativeFunctionalLayer(layer));
   }
 
   rsvpCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
@@ -255,6 +255,26 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   isRsvpFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
     return binding.startsWith('rsvp.') || binding.startsWith('display.rsvp.');
+  }
+
+  dedicationCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.'));
+  }
+
+  hasDedicationCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'dedications' && this.dedicationCanvasLayers(section).length > 0;
+  }
+
+  isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
+    const binding = String(layer.binding || '');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.');
+  }
+
+  shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    if (layer.binding === 'dedication.feedback') return Boolean(this.dedicationMessage);
+    if (layer.binding === 'dedication.wall') return this.pluginSetting(section, 'showWall', true) !== false;
+    return true;
   }
 
   rsvpControlName(layer: VisualInvitationLayer): string {

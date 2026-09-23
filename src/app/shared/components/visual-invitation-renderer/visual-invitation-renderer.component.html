@@ -161,7 +161,20 @@
       <div *ngIf="pluginSetting(section, 'showGallery', true)" class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button></div>
     </div>
 
-    <div class="functional-module form-module" *ngIf="section.type === 'dedications'">
+    <form *ngIf="hasDedicationCanvasLayers(section)" class="rsvp-layer-form dedication-layer-form" (ngSubmit)="sendDedication()">
+      <ng-container *ngFor="let layer of dedicationCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderDedicationLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.dedications.')">{{ resolveLayerText(layer) }}</div>
+          <label *ngIf="layer.binding === 'dedication.publicName'" class="rsvp-layer-control"><input [(ngModel)]="dedication.publicName" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Tu nombre'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre público')"></label>
+          <label *ngIf="layer.binding === 'dedication.message'" class="rsvp-layer-control"><textarea [(ngModel)]="dedication.message" [name]="rsvpControlName(layer)" required rows="3" [attr.aria-label]="layer.text || 'Dedicatoria'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Escribe tu dedicatoria...')"></textarea></label>
+          <button *ngIf="layer.binding === 'dedication.submit'" type="submit" class="visual-action-button" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar dedicatoria') }}</button>
+          <div *ngIf="layer.binding === 'dedication.feedback'" class="rsvp-layer-feedback">{{ dedicationMessage }}</div>
+          <div *ngIf="layer.binding === 'dedication.wall'" class="native-dedication-wall"><blockquote *ngFor="let item of dedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote><p *ngIf="!dedications.length">Las dedicatorias aprobadas aparecerán aquí.</p></div>
+        </div>
+      </ng-container>
+    </form>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'dedications' && !hasDedicationCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Libro de mensajes') }}</small><h2>{{ section.title || 'Dedicatorias' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <form (ngSubmit)="sendDedication()"><label>{{ pluginSetting(section, 'publicNameLabel', 'Tu nombre') }}<input [(ngModel)]="dedication.publicName" name="visualDedicationName"></label><label>{{ pluginSetting(section, 'messageLabel', 'Mensaje') }}<textarea [(ngModel)]="dedication.message" name="visualDedicationMessage" rows="4" required></textarea></label><button type="submit" [disabled]="sending">{{ pluginSetting(section, 'primaryButtonText', 'Enviar dedicatoria') }}</button></form>
       <p class="feedback" *ngIf="dedicationMessage">{{ dedicationMessage }}</p>

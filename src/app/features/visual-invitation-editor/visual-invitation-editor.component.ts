@@ -124,6 +124,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'rsvp.dietaryRestrictions', label: 'Alimentación', icon: '◌' }, { binding: 'rsvp.message', label: 'Mensaje', icon: '✎' },
     { binding: 'rsvp.submit', label: 'Enviar', icon: '→' }
   ];
+  readonly dedicationControlCatalog = [
+    { binding: 'dedication.publicName', label: 'Nombre público', icon: 'Aa' },
+    { binding: 'dedication.message', label: 'Dedicatoria', icon: '✎' },
+    { binding: 'dedication.submit', label: 'Enviar', icon: '→' },
+    { binding: 'dedication.wall', label: 'Muro aprobado', icon: '▤' }
+  ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
@@ -875,8 +881,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : type === 'dedications' ? 760 : 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
+    if (type === 'rsvp') { this.ensureRsvpPluginDesign(section); this.ensureRsvpCanvasLayers(section); this.ensureSeparatedRsvpFieldParts(section); }
+    if (type === 'dedications') this.ensureDedicationCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -1049,7 +1057,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.addComponent(item.key);
       this.centerLayersAt(this.selectedLayers, x, y);
     } else if (item.kind === 'rsvp-control') {
-      this.addRsvpControl(item.binding);
+      this.addFunctionalControl(item.binding);
       this.centerLayersAt(this.selectedLayers, x, y);
     } else {
       this.recordHistory();
@@ -1968,12 +1976,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return section.type === 'rsvp' && section.layers.some((layer) => this.isRsvpFunctionalLayer(layer));
   }
 
+  hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
+    return section.layers.some((layer) => this.isRsvpFunctionalLayer(layer) || String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.'));
+  }
+
   isRsvpFunctionalLayer(layer: VisualInvitationLayer): boolean {
     return String(layer.binding || '').startsWith('rsvp.') || String(layer.binding || '').startsWith('display.rsvp.');
   }
 
   rsvpFieldPreview(layer: VisualInvitationLayer): string {
     if (layer.style?.showPlaceholder === false) return '';
+    if (layer.binding === 'dedication.wall') return '“Que esta etapa esté llena de momentos inolvidables.”';
     if (layer.binding === 'rsvp.response') return 'Sí asistiré';
     if (layer.binding === 'rsvp.companions') return '0';
     return layer.placeholder || 'Escribe aquí';
@@ -1990,20 +2003,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addRsvpControl(binding: string): void {
+    this.addFunctionalControl(binding);
+  }
+
+  addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || section.type !== 'rsvp') return;
-    const definition = this.rsvpLayerDefinitions().find((item) => item.binding === binding);
-    if (!definition) return;
+    if (!section || !['rsvp', 'dedications'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
-    const layer = this.createRsvpLayer(section, definition, topZ + 1);
-    layer.x = 25;
-    layer.y = 40;
-    const additions = layer.type === 'field' ? [this.separateRsvpFieldLayer(layer, topZ + 1), layer] : [layer];
+    let layer: VisualInvitationLayer;
+    let label = '';
+    if (section.type === 'rsvp') {
+      const definition = this.rsvpLayerDefinitions().find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createRsvpLayer(section, definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.dedicationLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createDedicationLayer(section, definition, topZ + 1);
+      label = definition.label;
+    }
+    if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
+    const additions = layer.type === 'field' && layer.binding !== 'dedication.wall' ? [this.separateRsvpFieldLayer(layer, topZ + 1), layer] : [layer];
     section.layers.push(...additions);
     this.setLayerSelection(additions.map((item) => item.id), layer.id);
     this.inspectorView = 'properties';
-    this.flash(`${definition.label} agregado al lienzo.`);
+    this.flash(`${label} agregado al lienzo.`);
   }
 
   restoreMissingRsvpControls(section: VisualInvitationSection): void {
@@ -2506,6 +2532,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.ensureRsvpCanvasLayers(section);
         this.ensureSeparatedRsvpFieldParts(section);
       }
+      if (section.type === 'dedications') {
+        section.height = Math.max(section.height, 760);
+        this.ensureDedicationCanvasLayers(section);
+      }
     }
   }
 
@@ -2599,6 +2629,43 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       { key: 'submit', type: 'button', binding: 'rsvp.submit', label: 'Enviar confirmación' },
       { key: 'feedback', type: 'text', binding: 'rsvp.feedback', label: 'Aquí aparecerá la confirmación del envío' }
     ];
+  }
+
+  private dedicationLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    return [
+      { type: 'text', binding: 'display.dedications.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Libro de mensajes'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+      { type: 'text', binding: 'display.dedications.title', label: section.title || 'Dedicatorias', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
+      { type: 'text', binding: 'display.dedications.intro', label: String(this.pluginSetting(section, 'introText') || 'Déjanos unas palabras para recordar.'), x: 12, y: 24, width: 76, height: 7, fontSize: 14 },
+      { type: 'field', binding: 'dedication.publicName', label: 'Tu nombre', placeholder: 'Nombre público', x: 10, y: 36, width: 34, height: 13, fontSize: 14 },
+      { type: 'field', binding: 'dedication.message', label: 'Mensaje', placeholder: 'Escribe tu dedicatoria...', x: 48, y: 36, width: 42, height: 20, fontSize: 14 },
+      { type: 'button', binding: 'dedication.submit', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Enviar dedicatoria'), x: 30, y: 60, width: 40, height: 8, fontSize: 14 },
+      { type: 'text', binding: 'dedication.feedback', label: 'Aquí aparecerá el estado del envío', x: 20, y: 70, width: 60, height: 5, fontSize: 12 },
+      { type: 'field', binding: 'dedication.wall', label: 'Dedicatorias aprobadas', x: 8, y: 78, width: 84, height: 18, fontSize: 13 }
+    ];
+  }
+
+  private ensureDedicationCanvasLayers(section: VisualInvitationSection): void {
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.'))) return;
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    const additions: VisualInvitationLayer[] = [];
+    for (const definition of this.dedicationLayerDefinitions(section)) {
+      const layer = this.createDedicationLayer(section, definition, ++topZ);
+      if (layer.type === 'field' && !['dedication.wall'].includes(layer.binding || '')) additions.push(this.separateRsvpFieldLayer(layer, topZ));
+      additions.push(layer);
+    }
+    section.layers.push(...additions);
+    section.pluginSettings = { ...(section.pluginSettings || {}), nativeFieldPartsSeparated: true };
+  }
+
+  private createDedicationLayer(section: VisualInvitationSection, definition: ReturnType<typeof this.dedicationLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
+    layer.binding = definition.binding;
+    layer.placeholder = definition.placeholder;
+    layer.zIndex = zIndex;
+    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'left', showPlaceholder: true };
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.binding === 'dedication.wall') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
+    return layer;
   }
 
   private createRsvpLayer(
@@ -2738,6 +2805,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (!visibleBindings.includes('rsvp.name')) add('warning', 'RSVP sin nombre', 'Agrega el campo de nombre si la invitación no exige identificación previa.', section.id);
         const duplicates = visibleBindings.filter((binding, index) => binding && visibleBindings.indexOf(binding) !== index);
         for (const binding of [...new Set(duplicates)]) add('warning', `Función duplicada: ${binding}`, 'Conserva una sola capa con esta función para evitar confusión al responder.', section.id);
+      }
+      if (section.type === 'dedications' && this.hasNativeFunctionalLayers(section)) {
+        const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
+        if (!visibleBindings.includes('dedication.message')) add('critical', 'Dedicatorias sin mensaje', 'Restaura el campo para que los invitados puedan escribir su dedicatoria.', section.id);
+        if (!visibleBindings.includes('dedication.submit')) add('critical', 'Dedicatorias sin botón de envío', 'Restaura el botón para poder enviar el mensaje.', section.id);
       }
 
       for (const layer of section.layers) {
