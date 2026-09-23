@@ -267,13 +267,30 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
     if (layer.binding === 'dedication.feedback') return Boolean(this.dedicationMessage);
     if (layer.binding === 'dedication.wall') return this.pluginSetting(section, 'showWall', true) !== false;
+    return true;
+  }
+
+  songCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('song.') || String(layer.binding || '').startsWith('display.songs.'));
+  }
+
+  hasSongCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'songs' && this.songCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderSongLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    if (layer.binding === 'song.feedback') return Boolean(this.songRequestMessage);
+    if (layer.binding === 'song.sourceUrl') return this.pluginSetting(section, 'showSourceUrl', true) !== false;
+    if (layer.binding === 'song.artist') return this.pluginSetting(section, 'showArtist', true) !== false;
+    if (layer.binding === 'song.dedication') return this.pluginSetting(section, 'showDedication', true) !== false;
     return true;
   }
 

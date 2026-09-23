@@ -130,6 +130,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'dedication.submit', label: 'Enviar', icon: '→' },
     { binding: 'dedication.wall', label: 'Muro aprobado', icon: '▤' }
   ];
+  readonly songControlCatalog = [
+    { binding: 'song.title', label: 'Canción', icon: '♫' },
+    { binding: 'song.sourceUrl', label: 'Spotify / YouTube', icon: '↗' },
+    { binding: 'song.artist', label: 'Artista', icon: 'Aa' },
+    { binding: 'song.dedication', label: 'Dedicatoria', icon: '✎' },
+    { binding: 'song.submit', label: 'Enviar al DJ', icon: '→' }
+  ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
@@ -881,10 +888,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : type === 'dedications' ? 760 : 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs'].includes(type) ? 760 : 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     if (type === 'rsvp') { this.ensureRsvpPluginDesign(section); this.ensureRsvpCanvasLayers(section); this.ensureSeparatedRsvpFieldParts(section); }
     if (type === 'dedications') this.ensureDedicationCanvasLayers(section);
+    if (type === 'songs') this.ensureSongCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -1977,7 +1985,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
-    return section.layers.some((layer) => this.isRsvpFunctionalLayer(layer) || String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.'));
+    return section.layers.some((layer) => {
+      const binding = String(layer.binding || '');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.');
+    });
   }
 
   isRsvpFunctionalLayer(layer: VisualInvitationLayer): boolean {
@@ -2008,7 +2019,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2018,10 +2029,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createRsvpLayer(section, definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'dedications') {
       const definition = this.dedicationLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createDedicationLayer(section, definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.songLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createSongLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2536,6 +2552,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         section.height = Math.max(section.height, 760);
         this.ensureDedicationCanvasLayers(section);
       }
+      if (section.type === 'songs') {
+        section.height = Math.max(section.height, 760);
+        this.ensureSongCanvasLayers(section);
+      }
     }
   }
 
@@ -2665,6 +2685,43 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'left', showPlaceholder: true };
     if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     if (definition.binding === 'dedication.wall') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
+    return layer;
+  }
+
+  private songLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    return [
+      { type: 'text', binding: 'display.songs.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Música'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+      { type: 'text', binding: 'display.songs.title', label: section.title || 'Pide una canción', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
+      { type: 'text', binding: 'display.songs.intro', label: String(this.pluginSetting(section, 'introText') || 'Ayúdanos a crear la música de este momento.'), x: 12, y: 24, width: 76, height: 7, fontSize: 14 },
+      { type: 'field', binding: 'song.title', label: String(this.pluginSetting(section, 'songLabel') || 'Canción'), placeholder: 'Nombre de la canción', x: 8, y: 36, width: 40, height: 13 },
+      { type: 'field', binding: 'song.sourceUrl', label: 'Spotify / YouTube', placeholder: 'Pega el enlace de la canción', x: 52, y: 36, width: 40, height: 13 },
+      { type: 'field', binding: 'song.artist', label: 'Artista', placeholder: 'Nombre del artista', x: 8, y: 54, width: 40, height: 13 },
+      { type: 'field', binding: 'song.dedication', label: 'Dedicatoria', placeholder: 'Mensaje opcional', x: 52, y: 54, width: 40, height: 13 },
+      { type: 'button', binding: 'song.submit', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Enviar al DJ'), x: 30, y: 73, width: 40, height: 9, fontSize: 14 },
+      { type: 'text', binding: 'song.feedback', label: 'Aquí aparecerá el estado del envío', x: 20, y: 85, width: 60, height: 6, fontSize: 12 }
+    ];
+  }
+
+  private ensureSongCanvasLayers(section: VisualInvitationSection): void {
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('song.') || String(layer.binding || '').startsWith('display.songs.'))) return;
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    const additions: VisualInvitationLayer[] = [];
+    for (const definition of this.songLayerDefinitions(section)) {
+      const layer = this.createSongLayer(definition, ++topZ);
+      if (layer.type === 'field') additions.push(this.separateRsvpFieldLayer(layer, topZ));
+      additions.push(layer);
+    }
+    section.layers.push(...additions);
+    section.pluginSettings = { ...(section.pluginSettings || {}), nativeFieldPartsSeparated: true };
+  }
+
+  private createSongLayer(definition: ReturnType<typeof this.songLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
+    layer.binding = definition.binding;
+    layer.placeholder = definition.placeholder;
+    layer.zIndex = zIndex;
+    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'left', showPlaceholder: true };
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     return layer;
   }
 
@@ -2810,6 +2867,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
         if (!visibleBindings.includes('dedication.message')) add('critical', 'Dedicatorias sin mensaje', 'Restaura el campo para que los invitados puedan escribir su dedicatoria.', section.id);
         if (!visibleBindings.includes('dedication.submit')) add('critical', 'Dedicatorias sin botón de envío', 'Restaura el botón para poder enviar el mensaje.', section.id);
+      }
+      if (section.type === 'songs' && this.hasNativeFunctionalLayers(section)) {
+        const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
+        if (!visibleBindings.includes('song.title') && !visibleBindings.includes('song.sourceUrl')) add('critical', 'DJ sin canción o enlace', 'Muestra al menos el campo de canción o el enlace para recibir solicitudes.', section.id);
+        if (!visibleBindings.includes('song.submit')) add('critical', 'DJ sin botón de envío', 'Restaura el botón para enviar solicitudes al DJ.', section.id);
       }
 
       for (const layer of section.layers) {

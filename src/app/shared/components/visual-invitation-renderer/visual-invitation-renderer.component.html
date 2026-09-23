@@ -181,7 +181,21 @@
       <div *ngIf="pluginSetting(section, 'showWall', true)" class="dedication-list"><blockquote *ngFor="let item of dedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote></div>
     </div>
 
-    <div class="functional-module form-module" *ngIf="section.type === 'songs'">
+    <form *ngIf="hasSongCanvasLayers(section)" class="rsvp-layer-form song-layer-form" (ngSubmit)="sendSong()">
+      <ng-container *ngFor="let layer of songCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderSongLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.songs.')">{{ resolveLayerText(layer) }}</div>
+          <label *ngIf="layer.binding === 'song.title'" class="rsvp-layer-control"><input [(ngModel)]="song.title" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Canción'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre de la canción')"></label>
+          <label *ngIf="layer.binding === 'song.sourceUrl'" class="rsvp-layer-control"><input [(ngModel)]="song.sourceUrl" [name]="rsvpControlName(layer)" type="url" [attr.aria-label]="layer.text || 'Spotify o YouTube'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Pega el enlace de la canción')"></label>
+          <label *ngIf="layer.binding === 'song.artist'" class="rsvp-layer-control"><input [(ngModel)]="song.artist" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Artista'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre del artista')"></label>
+          <label *ngIf="layer.binding === 'song.dedication'" class="rsvp-layer-control"><textarea [(ngModel)]="song.dedication" [name]="rsvpControlName(layer)" rows="2" [attr.aria-label]="layer.text || 'Dedicatoria'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Mensaje opcional')"></textarea></label>
+          <button *ngIf="layer.binding === 'song.submit'" type="submit" class="visual-action-button" [disabled]="sending">{{ layer.text || 'Enviar al DJ' }}</button>
+          <div *ngIf="layer.binding === 'song.feedback'" class="rsvp-layer-feedback">{{ songRequestMessage }}</div>
+        </div>
+      </ng-container>
+    </form>
+
+    <div class="functional-module form-module" *ngIf="section.type === 'songs' && !hasSongCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Música') }}</small><h2>{{ section.title || 'Pide una canción' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <form (ngSubmit)="sendSong()"><label>{{ pluginSetting(section, 'songLabel', 'Canción o enlace') }}<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label *ngIf="pluginSetting(section, 'showSourceUrl', true)">Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label *ngIf="pluginSetting(section, 'showArtist', true)">Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label *ngIf="pluginSetting(section, 'showDedication', true)">Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">{{ pluginSetting(section, 'primaryButtonText', 'Enviar al DJ') }}</button></form><p class="feedback" *ngIf="songRequestMessage">{{ songRequestMessage }}</p>
     </div>
