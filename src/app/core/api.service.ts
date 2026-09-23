@@ -59,6 +59,7 @@ import {
   PlanDefinition,
   RsvpModel,
   RsvpPayload,
+  RsvpResponse,
   SocialLoginPayload,
   SongRequestPayload,
   SongRequestModel,
@@ -556,17 +557,38 @@ export class ApiService {
     });
   }
 
+  updateInvitationGuestRsvp(slug: string, guestSessionToken: string, payload: { response: RsvpResponse; companions?: number; companionNames?: string[]; message?: string; declineConfirmed?: boolean }): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
+    return this.http.patch<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/invitations/public/${slug}/my-status/rsvp`, payload, { headers: { Authorization: `Bearer ${guestSessionToken}` } });
+  }
+
+  removeInvitationGuestPhoto(slug: string, assetId: string, guestSessionToken: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/public/${slug}/my-status/album/${assetId}`, { headers: { Authorization: `Bearer ${guestSessionToken}` } });
+  }
+
+  removeInvitationGuestSong(slug: string, songRequestId: string, guestSessionToken: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/public/${slug}/my-status/song/${songRequestId}`, { headers: { Authorization: `Bearer ${guestSessionToken}` } });
+  }
+
+  updateInvitationGuestDedication(slug: string, dedicationId: string, guestSessionToken: string, payload: { publicName?: string; message: string; visibility?: 'public' | 'hosts_only' }): Observable<{ dedication: DedicationModel }> {
+    return this.http.patch<{ dedication: DedicationModel }>(`${this.apiUrl}/invitations/public/${slug}/my-status/dedication/${dedicationId}`, payload, { headers: { Authorization: `Bearer ${guestSessionToken}` } });
+  }
+
+  removeInvitationGuestDedication(slug: string, dedicationId: string, guestSessionToken: string): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/public/${slug}/my-status/dedication/${dedicationId}`, { headers: { Authorization: `Bearer ${guestSessionToken}` } });
+  }
+
   getGuestByToken(slug: string, token: string): Observable<GuestAccessResponse> {
     return this.http.get<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-token/${encodeURIComponent(token)}`);
   }
 
-  uploadPublicAlbumPhoto(slug: string, payload: { file: File; name?: string; email?: string; guest?: string }): Observable<{ asset: { id: string; status: string } }> {
+  uploadPublicAlbumPhoto(slug: string, payload: { file: File; name?: string; email?: string; guest?: string; guestSessionToken?: string }): Observable<{ asset: { id: string; status: string } }> {
     const formData = new FormData();
     formData.append('file', payload.file);
     if (payload.name) formData.append('name', payload.name);
     if (payload.email) formData.append('email', payload.email);
     if (payload.guest) formData.append('guest', payload.guest);
-    return this.http.post<{ asset: { id: string; status: string } }>(`${this.apiUrl}/invitations/public/${slug}/album-upload`, formData);
+    const options = payload.guestSessionToken ? { headers: { Authorization: `Bearer ${payload.guestSessionToken}` } } : {};
+    return this.http.post<{ asset: { id: string; status: string } }>(`${this.apiUrl}/invitations/public/${slug}/album-upload`, formData, options);
   }
 
   getStaffCheckInSession(token: string): Observable<StaffCheckInSession> {

@@ -1140,7 +1140,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       file: this.selectedAlbumFile,
       name: this.verifiedGuest?.name || this.rsvp.name,
       email: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail,
-      guest: this.verifiedGuest?.id
+      guest: this.verifiedGuest?.id,
+      guestSessionToken: this.guestSessionToken || undefined
     }).subscribe({
       next: () => {
         this.albumMessage = '¡Foto enviada para revisión!';
