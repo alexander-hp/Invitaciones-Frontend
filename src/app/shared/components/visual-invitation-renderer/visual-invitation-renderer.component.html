@@ -225,7 +225,22 @@
       <form (ngSubmit)="sendSong()"><label>{{ pluginSetting(section, 'songLabel', 'Canción o enlace') }}<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label *ngIf="pluginSetting(section, 'showSourceUrl', true)">Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label *ngIf="pluginSetting(section, 'showArtist', true)">Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label *ngIf="pluginSetting(section, 'showDedication', true)">Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">{{ pluginSetting(section, 'primaryButtonText', 'Enviar al DJ') }}</button></form><p class="feedback" *ngIf="songRequestMessage">{{ songRequestMessage }}</p>
     </div>
 
-    <div class="functional-module activity-module" *ngIf="section.type === 'guestActivity'">
+    <form *ngIf="hasGuestActivityCanvasLayers(section)" class="rsvp-layer-form guest-activity-layer-form" (ngSubmit)="identifyGuest()">
+      <ng-container *ngFor="let layer of guestActivityCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderGuestActivityLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [class.is-loading]="guestActivityLoading && layer.binding?.startsWith('activity.')" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.guestActivity.')">{{ resolveLayerText(layer) }}</div>
+          <label *ngIf="layer.binding === 'activity.email'" class="rsvp-layer-control"><input [(ngModel)]="guestEmail" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'correo@ejemplo.com')"></label>
+          <label *ngIf="layer.binding === 'activity.phone'" class="rsvp-layer-control"><input [(ngModel)]="guestPhone" [name]="rsvpControlName(layer)" type="tel" [attr.aria-label]="layer.text || 'Teléfono de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Número de teléfono')"></label>
+          <button *ngIf="layer.binding === 'activity.identify'" type="submit" class="visual-action-button" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : (layer.text || 'Ver mi actividad') }}</button>
+          <div *ngIf="layer.binding === 'activity.greeting'" class="native-activity-greeting">{{ guestActivityLayerText(layer) }}</div>
+          <div *ngIf="['activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications'].includes(layer.binding || '')" class="native-activity-status">{{ guestActivityLayerText(layer) }}</div>
+          <button *ngIf="layer.binding === 'activity.manage'" type="button" class="visual-action-button" (click)="openActivityPanel()">{{ layer.text || 'Administrar aquí' }}</button>
+          <button *ngIf="layer.binding === 'activity.full'" type="button" class="visual-action-button" (click)="openGuestActivity.emit()">{{ layer.text || 'Ver toda mi actividad' }}</button>
+        </div>
+      </ng-container>
+    </form>
+
+    <div class="functional-module activity-module" *ngIf="section.type === 'guestActivity' && !hasGuestActivityCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Tu espacio') }}</small>
       <h2>{{ section.title || 'Mi pase y actividad' }}</h2>
       <p class="module-intro">{{ pluginSetting(section, 'introText', 'Consulta tu confirmación, pase y envíos sin salir de la invitación.') }}</p>

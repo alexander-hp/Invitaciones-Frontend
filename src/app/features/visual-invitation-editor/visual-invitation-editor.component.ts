@@ -148,6 +148,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'pass.seat', label: 'Asiento', icon: '#' }, { binding: 'pass.companions', label: 'Acompañantes', icon: '+1' },
     { binding: 'pass.qr', label: 'Código QR', icon: '▦' }
   ];
+  readonly guestActivityControlCatalog = [
+    { binding: 'activity.email', label: 'Correo de acceso', icon: '@' }, { binding: 'activity.phone', label: 'Teléfono de acceso', icon: '☎' },
+    { binding: 'activity.identify', label: 'Identificar invitado', icon: '→' }, { binding: 'activity.greeting', label: 'Saludo y novedades', icon: 'Aa' },
+    { binding: 'activity.rsvp', label: 'Estado RSVP', icon: '✓' }, { binding: 'activity.pass', label: 'Mesa y pase', icon: '▦' },
+    { binding: 'activity.album', label: 'Total de fotos', icon: '▧' }, { binding: 'activity.songs', label: 'Total de canciones', icon: '♪' },
+    { binding: 'activity.dedications', label: 'Total de dedicatorias', icon: '✎' }, { binding: 'activity.manage', label: 'Abrir centro rápido', icon: '⚙' },
+    { binding: 'activity.full', label: 'Abrir centro completo', icon: '↗' }
+  ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
@@ -899,13 +907,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs', 'album', 'guestPass'].includes(type) ? 760 : 540);
+    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs', 'album', 'guestPass', 'guestActivity'].includes(type) ? 760 : 540);
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     if (type === 'rsvp') { this.ensureRsvpPluginDesign(section); this.ensureRsvpCanvasLayers(section); this.ensureSeparatedRsvpFieldParts(section); }
     if (type === 'dedications') this.ensureDedicationCanvasLayers(section);
     if (type === 'songs') this.ensureSongCanvasLayers(section);
     if (type === 'album') this.ensureAlbumCanvasLayers(section);
     if (type === 'guestPass') this.ensureGuestPassCanvasLayers(section);
+    if (type === 'guestActivity') this.ensureGuestActivityCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -2000,7 +2009,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.');
     });
   }
 
@@ -2013,13 +2022,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (layer.binding === 'dedication.wall') return '“Que esta etapa esté llena de momentos inolvidables.”';
     if (layer.binding === 'album.gallery') return '▧  ▧  ▧  Fotografías aprobadas';
     if (layer.binding === 'pass.qr') return '▦ Código QR';
+    if (layer.binding === 'activity.rsvp') return 'RSVP\nAsistencia confirmada';
+    if (layer.binding === 'activity.pass') return 'Pase\nMesa 5';
+    if (layer.binding === 'activity.album') return 'Fotografías\n2';
+    if (layer.binding === 'activity.songs') return 'Canciones\n1';
+    if (layer.binding === 'activity.dedications') return 'Dedicatorias\n1';
     if (layer.binding === 'rsvp.response') return 'Sí asistiré';
     if (layer.binding === 'rsvp.companions') return '0';
     return layer.placeholder || 'Escribe aquí';
   }
 
   isDynamicOutputLayer(layer: VisualInvitationLayer): boolean {
-    return ['dedication.wall', 'album.gallery', 'pass.qr'].includes(layer.binding || '');
+    return ['dedication.wall', 'album.gallery', 'pass.qr', 'activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications'].includes(layer.binding || '');
+  }
+
+  isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || layer.binding === 'activity.greeting');
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
@@ -2038,7 +2056,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2063,10 +2081,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createAlbumLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'guestPass') {
       const definition = this.guestPassLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createGuestPassLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.guestActivityLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createGuestActivityLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2593,6 +2616,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         section.height = Math.max(section.height, 760);
         this.ensureGuestPassCanvasLayers(section);
       }
+      if (section.type === 'guestActivity') {
+        section.height = Math.max(section.height, 760);
+        this.ensureGuestActivityCanvasLayers(section);
+      }
     }
   }
 
@@ -2826,6 +2853,45 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
+  private guestActivityLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    return [
+      { type: 'text', binding: 'display.guestActivity.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Tu espacio'), x: 15, y: 4, width: 70, height: 5, fontSize: 11 },
+      { type: 'text', binding: 'display.guestActivity.title', label: section.title || 'Mi pase y actividad', x: 10, y: 11, width: 80, height: 10, fontSize: 34 },
+      { type: 'text', binding: 'display.guestActivity.intro', label: String(this.pluginSetting(section, 'introText') || 'Consulta tu confirmación, pase y envíos sin salir de la invitación.'), x: 12, y: 22, width: 76, height: 7, fontSize: 14 },
+      { type: 'field', binding: 'activity.email', label: 'Correo', placeholder: 'correo@ejemplo.com', x: 10, y: 34, width: 36, height: 13 },
+      { type: 'field', binding: 'activity.phone', label: 'Teléfono', placeholder: 'Número de teléfono', x: 54, y: 34, width: 36, height: 13 },
+      { type: 'button', binding: 'activity.identify', label: String(this.pluginSetting(section, 'identifyButtonText') || 'Ver mi actividad'), x: 30, y: 52, width: 40, height: 9 },
+      { type: 'text', binding: 'activity.greeting', label: 'Hola, Invitado de ejemplo', x: 10, y: 32, width: 80, height: 7, fontSize: 17 },
+      { type: 'field', binding: 'activity.rsvp', label: 'Estado RSVP', x: 5, y: 43, width: 17, height: 18 },
+      { type: 'field', binding: 'activity.pass', label: 'Mesa y pase', x: 24, y: 43, width: 17, height: 18 },
+      { type: 'field', binding: 'activity.album', label: 'Fotografías', x: 43, y: 43, width: 17, height: 18 },
+      { type: 'field', binding: 'activity.songs', label: 'Canciones', x: 62, y: 43, width: 15, height: 18 },
+      { type: 'field', binding: 'activity.dedications', label: 'Dedicatorias', x: 79, y: 43, width: 16, height: 18 },
+      { type: 'button', binding: 'activity.manage', label: 'Administrar aquí', x: 15, y: 68, width: 32, height: 9 },
+      { type: 'button', binding: 'activity.full', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Ver toda mi actividad'), x: 53, y: 68, width: 32, height: 9 }
+    ];
+  }
+
+  private ensureGuestActivityCanvasLayers(section: VisualInvitationSection): void {
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('activity.') || String(layer.binding || '').startsWith('display.guestActivity.'))) return;
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    const additions: VisualInvitationLayer[] = [];
+    for (const definition of this.guestActivityLayerDefinitions(section)) {
+      const layer = this.createGuestActivityLayer(definition, ++topZ);
+      if (layer.type === 'field' && ['activity.email', 'activity.phone'].includes(layer.binding || '')) additions.push(this.separateRsvpFieldLayer(layer, topZ));
+      additions.push(layer);
+    }
+    section.layers.push(...additions);
+  }
+
+  private createGuestActivityLayer(definition: ReturnType<typeof this.guestActivityLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
+    layer.binding = definition.binding; layer.placeholder = definition.placeholder; layer.zIndex = zIndex;
+    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'center', showPlaceholder: true };
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    return layer;
+  }
+
   private createRsvpLayer(
     section: VisualInvitationSection,
     definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
@@ -2983,6 +3049,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (!visibleBindings.includes('pass.email') && !visibleBindings.includes('pass.phone')) add('critical', 'Pase sin dato de acceso', 'Muestra correo o teléfono para que el invitado pueda identificarse.', section.id);
         if (!visibleBindings.includes('pass.identify')) add('critical', 'Pase sin botón de identificación', 'Restaura el botón para consultar los datos del pase.', section.id);
         if (!visibleBindings.includes('pass.qr')) add('warning', 'Pase sin código QR', 'Agrega el código QR si se usará para check-in.', section.id);
+      }
+      if (section.type === 'guestActivity' && this.hasNativeFunctionalLayers(section)) {
+        const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
+        if (!visibleBindings.includes('activity.email') && !visibleBindings.includes('activity.phone')) add('critical', 'Actividad sin dato de acceso', 'Muestra correo o teléfono para que el invitado pueda identificarse.', section.id);
+        if (!visibleBindings.includes('activity.identify')) add('critical', 'Actividad sin botón de identificación', 'Restaura el botón para consultar la actividad del invitado.', section.id);
+        if (!visibleBindings.includes('activity.manage') && !visibleBindings.includes('activity.full')) add('critical', 'Actividad sin acción', 'Muestra el centro rápido o el centro completo para administrar los envíos.', section.id);
       }
 
       for (const layer of section.layers) {

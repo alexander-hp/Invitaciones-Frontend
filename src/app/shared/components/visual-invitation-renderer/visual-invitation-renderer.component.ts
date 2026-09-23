@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -340,6 +340,41 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (layer.binding === 'pass.table') return guest.tableName || 'Mesa por asignar';
     if (layer.binding === 'pass.seat') return guest.seatLabel ? `Lugar ${guest.seatLabel}` : '';
     if (layer.binding === 'pass.companions') return `${guest.allowedCompanions || 0} acompañante(s)`;
+    return '';
+  }
+
+  guestActivityCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('activity.') || String(layer.binding || '').startsWith('display.guestActivity.'));
+  }
+
+  hasGuestActivityCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'guestActivity' && this.guestActivityCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderGuestActivityLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.guestActivity.')) return true;
+    if (!this.verifiedGuest) return ['activity.email', 'activity.phone', 'activity.identify'].includes(binding);
+    if (binding === 'activity.greeting' || binding === 'activity.manage' || binding === 'activity.full') return true;
+    if (binding === 'activity.rsvp') return this.pluginSetting(section, 'showRsvp', true) !== false;
+    if (binding === 'activity.pass') return this.pluginSetting(section, 'showPass', true) !== false;
+    if (binding === 'activity.album') return this.pluginSetting(section, 'showAlbum', true) !== false;
+    if (binding === 'activity.songs') return this.pluginSetting(section, 'showSongs', true) !== false;
+    if (binding === 'activity.dedications') return this.pluginSetting(section, 'showDedications', true) !== false;
+    return false;
+  }
+
+  guestActivityLayerText(layer: VisualInvitationLayer): string {
+    if (layer.binding === 'activity.greeting') {
+      const notificationText = this.activityNotifications.length ? ` · ${this.activityNotifications.length} nuevo(s)` : '';
+      return `Hola, ${this.verifiedGuest?.name || 'invitado'}${notificationText}`;
+    }
+    if (layer.binding === 'activity.rsvp') return `RSVP\n${this.activityRsvpLabel()}`;
+    if (layer.binding === 'activity.pass') return `Pase\n${this.verifiedGuest?.tableName || 'Sin mesa asignada'}`;
+    if (layer.binding === 'activity.album') return `Fotografías\n${this.activityCount('album')}`;
+    if (layer.binding === 'activity.songs') return `Canciones\n${this.activityCount('songs')}`;
+    if (layer.binding === 'activity.dedications') return `Dedicatorias\n${this.activityCount('dedications')}`;
     return '';
   }
 

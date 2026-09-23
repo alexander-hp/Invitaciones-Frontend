@@ -212,6 +212,13 @@
           <button *ngFor="let control of guestPassControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'guestActivity'">
+        <h2>Datos de mi actividad</h2>
+        <p class="hint">Los accesos aparecen antes de identificar al invitado. El saludo, estados y acciones muestran después su información real y conservan sus funciones.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of guestActivityControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -453,9 +460,9 @@
       <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
-        <label *ngIf="(layer.type === 'text' && !layer.binding?.startsWith('pass.')) || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
-        <aside *ngIf="layer.type === 'text' && layer.binding?.startsWith('pass.')" class="plugin-binding-note"><strong>Dato dinámico del pase</strong><code>{{ layer.binding }}</code><span>En el editor ves un ejemplo. Al publicarse se reemplaza con los datos del invitado identificado; puedes cambiar posición, tamaño y estilo.</span></aside>
-        <div *ngIf="(layer.type === 'text' && !layer.binding?.startsWith('pass.')) || layer.type === 'button'" class="dynamic-variable-picker">
+        <label *ngIf="(layer.type === 'text' && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
+        <aside *ngIf="isDynamicTextOutputLayer(layer)" class="plugin-binding-note"><strong>Dato dinámico del invitado</strong><code>{{ layer.binding }}</code><span>En el editor ves un ejemplo. Al publicarse se reemplaza con la información del invitado identificado; puedes cambiar posición, tamaño y estilo.</span></aside>
+        <div *ngIf="(layer.type === 'text' && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'" class="dynamic-variable-picker">
           <span>Insertar dato</span>
           <div><button *ngFor="let variable of dynamicVariables" type="button" [title]="variable.group + ': ' + variable.example" (click)="insertDynamicVariable(layer, variable.token)">{{ variable.label }}</button></div>
         </div>
