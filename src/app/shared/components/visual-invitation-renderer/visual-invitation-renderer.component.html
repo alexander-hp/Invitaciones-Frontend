@@ -9,7 +9,7 @@
   [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
   <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
-    <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+    <div *ngFor="let layer of visualLayers(section); trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text'">{{ resolveLayerText(layer) }}</div>
       <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
       <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
@@ -91,7 +91,26 @@
       </div>
     </div>
 
-    <div class="functional-module form-module rsvp-module" *ngIf="section.type === 'rsvp'">
+    <form *ngIf="hasRsvpCanvasLayers(section) && (!requiresGuestValidation || verifiedGuest)" class="rsvp-layer-form" (ngSubmit)="sendRsvp()">
+      <ng-container *ngFor="let layer of rsvpCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderRsvpLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.rsvp.')">{{ resolveLayerText(layer) }}</div>
+          <label *ngIf="layer.binding === 'rsvp.name'" class="rsvp-layer-control"><strong>{{ layer.text || 'Nombre' }}</strong><input [(ngModel)]="rsvp.name" [name]="rsvpControlName(layer)" required [placeholder]="layer.placeholder || 'Nombre del invitado'"></label>
+          <label *ngIf="layer.binding === 'rsvp.email'" class="rsvp-layer-control"><strong>{{ layer.text || 'Correo' }}</strong><input [(ngModel)]="rsvp.email" [name]="rsvpControlName(layer)" type="email" [placeholder]="layer.placeholder || 'contacto@ejemplo.com'"></label>
+          <label *ngIf="layer.binding === 'rsvp.response'" class="rsvp-layer-control"><strong>{{ layer.text || 'Respuesta' }}</strong>
+            <select *ngIf="layer.style?.controlVariant !== 'cards'" [(ngModel)]="rsvp.response" [name]="rsvpControlName(layer)"><option value="confirmed">Sí asistiré</option><option *ngIf="invitation?.rsvpSettings?.allowMaybe !== false" value="maybe">Tal vez</option><option value="declined">No podré asistir</option></select>
+            <span *ngIf="layer.style?.controlVariant === 'cards'" class="rsvp-layer-response-cards"><button type="button" [class.active]="rsvp.response === 'confirmed'" (click)="rsvp.response='confirmed'">Sí asistiré</button><button *ngIf="invitation?.rsvpSettings?.allowMaybe !== false" type="button" [class.active]="rsvp.response === 'maybe'" (click)="rsvp.response='maybe'">Tal vez</button><button type="button" [class.active]="rsvp.response === 'declined'" (click)="rsvp.response='declined'">No asistiré</button></span>
+          </label>
+          <label *ngIf="layer.binding === 'rsvp.companions'" class="rsvp-layer-control"><strong>{{ layer.text || 'Acompañantes' }}</strong><input [(ngModel)]="rsvp.companions" [name]="rsvpControlName(layer)" type="number" min="0" [max]="maxCompanions" [placeholder]="layer.placeholder || '0'"></label>
+          <label *ngIf="layer.binding === 'rsvp.dietaryRestrictions'" class="rsvp-layer-control"><strong>{{ layer.text || 'Restricciones alimentarias' }}</strong><textarea [(ngModel)]="rsvp.dietaryRestrictions" [name]="rsvpControlName(layer)" rows="2" [placeholder]="layer.placeholder || 'Vegetariano, alergias...'"></textarea></label>
+          <label *ngIf="layer.binding === 'rsvp.message'" class="rsvp-layer-control"><strong>{{ layer.text || 'Mensaje' }}</strong><textarea [(ngModel)]="rsvp.message" [name]="rsvpControlName(layer)" rows="2" [placeholder]="layer.placeholder || 'Mensaje opcional'"></textarea></label>
+          <button *ngIf="layer.binding === 'rsvp.submit'" type="submit" class="visual-action-button" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar confirmación') }}</button>
+          <div *ngIf="layer.binding === 'rsvp.feedback'" class="rsvp-layer-feedback" [class.success]="success" [class.error]="error">{{ success || error }}</div>
+        </div>
+      </ng-container>
+    </form>
+
+    <div class="functional-module form-module rsvp-module" *ngIf="section.type === 'rsvp' && (!hasRsvpCanvasLayers(section) || (requiresGuestValidation && !verifiedGuest))">
       <form *ngIf="requiresGuestValidation && !verifiedGuest; else rsvpForm" class="rsvp-identify-form" (ngSubmit)="identifyGuest()">
         <h2>Identifica tu invitación</h2><p>Confirma que estás en la lista usando tu correo o teléfono.</p>
         <label>Correo<input [(ngModel)]="guestEmail" name="visualGuestEmail" type="email"></label>

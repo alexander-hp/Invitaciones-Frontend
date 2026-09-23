@@ -337,11 +337,12 @@ export interface InvitationLodgingItem {
   priority?: number;
 }
 
-export type VisualLayerType = 'text' | 'image' | 'video' | 'audio' | 'button' | 'shape';
+export type VisualLayerType = 'text' | 'image' | 'video' | 'audio' | 'button' | 'shape' | 'field';
 
 export interface VisualInvitationLayerStyle {
   color?: string;
   backgroundColor?: string;
+  backgroundImageUrl?: string;
   fontFamily?: string;
   fontSize?: number;
   fontWeight?: string | number;
@@ -368,12 +369,15 @@ export interface VisualInvitationLayerStyle {
   borderWidth?: number;
   borderStyle?: 'solid' | 'dashed' | 'dotted';
   boxShadow?: string;
+  padding?: number;
   gradientEnabled?: boolean;
   gradientStart?: string;
   gradientEnd?: string;
   gradientAngle?: number;
   imageMask?: 'none' | 'circle' | 'rounded' | 'arch' | 'diamond' | 'hexagon' | 'ticket';
   shapeKind?: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line';
+  controlVariant?: 'default' | 'cards';
+  controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
 }
 
 export interface VisualInvitationLayerLayout {
@@ -390,6 +394,7 @@ export interface VisualInvitationLayer {
   type: VisualLayerType;
   name?: string;
   text?: string;
+  placeholder?: string;
   url?: string;
   binding?: string;
   x: number;

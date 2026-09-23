@@ -177,6 +177,12 @@
       <div class="plugin-catalog">
         <button *ngFor="let plugin of pluginCatalog" type="button" (click)="addSection(plugin.type, plugin.label)"><b>{{ plugin.icon }}</b><span>{{ plugin.label }}</span><i>Agregar</i></button>
       </div>
+      <ng-container *ngIf="selectedSection?.type === 'rsvp'">
+        <h2>Campos RSVP</h2>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of rsvpControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addRsvpControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -208,7 +214,7 @@
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
-            <div *ngIf="section.type !== 'custom' && section.type !== 'hero'" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
+            <div *ngIf="section.type !== 'custom' && section.type !== 'hero' && !hasRsvpCanvasLayers(section)" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
               <ng-container [ngSwitch]="section.type">
                 <div *ngSwitchCase="'story'" class="preview-centered">
                   <small>Nuestra historia</small>
@@ -319,9 +325,15 @@
               <div class="selection-marquee" *ngIf="selectionMarquee as marquee" [class.visible]="marquee.sectionId === section.id" [style.left.%]="marquee.left" [style.top.%]="marquee.top" [style.width.%]="marquee.width" [style.height.%]="marquee.height"></div>
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
+              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ resolveLayerText(layer) }}</div>
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
+                <div *ngIf="layer.type === 'field'" class="functional-field-preview" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'">
+                  <strong>{{ layer.text || 'Campo' }}</strong>
+                  <span *ngIf="layer.binding !== 'rsvp.response' || layer.style?.controlVariant !== 'cards'">{{ rsvpFieldPreview(layer) }}</span>
+                  <div *ngIf="layer.binding === 'rsvp.response' && layer.style?.controlVariant === 'cards'" class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
+                  <small>{{ layer.binding }}</small>
+                </div>
                 <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
@@ -380,7 +392,7 @@
           <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
           <p class="selection-hint">Usa Shift + clic o arrastra un recuadro sobre el lienzo para seleccionar varios.</p>
           <article *ngFor="let item of orderedLayers" [class.active]="isLayerSelected(item)" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item, $event)">
-            <span class="layer-type">{{ item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : '●' }}</span>
+            <span class="layer-type">{{ item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : item.type === 'field' ? '⌨' : '●' }}</span>
             <div><strong>{{ layerLabel(item) }}</strong><small>{{ item.type }}<ng-container *ngIf="item.groupId"> · agrupado</ng-container></small></div>
             <div class="layer-actions">
               <button type="button" [title]="item.hidden ? 'Mostrar' : 'Ocultar'" (click)="toggleLayerHidden(item, $event)">{{ item.hidden ? '○' : '◉' }}</button>
@@ -413,7 +425,7 @@
       <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
-        <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
+        <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">{{ layer.type === 'field' ? 'Etiqueta' : 'Texto' }}<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <div *ngIf="layer.type === 'text' || layer.type === 'button'" class="dynamic-variable-picker">
           <span>Insertar dato</span>
           <div><button *ngFor="let variable of dynamicVariables" type="button" [title]="variable.group + ': ' + variable.example" (click)="insertDynamicVariable(layer, variable.token)">{{ variable.label }}</button></div>
@@ -421,6 +433,12 @@
         <ng-container *ngIf="layer.type === 'button'">
           <label>Acción<select [(ngModel)]="layer.binding"><option *ngFor="let action of buttonActions" [value]="action.value">{{ action.label }}</option></select></label>
           <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
+        </ng-container>
+        <ng-container *ngIf="layer.type === 'field'">
+          <aside class="plugin-binding-note"><strong>Dato protegido</strong><code>{{ layer.binding }}</code><span>El diseño y la posición son editables; esta vinculación mantiene funcionando el formulario.</span></aside>
+          <label>Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
+          <label *ngIf="layer.binding === 'rsvp.response'">Presentación<select [ngModel]="layer.style?.controlVariant || 'default'" (ngModelChange)="setLayerControlStyle(layer, 'controlVariant', $event)"><option value="default">Selector</option><option value="cards">Tarjetas</option></select></label>
+          <label>Forma<select [ngModel]="layer.style?.controlShape || 'rectangle'" (ngModelChange)="setLayerControlStyle(layer, 'controlShape', $event)"><option value="rectangle">Rectangular</option><option value="pill">Cápsula</option><option value="cloud">Nube</option><option value="notebook">Cuaderno</option></select></label>
         </ng-container>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
@@ -436,15 +454,15 @@
           </div>
         </div>
         <ng-container *ngIf="layer.style as style">
-          <label *ngIf="layer.type === 'text' || layer.type === 'button'">Tipografía<select [(ngModel)]="style.fontFamily"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Times New Roman', serif</option><option>Verdana, sans-serif</option></select></label>
+          <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tipografía<select [(ngModel)]="style.fontFamily"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Times New Roman', serif</option><option>Verdana, sans-serif</option></select></label>
           <div class="two-columns">
-            <label *ngIf="layer.type === 'text' || layer.type === 'button'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>
-            <label *ngIf="layer.type === 'text' || layer.type === 'button'">Peso<select [(ngModel)]="style.fontWeight"><option [ngValue]="300">Ligera</option><option [ngValue]="400">Normal</option><option [ngValue]="600">Semibold</option><option [ngValue]="700">Negrita</option></select></label>
+            <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>
+            <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Peso<select [(ngModel)]="style.fontWeight"><option [ngValue]="300">Ligera</option><option [ngValue]="400">Normal</option><option [ngValue]="600">Semibold</option><option [ngValue]="700">Negrita</option></select></label>
             <label>Color<input [(ngModel)]="style.color" type="color"></label>
             <label>Fondo<input [(ngModel)]="style.backgroundColor" type="color"></label>
             <label>Opacidad<input [(ngModel)]="style.opacity" type="number" min="0" max="1" step="0.1"></label>
           </div>
-          <div *ngIf="layer.type === 'text' || layer.type === 'button'" class="typography-settings">
+          <div *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'" class="typography-settings">
             <div class="two-columns">
               <label>Interlineado<input [(ngModel)]="style.lineHeight" type="number" min="0.8" max="3" step="0.1"></label>
               <label>Espaciado<input [(ngModel)]="style.letterSpacing" type="number" min="-5" max="30" step="0.5"></label>
@@ -564,7 +582,12 @@
                   <label>Botón de confirmación<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showDietary')" (ngModelChange)="setPluginSetting(section, 'showDietary', $event)" type="checkbox"> Mostrar restricciones alimentarias</label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showMessage')" (ngModelChange)="setPluginSetting(section, 'showMessage', $event)" type="checkbox"> Mostrar mensaje del invitado</label>
-                  <div class="plugin-design-panel">
+                  <div *ngIf="hasRsvpCanvasLayers(section)" class="plugin-binding-note">
+                    <strong>Campos libres en el lienzo</strong>
+                    <span>Cada campo funciona como una capa: puedes moverlo, redimensionarlo, bloquearlo y cambiar su orden. Su vínculo funcional permanece protegido.</span>
+                    <button type="button" class="content-add" (click)="restoreMissingRsvpControls(section)">Restaurar campos faltantes</button>
+                  </div>
+                  <div *ngIf="!hasRsvpCanvasLayers(section)" class="plugin-design-panel">
                     <h3>Diseño interno del RSVP</h3>
                     <p>La apariencia es editable; la función de cada control permanece protegida.</p>
                     <label>Distribución<select [ngModel]="section.pluginDesign?.layout || 'flow'" (ngModelChange)="setRsvpDesignLayout(section, $event)"><option value="flow">Automática y responsiva</option><option value="free">Libre: arrastrar en el lienzo</option></select></label>

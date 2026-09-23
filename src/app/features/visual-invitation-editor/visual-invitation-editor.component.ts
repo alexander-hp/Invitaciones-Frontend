@@ -25,6 +25,7 @@ type PaletteDragItem =
   | { kind: 'layer'; type: VisualLayerType }
   | { kind: 'shape'; shape: ShapeKind }
   | { kind: 'component'; key: string }
+  | { kind: 'rsvp-control'; binding: string }
   | { kind: 'media'; media: DesignMedia };
 type AuditSeverity = 'critical' | 'warning' | 'suggestion';
 type PublishAuditIssue = {
@@ -116,6 +117,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'message', label: 'Mensaje', binding: 'rsvp.message', purpose: 'Guarda un mensaje opcional' },
     { key: 'submit', label: 'Botón enviar', binding: 'rsvp.submit', purpose: 'Valida y envía la confirmación' },
     { key: 'feedback', label: 'Respuesta del sistema', binding: 'rsvp.feedback', purpose: 'Muestra éxito o error del envío' }
+  ];
+  readonly rsvpControlCatalog = [
+    { binding: 'rsvp.name', label: 'Nombre', icon: 'Aa' }, { binding: 'rsvp.email', label: 'Correo', icon: '@' },
+    { binding: 'rsvp.response', label: 'Respuesta', icon: '✓' }, { binding: 'rsvp.companions', label: 'Acompañantes', icon: '+1' },
+    { binding: 'rsvp.dietaryRestrictions', label: 'Alimentación', icon: '◌' }, { binding: 'rsvp.message', label: 'Mensaje', icon: '✎' },
+    { binding: 'rsvp.submit', label: 'Enviar', icon: '→' }
   ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
@@ -1041,6 +1048,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (item.kind === 'component') {
       this.addComponent(item.key);
       this.centerLayersAt(this.selectedLayers, x, y);
+    } else if (item.kind === 'rsvp-control') {
+      this.addRsvpControl(item.binding);
+      this.centerLayersAt(this.selectedLayers, x, y);
     } else {
       this.recordHistory();
       const type = item.kind === 'media' ? item.media.type : item.kind === 'shape' ? 'shape' : item.type;
@@ -1668,7 +1678,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
       borderRadius: shape ? '0' : `${Number(s.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
       borderStyle: !shape && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(s.borderWidth || 0)}px`,
-      backgroundImage: !shape && s.gradientEnabled ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})` : 'none',
+      backgroundImage: !shape && s.gradientEnabled
+        ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`
+        : !shape && s.backgroundImageUrl ? `url("${String(s.backgroundImageUrl)}")` : 'none',
+      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${Number(s.padding || 0)}px`,
       boxShadow: shape ? 'none' : String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
@@ -1949,6 +1962,52 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   isConfigurablePlugin(type: string): boolean {
     return ['rsvp', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs', 'gallery', 'itinerary', 'dressCode', 'lodging'].includes(type);
+  }
+
+  hasRsvpCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'rsvp' && section.layers.some((layer) => this.isRsvpFunctionalLayer(layer));
+  }
+
+  isRsvpFunctionalLayer(layer: VisualInvitationLayer): boolean {
+    return String(layer.binding || '').startsWith('rsvp.') || String(layer.binding || '').startsWith('display.rsvp.');
+  }
+
+  rsvpFieldPreview(layer: VisualInvitationLayer): string {
+    if (layer.binding === 'rsvp.response') return 'Sí asistiré';
+    if (layer.binding === 'rsvp.companions') return '0';
+    return layer.placeholder || 'Escribe aquí';
+  }
+
+  setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
+    layer.style = { ...(layer.style || {}), [key]: value };
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  addRsvpControl(binding: string): void {
+    const section = this.selectedSection;
+    if (!section || section.type !== 'rsvp') return;
+    const definition = this.rsvpLayerDefinitions().find((item) => item.binding === binding);
+    if (!definition) return;
+    this.recordHistory();
+    const layer = this.createRsvpLayer(section, definition, section.layers.length + 1);
+    layer.x = 25;
+    layer.y = 40;
+    layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
+    section.layers.push(layer);
+    this.setLayerSelection([layer.id]);
+    this.inspectorView = 'properties';
+    this.flash(`${definition.label} agregado al lienzo.`);
+  }
+
+  restoreMissingRsvpControls(section: VisualInvitationSection): void {
+    if (section.type !== 'rsvp') return;
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    const missing = this.rsvpLayerDefinitions().filter((definition) => !existing.has(definition.binding));
+    if (!missing.length) { this.flash('Todos los campos RSVP ya están en el lienzo.'); return; }
+    this.recordHistory();
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...missing.map((definition) => this.createRsvpLayer(section, definition, ++topZ)));
+    this.flash(`${missing.length} elemento(s) RSVP restaurado(s).`);
   }
 
   get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
@@ -2433,6 +2492,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (section.type === 'rsvp') {
         this.ensureRsvpPluginDesign(section);
         section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820);
+        this.ensureRsvpCanvasLayers(section);
       }
     }
   }
@@ -2462,9 +2522,60 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         name: base(5, 31, 42, 13), contact: base(53, 31, 42, 13), response: base(5, 47, 42, 13), companions: base(53, 47, 42, 13),
         dietary: base(5, 63, 42, 15), message: base(53, 63, 42, 15),
         submit: base(30, 82, 40, 10, { textAlign: 'center', fontWeight: 700, color: this.design?.theme?.buttonTextColor || '#ffffff', backgroundColor: this.design?.theme?.buttonBackgroundColor || '#292523', borderWidth: 0, borderRadius: this.design?.theme?.buttonRadius || 6 }),
-        feedback: base(15, 94, 70, 7, { textAlign: 'center', backgroundColor: '#edf5fb', borderWidth: 0, fontSize: 12 })
+        feedback: base(15, 92, 70, 6, { textAlign: 'center', backgroundColor: '#edf5fb', borderWidth: 0, fontSize: 12 })
       }
     };
+  }
+
+  private ensureRsvpCanvasLayers(section: VisualInvitationSection): void {
+    if (section.layers.some((layer) => this.isRsvpFunctionalLayer(layer))) return;
+    const definitions = this.rsvpLayerDefinitions();
+    const topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...definitions.map((definition, index) => this.createRsvpLayer(section, definition, topZ + index + 1)));
+    section.pluginDesign = { ...(section.pluginDesign || {}), layout: 'free' };
+  }
+
+  private rsvpLayerDefinitions(): Array<{ key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string }> {
+    return [
+      { key: 'eyebrow', type: 'text', binding: 'display.rsvp.eyebrow', label: 'Confirmación' },
+      { key: 'title', type: 'text', binding: 'display.rsvp.title', label: 'Confirma tu asistencia' },
+      { key: 'intro', type: 'text', binding: 'display.rsvp.intro', label: 'Nos encantará contar contigo.' },
+      { key: 'name', type: 'field', binding: 'rsvp.name', label: 'Nombre', placeholder: 'Nombre del invitado' },
+      { key: 'contact', type: 'field', binding: 'rsvp.email', label: 'Correo', placeholder: 'contacto@ejemplo.com' },
+      { key: 'response', type: 'field', binding: 'rsvp.response', label: 'Respuesta' },
+      { key: 'companions', type: 'field', binding: 'rsvp.companions', label: 'Acompañantes', placeholder: '0' },
+      { key: 'dietary', type: 'field', binding: 'rsvp.dietaryRestrictions', label: 'Restricciones alimentarias', placeholder: 'Vegetariano, alergias...' },
+      { key: 'message', type: 'field', binding: 'rsvp.message', label: 'Mensaje', placeholder: 'Mensaje opcional' },
+      { key: 'submit', type: 'button', binding: 'rsvp.submit', label: 'Enviar confirmación' },
+      { key: 'feedback', type: 'text', binding: 'rsvp.feedback', label: 'Aquí aparecerá la confirmación del envío' }
+    ];
+  }
+
+  private createRsvpLayer(
+    section: VisualInvitationSection,
+    definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
+    zIndex: number
+  ): VisualInvitationLayer {
+    const part = this.pluginPartDesign(section, definition.key);
+    const configuredText: Partial<Record<RsvpPartKey, string>> = {
+      eyebrow: String(this.pluginSetting(section, 'eyebrow') || definition.label),
+      title: section.title || definition.label,
+      intro: String(this.pluginSetting(section, 'introText') || definition.label),
+      submit: String(this.pluginSetting(section, 'primaryButtonText') || definition.label)
+    };
+    const layer = this.newLayer(definition.type, part.label || configuredText[definition.key] || definition.label, Number(part.x ?? 5), Number(part.y ?? 5), Number(part.width ?? 40), Number(part.height ?? 10), Number(part.fontSize || 14));
+    layer.name = this.rsvpPart(definition.key)?.label || definition.label;
+    layer.binding = definition.binding;
+    layer.placeholder = part.placeholder || definition.placeholder;
+    layer.hidden = Boolean(part.hidden);
+    layer.zIndex = zIndex;
+    layer.style = {
+      ...(layer.style || {}), color: part.color, backgroundColor: part.backgroundColor, backgroundImageUrl: part.backgroundImageUrl,
+      fontFamily: part.fontFamily, fontSize: part.fontSize, fontWeight: part.fontWeight, textAlign: part.textAlign,
+      borderColor: part.borderColor, borderWidth: part.borderWidth, borderStyle: 'solid', borderRadius: part.borderRadius,
+      padding: part.padding, boxShadow: part.boxShadow, controlShape: part.shape, controlVariant: part.variant
+    };
+    return layer;
   }
 
   private defaultPluginSettings(type: string): Record<string, string | number | boolean> {
@@ -2528,6 +2639,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         ? theme.buttonBackgroundColor
         : theme.buttonStyle === 'soft' ? this.colorWithAlpha(theme.buttonBackgroundColor, .16) : 'transparent';
       layer.style.color = theme.buttonStyle === 'solid' ? theme.buttonTextColor : theme.buttonBackgroundColor;
+    } else if (layer.type === 'field') {
+      layer.style.fontFamily = theme.bodyFont;
+      layer.style.color = theme.textColor;
+      layer.style.backgroundColor = theme.backgroundColor;
+      layer.style.borderColor = this.colorWithAlpha(theme.textColor, .28);
     } else if (layer.type === 'shape') {
       layer.style.backgroundColor = theme.accentColor;
     }
@@ -2564,6 +2680,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (section.type === 'gallery' && !content.gallery?.length) add('warning', 'Galería vacía', 'Agrega fotografías o desactiva esta sección.', section.id);
       if (section.type === 'gifts' && !content.giftRegistry?.length && !content.digitalEnvelope) add('warning', 'Mesa de regalos vacía', 'Agrega una mesa o sobre digital, o desactiva la sección.', section.id);
       if (section.type === 'lodging' && !content.lodging?.length) add('warning', 'Hospedaje vacío', 'Agrega por lo menos una recomendación o elimina esta sección.', section.id);
+
+      if (section.type === 'rsvp' && this.hasRsvpCanvasLayers(section)) {
+        const visibleBindings = section.layers.filter((layer) => !layer.hidden && this.isRsvpFunctionalLayer(layer)).map((layer) => layer.binding || '');
+        if (!visibleBindings.includes('rsvp.submit')) add('critical', 'RSVP sin botón de envío', 'Restaura o muestra el botón para que los invitados puedan enviar su confirmación.', section.id);
+        if (!visibleBindings.includes('rsvp.response')) add('critical', 'RSVP sin respuesta', 'Restaura o muestra el campo de respuesta para poder confirmar asistencia.', section.id);
+        if (!visibleBindings.includes('rsvp.name')) add('warning', 'RSVP sin nombre', 'Agrega el campo de nombre si la invitación no exige identificación previa.', section.id);
+        const duplicates = visibleBindings.filter((binding, index) => binding && visibleBindings.indexOf(binding) !== index);
+        for (const binding of [...new Set(duplicates)]) add('warning', `Función duplicada: ${binding}`, 'Conserva una sola capa con esta función para evitar confusión al responder.', section.id);
+      }
 
       for (const layer of section.layers) {
         if (layer.hidden) {
@@ -2641,7 +2766,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private layerTypeLabel(type: VisualLayerType): string {
-    return { image: 'Imagen', video: 'Video', audio: 'Audio', button: 'Botón', shape: 'Forma', text: 'Texto' }[type];
+    return { image: 'Imagen', video: 'Video', audio: 'Audio', button: 'Botón', shape: 'Forma', text: 'Texto', field: 'Campo' }[type];
   }
 
   private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number, ignoredIds = new Set<string>([layer.id])): { x: number; y: number; guideX: number | null; guideY: number | null } {

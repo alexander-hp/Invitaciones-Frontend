@@ -240,6 +240,37 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     return resolveVisualTemplateText(layer.text, visualTemplateContext(this.invitation, this.event, this.verifiedGuest));
   }
 
+  visualLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => !this.isRsvpFunctionalLayer(layer));
+  }
+
+  rsvpCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => this.isRsvpFunctionalLayer(layer));
+  }
+
+  hasRsvpCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'rsvp' && this.rsvpCanvasLayers(section).length > 0;
+  }
+
+  isRsvpFunctionalLayer(layer: VisualInvitationLayer): boolean {
+    const binding = String(layer.binding || '');
+    return binding.startsWith('rsvp.') || binding.startsWith('display.rsvp.');
+  }
+
+  rsvpControlName(layer: VisualInvitationLayer): string {
+    return `visual-${layer.id.replace(/[^a-z0-9_-]/gi, '-')}`;
+  }
+
+  shouldRenderRsvpLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    if (this.verifiedGuest && (layer.binding === 'rsvp.name' || layer.binding === 'rsvp.email')) return false;
+    if (layer.binding === 'rsvp.companions') return this.rsvp.response !== 'declined' && this.maxCompanions > 0;
+    if (layer.binding === 'rsvp.dietaryRestrictions') return this.pluginSetting(section, 'showDietary', true) !== false;
+    if (layer.binding === 'rsvp.message') return this.pluginSetting(section, 'showMessage', true) !== false;
+    if (layer.binding === 'rsvp.feedback') return Boolean(this.success || this.error);
+    return true;
+  }
+
   handleLayerAction(layer: VisualInvitationLayer): void {
     const action = String(layer.binding || '');
     if (action.startsWith('section:')) {
@@ -339,7 +370,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
       borderRadius: shape ? '0' : `${Number(style.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
       borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(style.borderWidth || 0)}px`,
-      backgroundImage: !shape && style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
+      backgroundImage: !shape && style.gradientEnabled
+        ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})`
+        : !shape && style.backgroundImageUrl ? `url("${String(style.backgroundImageUrl)}")` : 'none',
+      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${Number(style.padding || 0)}px`,
       boxShadow: shape ? 'none' : String(style.boxShadow || 'none'), opacity: String(style.opacity ?? 1),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
