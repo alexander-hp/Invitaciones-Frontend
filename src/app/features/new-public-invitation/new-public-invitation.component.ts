@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
-import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
+import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
 @Component({
@@ -70,6 +70,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   verifiedGuest?: GuestAccessResponse['guest'];
   guestActivity?: ExternalGuestStatusResponse;
   guestActivityLoading = false;
+  activityNotifications: GuestActivityNotification[] = [];
   private guestSessionToken = '';
   private guestActivityTimer?: ReturnType<typeof setInterval>;
   companionNamesText = '';
@@ -1124,9 +1125,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (showLoading) this.guestActivityLoading = true;
     this.api.getInvitationGuestStatus(this.invitation.slug, this.guestSessionToken).subscribe({
       next: (activity) => {
+        const hadActivity = Boolean(this.guestActivity);
+        const previousKeys = new Set(this.activityNotifications.map((item) => `${item.key}:${item.status}`));
+        this.syncActivityNotifications(activity);
+        const newestNotice = this.activityNotifications.find((item) => !previousKeys.has(`${item.key}:${item.status}`));
         this.guestActivity = activity;
         this.verifiedGuest = activity.guest;
         this.guestActivityLoading = false;
+        if (hadActivity && newestNotice) this.showToast(newestNotice.title);
       },
       error: (error) => {
         this.guestActivityLoading = false;
@@ -1138,6 +1144,42 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         }
       }
     });
+  }
+
+  markGuestActivityNotificationsRead(): void {
+    if (!this.invitation || !this.guestActivity) return;
+    const reviewed = this.reviewedActivityItems(this.guestActivity);
+    const seen = reviewed.reduce((result, item) => ({ ...result, [item.key]: item.status }), {} as Record<string, string>);
+    localStorage.setItem(this.activitySeenStorageKey(this.invitation.slug, this.guestActivity.guest.id), JSON.stringify(seen));
+    this.activityNotifications = [];
+  }
+
+  private syncActivityNotifications(activity: ExternalGuestStatusResponse): void {
+    if (!this.invitation) return;
+    let seen: Record<string, string> = {};
+    try { seen = JSON.parse(localStorage.getItem(this.activitySeenStorageKey(this.invitation.slug, activity.guest.id)) || '{}'); } catch { seen = {}; }
+    this.activityNotifications = this.reviewedActivityItems(activity).filter((item) => seen[item.key] !== item.status);
+  }
+
+  private reviewedActivityItems(activity: ExternalGuestStatusResponse): GuestActivityNotification[] {
+    const notices: GuestActivityNotification[] = [];
+    for (const item of activity.albumUploads || []) {
+      const id = item.id || item._id || '';
+      if (id && item.status !== 'pending') notices.push({ key: `album:${id}`, kind: 'album', itemId: id, status: item.status, title: item.status === 'approved' ? 'Tu fotografía fue aprobada' : 'Tu fotografía fue rechazada' });
+    }
+    for (const item of activity.songRequests || []) {
+      const id = item.id || item._id || '';
+      if (id && item.status !== 'pending') notices.push({ key: `song:${id}`, kind: 'song', itemId: id, status: item.status, title: item.status === 'played' ? `El DJ marcó “${item.title}” como tocada` : item.status === 'approved' ? `Tu canción “${item.title}” fue aprobada` : `Tu canción “${item.title}” fue rechazada` });
+    }
+    for (const item of activity.dedications || []) {
+      const id = item.id || item._id || '';
+      if (id && item.status !== 'pending') notices.push({ key: `dedication:${id}`, kind: 'dedication', itemId: id, status: item.status, title: item.status === 'approved' ? 'Tu dedicatoria fue aprobada' : 'Tu dedicatoria fue rechazada' });
+    }
+    return notices;
+  }
+
+  private activitySeenStorageKey(slug: string, guestId: string): string {
+    return `kyndra_activity_seen_${slug}_${guestId}`;
   }
 
   submitVisualRsvp(data: {

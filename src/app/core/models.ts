@@ -1286,6 +1286,14 @@ export interface ExternalGuestStatusResponse {
   dedications?: DedicationModel[];
 }
 
+export interface GuestActivityNotification {
+  key: string;
+  kind: 'album' | 'song' | 'dedication';
+  itemId: string;
+  status: string;
+  title: string;
+}
+
 export interface SongLookupResponse {
   song: Partial<SongRequestModel> & {
     title: string;

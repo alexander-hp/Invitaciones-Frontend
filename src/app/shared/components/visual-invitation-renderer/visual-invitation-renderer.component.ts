@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import {
-  DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
+  DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
   VisualInvitationLayer, VisualInvitationSection
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
@@ -17,6 +17,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Input() verifiedGuest?: GuestAccessResponse['guest'];
   @Input() guestActivity?: ExternalGuestStatusResponse;
   @Input() guestActivityLoading = false;
+  @Input() activityNotifications: GuestActivityNotification[] = [];
   @Input() requiresGuestValidation = false;
   @Input() sending = false;
   @Input() checkingGuest = false;
@@ -39,6 +40,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Output() updateActivityRsvp = new EventEmitter<{ response: RsvpResponse; companions: number; companionNames: string[]; message: string; declineConfirmed?: boolean }>();
   @Output() removeActivityItem = new EventEmitter<{ kind: 'album' | 'song' | 'dedication'; id: string }>();
   @Output() updateActivityDedication = new EventEmitter<{ id: string; publicName?: string; message: string; visibility?: 'public' | 'hosts_only' }>();
+  @Output() markActivityNotificationsRead = new EventEmitter<void>();
 
   activityPanelOpen = false;
   quickRsvp = { response: 'confirmed' as RsvpResponse, companions: 0, companionNames: '', message: '' };
@@ -54,6 +56,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   activityRsvpLabel(): string {
     const response = this.guestActivity?.rsvp?.response;
     return response === 'confirmed' ? 'Asistencia confirmada' : response === 'declined' ? 'No asistiré' : response === 'maybe' ? 'Tal vez asistiré' : 'Sin confirmar';
+  }
+
+  isActivityItemNew(kind: GuestActivityNotification['kind'], id?: string): boolean {
+    return Boolean(id && this.activityNotifications.some((item) => item.kind === kind && item.itemId === id));
   }
 
   openActivityPanel(): void {

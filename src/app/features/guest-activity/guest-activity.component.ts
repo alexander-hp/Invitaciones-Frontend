@@ -150,6 +150,7 @@ export class GuestActivityComponent implements OnInit, OnDestroy {
     this.api.getInvitationGuestStatus(this.slug, this.sessionToken).subscribe({
       next: (activity) => {
         this.activity = activity;
+        this.markReviewedActivityAsSeen(activity);
         if (activity.rsvp && !this.rsvpInitialized) {
           this.rsvpForm = {
             response: activity.rsvp.response,
@@ -167,6 +168,23 @@ export class GuestActivityComponent implements OnInit, OnDestroy {
         if (error.status === 401 || error.status === 403) this.closeSession();
       }
     });
+  }
+
+  private markReviewedActivityAsSeen(activity: ExternalGuestStatusResponse): void {
+    const seen: Record<string, string> = {};
+    for (const item of activity.albumUploads || []) {
+      const id = item.id || item._id;
+      if (id && item.status !== 'pending') seen[`album:${id}`] = item.status;
+    }
+    for (const item of activity.songRequests || []) {
+      const id = item.id || item._id;
+      if (id && item.status !== 'pending') seen[`song:${id}`] = item.status;
+    }
+    for (const item of activity.dedications || []) {
+      const id = item.id || item._id;
+      if (id && item.status !== 'pending') seen[`dedication:${id}`] = item.status;
+    }
+    localStorage.setItem(`kyndra_activity_seen_${this.slug}_${activity.guest.id}`, JSON.stringify(seen));
   }
 
   private runAction(request: { subscribe: Function }, successMessage: string, afterSuccess?: () => void): void {

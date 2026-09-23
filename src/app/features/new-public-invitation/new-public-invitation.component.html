@@ -59,6 +59,7 @@
     [verifiedGuest]="verifiedGuest"
     [guestActivity]="guestActivity"
     [guestActivityLoading]="guestActivityLoading"
+    [activityNotifications]="activityNotifications"
     [requiresGuestValidation]="requiresGuestValidation"
     [sending]="sending"
     [checkingGuest]="checkingGuest"
@@ -79,6 +80,7 @@
     (updateActivityRsvp)="updateGuestActivityRsvp($event)"
     (removeActivityItem)="removeGuestActivityItem($event)"
     (updateActivityDedication)="updateGuestActivityDedication($event)"
+    (markActivityNotificationsRead)="markGuestActivityNotificationsRead()"
     (openLightbox)="openLightbox($event)">
   </app-visual-invitation-renderer>
 
