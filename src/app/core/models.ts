@@ -378,6 +378,7 @@ export interface VisualInvitationLayerStyle {
   shapeKind?: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line';
   controlVariant?: 'default' | 'cards';
   controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
+  showPlaceholder?: boolean;
 }
 
 export interface VisualInvitationLayerLayout {

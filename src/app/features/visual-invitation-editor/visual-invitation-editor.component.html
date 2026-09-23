@@ -179,6 +179,7 @@
       </div>
       <ng-container *ngIf="selectedSection?.type === 'rsvp'">
         <h2>Campos RSVP</h2>
+        <p class="hint">Cada opción agrega el control funcional y su texto como capas independientes. Combínalos con imágenes o formas y elimina lo que no necesites.</p>
         <div class="component-catalog smart-component-catalog">
           <button *ngFor="let control of rsvpControlCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addRsvpControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
@@ -329,7 +330,6 @@
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ resolveLayerText(layer) }}</div>
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
                 <div *ngIf="layer.type === 'field'" class="functional-field-preview" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'">
-                  <strong>{{ layer.text || 'Campo' }}</strong>
                   <span *ngIf="layer.binding !== 'rsvp.response' || layer.style?.controlVariant !== 'cards'">{{ rsvpFieldPreview(layer) }}</span>
                   <div *ngIf="layer.binding === 'rsvp.response' && layer.style?.controlVariant === 'cards'" class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
                   <small>{{ layer.binding }}</small>
@@ -425,7 +425,7 @@
       <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
-        <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">{{ layer.type === 'field' ? 'Etiqueta' : 'Texto' }}<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
+        <label *ngIf="layer.type === 'text' || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <div *ngIf="layer.type === 'text' || layer.type === 'button'" class="dynamic-variable-picker">
           <span>Insertar dato</span>
           <div><button *ngFor="let variable of dynamicVariables" type="button" [title]="variable.group + ': ' + variable.example" (click)="insertDynamicVariable(layer, variable.token)">{{ variable.label }}</button></div>
@@ -435,10 +435,11 @@
           <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         </ng-container>
         <ng-container *ngIf="layer.type === 'field'">
-          <aside class="plugin-binding-note"><strong>Dato protegido</strong><code>{{ layer.binding }}</code><span>El diseño y la posición son editables; esta vinculación mantiene funcionando el formulario.</span></aside>
+          <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear nubes, tarjetas o cualquier composición.</span></aside>
           <label>Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
+          <label class="toggle"><input [ngModel]="layer.style?.showPlaceholder !== false" (ngModelChange)="layer.style!.showPlaceholder=$event" type="checkbox"> Mostrar texto de ejemplo</label>
           <label *ngIf="layer.binding === 'rsvp.response'">Presentación<select [ngModel]="layer.style?.controlVariant || 'default'" (ngModelChange)="setLayerControlStyle(layer, 'controlVariant', $event)"><option value="default">Selector</option><option value="cards">Tarjetas</option></select></label>
-          <label>Forma<select [ngModel]="layer.style?.controlShape || 'rectangle'" (ngModelChange)="setLayerControlStyle(layer, 'controlShape', $event)"><option value="rectangle">Rectangular</option><option value="pill">Cápsula</option><option value="cloud">Nube</option><option value="notebook">Cuaderno</option></select></label>
+          <button type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
         </ng-container>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
         <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>

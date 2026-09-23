@@ -1973,6 +1973,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   rsvpFieldPreview(layer: VisualInvitationLayer): string {
+    if (layer.style?.showPlaceholder === false) return '';
     if (layer.binding === 'rsvp.response') return 'Sí asistiré';
     if (layer.binding === 'rsvp.companions') return '0';
     return layer.placeholder || 'Escribe aquí';
@@ -1983,18 +1984,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.autosaveState = 'Cambios pendientes';
   }
 
+  makeFieldTransparent(layer: VisualInvitationLayer): void {
+    this.recordHistory();
+    layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, boxShadow: 'none' };
+  }
+
   addRsvpControl(binding: string): void {
     const section = this.selectedSection;
     if (!section || section.type !== 'rsvp') return;
     const definition = this.rsvpLayerDefinitions().find((item) => item.binding === binding);
     if (!definition) return;
     this.recordHistory();
-    const layer = this.createRsvpLayer(section, definition, section.layers.length + 1);
+    const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
+    const layer = this.createRsvpLayer(section, definition, topZ + 1);
     layer.x = 25;
     layer.y = 40;
-    layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
-    section.layers.push(layer);
-    this.setLayerSelection([layer.id]);
+    const additions = layer.type === 'field' ? [this.separateRsvpFieldLayer(layer, topZ + 1), layer] : [layer];
+    section.layers.push(...additions);
+    this.setLayerSelection(additions.map((item) => item.id), layer.id);
     this.inspectorView = 'properties';
     this.flash(`${definition.label} agregado al lienzo.`);
   }
@@ -2002,11 +2009,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   restoreMissingRsvpControls(section: VisualInvitationSection): void {
     if (section.type !== 'rsvp') return;
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
-    const missing = this.rsvpLayerDefinitions().filter((definition) => !existing.has(definition.binding));
+    const missing = this.rsvpLayerDefinitions().filter((definition) => definition.binding.startsWith('rsvp.') && !existing.has(definition.binding));
     if (!missing.length) { this.flash('Todos los campos RSVP ya están en el lienzo.'); return; }
     this.recordHistory();
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
-    section.layers.push(...missing.map((definition) => this.createRsvpLayer(section, definition, ++topZ)));
+    for (const definition of missing) {
+      const layer = this.createRsvpLayer(section, definition, ++topZ);
+      if (layer.type === 'field') section.layers.push(this.separateRsvpFieldLayer(layer, topZ), layer);
+      else section.layers.push(layer);
+    }
     this.flash(`${missing.length} elemento(s) RSVP restaurado(s).`);
   }
 
@@ -2493,6 +2504,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.ensureRsvpPluginDesign(section);
         section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820);
         this.ensureRsvpCanvasLayers(section);
+        this.ensureSeparatedRsvpFieldParts(section);
       }
     }
   }
@@ -2533,6 +2545,44 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     section.layers.push(...definitions.map((definition, index) => this.createRsvpLayer(section, definition, topZ + index + 1)));
     section.pluginDesign = { ...(section.pluginDesign || {}), layout: 'free' };
+  }
+
+  private ensureSeparatedRsvpFieldParts(section: VisualInvitationSection): void {
+    if (section.pluginSettings?.['nativeFieldPartsSeparated'] === true) return;
+    const fields = section.layers.filter((layer) => layer.type === 'field' && String(layer.binding || '').startsWith('rsvp.'));
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...fields.map((field) => this.separateRsvpFieldLayer(field, ++topZ)));
+    section.pluginSettings = { ...(section.pluginSettings || {}), nativeFieldPartsSeparated: true };
+  }
+
+  private separateRsvpFieldLayer(field: VisualInvitationLayer, zIndex: number): VisualInvitationLayer {
+    const splitLayout = (layout: { x: number; y: number; width: number; height: number; rotation?: number }) => {
+      const labelHeight = Math.min(5, Math.max(3, layout.height * .28));
+      const labelLayout = { ...layout, height: labelHeight };
+      layout.y = Math.min(100 - 4, layout.y + labelHeight + 1);
+      layout.height = Math.max(4, layout.height - labelHeight - 1);
+      return labelLayout;
+    };
+    const baseLayout = splitLayout(field);
+    const label = this.newLayer('text', field.text || 'Etiqueta', baseLayout.x, baseLayout.y, baseLayout.width, baseLayout.height, Math.max(10, Number(field.style?.fontSize || 14) * .82));
+    label.name = `Etiqueta: ${field.text || 'Campo'}`;
+    label.binding = `display.label.${field.binding}`;
+    label.hidden = field.hidden;
+    label.zIndex = zIndex;
+    label.style = {
+      ...(label.style || {}), color: field.style?.color, fontFamily: field.style?.fontFamily,
+      fontWeight: 600, textAlign: field.style?.textAlign || 'left', backgroundColor: 'transparent',
+      borderWidth: 0, padding: 0, boxShadow: 'none'
+    };
+    if (field.layouts) {
+      label.layouts = {};
+      for (const device of ['mobile', 'tablet', 'desktop'] as DeviceMode[]) {
+        const layout = field.layouts[device];
+        if (layout) label.layouts[device] = splitLayout(layout);
+      }
+    }
+    field.style = { ...(field.style || {}), showPlaceholder: field.style?.showPlaceholder !== false };
+    return label;
   }
 
   private rsvpLayerDefinitions(): Array<{ key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string }> {
