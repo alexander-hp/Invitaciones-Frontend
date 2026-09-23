@@ -267,7 +267,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.');
+    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -459,6 +459,86 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   private locationLayerParts(binding: string): { index: number; key: string } | null {
     const match = binding.match(/^location\.(\d+)\.([^.]+)$/);
     return match ? { index: Number(match[1]), key: match[2] } : null;
+  }
+
+  giftCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('display.gifts.'));
+  }
+
+  hasGiftCanvasLayers(section: VisualInvitationSection): boolean {
+    return section.type === 'gifts' && this.giftCanvasLayers(section).length > 0;
+  }
+
+  shouldRenderGiftLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
+    const binding = String(layer.binding || '');
+    if (binding.startsWith('display.gifts.') && binding !== 'display.gifts.envelopeTitle') return true;
+    const gift = this.giftLayerParts(binding);
+    if (gift) {
+      if (this.pluginSetting(section, 'showRegistry', true) === false) return false;
+      const item = this.invitation?.content?.giftRegistry?.[gift.index];
+      if (!item) return false;
+      if (gift.key === 'card') return true;
+      if (gift.key === 'image') return Boolean(item.imageUrl);
+      if (gift.key === 'open') return Boolean(item.url);
+      return Boolean(this.giftLayerText(layer));
+    }
+    if (!binding.startsWith('envelope.') && binding !== 'display.gifts.envelopeTitle') return false;
+    if (this.pluginSetting(section, 'showEnvelope', true) === false || !this.hasDigitalEnvelopeData()) return false;
+    const envelope = this.invitation?.content?.digitalEnvelope;
+    if (binding === 'envelope.card' || binding === 'display.gifts.envelopeTitle') return true;
+    if (binding === 'envelope.qr') return Boolean(envelope?.qrImageUrl);
+    if (binding === 'envelope.copyAccount') return Boolean(envelope?.account);
+    if (binding === 'envelope.copyClabe') return Boolean(envelope?.clabe);
+    if (binding === 'envelope.feedback') return Boolean(this.giftCopyMessage);
+    return Boolean(this.giftLayerText(layer));
+  }
+
+  giftLayerText(layer: VisualInvitationLayer): string {
+    const parsed = this.giftLayerParts(String(layer.binding || ''));
+    if (parsed) {
+      const gift = this.invitation?.content?.giftRegistry?.[parsed.index];
+      if (!gift) return '';
+      if (parsed.key === 'title') return gift.title || gift.store || `Mesa ${parsed.index + 1}`;
+      if (parsed.key === 'store') return gift.store || '';
+      if (parsed.key === 'note') return gift.note || '';
+      return layer.text || '';
+    }
+    const envelope = this.invitation?.content?.digitalEnvelope;
+    if (layer.binding === 'envelope.bank') return envelope?.bank || '';
+    if (layer.binding === 'envelope.holder') return envelope?.holder || '';
+    if (layer.binding === 'envelope.account') return envelope?.account ? `Cuenta: ${envelope.account}` : '';
+    if (layer.binding === 'envelope.clabe') return envelope?.clabe ? `CLABE: ${envelope.clabe}` : '';
+    if (layer.binding === 'envelope.note') return envelope?.note || '';
+    if (layer.binding === 'envelope.feedback') return this.giftCopyMessage;
+    return layer.text || '';
+  }
+
+  giftLayerImageUrl(layer: VisualInvitationLayer): string {
+    const parsed = this.giftLayerParts(String(layer.binding || ''));
+    if (parsed?.key === 'image') return this.invitation?.content?.giftRegistry?.[parsed.index]?.imageUrl || '';
+    if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || '';
+    return '';
+  }
+
+  giftLayerHref(layer: VisualInvitationLayer): string {
+    const parsed = this.giftLayerParts(String(layer.binding || ''));
+    return parsed?.key === 'open' ? this.invitation?.content?.giftRegistry?.[parsed.index]?.url || '' : '';
+  }
+
+  copyGiftLayer(layer: VisualInvitationLayer): void {
+    const envelope = this.invitation?.content?.digitalEnvelope;
+    this.copyGiftValue(layer.binding === 'envelope.copyAccount' ? envelope?.account : envelope?.clabe);
+  }
+
+  private giftLayerParts(binding: string): { index: number; key: string } | null {
+    const match = binding.match(/^gift\.(\d+)\.([^.]+)$/);
+    return match ? { index: Number(match[1]), key: match[2] } : null;
+  }
+
+  private hasDigitalEnvelopeData(): boolean {
+    const envelope = this.invitation?.content?.digitalEnvelope;
+    return Boolean(envelope && (envelope.bank || envelope.holder || envelope.account || envelope.clabe || envelope.note || envelope.qrImageUrl));
   }
 
   rsvpControlName(layer: VisualInvitationLayer): string {

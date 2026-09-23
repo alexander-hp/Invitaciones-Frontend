@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
+  EventModel, GiftRegistryItem, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
@@ -924,6 +924,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'guestActivity') this.ensureGuestActivityCanvasLayers(section);
     if (type === 'countdown') this.ensureCountdownCanvasLayers(section);
     if (type === 'locations') this.ensureLocationCanvasLayers(section);
+    if (type === 'gifts') this.ensureGiftCanvasLayers(section);
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -1341,7 +1342,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   startInlineEdit(event: MouseEvent, section: VisualInvitationSection, layer: VisualInvitationLayer): void {
-    if (layer.locked || !['text', 'button'].includes(layer.type)) return;
+    if (layer.locked || !['text', 'button'].includes(layer.type) || this.isDynamicTextOutputLayer(layer)) return;
     event.preventDefault();
     event.stopPropagation();
     this.applyLayerSelection(section, layer, false);
@@ -1373,7 +1374,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private activateImageCrop(section: VisualInvitationSection, layer: VisualInvitationLayer): void {
-    if (layer.locked || layer.type !== 'image' || !layer.url) return;
+    if (layer.locked || layer.type !== 'image' || !this.boundImageUrl(layer)) return;
     this.applyLayerSelection(section, layer, false);
     layer.style = {
       ...(layer.style || {}),
@@ -2018,7 +2019,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   hasNativeFunctionalLayers(section: VisualInvitationSection): boolean {
     return section.layers.some((layer) => {
       const binding = String(layer.binding || '');
-      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.');
+      return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.');
     });
   }
 
@@ -2046,7 +2047,49 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isDynamicTextOutputLayer(layer: VisualInvitationLayer): boolean {
-    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
+    return layer.type === 'text' && (String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || layer.binding === 'activity.greeting' || ['countdown.days', 'countdown.hours', 'countdown.minutes', 'countdown.seconds'].includes(layer.binding || ''));
+  }
+
+  isDynamicImageOutputLayer(layer: VisualInvitationLayer): boolean {
+    return layer.type === 'image' && (/^gift\.\d+\.image$/.test(String(layer.binding || '')) || layer.binding === 'envelope.qr');
+  }
+
+  boundImageUrl(layer: VisualInvitationLayer): string {
+    const giftMatch = String(layer.binding || '').match(/^gift\.(\d+)\.image$/);
+    if (giftMatch) return this.invitation?.content?.giftRegistry?.[Number(giftMatch[1])]?.imageUrl || layer.url || '';
+    if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
+    return layer.url || '';
+  }
+
+  editorLayerText(layer: VisualInvitationLayer): string {
+    const binding = String(layer.binding || '');
+    const locationMatch = binding.match(/^location\.(\d+)\.(name|address|notes|details)$/);
+    if (locationMatch) {
+      const location = this.locationSourceData()[Number(locationMatch[1])];
+      const key = locationMatch[2];
+      if (!location) return '';
+      if (key === 'name') return location.name || location.type || layer.text || '';
+      if (key === 'address') return location.address || '';
+      if (key === 'notes') return location.notes || '';
+      return [location.parking, location.transport, location.accessibility, ...(location.schedule || [])].filter(Boolean).join('\n');
+    }
+    const giftMatch = binding.match(/^gift\.(\d+)\.(title|store|note)$/);
+    if (giftMatch) {
+      const gift = this.invitation?.content?.giftRegistry?.[Number(giftMatch[1])];
+      const key = giftMatch[2] as 'title' | 'store' | 'note';
+      return gift?.[key] || (key === 'title' ? gift?.store : '') || layer.text || '';
+    }
+    const envelope = this.invitation?.content?.digitalEnvelope;
+    if (binding === 'envelope.bank') return envelope?.bank || layer.text || '';
+    if (binding === 'envelope.holder') return envelope?.holder || layer.text || '';
+    if (binding === 'envelope.account') return envelope?.account ? `Cuenta: ${envelope.account}` : layer.text || '';
+    if (binding === 'envelope.clabe') return envelope?.clabe ? `CLABE: ${envelope.clabe}` : layer.text || '';
+    if (binding === 'envelope.note') return envelope?.note || layer.text || '';
+    if (binding === 'countdown.days') return String(this.countdownPreview.days);
+    if (binding === 'countdown.hours') return String(this.countdownPreview.hours).padStart(2, '0');
+    if (binding === 'countdown.minutes') return String(this.countdownPreview.minutes).padStart(2, '0');
+    if (binding === 'countdown.seconds') return String(this.countdownPreview.seconds).padStart(2, '0');
+    return this.resolveLayerText(layer);
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
@@ -2065,7 +2108,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
-    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations'].includes(section.type)) return;
+    if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts'].includes(section.type)) return;
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -2105,10 +2148,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!definition) return;
       layer = this.createCountdownLayer(definition, topZ + 1);
       label = definition.label;
-    } else {
+    } else if (section.type === 'locations') {
       const definition = this.locationLayerDefinitions(section).find((item) => item.binding === binding);
       if (!definition) return;
       layer = this.createLocationLayer(definition, topZ + 1);
+      label = definition.label;
+    } else {
+      const definition = this.giftLayerDefinitions(section).find((item) => item.binding === binding);
+      if (!definition) return;
+      layer = this.createGiftLayer(definition, topZ + 1);
       label = definition.label;
     }
     if (section.type === 'rsvp') { layer.x = 25; layer.y = 40; }
@@ -2154,6 +2202,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const key = match?.[2] || 'name';
         return { binding: definition.binding, label: `Ubicación ${index + 1}: ${definition.label}`, icon: icons[key] || '+' };
       });
+  }
+
+  giftControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+    return this.giftLayerDefinitions(section)
+      .filter((definition) => /^(gift\.\d+\.(image|title|store|note|open)|envelope\.(bank|holder|account|clabe|note|qr|copyAccount|copyClabe|feedback))$/.test(definition.binding))
+      .map((definition) => ({ binding: definition.binding, label: definition.label, icon: definition.type === 'image' ? '▧' : definition.type === 'button' ? '→' : 'Aa' }));
   }
 
   beginContentEdit(): void {
@@ -2283,6 +2337,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'galleryItems') this.invitation.content.galleryItems!.push(this.emptyGalleryItem());
     if (key === 'giftRegistry') this.invitation.content.giftRegistry!.push({ store: '', title: '', url: '', imageUrl: '', note: '', priority: this.invitation.content.giftRegistry!.length });
     if (key === 'lodging') this.invitation.content.lodging!.push(this.emptyLodgingItem(this.invitation.content.lodging!.length));
+    if (key === 'giftRegistry') {
+      const index = this.invitation.content.giftRegistry!.length - 1;
+      const section = this.design.sections.find((item) => item.type === 'gifts');
+      if (section && this.hasNativeFunctionalLayers(section)) this.ensureGiftCanvasLayers(section, [index]);
+    }
   }
 
   removeContentItem(key: ContentListKey, index: number): void {
@@ -2306,7 +2365,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (key === 'locations') this.invitation?.content.locations?.forEach((item, index) => { item.priority = index; });
   }
 
-  uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift' | 'lodging', index = -1): void {
+  uploadContentImage(fileInput: HTMLInputElement, target: 'gallery' | 'dressCode' | 'gift' | 'lodging' | 'envelopeQr', index = -1): void {
     const file = fileInput.files?.[0];
     if (!file || !this.invitation) return;
     const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event._id || this.invitation.event.id);
@@ -2323,6 +2382,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
         if (target === 'dressCode') this.invitation!.content.dressCodeImageUrl = publicUrl;
         if (target === 'gift' && this.invitation!.content.giftRegistry?.[index]) this.invitation!.content.giftRegistry[index].imageUrl = publicUrl;
+        if (target === 'envelopeQr') this.invitation!.content.digitalEnvelope!.qrImageUrl = publicUrl;
         if (target === 'lodging' && this.invitation!.content.lodging?.[index]) this.invitation!.content.lodging[index].imageUrl = publicUrl;
         this.uploading = false;
         fileInput.value = '';
@@ -2662,6 +2722,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       if (section.type === 'locations') {
         this.ensureLocationCanvasLayers(section);
+      }
+      if (section.type === 'gifts') {
+        this.ensureGiftCanvasLayers(section);
       }
     }
   }
@@ -3049,6 +3112,81 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
+  private giftSourceData(): GiftRegistryItem[] {
+    const configured = this.invitation?.content?.giftRegistry || [];
+    return configured.length ? configured : this.previewGifts;
+  }
+
+  private giftLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const gifts = this.giftSourceData();
+    const rows = Math.max(1, Math.ceil(gifts.length / 2));
+    const requiredHeight = Math.max(900, 250 + rows * 290 + 330);
+    const pct = (pixels: number) => pixels / requiredHeight * 100;
+    const definitions: Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
+      { type: 'text', binding: 'display.gifts.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Un detalle opcional'), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
+      { type: 'text', binding: 'display.gifts.title', label: section.title || 'Mesa de regalos', x: 10, y: pct(68), width: 80, height: pct(66), fontSize: 34 },
+      { type: 'text', binding: 'display.gifts.intro', label: String(this.pluginSetting(section, 'introText') || this.invitation?.content?.giftSettings?.introText || 'Tu presencia es lo más importante para nosotros.'), x: 12, y: pct(137), width: 76, height: pct(45), fontSize: 14 }
+    ];
+    gifts.forEach((gift, index) => {
+      const left = index % 2 === 0 ? 4 : 52;
+      const topPx = 200 + Math.floor(index / 2) * 290;
+      const prefix = `gift.${index}`;
+      definitions.push(
+        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de regalo ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(255), fontSize: 14 },
+        { type: 'image', binding: `${prefix}.image`, label: `Logo de mesa ${index + 1}`, url: gift.imageUrl || '', x: left + 4, y: pct(topPx + 18), width: 14, height: pct(78), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: left + 20, y: pct(topPx + 22), width: 21, height: pct(38), fontSize: 20 },
+        { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: left + 20, y: pct(topPx + 64), width: 21, height: pct(28), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: left + 4, y: pct(topPx + 110), width: 36, height: pct(55), fontSize: 13 },
+        { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: left + 12, y: pct(topPx + 187), width: 28, height: pct(42), fontSize: 13 }
+      );
+    });
+    const envelopeTop = 220 + rows * 290;
+    const envelope = this.invitation?.content?.digitalEnvelope || {};
+    definitions.push(
+      { type: 'shape', binding: 'envelope.card', label: 'Tarjeta de sobre digital', x: 10, y: pct(envelopeTop), width: 80, height: pct(275), fontSize: 14 },
+      { type: 'text', binding: 'display.gifts.envelopeTitle', label: 'Sobre digital', x: 32, y: pct(envelopeTop + 18), width: 50, height: pct(38), fontSize: 24 },
+      { type: 'image', binding: 'envelope.qr', label: 'QR del sobre digital', url: envelope.qrImageUrl || '', x: 14, y: pct(envelopeTop + 20), width: 15, height: pct(112), fontSize: 12 },
+      { type: 'text', binding: 'envelope.bank', label: envelope.bank || 'Banco', x: 32, y: pct(envelopeTop + 62), width: 24, height: pct(28), fontSize: 13 },
+      { type: 'text', binding: 'envelope.holder', label: envelope.holder || 'Titular', x: 58, y: pct(envelopeTop + 62), width: 25, height: pct(28), fontSize: 13 },
+      { type: 'text', binding: 'envelope.account', label: envelope.account || 'Cuenta', x: 32, y: pct(envelopeTop + 98), width: 24, height: pct(30), fontSize: 12 },
+      { type: 'text', binding: 'envelope.clabe', label: envelope.clabe || 'CLABE', x: 58, y: pct(envelopeTop + 98), width: 25, height: pct(30), fontSize: 12 },
+      { type: 'text', binding: 'envelope.note', label: envelope.note || 'Agradecemos mucho tu detalle.', x: 18, y: pct(envelopeTop + 145), width: 64, height: pct(35), fontSize: 12 },
+      { type: 'button', binding: 'envelope.copyAccount', label: 'Copiar cuenta', x: 24, y: pct(envelopeTop + 196), width: 23, height: pct(40), fontSize: 12 },
+      { type: 'button', binding: 'envelope.copyClabe', label: String(this.pluginSetting(section, 'envelopeButtonText') || 'Copiar CLABE'), x: 53, y: pct(envelopeTop + 196), width: 23, height: pct(40), fontSize: 12 },
+      { type: 'text', binding: 'envelope.feedback', label: 'Aquí aparecerá la confirmación de copiado', x: 25, y: pct(envelopeTop + 242), width: 50, height: pct(24), fontSize: 11 }
+    );
+    return definitions;
+  }
+
+  private ensureGiftCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
+    const hasGiftLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('display.gifts.'));
+    if (!indexes?.length && hasGiftLayers) return;
+    const rows = Math.max(1, Math.ceil(this.giftSourceData().length / 2));
+    const requiredHeight = Math.max(900, 250 + rows * 290 + 330);
+    if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    const definitions = this.giftLayerDefinitions(section).filter((definition) => {
+      if (existing.has(definition.binding)) return false;
+      if (!indexes?.length) return true;
+      const match = definition.binding.match(/^gift\.(\d+)\./);
+      return Boolean(match && indexes.includes(Number(match[1])));
+    });
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    section.layers.push(...definitions.map((definition) => this.createGiftLayer(definition, ++topZ)));
+  }
+
+  private createGiftLayer(definition: ReturnType<typeof this.giftLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = zIndex;
+    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#ffffff', borderRadius: 8 };
+    if (definition.type === 'shape') {
+      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    return layer;
+  }
+
   private createRsvpLayer(
     section: VisualInvitationSection,
     definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
@@ -3177,7 +3315,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (section.type === 'locations' && content.locations?.length && content.locations.every((location) => !location.mapUrl && !location.wazeUrl)) add('warning', 'Ubicaciones sin navegación', 'Agrega un enlace de Google Maps o Waze para mostrar cómo llegar.', section.id);
       if (section.type === 'itinerary' && !content.itinerary?.length) add('warning', 'Itinerario vacío', 'Agrega actividades o desactiva esta sección.', section.id);
       if (section.type === 'gallery' && !content.gallery?.length) add('warning', 'Galería vacía', 'Agrega fotografías o desactiva esta sección.', section.id);
-      if (section.type === 'gifts' && !content.giftRegistry?.length && !content.digitalEnvelope) add('warning', 'Mesa de regalos vacía', 'Agrega una mesa o sobre digital, o desactiva la sección.', section.id);
+      if (section.type === 'gifts' && !content.giftRegistry?.length && !this.hasEnvelopeContent(content.digitalEnvelope)) add('warning', 'Mesa de regalos vacía', 'Agrega una mesa o sobre digital, o desactiva la sección.', section.id);
       if (section.type === 'lodging' && !content.lodging?.length) add('warning', 'Hospedaje vacío', 'Agrega por lo menos una recomendación o elimina esta sección.', section.id);
 
       if (section.type === 'rsvp' && this.hasRsvpCanvasLayers(section)) {
@@ -3294,6 +3432,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private isFunctionalType(type: string): boolean {
     return ['locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
+  }
+
+  private hasEnvelopeContent(envelope = this.invitation?.content?.digitalEnvelope): boolean {
+    return Boolean(envelope && (envelope.bank || envelope.holder || envelope.account || envelope.clabe || envelope.note || envelope.qrImageUrl));
   }
 
   private layerTypeLabel(type: VisualLayerType): string {

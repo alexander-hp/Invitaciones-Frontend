@@ -233,6 +233,13 @@
           <button *ngFor="let control of locationControlCatalog(locationSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
         </div>
       </ng-container>
+      <ng-container *ngIf="selectedSection?.type === 'gifts' && selectedSection as giftSection">
+        <h2>Piezas de regalos</h2>
+        <p class="hint">Los logos y datos se toman de la mesa de regalos y el sobre digital. Los botones mantienen su enlace o acción de copiar.</p>
+        <div class="component-catalog smart-component-catalog">
+          <button *ngFor="let control of giftControlCatalog(giftSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        </div>
+      </ng-container>
       <h2>Secciones</h2>
       <div class="section-catalog">
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
@@ -376,15 +383,15 @@
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
               <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
-                <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ resolveLayerText(layer) }}</div>
+                <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ editorLayerText(layer) }}</div>
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
                 <div *ngIf="layer.type === 'field'" class="functional-field-preview" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'">
                   <span *ngIf="layer.binding !== 'rsvp.response' || layer.style?.controlVariant !== 'cards'">{{ rsvpFieldPreview(layer) }}</span>
                   <div *ngIf="layer.binding === 'rsvp.response' && layer.style?.controlVariant === 'cards'" class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
                   <small>{{ layer.binding }}</small>
                 </div>
-                <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
-                <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Sube una imagen</div>
+                <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
+                <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder">Sube una imagen</div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
                 <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls preload="metadata"></video>
                 <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
@@ -398,7 +405,7 @@
                     <button type="button" title="Terminar encuadre" (click)="finishImageCrop()">Listo</button>
                   </div>
                   <div class="layer-toolbar" (pointerdown)="$event.stopPropagation()">
-                    <button *ngIf="layer.type === 'image' && layer.url && !layer.locked" type="button" title="Encuadrar imagen" (click)="startImageCrop($event, section, layer)">⌗</button>
+                    <button *ngIf="layer.type === 'image' && boundImageUrl(layer) && !layer.locked" type="button" title="Encuadrar imagen" (click)="startImageCrop($event, section, layer)">⌗</button>
                     <button type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button>
                     <button type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer, $event)">{{ layer.locked ? '▣' : '▢' }}</button>
                     <button type="button" title="Eliminar" (click)="removeLayer()">⌫</button>
@@ -491,8 +498,9 @@
           <label *ngIf="layer.binding === 'rsvp.response'">Presentación<select [ngModel]="layer.style?.controlVariant || 'default'" (ngModelChange)="setLayerControlStyle(layer, 'controlVariant', $event)"><option value="default">Selector</option><option value="cards">Tarjetas</option></select></label>
           <button *ngIf="!isDynamicOutputLayer(layer)" type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
         </ng-container>
-        <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
-        <label *ngIf="layer.type === 'image' || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
+        <aside *ngIf="isDynamicImageOutputLayer(layer)" class="plugin-binding-note"><strong>Imagen vinculada</strong><code>{{ layer.binding }}</code><span>Cambia el archivo desde la configuración de contenido. Aquí puedes ajustar tamaño, recorte, posición y estilo.</span></aside>
+        <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
+        <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
         <div class="transform-settings" *ngIf="selectedLayout as layout">
           <h3>Posición y tamaño</h3>
           <div class="two-columns">
@@ -778,7 +786,10 @@
                   <label>Cuenta<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.account" (focus)="beginContentEdit()" type="text"></label>
                   <label>CLABE<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.clabe" (focus)="beginContentEdit()" type="text"></label>
                   <label>Nota<textarea [(ngModel)]="currentInvitation.content.digitalEnvelope!.note" (focus)="beginContentEdit()" rows="2"></textarea></label>
+                  <label>QR o imagen del sobre<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.qrImageUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
+                  <label>Subir QR<input #envelopeQrUpload type="file" accept="image/*" (change)="uploadContentImage(envelopeQrUpload, 'envelopeQr')"></label>
                 </div>
+                <img *ngIf="currentInvitation.content.digitalEnvelope!.qrImageUrl" class="content-image-preview" [src]="currentInvitation.content.digitalEnvelope!.qrImageUrl" alt="QR del sobre digital">
               </div>
 
               <div *ngSwitchCase="'lodging'">
@@ -895,7 +906,7 @@
     </header>
     <div>
       <button type="button" title="Editar propiedades" (click)="openMobileInspector()"><b>✎</b><span>Editar</span></button>
-      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" [hidden]="layer.type !== 'image' || !layer.url || layer.locked" type="button" [title]="croppingLayerId === layer.id ? 'Terminar encuadre' : 'Encuadrar imagen'" (click)="croppingLayerId === layer.id ? finishImageCrop() : startMobileImageCrop(layer)"><b>{{ croppingLayerId === layer.id ? '✓' : '⌗' }}</b><span>{{ croppingLayerId === layer.id ? 'Listo' : 'Encuadrar' }}</span></button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" [hidden]="layer.type !== 'image' || !boundImageUrl(layer) || layer.locked" type="button" [title]="croppingLayerId === layer.id ? 'Terminar encuadre' : 'Encuadrar imagen'" (click)="croppingLayerId === layer.id ? finishImageCrop() : startMobileImageCrop(layer)"><b>{{ croppingLayerId === layer.id ? '✓' : '⌗' }}</b><span>{{ croppingLayerId === layer.id ? 'Listo' : 'Encuadrar' }}</span></button>
       <button type="button" title="Duplicar" (click)="duplicateLayer()"><b>⧉</b><span>Duplicar</span></button>
       <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer)"><b>{{ layer.locked ? '▣' : '▢' }}</b><span>{{ layer.locked ? 'Desbloquear' : 'Bloquear' }}</span></button>
       <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Enviar atrás" (click)="shiftLayer(layer, -1)"><b>↓</b><span>Atrás</span></button>

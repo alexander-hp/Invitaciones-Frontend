@@ -70,7 +70,20 @@
       </div>
     </div>
 
-    <div class="functional-module" *ngIf="section.type === 'gifts'">
+    <div *ngIf="hasGiftCanvasLayers(section)" class="rsvp-layer-form gift-layer-form">
+      <ng-container *ngFor="let layer of giftCanvasLayers(section); trackBy: trackVisualById">
+        <div *ngIf="shouldRenderGiftLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.binding?.startsWith('display.gifts.')">{{ resolveLayerText(layer) }}</div>
+          <div *ngIf="layer.type === 'text' && (layer.binding?.startsWith('gift.') || layer.binding?.startsWith('envelope.'))">{{ giftLayerText(layer) }}</div>
+          <img *ngIf="layer.binding?.endsWith('.image')" [src]="giftLayerImageUrl(layer)" [alt]="giftLayerText(layer) || 'Mesa de regalos'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
+          <button *ngIf="layer.binding === 'envelope.qr'" type="button" class="native-pass-qr" (click)="openLightbox.emit(giftLayerImageUrl(layer))"><img [src]="giftLayerImageUrl(layer)" alt="QR del sobre digital"></button>
+          <a *ngIf="layer.binding?.endsWith('.open')" class="visual-action-button" [href]="giftLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
+          <button *ngIf="layer.binding === 'envelope.copyAccount' || layer.binding === 'envelope.copyClabe'" type="button" class="visual-action-button" (click)="copyGiftLayer(layer)">{{ layer.text }}</button>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="functional-module" *ngIf="section.type === 'gifts' && !hasGiftCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Un detalle opcional') }}</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText') || invitation?.content?.giftSettings?.introText }}</p>
       <div class="module-grid">
         <ng-container *ngIf="pluginSetting(section, 'showRegistry', true)"><article *ngFor="let gift of invitation?.content?.giftRegistry">
