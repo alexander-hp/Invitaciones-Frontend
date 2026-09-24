@@ -5,6 +5,15 @@ export interface VisualDesignImportResult {
   design: VisualInvitationDesign;
   warnings: string[];
   stats: { sections: number; layers: number; ignored: number };
+  review: VisualDesignImportReview[];
+}
+
+export type VisualDesignImportReviewStatus = 'connected' | 'visual' | 'review';
+export interface VisualDesignImportReview {
+  sectionIndex: number;
+  status: VisualDesignImportReviewStatus;
+  title: string;
+  detail: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -67,7 +76,11 @@ export class VisualDesignImporterService {
       theme: parsed.theme, assets: Array.isArray(parsed.assets) ? parsed.assets.slice(0, 200) : [], sections
     };
     const warnings = parsed.sections.length > 50 ? ['Solo se importaron las primeras 50 secciones.'] : [];
-    return { design, warnings, stats: { sections: sections.length, layers: sections.reduce((sum, section) => sum + section.layers.length, 0), ignored: 0 } };
+    return {
+      design, warnings,
+      stats: { sections: sections.length, layers: sections.reduce((sum, section) => sum + section.layers.length, 0), ignored: 0 },
+      review: this.reviewSections(sections)
+    };
   }
 
   private convertDocument(doc: Document, win: Window, theme: NonNullable<VisualInvitationDesign['theme']>, warnings: string[], initialIgnored: number): VisualDesignImportResult {
@@ -95,8 +108,32 @@ export class VisualDesignImporterService {
     return {
       design: { version: 2, active: true, mode: 'advanced', responsiveMode: 'shared', theme: { ...theme }, assets: [], sections },
       warnings,
-      stats: { sections: sections.length, layers: layerCount, ignored }
+      stats: { sections: sections.length, layers: layerCount, ignored },
+      review: this.reviewSections(sections, roots.map((root) => Boolean(root.querySelector('form,input,select,textarea'))))
     };
+  }
+
+  private reviewSections(sections: VisualInvitationSection[], formFlags: boolean[] = []): VisualDesignImportReview[] {
+    return sections.map((section, sectionIndex) => {
+      const title = section.title || `Sección ${sectionIndex + 1}`;
+      if (this.isFunctionalType(section.type)) {
+        return {
+          sectionIndex, status: 'connected', title,
+          detail: `${this.functionalTypeLabel(section.type)} usa los datos y acciones reales de KyndraSoft.`
+        };
+      }
+      const hasUnconnectedForm = Boolean(formFlags[sectionIndex]) || section.layers.some((layer) => layer.type === 'field' && !layer.binding);
+      if (hasUnconnectedForm) {
+        return {
+          sectionIndex, status: 'review', title,
+          detail: 'Contiene controles que no se pudieron asociar con una función. Revisa sus campos y la acción del botón.'
+        };
+      }
+      return {
+        sectionIndex, status: 'visual', title,
+        detail: 'Texto, medios y estilos quedaron como capas libres completamente editables.'
+      };
+    });
   }
 
   private sanitize(html: string, css: string): { html: string; css: string; warnings: string[]; ignored: number } {

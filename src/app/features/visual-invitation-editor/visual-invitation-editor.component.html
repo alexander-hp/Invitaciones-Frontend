@@ -42,10 +42,22 @@
           <p class="import-help">Este modo es el recomendado para diseños creados por otra IA porque conserva posiciones, estilos, acciones y responsividad de forma precisa.</p>
         </ng-container>
         <fieldset><legend>Cómo aplicarlo</legend><label><input [(ngModel)]="importStrategy" type="radio" value="replace"> Reemplazar el diseño visual actual</label><label><input [(ngModel)]="importStrategy" type="radio" value="append"> Agregarlo al final del diseño actual</label></fieldset>
-        <div class="import-result" *ngIf="importSummary"><strong>{{ importSummary }}</strong><p>Ya puedes cerrar esta ventana y modificar el resultado. Guarda el diseño cuando termines de revisarlo.</p></div>
+        <div class="import-result" *ngIf="importSummary"><strong>{{ importSummary }}</strong><p>La importación aún no se guardará mientras esta revisión permanezca abierta.</p></div>
+        <section class="import-assistant" *ngIf="importReview.length" aria-labelledby="importAssistantTitle">
+          <div class="import-assistant-heading">
+            <div><span>Asistente posterior</span><strong id="importAssistantTitle">Resultado por sección</strong></div>
+            <div class="import-assistant-counts"><b class="connected">{{ importReviewCount('connected') }} conectadas</b><b class="visual">{{ importReviewCount('visual') }} visuales</b><b class="review">{{ importReviewCount('review') }} por revisar</b></div>
+          </div>
+          <div class="import-review-list">
+            <button *ngFor="let item of importReview" type="button" [class]="'import-review-item ' + item.status" (click)="reviewImportedSection(item)">
+              <span class="import-review-status">{{ item.status === 'connected' ? 'Conectada' : (item.status === 'visual' ? 'Editable' : 'Revisar') }}</span>
+              <strong>{{ item.title }}</strong><small>{{ item.detail }}</small><i>Ver en el lienzo →</i>
+            </button>
+          </div>
+        </section>
         <div class="import-warnings" *ngIf="importWarnings.length"><strong>Revisión de conversión</strong><ul><li *ngFor="let warning of importWarnings">{{ warning }}</li></ul></div>
       </div>
-      <footer><button type="button" class="secondary" (click)="closeDesignImporter()">Cerrar</button><button type="button" class="primary" [disabled]="importingDesign" (click)="importDesign()">{{ importingDesign ? 'Convirtiendo...' : 'Importar al editor' }}</button></footer>
+      <footer><button *ngIf="importSummary" type="button" class="danger-secondary" (click)="discardImportedDesign()">Descartar importación</button><button type="button" class="secondary" (click)="closeDesignImporter()">{{ importSummary ? 'Revisar en el lienzo' : 'Cerrar' }}</button><button type="button" class="primary" [disabled]="importingDesign" (click)="importDesign()">{{ importingDesign ? 'Convirtiendo...' : (importSummary ? 'Importar de nuevo' : 'Importar al editor') }}</button></footer>
     </section>
   </div>
   <div class="responsive-preview-backdrop" *ngIf="showResponsivePreview" (click)="closeResponsivePreview()">

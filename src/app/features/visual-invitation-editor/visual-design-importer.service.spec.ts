@@ -41,6 +41,7 @@ describe('VisualDesignImporterService', () => {
     expect(bindings).toContain('rsvp.submit');
     expect(bindings).toContain('rsvp.feedback');
     expect(result.warnings.join(' ')).toContain('RSVP');
+    expect(result.review[0].status).toBe('connected');
   });
 
   it('recognizes a DJ form by its content and preserves editable controls', async () => {
@@ -64,5 +65,18 @@ describe('VisualDesignImporterService', () => {
     expect(bindings).toContain('song.sourceUrl');
     expect(bindings).toContain('song.submit');
     expect(bindings).toContain('song.feedback');
+    expect(result.review[0].status).toBe('connected');
+  });
+
+  it('marks an unknown imported form for manual review', async () => {
+    const result = await service.fromHtml(`
+      <section aria-label="Formulario personalizado">
+        <h2>Pregunta especial</h2>
+        <form><input name="custom-answer"><button>Guardar respuesta</button></form>
+      </section>
+    `, 'section { min-height: 400px; }', theme);
+
+    expect(result.design.sections[0].type).toBe('custom');
+    expect(result.review[0].status).toBe('review');
   });
 });

@@ -12,7 +12,7 @@ import {
 } from '../../core/models';
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
-import { VisualDesignImporterService } from './visual-design-importer.service';
+import { VisualDesignImporterService, VisualDesignImportReview, VisualDesignImportReviewStatus } from './visual-design-importer.service';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -46,6 +46,7 @@ type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApprove
 type RsvpPartKey = 'eyebrow' | 'title' | 'intro' | 'name' | 'contact' | 'response' | 'companions' | 'dietary' | 'message' | 'submit' | 'feedback';
 type DesignImportSource = 'current' | 'catalog' | 'html' | 'json';
 type DesignImportStrategy = 'replace' | 'append';
+type VisualDesignImportReviewItem = VisualDesignImportReview & { sectionId?: string };
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -117,6 +118,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   importTemplateKey = 'envelope-cards';
   importWarnings: string[] = [];
   importSummary = '';
+  importReview: VisualDesignImportReviewItem[] = [];
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
   readonly importableTemplates = [
@@ -2695,6 +2697,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   openDesignImporter(): void {
     this.importWarnings = [];
     this.importSummary = '';
+    this.importReview = [];
     const currentTemplate = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || '';
     this.importSource = currentTemplate === 'visual-builder' ? 'catalog' : 'current';
     this.importTemplateKey = currentTemplate && currentTemplate !== 'visual-builder' && currentTemplate !== 'custom-html' ? currentTemplate : 'envelope-cards';
@@ -2709,11 +2712,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.showImportDialog = false;
   }
 
+  importReviewCount(status: VisualDesignImportReviewStatus): number {
+    return this.importReview.filter((item) => item.status === status).length;
+  }
+
+  reviewImportedSection(item: VisualDesignImportReviewItem): void {
+    if (!item.sectionId) return;
+    this.selectedSectionId = item.sectionId;
+    this.clearLayerSelection();
+    this.mobilePanel = 'canvas';
+    this.showImportDialog = false;
+    setTimeout(() => {
+      const target = Array.from(document.querySelectorAll<HTMLElement>('[data-section-id]'))
+        .find((element) => element.dataset['sectionId'] === item.sectionId);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  discardImportedDesign(): void {
+    if (!this.importSummary) return;
+    this.undo();
+    this.importSummary = '';
+    this.importWarnings = [];
+    this.importReview = [];
+    this.autosaveState = this.hasUnsavedChanges ? 'Cambios pendientes' : 'Guardado';
+  }
+
   async importDesign(): Promise<void> {
     if (this.importingDesign) return;
     this.error = '';
     this.importWarnings = [];
     this.importSummary = '';
+    this.importReview = [];
     this.importingDesign = true;
     try {
       let result;
@@ -2748,6 +2778,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.clearLayerSelection();
       this.importWarnings = result.warnings;
       this.importSummary = `${result.stats.sections} sección(es) y ${result.stats.layers} elemento(s) importados.`;
+      this.importReview = result.review.map((item) => ({ ...item, sectionId: imported.sections[item.sectionIndex]?.id }));
       this.autosaveState = 'Cambios pendientes';
     } catch (error) {
       this.error = error instanceof Error ? error.message : 'No fue posible importar el diseño.';
@@ -4098,7 +4129,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private autoSave(): void {
-    if (!this.hasUnsavedChanges || this.saving || this.publishing || this.autosaving || this.uploading) return;
+    if (this.showImportDialog || !this.hasUnsavedChanges || this.saving || this.publishing || this.autosaving || this.uploading) return;
     this.autosaving = true;
     this.autosaveState = 'Guardando...';
     this.persistDesign().subscribe({
