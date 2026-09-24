@@ -47,7 +47,13 @@ type RsvpPartKey = 'eyebrow' | 'title' | 'intro' | 'name' | 'contact' | 'respons
 type DesignImportSource = 'current' | 'catalog' | 'html' | 'json';
 type DesignImportStrategy = 'replace' | 'append';
 type ImportMappingModuleType = 'rsvp' | 'dedications' | 'songs' | 'album' | 'guestPass';
+type FunctionalTestType = ImportMappingModuleType;
 type VisualDesignImportReviewItem = VisualDesignImportReview & { sectionId?: string };
+type FunctionalTestData = {
+  name: string; contact: string; response: string; companions: number; dietary: string; message: string;
+  publicName: string; dedication: string; song: string; artist: string; sourceUrl: string; songDedication: string;
+  albumFileName: string; passEmail: string; passPhone: string;
+};
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -124,6 +130,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   importMappingType: ImportMappingModuleType = 'rsvp';
   importLayerBindings: Record<string, string> = {};
   importMappingError = '';
+  showFunctionalTest = false;
+  functionalTestSectionId = '';
+  functionalTestFeedback = '';
+  functionalTestSuccess = false;
+  functionalTestData: FunctionalTestData = this.emptyFunctionalTestData();
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
   readonly importMappingModules: Array<{ value: ImportMappingModuleType; label: string }> = [
@@ -133,6 +144,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { value: 'album', label: 'Álbum colectivo' },
     { value: 'guestPass', label: 'Mesa y pase' }
   ];
+  readonly functionalTestLabels: Record<FunctionalTestType, string> = {
+    rsvp: 'Confirmación RSVP', dedications: 'Dedicatorias', songs: 'Peticiones al DJ', album: 'Álbum colectivo', guestPass: 'Mesa y pase'
+  };
   readonly importableTemplates = [
     { key: 'envelope-cards', label: 'Sobre interactivo y cards' },
     { key: 'classic-vertical', label: 'Clásica editorial vertical' },
@@ -2723,6 +2737,90 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   closeDesignImporter(): void {
     if (this.importingDesign) return;
     this.showImportDialog = false;
+  }
+
+  functionalTestSections(): VisualInvitationSection[] {
+    return this.design.sections.filter((section) => section.enabled !== false && ['rsvp', 'dedications', 'songs', 'album', 'guestPass'].includes(section.type));
+  }
+
+  selectedFunctionalTestSection(): VisualInvitationSection | undefined {
+    return this.functionalTestSections().find((section) => section.id === this.functionalTestSectionId) || this.functionalTestSections()[0];
+  }
+
+  functionalTestLabel(section: VisualInvitationSection): string {
+    return this.functionalTestLabels[section.type as FunctionalTestType] || section.title || 'Función';
+  }
+
+  openFunctionalTest(): void {
+    const sections = this.functionalTestSections();
+    if (!sections.length) {
+      this.flash('Agrega RSVP, dedicatorias, DJ, álbum o pase para poder probar funciones.');
+      return;
+    }
+    this.functionalTestSectionId = sections[0].id;
+    this.resetFunctionalTest();
+    this.showFunctionalTest = true;
+  }
+
+  closeFunctionalTest(): void {
+    this.showFunctionalTest = false;
+    this.functionalTestFeedback = '';
+  }
+
+  selectFunctionalTestSection(sectionId: string): void {
+    this.functionalTestSectionId = sectionId;
+    this.functionalTestFeedback = '';
+    this.functionalTestSuccess = false;
+  }
+
+  functionalTestFileChanged(input: HTMLInputElement): void {
+    this.functionalTestData.albumFileName = input.files?.[0]?.name || '';
+    this.functionalTestFeedback = '';
+    this.functionalTestSuccess = false;
+  }
+
+  runFunctionalTest(section: VisualInvitationSection): void {
+    const data = this.functionalTestData;
+    this.functionalTestSuccess = false;
+    if (section.type === 'rsvp') {
+      if (!data.name.trim() || !data.contact.trim() || !data.response) return this.functionalTestError('Completa nombre, correo o teléfono y respuesta de asistencia.');
+      this.functionalTestSuccess = true;
+      this.functionalTestFeedback = `Simulación correcta: ${data.name.trim()} quedaría como ${data.response}${data.companions > 0 ? ` con ${data.companions} acompañante(s)` : ''}.`;
+    } else if (section.type === 'dedications') {
+      if (!data.publicName.trim() || !data.dedication.trim()) return this.functionalTestError('Escribe el nombre público y la dedicatoria.');
+      this.functionalTestSuccess = true;
+      this.functionalTestFeedback = 'La dedicatoria quedaría pendiente de moderación según la configuración del evento.';
+    } else if (section.type === 'songs') {
+      if (!data.song.trim() && !data.sourceUrl.trim()) return this.functionalTestError('Escribe una canción o pega un enlace de Spotify/YouTube.');
+      this.functionalTestSuccess = true;
+      this.functionalTestFeedback = `La solicitud${data.song.trim() ? ` “${data.song.trim()}”` : ''} quedaría registrada para revisión del DJ.`;
+    } else if (section.type === 'album') {
+      if (!data.albumFileName) return this.functionalTestError('Selecciona una imagen para comprobar el flujo del álbum.');
+      this.functionalTestSuccess = true;
+      this.functionalTestFeedback = `${data.albumFileName} quedaría pendiente de aprobación. El archivo no se subió durante esta prueba.`;
+    } else if (section.type === 'guestPass') {
+      if (!data.passEmail.trim() && !data.passPhone.trim()) return this.functionalTestError('Escribe un correo o teléfono para simular la identificación.');
+      this.functionalTestSuccess = true;
+      this.functionalTestFeedback = 'Identificación simulada. En la invitación publicada se consultaría el invitado real y se mostraría su pase.';
+    }
+  }
+
+  resetFunctionalTest(): void {
+    this.functionalTestData = this.emptyFunctionalTestData();
+    this.functionalTestFeedback = '';
+    this.functionalTestSuccess = false;
+  }
+
+  private functionalTestError(message: string): void {
+    this.functionalTestFeedback = message;
+    this.functionalTestSuccess = false;
+  }
+
+  private emptyFunctionalTestData(): FunctionalTestData {
+    return {
+      name: '', contact: '', response: '', companions: 0, dietary: '', message: '', publicName: '', dedication: '',
+      song: '', artist: '', sourceUrl: '', songDedication: '', albumFileName: '', passEmail: '', passPhone: ''
+    };
   }
 
   importReviewCount(status: VisualDesignImportReviewStatus): number {

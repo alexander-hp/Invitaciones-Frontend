@@ -14,6 +14,7 @@
     </div>
     <button class="secondary" type="button" (click)="openDesignImporter()">Importar diseño</button>
     <button class="secondary" type="button" (click)="openResponsivePreview()">Comparar</button>
+    <button class="secondary" type="button" (click)="openFunctionalTest()">Probar funciones</button>
     <button class="secondary" type="button" (click)="openPreview()">Vista pública</button>
     <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
     <button class="publish" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
@@ -68,6 +69,46 @@
         <div class="import-warnings" *ngIf="importWarnings.length"><strong>Revisión de conversión</strong><ul><li *ngFor="let warning of importWarnings">{{ warning }}</li></ul></div>
       </div>
       <footer><button *ngIf="importSummary" type="button" class="danger-secondary" (click)="discardImportedDesign()">Descartar importación</button><button type="button" class="secondary" (click)="closeDesignImporter()">{{ importSummary ? 'Revisar en el lienzo' : 'Cerrar' }}</button><button type="button" class="primary" [disabled]="importingDesign" (click)="importDesign()">{{ importingDesign ? 'Convirtiendo...' : (importSummary ? 'Importar de nuevo' : 'Importar al editor') }}</button></footer>
+    </section>
+  </div>
+  <div class="functional-test-backdrop" *ngIf="showFunctionalTest" (click)="closeFunctionalTest()">
+    <section class="functional-test-dialog" role="dialog" aria-modal="true" aria-labelledby="functionalTestTitle" (click)="$event.stopPropagation()">
+      <header><div><span>Entorno aislado</span><h1 id="functionalTestTitle">Probar funciones</h1><p>Valida campos, botones y respuestas sin enviar ni guardar datos reales.</p></div><button type="button" title="Cerrar" (click)="closeFunctionalTest()">×</button></header>
+      <nav aria-label="Funciones disponibles"><button *ngFor="let section of functionalTestSections()" type="button" [class.active]="selectedFunctionalTestSection()?.id === section.id" (click)="selectFunctionalTestSection(section.id)">{{ functionalTestLabel(section) }}</button></nav>
+      <div class="functional-test-body" *ngIf="selectedFunctionalTestSection() as testSection" [ngStyle]="functionalPreviewStyle(testSection)">
+        <aside><strong>Modo de prueba</strong><span>No se llamará al backend, no se enviarán mensajes y no se crearán registros.</span></aside>
+        <div class="functional-test-heading"><small>{{ pluginSetting(testSection, 'eyebrow') || 'Vista funcional' }}</small><h2>{{ testSection.title }}</h2><p>{{ pluginSetting(testSection, 'introText') || 'Completa el flujo como lo haría un invitado.' }}</p></div>
+        <div [ngSwitch]="testSection.type" class="functional-test-form">
+          <ng-container *ngSwitchCase="'rsvp'">
+            <label>Nombre<input [(ngModel)]="functionalTestData.name" placeholder="Nombre del invitado"></label>
+            <label>Correo o teléfono<input [(ngModel)]="functionalTestData.contact" placeholder="correo@ejemplo.com"></label>
+            <label>Respuesta<select [(ngModel)]="functionalTestData.response"><option value="">Selecciona</option><option value="confirmado">Sí asistiré</option><option value="tal vez">Tal vez</option><option value="rechazado">No asistiré</option></select></label>
+            <label>Acompañantes<input [(ngModel)]="functionalTestData.companions" type="number" min="0" max="20"></label>
+            <label>Restricciones alimentarias<input [(ngModel)]="functionalTestData.dietary" placeholder="Opcional"></label>
+            <label>Mensaje<textarea [(ngModel)]="functionalTestData.message" rows="3" placeholder="Mensaje opcional"></textarea></label>
+          </ng-container>
+          <ng-container *ngSwitchCase="'dedications'">
+            <label>Nombre público<input [(ngModel)]="functionalTestData.publicName" placeholder="Tu nombre"></label>
+            <label class="wide">Dedicatoria<textarea [(ngModel)]="functionalTestData.dedication" rows="5" placeholder="Escribe unas palabras..."></textarea></label>
+          </ng-container>
+          <ng-container *ngSwitchCase="'songs'">
+            <label>Canción<input [(ngModel)]="functionalTestData.song" placeholder="Nombre de la canción"></label>
+            <label>Artista<input [(ngModel)]="functionalTestData.artist" placeholder="Nombre del artista"></label>
+            <label class="wide">Spotify o YouTube<input [(ngModel)]="functionalTestData.sourceUrl" type="url" placeholder="https://..."></label>
+            <label class="wide">Dedicatoria<textarea [(ngModel)]="functionalTestData.songDedication" rows="3" placeholder="Mensaje opcional"></textarea></label>
+          </ng-container>
+          <ng-container *ngSwitchCase="'album'">
+            <label class="wide functional-test-file">Fotografía<input #functionalTestFile type="file" accept="image/*" (change)="functionalTestFileChanged(functionalTestFile)"><span>{{ functionalTestData.albumFileName || 'Ningún archivo seleccionado' }}</span></label>
+          </ng-container>
+          <ng-container *ngSwitchCase="'guestPass'">
+            <label>Correo<input [(ngModel)]="functionalTestData.passEmail" placeholder="correo@ejemplo.com"></label>
+            <label>Teléfono<input [(ngModel)]="functionalTestData.passPhone" placeholder="Número de teléfono"></label>
+            <div class="functional-test-pass wide" *ngIf="functionalTestSuccess"><b>QR</b><span><strong>{{ previewGuest.name }}</strong><small>{{ previewGuest.group }} · {{ previewGuest.tableName }} · {{ previewGuest.seatLabel }}</small><small>{{ previewGuest.allowedCompanions }} acompañantes permitidos</small></span></div>
+          </ng-container>
+        </div>
+        <div class="functional-test-feedback" *ngIf="functionalTestFeedback" [class.success]="functionalTestSuccess"><strong>{{ functionalTestSuccess ? 'Flujo válido' : 'Falta información' }}</strong><span>{{ functionalTestFeedback }}</span></div>
+      </div>
+      <footer><button type="button" class="secondary" (click)="resetFunctionalTest()">Limpiar</button><button type="button" class="primary" *ngIf="selectedFunctionalTestSection() as testSection" (click)="runFunctionalTest(testSection)">Simular acción</button></footer>
     </section>
   </div>
   <div class="responsive-preview-backdrop" *ngIf="showResponsivePreview" (click)="closeResponsivePreview()">
