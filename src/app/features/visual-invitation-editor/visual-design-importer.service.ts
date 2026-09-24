@@ -212,6 +212,8 @@ export class VisualDesignImporterService {
     }
     if (this.supportsImportedControls(componentType)) {
       layers.push(...this.functionalLayers(root, componentType, rootRect, width, sectionHeight, layers.length, win));
+    } else {
+      layers.push(...this.genericFormLayers(root, rootRect, width, sectionHeight, layers.length, win));
     }
     const backgroundImage = this.extractBackgroundUrl(style.backgroundImage);
     return {
@@ -279,6 +281,28 @@ export class VisualDesignImporterService {
         animation: { type: 'none', duration: .6, delay: 0, repeat: false }, style
       };
     });
+  }
+
+  private genericFormLayers(root: HTMLElement, rootRect: DOMRect, rootWidth: number, sectionHeight: number, startIndex: number, win: Window): VisualInvitationLayer[] {
+    return Array.from(root.querySelectorAll<HTMLElement>('input:not([type="submit"]):not([type="button"]),select,textarea'))
+      .slice(0, 30)
+      .map((source, index) => {
+        const rect = source.getBoundingClientRect();
+        const visible = rect.width >= 2 && rect.height >= 2;
+        const layout = visible
+          ? this.elementLayout(source, rootRect, rootWidth, sectionHeight)
+          : { x: 10, y: 24 + index * 13, width: 80, height: 10 };
+        const style = visible ? this.elementStyle(win.getComputedStyle(source), 'field') : this.defaultFunctionalStyle('field', 'custom');
+        return {
+          id: this.id(`import-unmapped-control-${index + 1}`), type: 'field' as const,
+          name: this.controlLabel(source, `Campo ${index + 1}`), text: this.controlLabel(source, `Campo ${index + 1}`),
+          placeholder: source.getAttribute('placeholder') || '', binding: '',
+          x: layout.x, y: layout.y, width: layout.width, height: layout.height,
+          rotation: 0, zIndex: startIndex + index + 1, locked: false, hidden: false,
+          animation: { type: 'none' as const, duration: .6, delay: 0, repeat: false },
+          style: { ...style, showPlaceholder: true, textAlign: style.textAlign || 'left' }
+        };
+      });
   }
 
   private functionalDefinitions(moduleType: string): Array<{ type: VisualInvitationLayer['type']; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number }> {

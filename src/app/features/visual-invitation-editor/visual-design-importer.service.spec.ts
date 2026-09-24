@@ -78,5 +78,6 @@ describe('VisualDesignImporterService', () => {
 
     expect(result.design.sections[0].type).toBe('custom');
     expect(result.review[0].status).toBe('review');
+    expect(result.design.sections[0].layers.some((layer) => layer.type === 'field' && layer.name === 'Campo 1')).toBeTrue();
   });
 });

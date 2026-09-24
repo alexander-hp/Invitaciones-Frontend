@@ -46,6 +46,7 @@ type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApprove
 type RsvpPartKey = 'eyebrow' | 'title' | 'intro' | 'name' | 'contact' | 'response' | 'companions' | 'dietary' | 'message' | 'submit' | 'feedback';
 type DesignImportSource = 'current' | 'catalog' | 'html' | 'json';
 type DesignImportStrategy = 'replace' | 'append';
+type ImportMappingModuleType = 'rsvp' | 'dedications' | 'songs' | 'album' | 'guestPass';
 type VisualDesignImportReviewItem = VisualDesignImportReview & { sectionId?: string };
 
 @Component({
@@ -119,8 +120,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   importWarnings: string[] = [];
   importSummary = '';
   importReview: VisualDesignImportReviewItem[] = [];
+  importMappingSectionId = '';
+  importMappingType: ImportMappingModuleType = 'rsvp';
+  importLayerBindings: Record<string, string> = {};
+  importMappingError = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
+  readonly importMappingModules: Array<{ value: ImportMappingModuleType; label: string }> = [
+    { value: 'rsvp', label: 'Confirmación RSVP' },
+    { value: 'dedications', label: 'Dedicatorias' },
+    { value: 'songs', label: 'Peticiones al DJ' },
+    { value: 'album', label: 'Álbum colectivo' },
+    { value: 'guestPass', label: 'Mesa y pase' }
+  ];
   readonly importableTemplates = [
     { key: 'envelope-cards', label: 'Sobre interactivo y cards' },
     { key: 'classic-vertical', label: 'Clásica editorial vertical' },
@@ -2698,6 +2710,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.importWarnings = [];
     this.importSummary = '';
     this.importReview = [];
+    this.resetImportMapping();
     const currentTemplate = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || '';
     this.importSource = currentTemplate === 'visual-builder' ? 'catalog' : 'current';
     this.importTemplateKey = currentTemplate && currentTemplate !== 'visual-builder' && currentTemplate !== 'custom-html' ? currentTemplate : 'envelope-cards';
@@ -2729,12 +2742,88 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     });
   }
 
+  beginImportMapping(item: VisualDesignImportReviewItem): void {
+    if (!item.sectionId) return;
+    this.importMappingSectionId = item.sectionId;
+    this.importMappingType = 'rsvp';
+    this.importMappingError = '';
+    this.suggestImportBindings();
+  }
+
+  importMappingSection(): VisualInvitationSection | undefined {
+    return this.design.sections.find((section) => section.id === this.importMappingSectionId);
+  }
+
+  importMappingLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
+    return section.layers.filter((layer) => layer.type === 'field' || layer.type === 'button');
+  }
+
+  importBindingOptions(): Array<{ binding: string; label: string }> {
+    if (this.importMappingType === 'rsvp') return this.rsvpControlCatalog.map(({ binding, label }) => ({ binding, label }));
+    if (this.importMappingType === 'dedications') return this.dedicationControlCatalog.filter((item) => item.binding !== 'dedication.wall').map(({ binding, label }) => ({ binding, label }));
+    if (this.importMappingType === 'songs') return this.songControlCatalog.map(({ binding, label }) => ({ binding, label }));
+    if (this.importMappingType === 'album') return this.albumControlCatalog.filter((item) => item.binding === 'album.upload').map(({ binding, label }) => ({ binding, label }));
+    return this.guestPassControlCatalog.filter((item) => ['pass.email', 'pass.phone', 'pass.identify'].includes(item.binding)).map(({ binding, label }) => ({ binding, label }));
+  }
+
+  changeImportMappingType(type: ImportMappingModuleType): void {
+    this.importMappingType = type;
+    this.importMappingError = '';
+    this.suggestImportBindings();
+  }
+
+  setImportLayerBinding(layerId: string, binding: string): void {
+    this.importLayerBindings = { ...this.importLayerBindings, [layerId]: binding };
+    this.importMappingError = '';
+  }
+
+  applyImportMapping(): void {
+    const section = this.importMappingSection();
+    if (!section) return;
+    const mapped = this.importMappingLayers(section).filter((layer) => this.importLayerBindings[layer.id]);
+    if (!mapped.length) {
+      this.importMappingError = 'Relaciona al menos un campo o botón antes de conectar la función.';
+      return;
+    }
+    const bindings = mapped.map((layer) => this.importLayerBindings[layer.id]);
+    const duplicate = bindings.find((binding, index) => bindings.indexOf(binding) !== index);
+    if (duplicate) {
+      this.importMappingError = 'Cada dato funcional solo puede asignarse una vez.';
+      return;
+    }
+    section.type = this.importMappingType;
+    section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}) };
+    section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
+    mapped.forEach((layer) => {
+      const binding = this.importLayerBindings[layer.id];
+      layer.binding = binding;
+      layer.type = this.isImportActionBinding(binding) ? 'button' : 'field';
+      layer.name = layer.name || this.importBindingOptions().find((item) => item.binding === binding)?.label || 'Control funcional';
+    });
+    this.completeMappedFunctionalSection(section);
+    const review = this.importReview.find((item) => item.sectionId === section.id);
+    if (review) {
+      review.status = 'connected';
+      review.detail = `${this.importMappingModules.find((item) => item.value === this.importMappingType)?.label || 'La función'} quedó conectada con los controles importados.`;
+    }
+    this.importWarnings = this.importWarnings.filter((warning) => !warning.startsWith('Se encontraron formularios, pero no fue posible identificar'));
+    this.importWarnings.push(`${section.title || 'La sección'} se conectó manualmente como ${this.importMappingModules.find((item) => item.value === this.importMappingType)?.label || 'módulo funcional'}.`);
+    this.importMappingSectionId = '';
+    this.importMappingError = '';
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  cancelImportMapping(): void {
+    this.resetImportMapping();
+  }
+
   discardImportedDesign(): void {
     if (!this.importSummary) return;
     this.undo();
     this.importSummary = '';
     this.importWarnings = [];
     this.importReview = [];
+    this.resetImportMapping();
     this.autosaveState = this.hasUnsavedChanges ? 'Cambios pendientes' : 'Guardado';
   }
 
@@ -2744,6 +2833,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.importWarnings = [];
     this.importSummary = '';
     this.importReview = [];
+    this.resetImportMapping();
     this.importingDesign = true;
     try {
       let result;
@@ -2785,6 +2875,117 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     } finally {
       this.importingDesign = false;
     }
+  }
+
+  private resetImportMapping(): void {
+    this.importMappingSectionId = '';
+    this.importLayerBindings = {};
+    this.importMappingError = '';
+  }
+
+  private suggestImportBindings(): void {
+    const section = this.importMappingSection();
+    this.importLayerBindings = {};
+    if (!section) return;
+    const used = new Set<string>();
+    for (const layer of this.importMappingLayers(section)) {
+      const binding = this.guessImportBinding(layer, this.importMappingType);
+      if (binding && !used.has(binding)) {
+        this.importLayerBindings[layer.id] = binding;
+        used.add(binding);
+      }
+    }
+  }
+
+  private guessImportBinding(layer: VisualInvitationLayer, type: ImportMappingModuleType): string {
+    const text = String(`${layer.name || ''} ${layer.text || ''} ${layer.placeholder || ''}`)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const action = layer.type === 'button' || /enviar|confirmar|guardar|subir|cargar|consultar|validar|abrir/.test(text);
+    if (type === 'rsvp') {
+      if (action) return 'rsvp.submit';
+      if (/acompan|invitados extra/.test(text)) return 'rsvp.companions';
+      if (/alerg|restric|diet|aliment/.test(text)) return 'rsvp.dietaryRestrictions';
+      if (/asist|respuesta|confirmacion/.test(text)) return 'rsvp.response';
+      if (/mensaje|comentario|nota/.test(text)) return 'rsvp.message';
+      if (/correo|email|mail|telefono|phone|whatsapp/.test(text)) return 'rsvp.email';
+      if (/nombre|invitado/.test(text)) return 'rsvp.name';
+    }
+    if (type === 'dedications') {
+      if (action) return 'dedication.submit';
+      if (/mensaje|dedicator|deseo|recuerdo|brindis/.test(text)) return 'dedication.message';
+      if (/nombre|autor/.test(text)) return 'dedication.publicName';
+    }
+    if (type === 'songs') {
+      if (action) return 'song.submit';
+      if (/spotify|youtube|url|enlace|link/.test(text)) return 'song.sourceUrl';
+      if (/artista|interprete/.test(text)) return 'song.artist';
+      if (/dedicator|mensaje|para quien/.test(text)) return 'song.dedication';
+      if (/cancion|titulo|tema/.test(text)) return 'song.title';
+    }
+    if (type === 'album' && (action || /foto|imagen|archivo/.test(text))) return 'album.upload';
+    if (type === 'guestPass') {
+      if (action) return 'pass.identify';
+      if (/telefono|phone|whatsapp|celular/.test(text)) return 'pass.phone';
+      if (/correo|email|mail/.test(text)) return 'pass.email';
+    }
+    return '';
+  }
+
+  private isImportActionBinding(binding: string): boolean {
+    return ['rsvp.submit', 'dedication.submit', 'song.submit', 'album.upload', 'pass.identify'].includes(binding);
+  }
+
+  private completeMappedFunctionalSection(section: VisualInvitationSection): void {
+    const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    if (section.type === 'rsvp') {
+      this.ensureRsvpPluginDesign(section);
+      for (const definition of this.rsvpLayerDefinitions()) {
+        if (existing.has(definition.binding)) continue;
+        section.layers.push(this.createRsvpLayer(section, definition, ++topZ));
+      }
+      section.pluginSettings = { ...(section.pluginSettings || {}), nativeFieldPartsSeparated: false };
+      this.ensureSeparatedRsvpFieldParts(section);
+      section.pluginDesign = { ...(section.pluginDesign || {}), layout: 'free' };
+      section.height = Math.max(section.height, 820);
+    } else if (section.type === 'dedications') {
+      for (const definition of this.dedicationLayerDefinitions(section)) {
+        if (!existing.has(definition.binding)) section.layers.push(this.createDedicationLayer(section, definition, ++topZ));
+      }
+      this.ensureImportedFieldLabels(section, ['dedication.publicName', 'dedication.message'], topZ);
+      section.height = Math.max(section.height, 760);
+    } else if (section.type === 'songs') {
+      for (const definition of this.songLayerDefinitions(section)) {
+        if (!existing.has(definition.binding)) section.layers.push(this.createSongLayer(definition, ++topZ));
+      }
+      this.ensureImportedFieldLabels(section, ['song.title', 'song.sourceUrl', 'song.artist', 'song.dedication'], topZ);
+      section.height = Math.max(section.height, 760);
+    } else if (section.type === 'album') {
+      for (const definition of this.albumLayerDefinitions(section)) {
+        if (!existing.has(definition.binding)) section.layers.push(this.createAlbumLayer(definition, ++topZ));
+      }
+      section.height = Math.max(section.height, 760);
+    } else if (section.type === 'guestPass') {
+      for (const definition of this.guestPassLayerDefinitions(section)) {
+        if (!existing.has(definition.binding)) section.layers.push(this.createGuestPassLayer(definition, ++topZ));
+      }
+      this.ensureImportedFieldLabels(section, ['pass.email', 'pass.phone'], topZ);
+      section.height = Math.max(section.height, 760);
+    }
+  }
+
+  private ensureImportedFieldLabels(section: VisualInvitationSection, bindings: string[], startingZ: number): void {
+    const existingLabels = new Set(section.layers.map((layer) => layer.binding).filter((binding) => String(binding || '').startsWith('display.label.')));
+    let topZ = Math.max(startingZ, ...section.layers.map((layer) => layer.zIndex || 0));
+    const labels: VisualInvitationLayer[] = [];
+    for (const field of section.layers.filter((layer) => layer.type === 'field' && bindings.includes(layer.binding || ''))) {
+      const labelBinding = `display.label.${field.binding}`;
+      if (existingLabels.has(labelBinding)) continue;
+      labels.push(this.separateRsvpFieldLayer(field, ++topZ));
+      existingLabels.add(labelBinding);
+    }
+    section.layers.push(...labels);
+    section.pluginSettings = { ...(section.pluginSettings || {}), nativeFieldPartsSeparated: true };
   }
 
   private templatePreviewUrl(templateKey: string): string {

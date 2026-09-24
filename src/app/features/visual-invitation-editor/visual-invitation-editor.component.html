@@ -49,11 +49,21 @@
             <div class="import-assistant-counts"><b class="connected">{{ importReviewCount('connected') }} conectadas</b><b class="visual">{{ importReviewCount('visual') }} visuales</b><b class="review">{{ importReviewCount('review') }} por revisar</b></div>
           </div>
           <div class="import-review-list">
-            <button *ngFor="let item of importReview" type="button" [class]="'import-review-item ' + item.status" (click)="reviewImportedSection(item)">
+            <button *ngFor="let item of importReview" type="button" [class]="'import-review-item ' + item.status" (click)="item.status === 'review' ? beginImportMapping(item) : reviewImportedSection(item)">
               <span class="import-review-status">{{ item.status === 'connected' ? 'Conectada' : (item.status === 'visual' ? 'Editable' : 'Revisar') }}</span>
-              <strong>{{ item.title }}</strong><small>{{ item.detail }}</small><i>Ver en el lienzo →</i>
+              <strong>{{ item.title }}</strong><small>{{ item.detail }}</small><i>{{ item.status === 'review' ? 'Configurar conexión →' : 'Ver en el lienzo →' }}</i>
             </button>
           </div>
+          <section class="import-mapping" *ngIf="importMappingSection() as mappingSection">
+            <div class="import-mapping-heading"><div><span>Conexión manual</span><strong>{{ mappingSection.title }}</strong></div><button type="button" title="Cerrar mapeo" (click)="cancelImportMapping()">×</button></div>
+            <label>¿Qué función debe realizar esta sección?<select [ngModel]="importMappingType" (ngModelChange)="changeImportMappingType($event)"><option *ngFor="let module of importMappingModules" [ngValue]="module.value">{{ module.label }}</option></select></label>
+            <p>Relaciona cada control de la plantilla con el dato que debe guardar o la acción que debe ejecutar. Los campos obligatorios faltantes se agregarán automáticamente.</p>
+            <div class="import-mapping-rows">
+              <label *ngFor="let layer of importMappingLayers(mappingSection)"><span><b>{{ layer.name || layer.text || 'Control importado' }}</b><small>{{ layer.type === 'button' ? 'Botón' : (layer.placeholder || 'Campo de captura') }}</small></span><select [ngModel]="importLayerBindings[layer.id] || ''" (ngModelChange)="setImportLayerBinding(layer.id, $event)"><option value="">Solo visual, sin función</option><option *ngFor="let option of importBindingOptions()" [value]="option.binding">{{ option.label }}</option></select></label>
+            </div>
+            <p class="import-mapping-error" *ngIf="importMappingError">{{ importMappingError }}</p>
+            <div class="import-mapping-actions"><button type="button" (click)="cancelImportMapping()">Cancelar</button><button type="button" class="primary" (click)="applyImportMapping()">Conectar función</button></div>
+          </section>
         </section>
         <div class="import-warnings" *ngIf="importWarnings.length"><strong>Revisión de conversión</strong><ul><li *ngFor="let warning of importWarnings">{{ warning }}</li></ul></div>
       </div>
