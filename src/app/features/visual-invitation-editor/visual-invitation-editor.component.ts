@@ -48,6 +48,7 @@ type DesignImportSource = 'current' | 'catalog' | 'html' | 'json';
 type DesignImportStrategy = 'replace' | 'append';
 type ImportMappingModuleType = 'rsvp' | 'dedications' | 'songs' | 'album' | 'guestPass';
 type FunctionalTestType = ImportMappingModuleType;
+type FunctionalTestView = 'guided' | 'design';
 type VisualDesignImportReviewItem = VisualDesignImportReview & { sectionId?: string };
 type FunctionalTestData = {
   name: string; contact: string; response: string; companions: number; dietary: string; message: string;
@@ -134,6 +135,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   functionalTestSectionId = '';
   functionalTestFeedback = '';
   functionalTestSuccess = false;
+  functionalTestView: FunctionalTestView = 'guided';
+  functionalTestDevice: DeviceMode = 'mobile';
   functionalTestData: FunctionalTestData = this.emptyFunctionalTestData();
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
@@ -2758,6 +2761,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       return;
     }
     this.functionalTestSectionId = sections[0].id;
+    this.functionalTestView = 'guided';
+    this.functionalTestDevice = this.device;
     this.resetFunctionalTest();
     this.showFunctionalTest = true;
   }
@@ -2773,10 +2778,60 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.functionalTestSuccess = false;
   }
 
-  functionalTestFileChanged(input: HTMLInputElement): void {
+  functionalTestArtboardWidth(): number {
+    return this.functionalTestDevice === 'mobile' ? 390 : this.functionalTestDevice === 'tablet' ? 768 : 1180;
+  }
+
+  functionalTestSectionStyle(section: VisualInvitationSection): Record<string, string> {
+    return { ...this.sectionStyle(section), ...this.functionalPreviewStyle(section), width: `${this.functionalTestArtboardWidth()}px` };
+  }
+
+  functionalTestLayerStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const style = layer.style || {};
+    const base = this.responsivePreviewLayerStyle(layer, this.functionalTestDevice);
+    return {
+      ...base,
+      padding: layer.type === 'shape' ? '0' : `${Number(style.padding || 0)}px`,
+      backgroundImage: layer.type !== 'shape' && style.gradientEnabled
+        ? base['backgroundImage']
+        : layer.type !== 'shape' && style.backgroundImageUrl ? `url("${String(style.backgroundImageUrl)}")` : 'none',
+      backgroundSize: 'cover', backgroundPosition: 'center',
+      '--button-hover-background': String(style.hoverBackgroundColor || style.backgroundColor || 'transparent'),
+      '--button-hover-color': String(style.hoverColor || style.color || '#2d2927'),
+      '--button-pressed-scale': String(style.pressedScale ?? .97)
+    };
+  }
+
+  functionalTestLayerText(layer: VisualInvitationLayer): string {
+    const binding = String(layer.binding || '');
+    if (binding.endsWith('.feedback')) return this.functionalTestFeedback || layer.text || 'Aquí aparecerá el estado de la acción';
+    if (!this.functionalTestSuccess) return this.editorLayerText(layer);
+    if (binding === 'dedication.wall') return `“${this.functionalTestData.dedication}”\n— ${this.functionalTestData.publicName}`;
+    if (binding === 'album.gallery') return `${this.functionalTestData.albumFileName || 'Fotografía'}\nPendiente de aprobación`;
+    if (binding === 'pass.qr') return '▦\nPase simulado';
+    if (binding === 'pass.name') return this.previewGuest.name;
+    if (binding === 'pass.group') return this.previewGuest.group;
+    if (binding === 'pass.table') return this.previewGuest.tableName;
+    if (binding === 'pass.seat') return this.previewGuest.seatLabel;
+    if (binding === 'pass.companions') return `${this.previewGuest.allowedCompanions} acompañantes`;
+    return this.editorLayerText(layer);
+  }
+
+  functionalTestButtonAction(section: VisualInvitationSection, layer: VisualInvitationLayer, fileInput: HTMLInputElement): void {
+    if (layer.binding === 'album.upload') {
+      fileInput.click();
+      return;
+    }
+    if (['rsvp.submit', 'dedication.submit', 'song.submit', 'pass.identify'].includes(String(layer.binding || ''))) {
+      this.runFunctionalTest(section);
+    }
+  }
+
+  functionalTestFileChanged(input: HTMLInputElement, section?: VisualInvitationSection): void {
     this.functionalTestData.albumFileName = input.files?.[0]?.name || '';
     this.functionalTestFeedback = '';
     this.functionalTestSuccess = false;
+    if (section && this.functionalTestData.albumFileName) this.runFunctionalTest(section);
   }
 
   runFunctionalTest(section: VisualInvitationSection): void {
