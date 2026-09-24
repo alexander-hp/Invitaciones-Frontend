@@ -12,6 +12,7 @@
       <button type="button" [class.active]="device === 'tablet'" (click)="setDevice('tablet')">Tablet</button>
       <button type="button" [class.active]="device === 'desktop'" (click)="setDevice('desktop')">Escritorio</button>
     </div>
+    <button class="secondary" type="button" (click)="openDesignImporter()">Importar diseño</button>
     <button class="secondary" type="button" (click)="openResponsivePreview()">Comparar</button>
     <button class="secondary" type="button" (click)="openPreview()">Vista pública</button>
     <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
@@ -19,6 +20,34 @@
   </header>
 
   <div class="ve-notice error" *ngIf="error">{{ error }}</div><div class="ve-notice success" *ngIf="message">{{ message }}</div>
+  <div class="design-import-backdrop" *ngIf="showImportDialog" (click)="closeDesignImporter()">
+    <section class="design-import-dialog" role="dialog" aria-modal="true" aria-labelledby="designImportTitle" (click)="$event.stopPropagation()">
+      <header><div><span>Convertir a capas editables</span><h1 id="designImportTitle">Importar diseño</h1><p>Los elementos compatibles se convertirán en capas. Puedes reemplazar el lienzo actual o agregar el resultado al final.</p></div><button type="button" title="Cerrar" (click)="closeDesignImporter()">×</button></header>
+      <div class="design-import-options">
+        <label><input [(ngModel)]="importSource" type="radio" value="current"> Plantilla actual</label>
+        <label><input [(ngModel)]="importSource" type="radio" value="catalog"> Catálogo</label>
+        <label><input [(ngModel)]="importSource" type="radio" value="html"> HTML y CSS</label>
+        <label><input [(ngModel)]="importSource" type="radio" value="json"> JSON visual o IA</label>
+      </div>
+      <div class="design-import-body">
+        <div *ngIf="importSource === 'current'" class="import-current-summary"><strong>{{ invitation.content.sourceTemplateKey || invitation.content.template || 'Plantilla actual' }}</strong><span>Se tomará la plantilla o el HTML personalizado guardado en esta invitación.</span></div>
+        <div *ngIf="importSource === 'catalog'" class="import-current-summary"><label>Plantilla del catálogo<select [(ngModel)]="importTemplateKey"><option *ngFor="let template of importableTemplates" [value]="template.key">{{ template.label }}</option></select></label><span>Se renderizará con los datos actuales del evento y después se convertirá en capas editables.</span></div>
+        <ng-container *ngIf="importSource === 'html'">
+          <label>HTML<textarea [(ngModel)]="importHtmlSource" rows="12" spellcheck="false" placeholder="<section>...</section>"></textarea></label>
+          <label>CSS<textarea [(ngModel)]="importCssSource" rows="9" spellcheck="false" placeholder=".mi-seccion { ... }"></textarea></label>
+          <p class="import-help">Scripts, iframes y eventos JavaScript se omiten. Textos, imágenes, video, audio, enlaces y estilos compatibles se vuelven editables.</p>
+        </ng-container>
+        <ng-container *ngIf="importSource === 'json'">
+          <label>Visual Design JSON<textarea [(ngModel)]="importJsonSource" rows="18" spellcheck="false" placeholder='{"version":2,"active":true,"mode":"advanced","sections":[]}'></textarea></label>
+          <p class="import-help">Este modo es el recomendado para diseños creados por otra IA porque conserva posiciones, estilos, acciones y responsividad de forma precisa.</p>
+        </ng-container>
+        <fieldset><legend>Cómo aplicarlo</legend><label><input [(ngModel)]="importStrategy" type="radio" value="replace"> Reemplazar el diseño visual actual</label><label><input [(ngModel)]="importStrategy" type="radio" value="append"> Agregarlo al final del diseño actual</label></fieldset>
+        <div class="import-result" *ngIf="importSummary"><strong>{{ importSummary }}</strong><p>Ya puedes cerrar esta ventana y modificar el resultado. Guarda el diseño cuando termines de revisarlo.</p></div>
+        <div class="import-warnings" *ngIf="importWarnings.length"><strong>Revisión de conversión</strong><ul><li *ngFor="let warning of importWarnings">{{ warning }}</li></ul></div>
+      </div>
+      <footer><button type="button" class="secondary" (click)="closeDesignImporter()">Cerrar</button><button type="button" class="primary" [disabled]="importingDesign" (click)="importDesign()">{{ importingDesign ? 'Convirtiendo...' : 'Importar al editor' }}</button></footer>
+    </section>
+  </div>
   <div class="responsive-preview-backdrop" *ngIf="showResponsivePreview" (click)="closeResponsivePreview()">
     <section class="responsive-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="responsivePreviewTitle" (click)="$event.stopPropagation()">
       <header><div><span>Vista comparativa</span><h1 id="responsivePreviewTitle">Celular, tablet y escritorio</h1><p>Revisa el diseño actual en los tres tamaños antes de publicar.</p></div><button type="button" title="Cerrar" (click)="closeResponsivePreview()">×</button></header>
@@ -410,7 +439,7 @@
               <div class="selection-marquee" *ngIf="selectionMarquee as marquee" [class.visible]="marquee.sectionId === section.id" [style.left.%]="marquee.left" [style.top.%]="marquee.top" [style.width.%]="marquee.width" [style.height.%]="marquee.height"></div>
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
+              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [attr.data-button-icon]="layer.type === 'button' ? (layer.style?.buttonIcon || null) : null" [class.button-icon-after]="layer.type === 'button' && layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.type === 'button' && layer.style?.buttonVariant === 'glass'" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ editorLayerText(layer) }}</div>
                 <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
                 <div *ngIf="layer.type === 'field'" class="functional-field-preview" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'">
@@ -518,6 +547,23 @@
         <ng-container *ngIf="layer.type === 'button'">
           <label>Acción<select [(ngModel)]="layer.binding"><option *ngFor="let action of buttonActions" [value]="action.value">{{ action.label }}</option></select></label>
           <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
+          <div class="button-style-editor">
+            <span>Estilo del botón</span>
+            <div class="button-variant-grid">
+              <button type="button" [class.active]="layer.style?.buttonVariant === 'solid'" (click)="setButtonVariant(layer, 'solid')">Sólido</button>
+              <button type="button" [class.active]="layer.style?.buttonVariant === 'outline'" (click)="setButtonVariant(layer, 'outline')">Contorno</button>
+              <button type="button" [class.active]="layer.style?.buttonVariant === 'soft'" (click)="setButtonVariant(layer, 'soft')">Suave</button>
+              <button type="button" [class.active]="layer.style?.buttonVariant === 'text'" (click)="setButtonVariant(layer, 'text')">Texto</button>
+              <button type="button" [class.active]="layer.style?.buttonVariant === 'glass'" (click)="setButtonVariant(layer, 'glass')">Cristal</button>
+            </div>
+            <div class="two-columns">
+              <label>Icono<input [(ngModel)]="layer.style!.buttonIcon" maxlength="8" placeholder="Ej. ↗"></label>
+              <label>Posición<select [(ngModel)]="layer.style!.buttonIconPosition"><option value="before">Antes</option><option value="after">Después</option></select></label>
+              <label>Fondo al pasar<input [(ngModel)]="layer.style!.hoverBackgroundColor" type="color"></label>
+              <label>Texto al pasar<input [(ngModel)]="layer.style!.hoverColor" type="color"></label>
+            </div>
+            <label>Efecto al presionar<input [ngModel]="layer.style?.pressedScale ?? 0.97" (ngModelChange)="layer.style!.pressedScale=$event" type="range" min="0.88" max="1" step="0.01"><span>{{ layer.style?.pressedScale ?? 0.97 }}×</span></label>
+          </div>
         </ng-container>
         <ng-container *ngIf="layer.type === 'field'">
           <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>{{ isDynamicOutputLayer(layer) ? 'Este elemento muestra contenido dinámico aprobado. Puedes cambiar su tamaño y posición sin convertirlo en un campo de captura.' : 'Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear cualquier composición.' }}</span></aside>

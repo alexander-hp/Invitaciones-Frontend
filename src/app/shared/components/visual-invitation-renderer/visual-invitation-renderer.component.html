@@ -11,7 +11,7 @@
   <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
     <div *ngFor="let layer of visualLayers(section); trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text'">{{ resolveLayerText(layer) }}</div>
-      <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
+      <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
       <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
       <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
       <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls playsinline preload="metadata"></video>
@@ -29,7 +29,7 @@
         <div *ngIf="shouldRenderLocationLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
           <div *ngIf="layer.binding?.startsWith('display.locations.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.binding?.endsWith('.name') || layer.binding?.endsWith('.address') || layer.binding?.endsWith('.notes') || layer.binding?.endsWith('.details')" class="native-location-text">{{ locationLayerText(section, layer) }}</div>
-          <a *ngIf="layer.type === 'button'" class="visual-action-button" [href]="locationLayerHref(section, layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
+          <a *ngIf="layer.type === 'button'" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="locationLayerHref(section, layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
         </div>
       </ng-container>
     </div>
@@ -51,7 +51,7 @@
         <div *ngIf="shouldRenderItineraryLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
           <div *ngIf="layer.binding?.startsWith('display.itinerary.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('itinerary.')">{{ itineraryLayerText(layer) }}</div>
-          <a *ngIf="layer.binding?.endsWith('.location')" class="visual-action-button" [href]="itineraryLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
+          <a *ngIf="layer.binding?.endsWith('.location')" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="itineraryLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
         </div>
       </ng-container>
     </div>
@@ -84,8 +84,8 @@
           <div *ngIf="layer.binding?.startsWith('display.gallery.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('gallery.')">{{ galleryLayerText(layer) }}</div>
           <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" loading="lazy" decoding="async"></button>
-          <button *ngIf="layer.binding === 'gallery.carousel.previous'" type="button" class="visual-action-button" aria-label="Fotografía anterior" (click)="moveGallery(-1)">{{ layer.text }}</button>
-          <button *ngIf="layer.binding === 'gallery.carousel.next'" type="button" class="visual-action-button" aria-label="Fotografía siguiente" (click)="moveGallery(1)">{{ layer.text }}</button>
+          <button *ngIf="layer.binding === 'gallery.carousel.previous'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" aria-label="Fotografía anterior" (click)="moveGallery(-1)">{{ layer.text }}</button>
+          <button *ngIf="layer.binding === 'gallery.carousel.next'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" aria-label="Fotografía siguiente" (click)="moveGallery(1)">{{ layer.text }}</button>
         </div>
       </ng-container>
     </div>
@@ -110,8 +110,8 @@
           <div *ngIf="layer.type === 'text' && (layer.binding?.startsWith('gift.') || layer.binding?.startsWith('envelope.'))">{{ giftLayerText(layer) }}</div>
           <img *ngIf="layer.binding?.endsWith('.image')" [src]="giftLayerImageUrl(layer)" [alt]="giftLayerText(layer) || 'Mesa de regalos'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
           <button *ngIf="layer.binding === 'envelope.qr'" type="button" class="native-pass-qr" (click)="openLightbox.emit(giftLayerImageUrl(layer))"><img [src]="giftLayerImageUrl(layer)" alt="QR del sobre digital"></button>
-          <a *ngIf="layer.binding?.endsWith('.open')" class="visual-action-button" [href]="giftLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
-          <button *ngIf="layer.binding === 'envelope.copyAccount' || layer.binding === 'envelope.copyClabe'" type="button" class="visual-action-button" (click)="copyGiftLayer(layer)">{{ layer.text }}</button>
+          <a *ngIf="layer.binding?.endsWith('.open')" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="giftLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
+          <button *ngIf="layer.binding === 'envelope.copyAccount' || layer.binding === 'envelope.copyClabe'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="copyGiftLayer(layer)">{{ layer.text }}</button>
         </div>
       </ng-container>
     </div>
@@ -136,7 +136,7 @@
           <div *ngIf="layer.binding?.startsWith('display.lodging.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('lodging.')">{{ lodgingLayerText(layer) }}</div>
           <img *ngIf="layer.binding?.endsWith('.image')" [src]="lodgingLayerImageUrl(layer)" [alt]="lodgingLayerText(layer) || 'Hospedaje recomendado'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
-          <a *ngIf="layer.type === 'button'" class="visual-action-button" [href]="lodgingLayerHref(layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
+          <a *ngIf="layer.type === 'button'" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="lodgingLayerHref(layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
         </div>
       </ng-container>
     </div>
@@ -171,7 +171,7 @@
           <label *ngIf="layer.binding === 'rsvp.companions'" class="rsvp-layer-control"><input [(ngModel)]="rsvp.companions" [name]="rsvpControlName(layer)" type="number" min="0" [max]="maxCompanions" [attr.aria-label]="layer.text || 'Acompañantes'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || '0')"></label>
           <label *ngIf="layer.binding === 'rsvp.dietaryRestrictions'" class="rsvp-layer-control"><textarea [(ngModel)]="rsvp.dietaryRestrictions" [name]="rsvpControlName(layer)" rows="2" [attr.aria-label]="layer.text || 'Restricciones alimentarias'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Vegetariano, alergias...')"></textarea></label>
           <label *ngIf="layer.binding === 'rsvp.message'" class="rsvp-layer-control"><textarea [(ngModel)]="rsvp.message" [name]="rsvpControlName(layer)" rows="2" [attr.aria-label]="layer.text || 'Mensaje'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Mensaje opcional')"></textarea></label>
-          <button *ngIf="layer.binding === 'rsvp.submit'" type="submit" class="visual-action-button" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar confirmación') }}</button>
+          <button *ngIf="layer.binding === 'rsvp.submit'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar confirmación') }}</button>
           <div *ngIf="layer.binding === 'rsvp.feedback'" class="rsvp-layer-feedback" [class.success]="success" [class.error]="error">{{ success || error }}</div>
         </div>
       </ng-container>
@@ -213,7 +213,7 @@
           <div *ngIf="layer.binding?.startsWith('display.guestPass.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'pass.email'" class="rsvp-layer-control"><input [(ngModel)]="guestEmail" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'correo@ejemplo.com')"></label>
           <label *ngIf="layer.binding === 'pass.phone'" class="rsvp-layer-control"><input [(ngModel)]="guestPhone" [name]="rsvpControlName(layer)" type="tel" [attr.aria-label]="layer.text || 'Teléfono de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Número de teléfono')"></label>
-          <button *ngIf="layer.binding === 'pass.identify'" type="submit" class="visual-action-button" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : (layer.text || 'Ver mi pase') }}</button>
+          <button *ngIf="layer.binding === 'pass.identify'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : (layer.text || 'Ver mi pase') }}</button>
           <button *ngIf="layer.binding === 'pass.qr'" type="button" class="native-pass-qr" (click)="openLightbox.emit(guestQrUrl)"><img [src]="guestQrUrl" alt="Código QR de acceso"></button>
           <div *ngIf="['pass.name', 'pass.group', 'pass.table', 'pass.seat', 'pass.companions'].includes(layer.binding || '')">{{ guestPassLayerText(layer) }}</div>
           <div *ngIf="layer.binding === 'pass.feedback'" class="rsvp-layer-feedback error">{{ error }}</div>
@@ -247,7 +247,7 @@
       <ng-container *ngFor="let layer of albumCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderAlbumLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
           <div *ngIf="layer.binding?.startsWith('display.album.')">{{ resolveLayerText(layer) }}</div>
-          <label *ngIf="layer.binding === 'album.upload'" class="visual-action-button native-file-button">{{ uploadingAlbum ? 'Subiendo...' : (layer.text || 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
+          <label *ngIf="layer.binding === 'album.upload'" class="visual-action-button native-file-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'">{{ uploadingAlbum ? 'Subiendo...' : (layer.text || 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
           <div *ngIf="layer.binding === 'album.feedback'" class="rsvp-layer-feedback">{{ albumMessage }}</div>
           <div *ngIf="layer.binding === 'album.gallery'" class="native-album-gallery"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button><p *ngIf="!albumAssets.length">Las fotografías aprobadas aparecerán aquí.</p></div>
         </div>
@@ -267,7 +267,7 @@
           <div *ngIf="layer.binding?.startsWith('display.dedications.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'dedication.publicName'" class="rsvp-layer-control"><input [(ngModel)]="dedication.publicName" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Tu nombre'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre público')"></label>
           <label *ngIf="layer.binding === 'dedication.message'" class="rsvp-layer-control"><textarea [(ngModel)]="dedication.message" [name]="rsvpControlName(layer)" required rows="3" [attr.aria-label]="layer.text || 'Dedicatoria'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Escribe tu dedicatoria...')"></textarea></label>
-          <button *ngIf="layer.binding === 'dedication.submit'" type="submit" class="visual-action-button" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar dedicatoria') }}</button>
+          <button *ngIf="layer.binding === 'dedication.submit'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar dedicatoria') }}</button>
           <div *ngIf="layer.binding === 'dedication.feedback'" class="rsvp-layer-feedback">{{ dedicationMessage }}</div>
           <div *ngIf="layer.binding === 'dedication.wall'" class="native-dedication-wall"><blockquote *ngFor="let item of dedications"><p>{{ item.message }}</p><cite>{{ item.publicName }}</cite></blockquote><p *ngIf="!dedications.length">Las dedicatorias aprobadas aparecerán aquí.</p></div>
         </div>
@@ -289,7 +289,7 @@
           <label *ngIf="layer.binding === 'song.sourceUrl'" class="rsvp-layer-control"><input [(ngModel)]="song.sourceUrl" [name]="rsvpControlName(layer)" type="url" [attr.aria-label]="layer.text || 'Spotify o YouTube'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Pega el enlace de la canción')"></label>
           <label *ngIf="layer.binding === 'song.artist'" class="rsvp-layer-control"><input [(ngModel)]="song.artist" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Artista'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre del artista')"></label>
           <label *ngIf="layer.binding === 'song.dedication'" class="rsvp-layer-control"><textarea [(ngModel)]="song.dedication" [name]="rsvpControlName(layer)" rows="2" [attr.aria-label]="layer.text || 'Dedicatoria'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Mensaje opcional')"></textarea></label>
-          <button *ngIf="layer.binding === 'song.submit'" type="submit" class="visual-action-button" [disabled]="sending">{{ layer.text || 'Enviar al DJ' }}</button>
+          <button *ngIf="layer.binding === 'song.submit'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="sending">{{ layer.text || 'Enviar al DJ' }}</button>
           <div *ngIf="layer.binding === 'song.feedback'" class="rsvp-layer-feedback">{{ songRequestMessage }}</div>
         </div>
       </ng-container>
@@ -306,11 +306,11 @@
           <div *ngIf="layer.binding?.startsWith('display.guestActivity.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'activity.email'" class="rsvp-layer-control"><input [(ngModel)]="guestEmail" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'correo@ejemplo.com')"></label>
           <label *ngIf="layer.binding === 'activity.phone'" class="rsvp-layer-control"><input [(ngModel)]="guestPhone" [name]="rsvpControlName(layer)" type="tel" [attr.aria-label]="layer.text || 'Teléfono de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Número de teléfono')"></label>
-          <button *ngIf="layer.binding === 'activity.identify'" type="submit" class="visual-action-button" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : (layer.text || 'Ver mi actividad') }}</button>
+          <button *ngIf="layer.binding === 'activity.identify'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="checkingGuest">{{ checkingGuest ? 'Validando...' : (layer.text || 'Ver mi actividad') }}</button>
           <div *ngIf="layer.binding === 'activity.greeting'" class="native-activity-greeting">{{ guestActivityLayerText(layer) }}</div>
           <div *ngIf="['activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications'].includes(layer.binding || '')" class="native-activity-status">{{ guestActivityLayerText(layer) }}</div>
-          <button *ngIf="layer.binding === 'activity.manage'" type="button" class="visual-action-button" (click)="openActivityPanel()">{{ layer.text || 'Administrar aquí' }}</button>
-          <button *ngIf="layer.binding === 'activity.full'" type="button" class="visual-action-button" (click)="openGuestActivity.emit()">{{ layer.text || 'Ver toda mi actividad' }}</button>
+          <button *ngIf="layer.binding === 'activity.manage'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="openActivityPanel()">{{ layer.text || 'Administrar aquí' }}</button>
+          <button *ngIf="layer.binding === 'activity.full'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="openGuestActivity.emit()">{{ layer.text || 'Ver toda mi actividad' }}</button>
         </div>
       </ng-container>
     </form>

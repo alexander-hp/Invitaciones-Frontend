@@ -379,6 +379,12 @@ export interface VisualInvitationLayerStyle {
   controlVariant?: 'default' | 'cards';
   controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
   showPlaceholder?: boolean;
+  buttonVariant?: 'solid' | 'outline' | 'soft' | 'text' | 'glass';
+  buttonIcon?: string;
+  buttonIconPosition?: 'before' | 'after';
+  hoverBackgroundColor?: string;
+  hoverColor?: string;
+  pressedScale?: number;
 }
 
 export interface VisualInvitationLayerLayout {

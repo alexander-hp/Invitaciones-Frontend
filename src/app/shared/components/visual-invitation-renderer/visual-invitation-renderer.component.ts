@@ -791,7 +791,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       if (url) window.open(url, '_blank', 'noopener');
       return;
     }
-    if (/^https?:\/\//i.test(String(layer.url || ''))) window.open(layer.url, '_blank', 'noopener');
+    const url = String(layer.url || '').trim();
+    if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+    else if (/^(mailto:|tel:)/i.test(url)) window.location.href = url;
   }
 
   private calendarUrl(): string {
@@ -878,6 +880,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
         : !shape && style.backgroundImageUrl ? `url("${String(style.backgroundImageUrl)}")` : 'none',
       backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${Number(style.padding || 0)}px`,
       boxShadow: shape ? 'none' : String(style.boxShadow || 'none'), opacity: String(style.opacity ?? 1),
+      '--button-hover-background': String(style.hoverBackgroundColor || style.backgroundColor || 'transparent'),
+      '--button-hover-color': String(style.hoverColor || style.color || '#25211f'),
+      '--button-pressed-scale': String(style.pressedScale ?? .97),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };

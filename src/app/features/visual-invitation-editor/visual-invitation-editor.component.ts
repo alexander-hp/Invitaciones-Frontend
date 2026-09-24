@@ -7,10 +7,12 @@ import { ApiService } from '../../core/api.service';
 import {
   EventModel, GiftRegistryItem, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
-  VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout,
+  VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationLayerStyle,
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
 } from '../../core/models';
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
+import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
+import { VisualDesignImporterService } from './visual-design-importer.service';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -42,6 +44,8 @@ type ContentListKey = 'locations' | 'itinerary' | 'galleryItems' | 'giftRegistry
 type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent; rsvpSettings: RsvpSettings };
 type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApproveEmails' | 'autoApprovePhones';
 type RsvpPartKey = 'eyebrow' | 'title' | 'intro' | 'name' | 'contact' | 'response' | 'companions' | 'dietary' | 'message' | 'submit' | 'feedback';
+type DesignImportSource = 'current' | 'catalog' | 'html' | 'json';
+type DesignImportStrategy = 'replace' | 'append';
 
 @Component({
   selector: 'app-visual-invitation-editor',
@@ -103,8 +107,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   touchZoomVisible = false;
   touchGestureActive = false;
   touchGestureLabel = '';
+  showImportDialog = false;
+  importingDesign = false;
+  importSource: DesignImportSource = 'current';
+  importStrategy: DesignImportStrategy = 'replace';
+  importHtmlSource = '';
+  importCssSource = '';
+  importJsonSource = '';
+  importTemplateKey = 'envelope-cards';
+  importWarnings: string[] = [];
+  importSummary = '';
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
+  readonly importableTemplates = [
+    { key: 'envelope-cards', label: 'Sobre interactivo y cards' },
+    { key: 'classic-vertical', label: 'Clásica editorial vertical' },
+    { key: 'modern-minimal', label: 'Glamour moderno y minimal' },
+    { key: 'boda-mobile-first', label: 'Boda mobile-first' },
+    { key: 'boda-desktop-first', label: 'Boda revista editorial' },
+    { key: 'boda-cards-lateral', label: 'Boda cards lateral' },
+    { key: 'boda-creativa-premium', label: 'Boda royal cinematic' },
+    { key: 'maison-dore', label: 'La Maison Dorée' },
+    { key: 'template-boda', label: 'Temática boda' },
+    { key: 'template-xv', label: 'Temática XV años' },
+    { key: 'template-graduacion', label: 'Temática graduación' },
+    { key: 'template-cumpleanos', label: 'Temática cumpleaños' },
+    { key: 'template-bautizo', label: 'Temática bautizo' },
+    { key: 'template-otro', label: 'Temática general' },
+    { key: 'boda-villa-perle', label: 'Villa Perlè' },
+    { key: 'boda-teatro', label: 'Gran Teatro' },
+    { key: 'boda-eleganza', label: 'Eleganza Italiana' },
+    { key: 'boda-rosas', label: 'Romance Floral' },
+    { key: 'boda-girasoles', label: 'Elegancia Rústica' },
+    { key: 'boda-navy-blue', label: 'Navy Blue & Gold' }
+  ];
   readonly rsvpParts: Array<{ key: RsvpPartKey; label: string; binding: string; purpose: string }> = [
     { key: 'eyebrow', label: 'Texto superior', binding: 'display.rsvp.eyebrow', purpose: 'Presentación visual' },
     { key: 'title', label: 'Título', binding: 'display.rsvp.title', purpose: 'Presentación visual' },
@@ -374,7 +410,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private api: ApiService
+    private api: ApiService,
+    private designImporter: VisualDesignImporterService
   ) {}
 
   ngOnInit(): void {
@@ -1735,9 +1772,44 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         : !shape && s.backgroundImageUrl ? `url("${String(s.backgroundImageUrl)}")` : 'none',
       backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${Number(s.padding || 0)}px`,
       boxShadow: shape ? 'none' : String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
+      '--button-hover-background': String(s.hoverBackgroundColor || s.backgroundColor || 'transparent'),
+      '--button-hover-color': String(s.hoverColor || s.color || '#2d2927'),
+      '--button-pressed-scale': String(s.pressedScale ?? .97),
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
+  }
+
+  setButtonVariant(layer: VisualInvitationLayer, variant: NonNullable<VisualInvitationLayerStyle['buttonVariant']>): void {
+    layer.style = layer.style || {};
+    this.recordHistory();
+    const style = layer.style;
+    const accent = this.design.theme?.accentColor || '#b66f5c';
+    const contrast = this.design.theme?.buttonTextColor || '#ffffff';
+    style.buttonVariant = variant;
+    style.pressedScale = style.pressedScale ?? .97;
+    style.borderRadius = style.borderRadius ?? this.design.theme?.buttonRadius ?? 8;
+    style.padding = style.padding ?? 10;
+
+    if (variant === 'solid') {
+      Object.assign(style, { backgroundColor: accent, color: contrast, borderWidth: 0, boxShadow: '0 6px 16px rgba(0,0,0,.16)', hoverBackgroundColor: this.shiftHex(accent, -18), hoverColor: contrast });
+    } else if (variant === 'outline') {
+      Object.assign(style, { backgroundColor: 'transparent', color: accent, borderWidth: 2, borderStyle: 'solid', borderColor: accent, boxShadow: 'none', hoverBackgroundColor: accent, hoverColor: contrast });
+    } else if (variant === 'soft') {
+      Object.assign(style, { backgroundColor: `${accent}26`, color: accent, borderWidth: 0, boxShadow: 'none', hoverBackgroundColor: `${accent}42`, hoverColor: accent });
+    } else if (variant === 'text') {
+      Object.assign(style, { backgroundColor: 'transparent', color: accent, borderWidth: 0, boxShadow: 'none', hoverBackgroundColor: `${accent}14`, hoverColor: accent });
+    } else {
+      Object.assign(style, { backgroundColor: '#ffffffb8', color: this.design.theme?.textColor || '#2d2927', borderWidth: 1, borderStyle: 'solid', borderColor: '#ffffffcc', boxShadow: '0 10px 30px rgba(0,0,0,.18)', hoverBackgroundColor: '#ffffffe6', hoverColor: this.design.theme?.textColor || '#2d2927' });
+    }
+  }
+
+  private shiftHex(color: string, amount: number): string {
+    const match = /^#([\da-f]{6})$/i.exec(color);
+    if (!match) return color;
+    const value = Number.parseInt(match[1], 16);
+    const channel = (shift: number) => Math.max(0, Math.min(255, shift + amount)).toString(16).padStart(2, '0');
+    return `#${channel(value >> 16)}${channel((value >> 8) & 255)}${channel(value & 255)}`;
   }
 
   imageStyle(layer: VisualInvitationLayer): Record<string, string> {
@@ -2618,6 +2690,100 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.clearLayerSelection();
     this.showOnboarding = false;
     this.autosaveState = 'Cambios pendientes';
+  }
+
+  openDesignImporter(): void {
+    this.importWarnings = [];
+    this.importSummary = '';
+    const currentTemplate = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || '';
+    this.importSource = currentTemplate === 'visual-builder' ? 'catalog' : 'current';
+    this.importTemplateKey = currentTemplate && currentTemplate !== 'visual-builder' && currentTemplate !== 'custom-html' ? currentTemplate : 'envelope-cards';
+    this.importHtmlSource = this.invitation?.content?.customHtml || '';
+    this.importCssSource = this.invitation?.content?.customCss || '';
+    this.importJsonSource = '';
+    this.showImportDialog = true;
+  }
+
+  closeDesignImporter(): void {
+    if (this.importingDesign) return;
+    this.showImportDialog = false;
+  }
+
+  async importDesign(): Promise<void> {
+    if (this.importingDesign) return;
+    this.error = '';
+    this.importWarnings = [];
+    this.importSummary = '';
+    this.importingDesign = true;
+    try {
+      let result;
+      if (this.importSource === 'json') {
+        result = this.designImporter.fromJson(this.importJsonSource.trim());
+      } else if (this.importSource === 'catalog' && this.invitation?.slug) {
+        result = await this.designImporter.fromUrl(this.templatePreviewUrl(this.importTemplateKey), this.design.theme || this.themePresets[0].theme);
+      } else if (this.importSource === 'current' && this.invitation?.content?.customHtml) {
+        result = await this.designImporter.fromHtml(this.invitation.content.customHtml, this.invitation.content.customCss || '', this.design.theme || this.themePresets[0].theme);
+      } else if (this.importSource === 'current' && this.invitation?.slug) {
+        const templateKey = this.invitation.content?.sourceTemplateKey || this.invitation.content?.template || 'envelope-cards';
+        result = templateKey === 'visual-builder'
+          ? this.designImporter.fromJson(JSON.stringify(this.design))
+          : await this.designImporter.fromUrl(this.templatePreviewUrl(templateKey), this.design.theme || this.themePresets[0].theme);
+      } else {
+        const source = this.importSource === 'current' ? this.currentTemplateHtml() : { html: this.importHtmlSource, css: this.importCssSource };
+        if (!source.html.trim()) throw new Error('Agrega HTML o selecciona una plantilla que tenga contenido para importar.');
+        result = await this.designImporter.fromHtml(source.html, source.css, this.design.theme || this.themePresets[0].theme);
+      }
+      this.recordHistory();
+      const imported = this.regenerateIds(this.clone(result.design));
+      if (this.importStrategy === 'append') {
+        this.design.sections.push(...imported.sections);
+        this.design.assets = [...(this.design.assets || []), ...(imported.assets || [])];
+      } else {
+        this.design = imported;
+      }
+      this.design.active = true;
+      this.design.theme = this.design.theme || this.inferTheme();
+      this.normalizeModuleStyles();
+      this.selectedSectionId = this.importStrategy === 'append' ? imported.sections[0]?.id || this.selectedSectionId : this.design.sections[0]?.id || '';
+      this.clearLayerSelection();
+      this.importWarnings = result.warnings;
+      this.importSummary = `${result.stats.sections} sección(es) y ${result.stats.layers} elemento(s) importados.`;
+      this.autosaveState = 'Cambios pendientes';
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : 'No fue posible importar el diseño.';
+    } finally {
+      this.importingDesign = false;
+    }
+  }
+
+  private templatePreviewUrl(templateKey: string): string {
+    const slug = this.invitation?.slug || '';
+    return `${window.location.origin}/new/i/${encodeURIComponent(slug)}?tpl=${encodeURIComponent(templateKey)}&preview=true&clean=1&visualImport=1`;
+  }
+
+  private currentTemplateHtml(): { html: string; css: string } {
+    const content = this.invitation?.content;
+    if (content?.customHtml) return { html: content.customHtml, css: content.customCss || '' };
+    const templateKey = content?.sourceTemplateKey || content?.template || 'classic-vertical';
+    return generateTemplateHtml(this.currentTemplateData(templateKey));
+  }
+
+  private currentTemplateData(templateKey: string): TemplateData {
+    const content = this.invitation?.content || {};
+    const envelope = content.digitalEnvelope || {};
+    return {
+      templateKey, palette: content.palette, eventDate: this.event?.date, coverImageUrl: content.coverImageUrl, brandLogoUrl: content.brandLogoUrl,
+      headline: content.headline || this.event?.title || 'Nuestra celebración', subheadline: content.subheadline || '', message: content.message || '',
+      storyTitle: content.storyTitle || 'Nuestra historia', storyBody: content.storyBody || '', dressCode: content.dressCode || '',
+      giftIntroText: content.giftSettings?.introText || '', envelopeBank: envelope.bank || '', envelopeHolder: envelope.holder || '',
+      envelopeAccount: envelope.account || '', envelopeClabe: envelope.clabe || '', envelopeNote: envelope.note || '',
+      dedicationIntroText: content.dedicationSettings?.introText || '', lodgingText: content.lodging?.map((item) => item.name).filter(Boolean).join(', ') || '',
+      itinerary: (content.itinerary || []).map((item) => ({ time: item.time || '', title: item.title || '', description: item.description || '' })),
+      locations: (content.locations || []).map((item) => ({ name: item.name || '', address: item.address || '', notes: item.notes || '', mapUrl: item.mapUrl })),
+      giftRegistry: (content.giftRegistry || []).map((item) => ({ store: item.store || '', title: item.title || '', note: item.note || '', url: item.url })),
+      lodgingList: (content.lodging || []).map((item) => ({ name: item.name || '', description: item.description || '', url: item.url })),
+      rsvpTitle: 'Confirma tu asistencia', rsvpDeadlineText: '', albumTitle: 'Álbum colectivo', albumNote: '', djTitle: 'Peticiones al DJ', djNote: ''
+    };
   }
 
   applyPersonalTemplate(template: VisualDesignTemplateModel): void {
