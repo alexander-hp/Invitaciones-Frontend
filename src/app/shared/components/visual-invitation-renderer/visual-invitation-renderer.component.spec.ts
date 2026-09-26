@@ -77,6 +77,24 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.layerStyle(layer)['fontSize']).toBe('60px');
   });
 
+  it('keeps a shared image frame ratio stable between devices', () => {
+    const layer = { id: 'photo', type: 'image' as const, x: 10, y: 10, width: 40, height: 20, style: {} };
+    component.invitation = { content: { visualDesign: { responsiveMode: 'shared', sections: [{ id: 'section', type: 'custom', enabled: true, layout: 'canvas', height: 780, layers: [layer] }] } } } as any;
+    component.device = 'desktop';
+
+    const style = component.layerStyle(layer);
+
+    expect(style['height']).toBe('auto');
+    expect(Number(style['aspectRatio'])).toBeCloseTo(1, 5);
+  });
+
+  it('uses a 16:9 frame for embedded YouTube video', () => {
+    const layer = { id: 'video', type: 'video' as const, url: 'https://www.youtube.com/watch?v=wC7IH002Ypk', x: 10, y: 10, width: 40, height: 40, style: {} };
+    component.invitation = { content: { visualDesign: { responsiveMode: 'shared', sections: [{ id: 'section', type: 'custom', enabled: true, layout: 'canvas', height: 780, layers: [layer] }] } } } as any;
+
+    expect(Number(component.layerStyle(layer)['aspectRatio'])).toBeCloseTo(16 / 9, 5);
+  });
+
   it('only publishes location actions backed by real data', () => {
     component.invitation = { content: { locations: [{ name: 'Salón', mapUrl: 'https://maps.example.test' }] } } as any;
     const section = { id: 'locations', type: 'locations', enabled: true, layout: 'canvas' as const, height: 760, layers: [] };

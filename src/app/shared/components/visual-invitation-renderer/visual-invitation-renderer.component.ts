@@ -4,6 +4,7 @@ import {
   VisualInvitationLayer, VisualInvitationSection, VisualPluginPartDesign
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
+import { resolveVisualMediaSource } from './visual-media-source';
 
 @Component({
   selector: 'app-visual-invitation-renderer',
@@ -874,8 +875,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
       ? layer.layouts[this.device]!
       : layer;
+    const mediaAspectRatio = this.mediaLayerAspectRatio(layer);
     return {
-      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
+      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: mediaAspectRatio ? 'auto' : `${layout.height}%`,
+      aspectRatio: mediaAspectRatio ? String(mediaAspectRatio) : 'auto',
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(style.color || '#25211f'), backgroundColor: shape ? 'transparent' : String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(style.fontSize || 30, responsiveScale, 10)}px`,
@@ -900,6 +903,21 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   private sharedStyleScale(): number {
     if (this.invitation?.content?.visualDesign?.responsiveMode === 'independent') return 1;
     return this.device === 'mobile' ? .68 : this.device === 'tablet' ? .84 : 1;
+  }
+
+  private mediaLayerAspectRatio(layer: VisualInvitationLayer): number | undefined {
+    if (!['image', 'video'].includes(layer.type) || layer.style?.preserveAspectRatio === false) return undefined;
+    const configured = Number(layer.style?.aspectRatio || 0);
+    if (configured > 0) return configured;
+    const provider = resolveVisualMediaSource(layer.url).provider;
+    if (layer.type === 'video' && (provider === 'youtube' || provider === 'vimeo')) return 16 / 9;
+    const design = this.invitation?.content?.visualDesign;
+    const section = design?.sections?.find((item) => item.layers.some((candidate) => candidate.id === layer.id));
+    if (!section) return undefined;
+    const canonical = design?.responsiveMode === 'independent' ? (layer.layouts?.mobile || layer) : layer;
+    const width = 390 * Number(canonical.width || 0) / 100;
+    const height = Number(section.height || 640) * Number(canonical.height || 0) / 100;
+    return width > 0 && height > 0 ? width / height : undefined;
   }
 
   private scaledLayerPixels(value: number, scale: number, minimum = 0): number {

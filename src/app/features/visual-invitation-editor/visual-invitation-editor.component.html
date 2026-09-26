@@ -677,6 +677,7 @@
           </div>
         </div>
         <ng-container *ngIf="layer.style as style">
+          <label *ngIf="layer.type === 'image' || layer.type === 'video'" class="toggle"><input [ngModel]="style.preserveAspectRatio !== false" (ngModelChange)="style.preserveAspectRatio=$event" type="checkbox"> Mantener proporción entre dispositivos</label>
           <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tipografía<select [(ngModel)]="style.fontFamily"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Times New Roman', serif</option><option>Verdana, sans-serif</option></select></label>
           <div class="two-columns">
             <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>

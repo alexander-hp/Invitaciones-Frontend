@@ -353,6 +353,8 @@ export interface VisualInvitationLayerStyle {
   objectPositionX?: number;
   objectPositionY?: number;
   imageScale?: number;
+  preserveAspectRatio?: boolean;
+  aspectRatio?: number;
   imageRotation?: number;
   flipX?: boolean;
   flipY?: boolean;
