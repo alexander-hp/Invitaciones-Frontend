@@ -220,8 +220,8 @@
           <label>Acento<input [(ngModel)]="theme.accentColor" type="color"></label>
           <label>Botón<input [(ngModel)]="theme.buttonBackgroundColor" type="color"></label>
         </div>
-        <label>Títulos<select [(ngModel)]="theme.headingFont"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Georgia, serif</option></select></label>
-        <label>Texto general<select [(ngModel)]="theme.bodyFont"><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option></select></label>
+        <app-visual-font-picker label="Títulos" [(value)]="theme.headingFont"></app-visual-font-picker>
+        <app-visual-font-picker label="Texto general" [(value)]="theme.bodyFont"></app-visual-font-picker>
         <div class="theme-button-settings">
           <label>Botones<select [(ngModel)]="theme.buttonStyle"><option value="solid">Sólido</option><option value="outline">Contorno</option><option value="soft">Suave</option></select></label>
           <label>Redondeado<input [(ngModel)]="theme.buttonRadius" type="number" min="0" max="100"></label>
@@ -678,7 +678,7 @@
         </div>
         <ng-container *ngIf="layer.style as style">
           <label *ngIf="layer.type === 'image' || layer.type === 'video'" class="toggle"><input [ngModel]="style.preserveAspectRatio !== false" (ngModelChange)="style.preserveAspectRatio=$event" type="checkbox"> Mostrar completo sin deformar ni recortar</label>
-          <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tipografía<select [(ngModel)]="style.fontFamily"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Times New Roman', serif</option><option>Verdana, sans-serif</option></select></label>
+          <app-visual-font-picker *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'" [(value)]="style.fontFamily"></app-visual-font-picker>
           <div class="two-columns">
             <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>
             <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Peso<select [(ngModel)]="style.fontWeight"><option [ngValue]="300">Ligera</option><option [ngValue]="400">Normal</option><option [ngValue]="600">Semibold</option><option [ngValue]="700">Negrita</option></select></label>

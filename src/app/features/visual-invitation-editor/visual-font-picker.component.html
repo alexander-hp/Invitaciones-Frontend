@@ -1,0 +1,26 @@
+<div class="font-picker">
+  <span class="font-picker-label">{{ label }}</span>
+  <button class="font-picker-trigger" type="button" [class.open]="open" (click)="toggle()" [attr.aria-expanded]="open">
+    <span [style.font-family]="selectedFont.family">{{ selectedFont.name }}</span><b>⌄</b>
+  </button>
+  <section class="font-picker-menu" *ngIf="open">
+    <div class="font-search"><span>⌕</span><input [(ngModel)]="query" type="search" placeholder="Buscar tipografía" aria-label="Buscar tipografía"></div>
+    <nav aria-label="Categorías de tipografía">
+      <button *ngFor="let item of categories" type="button" [class.active]="category === item.value" (click)="setCategory(item.value)">{{ item.label }}</button>
+    </nav>
+    <div class="font-list">
+      <ng-container *ngIf="!query && category === 'all' && recentFonts.length">
+        <small>Usadas recientemente</small>
+        <button *ngFor="let font of recentFonts; trackBy: trackFont" type="button" [class.selected]="font.family === value" (click)="select(font)">
+          <span [style.font-family]="font.family">Ag Nombre del evento</span><em>{{ font.name }}</em><b *ngIf="font.family === value">✓</b>
+        </button>
+        <small>Todas las tipografías</small>
+      </ng-container>
+      <button *ngFor="let font of filteredFonts; trackBy: trackFont" type="button" [class.selected]="font.family === value" (click)="select(font)">
+        <span [style.font-family]="font.family">Ag Nombre del evento</span><em>{{ font.name }}</em><b *ngIf="font.family === value">✓</b>
+      </button>
+      <p *ngIf="!filteredFonts.length">No encontramos una tipografía con ese nombre.</p>
+    </div>
+  </section>
+</div>
+
