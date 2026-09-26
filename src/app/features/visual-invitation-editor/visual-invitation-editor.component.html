@@ -114,40 +114,29 @@
           <div class="functional-test-feedback" *ngIf="functionalTestFeedback" [class.success]="functionalTestSuccess"><strong>{{ functionalTestSuccess ? 'Flujo válido' : 'Falta información' }}</strong><span>{{ functionalTestFeedback }}</span></div>
         </ng-container>
         <ng-template #exactDesignTest>
-          <div class="functional-design-scroll">
-            <section class="functional-design-artboard" [ngStyle]="functionalTestSectionStyle(testSection)">
-              <div *ngFor="let layer of testSection.layers; trackBy: trackVisualById" class="functional-design-layer" [style.display]="layer.hidden || !shouldRenderEditorLayer(testSection, layer) ? 'none' : null" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [class.test-feedback-error]="!functionalTestSuccess && functionalTestFeedback && layer.binding?.endsWith('.feedback')" [class.test-feedback-success]="functionalTestSuccess && layer.binding?.endsWith('.feedback')" [ngStyle]="functionalTestLayerStyle(layer)">
-                <ng-container [ngSwitch]="layer.type">
-                  <ng-container *ngSwitchCase="'text'">{{ functionalTestLayerText(layer) }}</ng-container>
-                  <button *ngSwitchCase="'button'" type="button" class="functional-design-button" (click)="functionalTestButtonAction(testSection, layer, exactFunctionalFile)">{{ functionalTestLayerText(layer) }}</button>
-                  <ng-container *ngSwitchCase="'field'">
-                    <ng-container [ngSwitch]="layer.binding">
-                      <input *ngSwitchCase="'rsvp.name'" [(ngModel)]="functionalTestData.name" [placeholder]="layer.placeholder || ''">
-                      <input *ngSwitchCase="'rsvp.email'" [(ngModel)]="functionalTestData.contact" type="email" [placeholder]="layer.placeholder || ''">
-                      <input *ngSwitchCase="'rsvp.phone'" [(ngModel)]="functionalTestData.contact" type="tel" [placeholder]="layer.placeholder || ''">
-                      <select *ngSwitchCase="'rsvp.response'" [(ngModel)]="functionalTestData.response"><option value="">Selecciona</option><option value="confirmado">Sí asistiré</option><option value="tal vez">Tal vez</option><option value="rechazado">No asistiré</option></select>
-                      <input *ngSwitchCase="'rsvp.companions'" [(ngModel)]="functionalTestData.companions" type="number" min="0" max="20">
-                      <input *ngSwitchCase="'rsvp.dietaryRestrictions'" [(ngModel)]="functionalTestData.dietary" [placeholder]="layer.placeholder || ''">
-                      <textarea *ngSwitchCase="'rsvp.message'" [(ngModel)]="functionalTestData.message" [placeholder]="layer.placeholder || ''"></textarea>
-                      <input *ngSwitchCase="'dedication.publicName'" [(ngModel)]="functionalTestData.publicName" [placeholder]="layer.placeholder || ''">
-                      <textarea *ngSwitchCase="'dedication.message'" [(ngModel)]="functionalTestData.dedication" [placeholder]="layer.placeholder || ''"></textarea>
-                      <input *ngSwitchCase="'song.title'" [(ngModel)]="functionalTestData.song" [placeholder]="layer.placeholder || ''">
-                      <input *ngSwitchCase="'song.artist'" [(ngModel)]="functionalTestData.artist" [placeholder]="layer.placeholder || ''">
-                      <input *ngSwitchCase="'song.sourceUrl'" [(ngModel)]="functionalTestData.sourceUrl" type="url" [placeholder]="layer.placeholder || ''">
-                      <textarea *ngSwitchCase="'song.dedication'" [(ngModel)]="functionalTestData.songDedication" [placeholder]="layer.placeholder || ''"></textarea>
-                      <input *ngSwitchCase="'pass.email'" [(ngModel)]="functionalTestData.passEmail" type="email" [placeholder]="layer.placeholder || ''">
-                      <input *ngSwitchCase="'pass.phone'" [(ngModel)]="functionalTestData.passPhone" type="tel" [placeholder]="layer.placeholder || ''">
-                      <div *ngSwitchDefault class="functional-design-output">{{ functionalTestLayerText(layer) }}</div>
-                    </ng-container>
-                  </ng-container>
-                  <div *ngSwitchCase="'image'" class="image-frame"><img *ngIf="boundImageUrl(layer)" [src]="boundImageUrl(layer)" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)"><span *ngIf="!boundImageUrl(layer)">Imagen</span></div>
-                  <div *ngSwitchCase="'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                  <video *ngSwitchCase="'video'" [src]="layer.url" controls></video>
-                  <audio *ngSwitchCase="'audio'" [src]="layer.url" controls></audio>
-                </ng-container>
-              </div>
-              <input #exactFunctionalFile class="functional-design-file" type="file" accept="image/*" (change)="functionalTestFileChanged(exactFunctionalFile, testSection)">
-            </section>
+          <div class="functional-design-scroll" *ngIf="functionalTestPreviewInvitation as previewInvitation">
+            <div class="functional-public-preview" [ngStyle]="functionalTestPublicViewportStyle()">
+              <app-visual-invitation-renderer
+                [invitation]="previewInvitation"
+                [event]="event"
+                [verifiedGuest]="functionalTestGuest"
+                [requiresGuestValidation]="false"
+                [forcedDevice]="functionalTestDevice"
+                [sandboxResetKey]="functionalTestResetKey"
+                [albumAssets]="functionalTestAlbumAssets"
+                [dedications]="functionalTestDedications"
+                [error]="!functionalTestSuccess ? functionalTestFeedback : ''"
+                [success]="functionalTestSuccess && testSection.type === 'rsvp' ? functionalTestFeedback : ''"
+                [albumMessage]="functionalTestMessage('album')"
+                [dedicationMessage]="functionalTestMessage('dedications')"
+                [songRequestMessage]="functionalTestMessage('songs')"
+                (verifyGuestAccess)="simulateVisualGuestAccess($event)"
+                (submitRsvp)="simulateVisualRsvp($event)"
+                (uploadPhoto)="simulateVisualPhoto($event)"
+                (submitDedication)="simulateVisualDedication($event)"
+                (requestSong)="simulateVisualSong($event)">
+              </app-visual-invitation-renderer>
+            </div>
           </div>
         </ng-template>
       </div>

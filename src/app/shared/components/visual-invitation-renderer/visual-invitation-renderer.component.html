@@ -1,4 +1,4 @@
-<main class="visual-invitation" *ngIf="sections.length; else emptyDesign"
+<main class="visual-invitation" *ngIf="sections.length; else emptyDesign" [class.device-mobile]="device === 'mobile'" [class.device-tablet]="device === 'tablet'" [class.device-desktop]="device === 'desktop'"
   [style.--visual-background]="invitation?.content?.visualDesign?.theme?.backgroundColor"
   [style.--visual-text]="invitation?.content?.visualDesign?.theme?.textColor"
   [style.--visual-accent]="invitation?.content?.visualDesign?.theme?.accentColor"

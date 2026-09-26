@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import {
   DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
   VisualInvitationLayer, VisualInvitationSection, VisualPluginPartDesign
@@ -29,6 +29,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Input() albumMessage = '';
   @Input() dedicationMessage = '';
   @Input() songRequestMessage = '';
+  @Input() forcedDevice?: 'mobile' | 'tablet' | 'desktop';
+  @Input() sandboxResetKey = 0;
 
   @Output() verifyGuestAccess = new EventEmitter<{ email: string; phone: string }>();
   @Output() submitRsvp = new EventEmitter<any>();
@@ -138,7 +140,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     return Math.max(100, Math.min(480, Number(this.pluginSetting(section, 'imageHeight', 170)) || 170));
   }
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.forcedDevice) this.device = this.forcedDevice;
+    if (changes['sandboxResetKey'] && !changes['sandboxResetKey'].firstChange) this.resetSandboxForms();
     this.galleryIndex = Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
     this.configureGalleryTimer();
     this.configureCountdownTimer();
@@ -940,7 +944,15 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   @HostListener('window:resize')
   onViewportResize(): void {
-    this.device = this.detectDevice();
+    if (!this.forcedDevice) this.device = this.detectDevice();
+  }
+
+  private resetSandboxForms(): void {
+    this.guestEmail = '';
+    this.guestPhone = '';
+    this.rsvp = { name: '', email: '', response: 'confirmed', companions: 0, dietaryRestrictions: '', message: '' };
+    this.dedication = { publicName: '', message: '' };
+    this.song = { title: '', artist: '', dedication: '', sourceUrl: '' };
   }
 
   @HostListener('document:keydown.escape')

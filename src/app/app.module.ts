@@ -102,7 +102,7 @@ import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-moda
 import { EventHeaderComponent } from './core/event-header/event-header.component';
 import { EventBookWidgetComponent } from './shared/components/event-book-widget/event-book-widget.component';
 import { ImageDropzoneComponent } from './shared/components/image-dropzone/image-dropzone.component';
-import { VisualInvitationRendererComponent } from './shared/components/visual-invitation-renderer/visual-invitation-renderer.component';
+import { VisualInvitationRendererModule } from './shared/components/visual-invitation-renderer/visual-invitation-renderer.module';
 import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
 
 @NgModule({
@@ -113,7 +113,6 @@ import { GuestActivityComponent } from './features/guest-activity/guest-activity
     EventHeaderComponent,
     EventBookWidgetComponent,
     ImageDropzoneComponent,
-    VisualInvitationRendererComponent,
     GuestActivityComponent,
     DocumentationComponent,
     UnauthorizedComponent,
@@ -203,7 +202,7 @@ import { GuestActivityComponent } from './features/guest-activity/guest-activity
     NewExternalEmbedComponent,
     NewExternalPortalComponent
   ],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule],
+  imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule, VisualInvitationRendererModule],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true }],
   bootstrap: [AppComponent]
 })

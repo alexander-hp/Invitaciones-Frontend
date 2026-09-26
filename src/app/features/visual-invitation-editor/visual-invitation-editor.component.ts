@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import {
-  EventModel, GiftRegistryItem, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
+  DedicationModel, EventModel, GiftRegistryItem, GuestAccessResponse, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
   VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationLayerStyle,
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
@@ -137,6 +137,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   functionalTestSuccess = false;
   functionalTestView: FunctionalTestView = 'guided';
   functionalTestDevice: DeviceMode = 'mobile';
+  functionalTestPreviewInvitation?: InvitationModel;
+  functionalTestGuest?: GuestAccessResponse['guest'];
+  functionalTestDedications: DedicationModel[] = [];
+  functionalTestAlbumAssets: Array<{ url: string; uploaderName?: string }> = [];
+  functionalTestResetKey = 0;
   functionalTestData: FunctionalTestData = this.emptyFunctionalTestData();
 
   readonly zoomOptions = [.5, .75, 1, 1.25, 1.5];
@@ -2764,6 +2769,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.functionalTestView = 'guided';
     this.functionalTestDevice = this.device;
     this.resetFunctionalTest();
+    this.prepareFunctionalTestPreview(sections[0]);
     this.showFunctionalTest = true;
   }
 
@@ -2774,57 +2780,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   selectFunctionalTestSection(sectionId: string): void {
     this.functionalTestSectionId = sectionId;
-    this.functionalTestFeedback = '';
-    this.functionalTestSuccess = false;
+    this.resetFunctionalTest();
+    const section = this.selectedFunctionalTestSection();
+    if (section) this.prepareFunctionalTestPreview(section);
   }
 
   functionalTestArtboardWidth(): number {
     return this.functionalTestDevice === 'mobile' ? 390 : this.functionalTestDevice === 'tablet' ? 768 : 1180;
   }
 
-  functionalTestSectionStyle(section: VisualInvitationSection): Record<string, string> {
-    return { ...this.sectionStyle(section), ...this.functionalPreviewStyle(section), width: `${this.functionalTestArtboardWidth()}px` };
-  }
-
-  functionalTestLayerStyle(layer: VisualInvitationLayer): Record<string, string> {
-    const style = layer.style || {};
-    const base = this.responsivePreviewLayerStyle(layer, this.functionalTestDevice);
-    return {
-      ...base,
-      padding: layer.type === 'shape' ? '0' : `${Number(style.padding || 0)}px`,
-      backgroundImage: layer.type !== 'shape' && style.gradientEnabled
-        ? base['backgroundImage']
-        : layer.type !== 'shape' && style.backgroundImageUrl ? `url("${String(style.backgroundImageUrl)}")` : 'none',
-      backgroundSize: 'cover', backgroundPosition: 'center',
-      '--button-hover-background': String(style.hoverBackgroundColor || style.backgroundColor || 'transparent'),
-      '--button-hover-color': String(style.hoverColor || style.color || '#2d2927'),
-      '--button-pressed-scale': String(style.pressedScale ?? .97)
-    };
-  }
-
-  functionalTestLayerText(layer: VisualInvitationLayer): string {
-    const binding = String(layer.binding || '');
-    if (binding.endsWith('.feedback')) return this.functionalTestFeedback || layer.text || 'Aquí aparecerá el estado de la acción';
-    if (!this.functionalTestSuccess) return this.editorLayerText(layer);
-    if (binding === 'dedication.wall') return `“${this.functionalTestData.dedication}”\n— ${this.functionalTestData.publicName}`;
-    if (binding === 'album.gallery') return `${this.functionalTestData.albumFileName || 'Fotografía'}\nPendiente de aprobación`;
-    if (binding === 'pass.qr') return '▦\nPase simulado';
-    if (binding === 'pass.name') return this.previewGuest.name;
-    if (binding === 'pass.group') return this.previewGuest.group;
-    if (binding === 'pass.table') return this.previewGuest.tableName;
-    if (binding === 'pass.seat') return this.previewGuest.seatLabel;
-    if (binding === 'pass.companions') return `${this.previewGuest.allowedCompanions} acompañantes`;
-    return this.editorLayerText(layer);
-  }
-
-  functionalTestButtonAction(section: VisualInvitationSection, layer: VisualInvitationLayer, fileInput: HTMLInputElement): void {
-    if (layer.binding === 'album.upload') {
-      fileInput.click();
-      return;
-    }
-    if (['rsvp.submit', 'dedication.submit', 'song.submit', 'pass.identify'].includes(String(layer.binding || ''))) {
-      this.runFunctionalTest(section);
-    }
+  functionalTestPublicViewportStyle(): Record<string, string> {
+    return { width: `${this.functionalTestArtboardWidth()}px` };
   }
 
   functionalTestFileChanged(input: HTMLInputElement, section?: VisualInvitationSection): void {
@@ -2864,6 +2830,60 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.functionalTestData = this.emptyFunctionalTestData();
     this.functionalTestFeedback = '';
     this.functionalTestSuccess = false;
+    this.functionalTestGuest = undefined;
+    this.functionalTestDedications = [];
+    this.functionalTestAlbumAssets = [];
+    this.functionalTestResetKey += 1;
+  }
+
+  simulateVisualRsvp(data: { name: string; email?: string; response: string; companions?: number }): void {
+    if (!data.name?.trim()) return this.functionalTestError('Escribe el nombre del invitado antes de enviar.');
+    this.functionalTestSuccess = true;
+    this.functionalTestFeedback = `RSVP válido: ${data.name.trim()} quedaría como ${data.response}${Number(data.companions || 0) > 0 ? ` con ${Number(data.companions)} acompañante(s)` : ''}.`;
+  }
+
+  simulateVisualDedication(data: { publicName: string; message: string }): void {
+    if (!data.message?.trim()) return this.functionalTestError('Escribe una dedicatoria antes de enviarla.');
+    this.functionalTestDedications = [{ id: 'sandbox-dedication', publicName: data.publicName || 'Invitado', message: data.message.trim(), type: 'dedication', status: 'approved' }];
+    this.functionalTestSuccess = true;
+    this.functionalTestFeedback = 'La dedicatoria quedaría pendiente de moderación según la configuración del evento.';
+  }
+
+  simulateVisualSong(data: { title: string; sourceUrl: string }): void {
+    if (!data.title?.trim() && !data.sourceUrl?.trim()) return this.functionalTestError('Escribe una canción o pega un enlace de Spotify/YouTube.');
+    this.functionalTestSuccess = true;
+    this.functionalTestFeedback = 'La solicitud quedaría registrada para revisión del DJ.';
+  }
+
+  simulateVisualPhoto(file: File): void {
+    this.functionalTestData.albumFileName = file.name;
+    this.functionalTestSuccess = true;
+    this.functionalTestFeedback = `${file.name} quedaría pendiente de aprobación. El archivo no se subió durante esta prueba.`;
+    const reader = new FileReader();
+    reader.onload = () => this.functionalTestAlbumAssets = [{ url: String(reader.result || ''), uploaderName: 'Vista previa local' }];
+    reader.readAsDataURL(file);
+  }
+
+  simulateVisualGuestAccess(data: { email: string; phone: string }): void {
+    if (!data.email?.trim() && !data.phone?.trim()) return this.functionalTestError('Escribe un correo o teléfono para simular la identificación.');
+    this.functionalTestGuest = { id: 'sandbox-guest', name: this.previewGuest.name, email: data.email || undefined, group: this.previewGuest.group, roles: ['vip'], allowedCompanions: this.previewGuest.allowedCompanions, status: 'pending', checkInCode: 'SANDBOX-PASS', tableName: this.previewGuest.tableName, seatLabel: this.previewGuest.seatLabel };
+    this.functionalTestSuccess = true;
+    this.functionalTestFeedback = 'Identificación simulada. En la invitación publicada se consultaría el invitado real y se mostraría su pase.';
+  }
+
+  functionalTestMessage(type: FunctionalTestType): string {
+    return this.selectedFunctionalTestSection()?.type === type ? this.functionalTestFeedback : '';
+  }
+
+  private prepareFunctionalTestPreview(section: VisualInvitationSection): void {
+    if (!this.invitation) return;
+    this.functionalTestPreviewInvitation = {
+      ...this.invitation,
+      content: {
+        ...(this.invitation.content || {}),
+        visualDesign: { ...this.design, active: true, sections: [this.clone(section)] }
+      }
+    };
   }
 
   private functionalTestError(message: string): void {
