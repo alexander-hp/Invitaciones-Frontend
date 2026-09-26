@@ -15,7 +15,7 @@
       <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
       <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
       <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-      <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''"></app-visual-media-player>
+      <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false"></app-visual-media-player>
       <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>
     </div>
 

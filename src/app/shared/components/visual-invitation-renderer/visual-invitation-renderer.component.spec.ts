@@ -77,22 +77,24 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.layerStyle(layer)['fontSize']).toBe('60px');
   });
 
-  it('keeps a shared image frame ratio stable between devices', () => {
+  it('keeps the authored media box geometry to avoid collisions', () => {
     const layer = { id: 'photo', type: 'image' as const, x: 10, y: 10, width: 40, height: 20, style: {} };
     component.invitation = { content: { visualDesign: { responsiveMode: 'shared', sections: [{ id: 'section', type: 'custom', enabled: true, layout: 'canvas', height: 780, layers: [layer] }] } } } as any;
     component.device = 'desktop';
 
     const style = component.layerStyle(layer);
 
-    expect(style['height']).toBe('auto');
-    expect(Number(style['aspectRatio'])).toBeCloseTo(1, 5);
+    expect(style['width']).toBe('40%');
+    expect(style['height']).toBe('20%');
   });
 
-  it('uses a 16:9 frame for embedded YouTube video', () => {
-    const layer = { id: 'video', type: 'video' as const, url: 'https://www.youtube.com/watch?v=wC7IH002Ypk', x: 10, y: 10, width: 40, height: 40, style: {} };
-    component.invitation = { content: { visualDesign: { responsiveMode: 'shared', sections: [{ id: 'section', type: 'custom', enabled: true, layout: 'canvas', height: 780, layers: [layer] }] } } } as any;
+  it('shows the complete image by default and allows an explicit crop mode', () => {
+    const layer = { id: 'photo', type: 'image' as const, x: 10, y: 10, width: 40, height: 20, style: {} };
 
-    expect(Number(component.layerStyle(layer)['aspectRatio'])).toBeCloseTo(16 / 9, 5);
+    expect(component.imageStyle(layer)['objectFit']).toBe('contain');
+
+    layer.style = { preserveAspectRatio: false, objectFit: 'cover' };
+    expect(component.imageStyle(layer)['objectFit']).toBe('cover');
   });
 
   it('only publishes location actions backed by real data', () => {

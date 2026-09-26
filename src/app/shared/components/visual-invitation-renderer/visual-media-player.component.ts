@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, HostBinding, Input, OnChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { resolveVisualMediaSource, VisualMediaProvider } from './visual-media-source';
 
@@ -11,6 +11,7 @@ export class VisualMediaPlayerComponent implements OnChanges {
   @Input() type = 'video';
   @Input() url = '';
   @Input() label = '';
+  @Input() preserveAspectRatio = true;
   @Input() showPlaceholder = false;
 
   provider: VisualMediaProvider = 'empty';
@@ -33,5 +34,10 @@ export class VisualMediaPlayerComponent implements OnChanges {
       : this.provider === 'spotify' ? 'Spotify'
         : this.provider === 'vimeo' ? 'Vimeo'
           : this.type === 'video' ? 'video' : 'audio';
+  }
+
+  @HostBinding('class.preserve-visual-aspect')
+  get preserveVisualAspect(): boolean {
+    return this.preserveAspectRatio && this.type === 'video';
   }
 }

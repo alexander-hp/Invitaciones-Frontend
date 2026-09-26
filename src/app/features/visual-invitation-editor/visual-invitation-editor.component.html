@@ -542,7 +542,7 @@
                 <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder">Sube una imagen</div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [showPlaceholder]="true" (pointerdown)="$event.stopPropagation()"></app-visual-media-player>
+                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" (pointerdown)="$event.stopPropagation()"></app-visual-media-player>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
                   <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
                     <span>Arrastra para encuadrar</span>
@@ -677,7 +677,7 @@
           </div>
         </div>
         <ng-container *ngIf="layer.style as style">
-          <label *ngIf="layer.type === 'image' || layer.type === 'video'" class="toggle"><input [ngModel]="style.preserveAspectRatio !== false" (ngModelChange)="style.preserveAspectRatio=$event" type="checkbox"> Mantener proporción entre dispositivos</label>
+          <label *ngIf="layer.type === 'image' || layer.type === 'video'" class="toggle"><input [ngModel]="style.preserveAspectRatio !== false" (ngModelChange)="style.preserveAspectRatio=$event" type="checkbox"> Mostrar completo sin deformar ni recortar</label>
           <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tipografía<select [(ngModel)]="style.fontFamily"><option>'Cormorant Garamond', serif</option><option>'Playfair Display', serif</option><option>Cinzel, serif</option><option>'Great Vibes', cursive</option><option>'Pinyon Script', cursive</option><option>'Alex Brush', cursive</option><option>Montserrat, sans-serif</option><option>Arial, sans-serif</option><option>Georgia, serif</option><option>'Times New Roman', serif</option><option>Verdana, sans-serif</option></select></label>
           <div class="two-columns">
             <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>
@@ -719,7 +719,7 @@
             <div class="mask-catalog">
               <button *ngFor="let mask of imageMasks" type="button" [class.active]="(style.imageMask || 'none') === mask.key" [title]="mask.label" (click)="setImageMask(layer, mask.key)"><b>{{ mask.icon }}</b><span>{{ mask.label }}</span></button>
             </div>
-            <label>Encuadre<select [(ngModel)]="style.objectFit"><option value="cover">Llenar marco</option><option value="contain">Mostrar completa</option></select></label>
+            <label *ngIf="style.preserveAspectRatio === false">Encuadre<select [(ngModel)]="style.objectFit"><option value="cover">Llenar marco con recorte</option><option value="contain">Mostrar completa</option></select></label>
             <label>Posición horizontal<input [(ngModel)]="style.objectPositionX" type="range" min="0" max="100"></label>
             <label>Posición vertical<input [(ngModel)]="style.objectPositionY" type="range" min="0" max="100"></label>
             <label>Zoom de imagen<input [ngModel]="style.imageScale ?? 1" (ngModelChange)="style.imageScale=$event" type="range" min="0.5" max="3" step="0.05"><span>{{ style.imageScale || 1 }}×</span></label>

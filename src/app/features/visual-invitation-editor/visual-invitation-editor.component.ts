@@ -1841,10 +1841,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const shape = layer.type === 'shape';
     const responsiveScale = this.sharedStyleScale(this.device);
     const layout = this.layoutFor(layer);
-    const mediaAspectRatio = this.mediaLayerAspectRatio(layer);
     return {
-      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: mediaAspectRatio ? 'auto' : `${layout.height}%`,
-      aspectRatio: mediaAspectRatio ? String(mediaAspectRatio) : 'auto',
+      left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(s.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(s.fontSize || 30, responsiveScale, 10)}px`,
@@ -1869,20 +1867,6 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private sharedStyleScale(device: DeviceMode): number {
     if (this.design.responsiveMode === 'independent') return 1;
     return device === 'mobile' ? .68 : device === 'tablet' ? .84 : 1;
-  }
-
-  private mediaLayerAspectRatio(layer: VisualInvitationLayer): number | undefined {
-    if (!['image', 'video'].includes(layer.type) || layer.style?.preserveAspectRatio === false) return undefined;
-    const configured = Number(layer.style?.aspectRatio || 0);
-    if (configured > 0) return configured;
-    const provider = resolveVisualMediaSource(layer.url).provider;
-    if (layer.type === 'video' && (provider === 'youtube' || provider === 'vimeo')) return 16 / 9;
-    const section = this.design.sections.find((item) => item.layers.some((candidate) => candidate.id === layer.id));
-    if (!section) return undefined;
-    const canonical = this.design.responsiveMode === 'independent' ? (layer.layouts?.mobile || layer) : layer;
-    const width = 390 * Number(canonical.width || 0) / 100;
-    const height = Number(section.height || this.artboardHeight) * Number(canonical.height || 0) / 100;
-    return width > 0 && height > 0 ? width / height : undefined;
   }
 
   private scaledLayerPixels(value: number, scale: number, minimum = 0): number {
@@ -1927,7 +1911,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const scaleX = scale * (style.flipX ? -1 : 1);
     const scaleY = scale * (style.flipY ? -1 : 1);
     return {
-      objectFit: style.objectFit || 'cover',
+      objectFit: style.preserveAspectRatio !== false ? 'contain' : (style.objectFit || 'cover'),
       objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
       transform: `scale(${scaleX},${scaleY}) rotate(${Number(style.imageRotation || 0)}deg)`,
       filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
