@@ -3,6 +3,8 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import html2canvas from 'html2canvas';
+import type { jsPDF as JsPdfDocument } from 'jspdf';
 import { ApiService } from '../../core/api.service';
 import {
   DedicationModel, EventModel, GiftRegistryItem, GuestAccessResponse, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
@@ -50,6 +52,7 @@ type DesignImportStrategy = 'replace' | 'append';
 type ImportMappingModuleType = 'rsvp' | 'dedications' | 'songs' | 'album' | 'guestPass';
 type FunctionalTestType = ImportMappingModuleType;
 type FunctionalTestView = 'guided' | 'design';
+type InvitationExportFormat = 'png' | 'jpeg' | 'pdf';
 type VisualDesignImportReviewItem = VisualDesignImportReview & { sectionId?: string };
 type FunctionalTestData = {
   name: string; contact: string; response: string; companions: number; dietary: string; message: string;
@@ -60,7 +63,7 @@ type FunctionalTestData = {
 @Component({
   selector: 'app-visual-invitation-editor',
   templateUrl: './visual-invitation-editor.component.html',
-  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css']
+  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   invitation?: InvitationModel;
@@ -140,6 +143,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   functionalTestDevice: DeviceMode = 'mobile';
   functionalTestPreviewInvitation?: InvitationModel;
   responsivePreviewInvitation?: InvitationModel;
+  exportPreviewInvitation?: InvitationModel;
+  showExportDialog = false;
+  exportFormat: InvitationExportFormat = 'png';
+  exportDevice: DeviceMode = 'desktop';
+  exportScale = 2;
+  exportJpegQuality = .92;
+  exportSectionIds: string[] = [];
+  exportingInvitation = false;
+  exportProgress = 0;
+  exportError = '';
   functionalTestGuest?: GuestAccessResponse['guest'];
   functionalTestDedications: DedicationModel[] = [];
   functionalTestAlbumAssets: Array<{ url: string; uploaderName?: string }> = [];
@@ -254,6 +267,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'tablet', label: 'Tablet', width: 768, scale: .315 },
     { key: 'desktop', label: 'Escritorio', width: 1180, scale: .205 }
   ];
+  readonly exportDevices: Array<{ key: DeviceMode; label: string; width: number }> = [
+    { key: 'mobile', label: 'Celular', width: 390 },
+    { key: 'tablet', label: 'Tablet', width: 768 },
+    { key: 'desktop', label: 'Escritorio', width: 1180 }
+  ];
+  readonly exportScales = [
+    { value: 1, label: 'Estándar', detail: '1x' },
+    { value: 2, label: 'Alta', detail: '2x' },
+    { value: 3, label: 'Máxima', detail: '3x' }
+  ];
 
   private undoStack: EditorHistoryState[] = [];
   private redoStack: EditorHistoryState[] = [];
@@ -353,6 +376,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.stageElement = nextStage;
     this.attachStageGestureListeners();
   }
+
+  @ViewChild('exportSurface') exportSurface?: ElementRef<HTMLElement>;
 
   readonly builtInPresets = [
     { key: 'editorial', label: 'Editorial claro', colors: ['#f6f1eb', '#24211f'] },
@@ -743,6 +768,206 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   closeResponsivePreview(): void {
     this.showResponsivePreview = false;
+  }
+
+  openExportDialog(): void {
+    this.exportSectionIds = this.exportableSections.map((section) => section.id);
+    this.exportError = '';
+    this.exportProgress = 0;
+    this.rebuildExportPreview();
+    this.showExportDialog = true;
+  }
+
+  closeExportDialog(): void {
+    if (this.exportingInvitation) return;
+    this.showExportDialog = false;
+    this.exportPreviewInvitation = undefined;
+  }
+
+  get exportableSections(): VisualInvitationSection[] {
+    return this.design.sections.filter((section) => section.enabled);
+  }
+
+  get selectedExportSections(): VisualInvitationSection[] {
+    return this.exportableSections.filter((section) => this.exportSectionIds.includes(section.id));
+  }
+
+  get exportDeviceWidth(): number {
+    return this.exportDevices.find((option) => option.key === this.exportDevice)?.width || 1180;
+  }
+
+  get exportOutputWidth(): number {
+    return this.exportDeviceWidth * this.exportScale;
+  }
+
+  get exportContainsMedia(): boolean {
+    return this.selectedExportSections.some((section) => section.layers.some((layer) => layer.type === 'video' || layer.type === 'audio'));
+  }
+
+  isExportSectionSelected(section: VisualInvitationSection): boolean {
+    return this.exportSectionIds.includes(section.id);
+  }
+
+  toggleExportSection(section: VisualInvitationSection, selected: boolean): void {
+    this.exportSectionIds = selected
+      ? Array.from(new Set([...this.exportSectionIds, section.id]))
+      : this.exportSectionIds.filter((id) => id !== section.id);
+    this.rebuildExportPreview();
+  }
+
+  selectAllExportSections(selected: boolean): void {
+    this.exportSectionIds = selected ? this.exportableSections.map((section) => section.id) : [];
+    this.rebuildExportPreview();
+  }
+
+  exportFormatLabel(): string {
+    return this.exportFormat === 'jpeg' ? 'JPEG' : this.exportFormat.toUpperCase();
+  }
+
+  exportDeliveryLabel(): string {
+    if (this.exportFormat === 'pdf') return `${this.selectedExportSections.length} página${this.selectedExportSections.length === 1 ? '' : 's'} en un PDF`;
+    return this.selectedExportSections.length > 1
+      ? `${this.selectedExportSections.length} archivos ${this.exportFormatLabel()} en ZIP`
+      : `1 archivo ${this.exportFormatLabel()}`;
+  }
+
+  exportSectionThumbnailStyle(section: VisualInvitationSection): Record<string, string> {
+    const background = section.background || {};
+    const alpha = Math.round(Number(background.overlay || 0) * 255).toString(16).padStart(2, '0');
+    return {
+      backgroundColor: background.color || this.design.theme?.backgroundColor || '#ffffff',
+      backgroundImage: background.imageUrl ? `linear-gradient(#000000${alpha},#000000${alpha}),url("${background.imageUrl}")` : 'none'
+    };
+  }
+
+  async exportInvitation(): Promise<void> {
+    if (!this.selectedExportSections.length || this.exportingInvitation) return;
+    this.exportingInvitation = true;
+    this.exportError = '';
+    this.exportProgress = 5;
+    this.rebuildExportPreview();
+
+    try {
+      await this.waitForExportRenderer();
+      this.exportProgress = 10;
+      const surface = this.exportSurface?.nativeElement;
+      const elements = Array.from(surface?.querySelectorAll<HTMLElement>('.visual-section') || []);
+      if (elements.length !== this.selectedExportSections.length) throw new Error('No fue posible preparar todas las páginas seleccionadas.');
+
+      const fileBase = this.exportFileBase();
+      const imagePages: Array<{ name: string; blob: Blob }> = [];
+      let pdf: JsPdfDocument | undefined;
+      const pdfModule = this.exportFormat === 'pdf' ? await import('jspdf') : undefined;
+
+      for (let index = 0; index < elements.length; index += 1) {
+        this.exportProgress = 10 + Math.round(index / elements.length * 80);
+        const canvas = await html2canvas(elements[index], {
+          scale: this.exportScale,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: this.exportFormat === 'png' ? null : '#ffffff'
+        });
+        const pageNumber = String(index + 1).padStart(2, '0');
+
+        if (this.exportFormat === 'pdf') {
+          const orientation: 'portrait' | 'landscape' = canvas.width > canvas.height ? 'landscape' : 'portrait';
+          if (!pdf) {
+            pdf = new pdfModule!.jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], compress: true, hotfixes: ['px_scaling'] });
+          } else {
+            pdf.addPage([canvas.width, canvas.height], orientation);
+          }
+          pdf.addImage(
+            canvas.toDataURL('image/jpeg', .94),
+            'JPEG',
+            0,
+            0,
+            pdf.internal.pageSize.getWidth(),
+            pdf.internal.pageSize.getHeight(),
+            undefined,
+            'FAST'
+          );
+        } else {
+          const mime = this.exportFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+          const extension = this.exportFormat === 'jpeg' ? 'jpg' : 'png';
+          imagePages.push({
+            name: `${fileBase}-pagina-${pageNumber}.${extension}`,
+            blob: await this.canvasBlob(canvas, mime, this.exportJpegQuality)
+          });
+        }
+
+        canvas.width = 1;
+        canvas.height = 1;
+      }
+
+      if (pdf) {
+        pdf.save(`${fileBase}.pdf`);
+      } else if (imagePages.length === 1) {
+        this.downloadBlob(imagePages[0].blob, imagePages[0].name);
+      } else {
+        const { default: JSZip } = await import('jszip');
+        const zip = new JSZip();
+        imagePages.forEach((page) => zip.file(page.name, page.blob));
+        this.downloadBlob(await zip.generateAsync({ type: 'blob' }), `${fileBase}-${this.exportFormat}.zip`);
+      }
+
+      this.exportProgress = 100;
+      this.flash(`Exportación ${this.exportFormatLabel()} preparada.`);
+    } catch (error) {
+      this.exportError = error instanceof Error ? error.message : 'No fue posible exportar la invitación.';
+    } finally {
+      this.exportingInvitation = false;
+    }
+  }
+
+  private rebuildExportPreview(): void {
+    if (!this.invitation) return;
+    const sections = this.selectedExportSections.map((section) => this.clone(section));
+    this.exportPreviewInvitation = {
+      ...this.invitation,
+      content: {
+        ...(this.invitation.content || {}),
+        visualDesign: { ...this.clone(this.design), active: true, sections }
+      }
+    };
+  }
+
+  private async waitForExportRenderer(): Promise<void> {
+    await this.exportDelay(0);
+    if (document.fonts?.ready) await Promise.race([document.fonts.ready.then(() => undefined), this.exportDelay(3000)]);
+    await this.exportDelay(50);
+    const images = Array.from(this.exportSurface?.nativeElement.querySelectorAll<HTMLImageElement>('img') || []);
+    await Promise.all(images.map((image) => image.complete
+      ? Promise.resolve()
+      : Promise.race([
+        new Promise<void>((resolve) => {
+          image.addEventListener('load', () => resolve(), { once: true });
+          image.addEventListener('error', () => resolve(), { once: true });
+        }),
+        this.exportDelay(5000)
+      ])));
+  }
+
+  private exportDelay(milliseconds: number): Promise<void> {
+    return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+  }
+
+  private canvasBlob(canvas: HTMLCanvasElement, mime: string, quality: number): Promise<Blob> {
+    return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No fue posible generar la imagen.')), mime, quality));
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  private exportFileBase(): string {
+    const source = this.invitation?.content?.headline || this.event?.title || 'invitacion';
+    return source.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'invitacion';
   }
 
   responsiveIssueCount(device: DeviceMode): number {

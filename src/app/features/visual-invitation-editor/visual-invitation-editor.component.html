@@ -14,6 +14,7 @@
     </div>
     <button class="secondary" type="button" (click)="openDesignImporter()">Importar diseño</button>
     <button class="secondary" type="button" (click)="openResponsivePreview()">Comparar</button>
+    <button class="secondary export-command" type="button" (click)="openExportDialog()">↓ Descargar</button>
     <button class="secondary" type="button" (click)="openFunctionalTest()">Probar funciones</button>
     <button class="secondary" type="button" (click)="openPreview()">Vista pública</button>
     <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
@@ -142,6 +143,36 @@
       </div>
       <footer><span *ngIf="functionalTestView === 'design'">Usa el botón colocado dentro del diseño para probar el flujo.</span><button type="button" class="secondary" (click)="resetFunctionalTest()">Limpiar</button><button type="button" class="primary" *ngIf="functionalTestView === 'guided' && selectedFunctionalTestSection() as testSection" (click)="runFunctionalTest(testSection)">Simular acción</button></footer>
     </section>
+  </div>
+  <div class="export-backdrop" *ngIf="showExportDialog" (click)="closeExportDialog()">
+    <section class="export-dialog" role="dialog" aria-modal="true" aria-labelledby="exportDialogTitle" (click)="$event.stopPropagation()">
+      <header><div><span>Exportar diseño</span><h1 id="exportDialogTitle">Descargar invitación</h1><p>Elige el formato, tamaño y las páginas que quieres entregar.</p></div><button type="button" title="Cerrar" [disabled]="exportingInvitation" (click)="closeExportDialog()">×</button></header>
+      <div class="export-dialog-body">
+        <div class="export-options">
+          <fieldset><legend>Formato</legend><div class="export-choice-grid format"><button type="button" [class.active]="exportFormat === 'png'" (click)="exportFormat='png'"><b>PNG</b><span>Calidad y transparencia</span></button><button type="button" [class.active]="exportFormat === 'jpeg'" (click)="exportFormat='jpeg'"><b>JPEG</b><span>Archivo más ligero</span></button><button type="button" [class.active]="exportFormat === 'pdf'" (click)="exportFormat='pdf'"><b>PDF</b><span>Documento multipágina</span></button></div></fieldset>
+          <fieldset><legend>Diseño de salida</legend><div class="export-choice-grid device"><button *ngFor="let option of exportDevices" type="button" [class.active]="exportDevice === option.key" (click)="exportDevice=option.key"><b>{{ option.label }}</b><span>{{ option.width }} px base</span></button></div></fieldset>
+          <fieldset><legend>Resolución</legend><div class="export-choice-grid quality"><button *ngFor="let option of exportScales" type="button" [class.active]="exportScale === option.value" (click)="exportScale=option.value"><b>{{ option.label }}</b><span>{{ option.detail }} · {{ exportDeviceWidth * option.value }} px</span></button></div></fieldset>
+          <label *ngIf="exportFormat === 'jpeg'" class="export-quality-slider"><span>Calidad JPEG <b>{{ exportJpegQuality * 100 | number:'1.0-0' }}%</b></span><input [(ngModel)]="exportJpegQuality" type="range" min="0.6" max="1" step="0.02"></label>
+          <aside class="export-summary"><span>{{ exportFormatLabel() }} · {{ exportOutputWidth }} px de ancho</span><strong>{{ exportDeliveryLabel() }}</strong><small>El alto se adapta a cada sección.</small></aside>
+          <aside class="export-media-warning" *ngIf="exportContainsMedia"><b>Contenido multimedia</b><span>PNG, JPEG y PDF son estáticos. Los videos y audios aparecerán identificados, pero se reproducen solamente en la invitación digital.</span></aside>
+          <p class="export-error" *ngIf="exportError">{{ exportError }}</p>
+        </div>
+        <div class="export-pages">
+          <div class="export-pages-heading"><div><span>Páginas</span><strong>{{ selectedExportSections.length }} de {{ exportableSections.length }} seleccionadas</strong></div><div><button type="button" (click)="selectAllExportSections(true)">Todas</button><button type="button" (click)="selectAllExportSections(false)">Ninguna</button></div></div>
+          <label *ngFor="let section of exportableSections; let index = index" [class.selected]="isExportSectionSelected(section)">
+            <input type="checkbox" [checked]="isExportSectionSelected(section)" (change)="toggleExportSection(section, $any($event.target).checked)">
+            <i [ngStyle]="exportSectionThumbnailStyle(section)"><b>{{ index + 1 }}</b></i>
+            <span><strong>{{ section.title || section.type }}</strong><small>{{ section.height }} px de alto</small></span>
+          </label>
+          <p *ngIf="!exportableSections.length">No hay secciones visibles para exportar.</p>
+        </div>
+      </div>
+      <div class="export-progress" *ngIf="exportingInvitation"><i [style.width.%]="exportProgress"></i><span>Generando páginas... {{ exportProgress }}%</span></div>
+      <footer><button type="button" class="secondary" [disabled]="exportingInvitation" (click)="closeExportDialog()">Cancelar</button><button type="button" class="primary" [disabled]="exportingInvitation || !selectedExportSections.length" (click)="exportInvitation()">{{ exportingInvitation ? 'Preparando archivo...' : '↓ Descargar ' + exportFormatLabel() }}</button></footer>
+    </section>
+    <div #exportSurface data-export-surface class="export-capture-surface" aria-hidden="true" [style.width.px]="exportDeviceWidth" *ngIf="exportPreviewInvitation as previewInvitation">
+      <app-visual-invitation-renderer [invitation]="previewInvitation" [event]="event" [requiresGuestValidation]="false" [forcedDevice]="exportDevice" [exportMode]="true"></app-visual-invitation-renderer>
+    </div>
   </div>
   <div class="responsive-preview-backdrop" *ngIf="showResponsivePreview" (click)="closeResponsivePreview()">
     <section class="responsive-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="responsivePreviewTitle" (click)="$event.stopPropagation()">
@@ -1095,5 +1126,6 @@
     <button type="button" [class.active]="mobilePanel === 'tools'" (click)="setMobilePanel('tools')"><b>+</b><span>Agregar</span></button>
     <button type="button" [class.active]="mobilePanel === 'canvas'" (click)="setMobilePanel('canvas')"><b>▱</b><span>Lienzo</span></button>
     <button type="button" [class.active]="mobilePanel === 'inspector'" (click)="setMobilePanel('inspector')"><b>≡</b><span>Editar</span><i *ngIf="selectedLayerCount">{{ selectedLayerCount }}</i></button>
+    <button type="button" (click)="openExportDialog()"><b>↓</b><span>Descargar</span></button>
   </nav>
 </div>

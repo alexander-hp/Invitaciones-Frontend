@@ -30,6 +30,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Input() dedicationMessage = '';
   @Input() songRequestMessage = '';
   @Input() forcedDevice?: 'mobile' | 'tablet' | 'desktop';
+  @Input() exportMode = false;
   @Input() sandboxResetKey = 0;
 
   @Output() verifyGuestAccess = new EventEmitter<{ email: string; phone: string }>();
@@ -48,6 +49,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   quickRsvp = { response: 'confirmed' as RsvpResponse, companions: 0, companionNames: '', message: '' };
   editingActivityDedicationId = '';
   activityDedicationDraft = '';
+
+  exportMediaDescription(layer: VisualInvitationLayer): string {
+    const label = String(layer.name || layer.text || '').trim();
+    return label && label.toLowerCase() !== layer.type ? label : 'Disponible en la invitación digital';
+  }
 
   activityCount(kind: 'album' | 'songs' | 'dedications'): number {
     if (kind === 'album') return this.guestActivity?.albumUploads?.length || 0;

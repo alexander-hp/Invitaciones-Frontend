@@ -62,7 +62,7 @@
   .ve-tools,.ve-inspector{display:none;position:fixed;inset:56px 0 58px;width:auto;box-sizing:border-box;z-index:2300;padding:16px 18px 28px;border:0;overflow:auto;background:#fff;box-shadow:none}
   .mobile-tools-open .ve-tools{display:block}
   .mobile-inspector-open .ve-inspector{display:block}
-  .mobile-editor-nav{position:fixed;left:0;right:0;bottom:0;z-index:2500;display:grid;grid-template-columns:repeat(3,1fr);height:58px;padding-bottom:env(safe-area-inset-bottom);border-top:1px solid #d9d2cc;background:#fff;box-shadow:0 -4px 14px #0002}
+  .mobile-editor-nav{position:fixed;left:0;right:0;bottom:0;z-index:2500;display:grid;grid-template-columns:repeat(4,1fr);height:58px;padding-bottom:env(safe-area-inset-bottom);border-top:1px solid #d9d2cc;background:#fff;box-shadow:0 -4px 14px #0002}
   .mobile-editor-nav button{position:relative;display:grid;place-items:center;align-content:center;gap:2px;border:0;background:#fff;color:#6d625c;cursor:pointer}
   .mobile-editor-nav button.active{color:#126b4a;background:#edf8f3}
   .mobile-editor-nav b{font:700 19px/1 Arial,sans-serif}.mobile-editor-nav span{font-size:10px;font-weight:700}.mobile-editor-nav i{position:absolute;top:5px;left:calc(50% + 10px);display:grid;place-items:center;min-width:16px;height:16px;padding:0 3px;border-radius:9px;background:#168a60;color:#fff;font:9px Arial,sans-serif}
