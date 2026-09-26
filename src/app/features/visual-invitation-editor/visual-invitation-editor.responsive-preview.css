@@ -1,0 +1,24 @@
+.responsive-preview-viewport {
+  width: 260px;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.responsive-preview-stage {
+  position: relative;
+  margin: 0 auto;
+  background: #fff;
+}
+
+.responsive-preview-artboard {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform-origin: top left;
+  background: #fff;
+}
+
+.responsive-preview-artboard app-visual-invitation-renderer {
+  display: block;
+  width: 100%;
+}

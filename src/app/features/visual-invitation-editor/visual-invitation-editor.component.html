@@ -149,19 +149,16 @@
       <div class="responsive-preview-grid">
         <article *ngFor="let preview of previewDevices">
           <div class="responsive-preview-heading"><strong>{{ preview.label }}</strong><span>{{ preview.width }} px</span><b *ngIf="responsiveIssueCount(preview.key)">{{ responsiveIssueCount(preview.key) }} alerta{{ responsiveIssueCount(preview.key) === 1 ? '' : 's' }}</b><i *ngIf="!responsiveIssueCount(preview.key)">Sin cortes</i></div>
-          <div class="responsive-preview-viewport">
-            <div class="responsive-preview-artboard" [style.width.px]="preview.width" [style.height.px]="artboardHeight" [style.transform]="'scale(' + preview.scale + ')'">
-              <section *ngFor="let section of design.sections; trackBy: trackVisualById" class="responsive-preview-section" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)">
-                <div *ngIf="section.layers.length === 0" class="responsive-module-placeholder"><strong>{{ section.title }}</strong><span>{{ section.type === 'custom' ? 'Sección vacía' : 'Módulo del evento' }}</span></div>
-                <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="responsive-preview-layer" [ngStyle]="responsivePreviewLayerStyle(layer, preview.key)">
-                  <div *ngIf="layer.type === 'text' || layer.type === 'button'">{{ resolveLayerText(layer) }}</div>
-                  <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
-                  <div *ngIf="layer.type === 'image' && !layer.url" class="media-placeholder">Imagen</div>
-                  <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                  <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" muted></video>
-                  <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url"></audio>
-                </div>
-              </section>
+          <div class="responsive-preview-viewport" *ngIf="responsivePreviewInvitation as previewInvitation">
+            <div class="responsive-preview-stage" [ngStyle]="responsivePreviewStageStyle(preview)">
+              <div class="responsive-preview-artboard" [style.width.px]="preview.width" [style.transform]="'scale(' + preview.scale + ')'">
+                <app-visual-invitation-renderer
+                  [invitation]="previewInvitation"
+                  [event]="event"
+                  [requiresGuestValidation]="false"
+                  [forcedDevice]="preview.key">
+                </app-visual-invitation-renderer>
+              </div>
             </div>
           </div>
           <button type="button" (click)="setDevice(preview.key); closeResponsivePreview()">Editar {{ preview.label | lowercase }}</button>
@@ -545,10 +542,7 @@
                 <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder">Sube una imagen</div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                <video *ngIf="layer.type === 'video' && layer.url" [src]="layer.url" controls preload="metadata"></video>
-                <div *ngIf="layer.type === 'video' && !layer.url" class="media-placeholder">Agrega una URL de video</div>
-                <audio *ngIf="layer.type === 'audio' && layer.url" [src]="layer.url" controls preload="metadata"></audio>
-                <div *ngIf="layer.type === 'audio' && !layer.url" class="media-placeholder">Agrega una URL de audio</div>
+                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [showPlaceholder]="true" (pointerdown)="$event.stopPropagation()"></app-visual-media-player>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
                   <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
                     <span>Arrastra para encuadrar</span>
@@ -668,7 +662,8 @@
           <button *ngIf="!isDynamicOutputLayer(layer)" type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
         </ng-container>
         <aside *ngIf="isDynamicImageOutputLayer(layer)" class="plugin-binding-note"><strong>Imagen vinculada</strong><code>{{ layer.binding }}</code><span>Cambia el archivo desde la configuración de contenido. Aquí puedes ajustar tamaño, recorte, posición y estilo.</span></aside>
-        <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">URL del archivo<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
+        <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">{{ layer.type === 'image' ? 'URL del archivo' : 'URL del archivo o proveedor' }}<input [(ngModel)]="layer.url" type="url" [placeholder]="layer.type === 'video' ? 'YouTube, Vimeo o archivo MP4/WebM' : (layer.type === 'audio' ? 'Spotify, YouTube o archivo MP3/WAV' : 'https://...')"></label>
+        <aside *ngIf="(layer.type === 'video' || layer.type === 'audio') && layer.url" class="plugin-binding-note"><strong>{{ mediaProviderLabel(layer.url) }}</strong><span>{{ mediaProviderHelp(layer) }}</span></aside>
         <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
         <div class="transform-settings" *ngIf="selectedLayout as layout">
           <h3>Posición y tamaño</h3>

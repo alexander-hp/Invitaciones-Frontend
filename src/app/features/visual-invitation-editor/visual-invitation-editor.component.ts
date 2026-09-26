@@ -13,6 +13,7 @@ import {
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
 import { VisualDesignImporterService, VisualDesignImportReview, VisualDesignImportReviewStatus } from './visual-design-importer.service';
+import { resolveVisualMediaSource } from '../../shared/components/visual-invitation-renderer/visual-media-source';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -59,7 +60,7 @@ type FunctionalTestData = {
 @Component({
   selector: 'app-visual-invitation-editor',
   templateUrl: './visual-invitation-editor.component.html',
-  styleUrls: ['./visual-invitation-editor.component.css']
+  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   invitation?: InvitationModel;
@@ -138,6 +139,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   functionalTestView: FunctionalTestView = 'guided';
   functionalTestDevice: DeviceMode = 'mobile';
   functionalTestPreviewInvitation?: InvitationModel;
+  responsivePreviewInvitation?: InvitationModel;
   functionalTestGuest?: GuestAccessResponse['guest'];
   functionalTestDedications: DedicationModel[] = [];
   functionalTestAlbumAssets: Array<{ url: string; uploaderName?: string }> = [];
@@ -727,6 +729,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   openResponsivePreview(): void {
     this.publishAuditIssues = this.auditDesign();
+    if (this.invitation) {
+      this.responsivePreviewInvitation = {
+        ...this.invitation,
+        content: {
+          ...(this.invitation.content || {}),
+          visualDesign: { ...this.clone(this.design), active: true }
+        }
+      };
+    }
     this.showResponsivePreview = true;
   }
 
@@ -736,6 +747,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   responsiveIssueCount(device: DeviceMode): number {
     return this.publishAuditIssues.filter((issue) => issue.device === device).length;
+  }
+
+  responsivePreviewContentHeight(): number {
+    return this.design.sections
+      .filter((section) => section.enabled)
+      .reduce((height, section) => height + (section.type === 'rsvp'
+        ? Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820)
+        : section.height), 0);
+  }
+
+  responsivePreviewStageStyle(preview: { width: number; scale: number }): Record<string, string> {
+    return {
+      width: `${preview.width * preview.scale}px`,
+      height: `${this.responsivePreviewContentHeight() * preview.scale}px`
+    };
   }
 
   responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
@@ -1019,6 +1045,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
+  }
+
+  mediaProviderLabel(url?: string): string {
+    const provider = resolveVisualMediaSource(url).provider;
+    return provider === 'youtube' ? 'YouTube detectado'
+      : provider === 'spotify' ? 'Spotify detectado'
+        : provider === 'vimeo' ? 'Vimeo detectado'
+          : 'Archivo multimedia directo';
+  }
+
+  mediaProviderHelp(layer: VisualInvitationLayer): string {
+    const provider = resolveVisualMediaSource(layer.url).provider;
+    if (provider === 'youtube') return layer.type === 'audio'
+      ? 'Se mostrará el reproductor de YouTube. Para reproducir solo audio, sube un archivo MP3 o WAV.'
+      : 'El enlace se convertirá automáticamente al reproductor embebido de YouTube.';
+    if (provider === 'spotify') return 'Se mostrará el reproductor oficial de Spotify; la reproducción requiere interacción del invitado.';
+    if (provider === 'vimeo') return 'El enlace se convertirá automáticamente al reproductor embebido de Vimeo.';
+    return layer.type === 'video'
+      ? 'Se usará el reproductor nativo. La URL debe entregar directamente un MP4 o WebM compatible.'
+      : 'Se usará el reproductor nativo. La URL debe entregar directamente un MP3 o WAV compatible.';
   }
 
   addShape(kind: ShapeKind): void {
