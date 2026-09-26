@@ -15,6 +15,9 @@ import {
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
 import { VisualDesignImporterService, VisualDesignImportReview, VisualDesignImportReviewStatus } from './visual-design-importer.service';
+import {
+  AnimatedExportTransition, animatedFrameSize, VisualInvitationAnimatedExportService
+} from './visual-invitation-animated-export.service';
 import { resolveVisualMediaSource } from '../../shared/components/visual-invitation-renderer/visual-media-source';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
@@ -52,7 +55,7 @@ type DesignImportStrategy = 'replace' | 'append';
 type ImportMappingModuleType = 'rsvp' | 'dedications' | 'songs' | 'album' | 'guestPass';
 type FunctionalTestType = ImportMappingModuleType;
 type FunctionalTestView = 'guided' | 'design';
-type InvitationExportFormat = 'png' | 'jpeg' | 'pdf';
+type InvitationExportFormat = 'png' | 'jpeg' | 'pdf' | 'gif' | 'mp4';
 type VisualDesignImportReviewItem = VisualDesignImportReview & { sectionId?: string };
 type FunctionalTestData = {
   name: string; contact: string; response: string; companions: number; dietary: string; message: string;
@@ -149,10 +152,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   exportDevice: DeviceMode = 'desktop';
   exportScale = 2;
   exportJpegQuality = .92;
+  exportPageDuration = 3;
+  exportTransitionDuration = .65;
+  exportTransition: AnimatedExportTransition = 'fade';
+  exportIncludeMusic = true;
   exportSectionIds: string[] = [];
   exportingInvitation = false;
   exportProgress = 0;
   exportError = '';
+  exportWarning = '';
   functionalTestGuest?: GuestAccessResponse['guest'];
   functionalTestDedications: DedicationModel[] = [];
   functionalTestAlbumAssets: Array<{ url: string; uploaderName?: string }> = [];
@@ -276,6 +284,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { value: 1, label: 'Estándar', detail: '1x' },
     { value: 2, label: 'Alta', detail: '2x' },
     { value: 3, label: 'Máxima', detail: '3x' }
+  ];
+  readonly exportTransitions: Array<{ value: AnimatedExportTransition; label: string; detail: string }> = [
+    { value: 'fade', label: 'Fundido', detail: 'Cambio suave' },
+    { value: 'slide', label: 'Deslizar', detail: 'Movimiento lateral' },
+    { value: 'zoom', label: 'Zoom', detail: 'Entrada cinematográfica' }
   ];
 
   private undoStack: EditorHistoryState[] = [];
@@ -474,7 +487,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private api: ApiService,
-    private designImporter: VisualDesignImporterService
+    private designImporter: VisualDesignImporterService,
+    private animatedExporter: VisualInvitationAnimatedExportService
   ) {}
 
   ngOnInit(): void {
@@ -773,6 +787,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   openExportDialog(): void {
     this.exportSectionIds = this.exportableSections.map((section) => section.id);
     this.exportError = '';
+    this.exportWarning = '';
     this.exportProgress = 0;
     this.rebuildExportPreview();
     this.showExportDialog = true;
@@ -800,6 +815,37 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.exportDeviceWidth * this.exportScale;
   }
 
+  get animatedExport(): boolean {
+    return this.exportFormat === 'gif' || this.exportFormat === 'mp4';
+  }
+
+  get animatedOutputSize(): { width: number; height: number } {
+    return animatedFrameSize(this.exportDevice, this.animatedWidthForScale(this.exportScale));
+  }
+
+  animatedWidthForScale(scale: number): number {
+    const limits = this.exportFormat === 'gif' ? [360, 540, 720] : [720, 1280, 1920];
+    return animatedFrameSize(this.exportDevice, Math.min(this.exportDeviceWidth * scale, limits[Math.max(0, Math.min(2, scale - 1))])).width;
+  }
+
+  get mp4Supported(): boolean {
+    return Boolean(this.animatedExporter.supportedMp4Type());
+  }
+
+  get exportMusicUrl(): string {
+    const primary = String(this.invitation?.content?.musicUrl || '').trim();
+    if (primary) return primary;
+    for (const section of this.selectedExportSections) {
+      const audio = section.layers.find((layer) => layer.type === 'audio' && layer.url);
+      if (audio?.url) return audio.url;
+    }
+    return '';
+  }
+
+  get exportCanIncludeMusic(): boolean {
+    return resolveVisualMediaSource(this.exportMusicUrl).provider === 'direct';
+  }
+
   get exportContainsMedia(): boolean {
     return this.selectedExportSections.some((section) => section.layers.some((layer) => layer.type === 'video' || layer.type === 'audio'));
   }
@@ -825,6 +871,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   exportDeliveryLabel(): string {
+    if (this.animatedExport) return `1 archivo ${this.exportFormatLabel()} con ${this.selectedExportSections.length} escena${this.selectedExportSections.length === 1 ? '' : 's'}`;
     if (this.exportFormat === 'pdf') return `${this.selectedExportSections.length} página${this.selectedExportSections.length === 1 ? '' : 's'} en un PDF`;
     return this.selectedExportSections.length > 1
       ? `${this.selectedExportSections.length} archivos ${this.exportFormatLabel()} en ZIP`
@@ -844,6 +891,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.selectedExportSections.length || this.exportingInvitation) return;
     this.exportingInvitation = true;
     this.exportError = '';
+    this.exportWarning = '';
     this.exportProgress = 5;
     this.rebuildExportPreview();
 
@@ -855,6 +903,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (elements.length !== this.selectedExportSections.length) throw new Error('No fue posible preparar todas las páginas seleccionadas.');
 
       const fileBase = this.exportFileBase();
+      if (this.animatedExport) {
+        await this.exportAnimatedInvitation(elements, fileBase);
+        this.flash(`Exportación ${this.exportFormatLabel()} preparada.`);
+        return;
+      }
       const imagePages: Array<{ name: string; blob: Blob }> = [];
       let pdf: JsPdfDocument | undefined;
       const pdfModule = this.exportFormat === 'pdf' ? await import('jspdf') : undefined;
@@ -917,6 +970,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.exportError = error instanceof Error ? error.message : 'No fue posible exportar la invitación.';
     } finally {
       this.exportingInvitation = false;
+    }
+  }
+
+  private async exportAnimatedInvitation(elements: HTMLElement[], fileBase: string): Promise<void> {
+    const captureScale = this.animatedOutputSize.width / this.exportDeviceWidth;
+    const pages: HTMLCanvasElement[] = [];
+    for (let index = 0; index < elements.length; index += 1) {
+      this.exportProgress = 10 + Math.round(index / elements.length * 25);
+      pages.push(await html2canvas(elements[index], {
+        scale: captureScale,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: this.design.theme?.backgroundColor || '#ffffff'
+      }));
+    }
+
+    try {
+      const audioUrl = this.exportFormat === 'mp4' && this.exportIncludeMusic && this.exportCanIncludeMusic
+        ? this.exportMusicUrl
+        : undefined;
+      const result = await this.animatedExporter.create(pages, {
+        format: this.exportFormat as 'gif' | 'mp4',
+        device: this.exportDevice,
+        width: this.animatedOutputSize.width,
+        pageDuration: this.exportPageDuration,
+        transitionDuration: Math.min(this.exportTransitionDuration, this.exportPageDuration / 2),
+        transition: this.exportTransition,
+        fps: 30,
+        backgroundColor: this.design.theme?.backgroundColor || '#ffffff',
+        audioUrl
+      }, (progress) => { this.exportProgress = 35 + Math.round(progress * .65); });
+      this.downloadBlob(result.blob, `${fileBase}.${result.extension}`);
+      this.exportWarning = result.warning || '';
+      this.exportProgress = 100;
+    } finally {
+      pages.forEach((canvas) => {
+        canvas.width = 1;
+        canvas.height = 1;
+      });
     }
   }
 
