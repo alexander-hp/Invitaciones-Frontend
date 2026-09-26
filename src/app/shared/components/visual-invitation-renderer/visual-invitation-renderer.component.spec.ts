@@ -56,12 +56,34 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.sectionRenderHeight({ id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 640, layers: [] })).toBe(640);
   });
 
-  it('preserves the authored font size on every device', () => {
+  it('preserves the authored font size on desktop', () => {
+    component.device = 'desktop';
     const style = component.layerStyle({
       id: 'title', type: 'text', text: 'Título', x: 10, y: 10, width: 80, height: 12,
       style: { fontSize: 42 }
     });
 
     expect(style['fontSize']).toBe('42px');
+  });
+
+  it('scales shared typography on mobile but keeps independent typography exact', () => {
+    component.device = 'mobile';
+    component.invitation = { content: { visualDesign: { responsiveMode: 'shared' } } } as any;
+    const layer = { id: 'title', type: 'text' as const, x: 10, y: 10, width: 80, height: 20, style: { fontSize: 60 } };
+
+    expect(component.layerStyle(layer)['fontSize']).toBe('40.8px');
+
+    (component.invitation as any).content.visualDesign.responsiveMode = 'independent';
+    expect(component.layerStyle(layer)['fontSize']).toBe('60px');
+  });
+
+  it('only publishes location actions backed by real data', () => {
+    component.invitation = { content: { locations: [{ name: 'Salón', mapUrl: 'https://maps.example.test' }] } } as any;
+    const section = { id: 'locations', type: 'locations', enabled: true, layout: 'canvas' as const, height: 760, layers: [] };
+    const map = { id: 'map', type: 'button' as const, binding: 'location.0.map', x: 0, y: 0, width: 20, height: 8 };
+    const waze = { ...map, id: 'waze', binding: 'location.0.waze' };
+
+    expect(component.shouldRenderLocationLayer(section, map)).toBeTrue();
+    expect(component.shouldRenderLocationLayer(section, waze)).toBeFalse();
   });
 });

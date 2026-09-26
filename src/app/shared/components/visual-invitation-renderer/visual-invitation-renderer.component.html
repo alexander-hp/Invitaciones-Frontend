@@ -28,6 +28,7 @@
     <div *ngIf="hasLocationCanvasLayers(section)" class="rsvp-layer-form location-layer-form">
       <ng-container *ngFor="let layer of locationCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderLocationLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.locations.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.binding?.endsWith('.name') || layer.binding?.endsWith('.address') || layer.binding?.endsWith('.notes') || layer.binding?.endsWith('.details')" class="native-location-text">{{ locationLayerText(section, layer) }}</div>
           <a *ngIf="layer.type === 'button'" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="locationLayerHref(section, layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
@@ -50,6 +51,7 @@
     <div *ngIf="hasItineraryCanvasLayers(section)" class="rsvp-layer-form itinerary-layer-form">
       <ng-container *ngFor="let layer of itineraryCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderItineraryLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.itinerary.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('itinerary.')">{{ itineraryLayerText(layer) }}</div>
           <a *ngIf="layer.binding?.endsWith('.location')" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="itineraryLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
@@ -65,6 +67,7 @@
     <div *ngIf="hasDressCodeCanvasLayers(section)" class="rsvp-layer-form dress-code-layer-form">
       <ng-container *ngFor="let layer of dressCodeCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderDressCodeLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="dressCodeLayerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.dressCode.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('dress.')">{{ dressCodeLayerText(layer) }}</div>
           <img *ngIf="layer.binding === 'dress.image'" [src]="dressCodeLayerImageUrl(layer)" alt="Referencia de vestimenta" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
@@ -82,6 +85,7 @@
     <div *ngIf="hasGalleryCanvasLayers(section)" class="rsvp-layer-form gallery-layer-form">
       <ng-container *ngFor="let layer of galleryCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderGalleryLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.gallery.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('gallery.')">{{ galleryLayerText(layer) }}</div>
           <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" loading="lazy" decoding="async"></button>
@@ -107,6 +111,7 @@
     <div *ngIf="hasGiftCanvasLayers(section)" class="rsvp-layer-form gift-layer-form">
       <ng-container *ngFor="let layer of giftCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderGiftLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.gifts.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && (layer.binding?.startsWith('gift.') || layer.binding?.startsWith('envelope.'))">{{ giftLayerText(layer) }}</div>
           <img *ngIf="layer.binding?.endsWith('.image')" [src]="giftLayerImageUrl(layer)" [alt]="giftLayerText(layer) || 'Mesa de regalos'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
@@ -134,6 +139,7 @@
     <div *ngIf="hasLodgingCanvasLayers(section)" class="rsvp-layer-form lodging-layer-form">
       <ng-container *ngFor="let layer of lodgingCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderLodgingLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.lodging.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('lodging.')">{{ lodgingLayerText(layer) }}</div>
           <img *ngIf="layer.binding?.endsWith('.image')" [src]="lodgingLayerImageUrl(layer)" [alt]="lodgingLayerText(layer) || 'Hospedaje recomendado'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
@@ -162,6 +168,7 @@
     <form *ngIf="hasRsvpCanvasLayers(section) && (!requiresGuestValidation || verifiedGuest)" class="rsvp-layer-form" (ngSubmit)="sendRsvp()">
       <ng-container *ngFor="let layer of rsvpCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderRsvpLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.rsvp.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'rsvp.name'" class="rsvp-layer-control"><input [(ngModel)]="rsvp.name" [name]="rsvpControlName(layer)" required [attr.aria-label]="layer.text || 'Nombre'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre del invitado')"></label>
           <label *ngIf="layer.binding === 'rsvp.email'" class="rsvp-layer-control"><input [(ngModel)]="rsvp.email" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'contacto@ejemplo.com')"></label>
@@ -211,6 +218,7 @@
     <form *ngIf="hasGuestPassCanvasLayers(section)" class="rsvp-layer-form guest-pass-layer-form" (ngSubmit)="identifyGuest()">
       <ng-container *ngFor="let layer of guestPassCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderGuestPassLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.guestPass.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'pass.email'" class="rsvp-layer-control"><input [(ngModel)]="guestEmail" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'correo@ejemplo.com')"></label>
           <label *ngIf="layer.binding === 'pass.phone'" class="rsvp-layer-control"><input [(ngModel)]="guestPhone" [name]="rsvpControlName(layer)" type="tel" [attr.aria-label]="layer.text || 'Teléfono de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Número de teléfono')"></label>
@@ -234,6 +242,7 @@
     <div *ngIf="hasCountdownCanvasLayers(section)" class="rsvp-layer-form countdown-layer-form">
       <ng-container *ngFor="let layer of countdownCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderCountdownLayer(layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.countdown.') || layer.binding?.startsWith('countdown.')">{{ countdownLayerText(layer) }}</div>
         </div>
       </ng-container>
@@ -247,6 +256,7 @@
     <div *ngIf="hasAlbumCanvasLayers(section)" class="rsvp-layer-form album-layer-form">
       <ng-container *ngFor="let layer of albumCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderAlbumLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.album.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'album.upload'" class="visual-action-button native-file-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'">{{ uploadingAlbum ? 'Subiendo...' : (layer.text || 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
           <div *ngIf="layer.binding === 'album.feedback'" class="rsvp-layer-feedback">{{ albumMessage }}</div>
@@ -265,6 +275,7 @@
     <form *ngIf="hasDedicationCanvasLayers(section)" class="rsvp-layer-form dedication-layer-form" (ngSubmit)="sendDedication()">
       <ng-container *ngFor="let layer of dedicationCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderDedicationLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.dedications.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'dedication.publicName'" class="rsvp-layer-control"><input [(ngModel)]="dedication.publicName" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Tu nombre'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre público')"></label>
           <label *ngIf="layer.binding === 'dedication.message'" class="rsvp-layer-control"><textarea [(ngModel)]="dedication.message" [name]="rsvpControlName(layer)" required rows="3" [attr.aria-label]="layer.text || 'Dedicatoria'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Escribe tu dedicatoria...')"></textarea></label>
@@ -285,6 +296,7 @@
     <form *ngIf="hasSongCanvasLayers(section)" class="rsvp-layer-form song-layer-form" (ngSubmit)="sendSong()">
       <ng-container *ngFor="let layer of songCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderSongLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.songs.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'song.title'" class="rsvp-layer-control"><input [(ngModel)]="song.title" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Canción'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre de la canción')"></label>
           <label *ngIf="layer.binding === 'song.sourceUrl'" class="rsvp-layer-control"><input [(ngModel)]="song.sourceUrl" [name]="rsvpControlName(layer)" type="url" [attr.aria-label]="layer.text || 'Spotify o YouTube'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Pega el enlace de la canción')"></label>
@@ -304,6 +316,7 @@
     <form *ngIf="hasGuestActivityCanvasLayers(section)" class="rsvp-layer-form guest-activity-layer-form" (ngSubmit)="identifyGuest()">
       <ng-container *ngFor="let layer of guestActivityCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderGuestActivityLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [class.is-loading]="guestActivityLoading && layer.binding?.startsWith('activity.')" [ngStyle]="layerStyle(layer)">
+          <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.guestActivity.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'activity.email'" class="rsvp-layer-control"><input [(ngModel)]="guestEmail" [name]="rsvpControlName(layer)" type="email" [attr.aria-label]="layer.text || 'Correo de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'correo@ejemplo.com')"></label>
           <label *ngIf="layer.binding === 'activity.phone'" class="rsvp-layer-control"><input [(ngModel)]="guestPhone" [name]="rsvpControlName(layer)" type="tel" [attr.aria-label]="layer.text || 'Teléfono de acceso'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Número de teléfono')"></label>

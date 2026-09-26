@@ -870,6 +870,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const style = layer.style || {};
     const shape = layer.type === 'shape';
+    const responsiveScale = this.sharedStyleScale();
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
       ? layer.layouts[this.device]!
       : layer;
@@ -877,16 +878,16 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(style.color || '#25211f'), backgroundColor: shape ? 'transparent' : String(style.backgroundColor || 'transparent'),
-      fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
+      fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(style.fontSize || 30, responsiveScale, 10)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
-      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${Number(style.letterSpacing || 0)}px`, textTransform: String(style.textTransform || 'none'),
+      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(style.letterSpacing || 0, responsiveScale)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
-      borderRadius: shape ? '0' : `${Number(style.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
-      borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(style.borderWidth || 0)}px`,
+      borderRadius: shape ? '0' : `${this.scaledLayerPixels(style.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
+      borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${this.scaledLayerPixels(style.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && style.gradientEnabled
         ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})`
         : !shape && style.backgroundImageUrl ? `url("${String(style.backgroundImageUrl)}")` : 'none',
-      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${Number(style.padding || 0)}px`,
+      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${this.scaledLayerPixels(style.padding || 0, responsiveScale)}px`,
       boxShadow: shape ? 'none' : String(style.boxShadow || 'none'), opacity: String(style.opacity ?? 1),
       '--button-hover-background': String(style.hoverBackgroundColor || style.backgroundColor || 'transparent'),
       '--button-hover-color': String(style.hoverColor || style.color || '#25211f'),
@@ -894,6 +895,15 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
+  }
+
+  private sharedStyleScale(): number {
+    if (this.invitation?.content?.visualDesign?.responsiveMode === 'independent') return 1;
+    return this.device === 'mobile' ? .68 : this.device === 'tablet' ? .84 : 1;
+  }
+
+  private scaledLayerPixels(value: number, scale: number, minimum = 0): number {
+    return Math.round(Math.max(minimum, Number(value || 0) * scale) * 100) / 100;
   }
 
   animationClass(layer: VisualInvitationLayer): string[] {

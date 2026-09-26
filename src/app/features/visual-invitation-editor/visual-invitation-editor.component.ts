@@ -741,17 +741,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
     const style = layer.style || {};
     const shape = layer.type === 'shape';
+    const responsiveScale = this.sharedStyleScale(device);
     const layout = this.design.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
     return {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(style.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(style.backgroundColor || 'transparent'),
-      fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(style.fontSize || 30)}px`,
+      fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(style.fontSize || 30, responsiveScale, 10)}px`,
       fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
-      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${Number(style.letterSpacing || 0)}px`, textTransform: String(style.textTransform || 'none'),
+      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(style.letterSpacing || 0, responsiveScale)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
-      borderRadius: shape ? '0' : `${Number(style.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
-      borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(style.borderWidth || 0)}px`,
+      borderRadius: shape ? '0' : `${this.scaledLayerPixels(style.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
+      borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${this.scaledLayerPixels(style.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
       boxShadow: shape ? 'none' : String(style.boxShadow || 'none'),
       opacity: layer.hidden ? '0' : String(style.opacity ?? 1)
@@ -1792,21 +1793,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const s = layer.style || {};
     const shape = layer.type === 'shape';
+    const responsiveScale = this.sharedStyleScale(this.device);
     const layout = this.layoutFor(layer);
     return {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(s.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(s.backgroundColor || 'transparent'),
-      fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${Number(s.fontSize || 30)}px`,
+      fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(s.fontSize || 30, responsiveScale, 10)}px`,
       fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
-      lineHeight: String(s.lineHeight || 1.2), letterSpacing: `${Number(s.letterSpacing || 0)}px`, textTransform: String(s.textTransform || 'none'),
+      lineHeight: String(s.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(s.letterSpacing || 0, responsiveScale)}px`, textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
-      borderRadius: shape ? '0' : `${Number(s.borderRadius || 0)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
-      borderStyle: !shape && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${Number(s.borderWidth || 0)}px`,
+      borderRadius: shape ? '0' : `${this.scaledLayerPixels(s.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
+      borderStyle: !shape && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${this.scaledLayerPixels(s.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && s.gradientEnabled
         ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`
         : !shape && s.backgroundImageUrl ? `url("${String(s.backgroundImageUrl)}")` : 'none',
-      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${Number(s.padding || 0)}px`,
+      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${this.scaledLayerPixels(s.padding || 0, responsiveScale)}px`,
       boxShadow: shape ? 'none' : String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
       '--button-hover-background': String(s.hoverBackgroundColor || s.backgroundColor || 'transparent'),
       '--button-hover-color': String(s.hoverColor || s.color || '#2d2927'),
@@ -1814,6 +1816,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
+  }
+
+  private sharedStyleScale(device: DeviceMode): number {
+    if (this.design.responsiveMode === 'independent') return 1;
+    return device === 'mobile' ? .68 : device === 'tablet' ? .84 : 1;
+  }
+
+  private scaledLayerPixels(value: number, scale: number, minimum = 0): number {
+    return Math.round(Math.max(minimum, Number(value || 0) * scale) * 100) / 100;
   }
 
   setButtonVariant(layer: VisualInvitationLayer, variant: NonNullable<VisualInvitationLayerStyle['buttonVariant']>): void {
@@ -2240,6 +2251,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (binding === 'countdown.minutes') return String(this.countdownPreview.minutes).padStart(2, '0');
     if (binding === 'countdown.seconds') return String(this.countdownPreview.seconds).padStart(2, '0');
     return this.resolveLayerText(layer);
+  }
+
+  editorLayerUnavailableReason(layer: VisualInvitationLayer): string {
+    if (layer.type !== 'button') return '';
+    const match = String(layer.binding || '').match(/^location\.(\d+)\.(map|waze|phone|website)$/);
+    if (!match) return '';
+    const location = this.locationSourceData()[Number(match[1])];
+    if (!location) return 'Esta ubicación ya no existe y la acción no se publicará.';
+    const value = match[2] === 'map' ? location.mapUrl
+      : match[2] === 'waze' ? location.wazeUrl
+        : match[2] === 'phone' ? location.phone
+          : location.websiteUrl;
+    return value ? '' : 'Falta configurar este dato; el botón no aparecerá en la invitación pública.';
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
@@ -4375,6 +4399,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
         if (layer.type === 'button' && !layer.url?.trim() && !layer.binding?.trim()) {
           add('critical', `Botón sin destino: ${this.layerLabel(layer)}`, 'Agrega una URL o una acción al botón.', section.id, layer.id);
+        }
+        const unavailableReason = this.editorLayerUnavailableReason(layer);
+        if (unavailableReason) {
+          add('warning', `Acción sin configurar: ${this.layerLabel(layer)}`, unavailableReason, section.id, layer.id);
         }
         if ((layer.type === 'text' || layer.type === 'button') && !layer.text?.trim()) {
           add('warning', 'Texto vacío', 'Escribe un texto o elimina el elemento.', section.id, layer.id);
