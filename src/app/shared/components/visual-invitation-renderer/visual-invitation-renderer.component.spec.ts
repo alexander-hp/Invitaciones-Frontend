@@ -46,4 +46,22 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.song.title).toBe('');
     expect(component.dedication.message).toBe('');
   });
+
+  it('preserves the authored section height for responsive rendering', () => {
+    const style = component.sectionStyle({
+      id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 640, layers: []
+    });
+
+    expect(style['height']).toBe('640px');
+    expect(component.sectionRenderHeight({ id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 640, layers: [] })).toBe(640);
+  });
+
+  it('preserves the authored font size on every device', () => {
+    const style = component.layerStyle({
+      id: 'title', type: 'text', text: 'Título', x: 10, y: 10, width: 80, height: 12,
+      style: { fontSize: 42 }
+    });
+
+    expect(style['fontSize']).toBe('42px');
+  });
 });

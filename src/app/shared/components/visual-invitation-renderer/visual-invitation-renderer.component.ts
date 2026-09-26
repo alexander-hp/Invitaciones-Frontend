@@ -838,9 +838,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const background = section.background || {};
     const moduleStyle = section.moduleStyle || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
-    const height = section.type === 'rsvp'
-      ? Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820)
-      : section.height;
+    const height = this.sectionRenderHeight(section);
     return {
       height: `${height}px`,
       backgroundColor: background.color || '#fff',
@@ -850,6 +848,12 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       '--module-columns': String(moduleStyle.columns || 2),
       '--module-gap': `${Number(moduleStyle.gap ?? 14)}px`
     };
+  }
+
+  sectionRenderHeight(section: VisualInvitationSection): number {
+    return section.type === 'rsvp'
+      ? Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820)
+      : section.height;
   }
 
   moduleClasses(section: VisualInvitationSection): string[] {

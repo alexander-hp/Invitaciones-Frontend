@@ -9,6 +9,7 @@
   [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
   <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
+    <div class="visual-section-canvas">
     <div *ngFor="let layer of visualLayers(section); trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text'">{{ resolveLayerText(layer) }}</div>
       <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
@@ -337,6 +338,7 @@
           <button type="submit" [disabled]="checkingGuest">{{ pluginSetting(section, 'identifyButtonText', 'Ver mi actividad') }}</button>
         </form>
       </ng-template>
+    </div>
     </div>
   </section>
 </main>
