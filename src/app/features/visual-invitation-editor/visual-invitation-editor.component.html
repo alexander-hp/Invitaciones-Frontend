@@ -583,7 +583,8 @@
                 <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder">Sube una imagen</div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'" (pointerdown)="$event.stopPropagation()"></app-visual-media-player>
+                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
+                <div *ngIf="(layer.type === 'video' || layer.type === 'audio') && !isMediaPreviewActive(layer)" class="media-editor-interaction" role="button" aria-label="Seleccionar y mover elemento multimedia" title="Arrastra para mover. Usa Probar reproducción para controlar el contenido."></div>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
                   <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
                     <span>Arrastra para encuadrar</span>
@@ -592,6 +593,7 @@
                     <button type="button" title="Terminar encuadre" (click)="finishImageCrop()">Listo</button>
                   </div>
                   <div class="layer-toolbar" (pointerdown)="$event.stopPropagation()">
+                    <button *ngIf="layer.type === 'video' || layer.type === 'audio'" type="button" [title]="isMediaPreviewActive(layer) ? 'Volver a mover' : 'Probar reproducción'" (click)="toggleMediaPreview(layer, $event)">{{ isMediaPreviewActive(layer) ? '↔' : '▶' }}</button>
                     <button *ngIf="layer.type === 'image' && boundImageUrl(layer) && !layer.locked" type="button" title="Encuadrar imagen" (click)="startImageCrop($event, section, layer)">⌗</button>
                     <button type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button>
                     <button type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer, $event)">{{ layer.locked ? '▣' : '▢' }}</button>

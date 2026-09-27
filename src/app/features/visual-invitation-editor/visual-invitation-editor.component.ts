@@ -117,6 +117,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   publishAuditIssues: PublishAuditIssue[] = [];
   showResponsivePreview = false;
   editingLayerId = '';
+  previewingMediaLayerId = '';
   paletteDropSectionId = '';
   selectionMarquee?: SelectionMarquee;
   croppingLayerId = '';
@@ -1461,6 +1462,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
+  }
+
+  isMediaPreviewActive(layer: VisualInvitationLayer): boolean {
+    return this.previewingMediaLayerId === layer.id;
+  }
+
+  toggleMediaPreview(layer: VisualInvitationLayer, event: Event): void {
+    event.stopPropagation();
+    this.previewingMediaLayerId = this.previewingMediaLayerId === layer.id ? '' : layer.id;
   }
 
   mediaProviderLabel(url?: string): string {
@@ -5178,11 +5188,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.selectedLayerId = primaryId && this.selectedLayerIds.includes(primaryId)
       ? primaryId
       : (this.selectedLayerIds[this.selectedLayerIds.length - 1] || '');
+    if (this.previewingMediaLayerId && !this.selectedLayerIds.includes(this.previewingMediaLayerId)) this.previewingMediaLayerId = '';
   }
 
   private clearLayerSelection(): void {
     this.selectedLayerIds = [];
     this.selectedLayerId = '';
+    this.previewingMediaLayerId = '';
   }
 
   private centerLayersAt(layers: VisualInvitationLayer[], x: number, y: number): void {
