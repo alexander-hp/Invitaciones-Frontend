@@ -1461,7 +1461,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (provider === 'youtube') return layer.type === 'audio'
       ? 'Se mostrará el reproductor de YouTube. Para reproducir solo audio, sube un archivo MP3 o WAV.'
       : 'El enlace se convertirá automáticamente al reproductor embebido de YouTube.';
-    if (provider === 'spotify') return 'Se mostrará el reproductor oficial de Spotify; la reproducción requiere interacción del invitado.';
+    if (provider === 'spotify') return 'Se mostrará el reproductor oficial de Spotify, incluso con enlaces regionales; la reproducción requiere interacción del invitado.';
     if (provider === 'vimeo') return 'El enlace se convertirá automáticamente al reproductor embebido de Vimeo.';
     return layer.type === 'video'
       ? 'Se usará el reproductor nativo. La URL debe entregar directamente un MP4 o WebM compatible.'

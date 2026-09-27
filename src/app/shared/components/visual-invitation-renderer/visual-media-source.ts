@@ -10,6 +10,13 @@ export function resolveVisualMediaSource(value?: string): VisualMediaSource {
   const sourceUrl = String(value || '').trim();
   if (!sourceUrl) return { provider: 'empty', sourceUrl: '' };
 
+  const spotifyUri = sourceUrl.match(/^spotify:(track|album|playlist|episode|show):([A-Za-z0-9_-]{6,64})$/i);
+  if (spotifyUri) {
+    const kind = spotifyUri[1].toLowerCase();
+    const id = spotifyUri[2];
+    return { provider: 'spotify', sourceUrl, embedUrl: `https://open.spotify.com/embed/${kind}/${id}` };
+  }
+
   try {
     const parsed = new URL(sourceUrl);
     const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
@@ -28,7 +35,10 @@ export function resolveVisualMediaSource(value?: string): VisualMediaSource {
     }
 
     if (host === 'open.spotify.com') {
-      const [kind, id] = parsed.pathname.split('/').filter(Boolean);
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      const kindIndex = parts.findIndex((part) => ['track', 'album', 'playlist', 'episode', 'show'].includes(part.toLowerCase()));
+      const kind = kindIndex >= 0 ? parts[kindIndex].toLowerCase() : '';
+      const id = kindIndex >= 0 ? parts[kindIndex + 1] : '';
       if (['track', 'album', 'playlist', 'episode', 'show'].includes(kind) && isSafeProviderId(id)) {
         return { provider: 'spotify', sourceUrl, embedUrl: `https://open.spotify.com/embed/${kind}/${id}` };
       }

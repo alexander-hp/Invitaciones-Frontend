@@ -1,4 +1,5 @@
 <iframe *ngIf="embedUrl" [src]="embedUrl" [title]="label || ('Reproductor de ' + providerLabel)" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-<video *ngIf="!embedUrl && type === 'video' && directUrl" [src]="directUrl" controls playsinline preload="metadata"></video>
-<audio *ngIf="!embedUrl && type === 'audio' && directUrl" [src]="directUrl" controls preload="metadata"></audio>
+<video *ngIf="!embedUrl && type === 'video' && directUrl && !nativeError" [src]="directUrl" controls playsinline preload="metadata" (error)="handleNativeError()"></video>
+<audio *ngIf="!embedUrl && type === 'audio' && directUrl && !nativeError" [src]="directUrl" controls preload="metadata" (error)="handleNativeError()"></audio>
+<div *ngIf="nativeError" class="media-error"><b>No se pudo reproducir este {{ type === 'video' ? 'video' : 'audio' }}</b><span>Usa un enlace directo a un archivo compatible o un enlace de YouTube, Spotify o Vimeo.</span><a [href]="directUrl" target="_blank" rel="noopener">Abrir enlace original</a></div>
 <div *ngIf="showPlaceholder && !directUrl" class="media-placeholder">Agrega una URL o sube un archivo de {{ type === 'video' ? 'video' : 'audio' }}</div>

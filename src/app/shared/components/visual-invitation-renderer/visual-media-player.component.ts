@@ -17,11 +17,13 @@ export class VisualMediaPlayerComponent implements OnChanges {
   provider: VisualMediaProvider = 'empty';
   directUrl = '';
   embedUrl?: SafeResourceUrl;
+  nativeError = false;
 
   constructor(private sanitizer: DomSanitizer) {}
 
   ngOnChanges(): void {
     const media = resolveVisualMediaSource(this.url);
+    this.nativeError = false;
     this.provider = media.provider;
     this.directUrl = media.sourceUrl;
     this.embedUrl = media.embedUrl
@@ -38,6 +40,20 @@ export class VisualMediaPlayerComponent implements OnChanges {
 
   @HostBinding('class.preserve-visual-aspect')
   get preserveVisualAspect(): boolean {
-    return this.preserveAspectRatio && this.type === 'video';
+    return this.preserveAspectRatio && (this.type === 'video' || this.provider === 'youtube' || this.provider === 'vimeo');
+  }
+
+  @HostBinding('class.audio-player')
+  get audioPlayer(): boolean {
+    return this.type === 'audio';
+  }
+
+  @HostBinding('class.spotify-player')
+  get spotifyPlayer(): boolean {
+    return this.provider === 'spotify';
+  }
+
+  handleNativeError(): void {
+    this.nativeError = true;
   }
 }
