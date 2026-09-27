@@ -583,7 +583,7 @@
                 <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder">Sube una imagen</div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" (pointerdown)="$event.stopPropagation()"></app-visual-media-player>
+                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'" (pointerdown)="$event.stopPropagation()"></app-visual-media-player>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
                   <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
                     <span>Arrastra para encuadrar</span>
@@ -706,6 +706,38 @@
         <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">{{ layer.type === 'image' ? 'URL del archivo' : 'URL del archivo o proveedor' }}<input [(ngModel)]="layer.url" type="url" [placeholder]="layer.type === 'video' ? 'YouTube, Vimeo o archivo MP4/WebM' : (layer.type === 'audio' ? 'Spotify, YouTube o archivo MP3/WAV' : 'https://...')"></label>
         <aside *ngIf="(layer.type === 'video' || layer.type === 'audio') && layer.url" class="plugin-binding-note"><strong>{{ mediaProviderLabel(layer.url) }}</strong><span>{{ mediaProviderHelp(layer) }}</span></aside>
         <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
+        <section *ngIf="layer.type === 'audio' && layer.style as audioStyle" class="audio-style-editor">
+          <div class="inspector-heading"><h3>Reproductor de música</h3></div>
+          <p *ngIf="!canUseCustomAudio(layer)" class="audio-provider-warning">Este proveedor requiere un reproductor visible. Sube un archivo de audio para usar un botón discreto o flotante.</p>
+          <label>Presentación<select [ngModel]="canUseCustomAudio(layer) ? (audioStyle.audioPresentation || 'button') : 'native'" (ngModelChange)="audioStyle.audioPresentation=$event" [disabled]="!canUseCustomAudio(layer)"><option value="button">Botón personalizado</option><option value="native">Reproductor completo</option></select></label>
+          <div class="audio-toggle-grid">
+            <label class="toggle"><input [(ngModel)]="audioStyle.audioAutoplay" type="checkbox"> Intentar reproducir al entrar</label>
+            <label class="toggle"><input [(ngModel)]="audioStyle.audioLoop" type="checkbox"> Repetir</label>
+          </div>
+          <label>Volumen inicial<input [ngModel]="audioStyle.audioVolume ?? 0.8" (ngModelChange)="audioStyle.audioVolume=$event" type="range" min="0" max="1" step="0.05"><span>{{ ((audioStyle.audioVolume ?? 0.8) * 100) | number:'1.0-0' }}%</span></label>
+          <ng-container *ngIf="canUseCustomAudio(layer) && (audioStyle.audioPresentation || 'button') === 'button'">
+            <label class="toggle"><input [checked]="(audioStyle.audioPosition || 'fixed') === 'fixed'" (change)="audioStyle.audioPosition=$any($event.target).checked ? 'fixed' : 'inline'" type="checkbox"> Mantener visible al desplazarse</label>
+            <label *ngIf="audioStyle.audioPosition !== 'inline'">Esquina<select [(ngModel)]="audioStyle.audioCorner"><option value="bottom-right">Abajo derecha</option><option value="bottom-left">Abajo izquierda</option><option value="top-right">Arriba derecha</option><option value="top-left">Arriba izquierda</option></select></label>
+            <span class="audio-option-title">Forma</span>
+            <div class="audio-preset-grid">
+              <button type="button" [class.active]="(audioStyle.audioShape || 'circle') === 'circle'" (click)="setAudioShape(layer, 'circle')"><i class="audio-demo circle">▶</i><b>Círculo</b></button>
+              <button type="button" [class.active]="audioStyle.audioShape === 'rounded'" (click)="setAudioShape(layer, 'rounded')"><i class="audio-demo rounded">▶</i><b>Redondeado</b></button>
+              <button type="button" [class.active]="audioStyle.audioShape === 'pill'" (click)="setAudioShape(layer, 'pill')"><i class="audio-demo pill">▶ Música</i><b>Píldora</b></button>
+            </div>
+            <span class="audio-option-title">Estilo</span>
+            <div class="audio-preset-grid">
+              <button type="button" [class.active]="(audioStyle.audioVariant || 'solid') === 'solid'" (click)="setAudioVariant(layer, 'solid')">Relleno</button>
+              <button type="button" [class.active]="audioStyle.audioVariant === 'outline'" (click)="setAudioVariant(layer, 'outline')">Contorno</button>
+              <button type="button" [class.active]="audioStyle.audioVariant === 'ghost'" (click)="setAudioVariant(layer, 'ghost')">Ligero</button>
+            </div>
+            <div class="two-columns">
+              <label>Icono<select [(ngModel)]="audioStyle.audioIcon"><option value="play">Play</option><option value="note">Nota musical</option></select></label>
+              <label>Tamaño fijo<input [ngModel]="audioStyle.audioSize ?? 64" (ngModelChange)="audioStyle.audioSize=$event" type="number" min="40" max="140" step="2"></label>
+              <label *ngIf="audioStyle.audioPosition !== 'inline'">Separación<input [ngModel]="audioStyle.audioOffset ?? 20" (ngModelChange)="audioStyle.audioOffset=$event" type="number" min="8" max="80" step="2"></label>
+            </div>
+            <div class="audio-toggle-grid"><label class="toggle"><input [ngModel]="audioStyle.audioShowIcon !== false" (ngModelChange)="audioStyle.audioShowIcon=$event" type="checkbox"> Mostrar icono</label><label class="toggle"><input [ngModel]="audioStyle.audioShowLabel === true" (ngModelChange)="audioStyle.audioShowLabel=$event" type="checkbox"> Mostrar texto</label></div>
+          </ng-container>
+        </section>
         <div class="transform-settings" *ngIf="selectedLayout as layout">
           <h3>Posición y tamaño</h3>
           <div class="two-columns">

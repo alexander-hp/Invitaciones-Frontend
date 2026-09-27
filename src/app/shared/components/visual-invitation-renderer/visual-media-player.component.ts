@@ -1,4 +1,4 @@
-import { Component, HostBinding, Input, OnChanges } from '@angular/core';
+import { Component, ElementRef, HostBinding, Input, OnChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { resolveVisualMediaSource, VisualMediaProvider } from './visual-media-source';
 
@@ -13,22 +13,69 @@ export class VisualMediaPlayerComponent implements OnChanges {
   @Input() label = '';
   @Input() preserveAspectRatio = true;
   @Input() showPlaceholder = false;
+  @Input() presentation: 'native' | 'button' = 'native';
+  @Input() autoplay = false;
+  @Input() loop = false;
+  @Input() volume = 1;
+  @Input() showIcon = true;
+  @Input() showLabel = true;
+  @Input() icon: 'play' | 'note' = 'play';
 
   provider: VisualMediaProvider = 'empty';
   directUrl = '';
   embedUrl?: SafeResourceUrl;
   nativeError = false;
+  playing = false;
+  private audioElement?: HTMLAudioElement;
+
+  @ViewChild('nativeAudio')
+  set nativeAudioRef(ref: ElementRef<HTMLAudioElement> | undefined) {
+    this.audioElement = ref?.nativeElement;
+    this.configureAudio();
+  }
 
   constructor(private sanitizer: DomSanitizer) {}
 
   ngOnChanges(): void {
     const media = resolveVisualMediaSource(this.url);
     this.nativeError = false;
+    this.playing = false;
     this.provider = media.provider;
     this.directUrl = media.sourceUrl;
     this.embedUrl = media.embedUrl
       ? this.sanitizer.bypassSecurityTrustResourceUrl(media.embedUrl)
       : undefined;
+    this.configureAudio();
+  }
+
+  get customAudioControl(): boolean {
+    return this.type === 'audio' && this.presentation === 'button' && this.provider === 'direct';
+  }
+
+  get audioIcon(): string {
+    if (this.playing) return '❚❚';
+    return this.icon === 'note' ? '♪' : '▶';
+  }
+
+  get audioActionLabel(): string {
+    return this.playing ? 'Pausar música' : 'Reproducir música';
+  }
+
+  async toggleAudio(): Promise<void> {
+    if (!this.audioElement) return;
+    if (!this.audioElement.paused) {
+      this.audioElement.pause();
+      return;
+    }
+    try {
+      await this.audioElement.play();
+    } catch {
+      this.playing = false;
+    }
+  }
+
+  updatePlaying(): void {
+    this.playing = Boolean(this.audioElement && !this.audioElement.paused);
   }
 
   get providerLabel(): string {
@@ -55,5 +102,17 @@ export class VisualMediaPlayerComponent implements OnChanges {
 
   handleNativeError(): void {
     this.nativeError = true;
+    this.playing = false;
+  }
+
+  private configureAudio(): void {
+    if (!this.audioElement) return;
+    this.audioElement.loop = this.loop;
+    this.audioElement.volume = Math.max(0, Math.min(1, Number(this.volume ?? 1)));
+    if (this.autoplay) {
+      void this.audioElement.play().catch(() => {
+        this.playing = false;
+      });
+    }
   }
 }

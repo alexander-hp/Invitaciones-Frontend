@@ -387,6 +387,19 @@ export interface VisualInvitationLayerStyle {
   hoverBackgroundColor?: string;
   hoverColor?: string;
   pressedScale?: number;
+  audioPresentation?: 'native' | 'button';
+  audioPosition?: 'inline' | 'fixed';
+  audioCorner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  audioShape?: 'circle' | 'rounded' | 'pill';
+  audioVariant?: 'solid' | 'outline' | 'ghost';
+  audioIcon?: 'play' | 'note';
+  audioShowIcon?: boolean;
+  audioShowLabel?: boolean;
+  audioAutoplay?: boolean;
+  audioLoop?: boolean;
+  audioVolume?: number;
+  audioSize?: number;
+  audioOffset?: number;
 }
 
 export interface VisualInvitationLayerLayout {

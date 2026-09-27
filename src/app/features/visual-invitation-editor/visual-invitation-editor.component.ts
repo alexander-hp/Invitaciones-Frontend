@@ -1444,6 +1444,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const layer = this.newLayer(type, text, 20, 25, type === 'text' ? 60 : 45, type === 'text' ? 18 : 30);
     layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
     this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (type === 'audio') {
+      layer.x = 82;
+      layer.y = 80;
+      layer.width = 12;
+      layer.height = 12;
+      layer.style = {
+        ...(layer.style || {}),
+        audioPresentation: 'button', audioPosition: 'fixed', audioCorner: 'bottom-right',
+        audioShape: 'circle', audioVariant: 'solid', audioIcon: 'play',
+        audioShowIcon: true, audioShowLabel: false, audioAutoplay: false, audioLoop: true,
+        audioVolume: .8, audioSize: 64, audioOffset: 20
+      };
+      this.setAudioShape(layer, 'circle', false);
+      this.setAudioVariant(layer, 'solid', false);
+    }
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
   }
@@ -1459,13 +1474,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   mediaProviderHelp(layer: VisualInvitationLayer): string {
     const provider = resolveVisualMediaSource(layer.url).provider;
     if (provider === 'youtube') return layer.type === 'audio'
-      ? 'Se mostrará el reproductor de YouTube. Para reproducir solo audio, sube un archivo MP3 o WAV.'
+      ? 'YouTube exige que su reproductor permanezca visible. Para mostrar solo un botón de música, sube un archivo MP3, WAV o M4A propio.'
       : 'El enlace se convertirá automáticamente al reproductor embebido de YouTube.';
     if (provider === 'spotify') return 'Se mostrará el reproductor oficial de Spotify, incluso con enlaces regionales; la reproducción requiere interacción del invitado.';
     if (provider === 'vimeo') return 'El enlace se convertirá automáticamente al reproductor embebido de Vimeo.';
     return layer.type === 'video'
       ? 'Se usará el reproductor nativo. La URL debe entregar directamente un MP4 o WebM compatible.'
-      : 'Se usará el reproductor nativo. La URL debe entregar directamente un MP3 o WAV compatible.';
+      : 'Se usará el reproductor nativo o el botón personalizado. La URL debe entregar directamente un MP3, WAV, OGG o M4A compatible.';
+  }
+
+  canUseCustomAudio(layer: VisualInvitationLayer): boolean {
+    const provider = resolveVisualMediaSource(layer.url).provider;
+    return provider === 'direct' || provider === 'empty';
   }
 
   addShape(kind: ShapeKind): void {
@@ -2295,6 +2315,44 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       Object.assign(style, { backgroundColor: 'transparent', color: accent, borderWidth: 0, boxShadow: 'none', hoverBackgroundColor: `${accent}14`, hoverColor: accent });
     } else {
       Object.assign(style, { backgroundColor: '#ffffffb8', color: this.design.theme?.textColor || '#2d2927', borderWidth: 1, borderStyle: 'solid', borderColor: '#ffffffcc', boxShadow: '0 10px 30px rgba(0,0,0,.18)', hoverBackgroundColor: '#ffffffe6', hoverColor: this.design.theme?.textColor || '#2d2927' });
+    }
+  }
+
+  setAudioShape(layer: VisualInvitationLayer, shape: NonNullable<VisualInvitationLayerStyle['audioShape']>, record = true): void {
+    layer.style = layer.style || {};
+    if (record) this.recordHistory();
+    layer.style.audioShape = shape;
+    const layout = this.layoutFor(layer);
+    if (shape === 'circle') {
+      layer.style.borderRadius = 999;
+      layout.width = Math.min(layout.width, 14);
+      layout.height = layout.width;
+      layer.style.audioShowLabel = false;
+    } else if (shape === 'pill') {
+      layer.style.borderRadius = 999;
+      layout.width = Math.max(layout.width, 22);
+      layout.height = Math.min(layout.height, 10);
+      layer.style.audioShowLabel = true;
+    } else {
+      layer.style.borderRadius = 12;
+      layout.width = Math.max(layout.width, 16);
+      layout.height = Math.min(layout.height, 12);
+    }
+  }
+
+  setAudioVariant(layer: VisualInvitationLayer, variant: NonNullable<VisualInvitationLayerStyle['audioVariant']>, record = true): void {
+    layer.style = layer.style || {};
+    if (record) this.recordHistory();
+    const style = layer.style;
+    const accent = this.design.theme?.accentColor || '#b66f5c';
+    const contrast = this.design.theme?.buttonTextColor || '#ffffff';
+    style.audioVariant = variant;
+    if (variant === 'solid') {
+      Object.assign(style, { backgroundColor: accent, color: contrast, borderWidth: 0, boxShadow: '0 6px 18px rgba(0,0,0,.22)' });
+    } else if (variant === 'outline') {
+      Object.assign(style, { backgroundColor: '#ffffff', color: accent, borderWidth: 2, borderStyle: 'solid', borderColor: accent, boxShadow: '0 4px 14px rgba(0,0,0,.12)' });
+    } else {
+      Object.assign(style, { backgroundColor: '#ffffffcc', color: accent, borderWidth: 0, boxShadow: 'none' });
     }
   }
 

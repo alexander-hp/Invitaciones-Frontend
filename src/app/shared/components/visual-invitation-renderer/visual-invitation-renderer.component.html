@@ -16,7 +16,7 @@
       <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode || sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
       <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
       <div *ngIf="exportMode && (layer.type === 'video' || layer.type === 'audio')" class="export-media-placeholder"><b>{{ layer.type === 'audio' ? 'Audio' : 'Video' }}</b><span>{{ exportMediaDescription(layer) }}</span></div>
-      <app-visual-media-player *ngIf="!exportMode && (layer.type === 'video' || layer.type === 'audio')" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false"></app-visual-media-player>
+      <app-visual-media-player *ngIf="!exportMode && (layer.type === 'video' || layer.type === 'audio')" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="!!layer.style?.audioAutoplay" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
       <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>
     </div>
 
@@ -359,6 +359,9 @@
     </div>
   </section>
 </main>
+<div *ngFor="let layer of floatingAudioLayers; trackBy: trackVisualById" class="visual-layer floating-audio-layer" [ngStyle]="layerStyle(layer)">
+  <app-visual-media-player [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" presentation="button" [autoplay]="!!layer.style?.audioAutoplay" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
+</div>
 <div *ngIf="activityPanelOpen && guestActivity as current" class="activity-modal-backdrop" (click)="closeActivityPanel()">
   <section class="activity-modal" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title" (click)="$event.stopPropagation()">
     <header><div><small>Centro rápido</small><h2 id="activity-modal-title">Mi pase y actividad <span *ngIf="activityNotifications.length" class="activity-badge">{{ activityNotifications.length }}</span></h2></div><button type="button" class="activity-modal-close" aria-label="Cerrar" (click)="closeActivityPanel()">×</button></header>

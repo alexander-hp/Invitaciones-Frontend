@@ -97,6 +97,28 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.imageStyle(layer)['objectFit']).toBe('cover');
   });
 
+  it('renders direct audio buttons in the configured fixed corner', () => {
+    const layer = {
+      id: 'music', type: 'audio' as const, url: 'https://cdn.example.test/song.mp3',
+      x: 80, y: 80, width: 12, height: 12,
+      style: { audioPresentation: 'button' as const, audioPosition: 'fixed' as const, audioCorner: 'bottom-right' as const, audioSize: 72, audioOffset: 24 }
+    };
+
+    expect(component.isFloatingAudio(layer)).toBeTrue();
+    expect(component.layerStyle(layer)).toEqual(jasmine.objectContaining({ position: 'fixed', right: '24px', bottom: '24px', width: '72px', height: '72px' }));
+  });
+
+  it('keeps YouTube audio in its required visible player', () => {
+    const layer = {
+      id: 'youtube-music', type: 'audio' as const, url: 'https://www.youtube.com/watch?v=wC7IH002Ypk',
+      x: 10, y: 10, width: 40, height: 24,
+      style: { audioPresentation: 'button' as const, audioPosition: 'fixed' as const }
+    };
+
+    expect(component.isFloatingAudio(layer)).toBeFalse();
+    expect(component.layerStyle(layer)['position']).not.toBe('fixed');
+  });
+
   it('only publishes location actions backed by real data', () => {
     component.invitation = { content: { locations: [{ name: 'Salón', mapUrl: 'https://maps.example.test' }] } } as any;
     const section = { id: 'locations', type: 'locations', enabled: true, layout: 'canvas' as const, height: 760, layers: [] };

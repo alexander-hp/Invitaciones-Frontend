@@ -1,5 +1,10 @@
 <iframe *ngIf="embedUrl" [src]="embedUrl" [title]="label || ('Reproductor de ' + providerLabel)" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 <video *ngIf="!embedUrl && type === 'video' && directUrl && !nativeError" [src]="directUrl" controls playsinline preload="metadata" (error)="handleNativeError()"></video>
-<audio *ngIf="!embedUrl && type === 'audio' && directUrl && !nativeError" [src]="directUrl" controls preload="metadata" (error)="handleNativeError()"></audio>
+<audio #nativeAudio *ngIf="!embedUrl && type === 'audio' && directUrl && !nativeError" [class.custom-audio-source]="customAudioControl" [src]="directUrl" [controls]="!customAudioControl" preload="metadata" (play)="updatePlaying()" (pause)="updatePlaying()" (ended)="updatePlaying()" (error)="handleNativeError()"></audio>
+<button *ngIf="customAudioControl && !nativeError" type="button" class="custom-audio-button" [attr.aria-label]="audioActionLabel" [title]="audioActionLabel" (click)="toggleAudio()">
+  <span *ngIf="showIcon" class="custom-audio-icon">{{ audioIcon }}</span>
+  <span *ngIf="showLabel" class="custom-audio-label">{{ playing ? 'Pausar' : 'Música' }}</span>
+</button>
+<div *ngIf="showPlaceholder && type === 'audio' && presentation === 'button' && embedUrl" class="audio-provider-note">YouTube, Spotify y Vimeo requieren mostrar su reproductor oficial. Para usar solo este botón, sube un archivo MP3, WAV o M4A.</div>
 <div *ngIf="nativeError" class="media-error"><b>No se pudo reproducir este {{ type === 'video' ? 'video' : 'audio' }}</b><span>Usa un enlace directo a un archivo compatible o un enlace de YouTube, Spotify o Vimeo.</span><a [href]="directUrl" target="_blank" rel="noopener">Abrir enlace original</a></div>
 <div *ngIf="showPlaceholder && !directUrl" class="media-placeholder">Agrega una URL o sube un archivo de {{ type === 'video' ? 'video' : 'audio' }}</div>

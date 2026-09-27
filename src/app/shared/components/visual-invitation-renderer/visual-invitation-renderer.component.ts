@@ -4,6 +4,7 @@ import {
   VisualInvitationLayer, VisualInvitationSection, VisualPluginPartDesign
 } from '../../../core/models';
 import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/visual-template-bindings';
+import { resolveVisualMediaSource } from './visual-media-source';
 
 @Component({
   selector: 'app-visual-invitation-renderer',
@@ -114,6 +115,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   get sections(): VisualInvitationSection[] {
     return (this.invitation?.content?.visualDesign?.sections || []).filter((section) => section.enabled);
+  }
+
+  get floatingAudioLayers(): VisualInvitationLayer[] {
+    if (this.exportMode) return [];
+    return this.sections.flatMap((section) => section.layers.filter((layer) => !layer.hidden && this.isFloatingAudio(layer)));
   }
 
   get maxCompanions(): number {
@@ -273,7 +279,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   visualLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return section.layers.filter((layer) => !this.isNativeFunctionalLayer(layer));
+    return section.layers.filter((layer) => !this.isNativeFunctionalLayer(layer) && (this.exportMode || !this.isFloatingAudio(layer)));
   }
 
   rsvpCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
@@ -917,7 +923,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
       ? layer.layouts[this.device]!
       : layer;
-    return {
+    const result: Record<string, string> = {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
       color: String(style.color || '#25211f'), backgroundColor: shape ? 'transparent' : String(style.backgroundColor || 'transparent'),
@@ -938,6 +944,28 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
+    if (!this.exportMode && this.isFloatingAudio(layer)) {
+      const size = Math.max(40, Math.min(140, Number(style.audioSize || 64)));
+      const offset = Math.max(8, Math.min(80, Number(style.audioOffset || 20)));
+      const corner = style.audioCorner || 'bottom-right';
+      result['position'] = 'fixed';
+      result['width'] = `${size}px`;
+      result['height'] = `${size}px`;
+      result['left'] = corner.endsWith('left') ? `${offset}px` : 'auto';
+      result['right'] = corner.endsWith('right') ? `${offset}px` : 'auto';
+      result['top'] = corner.startsWith('top') ? `${offset}px` : 'auto';
+      result['bottom'] = corner.startsWith('bottom') ? `${offset}px` : 'auto';
+      result['transform'] = 'none';
+      result['zIndex'] = '12000';
+    }
+    return result;
+  }
+
+  isFloatingAudio(layer: VisualInvitationLayer): boolean {
+    return layer.type === 'audio'
+      && layer.style?.audioPresentation === 'button'
+      && layer.style?.audioPosition === 'fixed'
+      && resolveVisualMediaSource(layer.url).provider === 'direct';
   }
 
   private sharedStyleScale(): number {
