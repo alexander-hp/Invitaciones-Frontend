@@ -13,7 +13,10 @@ export class AuthTokenInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = localStorage.getItem(TOKEN_KEY);
     const isApiRequest = req.url.startsWith(environment.apiUrl);
-    const authReq = token && isApiRequest ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+    const isPublicGuestRequest = /\/(public|external)\//.test(req.url);
+    const authReq = token && isApiRequest && !isPublicGuestRequest && !req.headers.has('Authorization')
+      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : req;
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {

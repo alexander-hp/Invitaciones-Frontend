@@ -11,6 +11,30 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.access-gate-form {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 360px);
+  margin-top: 20px;
+  text-align: left;
+}
+
+.access-gate-form input,
+.access-gate-form button {
+  min-height: 44px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #bfae9f;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.access-gate-form button {
+  background: #2f5348;
+  color: white;
+  cursor: pointer;
+}
+
 
 /* ── Host Containers ── */
 .nw-pub-custom-page-container {

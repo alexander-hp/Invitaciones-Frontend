@@ -22,3 +22,10 @@
   display: block;
   width: 100%;
 }
+
+.section-list.continuous-design { gap: 0; }
+.section-list.continuous-design .canvas-section { box-shadow: none; }
+.presentation-options { box-sizing: border-box; width: 100%; margin: 8px 0 12px; }
+.presentation-options button { flex: 1; }
+.section-list.continuous-design .canvas-section,
+.section-list.continuous-design .layer-surface { overflow: visible; }

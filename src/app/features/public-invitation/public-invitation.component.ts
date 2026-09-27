@@ -122,13 +122,8 @@ export class PublicInvitationComponent implements OnInit {
     this.error = '';
     this.success = '';
     this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
-      next: ({ guest }) => {
-        this.verifiedGuest = guest;
-        this.rsvp.name = guest.name;
-        this.rsvp.email = guest.email || this.guestAccessEmail;
-        if (!guest.email && this.guestAccessPhone) this.rsvp.phoneNationalNumber = this.guestAccessPhone.replace(/\D/g, '');
-        this.rsvp.companions = 0;
-        this.success = `Hola ${guest.name}, ya puedes confirmar tu asistencia.`;
+      next: ({ message }) => {
+        this.success = message;
         this.checkingGuest = false;
       },
       error: (error) => {

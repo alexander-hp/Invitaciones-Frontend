@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -21,6 +21,8 @@ import {
 import { resolveVisualMediaSource } from '../../shared/components/visual-invitation-renderer/visual-media-source';
 import { VisualInvitationRendererComponent } from '../../shared/components/visual-invitation-renderer/visual-invitation-renderer.component';
 import { VISUAL_ICON_CATALOG, VisualIconOption } from '../../shared/components/visual-invitation-renderer/visual-icon-catalog';
+import { isSingleInstanceControl, visibleControlDuplicates } from '../../shared/components/visual-invitation-renderer/visual-functional-controls';
+import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from '../../shared/components/visual-invitation-renderer/visual-canvas-geometry';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -299,6 +301,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private undoStack: EditorHistoryState[] = [];
   private redoStack: EditorHistoryState[] = [];
   private clipboardLayers: VisualInvitationLayer[] = [];
+  private clipboardSectionType?: string;
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private touchZoomHideHandle?: ReturnType<typeof setTimeout>;
   private locationSearchTimeouts: Record<number, ReturnType<typeof setTimeout>> = {};
@@ -334,6 +337,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   };
   private resizeState?: {
     corner: ResizeCorner;
+    section: VisualInvitationSection;
     layout: VisualInvitationLayerLayout;
     canvas: HTMLElement;
     startX: number;
@@ -400,6 +404,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   @ViewChild('exportSurface') exportSurface?: ElementRef<HTMLElement>;
   @ViewChild('exportRenderer') exportRenderer?: VisualInvitationRendererComponent;
+  @ViewChildren('responsiveArtboard') responsiveArtboards?: QueryList<ElementRef<HTMLElement>>;
+  responsivePreviewRuntimeIssues: Record<DeviceMode, string[]> = { mobile: [], tablet: [], desktop: [] };
+  responsivePreviewMeasuredHeight: Record<DeviceMode, number> = { mobile: 0, tablet: 0, desktop: 0 };
+  private responsiveAuditHandle?: ReturnType<typeof setTimeout>;
 
   readonly builtInPresets = [
     { key: 'editorial', label: 'Editorial claro', colors: ['#f6f1eb', '#24211f'] },
@@ -509,6 +517,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const storedDesign = this.invitation.content?.visualDesign;
         this.showOnboarding = !storedDesign?.sections?.length;
         this.design = this.clone(storedDesign?.sections?.length ? storedDesign : this.createDefaultDesign());
+        this.design.presentationMode = this.design.presentationMode || 'continuous';
         this.design.responsiveMode = this.design.responsiveMode || 'shared';
         this.design.assets = this.design.assets || [];
         this.design.theme = this.design.theme || this.inferTheme();
@@ -549,6 +558,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.autosaveHandle) clearInterval(this.autosaveHandle);
+    if (this.responsiveAuditHandle) clearTimeout(this.responsiveAuditHandle);
     if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
     Object.values(this.locationSearchTimeouts).forEach((handle) => clearTimeout(handle));
     this.detachStageGestureListeners();
@@ -704,7 +714,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   get artboardHeight(): number {
     const sections = this.design?.sections || [];
-    return sections.reduce((total, section) => total + Number(section.height || 0), 0) + Math.max(0, sections.length - 1) * 22;
+    const gap = this.design?.presentationMode === 'chapters' ? 22 : 0;
+    return visualCanvasHeight(sections) + Math.max(0, sections.length - 1) * gap;
   }
 
   get hasClipboardLayers(): boolean {
@@ -770,9 +781,31 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layout.width = this.bound(Number(layout.width) || 4, 4, 100);
     layout.height = this.bound(Number(layout.height) || 4, 4, 100);
     layout.x = this.bound(Number(layout.x) || 0, 0, 100 - layout.width);
-    layout.y = this.bound(Number(layout.y) || 0, 0, 100 - layout.height);
+    const range = this.verticalLayerBounds(this.selectedSection, layout.height);
+    layout.y = this.bound(Number(layout.y) || 0, range.min, range.max);
     layout.rotation = this.bound(Number(layout.rotation) || 0, -180, 180);
     layer.zIndex = Math.round(this.bound(Number(layer.zIndex) || 0, 0, 1000));
+  }
+
+  verticalLayerBounds(section: VisualInvitationSection | undefined, layerHeight: number): { min: number; max: number } {
+    if (!section || this.design.presentationMode === 'chapters') return { min: 0, max: 100 - layerHeight };
+    const index = this.design.sections.indexOf(section);
+    if (index < 0) return { min: 0, max: 100 - layerHeight };
+    const before = visualSectionOffset(this.design.sections, section);
+    const total = visualCanvasHeight(this.design.sections);
+    const height = visualSectionHeight(section);
+    return {
+      min: before ? Math.max(-10000, -before / height * 100) : 0,
+      max: Math.min(10000, (total - before) / height * 100 - layerHeight)
+    };
+  }
+
+  sectionHasOverflowLayers(section: VisualInvitationSection): boolean {
+    return this.design.presentationMode !== 'chapters' && section.layers.some((layer) => {
+      if (layer.hidden) return false;
+      const layout = this.layoutFor(layer);
+      return layout.y < 0 || layout.y + layout.height > 100;
+    });
   }
 
   openResponsivePreview(): void {
@@ -787,10 +820,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       };
     }
     this.showResponsivePreview = true;
+    this.responsivePreviewRuntimeIssues = { mobile: [], tablet: [], desktop: [] };
+    this.responsivePreviewMeasuredHeight = { mobile: 0, tablet: 0, desktop: 0 };
+    this.scheduleResponsiveAudit(1000);
   }
 
   closeResponsivePreview(): void {
     this.showResponsivePreview = false;
+    if (this.responsiveAuditHandle) clearTimeout(this.responsiveAuditHandle);
+  }
+
+  scheduleResponsiveAudit(delay = 350): void {
+    if (this.responsiveAuditHandle) clearTimeout(this.responsiveAuditHandle);
+    this.responsiveAuditHandle = setTimeout(() => this.auditRenderedPreviews(), delay);
+  }
+
+  private auditRenderedPreviews(): void {
+    if (!this.showResponsivePreview) return;
+    for (const artboardRef of this.responsiveArtboards?.toArray() || []) {
+      const artboard = artboardRef.nativeElement;
+      const device = artboard.dataset['device'] as DeviceMode;
+      if (!device) continue;
+      const issues: string[] = [];
+      const page = artboard.querySelector<HTMLElement>('.visual-invitation');
+      if (page && page.scrollWidth > page.clientWidth + 3) issues.push('Contenido desbordado horizontalmente');
+      if (page) this.responsivePreviewMeasuredHeight[device] = page.scrollHeight;
+      for (const image of Array.from(artboard.querySelectorAll('img'))) {
+        if (image.complete && !image.naturalWidth && image.currentSrc) issues.push(`Imagen no disponible: ${image.alt || image.currentSrc}`);
+      }
+      this.responsivePreviewRuntimeIssues[device] = issues;
+    }
   }
 
   openExportDialog(): void {
@@ -928,13 +987,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
       for (let index = 0; index < elements.length; index += 1) {
         this.exportProgress = 10 + Math.round(index / elements.length * 80);
-        const canvas = await html2canvas(elements[index], {
-          scale: this.exportScale,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          backgroundColor: this.exportFormat === 'png' ? null : '#ffffff'
-        });
+        const canvas = await this.captureExportSection(elements[index], this.exportScale, this.exportFormat === 'png' ? null : '#ffffff');
         const pageNumber = String(index + 1).padStart(2, '0');
 
         if (this.exportFormat === 'pdf') {
@@ -987,6 +1040,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  private captureExportSection(section: HTMLElement, scale: number, backgroundColor: string | null): Promise<HTMLCanvasElement> {
+    const root = this.exportSurface?.nativeElement.querySelector<HTMLElement>('.visual-invitation');
+    if (!root) throw new Error('No fue posible preparar el lienzo para exportar.');
+    const top = section.getBoundingClientRect().top - root.getBoundingClientRect().top;
+    return html2canvas(root, {
+      x: 0,
+      y: Math.round(top),
+      width: root.clientWidth,
+      height: section.offsetHeight,
+      scale,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      backgroundColor
+    });
+  }
+
   private async exportAnimatedInvitation(elements: HTMLElement[], fileBase: string): Promise<void> {
     const captureScale = this.animatedOutputSize.width / this.exportDeviceWidth;
     const scenes: AnimatedExportScene[] = [];
@@ -997,13 +1067,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       for (const galleryIndex of frameIndexes) {
         this.exportRenderer?.setExportGalleryIndex(galleryIndex);
         await this.waitForExportRenderer();
-        frames.push(await html2canvas(elements[index], {
-          scale: captureScale,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          backgroundColor: this.design.theme?.backgroundColor || '#ffffff'
-        }));
+        frames.push(await this.captureExportSection(elements[index], captureScale, this.design.theme?.backgroundColor || '#ffffff'));
       }
       scenes.push({ frames });
     }
@@ -1153,21 +1217,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   responsiveIssueCount(device: DeviceMode): number {
-    return this.publishAuditIssues.filter((issue) => issue.device === device).length;
+    return this.publishAuditIssues.filter((issue) => issue.device === device).length + this.responsivePreviewRuntimeIssues[device].length;
   }
 
   responsivePreviewContentHeight(): number {
-    return this.design.sections
-      .filter((section) => section.enabled)
-      .reduce((height, section) => height + (section.type === 'rsvp'
-        ? Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820)
-        : section.height), 0);
+    const heights = this.design.sections.filter((section) => section.enabled).map(visualSectionHeight);
+    return this.design.presentationMode === 'chapters'
+      ? Math.max(0, ...heights) + 96
+      : heights.reduce((total, height) => total + height, 0);
   }
 
-  responsivePreviewStageStyle(preview: { width: number; scale: number }): Record<string, string> {
+  responsivePreviewStageStyle(preview: { key: DeviceMode; width: number; scale: number }): Record<string, string> {
     return {
       width: `${preview.width * preview.scale}px`,
-      height: `${this.responsivePreviewContentHeight() * preview.scale}px`
+      height: `${(this.responsivePreviewMeasuredHeight[preview.key] || this.responsivePreviewContentHeight()) * preview.scale}px`
     };
   }
 
@@ -1238,6 +1301,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   auditSeverityLabel(severity: AuditSeverity): string {
     return { critical: 'Debes corregir', warning: 'Recomendado', suggestion: 'Mejora opcional' }[severity];
+  }
+
+  setPresentationMode(mode: 'continuous' | 'chapters'): void {
+    if (this.design.presentationMode === mode) return;
+    this.recordHistory();
+    this.design.presentationMode = mode;
+    this.autosaveState = 'Cambios pendientes';
   }
 
   setResponsiveMode(independent: boolean): void {
@@ -1777,8 +1847,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   duplicateLayer(): void {
     const section = this.selectedSection;
-    const layers = this.selectedLayers;
-    if (!section || !layers.length) return;
+    const selected = this.selectedLayers;
+    if (!section || !selected.length) return;
+    const layers = selected.filter((layer) => !isSingleInstanceControl(layer));
+    if (!layers.length) { this.flash('Los controles conectados son únicos. Selecciona el existente para editarlo.'); return; }
     this.recordHistory();
     const copiedGroup = layers.length > 1 ? this.uid('group') : undefined;
     const copies = layers.map((layer) => {
@@ -1787,28 +1859,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       copy.groupId = copiedGroup;
       copy.name = `${this.layerLabel(layer)} copia`;
       copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
-      copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
+      const range = this.verticalLayerBounds(section, copy.height);
+      copy.y = this.bound(copy.y + 3, range.min, range.max);
       if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
         if (!layout) return;
         layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
-        layout.y = this.bound(layout.y + 3, 0, 100 - layout.height);
+        const layoutRange = this.verticalLayerBounds(section, layout.height);
+        layout.y = this.bound(layout.y + 3, layoutRange.min, layoutRange.max);
       });
       copy.zIndex = (copy.zIndex || 1) + 1;
       return copy;
     });
     section.layers.push(...copies);
     this.setLayerSelection(copies.map((copy) => copy.id));
+    if (layers.length !== selected.length) this.flash('Se duplicaron solo los elementos decorativos; los controles conectados se conservan una vez.');
   }
 
   copySelectedLayers(): void {
     if (!this.selectedLayers.length) return;
     this.clipboardLayers = this.clone(this.selectedLayers);
+    this.clipboardSectionType = this.selectedSection?.type;
     this.flash(`${this.clipboardLayers.length} elemento${this.clipboardLayers.length === 1 ? '' : 's'} copiado${this.clipboardLayers.length === 1 ? '' : 's'}.`);
   }
 
   cutSelectedLayers(): void {
     if (!this.selectedLayers.length) return;
     this.clipboardLayers = this.clone(this.selectedLayers);
+    this.clipboardSectionType = this.selectedSection?.type;
     this.removeLayer();
     this.flash('Elementos cortados. Selecciona otra sección y pégalos.');
   }
@@ -1816,10 +1893,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   pasteLayers(): void {
     const section = this.selectedSection;
     if (!section || !this.clipboardLayers.length) return;
+    const existing = new Set(section.layers.filter((layer) => isSingleInstanceControl(layer)).map((layer) => layer.binding));
+    const sources = this.clipboardLayers.filter((layer) => {
+      if (!isSingleInstanceControl(layer)) return true;
+      if (this.clipboardSectionType !== section.type || existing.has(layer.binding)) return false;
+      existing.add(layer.binding);
+      return true;
+    });
+    if (!sources.length) { this.flash('Los controles conectados ya existen en esta sección o pertenecen a otra función.'); return; }
     this.recordHistory();
     const groupIds = new Map<string, string>();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
-    const copies = this.clipboardLayers.map((source, index) => {
+    const copies = sources.map((source, index) => {
       const copy = this.clone(source);
       copy.id = this.uid('layer');
       if (copy.groupId) {
@@ -1828,18 +1913,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       copy.name = `${this.layerLabel(source)} copia`;
       copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
-      copy.y = this.bound(copy.y + 3, 0, 100 - copy.height);
+      const range = this.verticalLayerBounds(section, copy.height);
+      copy.y = this.bound(copy.y + 3, range.min, range.max);
       if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
         if (!layout) return;
         layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
-        layout.y = this.bound(layout.y + 3, 0, 100 - layout.height);
+        const layoutRange = this.verticalLayerBounds(section, layout.height);
+        layout.y = this.bound(layout.y + 3, layoutRange.min, layoutRange.max);
       });
       copy.zIndex = topZ + index + 1;
       return copy;
     });
     section.layers.push(...copies);
     this.setLayerSelection(copies.map((copy) => copy.id));
-    this.flash(`${copies.length} elemento${copies.length === 1 ? '' : 's'} pegado${copies.length === 1 ? '' : 's'}.`);
+    this.flash(`${copies.length} elemento${copies.length === 1 ? '' : 's'} pegado${copies.length === 1 ? '' : 's'}.${copies.length !== this.clipboardLayers.length ? ' Se omitieron controles conectados duplicados.' : ''}`);
   }
 
   removeSection(section: VisualInvitationSection): void {
@@ -1905,7 +1992,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   beginResize(event: PointerEvent, layer: VisualInvitationLayer, corner: ResizeCorner): void {
-    if (layer.locked) return;
+    const section = this.selectedSection;
+    if (layer.locked || !section) return;
     event.preventDefault();
     event.stopPropagation();
     const canvas = (event.currentTarget as HTMLElement).closest('.canvas-section') as HTMLElement;
@@ -1914,7 +2002,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.resizing = true;
     const layout = this.editableLayout(layer);
     this.resizeState = {
-      corner, layout, canvas, startX: event.clientX, startY: event.clientY,
+      corner, section, layout, canvas, startX: event.clientX, startY: event.clientY,
       x: layout.x, y: layout.y, width: layout.width, height: layout.height
     };
   }
@@ -2124,9 +2212,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const precision = event.pointerType === 'touch' ? 2 : 100;
       const round = (value: number) => Math.round(value * precision) / precision;
       resize.layout.x = round(this.bound(nextX, 0, resize.x + resize.width - 4));
-      resize.layout.y = round(this.bound(nextY, 0, resize.y + resize.height - 4));
+      const height = this.bound(nextHeight, 4, 100);
+      const range = this.verticalLayerBounds(resize.section, height);
+      resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 4)));
       resize.layout.width = round(this.bound(nextWidth, 4, 100 - resize.layout.x));
-      resize.layout.height = round(this.bound(nextHeight, 4, 100 - resize.layout.y));
+      resize.layout.height = round(this.bound(height, 4, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
       return;
     }
     const drag = this.layerDragState;
@@ -2137,14 +2227,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     event.preventDefault();
     if (!drag.moved) { this.recordHistory(); drag.moved = true; }
     const rawX = this.bound(drag.bounds.x + distanceX / drag.canvas.clientWidth * 100, 0, 100 - drag.bounds.width);
-    const rawY = this.bound(drag.bounds.y + distanceY / drag.canvas.clientHeight * 100, 0, 100 - drag.bounds.height);
+    const range = this.verticalLayerBounds(drag.section, drag.bounds.height);
+    const rawY = this.bound(drag.bounds.y + distanceY / drag.canvas.clientHeight * 100, range.min, range.max);
     const ignoredIds = new Set(drag.items.map((item) => item.layer.id));
     const snapped = this.snapRawPosition(drag.layer, drag.section, drag.canvas, rawX, rawY, drag.bounds.width, drag.bounds.height, ignoredIds);
     const dx = snapped.x - drag.bounds.x;
     const dy = snapped.y - drag.bounds.y;
     for (const item of drag.items) {
       item.layout.x = this.bound(item.x + dx, 0, 100 - item.width);
-      item.layout.y = this.bound(item.y + dy, 0, 100 - item.height);
+      const itemRange = this.verticalLayerBounds(drag.section, item.height);
+      item.layout.y = this.bound(item.y + dy, itemRange.min, itemRange.max);
     }
     this.guideX = snapped.guideX;
     this.guideY = snapped.guideY;
@@ -2306,8 +2398,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const layout = this.editableLayout(layer);
       if (event.key === 'ArrowLeft') layout.x = this.bound(layout.x - step, 0, 100 - layout.width);
       if (event.key === 'ArrowRight') layout.x = this.bound(layout.x + step, 0, 100 - layout.width);
-      if (event.key === 'ArrowUp') layout.y = this.bound(layout.y - step, 0, 100 - layout.height);
-      if (event.key === 'ArrowDown') layout.y = this.bound(layout.y + step, 0, 100 - layout.height);
+      const range = this.verticalLayerBounds(this.selectedSection, layout.height);
+      if (event.key === 'ArrowUp') layout.y = this.bound(layout.y - step, range.min, range.max);
+      if (event.key === 'ArrowDown') layout.y = this.bound(layout.y + step, range.min, range.max);
     });
   }
 
@@ -2503,7 +2596,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const bg = section.background || {};
     const alpha = Math.round((bg.overlay || 0) * 255).toString(16).padStart(2, '0');
     return {
-      height: `${section.height}px`, backgroundColor: bg.color || '#fff',
+      height: `${visualSectionHeight(section)}px`, backgroundColor: bg.color || '#fff',
       backgroundImage: bg.imageUrl ? `linear-gradient(#000000${alpha},#000000${alpha}),url("${bg.imageUrl}")` : 'none'
     };
   }
@@ -2842,6 +2935,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   addFunctionalControl(binding: string): void {
     const section = this.selectedSection;
     if (!section || !['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode', 'lodging', 'gallery'].includes(section.type)) return;
+    const existing = section.layers.find((layer) => layer.binding === binding && isSingleInstanceControl(layer));
+    if (existing) {
+      this.setLayerSelection([existing.id]);
+      this.inspectorView = 'properties';
+      this.flash(existing.hidden ? 'Este control ya existe, pero está oculto. Actívalo en Propiedades.' : 'Este control ya existe. Selecciónalo para cambiar su diseño o posición.');
+      return;
+    }
     this.recordHistory();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
     let layer: VisualInvitationLayer;
@@ -3314,7 +3414,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   startBlankDesign(): void {
     const section = this.makeSection('custom', 'Mi primera sección', '#ffffff', 640);
-    this.design = { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', theme: this.clone(this.themePresets[0].theme), assets: [], sections: [section] };
+    this.design = { version: 1, active: false, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: this.clone(this.themePresets[0].theme), assets: [], sections: [section] };
     this.selectedSectionId = section.id;
     this.clearLayerSelection();
     this.showOnboarding = false;
@@ -3878,22 +3978,32 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   save(): void {
-    if (!this.invitation) return;
+    if (!this.invitation || this.saving || this.autosaving || this.publishing) return;
     this.saving = true;
     this.error = '';
-    this.persistDesign().subscribe({
-      next: ({ invitation }) => { this.invitation = invitation; this.saving = false; this.markSaved(); this.flash('Diseño guardado.'); },
+    const request = this.persistDesign();
+    const snapshot = this.designSnapshot();
+    request.subscribe({
+      next: ({ invitation }) => { this.acceptSavedDesign(invitation, snapshot); this.saving = false; this.flash(this.hasUnsavedChanges ? 'Guardado; hay cambios nuevos pendientes.' : 'Diseño guardado.'); },
       error: (error) => { this.saving = false; this.error = error?.error?.message || 'No fue posible guardar el diseño.'; }
     });
   }
 
   publish(): void {
-    if (!this.invitation) return;
+    if (!this.invitation || this.saving || this.autosaving || this.publishing) return;
     this.publishing = true;
     this.error = '';
     const id = this.invitation._id || this.invitation.id || '';
-    this.persistDesign().pipe(switchMap(() => this.api.publishInvitation(id))).subscribe({
-      next: ({ invitation }) => { this.invitation = invitation; this.publishing = false; this.showPublishAudit = false; this.markSaved(); this.flash('Diseño publicado.'); this.openPreview(); },
+    const request = this.persistDesign();
+    const snapshot = this.designSnapshot();
+    request.pipe(switchMap(() => this.api.publishInvitation(id))).subscribe({
+      next: ({ invitation }) => {
+        this.acceptSavedDesign(invitation, snapshot);
+        this.publishing = false;
+        this.showPublishAudit = false;
+        this.flash(this.hasUnsavedChanges ? 'Publicado; hay cambios nuevos pendientes.' : 'Diseño publicado.');
+        if (!this.hasUnsavedChanges) this.openPreview();
+      },
       error: (error) => { this.publishing = false; this.error = error?.error?.message || 'No fue posible publicar.'; }
     });
   }
@@ -3928,7 +4038,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   openPreview(): void {
-    if (this.invitation?.slug) window.open(`/new/i/${this.invitation.slug}`, '_blank');
+    if (!this.invitation?.slug) return;
+    if (this.invitation.status !== 'published') {
+      this.openResponsivePreview();
+      return;
+    }
+    window.open(`/new/i/${this.invitation.slug}`, '_blank');
   }
 
   private persistDesign() {
@@ -4007,7 +4122,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (settings.songRequests !== false) sections.push(this.makeSection('songs', 'Pide una canción', palette.background, 560));
     }
     const presetTheme = this.themePresets.find((item) => item.key === key)?.theme || this.themePresets[0].theme;
-    return { version: 1, active: false, mode: 'easy', responsiveMode: 'shared', theme: this.clone(presetTheme), sections };
+    return { version: 1, active: false, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: this.clone(presetTheme), sections };
   }
 
   private makeSection(type: string, title: string, color: string, height: number): VisualInvitationSection {
@@ -4922,8 +5037,6 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (!visibleBindings.includes('rsvp.submit')) add('critical', 'RSVP sin botón de envío', 'Restaura o muestra el botón para que los invitados puedan enviar su confirmación.', section.id);
         if (!visibleBindings.includes('rsvp.response')) add('critical', 'RSVP sin respuesta', 'Restaura o muestra el campo de respuesta para poder confirmar asistencia.', section.id);
         if (!visibleBindings.includes('rsvp.name')) add('warning', 'RSVP sin nombre', 'Agrega el campo de nombre si la invitación no exige identificación previa.', section.id);
-        const duplicates = visibleBindings.filter((binding, index) => binding && visibleBindings.indexOf(binding) !== index);
-        for (const binding of [...new Set(duplicates)]) add('warning', `Función duplicada: ${binding}`, 'Conserva una sola capa con esta función para evitar confusión al responder.', section.id);
       }
       if (section.type === 'dedications' && this.hasNativeFunctionalLayers(section)) {
         const visibleBindings = section.layers.filter((layer) => !layer.hidden).map((layer) => layer.binding || '');
@@ -4958,6 +5071,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (!visibleBindings.includes('countdown.expired')) add('warning', 'Cuenta regresiva sin mensaje final', 'Agrega un mensaje para mostrar cuando llegue la fecha del evento.', section.id);
       }
 
+      for (const { original, duplicate } of visibleControlDuplicates(section.layers)) {
+        add('warning', `Control duplicado: ${this.layerLabel(duplicate)}`, `Ya existe "${this.layerLabel(original)}" conectado a ${duplicate.binding}. La vista pública mostrará solo el primero; elimina u oculta esta copia.`, section.id, duplicate.id);
+      }
+
       for (const layer of section.layers) {
         if (layer.hidden) {
           add('suggestion', `Elemento oculto: ${this.layerLabel(layer)}`, 'Este elemento no se mostrará al público.', section.id, layer.id);
@@ -4983,7 +5100,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           ? (['mobile', 'tablet', 'desktop'] as DeviceMode[]).map((device) => ({ device, ...(layer.layouts?.[device] || layer) }))
           : [{ device: 'mobile', ...layer }];
         for (const layout of layouts) {
-          if (layout.x + layout.width > 100.01 || layout.y + layout.height > 100.01) {
+          const sectionHeight = visualSectionHeight(section);
+          const sectionTop = visualSectionOffset(enabledSections, section);
+          const top = sectionTop + sectionHeight * layout.y / 100;
+          const bottom = top + sectionHeight * layout.height / 100;
+          const outsideCanvas = this.design.presentationMode === 'chapters'
+            ? layout.y < -.01 || layout.y + layout.height > 100.01
+            : top < -.01 || bottom > visualCanvasHeight(enabledSections) + .01;
+          if (layout.x < -.01 || layout.x + layout.width > 100.01 || outsideCanvas) {
             add('critical', `Elemento fuera del área en ${this.deviceLabel(layout.device)}`, 'Muévelo o reduce su tamaño para que no se corte.', section.id, layer.id, layout.device);
             break;
           }
@@ -5046,8 +5170,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number, ignoredIds = new Set<string>([layer.id])): { x: number; y: number; guideX: number | null; guideY: number | null } {
+    const range = this.verticalLayerBounds(section, height);
     if (!this.smartSnapping) {
-      return { x: this.bound(rawX, 0, 100 - width), y: this.bound(rawY, 0, 100 - height), guideX: null, guideY: null };
+      return { x: this.bound(rawX, 0, 100 - width), y: this.bound(rawY, range.min, range.max), guideX: null, guideY: null };
     }
     const xTargets = [0, 50, 100];
     const yTargets = [0, 50, 100];
@@ -5063,7 +5188,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const snapY = this.closestSnap(yAnchors, yTargets, 800 / Math.max(canvas.clientHeight, 1));
     return {
       x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - width),
-      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, 0, 100 - height),
+      y: this.bound(snapY ? snapY.target - snapY.offset : rawY, range.min, range.max),
       guideX: snapX?.target ?? null,
       guideY: snapY?.target ?? null
     };
@@ -5103,8 +5228,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (this.showImportDialog || !this.hasUnsavedChanges || this.saving || this.publishing || this.autosaving || this.uploading) return;
     this.autosaving = true;
     this.autosaveState = 'Guardando...';
-    this.persistDesign().subscribe({
-      next: ({ invitation }) => { this.invitation = invitation; this.autosaving = false; this.markSaved(); },
+    const request = this.persistDesign();
+    const snapshot = this.designSnapshot();
+    request.subscribe({
+      next: ({ invitation }) => { this.acceptSavedDesign(invitation, snapshot); this.autosaving = false; },
       error: () => { this.autosaving = false; this.autosaveState = 'No se pudo guardar'; }
     });
   }
@@ -5113,6 +5240,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.lastSavedSnapshot = this.designSnapshot();
     this.autosaveState = 'Guardado';
     this.error = '';
+  }
+
+  private acceptSavedDesign(invitation: InvitationModel, snapshot: string): void {
+    if (this.designSnapshot() === snapshot) {
+      this.invitation = invitation;
+      this.markSaved();
+      return;
+    }
+    if (this.invitation) {
+      this.invitation.status = invitation.status;
+      this.invitation.publishedAt = invitation.publishedAt;
+    }
+    this.lastSavedSnapshot = snapshot;
+    this.autosaveState = 'Cambios pendientes';
   }
 
   private designSnapshot(): string {

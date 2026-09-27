@@ -1,4 +1,4 @@
-<main class="visual-invitation" *ngIf="sections.length; else emptyDesign" [class.device-mobile]="device === 'mobile'" [class.device-tablet]="device === 'tablet'" [class.device-desktop]="device === 'desktop'" [class.export-render-mode]="exportMode"
+<main #visualInvitationRoot class="visual-invitation" *ngIf="sections.length; else emptyDesign" [class.device-mobile]="device === 'mobile'" [class.device-tablet]="device === 'tablet'" [class.device-desktop]="device === 'desktop'" [class.export-render-mode]="exportMode" [class.presentation-continuous]="presentationMode === 'continuous'" [class.presentation-chapters]="presentationMode === 'chapters'"
   [style.--visual-background]="invitation?.content?.visualDesign?.theme?.backgroundColor"
   [style.--visual-text]="invitation?.content?.visualDesign?.theme?.textColor"
   [style.--visual-accent]="invitation?.content?.visualDesign?.theme?.accentColor"
@@ -8,24 +8,14 @@
   [style.--visual-button-text]="designThemeStyle()['--visual-button-text']"
   [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
-  <section *ngFor="let section of sections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
+  <section *ngFor="let section of displayedSections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [class.auto-flow]="presentationMode === 'chapters' && !section.layers.length && section.type !== 'hero' && section.type !== 'custom' && !exportMode" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
     <div class="visual-section-canvas">
-    <div *ngFor="let layer of visualLayers(section); trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
-      <lucide-icon *ngIf="layer.type === 'text' && layer.style?.iconName" class="visual-icon-layer" [name]="layer.style?.iconName" [strokeWidth]="layer.style?.iconStrokeWidth || 2" [style.fill]="layer.style?.iconFilled ? 'currentColor' : 'none'" aria-hidden="true"></lucide-icon>
-      <div *ngIf="layer.type === 'text' && !layer.style?.iconName">{{ resolveLayerText(layer) }}</div>
-      <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
-      <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode || sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
-      <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-      <div *ngIf="exportMode && (layer.type === 'video' || layer.type === 'audio')" class="export-media-placeholder"><b>{{ layer.type === 'audio' ? 'Audio' : 'Video' }}</b><span>{{ exportMediaDescription(layer) }}</span></div>
-      <app-visual-media-player *ngIf="!exportMode && (layer.type === 'video' || layer.type === 'audio')" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="!!layer.style?.audioAutoplay" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
-      <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>
-    </div>
+    <ng-container *ngIf="presentationMode === 'chapters'" [ngTemplateOutlet]="visualLayersTemplate" [ngTemplateOutletContext]="{ section: section, sectionIndex: sectionIndex, continuous: false }"></ng-container>
 
     <div class="functional-module story-module" *ngIf="section.type === 'story' && !section.layers.length">
       <h2>{{ invitation?.content?.storyTitle || section.title || 'Nuestra historia' }}</h2>
       <p>{{ invitation?.content?.storyBody || invitation?.content?.message }}</p>
     </div>
-
     <div *ngIf="hasLocationCanvasLayers(section)" class="rsvp-layer-form location-layer-form">
       <ng-container *ngFor="let layer of locationCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderLocationLayer(section, layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
@@ -89,7 +79,7 @@
           <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.gallery.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('gallery.')">{{ galleryLayerText(layer) }}</div>
-          <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img crossorigin="anonymous" [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"></button>
+          <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"></button>
           <button *ngIf="layer.binding === 'gallery.carousel.previous'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" aria-label="Fotografía anterior" (click)="moveGallery(-1)">{{ layer.text }}</button>
           <button *ngIf="layer.binding === 'gallery.carousel.next'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" aria-label="Fotografía siguiente" (click)="moveGallery(1)">{{ layer.text }}</button>
         </div>
@@ -307,7 +297,7 @@
           <label *ngIf="layer.binding === 'song.sourceUrl'" class="rsvp-layer-control"><input [(ngModel)]="song.sourceUrl" [name]="rsvpControlName(layer)" type="url" [attr.aria-label]="layer.text || 'Spotify o YouTube'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Pega el enlace de la canción')"></label>
           <label *ngIf="layer.binding === 'song.artist'" class="rsvp-layer-control"><input [(ngModel)]="song.artist" [name]="rsvpControlName(layer)" [attr.aria-label]="layer.text || 'Artista'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Nombre del artista')"></label>
           <label *ngIf="layer.binding === 'song.dedication'" class="rsvp-layer-control"><textarea [(ngModel)]="song.dedication" [name]="rsvpControlName(layer)" rows="2" [attr.aria-label]="layer.text || 'Dedicatoria'" [placeholder]="layer.style?.showPlaceholder === false ? '' : (layer.placeholder || 'Mensaje opcional')"></textarea></label>
-          <button *ngIf="layer.binding === 'song.submit'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="sending">{{ layer.text || 'Enviar al DJ' }}</button>
+          <button *ngIf="layer.binding === 'song.submit'" type="submit" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [disabled]="sending">{{ sending ? 'Enviando...' : (layer.text || 'Enviar al DJ') }}</button>
           <div *ngIf="layer.binding === 'song.feedback'" class="rsvp-layer-feedback">{{ songRequestMessage }}</div>
         </div>
       </ng-container>
@@ -315,7 +305,7 @@
 
     <div class="functional-module form-module" *ngIf="section.type === 'songs' && !hasSongCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Música') }}</small><h2>{{ section.title || 'Pide una canción' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
-      <form (ngSubmit)="sendSong()"><label>{{ pluginSetting(section, 'songLabel', 'Canción o enlace') }}<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label *ngIf="pluginSetting(section, 'showSourceUrl', true)">Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label *ngIf="pluginSetting(section, 'showArtist', true)">Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label *ngIf="pluginSetting(section, 'showDedication', true)">Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit">{{ pluginSetting(section, 'primaryButtonText', 'Enviar al DJ') }}</button></form><p class="feedback" *ngIf="songRequestMessage">{{ songRequestMessage }}</p>
+      <form (ngSubmit)="sendSong()"><label>{{ pluginSetting(section, 'songLabel', 'Canción o enlace') }}<input [(ngModel)]="song.title" name="visualSongTitle" placeholder="Nombre de canción"></label><label *ngIf="pluginSetting(section, 'showSourceUrl', true)">Spotify / YouTube<input [(ngModel)]="song.sourceUrl" name="visualSongUrl" type="url" placeholder="https://..."></label><label *ngIf="pluginSetting(section, 'showArtist', true)">Artista<input [(ngModel)]="song.artist" name="visualSongArtist"></label><label *ngIf="pluginSetting(section, 'showDedication', true)">Dedicatoria<textarea [(ngModel)]="song.dedication" name="visualSongDedication" rows="2"></textarea></label><button type="submit" [disabled]="sending">{{ sending ? 'Enviando...' : pluginSetting(section, 'primaryButtonText', 'Enviar al DJ') }}</button></form><p class="feedback" *ngIf="songRequestMessage">{{ songRequestMessage }}</p>
     </div>
 
     <form *ngIf="hasGuestActivityCanvasLayers(section)" class="rsvp-layer-form guest-activity-layer-form" (ngSubmit)="identifyGuest()">
@@ -359,7 +349,27 @@
     </div>
     </div>
   </section>
+  <div *ngIf="presentationMode === 'continuous'" class="continuous-layer-plane" [style.height.px]="continuousCanvasHeight">
+    <ng-container *ngFor="let section of displayedSections; let sectionIndex = index; trackBy: trackVisualById" [ngTemplateOutlet]="visualLayersTemplate" [ngTemplateOutletContext]="{ section: section, sectionIndex: sectionIndex, continuous: true }"></ng-container>
+  </div>
+  <nav *ngIf="presentationMode === 'chapters' && sections.length > 1" class="chapter-navigation" aria-label="Navegación de la invitación">
+    <button type="button" (click)="goToChapter(currentChapterIndex - 1)" [disabled]="currentChapterIndex === 0" aria-label="Capítulo anterior">← <span>Anterior</span></button>
+    <label><span>Capítulo {{ currentChapterIndex + 1 }} de {{ sections.length }}</span><select [value]="currentChapterIndex" (change)="goToChapter(+$any($event.target).value)" aria-label="Ir a capítulo"><option *ngFor="let chapter of sections; let index = index" [value]="index">{{ chapter.title || chapter.type }}</option></select></label>
+    <button type="button" (click)="goToChapter(currentChapterIndex + 1)" [disabled]="currentChapterIndex === sections.length - 1" aria-label="Capítulo siguiente"><span>Siguiente</span> →</button>
+  </nav>
 </main>
+<ng-template #visualLayersTemplate let-section="section" let-sectionIndex="sectionIndex" let-continuous="continuous">
+  <div *ngFor="let layer of visualLayers(section); trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="continuous ? continuousLayerStyle(section, layer) : layerStyle(layer)">
+    <lucide-icon *ngIf="layer.type === 'text' && layer.style?.iconName" class="visual-icon-layer" [name]="layer.style?.iconName" [strokeWidth]="layer.style?.iconStrokeWidth || 2" [style.fill]="layer.style?.iconFilled ? 'currentColor' : 'none'" aria-hidden="true"></lucide-icon>
+    <div *ngIf="layer.type === 'text' && !layer.style?.iconName">{{ resolveLayerText(layer) }}</div>
+    <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
+    <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode || sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
+    <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
+    <div *ngIf="exportMode && (layer.type === 'video' || layer.type === 'audio')" class="export-media-placeholder"><b>{{ layer.type === 'audio' ? 'Audio' : 'Video' }}</b><span>{{ exportMediaDescription(layer) }}</span></div>
+    <app-visual-media-player *ngIf="!exportMode && (layer.type === 'video' || layer.type === 'audio')" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="!!layer.style?.audioAutoplay" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
+    <a *ngIf="assetCredit(layer.url) as credit" class="asset-credit" [href]="credit.url" target="_blank" rel="noopener">{{ credit.label }}</a>
+  </div>
+</ng-template>
 <div *ngFor="let layer of floatingAudioLayers; trackBy: trackVisualById" class="visual-layer floating-audio-layer" [ngStyle]="layerStyle(layer)">
   <app-visual-media-player [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" presentation="button" [autoplay]="!!layer.style?.audioAutoplay" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
 </div>

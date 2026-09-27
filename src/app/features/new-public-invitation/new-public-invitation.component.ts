@@ -21,6 +21,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   checkingGuest = false;
   uploadingAlbum = false;
   error = '';
+  accessRequired = false;
+  accessMessage = '';
   success = '';
   albumMessage = '';
   dedicationMessage = '';
@@ -201,41 +203,45 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const slug = this.route.snapshot.paramMap.get('slug') || '';
     this.loading = true;
     this.error = '';
-    this.api.getPublicInvitation(slug).subscribe({
-      next: ({ invitation }) => {
-        this.applyInvitation(invitation, slug);
-      },
+    const personalToken = this.route.snapshot.queryParamMap.get('t');
+    if (personalToken) {
+      this.api.getGuestByToken(slug, personalToken).subscribe({
+        next: ({ guest, guestSessionToken }) => {
+          this.verifiedGuest = guest;
+          this.rsvp.name = guest.name;
+          this.rsvp.email = guest.email || '';
+          this.guestSessionToken = guestSessionToken || '';
+          if (guestSessionToken) sessionStorage.setItem(this.guestSessionStorageKey(slug), guestSessionToken);
+          const search = new URLSearchParams(window.location.search);
+          search.delete('t');
+          window.history.replaceState({}, '', `${window.location.pathname}${search.toString() ? `?${search}` : ''}${window.location.hash}`);
+          this.fetchPublishedInvitation(slug, guestSessionToken);
+        },
+        error: () => {
+          this.accessRequired = true;
+          this.accessMessage = 'El enlace personal no es válido o ya no tiene acceso. Solicita uno nuevo.';
+          this.loading = false;
+        }
+      });
+      return;
+    }
+    this.fetchPublishedInvitation(slug, sessionStorage.getItem(this.guestSessionStorageKey(slug)) || undefined);
+  }
+
+  private fetchPublishedInvitation(slug: string, token?: string): void {
+    this.api.getPublicInvitation(slug, token).subscribe({
+      next: ({ invitation }) => { this.accessRequired = false; this.applyInvitation(invitation, slug); },
       error: (error) => {
-        const hasToken = Boolean(localStorage.getItem('invitaciones_token'));
-        const isIframe = typeof window !== 'undefined' && window.self !== window.top;
-
-        // Si el usuario es el anfitrión logueado, cargar su invitación aunque esté en borrador
-        if (hasToken) {
-          this.api.listInvitations().subscribe({
-            next: ({ invitations }) => {
-              const found = (invitations || []).find(i => i.slug === slug || (i as any)._id === slug || i.id === slug);
-              if (found) {
-                this.applyInvitation(found, slug);
-                return;
-              }
-              this.handleFallbackOrError(slug, error, true);
-            },
-            error: () => {
-              this.handleFallbackOrError(slug, error, true);
-            }
-          });
-          return;
-        }
-
-        // Si está dentro del iframe del editor
-        if (isIframe) {
-          this.handleFallbackOrError(slug, error, true);
-          return;
-        }
-
-        // Para invitados externos (sin sesión): respetar la seguridad del backend
-        this.error = error?.error?.message || 'Invitación no encontrada o no publicada';
         this.loading = false;
+        this.accessRequired = error?.status === 401 || error?.status === 403;
+        if (this.accessRequired) {
+          sessionStorage.removeItem(this.guestSessionStorageKey(slug));
+          this.guestSessionToken = '';
+          this.verifiedGuest = undefined;
+          this.accessMessage = 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.';
+        } else {
+          this.error = error?.error?.message || 'Invitación no encontrada o no publicada';
+        }
       }
     });
   }
@@ -294,7 +300,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
 
     this.updateCustomHtmlSafeSrcdoc();
-    this.loadGuestToken();
     this.loadPublicAlbum();
     this.loadDedications();
     this.startCountdown();
@@ -303,103 +308,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.setupSectionObserver();
     this.loadEditedTexts(slug);
     this.updateAllAlbumAssets();
-    this.loading = false;
-  }
-
-  private handleFallbackOrError(slug: string, originalError: any, isPreview: boolean): void {
-    // Fallback 1: LocalStorage / Submissions custom HTML
-    const localCustomHtml = this.customHtmlContent || localStorage.getItem(`inv_custom_html_${slug}`) || localStorage.getItem(`custom_template_html_${slug}`);
-    const localCustomCss = this.customCssContent || localStorage.getItem(`inv_custom_css_${slug}`) || localStorage.getItem(`custom_template_css_${slug}`) || '';
-    const localSourceTpl = localStorage.getItem(`inv_source_tpl_${slug}`);
-
-    if (localCustomHtml) {
-      const detected = this.detectSourceTemplateFromHtml(localCustomHtml);
-      const tplKey = detected ? detected.templateKey : (localSourceTpl || 'custom-html');
-
-      const mockInv: any = {
-        id: 'custom-' + slug,
-        slug: slug,
-        status: 'published',
-        accessMode: 'open',
-        content: {
-          template: tplKey,
-          customHtml: localCustomHtml,
-          customCss: localCustomCss,
-          customPageApproved: true,
-          headline: 'Invitación Especial',
-          editedTexts: detected ? detected.editedTexts : undefined
-        }
-      };
-
-      if (detected) {
-        this.detectedSourceTemplate = detected.templateKey;
-        this.pendingEditedTexts = detected.editedTexts;
-      }
-
-      this.applyInvitation(mockInv, slug);
-      return;
-    }
-
-    // Fallback 2: If in preview mode or previewing a template, generate a demo preview so the user can see it
-    if (isPreview) {
-      const tplParam = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template') || 'envelope-cards';
-      const demoDate = new Date();
-      demoDate.setDate(demoDate.getDate() + 30);
-      demoDate.setHours(18, 0, 0, 0);
-
-      const demoInv: any = {
-        id: 'preview-' + slug,
-        slug: slug,
-        status: 'published',
-        accessMode: 'open',
-        content: {
-          template: tplParam,
-          headline: '¡Nuestra Boda!',
-          subheadline: 'Acompáñanos a celebrar este día tan especial',
-          welcomeMessage: 'Los momentos más felices de la vida se comparten con las personas que más queremos.',
-          dressCode: 'Formal / Rigurosa Etiqueta',
-          palette: { primary: '#c09c78', secondary: '#2e2621', background: '#faf7f2', text: '#2e2621' },
-          locations: [
-            {
-              title: 'Ceremonia Religiosa',
-              name: 'Parroquia Nuestra Señora de Guadalupe',
-              address: 'Av. Reforma 123, Centro Histórico',
-              time: '17:00 HRS',
-              mapUrl: 'https://maps.google.com'
-            },
-            {
-              title: 'Recepción & Banquete',
-              name: 'Hacienda San José',
-              address: 'Carretera Nacional Km 14',
-              time: '19:00 HRS',
-              mapUrl: 'https://maps.google.com'
-            }
-          ],
-          itinerary: [
-            { time: '17:00', title: 'Ceremonia Religiosa', description: 'Misa de bendición nupcial', icon: 'church' },
-            { time: '18:30', title: 'Cóctel de Bienvenida', description: 'Bebidas y bocadillos en el jardín', icon: 'cocktail' },
-            { time: '20:00', title: 'Cena & Brindis', description: 'Banquete de gala', icon: 'dinner' },
-            { time: '21:30', title: 'Apertura de Pista', description: '¡A bailar toda la noche!', icon: 'party' }
-          ],
-          giftRegistries: [
-            { store: 'Liverpool', url: 'https://www.liverpool.com.mx', code: 'EVENTO-98234' },
-            { store: 'Amazon', url: 'https://www.amazon.com.mx', code: 'BODA-AMAZON-2026' }
-          ]
-        },
-        event: {
-          id: 'demo-event',
-          title: 'Nuestra Boda',
-          eventType: 'boda',
-          date: demoDate.toISOString(),
-          location: 'Hacienda San José'
-        }
-      };
-
-      this.applyInvitation(demoInv, slug);
-      return;
-    }
-
-    this.error = originalError?.error?.message || 'Invitación no encontrada o no publicada';
     this.loading = false;
   }
 
@@ -914,7 +822,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return;
     }
     if (this.requiresGuestValidation && !this.verifiedGuest) {
-      this.error = 'Valida tu correo o teléfono antes de enviar tu RSVP.';
+      this.error = 'Abre tu enlace personal antes de confirmar tu asistencia.';
       return;
     }
     if (this.rsvp.response === 'declined' && this.requiresDeclineConfirmation && !this.declineConfirmed) {
@@ -942,7 +850,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       customAnswers: this.customQuestionAnswers,
       declineConfirmed: this.declineConfirmed
     };
-    this.api.submitRsvp(this.invitation.slug, payload).subscribe({
+    this.api.submitRsvp(this.invitation.slug, payload, this.guestSessionToken).subscribe({
       next: (response) => {
         this.success = response.updated ? '¡Tu respuesta fue actualizada con éxito!' : '¡Muchas gracias! Tu respuesta fue registrada.';
         this.sending = false;
@@ -981,52 +889,37 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   checkGuestAccess(): void {
-    if (this.guestAccessSingleInput && !this.guestAccessEmail && !this.guestAccessPhone) {
+    if (this.guestAccessSingleInput && (this.accessRequired || (!this.guestAccessEmail && !this.guestAccessPhone))) {
       const val = this.guestAccessSingleInput.trim();
       if (val.includes('@')) {
         this.guestAccessEmail = val;
+        this.guestAccessPhone = '';
       } else {
         this.guestAccessPhone = val.replace(/\D/g, '');
+        this.guestAccessEmail = '';
       }
     }
-    if (!this.invitation || (!this.guestAccessEmail && !this.guestAccessPhone)) return;
+    if (!this.guestAccessEmail && !this.guestAccessPhone) return;
+    const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     this.checkingGuest = true;
     this.error = '';
     this.success = '';
-    this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
-      next: ({ guest, guestSessionToken }) => {
-        this.isOpeningVipEnvelope = true;
-        setTimeout(() => {
-          this.verifiedGuest = guest;
-          this.setGuestActivitySession(this.invitation!.slug, guestSessionToken);
-          this.rsvp.name = guest.name;
-          this.rsvp.email = guest.email || this.guestAccessEmail;
-          if (!guest.email && this.guestAccessPhone) this.rsvp.phoneNationalNumber = this.guestAccessPhone.replace(/\D/g, '');
-          this.rsvp.companions = 0;
-          this.success = `¡Hola ${guest.name}! Tu pase VIP ha sido validado con éxito.`;
-          this.checkingGuest = false;
-          this.isOpeningVipEnvelope = false;
-          this.loadGuestSongRequests();
-          this.showToast(`¡Pase VIP activado para ${guest.name}!`);
-
-          // Attempt music playback on user gesture if available
-          if (this.hasMusicTrack() && !this.isPlayingMusic) {
-            if (this.getMusicSettings().playbackMode === 'after_access') this.toggleMusic();
-            else this.setupFirstInteractionPlayback();
-          }
-        }, 600);
+    this.api.checkGuestAccess(slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
+      next: ({ message }) => {
+        this.accessMessage = message;
+        this.success = message;
+        this.checkingGuest = false;
+        this.showToast(message);
       },
       error: (error) => {
-        this.verifiedGuest = undefined;
-        this.guestSubmittedSongsCount = 0;
-        this.error = error.error?.message || 'Este invitado no fue encontrado en la lista del evento. Por favor revisa tu correo o teléfono.';
+        this.error = error.error?.message || 'No fue posible solicitar el enlace. Intenta más tarde.';
         this.checkingGuest = false;
-        this.isOpeningVipEnvelope = false;
       }
     });
   }
 
   resetGuestAccess(): void {
+    const wasRestricted = this.requiresGuestValidation;
     if (this.invitation) sessionStorage.removeItem(this.guestSessionStorageKey(this.invitation.slug));
     if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
     this.guestSessionToken = '';
@@ -1043,6 +936,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.companionNamesText = '';
     this.customAnswers = {};
     this.rsvp = { name: '', email: '', response: 'confirmed' as RsvpResponse, companions: 0, dietaryRestrictions: '', mealPreference: '', menuSelection: '', message: '', phoneCountryCode: '+52', phoneNationalNumber: '' };
+    if (wasRestricted) {
+      this.invitation = undefined;
+      this.accessRequired = true;
+      this.accessMessage = 'Solicita un enlace personal para volver a entrar.';
+    }
   }
 
   submitRsvp(): void {
@@ -1131,6 +1029,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         const newestNotice = this.activityNotifications.find((item) => !previousKeys.has(`${item.key}:${item.status}`));
         this.guestActivity = activity;
         this.verifiedGuest = activity.guest;
+        this.guestSubmittedSongsCount = activity.songRequests.length;
         this.guestActivityLoading = false;
         if (hadActivity && newestNotice) this.showToast(newestNotice.title);
       },
@@ -1141,6 +1040,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           this.guestSessionToken = '';
           this.guestActivity = undefined;
           if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
+          if (this.requiresGuestValidation) {
+            this.invitation = undefined;
+            this.accessRequired = true;
+            this.accessMessage = 'Tu sesión terminó. Abre tu enlace personal para continuar.';
+          }
         }
       }
     });
@@ -1254,7 +1158,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       email: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail,
       message: this.dedication.message,
       type: this.dedication.type
-    }).subscribe({
+    }, this.guestSessionToken).subscribe({
       next: () => {
         this.dedicationMessage = '¡Gracias! Tu dedicatoria fue enviada para revisión.';
         this.dedication = { publicName: '', message: '', type: 'dedication' };
@@ -1271,7 +1175,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   loadPublicAlbum(): void {
     if (!this.invitation?.content.privateAlbumEnabled) return;
-    this.api.listPublicAlbum(this.invitation.slug).subscribe({
+    this.api.listPublicAlbum(this.invitation.slug, this.guestSessionToken).subscribe({
       next: ({ assets }) => {
         this.publicAlbumAssets = assets;
         this.updateAllAlbumAssets();
@@ -1285,7 +1189,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   loadDedications(): void {
     if (this.invitation?.content.dedicationSettings?.enabled === false) return;
-    this.api.listPublicInvitationDedications(this.invitation?.slug || '').subscribe({
+    this.api.listPublicInvitationDedications(this.invitation?.slug || '', this.guestSessionToken).subscribe({
       next: ({ dedications }) => this.dedications = dedications,
       error: () => this.dedications = []
     });
@@ -1849,21 +1753,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     } catch (e) { }
   }
 
-  loadGuestSongRequests(): void {
-    if (!this.invitation?.slug) return;
-    const guestId = this.verifiedGuest?.id || (this.verifiedGuest as any)?._id;
-    const email = this.verifiedGuest?.email || this.guestAccessEmail;
-    if (!guestId && !email) return;
-
-    this.api.listPublicSongRequests(this.invitation.slug, { guest: guestId, email }).subscribe({
-      next: (res) => {
-        if (res?.songRequests) {
-          this.guestSubmittedSongsCount = res.songRequests.length;
-        }
-      },
-      error: () => { }
-    });
-  }
 
   getYouTubeVideoId(url: string): string {
     const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
@@ -1974,7 +1863,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (!slug || !song.title) return;
     const searchTerm = `${song.artist} ${song.title}`.trim();
 
-    this.api.lookupPublicSong(slug, searchTerm).subscribe({
+    this.api.lookupPublicSong(slug, searchTerm, this.guestSessionToken).subscribe({
       next: (res) => {
         if (res?.video?.sourceUrl) {
           song.sourceUrl = res.video.sourceUrl;
@@ -2026,7 +1915,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       requesterEmail: this.verifiedGuest?.email || this.rsvp.email || this.guestAccessEmail || undefined
     };
 
-    this.api.createPublicSongRequest(slug, payload as any).subscribe({
+    this.api.createPublicSongRequest(slug, payload as any, this.guestSessionToken).subscribe({
       next: (res: any) => {
         this.recordGuestSubmittedSong(this.songRequest.title.trim());
         const status = res?.songRequest?.status;
@@ -2060,26 +1949,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }): void {
     this.songRequest = { ...data, thumbnailUrl: '' };
     this.submitSongRequest();
-  }
-
-  private loadGuestToken(): void {
-    const token = this.route.snapshot.queryParamMap.get('t');
-    if (!this.invitation || !token) return;
-    this.checkingGuest = true;
-    this.api.getGuestByToken(this.invitation.slug, token).subscribe({
-      next: ({ guest, guestSessionToken }) => {
-        this.verifiedGuest = guest;
-        this.setGuestActivitySession(this.invitation!.slug, guestSessionToken);
-        this.rsvp.name = guest.name;
-        this.rsvp.email = guest.email || '';
-        this.success = `¡Hola ${guest.name}! Tu pase personalizado está listo.`;
-        this.checkingGuest = false;
-        this.loadGuestSongRequests();
-      },
-      error: () => {
-        this.checkingGuest = false;
-      }
-    });
   }
 
   /**

@@ -287,10 +287,11 @@ export class ApiService {
     );
   }
 
-  createPublicSongRequest(slug: string, payload: SongRequestPayload): Observable<{ songRequest: SongRequestModel }> {
-    return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/invitations/public/${slug}/song-requests`, payload).pipe(
+  createPublicSongRequest(slug: string, payload: SongRequestPayload, guestSessionToken?: string): Observable<{ songRequest: SongRequestModel }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/invitations/public/${slug}/song-requests`, payload, { headers }).pipe(
       catchError((err) => {
-        if (err.status === 404 || err.status === 401 || err.status === 403) {
+        if (err.status === 404) {
           return this.http.post<{ songRequest: SongRequestModel }>(`${this.apiUrl}/external/${slug}/song-requests`, payload);
         }
         return throwError(() => err);
@@ -298,17 +299,16 @@ export class ApiService {
     );
   }
 
-  listPublicSongRequests(slug: string, params?: { guest?: string; email?: string }): Observable<{ songRequests: SongRequestModel[] }> {
-    const httpParams: any = {};
-    if (params?.guest) httpParams.guest = params.guest;
-    if (params?.email) httpParams.email = params.email;
-    return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/invitations/public/${slug}/song-requests`, { params: httpParams }).pipe(
+  listPublicSongRequests(slug: string, guestSessionToken?: string): Observable<{ songRequests: SongRequestModel[] }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.get<{ songRequests: SongRequestModel[] }>(`${this.apiUrl}/invitations/public/${slug}/song-requests`, { headers }).pipe(
       catchError(() => of({ songRequests: [] }))
     );
   }
 
-  lookupPublicSong(slug: string, query: string): Observable<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }> {
-    return this.http.post<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }>(`${this.apiUrl}/invitations/public/${slug}/song-lookup`, { query }).pipe(
+  lookupPublicSong(slug: string, query: string, guestSessionToken?: string): Observable<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.post<{ video?: { videoId: string; sourceUrl: string; thumbnailUrl: string; title: string; artist: string } }>(`${this.apiUrl}/invitations/public/${slug}/song-lookup`, { query }, { headers }).pipe(
       catchError(() => of({ video: undefined }))
     );
   }
@@ -495,16 +495,19 @@ export class ApiService {
     return this.http.patch<{ asset: AlbumAssetModel }>(`${this.apiUrl}/events/${eventId}/album/${assetId}`, body);
   }
 
-  listPublicAlbum(slug: string): Observable<{ assets: AlbumAssetModel[] }> {
-    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/invitations/public/${slug}/album`);
+  listPublicAlbum(slug: string, guestSessionToken?: string): Observable<{ assets: AlbumAssetModel[] }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.get<{ assets: AlbumAssetModel[] }>(`${this.apiUrl}/invitations/public/${slug}/album`, { headers });
   }
 
-  listPublicInvitationDedications(slug: string): Observable<{ dedications: DedicationModel[] }> {
-    return this.http.get<{ dedications: DedicationModel[] }>(`${this.apiUrl}/invitations/public/${slug}/dedications`);
+  listPublicInvitationDedications(slug: string, guestSessionToken?: string): Observable<{ dedications: DedicationModel[] }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.get<{ dedications: DedicationModel[] }>(`${this.apiUrl}/invitations/public/${slug}/dedications`, { headers });
   }
 
-  createPublicInvitationDedication(slug: string, payload: { guest?: string; publicName?: string; email?: string; message: string; type?: string; visibility?: string }): Observable<{ dedication: DedicationModel }> {
-    return this.http.post<{ dedication: DedicationModel }>(`${this.apiUrl}/invitations/public/${slug}/dedications`, payload);
+  createPublicInvitationDedication(slug: string, payload: { guest?: string; publicName?: string; email?: string; message: string; type?: string; visibility?: string }, guestSessionToken?: string): Observable<{ dedication: DedicationModel }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.post<{ dedication: DedicationModel }>(`${this.apiUrl}/invitations/public/${slug}/dedications`, payload, { headers });
   }
 
   listInvitations(): Observable<{ invitations: InvitationModel[] }> {
@@ -542,13 +545,14 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/invitations/${id}`);
   }
 
-  getPublicInvitation(slug: string): Observable<{ invitation: InvitationModel }> {
+  getPublicInvitation(slug: string, guestSessionToken?: string): Observable<{ invitation: InvitationModel }> {
     const params = new HttpParams().set('_v', Date.now().toString());
-    return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`, { params });
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`, { params, headers });
   }
 
-  checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<GuestAccessResponse> {
-    return this.http.post<GuestAccessResponse>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
+  checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 
   getInvitationGuestStatus(slug: string, guestSessionToken: string): Observable<ExternalGuestStatusResponse> {
@@ -1030,8 +1034,9 @@ export class ApiService {
     return this.http.post<CheckoutResponse>(`${this.apiUrl}/payments/checkout`, payload);
   }
 
-  submitRsvp(slug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
-    return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/rsvps/public/${slug}`, payload);
+  submitRsvp(slug: string, payload: RsvpPayload, guestSessionToken?: string): Observable<{ rsvp: RsvpModel; updated?: boolean }> {
+    const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
+    return this.http.post<{ rsvp: RsvpModel; updated?: boolean }>(`${this.apiUrl}/rsvps/public/${slug}`, payload, { headers });
   }
 
   submitExternalRsvp(portalSlug: string, payload: RsvpPayload): Observable<{ rsvp: RsvpModel; updated?: boolean }> {

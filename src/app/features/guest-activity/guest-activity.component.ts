@@ -30,14 +30,16 @@ export class GuestActivityComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.slug = this.route.snapshot.paramMap.get('slug') || '';
     this.sessionToken = sessionStorage.getItem(this.storageKey) || '';
-    this.api.getPublicInvitation(this.slug).subscribe({
+    this.api.getPublicInvitation(this.slug, this.sessionToken || undefined).subscribe({
       next: ({ invitation }) => {
         this.invitation = invitation;
         this.loading = false;
         if (this.sessionToken) this.loadStatus();
       },
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo abrir la invitación.';
+        this.error = error.status === 401 || error.status === 403
+          ? ''
+          : error.error?.message || 'No se pudo abrir la invitación.';
         this.loading = false;
       }
     });
@@ -54,15 +56,9 @@ export class GuestActivityComponent implements OnInit, OnDestroy {
     this.error = '';
     const payload = value.includes('@') ? { email: value } : { phone: value };
     this.api.checkGuestAccess(this.slug, payload).subscribe({
-      next: ({ guestSessionToken }) => {
+      next: ({ message }) => {
         this.identifying = false;
-        if (!guestSessionToken) {
-          this.error = 'No se pudo iniciar una sesión para este invitado.';
-          return;
-        }
-        this.sessionToken = guestSessionToken;
-        sessionStorage.setItem(this.storageKey, guestSessionToken);
-        this.loadStatus();
+        this.actionMessage = message;
       },
       error: (error) => {
         this.identifying = false;

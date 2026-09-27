@@ -1,5 +1,8 @@
 import { SimpleChange } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { VisualInvitationSection } from '../../../core/models';
 import { VisualInvitationRendererComponent } from './visual-invitation-renderer.component';
+import { VisualInvitationRendererModule } from './visual-invitation-renderer.module';
 
 describe('VisualInvitationRendererComponent', () => {
   let component: VisualInvitationRendererComponent;
@@ -54,6 +57,85 @@ describe('VisualInvitationRendererComponent', () => {
 
     expect(style['height']).toBe('640px');
     expect(component.sectionRenderHeight({ id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 640, layers: [] })).toBe(640);
+  });
+
+  it('keeps all enabled sections in continuous mode and only one in chapters', () => {
+    const sections: VisualInvitationSection[] = [
+      { id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 600, layers: [] },
+      { id: 'hidden', type: 'custom', enabled: false, layout: 'canvas', height: 600, layers: [] },
+      { id: 'rsvp', type: 'rsvp', enabled: true, layout: 'canvas', height: 600, layers: [] }
+    ];
+    component.invitation = { content: { visualDesign: { sections } } } as any;
+    expect(component.displayedSections.map((section) => section.id)).toEqual(['hero', 'rsvp']);
+
+    (component.invitation as any).content.visualDesign.presentationMode = 'chapters';
+    expect(component.displayedSections.map((section) => section.id)).toEqual(['hero']);
+    component.goToChapter(1);
+    expect(component.displayedSections.map((section) => section.id)).toEqual(['rsvp']);
+    component.goToChapter(4);
+    expect(component.currentChapterIndex).toBe(1);
+
+    component.exportMode = true;
+    expect(component.displayedSections.map((section) => section.id)).toEqual(['hero', 'rsvp']);
+  });
+
+  it('keeps continuous modules at their authored height in public and export views', () => {
+    const section: VisualInvitationSection = { id: 'rsvp', type: 'rsvp', enabled: true, layout: 'canvas', height: 600, layers: [] };
+    component.invitation = { content: { visualDesign: { presentationMode: 'continuous', sections: [section] } } } as any;
+    expect(component.sectionStyle(section)['height']).toBe('600px');
+    component.exportMode = true;
+    expect(component.sectionStyle(section)['height']).toBe('600px');
+    component.exportMode = false;
+    (component.invitation as any).content.visualDesign.presentationMode = 'chapters';
+    expect(component.sectionStyle(section)['height']).toBe('auto');
+  });
+
+  it('keeps a continuous layer visible beyond its section boundary', () => {
+    const section: VisualInvitationSection = {
+      id: 'cover', type: 'hero', enabled: true, layout: 'canvas', height: 600,
+      layers: [{ id: 'photo', type: 'image', x: 10, y: 90, width: 50, height: 30 }]
+    };
+    component.invitation = { content: { visualDesign: { presentationMode: 'continuous', sections: [section] } } } as any;
+    expect(component.sectionHasOverflowLayers(section)).toBeTrue();
+    expect(component.sectionStyle(section)['zIndex']).toBeUndefined();
+
+    (component.invitation as any).content.visualDesign.presentationMode = 'chapters';
+    expect(component.sectionHasOverflowLayers(section)).toBeFalse();
+  });
+
+  it('places crossing layers on the shared continuous canvas without changing their authored size', () => {
+    const first: VisualInvitationSection = { id: 'cover', type: 'hero', enabled: true, layout: 'canvas', height: 600, layers: [] };
+    const second: VisualInvitationSection = { id: 'gallery', type: 'custom', enabled: true, layout: 'canvas', height: 800, layers: [] };
+    const layer = { id: 'photo', type: 'image' as const, x: 10, y: -10, width: 50, height: 30 };
+    second.layers.push(layer);
+    component.invitation = { content: { visualDesign: { presentationMode: 'continuous', sections: [first, second] } } } as any;
+
+    expect(component.continuousCanvasHeight).toBe(1400);
+    expect(component.continuousLayerStyle(second, layer)).toEqual(jasmine.objectContaining({
+      left: '10%', top: '520px', width: '50%', height: '240px'
+    }));
+  });
+
+  it('renders a layer across two sections on the public canvas', () => {
+    TestBed.configureTestingModule({ imports: [VisualInvitationRendererModule] });
+    const fixture = TestBed.createComponent(VisualInvitationRendererComponent);
+    fixture.componentInstance.invitation = { content: { visualDesign: { presentationMode: 'continuous', sections: [
+      { id: 'first', type: 'hero', enabled: true, layout: 'canvas', height: 600, layers: [
+        { id: 'crossing', type: 'text', text: 'Cruza secciones', x: 10, y: 90, width: 50, height: 30 }
+      ] },
+      { id: 'second', type: 'custom', enabled: true, layout: 'canvas', height: 600, layers: [] }
+    ] } } } as any;
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const first = root.querySelector<HTMLElement>('.visual-section')!;
+    const layer = root.querySelector<HTMLElement>('.continuous-layer-plane > .visual-layer')!;
+    expect(root.querySelectorAll('.visual-section .visual-layer').length).toBe(0);
+    expect(layer.style.top).toBe('540px');
+    expect(layer.style.height).toBe('180px');
+    expect(layer.parentElement?.classList.contains('continuous-layer-plane')).toBeTrue();
+    expect(first.style.height).toBe('600px');
+    fixture.destroy();
   });
 
   it('preserves the authored font size on desktop', () => {
@@ -127,5 +209,39 @@ describe('VisualInvitationRendererComponent', () => {
 
     expect(component.shouldRenderLocationLayer(section, map)).toBeTrue();
     expect(component.shouldRenderLocationLayer(section, waze)).toBeFalse();
+  });
+
+  it('renders one active upload control from an older design with duplicates', () => {
+    const section: VisualInvitationSection = { id: 'album', type: 'album', enabled: true, layout: 'canvas', height: 760, layers: [
+      { id: 'first', type: 'button' as const, binding: 'album.upload', x: 10, y: 20, width: 35, height: 8 },
+      { id: 'copy', type: 'button' as const, binding: 'album.upload', x: 50, y: 20, width: 35, height: 8 },
+      { id: 'heading', type: 'text' as const, binding: 'display.album.title', x: 10, y: 5, width: 80, height: 8 },
+      { id: 'heading-copy', type: 'text' as const, binding: 'display.album.title', x: 10, y: 35, width: 80, height: 8 }
+    ] };
+
+    expect(component.albumCanvasLayers(section).map((layer) => layer.id)).toEqual(['first', 'heading', 'heading-copy']);
+    section.layers[0].hidden = true;
+    expect(component.albumCanvasLayers(section).filter((layer) => !layer.hidden).map((layer) => layer.id)).toEqual(['copy', 'heading', 'heading-copy']);
+  });
+
+  it('does not emit another form submission while a request is sending', () => {
+    let rsvpCount = 0;
+    let songCount = 0;
+    let dedicationCount = 0;
+    component.submitRsvp.subscribe(() => rsvpCount++);
+    component.requestSong.subscribe(() => songCount++);
+    component.submitDedication.subscribe(() => dedicationCount++);
+    component.song.title = 'Canción';
+    component.dedication.message = 'Felicidades';
+
+    component.sendRsvp();
+    component.sendSong();
+    component.sendDedication();
+    component.sending = true;
+    component.sendRsvp();
+    component.sendSong();
+    component.sendDedication();
+
+    expect([rsvpCount, songCount, dedicationCount]).toEqual([1, 1, 1]);
   });
 });

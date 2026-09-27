@@ -11,8 +11,8 @@
 
   <section *ngIf="!loading && !activity" class="identify-panel">
     <small>Acceso personal</small><h2>Consulta tu pase y tus envíos</h2>
-    <p>Usa el correo o teléfono registrado en la lista del evento.</p>
-    <form (ngSubmit)="identify()"><input [(ngModel)]="identity" name="identity" autocomplete="email" placeholder="Correo o teléfono" required><button type="submit" [disabled]="identifying">{{ identifying ? 'Validando...' : 'Continuar' }}</button></form>
+    <p>Ingresa tu correo o teléfono registrado para recibir un enlace personal. También puedes usar el enlace de tu invitación original.</p>
+    <form (ngSubmit)="identify()"><input [(ngModel)]="identity" name="identity" autocomplete="email" placeholder="Correo o teléfono" required><button type="submit" [disabled]="identifying">{{ identifying ? 'Enviando...' : 'Solicitar enlace' }}</button></form>
   </section>
 
   <ng-container *ngIf="activity as current">

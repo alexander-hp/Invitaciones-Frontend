@@ -525,6 +525,7 @@ export interface VisualInvitationDesign {
   version: number;
   active: boolean;
   mode: 'easy' | 'advanced';
+  presentationMode?: 'continuous' | 'chapters';
   responsiveMode?: 'shared' | 'independent';
   theme?: {
     backgroundColor: string;

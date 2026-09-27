@@ -29,7 +29,18 @@
   <p class="nw-pub-state-text">Cargando tu invitación especial...</p>
 </div>
 
-<div *ngIf="error && !invitation" class="nw-pub-state-container error">
+<div *ngIf="accessRequired && !invitation" class="nw-pub-state-container access-gate">
+  <h2>Acceso a la invitación</h2>
+  <p>{{ accessMessage }}</p>
+  <form (ngSubmit)="checkGuestAccess()" class="access-gate-form">
+    <label for="guest-access-contact">Correo o teléfono registrado</label>
+    <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput" autocomplete="email" required>
+    <button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Enviando...' : 'Solicitar enlace' }}</button>
+  </form>
+  <p *ngIf="error" role="alert">{{ error }}</p>
+</div>
+
+<div *ngIf="error && !invitation && !accessRequired" class="nw-pub-state-container error">
   <div class="nw-pub-state-icon">
     <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>

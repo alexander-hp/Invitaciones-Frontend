@@ -16,7 +16,7 @@
     <button class="secondary" type="button" (click)="openResponsivePreview()">Comparar</button>
     <button class="secondary export-command" type="button" (click)="openExportDialog()">↓ Descargar</button>
     <button class="secondary" type="button" (click)="openFunctionalTest()">Probar funciones</button>
-    <button class="secondary" type="button" (click)="openPreview()">Vista pública</button>
+    <button class="secondary" type="button" (click)="openPreview()">{{ invitation?.status === 'published' ? 'Vista pública' : 'Vista previa' }}</button>
     <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
     <button class="publish" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
   </header>
@@ -189,10 +189,10 @@
       <header><div><span>Vista comparativa</span><h1 id="responsivePreviewTitle">Celular, tablet y escritorio</h1><p>Revisa el diseño actual en los tres tamaños antes de publicar.</p></div><button type="button" title="Cerrar" (click)="closeResponsivePreview()">×</button></header>
       <div class="responsive-preview-grid">
         <article *ngFor="let preview of previewDevices">
-          <div class="responsive-preview-heading"><strong>{{ preview.label }}</strong><span>{{ preview.width }} px</span><b *ngIf="responsiveIssueCount(preview.key)">{{ responsiveIssueCount(preview.key) }} alerta{{ responsiveIssueCount(preview.key) === 1 ? '' : 's' }}</b><i *ngIf="!responsiveIssueCount(preview.key)">Sin cortes</i></div>
-          <div class="responsive-preview-viewport" *ngIf="responsivePreviewInvitation as previewInvitation">
+          <div class="responsive-preview-heading"><strong>{{ preview.label }}</strong><span>{{ preview.width }} px</span><b *ngIf="responsiveIssueCount(preview.key)" [title]="responsivePreviewRuntimeIssues[preview.key].join(' | ')">{{ responsiveIssueCount(preview.key) }} alerta{{ responsiveIssueCount(preview.key) === 1 ? '' : 's' }}</b><i *ngIf="!responsiveIssueCount(preview.key)">Sin cortes detectados</i></div>
+          <div class="responsive-preview-viewport" *ngIf="responsivePreviewInvitation as previewInvitation" (scroll)="scheduleResponsiveAudit()">
             <div class="responsive-preview-stage" [ngStyle]="responsivePreviewStageStyle(preview)">
-              <div class="responsive-preview-artboard" [style.width.px]="preview.width" [style.transform]="'scale(' + preview.scale + ')'">
+              <div #responsiveArtboard class="responsive-preview-artboard" [attr.data-device]="preview.key" [style.width.px]="preview.width" [style.transform]="'scale(' + preview.scale + ')'" (click)="scheduleResponsiveAudit(100)" (change)="scheduleResponsiveAudit(100)">
                 <app-visual-invitation-renderer
                   [invitation]="previewInvitation"
                   [event]="event"
@@ -464,7 +464,7 @@
       </div>
       <div class="artboard-viewport" [style.width.px]="artboardWidth * canvasZoom" [style.height.px]="artboardHeight * canvasZoom">
       <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
-        <div cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list">
+        <div cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list" [class.continuous-design]="design.presentationMode !== 'chapters'">
           <section *ngFor="let section of design.sections; trackBy: trackVisualById" cdkDrag class="canvas-section" [attr.data-section-id]="section.id" [class.selected]="section.id === selectedSectionId" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)" (click)="selectSection(section)">
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
@@ -627,6 +627,12 @@
 
     <aside class="ve-inspector">
       <div class="responsive-settings">
+        <strong>Presentación pública</strong>
+        <div class="segmented presentation-options" role="group" aria-label="Presentación pública">
+          <button type="button" [class.active]="design.presentationMode !== 'chapters'" [attr.aria-pressed]="design.presentationMode !== 'chapters'" (click)="setPresentationMode('continuous')">Continua</button>
+          <button type="button" [class.active]="design.presentationMode === 'chapters'" [attr.aria-pressed]="design.presentationMode === 'chapters'" (click)="setPresentationMode('chapters')">Capítulos</button>
+        </div>
+        <p>{{ design.presentationMode === 'chapters' ? 'Cada sección se abre por separado. Los elementos que cruzan límites se recortan en este modo.' : 'Lienzo seguido: arrastra elementos entre secciones sin que se corten.' }}</p>
         <label class="toggle"><input type="checkbox" [ngModel]="design.responsiveMode === 'independent'" (ngModelChange)="setResponsiveMode($event)"> Ajustar cada dispositivo</label>
         <p>{{ design.responsiveMode === 'independent' ? 'Los cambios de posición y tamaño solo afectan esta vista.' : 'La misma distribución se usa en celular, tablet y escritorio.' }}</p>
         <div *ngIf="design.responsiveMode === 'independent'" class="copy-layout-actions">
@@ -760,9 +766,9 @@
           <h3>Posición y tamaño</h3>
           <div class="two-columns">
             <label>Posición X<input [(ngModel)]="layout.x" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" [max]="100 - layout.width" step="0.5"></label>
-            <label>Posición Y<input [(ngModel)]="layout.y" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" [max]="100 - layout.height" step="0.5"></label>
+            <label>Posición Y<input [(ngModel)]="layout.y" (change)="normalizeLayerTransform(layer, layout)" type="number" [min]="verticalLayerBounds(selectedSection, layout.height).min" [max]="verticalLayerBounds(selectedSection, layout.height).max" step="0.5"></label>
             <label>Ancho<input [(ngModel)]="layout.width" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" [max]="100 - layout.x" step="0.5"></label>
-            <label>Alto<input [(ngModel)]="layout.height" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" [max]="100 - layout.y" step="0.5"></label>
+            <label>Alto<input [(ngModel)]="layout.height" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" [max]="design.presentationMode === 'chapters' ? 100 - layout.y : 100" step="0.5"></label>
             <label>Giro<input [(ngModel)]="layout.rotation" (change)="normalizeLayerTransform(layer, layout)" type="number" min="-180" max="180" step="1"></label>
             <label>Capa<input [(ngModel)]="layer.zIndex" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" max="1000" step="1"></label>
           </div>
