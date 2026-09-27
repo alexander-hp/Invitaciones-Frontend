@@ -304,6 +304,7 @@ export interface InvitationModerationSettings {
 export interface InvitationGalleryItem {
   id?: string;
   url: string;
+  featured?: boolean;
   title?: string;
   description?: string;
   dedication?: string;

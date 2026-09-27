@@ -149,7 +149,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (this.forcedDevice) this.device = this.forcedDevice;
     if (changes['sandboxResetKey'] && !changes['sandboxResetKey'].firstChange) this.resetSandboxForms();
-    this.galleryIndex = Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
+    const featuredIndex = this.galleryItems.findIndex((item) => item.featured);
+    this.galleryIndex = changes['invitation']
+      ? Math.max(0, featuredIndex)
+      : Math.min(this.galleryIndex, Math.max(0, this.galleryItems.length - 1));
     this.configureGalleryTimer();
     this.configureCountdownTimer();
     if (this.guestActivity?.rsvp && !this.activityPanelOpen) {
@@ -178,6 +181,25 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   moveGallery(direction: number): void {
     if (!this.galleryItems.length) return;
     this.galleryIndex = (this.galleryIndex + direction + this.galleryItems.length) % this.galleryItems.length;
+  }
+
+  setExportGalleryIndex(index: number): void {
+    this.clearGalleryTimer();
+    this.galleryIndex = Math.max(0, Math.min(index, Math.max(0, this.galleryItems.length - 1)));
+  }
+
+  exportEventDateLabel(): string {
+    const target = this.eventTargetDate();
+    if (!target) return 'Fecha por confirmar';
+    return new Intl.DateTimeFormat('es-MX', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    }).format(target);
+  }
+
+  exportEventTimeLabel(): string {
+    const target = this.eventTargetDate();
+    if (!target || !this.event?.time) return '';
+    return new Intl.DateTimeFormat('es-MX', { hour: 'numeric', minute: '2-digit' }).format(target);
   }
 
   trackVisualById(index: number, item: VisualInvitationSection | VisualInvitationLayer): string | number {
@@ -393,7 +415,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   hasCountdownCanvasLayers(section: VisualInvitationSection): boolean {
-    return section.type === 'countdown' && this.countdownCanvasLayers(section).length > 0;
+    return this.countdownCanvasLayers(section).length > 0;
   }
 
   shouldRenderCountdownLayer(layer: VisualInvitationLayer): boolean {
@@ -1027,6 +1049,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   private configureGalleryTimer(): void {
     this.clearGalleryTimer();
+    if (this.exportMode) return;
     const settings = this.invitation?.content?.gallerySettings;
     const carouselEnabled = this.sections.some((section) => section.type === 'gallery' && this.galleryDisplayModeFor(section) === 'carousel');
     if (!carouselEnabled || !settings?.autoplay || this.galleryItems.length < 2) return;
@@ -1041,7 +1064,18 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   private updateCountdown(): void {
-    if (!this.event?.date) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    const target = this.eventTargetDate();
+    if (!target) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    const distance = target.getTime() - Date.now();
+    if (Number.isNaN(distance) || distance <= 0) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    this.countdown = {
+      days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
+      minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
+    };
+  }
+
+  private eventTargetDate(): Date | null {
+    if (!this.event?.date) return null;
     const dateOnly = this.event.date.match(/^(\d{4})-(\d{2})-(\d{2})/);
     const target = dateOnly
       ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12)
@@ -1050,12 +1084,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       const [hours, minutes] = this.event.time.split(':').map(Number);
       target.setHours(hours, minutes, 0, 0);
     }
-    const distance = target.getTime() - Date.now();
-    if (Number.isNaN(distance) || distance <= 0) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
-    this.countdown = {
-      days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
-      minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
-    };
+    return Number.isNaN(target.getTime()) ? null : target;
   }
 
   private clearGalleryTimer(): void {

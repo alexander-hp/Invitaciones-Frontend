@@ -989,6 +989,10 @@ export class ApiService {
     return this.http.post<WhatsAppMediaInspection>(`${this.apiUrl}/assets/inspect-url`, { url });
   }
 
+  exportAssetImage(url: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/assets/export-image`, { params: { url }, responseType: 'blob' });
+  }
+
   uploadAsset(uploadUrl: string, file: File): Observable<unknown> {
     return this.http.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
   }

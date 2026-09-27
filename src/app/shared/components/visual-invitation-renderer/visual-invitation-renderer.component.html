@@ -13,7 +13,7 @@
     <div *ngFor="let layer of visualLayers(section); trackBy: trackVisualById" class="visual-layer" [hidden]="layer.hidden" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
       <div *ngIf="layer.type === 'text'">{{ resolveLayerText(layer) }}</div>
       <button *ngIf="layer.type === 'button'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="handleLayerAction(layer)">{{ resolveLayerText(layer) }}</button>
-      <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
+      <div *ngIf="layer.type === 'image' && layer.url" class="image-frame" [ngStyle]="imageMaskStyle(layer)"><img [src]="layer.url" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode || sectionIndex === 0 ? 'eager' : 'lazy'" decoding="async"></div>
       <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
       <div *ngIf="exportMode && (layer.type === 'video' || layer.type === 'audio')" class="export-media-placeholder"><b>{{ layer.type === 'audio' ? 'Audio' : 'Video' }}</b><span>{{ exportMediaDescription(layer) }}</span></div>
       <app-visual-media-player *ngIf="!exportMode && (layer.type === 'video' || layer.type === 'audio')" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false"></app-visual-media-player>
@@ -70,7 +70,7 @@
           <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.dressCode.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('dress.')">{{ dressCodeLayerText(layer) }}</div>
-          <img *ngIf="layer.binding === 'dress.image'" [src]="dressCodeLayerImageUrl(layer)" alt="Referencia de vestimenta" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
+          <img *ngIf="layer.binding === 'dress.image'" [src]="dressCodeLayerImageUrl(layer)" alt="Referencia de vestimenta" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async">
         </div>
       </ng-container>
     </div>
@@ -88,7 +88,7 @@
           <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.gallery.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('gallery.')">{{ galleryLayerText(layer) }}</div>
-          <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" loading="lazy" decoding="async"></button>
+          <button *ngIf="layer.type === 'image'" type="button" class="native-gallery-image" (click)="openGalleryLayer(layer)"><img crossorigin="anonymous" [src]="galleryLayerImageUrl(layer)" [alt]="galleryLayerText(layer) || 'Fotografía del evento'" [ngStyle]="galleryNativeImageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"></button>
           <button *ngIf="layer.binding === 'gallery.carousel.previous'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" aria-label="Fotografía anterior" (click)="moveGallery(-1)">{{ layer.text }}</button>
           <button *ngIf="layer.binding === 'gallery.carousel.next'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" aria-label="Fotografía siguiente" (click)="moveGallery(1)">{{ layer.text }}</button>
         </div>
@@ -98,7 +98,7 @@
     <div class="functional-module" *ngIf="section.type === 'gallery' && !hasGalleryCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Momentos') }}</small><h2>{{ section.title || 'Galería' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="gallery-grid" *ngIf="galleryDisplayModeFor(section) !== 'carousel'" [class.gallery-list]="galleryDisplayModeFor(section) === 'list'">
-        <figure *ngFor="let image of galleryItems"><button type="button" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" [style.height.px]="galleryImageHeight(section)" loading="lazy" decoding="async"></button><figcaption *ngIf="galleryCaptionsFor(section) && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
+        <figure *ngFor="let image of galleryItems"><button type="button" (click)="openLightbox.emit(image.url)"><img [src]="image.url" [alt]="image.alt || image.title || 'Fotografía del evento'" [ngStyle]="galleryImageStyle(image)" [style.height.px]="galleryImageHeight(section)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"></button><figcaption *ngIf="galleryCaptionsFor(section) && galleryCaption(image)">{{ galleryCaption(image) }}</figcaption></figure>
       </div>
       <div class="gallery-carousel" *ngIf="galleryDisplayModeFor(section) === 'carousel' && galleryItems[galleryIndex] as image">
         <button type="button" class="gallery-arrow previous" aria-label="Fotografía anterior" (click)="moveGallery(-1)">‹</button>
@@ -114,7 +114,7 @@
           <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.gifts.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && (layer.binding?.startsWith('gift.') || layer.binding?.startsWith('envelope.'))">{{ giftLayerText(layer) }}</div>
-          <img *ngIf="layer.binding?.endsWith('.image')" [src]="giftLayerImageUrl(layer)" [alt]="giftLayerText(layer) || 'Mesa de regalos'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
+          <img *ngIf="layer.binding?.endsWith('.image')" [src]="giftLayerImageUrl(layer)" [alt]="giftLayerText(layer) || 'Mesa de regalos'" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async">
           <button *ngIf="layer.binding === 'envelope.qr'" type="button" class="native-pass-qr" (click)="openLightbox.emit(giftLayerImageUrl(layer))"><img [src]="giftLayerImageUrl(layer)" alt="QR del sobre digital"></button>
           <a *ngIf="layer.binding?.endsWith('.open')" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="giftLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
           <button *ngIf="layer.binding === 'envelope.copyAccount' || layer.binding === 'envelope.copyClabe'" type="button" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" (click)="copyGiftLayer(layer)">{{ layer.text }}</button>
@@ -126,7 +126,7 @@
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Un detalle opcional') }}</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText') || invitation?.content?.giftSettings?.introText }}</p>
       <div class="module-grid">
         <ng-container *ngIf="pluginSetting(section, 'showRegistry', true)"><article *ngFor="let gift of invitation?.content?.giftRegistry">
-          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" loading="lazy" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mesa') }}</a>
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mesa') }}</a>
         </article></ng-container>
         <article *ngIf="pluginSetting(section, 'showEnvelope', true) && invitation?.content?.digitalEnvelope as envelope">
           <h3>Sobre digital</h3><p>{{ envelope.bank }} · {{ envelope.holder }}</p><p *ngIf="envelope.clabe"><strong>CLABE:</strong> {{ envelope.clabe }}</p><p *ngIf="envelope.account"><strong>Cuenta:</strong> {{ envelope.account }}</p><p>{{ envelope.note }}</p>
@@ -142,7 +142,7 @@
           <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.lodging.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && layer.binding?.startsWith('lodging.')">{{ lodgingLayerText(layer) }}</div>
-          <img *ngIf="layer.binding?.endsWith('.image')" [src]="lodgingLayerImageUrl(layer)" [alt]="lodgingLayerText(layer) || 'Hospedaje recomendado'" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async">
+          <img *ngIf="layer.binding?.endsWith('.image')" [src]="lodgingLayerImageUrl(layer)" [alt]="lodgingLayerText(layer) || 'Hospedaje recomendado'" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async">
           <a *ngIf="layer.type === 'button'" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="lodgingLayerHref(layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
         </div>
       </ng-container>
@@ -152,7 +152,7 @@
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Para invitados foráneos') }}</small><h2>{{ section.title || 'Hospedaje recomendado' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
       <div class="module-grid lodging-grid">
         <article *ngFor="let hotel of invitation?.content?.lodging">
-          <img *ngIf="hotel.imageUrl" [src]="hotel.imageUrl" [alt]="hotel.name || 'Hospedaje recomendado'" loading="lazy" decoding="async">
+          <img *ngIf="hotel.imageUrl" [src]="hotel.imageUrl" [alt]="hotel.name || 'Hospedaje recomendado'" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async">
           <h3>{{ hotel.name || 'Hospedaje recomendado' }}</h3>
           <p *ngIf="hotel.description">{{ hotel.description }}</p><p *ngIf="hotel.address">{{ hotel.address }}</p>
           <p *ngIf="pluginSetting(section, 'showPrice', true) && hotel.priceLabel"><strong>{{ hotel.priceLabel }}</strong></p>
@@ -240,17 +240,21 @@
     </div>
 
     <div *ngIf="hasCountdownCanvasLayers(section)" class="rsvp-layer-form countdown-layer-form">
+      <ng-container *ngIf="!exportMode">
       <ng-container *ngFor="let layer of countdownCanvasLayers(section); trackBy: trackVisualById">
         <div *ngIf="shouldRenderCountdownLayer(layer)" class="visual-layer rsvp-functional-layer" [ngClass]="animationClass(layer)" [ngStyle]="layerStyle(layer)">
           <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
           <div *ngIf="layer.binding?.startsWith('display.countdown.') || layer.binding?.startsWith('countdown.')">{{ countdownLayerText(layer) }}</div>
         </div>
       </ng-container>
+      </ng-container>
+      <div *ngIf="exportMode" class="export-countdown-date"><small>Reserva la fecha</small><b>{{ exportEventDateLabel() }}</b><span *ngIf="exportEventTimeLabel()">{{ exportEventTimeLabel() }}</span></div>
     </div>
 
     <div class="functional-module countdown-module" *ngIf="section.type === 'countdown' && !hasCountdownCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Falta poco') }}</small><h2>{{ section.title || 'Cuenta regresiva' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
-      <div *ngIf="!countdown.isOver; else countdownOver" class="public-countdown"><span><b>{{ countdown.days }}</b>Días</span><span><b>{{ countdown.hours }}</b>Horas</span><span><b>{{ countdown.minutes }}</b>Minutos</span><span><b>{{ countdown.seconds }}</b>Segundos</span></div><ng-template #countdownOver><strong class="countdown-over">{{ pluginSetting(section, 'expiredText', 'El gran día llegó') }}</strong></ng-template>
+      <div *ngIf="exportMode; else liveCountdown" class="export-countdown-date native"><small>Reserva la fecha</small><b>{{ exportEventDateLabel() }}</b><span *ngIf="exportEventTimeLabel()">{{ exportEventTimeLabel() }}</span></div>
+      <ng-template #liveCountdown><div *ngIf="!countdown.isOver; else countdownOver" class="public-countdown"><span><b>{{ countdown.days }}</b>Días</span><span><b>{{ countdown.hours }}</b>Horas</span><span><b>{{ countdown.minutes }}</b>Minutos</span><span><b>{{ countdown.seconds }}</b>Segundos</span></div><ng-template #countdownOver><strong class="countdown-over">{{ pluginSetting(section, 'expiredText', 'El gran día llegó') }}</strong></ng-template></ng-template>
     </div>
 
     <div *ngIf="hasAlbumCanvasLayers(section)" class="rsvp-layer-form album-layer-form">
@@ -260,7 +264,7 @@
           <div *ngIf="layer.binding?.startsWith('display.album.')">{{ resolveLayerText(layer) }}</div>
           <label *ngIf="layer.binding === 'album.upload'" class="visual-action-button native-file-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'">{{ uploadingAlbum ? 'Subiendo...' : (layer.text || 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
           <div *ngIf="layer.binding === 'album.feedback'" class="rsvp-layer-feedback">{{ albumMessage }}</div>
-          <div *ngIf="layer.binding === 'album.gallery'" class="native-album-gallery"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button><p *ngIf="!albumAssets.length">Las fotografías aprobadas aparecerán aquí.</p></div>
+          <div *ngIf="layer.binding === 'album.gallery'" class="native-album-gallery"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"></button><p *ngIf="!albumAssets.length">Las fotografías aprobadas aparecerán aquí.</p></div>
         </div>
       </ng-container>
     </div>
@@ -269,7 +273,7 @@
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Álbum colectivo') }}</small><h2>{{ section.title || 'Álbum colectivo' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText', 'Comparte tus mejores momentos con los anfitriones.') }}</p>
       <label class="file-button">{{ pluginSetting(section, 'primaryButtonText', 'Seleccionar fotografía') }}<input type="file" accept="image/*" (change)="selectPhoto($event)" [disabled]="uploadingAlbum"></label>
       <p class="feedback" *ngIf="albumMessage">{{ albumMessage }}</p>
-      <div *ngIf="pluginSetting(section, 'showGallery', true)" class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" loading="lazy" decoding="async"></button></div>
+      <div *ngIf="pluginSetting(section, 'showGallery', true)" class="gallery-grid approved"><button *ngFor="let asset of albumAssets" type="button" (click)="openLightbox.emit(asset.url)"><img [src]="asset.url" [alt]="asset.uploaderName || 'Álbum'" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"></button></div>
     </div>
 
     <form *ngIf="hasDedicationCanvasLayers(section)" class="rsvp-layer-form dedication-layer-form" (ngSubmit)="sendDedication()">

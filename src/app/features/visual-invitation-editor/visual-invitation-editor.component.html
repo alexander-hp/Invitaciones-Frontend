@@ -156,9 +156,11 @@
           <div class="animated-export-options" *ngIf="animatedExport">
             <fieldset><legend>Transición entre páginas</legend><div class="export-choice-grid transition"><button *ngFor="let option of exportTransitions" type="button" [class.active]="exportTransition === option.value" (click)="exportTransition=option.value"><b>{{ option.label }}</b><span>{{ option.detail }}</span></button></div></fieldset>
             <label class="export-quality-slider"><span>Duración por página <b>{{ exportPageDuration | number:'1.0-1' }} s</b></span><input [(ngModel)]="exportPageDuration" type="range" min="1.5" max="6" step="0.5"></label>
+            <label class="export-quality-slider" *ngIf="exportContainsCarousel"><span>Duración por foto del carrusel <b>{{ exportCarouselImageDuration | number:'1.0-1' }} s</b></span><input [(ngModel)]="exportCarouselImageDuration" type="range" min="0.75" max="3" step="0.25"></label>
             <label class="export-music-option" *ngIf="exportFormat === 'mp4' && exportCanIncludeMusic"><input type="checkbox" [(ngModel)]="exportIncludeMusic"><span><b>Incluir música principal</b><small>Se repetirá durante todo el video.</small></span></label>
             <aside class="export-media-warning" *ngIf="exportFormat === 'mp4' && !mp4Supported"><b>MP4 no disponible en este navegador</b><span>Abre el editor en Chrome o Edge actualizado, o usa GIF.</span></aside>
             <aside class="export-media-warning" *ngIf="exportFormat === 'mp4' && exportMusicUrl && !exportCanIncludeMusic"><b>Música solo en la invitación digital</b><span>YouTube, Spotify y Vimeo no permiten incorporarse al archivo. Sube un MP3/M4A directo para incluirlo.</span></aside>
+            <aside class="export-media-warning" *ngIf="exportFormat === 'gif' && exportMusicUrl"><b>GIF no admite audio</b><span>Usa MP4 y activa “Incluir música principal” para descargar una versión con sonido.</span></aside>
           </div>
           <aside class="export-summary"><span>{{ exportFormatLabel() }} · {{ animatedExport ? animatedOutputSize.width + ' × ' + animatedOutputSize.height + ' px' : exportOutputWidth + ' px de ancho' }}</span><strong>{{ exportDeliveryLabel() }}</strong><small>{{ animatedExport ? 'Las páginas se ajustan sin deformarse.' : 'El alto se adapta a cada sección.' }}</small></aside>
           <aside class="export-media-warning" *ngIf="exportContainsMedia"><b>Contenido multimedia</b><span>Los reproductores externos no pueden incrustarse en el archivo; aparecerán identificados. La invitación digital conserva su reproducción completa.</span></aside>
@@ -179,7 +181,7 @@
       <footer><button type="button" class="secondary" [disabled]="exportingInvitation" (click)="closeExportDialog()">Cancelar</button><button type="button" class="primary" [disabled]="exportingInvitation || !selectedExportSections.length || (exportFormat === 'mp4' && !mp4Supported)" (click)="exportInvitation()">{{ exportingInvitation ? 'Preparando archivo...' : '↓ Descargar ' + exportFormatLabel() }}</button></footer>
     </section>
     <div #exportSurface data-export-surface class="export-capture-surface" aria-hidden="true" [style.width.px]="exportDeviceWidth" *ngIf="exportPreviewInvitation as previewInvitation">
-      <app-visual-invitation-renderer [invitation]="previewInvitation" [event]="event" [requiresGuestValidation]="false" [forcedDevice]="exportDevice" [exportMode]="true"></app-visual-invitation-renderer>
+      <app-visual-invitation-renderer #exportRenderer [invitation]="previewInvitation" [event]="event" [requiresGuestValidation]="false" [forcedDevice]="exportDevice" [exportMode]="true"></app-visual-invitation-renderer>
     </div>
   </div>
   <div class="responsive-preview-backdrop" *ngIf="showResponsivePreview" (click)="closeResponsivePreview()">
@@ -1045,6 +1047,7 @@
                   <article *ngFor="let image of currentInvitation.content.galleryItems; let index=index" cdkDrag>
                     <header><button type="button" cdkDragHandle title="Reordenar">⋮⋮</button><strong>Imagen {{ index + 1 }}</strong><button type="button" class="content-remove" title="Eliminar" (click)="removeContentItem('galleryItems', index)">×</button></header>
                     <img *ngIf="image.url" [src]="image.url" [alt]="image.alt || image.title || 'Imagen de la galería'" [style.object-fit]="image.fit || 'cover'" [style.object-position]="(image.focalX || 50) + '% ' + (image.focalY || 50) + '%'">
+                    <label class="toggle gallery-featured"><input type="radio" name="galleryFeaturedImage" [checked]="image.featured || (!hasFeaturedGalleryItem && index === 0)" (change)="setFeaturedGalleryItem(index)"> Foto destacada para portada estática y primer cuadro del carrusel</label>
                     <div class="content-fields two-columns">
                       <label>URL<input [ngModel]="image.url" (ngModelChange)="updateGalleryItemUrl(image, $event)" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
                       <label>Título<input [(ngModel)]="image.title" (focus)="beginContentEdit()" type="text" maxlength="160"></label>

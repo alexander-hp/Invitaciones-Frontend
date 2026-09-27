@@ -16,9 +16,10 @@ import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateCon
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
 import { VisualDesignImporterService, VisualDesignImportReview, VisualDesignImportReviewStatus } from './visual-design-importer.service';
 import {
-  AnimatedExportTransition, animatedFrameSize, VisualInvitationAnimatedExportService
+  AnimatedExportScene, AnimatedExportTransition, animatedFrameSize, VisualInvitationAnimatedExportService
 } from './visual-invitation-animated-export.service';
 import { resolveVisualMediaSource } from '../../shared/components/visual-invitation-renderer/visual-media-source';
+import { VisualInvitationRendererComponent } from '../../shared/components/visual-invitation-renderer/visual-invitation-renderer.component';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -153,6 +154,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   exportScale = 2;
   exportJpegQuality = .92;
   exportPageDuration = 3;
+  exportCarouselImageDuration = 1.5;
   exportTransitionDuration = .65;
   exportTransition: AnimatedExportTransition = 'fade';
   exportIncludeMusic = true;
@@ -391,6 +393,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   @ViewChild('exportSurface') exportSurface?: ElementRef<HTMLElement>;
+  @ViewChild('exportRenderer') exportRenderer?: VisualInvitationRendererComponent;
 
   readonly builtInPresets = [
     { key: 'editorial', label: 'Editorial claro', colors: ['#f6f1eb', '#24211f'] },
@@ -850,6 +853,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.selectedExportSections.some((section) => section.layers.some((layer) => layer.type === 'video' || layer.type === 'audio'));
   }
 
+  get exportContainsCarousel(): boolean {
+    return this.selectedExportSections.some((section) => section.type === 'gallery' && this.galleryExportMode(section) === 'carousel');
+  }
+
   isExportSectionSelected(section: VisualInvitationSection): boolean {
     return this.exportSectionIds.includes(section.id);
   }
@@ -896,6 +903,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.rebuildExportPreview();
 
     try {
+      await this.inlineExportImages();
       await this.waitForExportRenderer();
       this.exportProgress = 10;
       const surface = this.exportSurface?.nativeElement;
@@ -975,23 +983,30 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private async exportAnimatedInvitation(elements: HTMLElement[], fileBase: string): Promise<void> {
     const captureScale = this.animatedOutputSize.width / this.exportDeviceWidth;
-    const pages: HTMLCanvasElement[] = [];
+    const scenes: AnimatedExportScene[] = [];
     for (let index = 0; index < elements.length; index += 1) {
       this.exportProgress = 10 + Math.round(index / elements.length * 25);
-      pages.push(await html2canvas(elements[index], {
-        scale: captureScale,
-        useCORS: true,
-        allowTaint: false,
-        logging: false,
-        backgroundColor: this.design.theme?.backgroundColor || '#ffffff'
-      }));
+      const frameIndexes = this.galleryExportFrameIndexes(this.selectedExportSections[index]);
+      const frames: HTMLCanvasElement[] = [];
+      for (const galleryIndex of frameIndexes) {
+        this.exportRenderer?.setExportGalleryIndex(galleryIndex);
+        await this.waitForExportRenderer();
+        frames.push(await html2canvas(elements[index], {
+          scale: captureScale,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: this.design.theme?.backgroundColor || '#ffffff'
+        }));
+      }
+      scenes.push({ frames });
     }
 
     try {
       const audioUrl = this.exportFormat === 'mp4' && this.exportIncludeMusic && this.exportCanIncludeMusic
         ? this.exportMusicUrl
         : undefined;
-      const result = await this.animatedExporter.create(pages, {
+      const result = await this.animatedExporter.create(scenes, {
         format: this.exportFormat as 'gif' | 'mp4',
         device: this.exportDevice,
         width: this.animatedOutputSize.width,
@@ -1006,23 +1021,91 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.exportWarning = result.warning || '';
       this.exportProgress = 100;
     } finally {
-      pages.forEach((canvas) => {
+      scenes.flatMap((scene) => scene.frames).forEach((canvas) => {
         canvas.width = 1;
         canvas.height = 1;
       });
     }
   }
 
+  private galleryExportFrameIndexes(section: VisualInvitationSection): number[] {
+    const items = (this.invitation?.content?.galleryItems || []).filter((item) => item.url);
+    const featuredIndex = Math.max(0, items.findIndex((item) => item.featured));
+    if (section.type !== 'gallery' || this.galleryExportMode(section) !== 'carousel' || items.length < 2) return [featuredIndex];
+    const stableDuration = Math.max(.5, this.exportPageDuration - this.exportTransitionDuration);
+    const count = Math.min(items.length, Math.max(1, Math.ceil(stableDuration / this.exportCarouselImageDuration)));
+    return Array.from({ length: count }, (_, offset) => (featuredIndex + offset) % items.length);
+  }
+
+  private galleryExportMode(section: VisualInvitationSection): 'grid' | 'list' | 'carousel' {
+    const configured = String(section.pluginSettings?.['displayMode'] || 'inherit');
+    if (configured === 'grid' || configured === 'list' || configured === 'carousel') return configured;
+    return this.invitation?.content?.gallerySettings?.displayMode || 'grid';
+  }
+
   private rebuildExportPreview(): void {
     if (!this.invitation) return;
     const sections = this.selectedExportSections.map((section) => this.clone(section));
+    const content = this.clone(this.invitation.content || {});
     this.exportPreviewInvitation = {
       ...this.invitation,
       content: {
-        ...(this.invitation.content || {}),
+        ...content,
         visualDesign: { ...this.clone(this.design), active: true, sections }
       }
     };
+  }
+
+  private async inlineExportImages(): Promise<void> {
+    const content = this.exportPreviewInvitation?.content;
+    const sections = content?.visualDesign?.sections || [];
+    if (!content) return;
+    const cache = new Map<string, Promise<string>>();
+    const inline = (url?: string) => {
+      const source = String(url || '').trim();
+      if (!source || source.startsWith('data:') || source.startsWith('blob:')) return Promise.resolve(source);
+      if (!cache.has(source)) cache.set(source, this.exportImageDataUrl(source));
+      return cache.get(source)!;
+    };
+
+    content.coverImageUrl = await inline(content.coverImageUrl);
+    if (content.galleryItems) {
+      await Promise.all(content.galleryItems.map(async (item) => { item.url = await inline(item.url); }));
+      content.gallery = content.galleryItems.map((item) => item.url).filter(Boolean);
+    }
+    await Promise.all(sections.flatMap((section) => {
+      const tasks: Promise<void>[] = [];
+      if (section.background?.imageUrl) tasks.push(inline(section.background.imageUrl).then((url) => { section.background!.imageUrl = url; }));
+      section.layers.filter((layer) => layer.type === 'image' && layer.url).forEach((layer) => {
+        tasks.push(inline(layer.url).then((url) => { layer.url = url; }));
+      });
+      return tasks;
+    }));
+  }
+
+  private async exportImageDataUrl(url: string): Promise<string> {
+    let blob: Blob | undefined;
+    try {
+      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (response.ok) blob = await response.blob();
+    } catch {
+      // The authenticated proxy below handles storage providers that block browser canvas access.
+    }
+    if (!blob?.type.startsWith('image/')) {
+      try { blob = await this.api.exportAssetImage(url).toPromise(); } catch { return url; }
+    }
+    if (!blob?.type.startsWith('image/')) return url;
+    const imageBlob = blob;
+    try {
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener('load', () => resolve(String(reader.result || url)), { once: true });
+        reader.addEventListener('error', () => reject(reader.error), { once: true });
+        reader.readAsDataURL(imageBlob);
+      });
+    } catch {
+      return url;
+    }
   }
 
   private async waitForExportRenderer(): Promise<void> {
@@ -2898,6 +2981,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   updateGalleryItemUrl(item: InvitationGalleryItem, value: string): void {
     item.url = value;
     this.syncLegacyGallery();
+  }
+
+  get hasFeaturedGalleryItem(): boolean {
+    return Boolean(this.invitation?.content?.galleryItems?.some((item) => item.featured));
+  }
+
+  setFeaturedGalleryItem(index: number): void {
+    if (!this.invitation) return;
+    this.beginContentEdit();
+    this.invitation.content.galleryItems?.forEach((item, itemIndex) => { item.featured = itemIndex === index; });
   }
 
   galleryCaption(item: InvitationGalleryItem): string {
@@ -4944,7 +5037,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private emptyGalleryItem(index = 0): InvitationGalleryItem {
     return {
       id: this.uid(`gallery-${index + 1}`), url: '', title: '', description: '', dedication: '', alt: '',
-      fit: 'cover', focalX: 50, focalY: 50
+      featured: false, fit: 'cover', focalX: 50, focalY: 50
     };
   }
 

@@ -22,6 +22,10 @@ export interface AnimatedExportResult {
   warning?: string;
 }
 
+export interface AnimatedExportScene {
+  frames: HTMLCanvasElement[];
+}
+
 export function animatedFrameSize(device: AnimatedExportDevice, requestedWidth: number): { width: number; height: number } {
   const maxWidth = device === 'mobile' ? 1170 : device === 'tablet' ? 1536 : 1920;
   const width = Math.max(320, Math.min(Math.round(requestedWidth), maxWidth));
@@ -43,18 +47,18 @@ export class VisualInvitationAnimatedExportService {
   }
 
   async create(
-    pages: HTMLCanvasElement[],
+    scenes: AnimatedExportScene[],
     options: AnimatedExportOptions,
     onProgress: (progress: number) => void
   ): Promise<AnimatedExportResult> {
-    if (!pages.length) throw new Error('Selecciona al menos una página para crear la animación.');
+    if (!scenes.length || scenes.some((scene) => !scene.frames.length)) throw new Error('Selecciona al menos una página para crear la animación.');
     return options.format === 'gif'
-      ? this.createGif(pages, options, onProgress)
-      : this.createMp4(pages, options, onProgress);
+      ? this.createGif(scenes, options, onProgress)
+      : this.createMp4(scenes, options, onProgress);
   }
 
   private async createGif(
-    pages: HTMLCanvasElement[],
+    scenes: AnimatedExportScene[],
     options: AnimatedExportOptions,
     onProgress: (progress: number) => void
   ): Promise<AnimatedExportResult> {
@@ -64,8 +68,8 @@ export class VisualInvitationAnimatedExportService {
     const context = canvas.getContext('2d', { alpha: false });
     if (!context) throw new Error('El navegador no pudo preparar el lienzo animado.');
     const gif = GIFEncoder({ initialCapacity: 1024 * 1024 });
-    const steps = pages.length > 1 ? 4 : 0;
-    const totalFrames = pages.length * (1 + steps);
+    const steps = scenes.length > 1 ? 4 : 0;
+    const totalFrames = scenes.reduce((total, scene) => total + scene.frames.length + steps, 0);
     let writtenFrames = 0;
 
     const write = (delay: number) => {
@@ -77,13 +81,20 @@ export class VisualInvitationAnimatedExportService {
       onProgress(Math.round(writtenFrames / totalFrames * 100));
     };
 
-    for (let index = 0; index < pages.length; index += 1) {
-      this.drawTransitionFrame(context, canvas, pages[index], pages[index], 0, options.transition, options.backgroundColor);
-      write(Math.max(250, (options.pageDuration - options.transitionDuration) * 1000));
+    for (let index = 0; index < scenes.length; index += 1) {
+      const scene = scenes[index];
+      const stillDuration = steps ? options.pageDuration - options.transitionDuration : options.pageDuration;
+      const stillDelay = Math.max(120, stillDuration * 1000 / scene.frames.length);
+      for (const frame of scene.frames) {
+        this.drawTransitionFrame(context, canvas, frame, frame, 0, options.transition, options.backgroundColor);
+        write(stillDelay);
+        await this.yieldToBrowser();
+      }
       if (steps) {
-        const next = pages[(index + 1) % pages.length];
+        const current = scene.frames[scene.frames.length - 1];
+        const next = scenes[(index + 1) % scenes.length].frames[0];
         for (let step = 1; step <= steps; step += 1) {
-          this.drawTransitionFrame(context, canvas, pages[index], next, step / steps, options.transition, options.backgroundColor);
+          this.drawTransitionFrame(context, canvas, current, next, step / steps, options.transition, options.backgroundColor);
           write(options.transitionDuration * 1000 / steps);
           await this.yieldToBrowser();
         }
@@ -96,7 +107,7 @@ export class VisualInvitationAnimatedExportService {
   }
 
   private async createMp4(
-    pages: HTMLCanvasElement[],
+    scenes: AnimatedExportScene[],
     options: AnimatedExportOptions,
     onProgress: (progress: number) => void
   ): Promise<AnimatedExportResult> {
@@ -130,7 +141,7 @@ export class VisualInvitationAnimatedExportService {
       recorder.addEventListener('stop', () => resolve(), { once: true });
       recorder.addEventListener('error', () => reject(new Error('El navegador interrumpió la grabación MP4.')), { once: true });
     });
-    const totalDuration = Math.max(.5, pages.length * options.pageDuration);
+    const totalDuration = Math.max(.5, scenes.length * options.pageDuration);
     const startedAt = performance.now();
     recorder.start(500);
 
@@ -138,15 +149,19 @@ export class VisualInvitationAnimatedExportService {
       while (true) {
         const elapsed = (performance.now() - startedAt) / 1000;
         const bounded = Math.min(elapsed, totalDuration);
-        const index = Math.min(pages.length - 1, Math.floor(bounded / options.pageDuration));
+        const index = Math.min(scenes.length - 1, Math.floor(bounded / options.pageDuration));
         const local = bounded - index * options.pageDuration;
         const transitionStart = options.pageDuration - options.transitionDuration;
-        const hasNext = index < pages.length - 1;
+        const hasNext = index < scenes.length - 1;
+        const scene = scenes[index];
+        const stableProgress = Math.max(0, Math.min(.999, local / Math.max(.1, transitionStart)));
+        const frameIndex = Math.min(scene.frames.length - 1, Math.floor(stableProgress * scene.frames.length));
+        const current = local > transitionStart ? scene.frames[scene.frames.length - 1] : scene.frames[frameIndex];
         const transitionProgress = hasNext && local > transitionStart
           ? Math.min(1, (local - transitionStart) / options.transitionDuration)
           : 0;
-        const next = hasNext ? pages[index + 1] : pages[index];
-        this.drawTransitionFrame(context, canvas, pages[index], next, transitionProgress, options.transition, options.backgroundColor, local / options.pageDuration);
+        const next = hasNext ? scenes[index + 1].frames[0] : current;
+        this.drawTransitionFrame(context, canvas, current, next, transitionProgress, options.transition, options.backgroundColor, local / options.pageDuration);
         onProgress(Math.min(99, Math.round(bounded / totalDuration * 100)));
         if (elapsed >= totalDuration) break;
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
