@@ -286,6 +286,14 @@
         <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'button'})" (dragend)="endPaletteDrag()" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
         <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'shape'})" (dragend)="endPaletteDrag()" (click)="addLayer('shape')"><b>●</b><span>Forma</span></button>
       </div>
+      <h2>Iconos</h2>
+      <div class="icon-catalog-tools">
+        <input [(ngModel)]="iconSearch" type="search" placeholder="Buscar iconos...">
+        <select [(ngModel)]="iconCategory"><option value="all">Todos</option><option value="celebracion">Celebración</option><option value="evento">Evento</option><option value="comunicacion">Comunicación</option><option value="servicios">Servicios</option></select>
+      </div>
+      <div class="icon-catalog">
+        <button *ngFor="let icon of filteredIconCatalog" type="button" draggable="true" [title]="icon.label" (dragstart)="beginPaletteDrag($event, {kind:'icon', icon:icon})" (dragend)="endPaletteDrag()" (click)="addIcon(icon)"><lucide-icon [name]="icon.name" [strokeWidth]="1.8"></lucide-icon><span>{{ icon.label }}</span></button>
+      </div>
       <h2>Formas</h2>
       <div class="shape-catalog">
         <button *ngFor="let shape of shapeCatalog" type="button" draggable="true" [title]="shape.label" (dragstart)="beginPaletteDrag($event, {kind:'shape', shape:shape.key})" (dragend)="endPaletteDrag()" (click)="addShape(shape.key)"><b>{{ shape.icon }}</b><span>{{ shape.label }}</span></button>
@@ -573,8 +581,9 @@
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
               <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [attr.data-button-icon]="layer.type === 'button' ? (layer.style?.buttonIcon || null) : null" [attr.title]="editorLayerUnavailableReason(layer) || null" [attr.data-unavailable]="editorLayerUnavailableReason(layer) ? 'true' : null" [class.button-icon-after]="layer.type === 'button' && layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.type === 'button' && layer.style?.buttonVariant === 'glass'" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.data-unavailable]="!!editorLayerUnavailableReason(layer)" [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
-                <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId !== layer.id">{{ editorLayerText(layer) }}</div>
-                <div *ngIf="(layer.type === 'text' || layer.type === 'button') && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
+                <lucide-icon *ngIf="isIconLayer(layer)" class="canvas-icon-layer" [name]="layer.style?.iconName" [strokeWidth]="layer.style?.iconStrokeWidth || 2" [style.fill]="layer.style?.iconFilled ? 'currentColor' : 'none'"></lucide-icon>
+                <div *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId !== layer.id">{{ editorLayerText(layer) }}</div>
+                <div *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
                 <div *ngIf="layer.type === 'field'" class="functional-field-preview" [class.control-cards]="layer.style?.controlVariant === 'cards'" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'">
                   <span *ngIf="layer.binding !== 'rsvp.response' || layer.style?.controlVariant !== 'cards'">{{ rsvpFieldPreview(layer) }}</span>
                   <div *ngIf="layer.binding === 'rsvp.response' && layer.style?.controlVariant === 'cards'" class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
@@ -637,7 +646,7 @@
           <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
           <p class="selection-hint">Usa Shift + clic o arrastra un recuadro sobre el lienzo para seleccionar varios.</p>
           <article *ngFor="let item of orderedLayers" [class.active]="isLayerSelected(item)" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item, $event)">
-            <span class="layer-type">{{ item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : item.type === 'field' ? '⌨' : '●' }}</span>
+            <span class="layer-type">{{ isIconLayer(item) ? '◇' : item.type === 'text' ? 'T' : item.type === 'image' ? '▧' : item.type === 'video' ? '▶' : item.type === 'audio' ? '♪' : item.type === 'button' ? '▣' : item.type === 'field' ? '⌨' : '●' }}</span>
             <div><strong>{{ layerLabel(item) }}</strong><small>{{ item.type }}<ng-container *ngIf="item.groupId"> · agrupado</ng-container></small></div>
             <div class="layer-actions">
               <button type="button" [title]="item.hidden ? 'Mostrar' : 'Ocultar'" (click)="toggleLayerHidden(item, $event)">{{ item.hidden ? '○' : '◉' }}</button>
@@ -670,9 +679,9 @@
       <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
-        <label *ngIf="(layer.type === 'text' && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
+        <label *ngIf="(layer.type === 'text' && !isIconLayer(layer) && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <aside *ngIf="isDynamicTextOutputLayer(layer)" class="plugin-binding-note"><strong>Dato dinámico del invitado</strong><code>{{ layer.binding }}</code><span>En el editor ves un ejemplo. Al publicarse se reemplaza con la información del invitado identificado; puedes cambiar posición, tamaño y estilo.</span></aside>
-        <div *ngIf="(layer.type === 'text' && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'" class="dynamic-variable-picker">
+        <div *ngIf="(layer.type === 'text' && !isIconLayer(layer) && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'" class="dynamic-variable-picker">
           <span>Insertar dato</span>
           <div><button *ngFor="let variable of dynamicVariables" type="button" [title]="variable.group + ': ' + variable.example" (click)="insertDynamicVariable(layer, variable.token)">{{ variable.label }}</button></div>
         </div>
@@ -697,6 +706,13 @@
             <label>Efecto al presionar<input [ngModel]="layer.style?.pressedScale ?? 0.97" (ngModelChange)="layer.style!.pressedScale=$event" type="range" min="0.88" max="1" step="0.01"><span>{{ layer.style?.pressedScale ?? 0.97 }}×</span></label>
           </div>
         </ng-container>
+        <section *ngIf="isIconLayer(layer) && layer.style as iconStyle" class="icon-style-editor">
+          <div class="inspector-heading"><h3>Icono</h3></div>
+          <input [(ngModel)]="iconSearch" type="search" placeholder="Cambiar icono...">
+          <div class="icon-catalog inspector-icon-catalog"><button *ngFor="let icon of filteredIconCatalog" type="button" [class.active]="iconStyle.iconName === icon.name" [title]="icon.label" (click)="setLayerIcon(layer, icon)"><lucide-icon [name]="icon.name" [strokeWidth]="1.8"></lucide-icon><span>{{ icon.label }}</span></button></div>
+          <label>Grosor<input [ngModel]="iconStyle.iconStrokeWidth ?? 2" (ngModelChange)="iconStyle.iconStrokeWidth=$event" type="range" min="0.75" max="4" step="0.25"><span>{{ iconStyle.iconStrokeWidth || 2 }}</span></label>
+          <label class="toggle"><input [(ngModel)]="iconStyle.iconFilled" type="checkbox"> Usar relleno</label>
+        </section>
         <ng-container *ngIf="layer.type === 'field'">
           <aside class="plugin-binding-note"><strong>{{ layer.text || 'Campo funcional' }}</strong><code>{{ layer.binding }}</code><span>{{ isDynamicOutputLayer(layer) ? 'Este elemento muestra contenido dinámico aprobado. Puedes cambiar su tamaño y posición sin convertirlo en un campo de captura.' : 'Este control captura el dato indicado. El label es otra capa de texto y puede moverse o eliminarse. Usa imágenes y formas detrás para crear cualquier composición.' }}</span></aside>
           <label *ngIf="!isDynamicOutputLayer(layer)">Texto de ejemplo<input [(ngModel)]="layer.placeholder" type="text" maxlength="240"></label>
@@ -753,15 +769,15 @@
         </div>
         <ng-container *ngIf="layer.style as style">
           <label *ngIf="layer.type === 'image' || layer.type === 'video'" class="toggle"><input [ngModel]="style.preserveAspectRatio !== false" (ngModelChange)="style.preserveAspectRatio=$event" type="checkbox"> Mostrar completo sin deformar ni recortar</label>
-          <app-visual-font-picker *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'" [(value)]="style.fontFamily"></app-visual-font-picker>
+          <app-visual-font-picker *ngIf="(layer.type === 'text' && !isIconLayer(layer)) || layer.type === 'button' || layer.type === 'field'" [(value)]="style.fontFamily"></app-visual-font-picker>
           <div class="two-columns">
-            <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>
-            <label *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'">Peso<select [(ngModel)]="style.fontWeight"><option [ngValue]="300">Ligera</option><option [ngValue]="400">Normal</option><option [ngValue]="600">Semibold</option><option [ngValue]="700">Negrita</option></select></label>
+            <label *ngIf="(layer.type === 'text' && !isIconLayer(layer)) || layer.type === 'button' || layer.type === 'field'">Tamaño<input [(ngModel)]="style.fontSize" type="number" min="8" max="180"></label>
+            <label *ngIf="(layer.type === 'text' && !isIconLayer(layer)) || layer.type === 'button' || layer.type === 'field'">Peso<select [(ngModel)]="style.fontWeight"><option [ngValue]="300">Ligera</option><option [ngValue]="400">Normal</option><option [ngValue]="600">Semibold</option><option [ngValue]="700">Negrita</option></select></label>
             <label>Color<input [(ngModel)]="style.color" type="color"></label>
             <label>Fondo<input [(ngModel)]="style.backgroundColor" type="color"></label>
             <label>Opacidad<input [(ngModel)]="style.opacity" type="number" min="0" max="1" step="0.1"></label>
           </div>
-          <div *ngIf="layer.type === 'text' || layer.type === 'button' || layer.type === 'field'" class="typography-settings">
+          <div *ngIf="(layer.type === 'text' && !isIconLayer(layer)) || layer.type === 'button' || layer.type === 'field'" class="typography-settings">
             <div class="two-columns">
               <label>Interlineado<input [(ngModel)]="style.lineHeight" type="number" min="0.8" max="3" step="0.1"></label>
               <label>Espaciado<input [(ngModel)]="style.letterSpacing" type="number" min="-5" max="30" step="0.5"></label>

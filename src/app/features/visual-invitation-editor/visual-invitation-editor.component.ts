@@ -20,6 +20,7 @@ import {
 } from './visual-invitation-animated-export.service';
 import { resolveVisualMediaSource } from '../../shared/components/visual-invitation-renderer/visual-media-source';
 import { VisualInvitationRendererComponent } from '../../shared/components/visual-invitation-renderer/visual-invitation-renderer.component';
+import { VISUAL_ICON_CATALOG, VisualIconOption } from '../../shared/components/visual-invitation-renderer/visual-icon-catalog';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -33,6 +34,7 @@ type ShapeKind = NonNullable<NonNullable<VisualInvitationLayer['style']>['shapeK
 type PaletteDragItem =
   | { kind: 'layer'; type: VisualLayerType }
   | { kind: 'shape'; shape: ShapeKind }
+  | { kind: 'icon'; icon: VisualIconOption }
   | { kind: 'component'; key: string }
   | { kind: 'rsvp-control'; binding: string }
   | { kind: 'media'; media: DesignMedia };
@@ -67,7 +69,7 @@ type FunctionalTestData = {
 @Component({
   selector: 'app-visual-invitation-editor',
   templateUrl: './visual-invitation-editor.component.html',
-  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css']
+  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   invitation?: InvitationModel;
@@ -304,6 +306,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private suppressNextLayerClickId = '';
   private inlineEditOriginal = '';
   private paletteDragItem?: PaletteDragItem;
+  iconSearch = '';
+  iconCategory: 'all' | VisualIconOption['category'] = 'all';
+  readonly iconCatalog = VISUAL_ICON_CATALOG;
   private marqueeState?: {
     section: VisualInvitationSection;
     canvas: HTMLElement;
@@ -1464,6 +1469,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection([layer.id]);
   }
 
+  get filteredIconCatalog(): VisualIconOption[] {
+    const query = this.iconSearch.trim().toLocaleLowerCase('es');
+    return this.iconCatalog.filter((icon) => {
+      const categoryMatches = this.iconCategory === 'all' || icon.category === this.iconCategory;
+      const haystack = `${icon.label} ${icon.name} ${icon.keywords}`.toLocaleLowerCase('es');
+      return categoryMatches && (!query || haystack.includes(query));
+    });
+  }
+
+  isIconLayer(layer: VisualInvitationLayer): boolean {
+    return layer.type === 'text' && Boolean(layer.style?.iconName);
+  }
+
+  addIcon(icon: VisualIconOption): void {
+    const section = this.selectedSection;
+    if (!section) return;
+    this.recordHistory();
+    const layer = this.newLayer('text', icon.label, 44, 32, 12, 12);
+    layer.name = `Icono: ${icon.label}`;
+    layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
+    this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    layer.style = { ...(layer.style || {}), iconName: icon.name, iconStrokeWidth: 2, iconFilled: false, padding: 0, backgroundColor: 'transparent' };
+    section.layers.push(layer);
+    this.setLayerSelection([layer.id]);
+    this.inspectorView = 'properties';
+  }
+
+  setLayerIcon(layer: VisualInvitationLayer, icon: VisualIconOption): void {
+    this.recordHistory();
+    layer.style = { ...(layer.style || {}), iconName: icon.name, iconStrokeWidth: layer.style?.iconStrokeWidth || 2 };
+    layer.name = `Icono: ${icon.label}`;
+    layer.text = icon.label;
+  }
+
   isMediaPreviewActive(layer: VisualInvitationLayer): boolean {
     return this.previewingMediaLayerId === layer.id;
   }
@@ -1656,11 +1695,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.centerLayersAt(this.selectedLayers, x, y);
     } else {
       this.recordHistory();
-      const type = item.kind === 'media' ? item.media.type : item.kind === 'shape' ? 'shape' : item.type;
+      const type = item.kind === 'media' ? item.media.type : item.kind === 'shape' ? 'shape' : item.kind === 'icon' ? 'text' : item.type;
       const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
       const shapeDimensions = item.kind === 'shape' ? this.shapeDimensions(item.shape) : undefined;
-      const width = shapeDimensions?.width || (type === 'text' ? 60 : type === 'shape' ? 36 : 45);
-      const height = shapeDimensions?.height || (type === 'text' ? 18 : type === 'button' ? 13 : type === 'shape' ? 22 : 30);
+      const width = item.kind === 'icon' ? 12 : shapeDimensions?.width || (type === 'text' ? 60 : type === 'shape' ? 36 : 45);
+      const height = item.kind === 'icon' ? 12 : shapeDimensions?.height || (type === 'text' ? 18 : type === 'button' ? 13 : type === 'shape' ? 22 : 30);
       const layer = this.newLayer(type, text, 0, 0, width, height);
       layer.x = this.bound(x - width / 2, 0, 100 - width);
       layer.y = this.bound(y - height / 2, 0, 100 - height);
@@ -1671,6 +1710,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (type === 'shape') this.applyShapePreset(layer, item.kind === 'shape' ? item.shape : 'rectangle');
+      if (item.kind === 'icon') {
+        layer.name = `Icono: ${item.icon.label}`;
+        layer.text = item.icon.label;
+        layer.style = { ...(layer.style || {}), iconName: item.icon.name, iconStrokeWidth: 2, iconFilled: false, padding: 0, backgroundColor: 'transparent' };
+      }
       section.layers.push(layer);
       this.setLayerSelection([layer.id]);
     }

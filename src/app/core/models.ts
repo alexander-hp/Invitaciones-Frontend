@@ -387,6 +387,9 @@ export interface VisualInvitationLayerStyle {
   hoverBackgroundColor?: string;
   hoverColor?: string;
   pressedScale?: number;
+  iconName?: string;
+  iconStrokeWidth?: number;
+  iconFilled?: boolean;
   audioPresentation?: 'native' | 'button';
   audioPosition?: 'inline' | 'fixed';
   audioCorner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';

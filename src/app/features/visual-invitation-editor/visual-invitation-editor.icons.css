@@ -1,0 +1,14 @@
+.icon-catalog-tools{display:grid;grid-template-columns:minmax(0,1fr) 105px;gap:5px;margin-bottom:7px}
+.icon-catalog-tools input,.icon-catalog-tools select,.icon-style-editor>input{box-sizing:border-box;width:100%;min-width:0;padding:8px;border:1px solid #d8d0ca;background:#fff;font-size:10px}
+.icon-catalog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;max-height:245px;margin-bottom:18px;overflow:auto}
+.icon-catalog button{display:grid;place-items:center;gap:4px;min-width:0;min-height:58px;padding:6px 3px;border:1px solid #ddd5cf;background:#fff;color:#514842;cursor:grab}
+.icon-catalog button:hover,.icon-catalog button.active{border-color:#168a60;background:#eaf7f2;color:#126447}
+.icon-catalog lucide-icon{display:block;width:22px;height:22px}
+.icon-catalog lucide-icon svg{display:block;width:100%;height:100%}
+.icon-catalog span{max-width:100%;overflow:hidden;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.canvas-icon-layer{display:block;width:100%;height:100%;color:inherit;pointer-events:none}
+.canvas-icon-layer svg{display:block;width:100%;height:100%}
+.icon-style-editor{display:grid;gap:9px;margin:12px 0;padding:12px;border:1px solid #d8d0ca;background:#fbfaf8}
+.icon-style-editor h3{margin:0}
+.inspector-icon-catalog{grid-template-columns:repeat(3,minmax(0,1fr));max-height:190px;margin:0}
+@media(max-width:700px){.icon-catalog{grid-template-columns:repeat(5,minmax(0,1fr))}.icon-catalog-tools{grid-template-columns:1fr}}
