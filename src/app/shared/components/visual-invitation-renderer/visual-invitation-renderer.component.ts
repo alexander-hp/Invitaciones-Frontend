@@ -855,11 +855,26 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       '--visual-accent': theme.accentColor,
       '--visual-heading-font': theme.headingFont,
       '--visual-body-font': theme.bodyFont,
-      '--visual-button-background': theme.buttonStyle === 'solid' ? theme.buttonBackgroundColor : theme.buttonStyle === 'soft' ? `color-mix(in srgb,${theme.buttonBackgroundColor} 16%,transparent)` : 'transparent',
+      '--visual-background-overlay': this.colorWithAlpha(theme.backgroundColor, .94, 'rgba(255,255,255,.94)'),
+      '--visual-accent-border': this.colorWithAlpha(theme.accentColor, .32, 'rgba(154,103,84,.32)'),
+      '--visual-accent-soft': this.colorWithAlpha(theme.accentColor, .1, 'rgba(154,103,84,.1)'),
+      '--visual-text-shadow': this.colorWithAlpha(theme.textColor, .15, 'rgba(41,37,35,.15)'),
+      '--visual-button-background': theme.buttonStyle === 'solid' ? theme.buttonBackgroundColor : theme.buttonStyle === 'soft' ? this.colorWithAlpha(theme.buttonBackgroundColor, .16, 'rgba(41,37,35,.16)') : 'transparent',
       '--visual-button-text': theme.buttonStyle === 'solid' ? theme.buttonTextColor : theme.buttonBackgroundColor,
       '--visual-button-border': theme.buttonStyle === 'outline' ? `2px solid ${theme.buttonBackgroundColor}` : '0 solid transparent',
       '--visual-button-radius': `${theme.buttonRadius}px`
     };
+  }
+
+  private colorWithAlpha(color: string, alpha: number, fallback: string): string {
+    const value = String(color || '').trim();
+    const match = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (!match) return fallback;
+    const hex = match[1].length === 3 ? match[1].split('').map((part) => part + part).join('') : match[1];
+    const red = Number.parseInt(hex.slice(0, 2), 16);
+    const green = Number.parseInt(hex.slice(2, 4), 16);
+    const blue = Number.parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red},${green},${blue},${alpha})`;
   }
 
   sectionStyle(section: VisualInvitationSection): Record<string, string> {
