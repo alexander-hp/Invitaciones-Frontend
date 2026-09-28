@@ -23,6 +23,9 @@ import { VisualInvitationRendererComponent } from '../../shared/components/visua
 import { VISUAL_ICON_CATALOG, VisualIconOption } from '../../shared/components/visual-invitation-renderer/visual-icon-catalog';
 import { isSingleInstanceControl, visibleControlDuplicates } from '../../shared/components/visual-invitation-renderer/visual-functional-controls';
 import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from '../../shared/components/visual-invitation-renderer/visual-canvas-geometry';
+import { buildCompleteDesign, COMPLETE_DESIGN_PRESETS, CompleteDesignPreset } from './complete-design-library';
+import { createVisualDesignAiPrompt, createVisualDesignExchange } from './visual-design-exchange';
+import { buttonPresetStyle, VISUAL_BUTTON_PRESETS, VisualButtonPreset } from './visual-button-presets';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
@@ -35,6 +38,7 @@ type ImageMask = NonNullable<NonNullable<VisualInvitationLayer['style']>['imageM
 type ShapeKind = NonNullable<NonNullable<VisualInvitationLayer['style']>['shapeKind']>;
 type PaletteDragItem =
   | { kind: 'layer'; type: VisualLayerType }
+  | { kind: 'frame'; mask: ImageMask }
   | { kind: 'shape'; shape: ShapeKind }
   | { kind: 'icon'; icon: VisualIconOption }
   | { kind: 'component'; key: string }
@@ -55,7 +59,7 @@ type ContentListKey = 'locations' | 'itinerary' | 'galleryItems' | 'giftRegistry
 type EditorHistoryState = { design: VisualInvitationDesign; content: InvitationContent; rsvpSettings: RsvpSettings };
 type ModerationListKey = 'autoApproveRoles' | 'autoApproveGroups' | 'autoApproveEmails' | 'autoApprovePhones';
 type RsvpPartKey = 'eyebrow' | 'title' | 'intro' | 'name' | 'contact' | 'response' | 'companions' | 'dietary' | 'message' | 'submit' | 'feedback';
-type DesignImportSource = 'current' | 'catalog' | 'html' | 'json';
+type DesignImportSource = 'ai' | 'current' | 'catalog' | 'html' | 'json';
 type DesignImportStrategy = 'replace' | 'append';
 type ImportMappingModuleType = 'rsvp' | 'dedications' | 'songs' | 'album' | 'guestPass';
 type FunctionalTestType = ImportMappingModuleType;
@@ -71,9 +75,11 @@ type FunctionalTestData = {
 @Component({
   selector: 'app-visual-invitation-editor',
   templateUrl: './visual-invitation-editor.component.html',
-  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css']
+  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css', './visual-invitation-editor.library.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
+  readonly buttonPresets = VISUAL_BUTTON_PRESETS;
+  readonly buttonPresetStyle = buttonPresetStyle;
   invitation?: InvitationModel;
   event?: EventModel;
   design!: VisualInvitationDesign;
@@ -94,6 +100,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   savingRevision = false;
   loadingRevisions = false;
   showOnboarding = false;
+  showDesignLibrary = false;
+  libraryCategory = 'all';
+  librarySelectedKey = COMPLETE_DESIGN_PRESETS[0].key;
+  libraryPreviewDesign?: VisualInvitationDesign;
+  libraryPreviewInvitation?: InvitationModel;
   autosaving = false;
   autosaveState = 'Guardado';
   message = '';
@@ -119,6 +130,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   smartSnapping = true;
   showPublishAudit = false;
   publishAuditIssues: PublishAuditIssue[] = [];
+  showAcknowledgedAuditIssues = false;
+  private acknowledgedAuditIssueKeys = new Set<string>();
   showResponsivePreview = false;
   editingLayerId = '';
   previewingMediaLayerId = '';
@@ -136,9 +149,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   importHtmlSource = '';
   importCssSource = '';
   importJsonSource = '';
+  importJsonFileName = '';
+  importError = '';
+  aiExchangeMessage = '';
+  aiDesignPrompt = '';
   importTemplateKey = 'envelope-cards';
   importWarnings: string[] = [];
   importSummary = '';
+  private importHistorySteps = 0;
   importReview: VisualDesignImportReviewItem[] = [];
   importMappingSectionId = '';
   importMappingType: ImportMappingModuleType = 'rsvp';
@@ -409,11 +427,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   responsivePreviewMeasuredHeight: Record<DeviceMode, number> = { mobile: 0, tablet: 0, desktop: 0 };
   private responsiveAuditHandle?: ReturnType<typeof setTimeout>;
 
-  readonly builtInPresets = [
-    { key: 'editorial', label: 'Editorial claro', colors: ['#f6f1eb', '#24211f'] },
-    { key: 'romantic', label: 'Romántico floral', colors: ['#f8e9e8', '#8d4f58'] },
-    { key: 'night', label: 'Noche elegante', colors: ['#171717', '#d6b46c'] }
-  ];
+  readonly builtInPresets = COMPLETE_DESIGN_PRESETS;
 
   readonly themePresets: Array<{ key: string; label: string; theme: VisualTheme }> = [
     { key: 'editorial', label: 'Editorial', theme: { backgroundColor: '#f6f1eb', textColor: '#24211f', accentColor: '#b57c62', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#24211f', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 4 } },
@@ -723,11 +737,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   get criticalAuditCount(): number {
-    return this.publishAuditIssues.filter((issue) => issue.severity === 'critical').length;
+    return this.pendingPublishAuditIssues.filter((issue) => issue.severity === 'critical').length;
   }
 
   get warningAuditCount(): number {
-    return this.publishAuditIssues.filter((issue) => issue.severity === 'warning').length;
+    return this.pendingPublishAuditIssues.filter((issue) => issue.severity === 'warning').length;
+  }
+
+  get optionalAuditCount(): number {
+    return this.pendingPublishAuditIssues.filter((issue) => issue.severity === 'suggestion').length;
+  }
+
+  get pendingPublishAuditIssues(): PublishAuditIssue[] {
+    return this.publishAuditIssues.filter((issue) => !this.acknowledgedAuditIssueKeys.has(this.auditIssueKey(issue)));
+  }
+
+  get acknowledgedPublishAuditIssues(): PublishAuditIssue[] {
+    return this.publishAuditIssues.filter((issue) => this.acknowledgedAuditIssueKeys.has(this.auditIssueKey(issue)));
   }
 
   get selectedLayout(): VisualInvitationLayerLayout | undefined {
@@ -780,7 +806,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   normalizeLayerTransform(layer: VisualInvitationLayer, layout: VisualInvitationLayerLayout): void {
     layout.width = this.bound(Number(layout.width) || 4, 4, 100);
     layout.height = this.bound(Number(layout.height) || 4, 4, 100);
-    layout.x = this.bound(Number(layout.x) || 0, 0, 100 - layout.width);
+    layout.x = this.bound(Number(layout.x) || 0, -100, 200);
     const range = this.verticalLayerBounds(this.selectedSection, layout.height);
     layout.y = this.bound(Number(layout.y) || 0, range.min, range.max);
     layout.rotation = this.bound(Number(layout.rotation) || 0, -180, 180);
@@ -806,6 +832,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const layout = this.layoutFor(layer);
       return layout.y < 0 || layout.y + layout.height > 100;
     });
+  }
+
+  layerHasHorizontalOverflow(layout: VisualInvitationLayerLayout): boolean {
+    return layout.x < 0 || layout.x + layout.width > 100;
   }
 
   openResponsivePreview(): void {
@@ -1237,18 +1267,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
     const style = layer.style || {};
     const shape = layer.type === 'shape';
+    const maskedImage = layer.type === 'image' && !!style.imageMask && style.imageMask !== 'none';
     const responsiveScale = this.sharedStyleScale(device);
     const layout = this.design.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
     return {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
-      color: String(style.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(style.backgroundColor || 'transparent'),
+      color: String(style.color || '#2d2927'), backgroundColor: shape || maskedImage ? 'transparent' : String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(style.fontSize || 30, responsiveScale, 10)}px`,
-      fontWeight: String(style.fontWeight || 400), textAlign: String(style.textAlign || 'center'),
+      fontWeight: String(style.fontWeight || 400), fontStyle: String(style.fontStyle || 'normal'), textAlign: String(style.textAlign || 'center'),
       lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(style.letterSpacing || 0, responsiveScale)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
       borderRadius: shape ? '0' : `${this.scaledLayerPixels(style.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
-      borderStyle: !shape && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${this.scaledLayerPixels(style.borderWidth || 0, responsiveScale)}px`,
+      borderStyle: !shape && !maskedImage && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape || maskedImage ? '0' : `${this.scaledLayerPixels(style.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
       boxShadow: shape ? 'none' : String(style.boxShadow || 'none'),
       opacity: layer.hidden ? '0' : String(style.opacity ?? 1)
@@ -1279,7 +1310,60 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   openPublishAudit(): void {
     this.publishAuditIssues = this.auditDesign();
+    this.loadAuditAcknowledgements();
+    this.showAcknowledgedAuditIssues = false;
     this.showPublishAudit = true;
+  }
+
+  acknowledgeAuditIssue(issue: PublishAuditIssue): void {
+    if (issue.severity === 'critical') return;
+    this.acknowledgedAuditIssueKeys.add(this.auditIssueKey(issue));
+    this.saveAuditAcknowledgements();
+  }
+
+  restoreAuditIssue(issue: PublishAuditIssue): void {
+    this.acknowledgedAuditIssueKeys.delete(this.auditIssueKey(issue));
+    this.saveAuditAcknowledgements();
+  }
+
+  private auditIssueKey(issue: PublishAuditIssue): string {
+    return JSON.stringify([issue.severity, issue.title, issue.detail, issue.sectionId, issue.layerId, issue.device]);
+  }
+
+  private auditAcknowledgementStorageKey(): string {
+    return `visual-editor-audit:${this.invitation?._id || this.invitation?.id || ''}`;
+  }
+
+  private auditDesignFingerprint(): string {
+    const snapshot = this.designSnapshot();
+    let hash = 2166136261;
+    for (let index = 0; index < snapshot.length; index++) {
+      hash ^= snapshot.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(36);
+  }
+
+  private loadAuditAcknowledgements(): void {
+    this.acknowledgedAuditIssueKeys.clear();
+    try {
+      const stored = JSON.parse(localStorage.getItem(this.auditAcknowledgementStorageKey()) || 'null');
+      if (stored?.fingerprint === this.auditDesignFingerprint() && Array.isArray(stored.keys)) {
+        this.acknowledgedAuditIssueKeys = new Set(stored.keys.filter((key: unknown): key is string => typeof key === 'string'));
+      }
+    } catch {
+      // Browser storage is optional; acknowledgements still work for this session.
+    }
+  }
+
+  private saveAuditAcknowledgements(): void {
+    try {
+      localStorage.setItem(this.auditAcknowledgementStorageKey(), JSON.stringify({
+        fingerprint: this.auditDesignFingerprint(), keys: [...this.acknowledgedAuditIssueKeys]
+      }));
+    } catch {
+      // Browser storage is optional; acknowledgements still work for this session.
+    }
   }
 
   closePublishAudit(): void {
@@ -1539,6 +1623,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection([layer.id]);
   }
 
+  addFrame(mask: ImageMask): void {
+    const section = this.selectedSection;
+    if (!section) return;
+    this.recordHistory();
+    const layer = this.newLayer('image', '', 24, 26, 52, 26);
+    layer.name = `Marco ${this.imageMasks.find((item) => item.key === mask)?.label || 'de foto'}`;
+    layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
+    layer.style = {
+      ...layer.style, imageMask: mask, frameEnabled: true, objectFit: 'cover', preserveAspectRatio: false,
+      borderWidth: 5, borderStyle: 'solid', borderColor: this.design.theme?.accentColor || '#9d765d',
+      backgroundColor: '#e9e3dc', objectPositionX: 50, objectPositionY: 50
+    };
+    section.layers.push(layer);
+    this.setLayerSelection([layer.id]);
+    this.inspectorView = 'properties';
+  }
+
   get filteredIconCatalog(): VisualIconOption[] {
     const query = this.iconSearch.trim().toLocaleLowerCase('es');
     return this.iconCatalog.filter((icon) => {
@@ -1757,11 +1858,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const y = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
     this.selectedSectionId = section.id;
 
+    const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+    const imageTarget = section.layers.find((layer) => layer.id === targetId && layer.type === 'image' && layer.style?.frameEnabled);
+    if (item.kind === 'media' && item.media.type === 'image' && imageTarget) {
+      this.recordHistory();
+      imageTarget.url = item.media.url;
+      this.setLayerSelection([imageTarget.id]);
+      this.inspectorView = 'properties';
+      this.endPaletteDrag();
+      this.flash('Foto colocada en el marco.');
+      return;
+    }
+
     if (item.kind === 'component') {
       this.addComponent(item.key);
       this.centerLayersAt(this.selectedLayers, x, y);
     } else if (item.kind === 'rsvp-control') {
       this.addFunctionalControl(item.binding);
+      this.centerLayersAt(this.selectedLayers, x, y);
+    } else if (item.kind === 'frame') {
+      this.addFrame(item.mask);
       this.centerLayersAt(this.selectedLayers, x, y);
     } else {
       this.recordHistory();
@@ -2211,11 +2327,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const nextHeight = north ? resize.height - dy : resize.height + dy;
       const precision = event.pointerType === 'touch' ? 2 : 100;
       const round = (value: number) => Math.round(value * precision) / precision;
-      resize.layout.x = round(this.bound(nextX, 0, resize.x + resize.width - 4));
+      resize.layout.x = round(this.bound(nextX, -100, resize.x + resize.width - 4));
       const height = this.bound(nextHeight, 4, 100);
       const range = this.verticalLayerBounds(resize.section, height);
       resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 4)));
-      resize.layout.width = round(this.bound(nextWidth, 4, 100 - resize.layout.x));
+      resize.layout.width = round(this.bound(nextWidth, 4, 100));
       resize.layout.height = round(this.bound(height, 4, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
       return;
     }
@@ -2226,7 +2342,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!drag.moved && Math.hypot(distanceX, distanceY) < 3) return;
     event.preventDefault();
     if (!drag.moved) { this.recordHistory(); drag.moved = true; }
-    const rawX = this.bound(drag.bounds.x + distanceX / drag.canvas.clientWidth * 100, 0, 100 - drag.bounds.width);
+    const rawX = this.bound(drag.bounds.x + distanceX / drag.canvas.clientWidth * 100, -100, 200);
     const range = this.verticalLayerBounds(drag.section, drag.bounds.height);
     const rawY = this.bound(drag.bounds.y + distanceY / drag.canvas.clientHeight * 100, range.min, range.max);
     const ignoredIds = new Set(drag.items.map((item) => item.layer.id));
@@ -2234,7 +2350,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const dx = snapped.x - drag.bounds.x;
     const dy = snapped.y - drag.bounds.y;
     for (const item of drag.items) {
-      item.layout.x = this.bound(item.x + dx, 0, 100 - item.width);
+      item.layout.x = this.bound(item.x + dx, -100, 200);
       const itemRange = this.verticalLayerBounds(drag.section, item.height);
       item.layout.y = this.bound(item.y + dy, itemRange.min, itemRange.max);
     }
@@ -2351,7 +2467,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   applyMedia(media: DesignMedia): void {
     let layer = this.selectedLayer;
     let created = false;
-    if (!layer || !['image', 'video', 'audio'].includes(layer.type)) {
+    if (!layer || layer.type !== media.type) {
       this.addLayer(media.type);
       layer = this.selectedLayer;
       created = true;
@@ -2396,8 +2512,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const step = event.shiftKey ? 2 : .25;
     layers.forEach((layer) => {
       const layout = this.editableLayout(layer);
-      if (event.key === 'ArrowLeft') layout.x = this.bound(layout.x - step, 0, 100 - layout.width);
-      if (event.key === 'ArrowRight') layout.x = this.bound(layout.x + step, 0, 100 - layout.width);
+      if (event.key === 'ArrowLeft') layout.x = this.bound(layout.x - step, -100, 200);
+      if (event.key === 'ArrowRight') layout.x = this.bound(layout.x + step, -100, 200);
       const range = this.verticalLayerBounds(this.selectedSection, layout.height);
       if (event.key === 'ArrowUp') layout.y = this.bound(layout.y - step, range.min, range.max);
       if (event.key === 'ArrowDown') layout.y = this.bound(layout.y + step, range.min, range.max);
@@ -2407,18 +2523,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const s = layer.style || {};
     const shape = layer.type === 'shape';
+    const maskedImage = layer.type === 'image' && !!s.imageMask && s.imageMask !== 'none';
     const responsiveScale = this.sharedStyleScale(this.device);
     const layout = this.layoutFor(layer);
     return {
       left: `${layout.x}%`, top: `${layout.y}%`, width: `${layout.width}%`, height: `${layout.height}%`,
       transform: `rotate(${layout.rotation || 0}deg)`, zIndex: String(layer.zIndex || 1),
-      color: String(s.color || '#2d2927'), backgroundColor: shape ? 'transparent' : String(s.backgroundColor || 'transparent'),
+      color: String(s.color || '#2d2927'), backgroundColor: shape || maskedImage ? 'transparent' : String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(s.fontSize || 30, responsiveScale, 10)}px`,
-      fontWeight: String(s.fontWeight || 400), textAlign: String(s.textAlign || 'center'),
+      fontWeight: String(s.fontWeight || 400), fontStyle: String(s.fontStyle || 'normal'), textAlign: String(s.textAlign || 'center'),
       lineHeight: String(s.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(s.letterSpacing || 0, responsiveScale)}px`, textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
       borderRadius: shape ? '0' : `${this.scaledLayerPixels(s.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
-      borderStyle: !shape && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape ? '0' : `${this.scaledLayerPixels(s.borderWidth || 0, responsiveScale)}px`,
+      borderStyle: !shape && !maskedImage && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape || maskedImage ? '0' : `${this.scaledLayerPixels(s.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && s.gradientEnabled
         ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`
         : !shape && s.backgroundImageUrl ? `url("${String(s.backgroundImageUrl)}")` : 'none',
@@ -2463,6 +2580,32 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     } else {
       Object.assign(style, { backgroundColor: '#ffffffb8', color: this.design.theme?.textColor || '#2d2927', borderWidth: 1, borderStyle: 'solid', borderColor: '#ffffffcc', boxShadow: '0 10px 30px rgba(0,0,0,.18)', hoverBackgroundColor: '#ffffffe6', hoverColor: this.design.theme?.textColor || '#2d2927' });
     }
+  }
+
+  applyButtonPreset(layer: VisualInvitationLayer, preset: VisualButtonPreset): void {
+    if (layer.type !== 'button') return;
+    this.recordHistory();
+    layer.style = {
+      ...layer.style,
+      ...preset.style,
+      gradientEnabled: !!preset.style.gradientEnabled,
+      backgroundImageUrl: undefined,
+      fontStyle: 'normal',
+      textAlign: 'center',
+      textDecoration: preset.style.textDecoration || 'none',
+      textShadow: 'none',
+      letterSpacing: 0,
+      lineHeight: 1.2,
+      textTransform: preset.style.textTransform || 'none',
+      opacity: 1,
+      pressedScale: .97
+    };
+  }
+
+  isButtonPresetApplied(layer: VisualInvitationLayer, preset: VisualButtonPreset): boolean {
+    return Object.entries(preset.style).every(([key, value]) =>
+      layer.style?.[key as keyof VisualInvitationLayerStyle] === value
+    ) && !!layer.style?.gradientEnabled === !!preset.style.gradientEnabled;
   }
 
   setAudioShape(layer: VisualInvitationLayer, shape: NonNullable<VisualInvitationLayerStyle['audioShape']>, record = true): void {
@@ -2519,6 +2662,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return {
       objectFit: style.preserveAspectRatio !== false ? 'contain' : (style.objectFit || 'cover'),
       objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
+      clipPath: style.imageMask && style.imageMask !== 'none' && Number(style.borderWidth || 0) > 0 ? this.maskClipPath(style.imageMask) : 'none',
+      borderRadius: style.imageMask === 'rounded' ? '12%' : '0',
       transform: `scale(${scaleX},${scaleY}) rotate(${Number(style.imageRotation || 0)}deg)`,
       filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
     };
@@ -2526,7 +2671,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   imageMaskStyle(layer: VisualInvitationLayer): Record<string, string> {
     const mask = layer.style?.imageMask || 'none';
+    const framed = mask !== 'none' && Number(layer.style?.borderWidth || 0) > 0;
+    return {
+      clipPath: this.maskClipPath(mask), borderRadius: mask === 'rounded' ? '12%' : '0',
+      boxSizing: 'border-box',
+      padding: framed ? `${this.scaledLayerPixels(Number(layer.style?.borderWidth || 0), this.sharedStyleScale(this.device))}px` : '0',
+      backgroundColor: framed ? String(layer.style?.borderColor || '#ffffff') : 'transparent'
+    };
+  }
+
+  framePreviewStyle(mask: ImageMask): Record<string, string> {
     return { clipPath: this.maskClipPath(mask), borderRadius: mask === 'rounded' ? '12%' : '0' };
+  }
+
+  setImageFit(layer: VisualInvitationLayer, fit: 'cover' | 'contain'): void {
+    this.recordHistory();
+    layer.style = { ...layer.style, preserveAspectRatio: fit === 'contain', objectFit: fit };
   }
 
   setImageMask(layer: VisualInvitationLayer, mask: ImageMask): void {
@@ -3395,21 +3555,74 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     });
   }
 
-  applyBuiltInPreset(key: string): void {
-    if (!this.confirmReplaceDesign()) return;
-    this.recordHistory();
-    this.design = this.buildPreset(key);
-    this.selectedSectionId = this.design.sections[0]?.id || '';
-    this.clearLayerSelection();
+  chooseStartingDesign(key: string): void {
+    this.openDesignLibrary(key);
   }
 
-  chooseStartingDesign(key: string): void {
-    this.design = this.buildPreset(key);
-    this.design.assets = [];
+  get filteredCompleteDesigns(): CompleteDesignPreset[] {
+    return this.libraryCategory === 'all'
+      ? this.builtInPresets
+      : this.builtInPresets.filter((preset) => preset.category === this.libraryCategory || preset.category === 'general');
+  }
+
+  get selectedCompleteDesign(): CompleteDesignPreset {
+    return this.builtInPresets.find((preset) => preset.key === this.librarySelectedKey) || this.builtInPresets[0];
+  }
+
+  openDesignLibrary(key?: string): void {
+    this.libraryCategory = 'all';
+    this.selectCompleteDesign(key || this.recommendedCompleteDesignKey());
+    this.showDesignLibrary = true;
+  }
+
+  setLibraryCategory(category: string): void {
+    this.libraryCategory = category;
+    if (!this.filteredCompleteDesigns.some((preset) => preset.key === this.librarySelectedKey)) {
+      this.selectCompleteDesign(this.filteredCompleteDesigns.find((preset) => preset.category === category)?.key || this.filteredCompleteDesigns[0].key);
+    }
+  }
+
+  closeDesignLibrary(): void {
+    this.showDesignLibrary = false;
+    this.libraryPreviewDesign = undefined;
+    this.libraryPreviewInvitation = undefined;
+  }
+
+  selectCompleteDesign(key: string): void {
+    if (!this.invitation) return;
+    this.librarySelectedKey = key;
+    const candidate = this.buildPreset(key);
+    const current = this.design;
+    try {
+      this.design = candidate;
+      this.normalizeModuleStyles();
+    } finally {
+      this.design = current;
+    }
+    this.libraryPreviewDesign = candidate;
+    this.libraryPreviewInvitation = {
+      ...this.invitation,
+      content: { ...this.invitation.content, visualDesign: candidate }
+    };
+  }
+
+  applyCompleteDesign(): void {
+    if (!this.libraryPreviewDesign || (!this.showOnboarding && !this.confirmReplaceDesign())) return;
+    this.recordHistory();
+    const assets = this.design.assets || [];
+    this.design = this.clone(this.libraryPreviewDesign);
+    this.design.active = true;
+    this.design.assets = assets;
     this.selectedSectionId = this.design.sections[0]?.id || '';
     this.clearLayerSelection();
     this.showOnboarding = false;
+    this.closeDesignLibrary();
     this.autosaveState = 'Cambios pendientes';
+  }
+
+  private recommendedCompleteDesignKey(): string {
+    const type = this.event?.type;
+    return this.builtInPresets.find((preset) => preset.category === type)?.key || 'editorial';
   }
 
   startBlankDesign(): void {
@@ -3427,12 +3640,53 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.importReview = [];
     this.resetImportMapping();
     const currentTemplate = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || '';
-    this.importSource = currentTemplate === 'visual-builder' ? 'catalog' : 'current';
+    this.importSource = 'ai';
     this.importTemplateKey = currentTemplate && currentTemplate !== 'visual-builder' && currentTemplate !== 'custom-html' ? currentTemplate : 'envelope-cards';
     this.importHtmlSource = this.invitation?.content?.customHtml || '';
     this.importCssSource = this.invitation?.content?.customCss || '';
     this.importJsonSource = '';
+    this.importJsonFileName = '';
+    this.importError = '';
+    this.aiExchangeMessage = '';
+    this.aiDesignPrompt = createVisualDesignAiPrompt(this.event?.type);
     this.showImportDialog = true;
+  }
+
+  async copyAiDesignPrompt(): Promise<void> {
+    this.importError = '';
+    try {
+      await navigator.clipboard.writeText(this.aiDesignPrompt);
+      this.aiExchangeMessage = 'Instrucciones copiadas. Pégalas en el chat de la IA que prefieras.';
+    } catch {
+      this.importError = 'No se pudo copiar automáticamente. Abre las instrucciones y cópialas manualmente.';
+    }
+  }
+
+  downloadEditableDesign(): void {
+    const design = this.stripMongoMetadata(this.clone(this.design));
+    const content = JSON.stringify(createVisualDesignExchange(design), null, 2);
+    this.downloadBlob(new Blob([content], { type: 'application/json' }), `${this.exportFileBase()}-editable.json`);
+    this.aiExchangeMessage = 'Diseño editable descargado. Puedes compartir ese JSON con otra IA y volver a importarlo aquí.';
+  }
+
+  async loadDesignJsonFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.importError = '';
+    this.aiExchangeMessage = '';
+    if (!file.name.toLowerCase().endsWith('.json') || file.size > 2_000_000) {
+      this.importError = 'Selecciona un archivo .json de hasta 2 MB.';
+      return;
+    }
+    try {
+      this.importJsonSource = await file.text();
+      this.importJsonFileName = file.name;
+      this.aiExchangeMessage = 'Archivo cargado. Revísalo y pulsa Importar al editor.';
+    } catch {
+      this.importError = 'No fue posible leer el archivo JSON.';
+    }
   }
 
   closeDesignImporter(): void {
@@ -3685,7 +3939,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   discardImportedDesign(): void {
     if (!this.importSummary) return;
-    this.undo();
+    for (let step = 0; step < this.importHistorySteps; step++) this.undo();
+    this.importHistorySteps = 0;
     this.importSummary = '';
     this.importWarnings = [];
     this.importReview = [];
@@ -3696,6 +3951,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   async importDesign(): Promise<void> {
     if (this.importingDesign) return;
     this.error = '';
+    this.importError = '';
     this.importWarnings = [];
     this.importSummary = '';
     this.importReview = [];
@@ -3703,7 +3959,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.importingDesign = true;
     try {
       let result;
-      if (this.importSource === 'json') {
+      if (this.importSource === 'json' || this.importSource === 'ai') {
         result = this.designImporter.fromJson(this.importJsonSource.trim());
       } else if (this.importSource === 'catalog' && this.invitation?.slug) {
         result = await this.designImporter.fromUrl(this.templatePreviewUrl(this.importTemplateKey), this.design.theme || this.themePresets[0].theme);
@@ -3720,6 +3976,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         result = await this.designImporter.fromHtml(source.html, source.css, this.design.theme || this.themePresets[0].theme);
       }
       this.recordHistory();
+      this.importHistorySteps = 1;
       const imported = this.regenerateIds(this.clone(result.design));
       if (this.importStrategy === 'append') {
         this.design.sections.push(...imported.sections);
@@ -3737,10 +3994,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.importReview = result.review.map((item) => ({ ...item, sectionId: imported.sections[item.sectionIndex]?.id }));
       this.autosaveState = 'Cambios pendientes';
     } catch (error) {
-      this.error = error instanceof Error ? error.message : 'No fue posible importar el diseño.';
+      this.importError = error instanceof Error ? error.message : 'No fue posible importar el diseño.';
     } finally {
       this.importingDesign = false;
     }
+  }
+
+  addImportedModule(type: 'rsvp' | 'countdown' | 'locations' | 'album'): void {
+    if (!this.importSummary || this.designHasSectionType(type)) return;
+    const labels = { rsvp: 'Confirmación RSVP', countdown: 'Cuenta regresiva', locations: 'Ubicación y mapa', album: 'Álbum colectivo' };
+    this.addSection(type, labels[type]);
+    this.importHistorySteps++;
+    const section = this.design.sections[this.design.sections.length - 1];
+    this.importReview.push({ sectionIndex: this.design.sections.length - 1, sectionId: section.id, status: 'connected',
+      title: labels[type], detail: 'Módulo nativo conectado con los datos del evento. Revisa su configuración antes de publicar.' });
+    this.importWarnings = this.importWarnings.filter((warning) => !warning.startsWith('Este diseño es solo visual'));
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  designHasSectionType(type: string): boolean {
+    return this.design.sections.some((section) => section.type === type);
   }
 
   private resetImportMapping(): void {
@@ -3985,7 +4258,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const snapshot = this.designSnapshot();
     request.subscribe({
       next: ({ invitation }) => { this.acceptSavedDesign(invitation, snapshot); this.saving = false; this.flash(this.hasUnsavedChanges ? 'Guardado; hay cambios nuevos pendientes.' : 'Diseño guardado.'); },
-      error: (error) => { this.saving = false; this.error = error?.error?.message || 'No fue posible guardar el diseño.'; }
+      error: (error) => { this.saving = false; this.error = this.designRequestError(error, 'No fue posible guardar el diseño.'); }
     });
   }
 
@@ -4004,7 +4277,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.flash(this.hasUnsavedChanges ? 'Publicado; hay cambios nuevos pendientes.' : 'Diseño publicado.');
         if (!this.hasUnsavedChanges) this.openPreview();
       },
-      error: (error) => { this.publishing = false; this.error = error?.error?.message || 'No fue posible publicar.'; }
+      error: (error) => { this.publishing = false; this.error = this.designRequestError(error, 'No fue posible publicar.'); }
     });
   }
 
@@ -4062,6 +4335,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     });
   }
 
+  private designRequestError(error: { error?: { message?: string; details?: { issues?: Array<{ path?: Array<string | number>; message?: string }>; fieldErrors?: Record<string, string[]> } } }, fallback: string): string {
+    const details = error?.error?.details;
+    const issues = details?.issues?.slice(0, 3).map((issue) => {
+      const path = issue.path?.map((part) => typeof part === 'number' ? `[${part}]` : part).join('.').replace(/\.\[/g, '[') || 'diseño';
+      return `${path}: ${issue.message || 'valor inválido'}`;
+    });
+    if (issues?.length) return `Revisa estos campos antes de guardar: ${issues.join('; ')}`;
+    const fieldErrors = details?.fieldErrors;
+    if (fieldErrors && Object.values(fieldErrors).some((messages) => messages?.length)) {
+      return `Revisa el diseño: ${Object.entries(fieldErrors).flatMap(([field, messages]) => messages.map((message) => `${field}: ${message}`)).slice(0, 3).join('; ')}`;
+    }
+    return error?.error?.message || fallback;
+  }
+
   private loadPersonalTemplates(): void {
     this.api.listVisualDesignTemplates().subscribe({
       next: ({ templates }) => { this.personalTemplates = templates; },
@@ -4084,45 +4371,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private buildPreset(key: string, includeModules = true): VisualInvitationDesign {
-    const content = this.invitation?.content || {};
-    const palettes: Record<string, { background: string; foreground: string; accent: string; font: string }> = {
-      editorial: { background: '#f6f1eb', foreground: '#24211f', accent: '#b57c62', font: 'Georgia, serif' },
-      romantic: { background: '#f8e9e8', foreground: '#633c43', accent: '#a65e6a', font: 'Georgia, serif' },
-      night: { background: '#171717', foreground: '#f7f1e5', accent: '#d6b46c', font: "'Times New Roman', serif" }
-    };
-    const palette = palettes[key] || palettes['editorial'];
-    const hero = this.makeSection('hero', 'Portada', palette.background, 720);
-    hero.background = { color: palette.background, imageUrl: content.coverImageUrl || '', overlay: content.coverImageUrl ? .35 : 0 };
-    const title = this.newLayer('text', content.headline || this.event?.title || 'Nuestra celebración', 8, 29, 84, 20, 54);
-    title.style = { ...title.style, color: palette.foreground, fontFamily: palette.font, fontWeight: 600 };
-    const subtitle = this.newLayer('text', content.subheadline || 'Acompáñanos en este día especial', 15, 54, 70, 12, 21);
-    subtitle.style = { ...subtitle.style, color: palette.accent, fontFamily: palette.font, fontWeight: 400 };
-    hero.layers = [title, subtitle];
-    const sections = [hero];
-
-    if (includeModules) {
-      if (content.storyBody || content.storyTitle) {
-        const story = this.makeSection('story', content.storyTitle || 'Nuestra historia', palette.background, 560);
-        const storyTitle = this.newLayer('text', content.storyTitle || 'Nuestra historia', 12, 10, 76, 14, 38);
-        const storyBody = this.newLayer('text', content.storyBody || '', 14, 31, 72, 45, 20);
-        storyTitle.style = { ...storyTitle.style, color: palette.accent, fontFamily: palette.font };
-        storyBody.style = { ...storyBody.style, color: palette.foreground, fontFamily: 'Arial, sans-serif', fontWeight: 400 };
-        story.layers = [storyTitle, storyBody];
-        sections.push(story);
-      }
-      const settings = content.sectionSettings || {};
-      if (settings.locations !== false && content.locations?.length) sections.push(this.makeSection('locations', 'Ubicaciones', palette.background, 620));
-      if (settings.itinerary !== false && content.itinerary?.length) sections.push(this.makeSection('itinerary', 'Itinerario', palette.background, 620));
-      if (settings.gallery !== false && content.gallery?.length) sections.push(this.makeSection('gallery', 'Galería', palette.background, 620));
-      if (settings.giftRegistry !== false || settings.digitalEnvelope !== false) sections.push(this.makeSection('gifts', 'Mesa de regalos', palette.background, 620));
-      if (settings.lodging !== false && content.lodging?.length) sections.push(this.makeSection('lodging', 'Hospedaje recomendado', palette.background, 650));
-      if (settings.rsvp !== false) sections.push(this.makeSection('rsvp', 'Confirma tu asistencia', palette.background, 700));
-      if (settings.guestAlbum !== false) sections.push(this.makeSection('album', 'Álbum colectivo', palette.background, 520));
-      if (settings.dedications !== false) sections.push(this.makeSection('dedications', 'Dedicatorias', palette.background, 620));
-      if (settings.songRequests !== false) sections.push(this.makeSection('songs', 'Pide una canción', palette.background, 560));
-    }
-    const presetTheme = this.themePresets.find((item) => item.key === key)?.theme || this.themePresets[0].theme;
-    return { version: 1, active: false, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: this.clone(presetTheme), sections };
+    return buildCompleteDesign(key, this.invitation?.content || {}, this.event, (prefix) => this.uid(prefix), includeModules);
   }
 
   private makeSection(type: string, title: string, color: string, height: number): VisualInvitationSection {
@@ -5081,7 +5330,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           continue;
         }
         if (['image', 'video', 'audio'].includes(layer.type) && !layer.url?.trim()) {
-          add('critical', `${this.layerTypeLabel(layer.type)} sin archivo`, 'Carga un archivo o elimina este elemento.', section.id, layer.id);
+          const emptyFrame = layer.type === 'image' && layer.style?.frameEnabled;
+          add(emptyFrame ? 'suggestion' : 'critical', emptyFrame ? 'Marco sin foto' : `${this.layerTypeLabel(layer.type)} sin archivo`,
+            emptyFrame ? 'Este marco no aparecerá en la invitación pública hasta que coloques una foto.' : 'Carga un archivo o elimina este elemento.', section.id, layer.id);
         }
         if (layer.type === 'button' && !layer.url?.trim() && !layer.binding?.trim()) {
           add('critical', `Botón sin destino: ${this.layerLabel(layer)}`, 'Agrega una URL o una acción al botón.', section.id, layer.id);
@@ -5093,7 +5344,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if ((layer.type === 'text' || layer.type === 'button') && !layer.text?.trim()) {
           add('warning', 'Texto vacío', 'Escribe un texto o elimina el elemento.', section.id, layer.id);
         }
-        if (layer.type === 'image' && !layer.text?.trim()) {
+        if (layer.type === 'image' && layer.url?.trim() && !layer.text?.trim()) {
           add('suggestion', `Imagen sin descripción: ${this.layerLabel(layer)}`, 'Agrega una descripción breve para accesibilidad.', section.id, layer.id);
         }
         const layouts: Array<{ device: DeviceMode; x: number; y: number; width: number; height: number }> = this.design.responsiveMode === 'independent'
@@ -5107,13 +5358,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           const outsideCanvas = this.design.presentationMode === 'chapters'
             ? layout.y < -.01 || layout.y + layout.height > 100.01
             : top < -.01 || bottom > visualCanvasHeight(enabledSections) + .01;
-          if (layout.x < -.01 || layout.x + layout.width > 100.01 || outsideCanvas) {
-            add('critical', `Elemento fuera del área en ${this.deviceLabel(layout.device)}`, 'Muévelo o reduce su tamaño para que no se corte.', section.id, layer.id, layout.device);
-            break;
+          const horizontalOverflow = layout.x < -.01 || layout.x + layout.width > 100.01;
+          if (horizontalOverflow) {
+            add('suggestion', `Elemento parcialmente fuera del ancho en ${this.deviceLabel(layout.device)}`, 'Se conservará su posición; la parte exterior se recortará en la invitación pública.', section.id, layer.id, layout.device);
           }
+          if (outsideCanvas) {
+            add('critical', `Elemento fuera del área en ${this.deviceLabel(layout.device)}`, 'Muévelo o reduce su tamaño para que no se corte.', section.id, layer.id, layout.device);
+          }
+          if (horizontalOverflow || outsideCanvas) break;
         }
         if (layer.type === 'text' && !section.background?.imageUrl && this.hasLowContrast(String(layer.style?.color || '#000000'), section.background?.color || '#ffffff')) {
-          add('warning', `Contraste bajo: ${this.layerLabel(layer)}`, 'Cambia el color del texto o del fondo para mejorar la lectura.', section.id, layer.id);
+          add('suggestion', `Contraste bajo: ${this.layerLabel(layer)}`, 'Cambia el color del texto o del fondo para mejorar la lectura.', section.id, layer.id);
         }
       }
     }
@@ -5158,7 +5413,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private isFunctionalType(type: string): boolean {
-    return ['locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
+    return ['story', 'locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
   }
 
   private hasEnvelopeContent(envelope = this.invitation?.content?.digitalEnvelope): boolean {
@@ -5172,7 +5427,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private snapRawPosition(layer: VisualInvitationLayer, section: VisualInvitationSection, canvas: HTMLElement, rawX: number, rawY: number, width: number, height: number, ignoredIds = new Set<string>([layer.id])): { x: number; y: number; guideX: number | null; guideY: number | null } {
     const range = this.verticalLayerBounds(section, height);
     if (!this.smartSnapping) {
-      return { x: this.bound(rawX, 0, 100 - width), y: this.bound(rawY, range.min, range.max), guideX: null, guideY: null };
+      return { x: this.bound(rawX, -100, 200), y: this.bound(rawY, range.min, range.max), guideX: null, guideY: null };
     }
     const xTargets = [0, 50, 100];
     const yTargets = [0, 50, 100];
@@ -5187,7 +5442,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const snapX = this.closestSnap(xAnchors, xTargets, 800 / Math.max(canvas.clientWidth, 1));
     const snapY = this.closestSnap(yAnchors, yTargets, 800 / Math.max(canvas.clientHeight, 1));
     return {
-      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, 0, 100 - width),
+      x: this.bound(snapX ? snapX.target - snapX.offset : rawX, -100, 200),
       y: this.bound(snapY ? snapY.target - snapY.offset : rawY, range.min, range.max),
       guideX: snapX?.target ?? null,
       guideY: snapY?.target ?? null

@@ -66,16 +66,49 @@ export class VisualDesignImporterService {
   }
 
   fromJson(source: string): VisualDesignImportResult {
-    const parsed = JSON.parse(source) as Partial<VisualInvitationDesign>;
-    if (!parsed || !Array.isArray(parsed.sections)) throw new Error('El JSON no contiene un arreglo de secciones válido.');
-    const sections = parsed.sections.slice(0, 50).map((section, sectionIndex) => this.normalizeSection(section, sectionIndex));
+    const trimmed = source.trim();
+    if (!trimmed) throw new Error('Pega el JSON que te entregó la IA o elige un archivo .json.');
+    if (trimmed.length > 2_000_000) throw new Error('El archivo JSON supera el límite de 2 MB. Usa URLs para los archivos multimedia.');
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(fenced ? fenced[1] : trimmed) as Record<string, unknown>;
+    } catch {
+      throw new Error('La respuesta no es JSON válido. Pide a la IA que entregue solo el objeto JSON, sin explicaciones.');
+    }
+    if (payload?.['format'] && payload['format'] !== 'kyndrasoft-visual-design') throw new Error('El archivo no usa el formato de diseño visual de KyndraSoft.');
+    if (payload?.['format'] === 'kyndrasoft-visual-design' && payload['version'] !== 1) throw new Error('La versión de este archivo de diseño no es compatible.');
+    const parsed = (payload?.['format'] ? payload['design'] : payload) as Partial<VisualInvitationDesign>;
+    if (!parsed || !Array.isArray(parsed.sections) || !parsed.sections.length) throw new Error('El JSON no contiene un arreglo de secciones válido.');
+    const continuous = parsed.presentationMode !== 'chapters';
+    const repairs = { overflow: 0, bounds: 0, animations: 0, unsupportedStyles: 0 };
+    const sections = parsed.sections.slice(0, 50).map((section, sectionIndex) => this.normalizeSection(section, sectionIndex, continuous, repairs));
+    const extraLayers = parsed.sections.slice(0, 50).reduce((total, section) => total + Math.max(0, (section.layers?.length || 0) - 100), 0);
+    const assets = Array.isArray(parsed.assets) ? parsed.assets.slice(0, 200).filter((asset) => asset && /^https?:\/\//i.test(asset.url || '')) : [];
     const design: VisualInvitationDesign = {
       version: Number(parsed.version || 2), active: true,
       mode: parsed.mode === 'easy' ? 'easy' : 'advanced',
+      presentationMode: parsed.presentationMode === 'chapters' ? 'chapters' : 'continuous',
       responsiveMode: parsed.responsiveMode === 'independent' ? 'independent' : 'shared',
-      theme: parsed.theme, assets: Array.isArray(parsed.assets) ? parsed.assets.slice(0, 200) : [], sections
+      theme: parsed.theme ? {
+        backgroundColor: parsed.theme.backgroundColor || '#ffffff', textColor: parsed.theme.textColor || '#292523',
+        accentColor: parsed.theme.accentColor || '#b57c62', headingFont: parsed.theme.headingFont || 'Georgia, serif',
+        bodyFont: parsed.theme.bodyFont || 'Arial, sans-serif', buttonBackgroundColor: parsed.theme.buttonBackgroundColor || '#292523',
+        buttonTextColor: parsed.theme.buttonTextColor || '#ffffff',
+        buttonStyle: ['solid', 'outline', 'soft'].includes(parsed.theme.buttonStyle) ? parsed.theme.buttonStyle : 'solid',
+        buttonRadius: this.safeNumber(parsed.theme.buttonRadius, 8, 0, 100)
+      } : undefined,
+      assets,
+      sections
     };
     const warnings = parsed.sections.length > 50 ? ['Solo se importaron las primeras 50 secciones.'] : [];
+    if (extraLayers) warnings.push(`${extraLayers} capa(s) exceden el límite de 100 por sección y no se importaron.`);
+    if (Array.isArray(parsed.assets) && assets.length < parsed.assets.length) warnings.push('Algunos recursos no se importaron porque exceden el límite o no tienen una URL HTTP(S) válida.');
+    if (repairs.overflow) warnings.push(`${repairs.overflow} elemento(s) sobresalen del ancho del lienzo. Se conservó su posición; la parte exterior se recortará en la invitación pública.`);
+    if (repairs.bounds) warnings.push(`${repairs.bounds} posición(es) superaban el límite técnico de edición y se ajustaron.`);
+    if (repairs.animations) warnings.push(`${repairs.animations} animación(es) de la IA se convirtieron al formato reproducible del editor.`);
+    if (repairs.unsupportedStyles) warnings.push(`${repairs.unsupportedStyles} estilo(s) CSS no compatibles se omitieron. Revisa el diseño antes de publicar.`);
+    if (!sections.some((section) => this.isFunctionalType(section.type))) warnings.push('Este diseño es solo visual: no incluye RSVP, mapas, álbum ni otros módulos conectados. Agrégalos desde el editor si los necesitas.');
     return {
       design, warnings,
       stats: { sections: sections.length, layers: sections.reduce((sum, section) => sum + section.layers.length, 0), ignored: 0 },
@@ -427,7 +460,7 @@ export class VisualDesignImporterService {
   }
 
   private isFunctionalType(type: string): boolean {
-    return ['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode', 'lodging', 'gallery'].includes(type);
+    return ['rsvp', 'dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'itinerary', 'dressCode', 'lodging', 'gallery', 'story'].includes(type);
   }
 
   private isSingletonFunctionalType(type: string): boolean {
@@ -435,7 +468,7 @@ export class VisualDesignImporterService {
   }
 
   private functionalTypeLabel(type: string): string {
-    const labels: Record<string, string> = { rsvp: 'RSVP', dedications: 'dedicatorias', songs: 'DJ', album: 'álbum', guestPass: 'pase', countdown: 'cuenta regresiva', locations: 'ubicaciones', gifts: 'regalos', itinerary: 'itinerario', dressCode: 'vestimenta', lodging: 'hospedaje', gallery: 'galería' };
+    const labels: Record<string, string> = { rsvp: 'RSVP', dedications: 'dedicatorias', songs: 'DJ', album: 'álbum', guestPass: 'pase', guestActivity: 'actividad del invitado', countdown: 'cuenta regresiva', locations: 'ubicaciones', gifts: 'regalos', itinerary: 'itinerario', dressCode: 'vestimenta', lodging: 'hospedaje', gallery: 'galería', story: 'historia' };
     return labels[type] || type;
   }
 
@@ -483,16 +516,77 @@ export class VisualDesignImporterService {
     };
   }
 
-  private normalizeSection(section: VisualInvitationSection, index: number): VisualInvitationSection {
+  private normalizeSection(section: VisualInvitationSection, index: number, continuous: boolean, repairs: { overflow: number; bounds: number; animations: number; unsupportedStyles: number }): VisualInvitationSection {
     if (!section || !Array.isArray(section.layers)) throw new Error(`La sección ${index + 1} no contiene capas válidas.`);
+    if (section.layers.some((layer) => !layer || typeof layer !== 'object')) throw new Error(`La sección ${index + 1} contiene una capa inválida.`);
+    const layerTypes = new Set<VisualInvitationLayer['type']>(['text', 'image', 'video', 'audio', 'button', 'shape', 'field']);
     return {
-      ...section, id: section.id || this.id(`json-section-${index + 1}`), type: section.type || 'custom', enabled: section.enabled !== false,
-      layout: section.layout === 'flow' ? 'flow' : 'canvas', height: this.clamp(Number(section.height || 640), 240, 1600),
-      layers: section.layers.slice(0, 100).map((layer, layerIndex) => ({
-        ...layer, id: layer.id || this.id(`json-layer-${layerIndex + 1}`), x: this.clamp(Number(layer.x || 0), 0, 100), y: this.clamp(Number(layer.y || 0), 0, 100),
-        width: this.clamp(Number(layer.width || 20), 1, 100), height: this.clamp(Number(layer.height || 10), 1, 100), zIndex: this.clamp(Number(layer.zIndex || layerIndex + 1), 0, 1000), style: { ...(layer.style || {}) }
-      }))
+      id: section.id || this.id(`json-section-${index + 1}`), type: section.type || 'custom', title: section.title,
+      enabled: section.enabled !== false, moduleStyle: section.moduleStyle, pluginSettings: section.pluginSettings, pluginDesign: section.pluginDesign,
+      layout: section.layout === 'flow' ? 'flow' : 'canvas', height: Math.round(this.safeNumber(section.height, 640, 240, 1600)),
+      background: section.background ? { color: section.background.color,
+        imageUrl: this.safeImportedUrl(section.background.imageUrl), overlay: section.background.overlay } : undefined,
+      layers: section.layers.slice(0, 100).map((layer, layerIndex) => {
+        if (!layerTypes.has(layer.type)) throw new Error(`La sección ${index + 1}, elemento ${layerIndex + 1}, usa un tipo de capa no compatible: ${String(layer.type)}.`);
+        const width = this.safeNumber(layer.width, 20, 1, 100);
+        const x = this.safeNumber(layer.x, 0, -100, 200);
+        if (Number(layer.x) !== x) repairs.bounds++;
+        if (x < 0 || x + width > 100) repairs.overflow++;
+        const rawStyle = (layer.style || {}) as Record<string, unknown>;
+        const style: Record<string, string | number | boolean | null> = {};
+        for (const [key, value] of Object.entries(rawStyle)) {
+          if (key === 'animation' || key === 'transform') {
+            continue;
+          }
+          if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+            style[key] = value as string | number | boolean | null;
+          } else {
+            repairs.unsupportedStyles++;
+          }
+        }
+        if (style['backgroundImageUrl']) style['backgroundImageUrl'] = this.safeImportedUrl(String(style['backgroundImageUrl'])) || '';
+        const animation = layer.animation || this.importedAnimation(rawStyle['animation']);
+        if (!layer.animation && animation) repairs.animations++;
+        if (rawStyle['animation'] && !animation) repairs.unsupportedStyles++;
+        const importedRotation = typeof rawStyle['transform'] === 'string' ? /^rotate\((-?\d+(?:\.\d+)?)deg\)$/i.exec(rawStyle['transform'].trim()) : null;
+        if (rawStyle['transform'] && !importedRotation) repairs.unsupportedStyles++;
+        return {
+          id: layer.id || this.id(`json-layer-${layerIndex + 1}`), type: layer.type,
+          name: layer.name, text: layer.text, placeholder: layer.placeholder, url: this.safeImportedUrl(layer.url),
+          binding: layer.binding, groupId: layer.groupId, x,
+          y: this.safeNumber(layer.y, 0, continuous ? -10000 : 0, continuous ? 10000 : 100),
+          width, height: this.safeNumber(layer.height, 10, 1, 100),
+          rotation: layer.rotation ?? (importedRotation ? this.safeNumber(importedRotation[1], 0, -360, 360) : undefined),
+          zIndex: Math.round(this.safeNumber(layer.zIndex, layerIndex + 1, 0, 1000)),
+          locked: layer.locked, hidden: layer.hidden, animation, layouts: layer.layouts,
+          style: style as VisualInvitationLayerStyle
+        };
+      })
     };
+  }
+
+  private importedAnimation(value: unknown): VisualInvitationLayer['animation'] | undefined {
+    if (typeof value !== 'string') return undefined;
+    const match = /^([a-z][a-z-]*)\s+(\d+(?:\.\d+)?)s\b/i.exec(value.trim());
+    if (!match) return undefined;
+    const aliases: Record<string, NonNullable<VisualInvitationLayer['animation']>['type']> = {
+      float: 'float', fade: 'fade', fadein: 'fade', fadeinup: 'slide-up', fadeinleft: 'slide-right', fadeinright: 'slide-left',
+      'slide-up': 'slide-up', 'slide-left': 'slide-left', 'slide-right': 'slide-right', zoom: 'zoom', pulse: 'pulse', bounce: 'bounce'
+    };
+    const type = aliases[match[1].toLowerCase()];
+    if (!type) return undefined;
+    return { type,
+      duration: this.safeNumber(match[2], 1, 0.2, 10), delay: 0, repeat: /\binfinite\b/i.test(value) };
+  }
+
+  private safeNumber(value: unknown, fallback: number, min: number, max: number): number {
+    const number = Number(value);
+    return this.clamp(Number.isFinite(number) ? number : fallback, min, max);
+  }
+
+  private safeImportedUrl(value?: string): string | undefined {
+    if (!value) return value;
+    return /^(https?:\/\/|\/[^/]|\.\/)/i.test(value.trim()) ? value.trim() : undefined;
   }
 
   private hrefAction(href: string): string {

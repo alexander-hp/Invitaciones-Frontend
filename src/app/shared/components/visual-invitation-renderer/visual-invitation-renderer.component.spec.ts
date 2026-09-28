@@ -59,6 +59,17 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.sectionRenderHeight({ id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 640, layers: [] })).toBe(640);
   });
 
+  it('renders a masked photo with a colored frame instead of a rectangular border', () => {
+    const layer = { id: 'frame', type: 'image' as const, x: 10, y: 10, width: 50, height: 30,
+      style: { imageMask: 'circle' as const, frameEnabled: true, preserveAspectRatio: false,
+        borderWidth: 6, borderColor: '#ab7654', objectFit: 'cover' as const } };
+    expect(component.layerStyle(layer)['borderWidth']).toBe('0');
+    expect(component.imageMaskStyle(layer)['backgroundColor']).toBe('#ab7654');
+    expect(component.imageMaskStyle(layer)['padding']).toContain('px');
+    expect(component.imageStyle(layer)['clipPath']).toContain('circle');
+    expect(component.imageStyle(layer)['objectFit']).toBe('cover');
+  });
+
   it('keeps all enabled sections in continuous mode and only one in chapters', () => {
     const sections: VisualInvitationSection[] = [
       { id: 'hero', type: 'hero', enabled: true, layout: 'canvas', height: 600, layers: [] },

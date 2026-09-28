@@ -347,6 +347,7 @@ export interface VisualInvitationLayerStyle {
   fontFamily?: string;
   fontSize?: number;
   fontWeight?: string | number;
+  fontStyle?: 'normal' | 'italic';
   textAlign?: string;
   borderRadius?: number;
   opacity?: number;
@@ -377,6 +378,7 @@ export interface VisualInvitationLayerStyle {
   gradientEnd?: string;
   gradientAngle?: number;
   imageMask?: 'none' | 'circle' | 'rounded' | 'arch' | 'diamond' | 'hexagon' | 'ticket';
+  frameEnabled?: boolean;
   shapeKind?: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line';
   controlVariant?: 'default' | 'cards';
   controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
@@ -431,7 +433,7 @@ export interface VisualInvitationLayer {
   locked?: boolean;
   hidden?: boolean;
   animation?: {
-    type: 'none' | 'fade' | 'slide-up' | 'slide-left' | 'zoom' | 'float';
+    type: 'none' | 'fade' | 'slide-up' | 'slide-left' | 'slide-right' | 'zoom' | 'float' | 'pulse' | 'bounce';
     duration?: number;
     delay?: number;
     repeat?: boolean;

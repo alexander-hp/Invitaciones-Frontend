@@ -1,6 +1,7 @@
 import { Subject } from 'rxjs';
 import { InvitationModel } from '../../core/models';
 import { VisualInvitationEditorComponent } from './visual-invitation-editor.component';
+import { VisualDesignImporterService } from './visual-design-importer.service';
 
 describe('VisualInvitationEditorComponent persistence', () => {
   let component: VisualInvitationEditorComponent;
@@ -48,6 +49,39 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(component.autosaveState).toBe('Guardado');
   });
 
+  it('downloads the current editable design in the AI exchange format', async () => {
+    const download = spyOn<any>(component, 'downloadBlob');
+    component.downloadEditableDesign();
+    const [blob, name] = download.calls.mostRecent().args as [Blob, string];
+    const payload = JSON.parse(await blob.text());
+    expect(name).toBe('evento-editable.json');
+    expect(payload.format).toBe('kyndrasoft-visual-design');
+    expect(payload.design.sections[0].title).toBe('Original');
+    expect(payload.invitation).toBeUndefined();
+  });
+
+  it('reads an AI JSON file without applying it before import', async () => {
+    const file = new File(['{"format":"kyndrasoft-visual-design","version":1,"design":{"sections":[]}}'], 'design.json', { type: 'application/json' });
+    await component.loadDesignJsonFile({ target: { files: [file], value: 'design.json' } } as unknown as Event);
+    expect(component.importJsonFileName).toBe('design.json');
+    expect(component.importJsonSource).toContain('kyndrasoft-visual-design');
+    expect(component.design.sections[0].title).toBe('Original');
+  });
+
+  it('adds native modules to an imported design and discards the full import together', async () => {
+    (component as any).designImporter = new VisualDesignImporterService();
+    component.importSource = 'json';
+    component.importJsonSource = JSON.stringify({ sections: [{ id: 'imported', type: 'custom', enabled: true, layout: 'canvas', height: 640,
+      layers: [{ id: 'headline', type: 'text', text: 'Fiesta', x: 10, y: 20, width: 80, height: 10 }] }] });
+    await component.importDesign();
+    component.addImportedModule('rsvp');
+    expect(component.design.sections.some((section) => section.type === 'rsvp')).toBeTrue();
+    expect(component.importReviewCount('connected')).toBe(1);
+    component.discardImportedDesign();
+    expect(component.design.sections.length).toBe(1);
+    expect(component.design.sections[0].title).toBe('Original');
+  });
+
   it('persists the selected presentation mode with the invitation', () => {
     component.setPresentationMode('chapters');
     expect(component.hasUnsavedChanges).toBeTrue();
@@ -58,6 +92,63 @@ describe('VisualInvitationEditorComponent persistence', () => {
       content: { ...component.invitation!.content, visualDesign: component.design }
     } });
     expect(component.hasUnsavedChanges).toBeFalse();
+  });
+
+  it('applies a button design without changing its action or text', () => {
+    const layer = {
+      id: 'cta', type: 'button' as const, text: 'Confirmar asistencia', binding: 'section:rsvp',
+      x: 20, y: 20, width: 60, height: 12,
+      style: { gradientEnabled: true, gradientStart: '#000000', backgroundImageUrl: 'https://example.com/old.png', buttonIcon: '↗' }
+    };
+    component.design.sections[0].layers.push(layer);
+    const preset = component.buttonPresets.find((item) => item.key === 'gold')!;
+    component.applyButtonPreset(layer, preset);
+
+    expect(layer.text).toBe('Confirmar asistencia');
+    expect(layer.binding).toBe('section:rsvp');
+    expect(layer.style.buttonIcon).toBe('↗');
+    expect(layer.style.gradientEnabled).toBeFalse();
+    expect(layer.style.backgroundImageUrl).toBeUndefined();
+    expect(component.isButtonPresetApplied(layer, preset)).toBeTrue();
+    expect(component.hasUnsavedChanges).toBeTrue();
+  });
+
+  it('clears a previous button preset when switching from gradient to minimal', () => {
+    const layer = { id: 'cta', type: 'button' as const, text: 'Abrir', x: 20, y: 20, width: 50, height: 10,
+      style: { gradientEnabled: false, textDecoration: 'none' as const } };
+    component.design.sections[0].layers.push(layer);
+    component.applyButtonPreset(layer, component.buttonPresets.find((item) => item.key === 'aurora')!);
+    expect(layer.style.gradientEnabled).toBeTrue();
+    component.applyButtonPreset(layer, component.buttonPresets.find((item) => item.key === 'minimal')!);
+    expect(layer.style.gradientEnabled).toBeFalse();
+    expect(layer.style.textDecoration).toBe('underline');
+    component.applyButtonPreset(layer, component.buttonPresets.find((item) => item.key === 'editorial')!);
+    expect(layer.style.textDecoration).toBe('none');
+  });
+
+  it('creates an empty photo frame and fills it when an image is dropped onto it', () => {
+    component.selectedSectionId = 'hero';
+    component.addFrame('circle');
+    const frame = component.design.sections[0].layers[0];
+    expect(frame.style?.imageMask).toBe('circle');
+    expect(frame.style?.frameEnabled).toBeTrue();
+    expect(frame.style?.objectFit).toBe('cover');
+    expect((component as any).auditDesign().find((issue: any) => issue.layerId === frame.id && issue.title === 'Marco sin foto')?.severity).toBe('suggestion');
+
+    const surface = document.createElement('div');
+    const target = document.createElement('div');
+    target.className = 'canvas-layer';
+    target.dataset['layerId'] = frame.id;
+    surface.appendChild(target);
+    spyOn(surface, 'getBoundingClientRect').and.returnValue({ left: 0, top: 0, width: 400, height: 600 } as DOMRect);
+    (component as any).paletteDragItem = { kind: 'media', media: { type: 'image', url: 'https://example.com/photo.jpg', label: 'Foto' } };
+    component.dropPaletteItem({ target, currentTarget: surface, clientX: 100, clientY: 100,
+      preventDefault: () => {}, stopPropagation: () => {} } as unknown as DragEvent, component.design.sections[0]);
+
+    expect(component.design.sections[0].layers.length).toBe(1);
+    expect(frame.url).toBe('https://example.com/photo.jpg');
+    expect(frame.style?.imageMask).toBe('circle');
+    expect((component as any).auditDesign().some((issue: any) => issue.layerId === frame.id && issue.title === 'Marco sin foto')).toBeFalse();
   });
 
   it('lets a layer cross section boundaries only in continuous mode', () => {
@@ -139,6 +230,40 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(section.layers.filter((layer) => layer.binding === 'song.submit').length).toBe(1);
   });
 
+  it('previews a complete design without changing the current design and keeps assets when applying it', () => {
+    const original = component.design;
+    original.assets = [{ id: 'uploaded', url: 'https://example.com/photo.jpg', type: 'image', name: 'foto.jpg' }];
+    component.openDesignLibrary('night');
+    expect(component.design).toBe(original);
+    expect(component.libraryPreviewInvitation?.content.visualDesign?.sections.length).toBeGreaterThan(2);
+    expect(component.libraryPreviewDesign?.sections[0].layers.some((layer) => layer.binding === 'section:rsvp')).toBeTrue();
+
+    component.showOnboarding = true;
+    component.applyCompleteDesign();
+    expect(component.design.sections.length).toBeGreaterThan(2);
+    expect(component.design.assets).toEqual(original.assets);
+    expect(component.showDesignLibrary).toBeFalse();
+    expect(component.showOnboarding).toBeFalse();
+    component.undo();
+    expect(component.design.sections[0].title).toBe('Original');
+  });
+
+  it('keeps the selected preview inside the filtered category', () => {
+    component.openDesignLibrary('night');
+    component.setLibraryCategory('boda');
+    expect(component.librarySelectedKey).toBe('romantic');
+    expect(component.libraryPreviewDesign?.sections.length).toBeGreaterThan(2);
+  });
+
+  it('recommends a complete design for birthday and baptism events', () => {
+    component.event = { title: 'Fiesta', type: 'cumpleanos' } as any;
+    component.openDesignLibrary();
+    expect(component.librarySelectedKey).toBe('birthday');
+    component.event = { title: 'Ceremonia', type: 'bautizo' } as any;
+    component.openDesignLibrary();
+    expect(component.librarySelectedKey).toBe('baptism');
+  });
+
   it('points a duplicate warning to the redundant layer', () => {
     const section = component.design.sections[0];
     section.type = 'album';
@@ -150,5 +275,36 @@ describe('VisualInvitationEditorComponent persistence', () => {
     const duplicate = (component as any).auditDesign().find((issue: any) => issue.title.startsWith('Control duplicado'));
     expect(duplicate.layerId).toBe('upload-copy');
     expect(duplicate.sectionId).toBe(section.id);
+  });
+
+  it('lets a reviewed contrast or decorative overflow warning be restored, and revisits it after edits', () => {
+    const section = component.design.sections[0];
+    section.background = { color: '#ffffff' };
+    section.layers = [{ id: 'decoration', type: 'text', text: 'Decoración', x: -10, y: 20, width: 35, height: 12,
+      style: { color: '#fefefe' } }];
+    component.design.sections.push({ id: 'rsvp', type: 'rsvp', enabled: true, layout: 'canvas', height: 820, layers: [] });
+    component.event = { date: '2026-10-01', venue: { name: 'Jardín' } } as any;
+    const key = 'visual-editor-audit:invitation-1';
+    localStorage.removeItem(key);
+
+    component.openPublishAudit();
+    const contrast = component.publishAuditIssues.find((issue) => issue.title.startsWith('Contraste bajo'))!;
+    const overflow = component.publishAuditIssues.find((issue) => issue.title.startsWith('Elemento parcialmente fuera'))!;
+    expect(contrast.severity).toBe('suggestion');
+    expect(overflow.severity).toBe('suggestion');
+    component.acknowledgeAuditIssue(contrast);
+    component.acknowledgeAuditIssue(overflow);
+    expect(component.optionalAuditCount).toBe(0);
+    expect(component.acknowledgedPublishAuditIssues.length).toBe(2);
+
+    component.openPublishAudit();
+    expect(component.acknowledgedPublishAuditIssues.length).toBe(2);
+    component.restoreAuditIssue(contrast);
+    expect(component.optionalAuditCount).toBe(1);
+
+    section.layers[0].x = -12;
+    component.openPublishAudit();
+    expect(component.optionalAuditCount).toBe(2);
+    localStorage.removeItem(key);
   });
 });
