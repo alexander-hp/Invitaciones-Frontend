@@ -24,6 +24,36 @@ describe('VisualInvitationEditorComponent persistence', () => {
     (component as any).markSaved();
   });
 
+  it('walks through the editor panels without changing the invitation', () => {
+    const original = JSON.stringify(component.design);
+    component.openTutorial();
+    expect(component.tutorialStep).toBe(0);
+    component.changeTutorialStep(1);
+    expect(component.toolCategory).toBe('design');
+    expect(component.mobilePanel).toBe('tools');
+    component.changeTutorialStep(1);
+    expect(component.toolCategory).toBe('elements');
+    component.changeTutorialStep(1);
+    expect(component.toolCategory).toBe('assets');
+    component.changeTutorialStep(1);
+    expect(component.toolCategory).toBe('functions');
+    component.changeTutorialStep(1);
+    expect(component.mobilePanel).toBe('canvas');
+    component.changeTutorialStep(1);
+    expect(component.mobilePanel).toBe('inspector');
+    expect(JSON.stringify(component.design)).toBe(original);
+  });
+
+  it('allows dismissing and reopening the tutorial', () => {
+    component.openTutorial();
+    component.closeTutorial();
+    expect(component.tutorialStep).toBe(-1);
+    expect(localStorage.getItem('kyndra-visual-editor-tutorial-v1')).toBe('seen');
+    component.openTutorial();
+    expect(component.tutorialStep).toBe(0);
+    localStorage.removeItem('kyndra-visual-editor-tutorial-v1');
+  });
+
   it('keeps edits made while a save request is in flight pending', () => {
     component.save();
     component.design.sections[0].title = 'Cambio posterior';
@@ -149,6 +179,174 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(frame.url).toBe('https://example.com/photo.jpg');
     expect(frame.style?.imageMask).toBe('circle');
     expect((component as any).auditDesign().some((issue: any) => issue.layerId === frame.id && issue.title === 'Marco sin foto')).toBeFalse();
+  });
+
+  it('adds a responsive grouped composition while allowing each photo to be replaced', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('triptych');
+    const frames = component.design.sections[0].layers;
+    expect(frames.length).toBe(3);
+    expect(component.design.responsiveMode).toBe('independent');
+    expect(new Set(frames.map((frame) => frame.groupId)).size).toBe(1);
+    expect(frames.every((frame) => frame.style?.frameEnabled && frame.layouts?.mobile && frame.layouts?.tablet && frame.layouts?.desktop)).toBeTrue();
+    expect(component.selectedCompositeFrames.length).toBe(3);
+
+    component.selectCompositeFrame(frames[1]);
+    expect(component.selectedLayerCount).toBe(1);
+    frames[1].url = 'https://example.com/second.jpg';
+    component.selectCompositeGroup(frames[1]);
+    expect(component.selectedCompositeFrames.length).toBe(3);
+    expect(frames[0].url).toBeFalsy();
+    expect(frames[1].url).toBe('https://example.com/second.jpg');
+  });
+
+  it('swaps photos and crops between frames without moving or restyling the frames', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('triptych');
+    const [first, second] = component.design.sections[0].layers;
+    first.url = 'https://example.com/first.jpg';
+    second.url = 'https://example.com/second.jpg';
+    first.style!.objectPositionX = 20;
+    second.style!.objectPositionX = 80;
+    first.style!.imageScale = 1.5;
+    const firstLayout = { ...first.layouts!.mobile! };
+    const firstMask = first.style!.imageMask;
+    const secondMask = second.style!.imageMask;
+
+    component.swapCompositePhotos(first, second);
+
+    expect(first.url).toBe('https://example.com/second.jpg');
+    expect(second.url).toBe('https://example.com/first.jpg');
+    expect(first.style?.objectPositionX).toBe(80);
+    expect(second.style?.objectPositionX).toBe(20);
+    expect(first.style?.imageScale).toBeUndefined();
+    expect(second.style?.imageScale).toBe(1.5);
+    expect(first.style?.imageMask).toBe(firstMask);
+    expect(second.style?.imageMask).toBe(secondMask);
+    expect(first.layouts?.mobile).toEqual(firstLayout);
+    component.undo();
+    expect(component.design.sections[0].layers[0].url).toBe('https://example.com/first.jpg');
+  });
+
+  it('drops an inspector photo onto another frame, but not onto another composition or a locked frame', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    const [first, second] = component.design.sections[0].layers;
+    first.url = 'https://example.com/first.jpg';
+    second.url = 'https://example.com/second.jpg';
+    const surface = document.createElement('div');
+    const target = document.createElement('div');
+    target.className = 'canvas-layer';
+    target.dataset['layerId'] = second.id;
+    surface.appendChild(target);
+    const event = { target, currentTarget: surface, preventDefault: jasmine.createSpy(), stopPropagation: jasmine.createSpy() } as unknown as DragEvent;
+
+    component.beginPhotoSwapDrag({ dataTransfer: { setData: () => {} } } as unknown as DragEvent, first);
+    component.dragPaletteOver(event, component.design.sections[0]);
+    expect(component.photoSwapTargetId).toBe(second.id);
+    component.dropPaletteItem(event, component.design.sections[0]);
+    expect(first.url).toBe('https://example.com/second.jpg');
+    expect(second.url).toBe('https://example.com/first.jpg');
+    expect(component.photoSwapTargetId).toBe('');
+
+    second.locked = true;
+    component.swapCompositePhotos(first, second);
+    expect(first.url).toBe('https://example.com/second.jpg');
+    second.locked = false;
+    component.addPhotoComposition('diptych');
+    component.swapCompositePhotos(first, component.design.sections[0].layers[2]);
+    expect(first.url).toBe('https://example.com/second.jpg');
+  });
+
+  it('moves a photo into an empty frame without changing either frame layout', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    const [first, second] = component.design.sections[0].layers;
+    first.url = 'https://example.com/first.jpg';
+    first.style!.objectPositionY = 35;
+    const secondLayout = { ...second.layouts!.mobile! };
+
+    component.swapCompositePhotos(first, second);
+
+    expect(first.url).toBeFalsy();
+    expect(second.url).toBe('https://example.com/first.jpg');
+    expect(second.style?.objectPositionY).toBe(35);
+    expect(second.layouts?.mobile).toEqual(secondLayout);
+  });
+
+  it('changes a composition layout without replacing photos, crops or frame styles', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('triptych');
+    const frames = component.design.sections[0].layers;
+    const ids = frames.map((frame) => frame.id);
+    const before = frames.map((frame) => ({ ...frame.layouts!.mobile! }));
+    frames.forEach((frame, index) => { frame.url = `https://example.com/${index}.jpg`; });
+    frames[0].style!.objectPositionX = 28;
+    frames[0].style!.imageMask = 'circle';
+
+    component.applyPhotoCompositionPreset('filmstrip');
+
+    expect(component.design.sections[0].layers.map((frame) => frame.id)).toEqual(ids);
+    expect(frames.map((frame) => frame.url)).toEqual(['https://example.com/0.jpg', 'https://example.com/1.jpg', 'https://example.com/2.jpg']);
+    expect(frames[0].style?.objectPositionX).toBe(28);
+    expect(frames[0].style?.imageMask).toBe('circle');
+    expect(frames[0].layouts?.mobile?.width).not.toBe(before[0].width);
+    expect(frames.every((frame) => frame.layouts?.tablet && frame.layouts?.desktop)).toBeTrue();
+    component.undo();
+    expect(component.design.sections[0].layers[0].layouts?.mobile).toEqual(before[0]);
+  });
+
+  it('only offers matching frame counts and keeps a locked composition unchanged', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    expect(component.compatiblePhotoCompositionPresets.map((preset) => preset.key)).toEqual(['diptych', 'stacked']);
+    const before = component.design.sections[0].layers.map((frame) => ({ ...frame.layouts!.mobile! }));
+    component.applyPhotoCompositionPreset('grid');
+    expect(component.design.sections[0].layers[0].layouts?.mobile).toEqual(before[0]);
+    component.design.sections[0].layers[0].locked = true;
+    component.applyPhotoCompositionPreset('stacked');
+    expect(component.design.sections[0].layers[0].layouts?.mobile).toEqual(before[0]);
+  });
+
+  it('adjusts composition spacing on the active device and undoes the slider as one change', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('grid');
+    const frames = component.design.sections[0].layers;
+    const originalMobile = frames.map((frame) => ({ ...frame.layouts!.mobile! }));
+    const originalTablet = frames.map((frame) => ({ ...frame.layouts!.tablet! }));
+    const gap = component.selectedPhotoCompositionSpacing;
+    component.setPhotoCompositionSpacing(gap + 4);
+    component.setPhotoCompositionSpacing(gap + 8);
+    component.finishPhotoCompositionSpacing();
+
+    expect(component.selectedPhotoCompositionSpacing).toBeCloseTo(gap + 8, 0);
+    expect(frames[0].layouts?.tablet).toEqual(originalTablet[0]);
+    expect(frames[0].layouts?.mobile).not.toEqual(originalMobile[0]);
+    component.undo();
+    expect(component.design.sections[0].layers[0].layouts?.mobile).toEqual(originalMobile[0]);
+
+    component.device = 'tablet';
+    const tabletGap = component.selectedPhotoCompositionSpacing;
+    component.setPhotoCompositionSpacing(tabletGap + 5);
+    component.finishPhotoCompositionSpacing();
+    expect(component.design.sections[0].layers[0].layouts?.mobile).toEqual(originalMobile[0]);
+    expect(component.design.sections[0].layers[0].layouts?.tablet).not.toEqual(originalTablet[0]);
+  });
+
+  it('keeps spacing shared when device-specific layouts are disabled', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    component.design.responsiveMode = 'shared';
+    const frames = component.design.sections[0].layers;
+    const before = frames[0].width;
+    const gap = component.selectedPhotoCompositionSpacing;
+
+    component.setPhotoCompositionSpacing(gap + 8);
+    component.finishPhotoCompositionSpacing();
+
+    expect(component.design.responsiveMode).toBe('shared');
+    expect(frames[0].width).toBeLessThan(before);
+    expect(component.selectedPhotoCompositionSpacing).toBeCloseTo(gap + 8, 0);
   });
 
   it('lets a layer cross section boundaries only in continuous mode', () => {
@@ -306,5 +504,14 @@ describe('VisualInvitationEditorComponent persistence', () => {
     component.openPublishAudit();
     expect(component.optionalAuditCount).toBe(2);
     localStorage.removeItem(key);
+  });
+
+  it('fits a desktop artboard inside a tablet viewport', () => {
+    spyOnProperty(window, 'innerWidth', 'get').and.returnValue(800);
+    component.device = 'desktop';
+
+    component.fitCanvasToViewport();
+
+    expect(component.canvasZoom).toBe(0.64);
   });
 });

@@ -7,21 +7,35 @@
       <button class="icon-button" type="button" title="Deshacer" (click)="undo()">↶</button>
       <button class="icon-button" type="button" title="Rehacer" (click)="redo()">↷</button>
     </div>
-    <div class="segmented" aria-label="Vista por dispositivo">
+    <div class="segmented" [class.tutorial-focus]="tutorialStep === 7" aria-label="Vista por dispositivo">
       <button type="button" [class.active]="device === 'mobile'" (click)="setDevice('mobile')">Celular</button>
       <button type="button" [class.active]="device === 'tablet'" (click)="setDevice('tablet')">Tablet</button>
       <button type="button" [class.active]="device === 'desktop'" (click)="setDevice('desktop')">Escritorio</button>
     </div>
-    <button class="secondary" type="button" (click)="openDesignImporter()">Diseño con IA / Importar</button>
-    <button class="secondary" type="button" (click)="openResponsivePreview()">Comparar</button>
-    <button class="secondary export-command" type="button" (click)="openExportDialog()">↓ Descargar</button>
-    <button class="secondary" type="button" (click)="openFunctionalTest()">Probar funciones</button>
-    <button class="secondary" type="button" (click)="openPreview()">{{ invitation?.status === 'published' ? 'Vista pública' : 'Vista previa' }}</button>
-    <button class="primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
-    <button class="publish" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
+    <details class="topbar-more" [class.tutorial-focus]="tutorialStep === 8" #moreMenu>
+      <summary aria-label="Más herramientas"><lucide-icon name="ellipsis" [strokeWidth]="1.8"></lucide-icon><span>Más</span></summary>
+      <div class="topbar-menu">
+        <button type="button" (click)="moreMenu.open=false;openTutorial()"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon> Guía del editor</button>
+        <button type="button" (click)="moreMenu.open=false;openDesignImporter()"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Crear con IA o importar</button>
+        <button type="button" (click)="moreMenu.open=false;openResponsivePreview()"><lucide-icon name="panels-top-left" [strokeWidth]="1.8"></lucide-icon> Comparar dispositivos</button>
+        <button type="button" (click)="moreMenu.open=false;openExportDialog()"><lucide-icon name="download" [strokeWidth]="1.8"></lucide-icon> Descargar</button>
+        <button type="button" (click)="moreMenu.open=false;openFunctionalTest()"><lucide-icon name="flask-conical" [strokeWidth]="1.8"></lucide-icon> Probar funciones</button>
+        <button class="mobile-preview-command" type="button" (click)="moreMenu.open=false;openPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> {{ invitation?.status === 'published' ? 'Vista pública' : 'Vista previa' }}</button>
+      </div>
+    </details>
+    <button class="secondary preview-command" type="button" (click)="openPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>{{ invitation?.status === 'published' ? 'Vista pública' : 'Vista previa' }}</button>
+    <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
+    <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
   </header>
 
   <div class="ve-notice error" *ngIf="error">{{ error }}</div><div class="ve-notice success" *ngIf="message">{{ message }}</div>
+  <section class="ve-tutorial" *ngIf="tutorialStep >= 0" role="region" aria-labelledby="tutorialTitle" aria-live="polite">
+    <header><span>Guía del editor</span><button type="button" title="Cerrar guía" aria-label="Cerrar guía" (click)="closeTutorial()">×</button></header>
+    <div class="tutorial-progress"><span>Paso {{ tutorialStep + 1 }} de {{ tutorialSteps.length }}</span><div aria-hidden="true"><i [style.width.%]="(tutorialStep + 1) * 100 / tutorialSteps.length"></i></div></div>
+    <h2 id="tutorialTitle">{{ tutorialSteps[tutorialStep].title }}</h2>
+    <p>{{ tutorialSteps[tutorialStep].description }}</p>
+    <footer><button type="button" [disabled]="tutorialStep === 0" (click)="changeTutorialStep(-1)">Anterior</button><button type="button" class="tutorial-next" (click)="changeTutorialStep(1)">{{ tutorialStep === tutorialSteps.length - 1 ? 'Terminar' : 'Siguiente' }}</button></footer>
+  </section>
   <div class="design-library-backdrop" *ngIf="showDesignLibrary" (click)="closeDesignLibrary()">
     <section class="design-library-dialog" role="dialog" aria-modal="true" aria-labelledby="designLibraryTitle" (click)="$event.stopPropagation()">
       <header class="design-library-heading">
@@ -55,16 +69,16 @@
   <div class="design-import-backdrop" *ngIf="showImportDialog" (click)="closeDesignImporter()">
     <section class="design-import-dialog" role="dialog" aria-modal="true" aria-labelledby="designImportTitle" (click)="$event.stopPropagation()">
       <header><div><span>Diseños editables</span><h1 id="designImportTitle">Crear con otra IA o importar</h1><p>Trae un diseño generado en otro chat, o importa una plantilla HTML, CSS o JSON.</p></div><button type="button" title="Cerrar" (click)="closeDesignImporter()">×</button></header>
-      <div class="design-import-options">
-        <label><input [(ngModel)]="importSource" type="radio" value="ai"> Con otra IA</label>
-        <label><input [(ngModel)]="importSource" type="radio" value="current"> Plantilla actual</label>
-        <label><input [(ngModel)]="importSource" type="radio" value="catalog"> Catálogo</label>
-        <label><input [(ngModel)]="importSource" type="radio" value="html"> HTML y CSS</label>
-        <label><input [(ngModel)]="importSource" type="radio" value="json"> JSON avanzado</label>
+      <div class="design-import-options" aria-label="Origen del diseño">
+        <button type="button" [class.active]="importSource === 'ai'" [attr.aria-pressed]="importSource === 'ai'" (click)="importSource='ai'">Con otra IA</button>
+        <button type="button" [class.active]="importSource === 'current'" [attr.aria-pressed]="importSource === 'current'" (click)="importSource='current'">Plantilla actual</button>
+        <button type="button" [class.active]="importSource === 'catalog'" [attr.aria-pressed]="importSource === 'catalog'" (click)="importSource='catalog'">Catálogo</button>
+        <button type="button" [class.active]="importSource === 'html'" [attr.aria-pressed]="importSource === 'html'" (click)="importSource='html'">HTML y CSS</button>
+        <button type="button" [class.active]="importSource === 'json'" [attr.aria-pressed]="importSource === 'json'" (click)="importSource='json'">JSON avanzado</button>
       </div>
-      <div class="design-import-body">
+      <div class="design-import-body" [class.ai-mode]="importSource === 'ai'">
         <section *ngIf="importSource === 'ai'" class="ai-exchange" aria-label="Intercambio de diseños con IA">
-          <div class="ai-exchange-step"><b>1</b><div><strong>Pide el diseño en tu chat de IA</strong><p>Copia estas instrucciones y describe los colores, estilo, secciones y fotos que quieres. No necesitas compartir datos de invitados.</p><button type="button" class="secondary" (click)="copyAiDesignPrompt()">Copiar instrucciones para IA</button><details><summary>Ver instrucciones completas</summary><textarea [value]="aiDesignPrompt" readonly rows="12" spellcheck="false" aria-label="Instrucciones para otra IA"></textarea></details></div></div>
+          <div class="ai-exchange-step"><b>1</b><div><strong>Pide el diseño en tu chat de IA</strong><p>Copia estas instrucciones y describe el estilo, las fotos y las funciones que necesitas, como RSVP, mesa y pase, regalos o álbum. No compartas datos de invitados.</p><button type="button" class="secondary" (click)="copyAiDesignPrompt()">Copiar instrucciones para IA</button><details><summary>Ver instrucciones completas</summary><textarea [value]="aiDesignPrompt" readonly rows="12" spellcheck="false" aria-label="Instrucciones para otra IA"></textarea></details></div></div>
           <div class="ai-exchange-step"><b>2</b><div><strong>Importa la respuesta</strong><p>Pega el JSON que devolvió la IA, o elige su archivo .json. También aceptamos respuestas dentro de un bloque <code>```json</code>.</p><label class="ai-exchange-file">Elegir archivo JSON<input type="file" accept=".json,application/json" (change)="loadDesignJsonFile($event)"></label><span *ngIf="importJsonFileName">{{ importJsonFileName }}</span></div></div>
           <div class="ai-exchange-step"><b>3</b><div><strong>Edita y vuelve a exportar</strong><p>Después de importar podrás mover todo, conectar funciones y guardar como plantilla. Exporta el diseño actual para pedir cambios a tu IA.</p><button type="button" class="secondary" (click)="downloadEditableDesign()">Descargar diseño editable JSON</button><small>El archivo incluye textos y URLs de medios del diseño actual; no incluye invitados ni pagos. Los archivos multimedia se enlazan, no se incrustan.</small></div></div>
           <p class="ai-exchange-feedback" *ngIf="aiExchangeMessage" role="status">{{ aiExchangeMessage }}</p>
@@ -81,7 +95,7 @@
           <p class="import-help">Se importan las posiciones, estilos, acciones y ajustes responsive. Revisa la vista previa antes de guardar.</p>
         </ng-container>
         <p class="import-mapping-error" *ngIf="importError" role="alert">{{ importError }}</p>
-        <fieldset><legend>Cómo aplicarlo</legend><label><input [(ngModel)]="importStrategy" type="radio" value="replace"> Reemplazar el diseño visual actual</label><label><input [(ngModel)]="importStrategy" type="radio" value="append"> Agregarlo al final del diseño actual</label></fieldset>
+        <fieldset class="import-strategy"><legend>Cómo aplicarlo</legend><button type="button" [class.active]="importStrategy === 'replace'" [attr.aria-pressed]="importStrategy === 'replace'" (click)="importStrategy='replace'"><strong>Reemplazar diseño</strong><small>Sustituye el lienzo actual</small></button><button type="button" [class.active]="importStrategy === 'append'" [attr.aria-pressed]="importStrategy === 'append'" (click)="importStrategy='append'"><strong>Agregar al final</strong><small>Conserva el diseño actual</small></button></fieldset>
         <div class="import-result" *ngIf="importSummary"><strong>{{ importSummary }}</strong><p>Esto solo prepara el diseño en el editor. Cierra esta revisión, comprueba la vista y pulsa Publicar para hacerlo visible a tus invitados.</p></div>
         <section class="import-assistant" *ngIf="importReview.length" aria-labelledby="importAssistantTitle">
           <div class="import-assistant-heading">
@@ -295,8 +309,17 @@
       </div>
     </section>
   </div>
-  <div class="ve-workspace" [class.mobile-tools-open]="mobilePanel === 'tools'" [class.mobile-canvas-open]="mobilePanel === 'canvas'" [class.mobile-inspector-open]="mobilePanel === 'inspector'">
+  <div class="ve-workspace" [class.tools-collapsed]="toolsCollapsed" [class.mobile-tools-open]="mobilePanel === 'tools'" [class.mobile-canvas-open]="mobilePanel === 'canvas'" [class.mobile-inspector-open]="mobilePanel === 'inspector'">
     <aside class="ve-tools">
+      <nav class="tool-category-nav" aria-label="Biblioteca del editor">
+        <button type="button" class="tool-collapse-toggle" [attr.aria-label]="toolsCollapsed ? 'Expandir biblioteca' : 'Contraer biblioteca'" [title]="toolsCollapsed ? 'Expandir biblioteca' : 'Contraer biblioteca'" [attr.aria-expanded]="!toolsCollapsed" (click)="toolsCollapsed=!toolsCollapsed"><lucide-icon [name]="toolsCollapsed ? 'panel-left-open' : 'panel-left-close'" [strokeWidth]="1.8"></lucide-icon></button>
+        <button type="button" title="Diseño" [class.active]="toolCategory === 'design'" [class.tutorial-focus]="tutorialStep === 1" [attr.aria-pressed]="toolCategory === 'design'" (click)="toolCategory='design';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon><span>Diseño</span></button>
+        <button type="button" title="Elementos" [class.active]="toolCategory === 'elements'" [class.tutorial-focus]="tutorialStep === 2" [attr.aria-pressed]="toolCategory === 'elements'" (click)="toolCategory='elements';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="shapes" [strokeWidth]="1.8"></lucide-icon><span>Elementos</span></button>
+        <button type="button" title="Archivos" [class.active]="toolCategory === 'assets'" [class.tutorial-focus]="tutorialStep === 3" [attr.aria-pressed]="toolCategory === 'assets'" (click)="toolCategory='assets';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Archivos</span></button>
+        <button type="button" title="Funciones" [class.active]="toolCategory === 'functions'" [class.tutorial-focus]="tutorialStep === 4" [attr.aria-pressed]="toolCategory === 'functions'" (click)="toolCategory='functions';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="blocks" [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
+      </nav>
+      <div class="ve-tool-content" #toolContent>
+      <ng-container *ngIf="toolCategory === 'design'">
       <h2>Diseños completos</h2>
       <button class="open-design-library" type="button" (click)="openDesignLibrary()"><span><lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon></span><strong>Explorar biblioteca</strong><small>Diseños listos y editables</small></button>
       <details class="theme-editor" open *ngIf="design.theme as theme">
@@ -329,6 +352,8 @@
           </button>
         </div>
       </ng-container>
+      </ng-container>
+      <ng-container *ngIf="toolCategory === 'elements'">
       <h2>Agregar</h2>
       <div class="tool-grid">
         <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'text'})" (dragend)="endPaletteDrag()" (click)="addLayer('text')"><b>T</b><span>Texto</span></button>
@@ -356,6 +381,17 @@
           <span class="frame-catalog-sample" [ngStyle]="framePreviewStyle(mask.key)"></span><span>{{ mask.label === 'Original' ? 'Rectangular' : mask.label }}</span>
         </button>
       </div>
+      <h2>Composiciones de fotos</h2>
+      <div class="photo-composition-catalog">
+        <button *ngFor="let preset of photoCompositionPresets" type="button" draggable="true" [title]="'Agregar ' + preset.name" (dragstart)="beginPaletteDrag($event, {kind:'composition', key:preset.key})" (dragend)="endPaletteDrag()" (click)="addPhotoComposition(preset.key)">
+          <span class="photo-composition-preview" aria-hidden="true">
+            <span class="photo-composition-sample" [style.width.px]="preset.aspectRatio >= 1.5 ? 98 : 66 * preset.aspectRatio" [style.height.px]="preset.aspectRatio >= 1.5 ? 98 / preset.aspectRatio : 66">
+              <span *ngFor="let slot of preset.slots" class="photo-composition-slot" [style.left.%]="slot.x" [style.top.%]="slot.y" [style.width.%]="slot.width" [style.height.%]="slot.height" [ngStyle]="framePreviewStyle(slot.mask)"></span>
+            </span>
+          </span>
+          <span>{{ preset.name }}</span>
+        </button>
+      </div>
       <h2>Bloques listos</h2>
       <div class="component-catalog">
         <button *ngFor="let component of componentCatalog" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'component', key:component.key})" (dragend)="endPaletteDrag()" (click)="addComponent(component.key)">
@@ -368,6 +404,8 @@
           <b>{{ component.icon }}</b><span>{{ component.label }}</span>
         </button>
       </div>
+      </ng-container>
+      <ng-container *ngIf="toolCategory === 'assets'">
       <section class="media-section">
         <div class="media-heading"><h2>Mis archivos</h2><label title="Subir imágenes, videos o audio">+ Subir<input #libraryUpload type="file" accept="image/*,video/*,audio/*" multiple (change)="uploadLibraryFiles(libraryUpload)"></label></div>
         <div class="media-filters" *ngIf="mediaLibrary.length">
@@ -401,6 +439,8 @@
           </article>
         </div>
       </section>
+      </ng-container>
+      <ng-container *ngIf="toolCategory === 'functions'">
       <h2>Funciones</h2>
       <div class="plugin-catalog">
         <button *ngFor="let plugin of pluginCatalog" type="button" (click)="addSection(plugin.type, plugin.label)"><b>{{ plugin.icon }}</b><span>{{ plugin.label }}</span><i>Agregar</i></button>
@@ -501,15 +541,21 @@
         <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
       </div>
       <p class="hint">Agrega una sección y luego arrastra sus elementos directamente en el lienzo.</p>
-      <div class="save-template-box">
+      </ng-container>
+      <div class="save-template-box" *ngIf="toolCategory === 'design'">
         <label>Guardar diseño como plantilla<input [(ngModel)]="templateName" type="text" placeholder="Ej. Bodas elegantes"></label>
         <button type="button" [disabled]="savingTemplate" (click)="saveAsTemplate()">{{ savingTemplate ? 'Guardando...' : 'Guardar en mi cuenta' }}</button>
+      </div>
       </div>
     </aside>
 
     <main #editorStage class="ve-stage" [class.touch-gesturing]="touchGestureActive">
       <div class="touch-zoom-indicator" *ngIf="touchZoomVisible">{{ touchGestureLabel }}</div>
-      <div class="canvas-toolbar" aria-label="Controles del lienzo">
+      <div class="canvas-toolbar" [class.tutorial-focus]="tutorialStep === 5" aria-label="Controles del lienzo">
+        <button class="canvas-quick-action" type="button" (click)="setMobilePanel('tools')">+ Agregar</button>
+        <button class="canvas-quick-action" type="button" *ngIf="!selectedLayerCount" (click)="toolCategory='functions'; setMobilePanel('tools')">Funciones</button>
+        <button class="canvas-quick-action" type="button" *ngIf="selectedLayerCount" (click)="openMobileInspector()" [title]="'Editar ' + mobileSelectionLabel">✎ Editar selección</button>
+        <div class="canvas-utilities">
         <button type="button" [class.active]="showGrid" title="Mostrar cuadrícula" (click)="showGrid=!showGrid">▦</button>
         <button type="button" [class.active]="smartSnapping" title="Ajuste inteligente" (click)="smartSnapping=!smartSnapping">⌁</button>
         <button type="button" [class.active]="showSafeMargins" title="Mostrar márgenes seguros" (click)="showSafeMargins=!showSafeMargins">▣</button>
@@ -518,7 +564,20 @@
         <button type="button" [disabled]="!selectedLayerCount" title="Cortar" (click)="cutSelectedLayers()">✂</button>
         <button type="button" [disabled]="!hasClipboardLayers" title="Pegar en la sección seleccionada" (click)="pasteLayers()">▤</button>
         <span class="toolbar-divider"></span>
-        <select [ngModel]="canvasZoom" (ngModelChange)="setCanvasZoom($event)" aria-label="Zoom del lienzo"><option *ngFor="let zoom of zoomOptions" [ngValue]="zoom">{{ zoom * 100 }}%</option></select>
+        <select [ngModel]="canvasZoom" (ngModelChange)="setCanvasZoom($event)" aria-label="Zoom del lienzo"><option *ngIf="!zoomOptions.includes(canvasZoom)" [ngValue]="canvasZoom">Ajustar {{ canvasZoom * 100 | number:'1.0-0' }}%</option><option *ngFor="let zoom of zoomOptions" [ngValue]="zoom">{{ zoom * 100 }}%</option></select>
+        </div>
+        <details class="canvas-mobile-options">
+          <summary>Opciones</summary>
+          <div>
+            <button type="button" [class.active]="showGrid" (click)="showGrid=!showGrid">Cuadrícula</button>
+            <button type="button" [class.active]="smartSnapping" (click)="smartSnapping=!smartSnapping">Ajuste inteligente</button>
+            <button type="button" [class.active]="showSafeMargins" (click)="showSafeMargins=!showSafeMargins">Márgenes seguros</button>
+            <button type="button" [disabled]="!selectedLayerCount" (click)="copySelectedLayers()">Copiar</button>
+            <button type="button" [disabled]="!selectedLayerCount" (click)="cutSelectedLayers()">Cortar</button>
+            <button type="button" [disabled]="!hasClipboardLayers" (click)="pasteLayers()">Pegar</button>
+            <label>Zoom <select [ngModel]="canvasZoom" (ngModelChange)="setCanvasZoom($event)"><option *ngIf="!zoomOptions.includes(canvasZoom)" [ngValue]="canvasZoom">Ajustar {{ canvasZoom * 100 | number:'1.0-0' }}%</option><option *ngFor="let zoom of zoomOptions" [ngValue]="zoom">{{ zoom * 100 }}%</option></select></label>
+          </div>
+        </details>
       </div>
       <div class="artboard-viewport" [style.width.px]="artboardWidth * canvasZoom" [style.height.px]="artboardHeight * canvasZoom">
       <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
@@ -638,7 +697,7 @@
               <div class="selection-marquee" *ngIf="selectionMarquee as marquee" [class.visible]="marquee.sectionId === section.id" [style.left.%]="marquee.left" [style.top.%]="marquee.top" [style.width.%]="marquee.width" [style.height.%]="marquee.height"></div>
               <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical" [style.left.%]="guideX"></div>
               <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal" [style.top.%]="guideY"></div>
-              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [attr.data-button-icon]="layer.type === 'button' ? (layer.style?.buttonIcon || null) : null" [attr.title]="editorLayerUnavailableReason(layer) || null" [attr.data-unavailable]="editorLayerUnavailableReason(layer) ? 'true' : null" [class.button-icon-after]="layer.type === 'button' && layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.type === 'button' && layer.style?.buttonVariant === 'glass'" [class.selected]="isLayerSelected(layer)" [class.layer-hidden]="layer.hidden" [class.data-unavailable]="!!editorLayerUnavailableReason(layer)" [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
+              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer" [attr.data-layer-id]="layer.id" [attr.data-button-icon]="layer.type === 'button' ? (layer.style?.buttonIcon || null) : null" [attr.title]="editorLayerUnavailableReason(layer) || null" [attr.data-unavailable]="editorLayerUnavailableReason(layer) ? 'true' : null" [class.button-icon-after]="layer.type === 'button' && layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.type === 'button' && layer.style?.buttonVariant === 'glass'" [class.selected]="isLayerSelected(layer)" [class.photo-swap-target]="photoSwapTargetId === layer.id" [class.layer-hidden]="layer.hidden" [class.data-unavailable]="!!editorLayerUnavailableReason(layer)" [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)" [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked" [class.inline-editing]="editingLayerId === layer.id" [class.control-cloud]="layer.style?.controlShape === 'cloud'" [class.control-notebook]="layer.style?.controlShape === 'notebook'" [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)" (pointerdown)="beginLayerDrag($event, layer, section)" (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
                 <lucide-icon *ngIf="isIconLayer(layer)" class="canvas-icon-layer" [name]="layer.style?.iconName" [strokeWidth]="layer.style?.iconStrokeWidth || 2" [style.fill]="layer.style?.iconFilled ? 'currentColor' : 'none'"></lucide-icon>
                 <div *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId !== layer.id">{{ editorLayerText(layer) }}</div>
                 <div *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId === layer.id" class="inline-text-editor" contenteditable="true" spellcheck="true" [attr.data-inline-editor]="layer.id" [textContent]="layer.text" (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)" (blur)="finishInlineEdit($event, layer)"></div>
@@ -684,29 +743,29 @@
     </main>
 
     <aside class="ve-inspector">
-      <div class="responsive-settings">
-        <strong>Presentación pública</strong>
+      <details class="responsive-settings presentation-settings">
+        <summary>Presentación y dispositivos</summary>
         <div class="segmented presentation-options" role="group" aria-label="Presentación pública">
           <button type="button" [class.active]="design.presentationMode !== 'chapters'" [attr.aria-pressed]="design.presentationMode !== 'chapters'" (click)="setPresentationMode('continuous')">Continua</button>
           <button type="button" [class.active]="design.presentationMode === 'chapters'" [attr.aria-pressed]="design.presentationMode === 'chapters'" (click)="setPresentationMode('chapters')">Capítulos</button>
         </div>
         <p>{{ design.presentationMode === 'chapters' ? 'Cada sección se abre por separado. Los elementos que cruzan límites se recortan en este modo.' : 'Lienzo seguido: arrastra elementos entre secciones sin que se corten.' }}</p>
-        <label class="toggle"><input type="checkbox" [ngModel]="design.responsiveMode === 'independent'" (ngModelChange)="setResponsiveMode($event)"> Ajustar cada dispositivo</label>
+        <div class="ve-help-row"><label class="toggle"><input type="checkbox" [ngModel]="design.responsiveMode === 'independent'" (ngModelChange)="setResponsiveMode($event)"> Ajustar cada dispositivo</label><details class="ve-context-help"><summary title="Ayuda sobre diseño por dispositivo" aria-label="Ayuda sobre diseño por dispositivo"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Actívalo solo si necesitas posiciones distintas en celular, tablet y escritorio. Desde aquí puedes copiar una distribución a otra vista. En modo Capítulos, lo que salga de cada sección se recorta.</p></details></div>
         <p>{{ design.responsiveMode === 'independent' ? 'Los cambios de posición y tamaño solo afectan esta vista.' : 'La misma distribución se usa en celular, tablet y escritorio.' }}</p>
         <div *ngIf="design.responsiveMode === 'independent'" class="copy-layout-actions">
           <button *ngIf="device !== 'mobile'" type="button" (click)="copyCurrentLayoutTo('mobile')">Copiar a celular</button>
           <button *ngIf="device !== 'tablet'" type="button" (click)="copyCurrentLayoutTo('tablet')">Copiar a tablet</button>
           <button *ngIf="device !== 'desktop'" type="button" (click)="copyCurrentLayoutTo('desktop')">Copiar a escritorio</button>
         </div>
-      </div>
-      <div class="inspector-tabs">
+      </details>
+      <div class="inspector-tabs" [class.tutorial-focus]="tutorialStep === 6">
         <button type="button" [class.active]="inspectorView === 'properties'" (click)="inspectorView='properties'">Propiedades</button>
         <button type="button" [class.active]="inspectorView === 'layers'" (click)="inspectorView='layers'">Capas</button>
         <button type="button" [class.active]="inspectorView === 'history'" (click)="inspectorView='history'">Versiones</button>
       </div>
       <ng-container *ngIf="inspectorView === 'layers'; else nonLayerInspector">
         <div class="layer-panel" *ngIf="selectedSection as section">
-          <div class="layer-panel-title"><strong>{{ section.title || section.type }}</strong><span>{{ section.layers.length }} elementos</span></div>
+          <div class="layer-panel-title"><strong>{{ section.title || section.type }}</strong><span>{{ section.layers.length }} elementos</span><details class="ve-context-help"><summary title="Ayuda sobre capas" aria-label="Ayuda sobre capas"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Las capas de arriba se muestran delante. Bloquear evita mover un objeto por accidente; ocultar lo quita también de la invitación pública.</p></details></div>
           <p class="empty-layers" *ngIf="!section.layers.length">Esta sección no contiene elementos visuales.</p>
           <p class="selection-hint">Usa Shift + clic o arrastra un recuadro sobre el lienzo para seleccionar varios.</p>
           <article *ngFor="let item of orderedLayers" [class.active]="isLayerSelected(item)" [class.muted]="item.hidden" (click)="selectLayerFromPanel(item, $event)">
@@ -743,6 +802,7 @@
       <ng-container *ngIf="selectedLayerCount === 1 && selectedLayer as layer; else sectionInspector">
         <div class="inspector-heading"><h2>Elemento</h2><div><button class="duplicate-icon" type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button><button class="danger-icon" type="button" title="Eliminar" (click)="removeLayer()">⌫</button></div></div>
         <label>Nombre de capa<input [(ngModel)]="layer.name" type="text" maxlength="120"></label>
+        <button *ngIf="layer.type === 'image' && layer.groupId && layer.style?.frameEnabled" type="button" class="content-add" (click)="selectCompositeGroup(layer)">Seleccionar composición completa</button>
         <label *ngIf="(layer.type === 'text' && !isIconLayer(layer) && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'">Texto<textarea [(ngModel)]="layer.text" rows="3"></textarea></label>
         <aside *ngIf="isDynamicTextOutputLayer(layer)" class="plugin-binding-note"><strong>Dato dinámico del invitado</strong><code>{{ layer.binding }}</code><span>En el editor ves un ejemplo. Al publicarse se reemplaza con la información del invitado identificado; puedes cambiar posición, tamaño y estilo.</span></aside>
         <div *ngIf="(layer.type === 'text' && !isIconLayer(layer) && !isDynamicTextOutputLayer(layer)) || layer.type === 'button'" class="dynamic-variable-picker">
@@ -750,7 +810,7 @@
           <div><button *ngFor="let variable of dynamicVariables" type="button" [title]="variable.group + ': ' + variable.example" (click)="insertDynamicVariable(layer, variable.token)">{{ variable.label }}</button></div>
         </div>
         <ng-container *ngIf="layer.type === 'button'">
-          <label>Acción<select [(ngModel)]="layer.binding"><option *ngFor="let action of buttonActions" [value]="action.value">{{ action.label }}</option></select></label>
+          <div class="ve-help-row"><label>Acción<select [(ngModel)]="layer.binding"><option *ngFor="let action of buttonActions" [value]="action.value">{{ action.label }}</option></select></label><details class="ve-context-help"><summary title="Ayuda sobre acciones del botón" aria-label="Ayuda sobre acciones del botón"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>El texto cambia lo que dice el botón; la acción define qué hace al pulsarlo. Para un sitio externo elige Enlace personalizado y escribe su URL. Para ir a una función, agrégala también a la invitación.</p></details></div>
           <label *ngIf="!layer.binding">Enlace<input [(ngModel)]="layer.url" type="url" placeholder="https://..."></label>
           <div class="button-style-editor">
             <span>Estilo del botón</span>
@@ -799,7 +859,7 @@
           <p *ngIf="!canUseCustomAudio(layer)" class="audio-provider-warning">Este proveedor requiere un reproductor visible. Sube un archivo de audio para usar un botón discreto o flotante.</p>
           <label>Presentación<select [ngModel]="canUseCustomAudio(layer) ? (audioStyle.audioPresentation || 'button') : 'native'" (ngModelChange)="audioStyle.audioPresentation=$event" [disabled]="!canUseCustomAudio(layer)"><option value="button">Botón personalizado</option><option value="native">Reproductor completo</option></select></label>
           <div class="audio-toggle-grid">
-            <label class="toggle"><input [(ngModel)]="audioStyle.audioAutoplay" type="checkbox"> Intentar reproducir al entrar</label>
+            <div class="ve-help-row"><label class="toggle"><input [(ngModel)]="audioStyle.audioAutoplay" type="checkbox"> Intentar reproducir al entrar</label><details class="ve-context-help"><summary title="Ayuda sobre reproducción automática" aria-label="Ayuda sobre reproducción automática"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Algunos navegadores impiden iniciar audio con sonido hasta que el invitado toque la página. El control de reproducir seguirá disponible. Los enlaces de YouTube y Spotify requieren un reproductor visible.</p></details></div>
             <label class="toggle"><input [(ngModel)]="audioStyle.audioLoop" type="checkbox"> Repetir</label>
           </div>
           <label>Volumen inicial<input [ngModel]="audioStyle.audioVolume ?? 0.8" (ngModelChange)="audioStyle.audioVolume=$event" type="range" min="0" max="1" step="0.05"><span>{{ ((audioStyle.audioVolume ?? 0.8) * 100) | number:'1.0-0' }}%</span></label>
@@ -827,7 +887,7 @@
           </ng-container>
         </section>
         <div class="transform-settings" *ngIf="selectedLayout as layout">
-          <h3>Posición y tamaño</h3>
+          <div class="ve-help-row"><h3>Posición y tamaño</h3><details class="ve-context-help"><summary title="Ayuda sobre posición y tamaño" aria-label="Ayuda sobre posición y tamaño"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Estos valores son porcentajes del lienzo. Puedes mover elementos fuera del área visible, pero esa parte no aparecerá en la invitación pública. Revisa los tres tamaños antes de publicar.</p></details></div>
           <div class="two-columns">
             <label>Posición X<input [(ngModel)]="layout.x" (change)="normalizeLayerTransform(layer, layout)" type="number" min="-100" max="200" step="0.5"></label>
             <label>Posición Y<input [(ngModel)]="layout.y" (change)="normalizeLayerTransform(layer, layout)" type="number" [min]="verticalLayerBounds(selectedSection, layout.height).min" [max]="verticalLayerBounds(selectedSection, layout.height).max" step="0.5"></label>
@@ -886,7 +946,7 @@
               <label>Grosor del marco<input [ngModel]="style.borderWidth || 0" (ngModelChange)="style.borderWidth=+$event" type="number" min="0" max="20"></label>
               <label>Color del marco<input [ngModel]="style.borderColor || '#ffffff'" (ngModelChange)="style.borderColor=$event" type="color"></label>
             </div>
-            <label>Foto dentro del marco<select [ngModel]="style.preserveAspectRatio === false ? (style.objectFit || 'cover') : 'contain'" (ngModelChange)="setImageFit(layer, $event)"><option value="cover">Llenar marco con recorte</option><option value="contain">Mostrar completa</option></select></label>
+            <div class="ve-help-row"><label>Foto dentro del marco<select [ngModel]="style.preserveAspectRatio === false ? (style.objectFit || 'cover') : 'contain'" (ngModelChange)="setImageFit(layer, $event)"><option value="cover">Llenar marco con recorte</option><option value="contain">Mostrar completa</option></select></label><details class="ve-context-help"><summary title="Ayuda sobre encuadre" aria-label="Ayuda sobre encuadre"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Llenar ocupa todo el marco y puede recortar bordes, sin estirar la foto. Mostrar completa conserva toda la imagen y puede dejar espacio vacío alrededor.</p></details></div>
             <label>Posición horizontal<input [(ngModel)]="style.objectPositionX" type="range" min="0" max="100"></label>
             <label>Posición vertical<input [(ngModel)]="style.objectPositionY" type="range" min="0" max="100"></label>
             <label>Zoom de imagen<input [ngModel]="style.imageScale ?? 1" (ngModelChange)="style.imageScale=$event" type="range" min="0.5" max="3" step="0.05"><span>{{ style.imageScale || 1 }}×</span></label>
@@ -900,7 +960,7 @@
         </ng-container>
         <ng-container *ngIf="animationFor(layer) as animation">
           <div class="animation-settings">
-            <div class="inspector-heading"><h3>Animación</h3><button type="button" [disabled]="animation.type === 'none'" (click)="previewAnimation(layer)">Vista previa</button></div>
+            <div class="inspector-heading"><h3>Animación</h3><details class="ve-context-help"><summary title="Ayuda sobre animaciones" aria-label="Ayuda sobre animaciones"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Duración indica cuánto tarda el efecto; Espera, cuándo comienza. Repetir vuelve a ejecutarlo. Usa Vista previa para comprobarlo antes de publicar.</p></details><button type="button" [disabled]="animation.type === 'none'" (click)="previewAnimation(layer)">Vista previa</button></div>
             <label>Efecto<select [(ngModel)]="animation.type"><option value="none">Sin animación</option><option value="fade">Aparecer</option><option value="slide-up">Subir</option><option value="slide-left">Entrar desde la derecha</option><option value="slide-right">Entrar desde la izquierda</option><option value="zoom">Acercar</option><option value="float">Flotar</option><option value="pulse">Pulsar</option><option value="bounce">Rebotar</option></select></label>
             <div class="two-columns" *ngIf="animation.type !== 'none'"><label>Duración<input [(ngModel)]="animation.duration" type="number" min="0.2" max="10" step="0.1"></label><label>Espera<input [(ngModel)]="animation.delay" type="number" min="0" max="10" step="0.1"></label></div>
             <label *ngIf="animation.type !== 'none'" class="toggle"><input [(ngModel)]="animation.repeat" type="checkbox"> Repetir</label>
@@ -918,6 +978,32 @@
           <div class="selection-actions">
             <button type="button" (click)="groupSelectedLayers()">Agrupar</button>
             <button type="button" (click)="ungroupSelectedLayers()">Desagrupar</button>
+          </div>
+          <div *ngIf="selectedCompositeFrames.length" class="composite-frame-list">
+            <h3>Fotos de la composición</h3>
+            <button *ngFor="let frame of selectedCompositeFrames" type="button" [attr.draggable]="frame.locked || frame.binding ? null : 'true'" [class.photo-swap-target]="photoSwapTargetId === frame.id" [title]="frame.locked ? 'Marco bloqueado' : 'Arrastra a otro marco para intercambiar fotos'" (dragstart)="beginPhotoSwapDrag($event, frame)" (dragover)="dragPhotoSwapOver($event, frame)" (dragleave)="leavePhotoSwapTarget(frame)" (drop)="dropPhotoSwap($event, frame)" (dragend)="endPhotoSwapDrag()" (click)="selectCompositeFrame(frame)">
+              <lucide-icon name="grip-vertical" [strokeWidth]="1.8" aria-hidden="true"></lucide-icon>
+              <span class="composite-frame-thumb" [ngStyle]="framePreviewStyle(frame.style!.imageMask || 'none')"><img *ngIf="frame.url" [src]="frame.url" alt=""></span>
+              <span>{{ frame.name || 'Foto' }}</span>
+              <span>Editar</span>
+            </button>
+          </div>
+          <div *ngIf="selectedCompositeFrames.length" class="photo-composition-options">
+            <h3>Distribución</h3>
+            <div class="photo-composition-catalog">
+              <button *ngFor="let preset of compatiblePhotoCompositionPresets" type="button" [disabled]="!canReflowSelectedComposition" [title]="'Aplicar distribución ' + preset.name" (click)="applyPhotoCompositionPreset(preset.key)">
+                <span class="photo-composition-preview" aria-hidden="true">
+                  <span class="photo-composition-sample" [style.width.px]="preset.aspectRatio >= 1.5 ? 98 : 66 * preset.aspectRatio" [style.height.px]="preset.aspectRatio >= 1.5 ? 98 / preset.aspectRatio : 66">
+                    <span *ngFor="let slot of preset.slots" class="photo-composition-slot" [style.left.%]="slot.x" [style.top.%]="slot.y" [style.width.%]="slot.width" [style.height.%]="slot.height" [ngStyle]="framePreviewStyle(slot.mask)"></span>
+                  </span>
+                </span>
+                <span>{{ preset.name }}</span>
+              </button>
+            </div>
+            <label class="photo-composition-spacing">Separación
+              <input type="range" min="0" max="40" step="1" [disabled]="!canReflowSelectedComposition" [ngModel]="selectedPhotoCompositionSpacing" (ngModelChange)="setPhotoCompositionSpacing($event)" (change)="finishPhotoCompositionSpacing()">
+              <span>{{ selectedPhotoCompositionSpacing }} px</span>
+            </label>
           </div>
           <h3>Alinear</h3>
           <div class="alignment-actions">

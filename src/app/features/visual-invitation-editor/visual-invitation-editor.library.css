@@ -1,3 +1,4 @@
+@import './visual-invitation-editor.workspace-ux.css';
 .open-design-library{width:100%;min-height:68px;margin-bottom:18px;padding:11px 12px;display:grid;grid-template-columns:36px 1fr;column-gap:8px;align-items:center;text-align:left;border:1px solid #d4c5bb;background:#f9f7f4;color:#252623;cursor:pointer}
 .open-design-library>span{grid-row:span 2;display:grid;place-items:center;height:36px;background:#e6eee9;color:#237359;font-size:22px}
 .open-design-library lucide-icon{width:20px;height:20px}
@@ -94,5 +95,27 @@
 .frame-catalog button{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:8px 4px;border:1px solid #ded5cf;background:#fff;color:#342e2a;font-size:10px;cursor:pointer}
 .frame-catalog button:hover,.frame-catalog button:focus-visible{border-color:#256b54;outline:2px solid #256b5433;outline-offset:-2px}
 .frame-catalog-sample{display:block;width:52px;height:52px;background:linear-gradient(135deg,#385f4d 0%,#85ac91 47%,#e7b79b 48%,#ce846e 100%)}
+.photo-composition-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 20px}
+.photo-composition-catalog button{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;padding:9px 5px;border:1px solid #ded5cf;background:#fff;color:#342e2a;font-size:11px;cursor:pointer}
+.photo-composition-catalog button:hover,.photo-composition-catalog button:focus-visible{border-color:#256b54;outline:2px solid #256b5433;outline-offset:-2px}
+.photo-composition-catalog button:disabled{opacity:.5;cursor:not-allowed}
+.photo-composition-preview{display:flex;align-items:center;justify-content:center;width:100%;height:66px}
+.photo-composition-sample{position:relative;display:block;flex:none;max-width:100%;max-height:66px}
+.photo-composition-slot{position:absolute;box-sizing:border-box;border:1px solid #ae8a79;background:#e9e3dc}
+.photo-composition-options{margin:16px 0}
+.photo-composition-options h3{margin:0 0 7px}
+.photo-composition-options .photo-composition-catalog{margin:0}
+.photo-composition-spacing{margin-top:12px}
+.composite-frame-list{display:grid;gap:6px;margin:14px 0}
+.composite-frame-list h3{margin:0 0 2px}
+.composite-frame-list button{display:flex;align-items:center;gap:9px;width:100%;min-width:0;padding:6px;border:1px solid #ded5cf;background:#fff;text-align:left;cursor:grab}
+.composite-frame-list button:hover,.composite-frame-list button:focus-visible{border-color:#256b54;outline:2px solid #256b5433;outline-offset:-2px}
+.composite-frame-list button.photo-swap-target{border-color:#1689df;background:#eaf6ff;outline:2px solid #1689df;outline-offset:-2px}
+.composite-frame-list button lucide-icon{flex:none;width:15px;height:15px;color:#777}
+.composite-frame-list button span:nth-child(3){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.composite-frame-list button span:last-child{font-size:11px;color:#256b54}
+.composite-frame-thumb{display:block;flex:none;width:38px;height:38px;overflow:hidden;background:#e9e3dc}
+.composite-frame-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.canvas-layer.photo-swap-target{outline:3px solid #1689df;outline-offset:3px;box-shadow:0 0 0 7px #1689df33}
 .frame-empty{box-sizing:border-box;overflow:hidden}
 .frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:8px;background:#eee9e4;color:#5d5048;font-size:11px;text-align:center}

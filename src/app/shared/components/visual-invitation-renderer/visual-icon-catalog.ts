@@ -1,19 +1,19 @@
 import {
-  Baby, Bell, Cake, CalendarDays, CalendarHeart, Camera, Car, Church, CircleCheckBig,
-  CircleUserRound, Clock, Crown, Facebook, Flower2, Gem, Gift, GraduationCap, Heart,
+  Baby, Bell, Blocks, Cake, CalendarDays, CalendarHeart, Camera, Car, Church, CircleCheckBig,
+  CircleHelp, CircleUserRound, Clock, Crown, Facebook, Flower2, Gem, Gift, GraduationCap, Heart,
   HeartHandshake, Hotel, House, Image, Images, Instagram, KeyRound, Link, LockKeyhole,
-  Mail, MapPin, MapPinned, MessageCircle, MicVocal, Music, Music2, Navigation, PartyPopper,
+  Download, Ellipsis, Eye, FlaskConical, Mail, MapPin, MapPinned, MessageCircle, MicVocal, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen, PanelsTopLeft, PartyPopper,
   Phone, Play, QrCode, Send, Share2, ShieldCheck, Sparkles, Star, TicketCheck, Upload,
-  UserRound, Users, Utensils, Wine, Youtube
+  Shapes, UserRound, Users, Utensils, Wine, Youtube
 } from 'lucide-angular';
 
 export const VISUAL_LUCIDE_ICONS = {
-  Baby, Bell, Cake, CalendarDays, CalendarHeart, Camera, Car, Church, CircleCheckBig,
-  CircleUserRound, Clock, Crown, Facebook, Flower2, Gem, Gift, GraduationCap, Heart,
+  Baby, Bell, Blocks, Cake, CalendarDays, CalendarHeart, Camera, Car, Church, CircleCheckBig,
+  CircleHelp, CircleUserRound, Clock, Crown, Facebook, Flower2, Gem, Gift, GraduationCap, Heart,
   HeartHandshake, Hotel, House, Image, Images, Instagram, KeyRound, Link, LockKeyhole,
-  Mail, MapPin, MapPinned, MessageCircle, MicVocal, Music, Music2, Navigation, PartyPopper,
+  Download, Ellipsis, Eye, FlaskConical, Mail, MapPin, MapPinned, MessageCircle, MicVocal, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen, PanelsTopLeft, PartyPopper,
   Phone, Play, QrCode, Send, Share2, ShieldCheck, Sparkles, Star, TicketCheck, Upload,
-  UserRound, Users, Utensils, Wine, Youtube
+  Shapes, UserRound, Users, Utensils, Wine, Youtube
 };
 
 export interface VisualIconOption {

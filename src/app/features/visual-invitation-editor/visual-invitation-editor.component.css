@@ -49,7 +49,7 @@
   :host{height:100dvh;min-height:100vh}
   .visual-editor{height:100dvh;min-height:100vh;overflow:hidden}
   .ve-topbar{height:56px;min-height:56px;gap:4px;padding:6px 8px;overflow-x:auto}
-  .ve-title,.secondary{display:none}
+  .ve-title,.ve-topbar > .secondary{display:none}
   .ve-history{gap:2px}
   .icon-button{width:34px;min-width:34px;height:34px}
   .segmented{margin-left:0;min-width:100px;padding:2px}

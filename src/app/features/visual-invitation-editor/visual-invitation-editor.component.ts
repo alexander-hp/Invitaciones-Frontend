@@ -26,9 +26,11 @@ import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from '..
 import { buildCompleteDesign, COMPLETE_DESIGN_PRESETS, CompleteDesignPreset } from './complete-design-library';
 import { createVisualDesignAiPrompt, createVisualDesignExchange } from './visual-design-exchange';
 import { buttonPresetStyle, VISUAL_BUTTON_PRESETS, VisualButtonPreset } from './visual-button-presets';
+import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpacing, reflowPhotoCompositionLayouts, withPhotoCompositionSpacing } from './photo-composition-presets';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
+type ToolCategory = 'design' | 'elements' | 'assets' | 'functions';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
@@ -39,6 +41,7 @@ type ShapeKind = NonNullable<NonNullable<VisualInvitationLayer['style']>['shapeK
 type PaletteDragItem =
   | { kind: 'layer'; type: VisualLayerType }
   | { kind: 'frame'; mask: ImageMask }
+  | { kind: 'composition'; key: string }
   | { kind: 'shape'; shape: ShapeKind }
   | { kind: 'icon'; icon: VisualIconOption }
   | { kind: 'component'; key: string }
@@ -75,11 +78,12 @@ type FunctionalTestData = {
 @Component({
   selector: 'app-visual-invitation-editor',
   templateUrl: './visual-invitation-editor.component.html',
-  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css', './visual-invitation-editor.library.css']
+  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css', './visual-invitation-editor.library.css', './visual-invitation-editor.tutorial.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   readonly buttonPresets = VISUAL_BUTTON_PRESETS;
   readonly buttonPresetStyle = buttonPresetStyle;
+  readonly photoCompositionPresets = PHOTO_COMPOSITION_PRESETS;
   invitation?: InvitationModel;
   event?: EventModel;
   design!: VisualInvitationDesign;
@@ -91,6 +95,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectedLayerId = '';
   selectedLayerIds: string[] = [];
   selectedPluginPartKey = '';
+  toolCategory: ToolCategory = 'elements';
+  toolsCollapsed = false;
+  tutorialStep = -1;
+  readonly tutorialSteps = [
+    { title: 'Tu espacio de diseño', description: 'A la izquierda eliges qué agregar, en el centro acomodas la invitación y a la derecha cambias las propiedades de lo seleccionado.' },
+    { title: 'Empieza con un diseño', description: 'Explora diseños completos o ajusta colores, tipografía y botones desde Diseño. En Más también puedes importar una plantilla hecha con otra IA.' },
+    { title: 'Agrega elementos', description: 'Añade texto, fotos, video, audio, botones, formas y marcos. Arrastra cada pieza al lienzo y colócala donde la necesites.' },
+    { title: 'Usa tus archivos', description: 'Sube imágenes, videos y música, o busca recursos. Selecciona un archivo para usarlo como portada, fondo o elemento del diseño.' },
+    { title: 'Conecta funciones reales', description: 'Agrega RSVP, pase, mesa, mapas, regalos, álbum, dedicatorias o peticiones al DJ. Estos módulos guardan respuestas; no son solo decoración.' },
+    { title: 'Organiza el lienzo', description: 'Selecciona, mueve y cambia el tamaño de los objetos. La barra del lienzo te permite activar cuadrícula, ajuste, márgenes y zoom.' },
+    { title: 'Personaliza cada detalle', description: 'Selecciona una sección u objeto y usa Propiedades para editarlo. En Capas cambias el orden o eliges piezas superpuestas; Versiones permite recuperar diseños.' },
+    { title: 'Comprueba cada dispositivo', description: 'Alterna entre celular, tablet y escritorio. Puedes ajustar cada tamaño y abrir la vista comparativa desde Más antes de publicar.' },
+    { title: 'Prueba la experiencia', description: 'En Más encontrarás la vista comparativa, la prueba de formularios y la descarga. Usa Vista previa para ver la invitación como invitado.' },
+    { title: 'Guarda y publica', description: 'Guarda el diseño mientras trabajas. Publicar revisa advertencias antes de hacerlo visible; podrás volver a editarlo después. Repite esta guía desde Más.' }
+  ];
   device: DeviceMode = 'mobile';
   loading = true;
   saving = false;
@@ -327,6 +346,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private suppressNextLayerClickId = '';
   private inlineEditOriginal = '';
   private paletteDragItem?: PaletteDragItem;
+  private photoSwapSourceId = '';
+  photoSwapTargetId = '';
+  private photoSpacingEditKey = '';
   iconSearch = '';
   iconCategory: 'all' | VisualIconOption['category'] = 'all';
   readonly iconCatalog = VISUAL_ICON_CATALOG;
@@ -546,10 +568,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const eventId = typeof this.invitation.event === 'string'
           ? this.invitation.event
           : (this.invitation.event._id || this.invitation.event.id || '');
-        if (!eventId) { this.loading = false; return; }
+        if (!eventId) { this.loading = false; this.maybeStartTutorial(); return; }
         this.api.getEvent(eventId).subscribe({
-          next: ({ event }) => { this.event = event; this.loading = false; },
-          error: () => { this.loading = false; }
+          next: ({ event }) => { this.event = event; this.loading = false; this.maybeStartTutorial(); },
+          error: () => { this.loading = false; this.maybeStartTutorial(); }
         });
       },
       error: () => this.fail('No fue posible cargar la invitación.')
@@ -717,6 +739,28 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.selectedLayers.length;
   }
 
+  get selectedCompositeFrames(): VisualInvitationLayer[] {
+    const layers = this.selectedLayers;
+    const groupId = layers[0]?.groupId;
+    return groupId && layers.length > 1 && layers.every((layer) => layer.groupId === groupId && layer.type === 'image' && layer.style?.frameEnabled)
+      ? layers : [];
+  }
+
+  get compatiblePhotoCompositionPresets(): typeof PHOTO_COMPOSITION_PRESETS {
+    return this.photoCompositionPresets.filter((preset) => preset.slots.length === this.selectedCompositeFrames.length);
+  }
+
+  get canReflowSelectedComposition(): boolean {
+    return this.selectedCompositeFrames.length > 1 && this.selectedCompositeFrames.every((frame) => !frame.locked);
+  }
+
+  get selectedPhotoCompositionSpacing(): number {
+    const section = this.selectedSection;
+    return section && this.selectedCompositeFrames.length > 1
+      ? Math.round(photoCompositionSpacing(this.selectedCompositeFrames.map((frame) => this.layoutFor(frame)), this.artboardWidth, visualSectionHeight(section)))
+      : 0;
+  }
+
   get mobileSelectionLabel(): string {
     if (this.selectedLayerCount > 1) return `${this.selectedLayerCount} elementos`;
     return this.selectedLayer ? this.layerLabel(this.selectedLayer) : 'Elemento';
@@ -779,6 +823,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (panel === 'canvas') setTimeout(() => this.fitCanvasToViewport());
   }
 
+  private maybeStartTutorial(): void {
+    if (this.showOnboarding) return;
+    try {
+      if (localStorage.getItem('kyndra-visual-editor-tutorial-v1')) return;
+    } catch { /* El tutorial también funciona sin almacenamiento local. */ }
+    setTimeout(() => this.openTutorial());
+  }
+
+  openTutorial(): void {
+    this.tutorialStep = 0;
+    this.prepareTutorialStep();
+  }
+
+  changeTutorialStep(direction: number): void {
+    if (this.tutorialStep < 0) return;
+    if (this.tutorialStep + direction >= this.tutorialSteps.length) { this.closeTutorial(); return; }
+    this.tutorialStep = Math.max(0, this.tutorialStep + direction);
+    this.prepareTutorialStep();
+  }
+
+  closeTutorial(): void {
+    this.tutorialStep = -1;
+    try { localStorage.setItem('kyndra-visual-editor-tutorial-v1', 'seen'); } catch { /* The guide remains available from Más. */ }
+  }
+
+  private prepareTutorialStep(): void {
+    const categories: Partial<Record<number, ToolCategory>> = { 1: 'design', 2: 'elements', 3: 'assets', 4: 'functions' };
+    const category = categories[this.tutorialStep];
+    if (category) {
+      this.toolCategory = category;
+      this.toolsCollapsed = false;
+      this.setMobilePanel('tools');
+    } else if (this.tutorialStep === 6) {
+      this.inspectorView = 'properties';
+      this.setMobilePanel('inspector');
+    } else {
+      this.setMobilePanel('canvas');
+    }
+  }
+
   openMobileInspector(): void {
     this.inspectorView = 'properties';
     this.setMobilePanel('inspector');
@@ -789,8 +873,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   fitCanvasToViewport(): void {
-    if (typeof window === 'undefined' || window.innerWidth > 700) return;
-    const availableWidth = Math.max(240, window.innerWidth - 20);
+    if (typeof window === 'undefined' || window.innerWidth > 1280) return;
+    const availableWidth = Math.max(240, window.innerWidth - (window.innerWidth <= 700 ? 20 : 48));
     this.canvasZoom = this.bound(availableWidth / this.artboardWidth, .5, 1);
   }
 
@@ -1640,6 +1724,178 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.inspectorView = 'properties';
   }
 
+  addPhotoComposition(key: string): void {
+    const section = this.selectedSection;
+    const preset = this.photoCompositionPresets.find((item) => item.key === key);
+    if (!section || !preset) return;
+    this.recordHistory();
+    this.design.responsiveMode = 'independent';
+    const layouts = photoCompositionLayouts(preset, visualSectionHeight(section));
+    const groupId = this.uid('group');
+    const topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    const layers = preset.slots.map((slot, index) => {
+      const mobile = layouts.mobile[index];
+      const layer = this.newLayer('image', '', mobile.x, mobile.y, mobile.width, mobile.height);
+      layer.name = `Foto ${index + 1}`;
+      layer.groupId = groupId;
+      layer.zIndex = topZ + index + 1;
+      layer.layouts = {
+        mobile: { ...mobile }, tablet: { ...layouts.tablet[index] }, desktop: { ...layouts.desktop[index] }
+      };
+      layer.style = {
+        ...layer.style, frameEnabled: true, imageMask: slot.mask, objectFit: 'cover', preserveAspectRatio: false,
+        borderWidth: 3, borderStyle: 'solid', borderColor: this.design.theme?.accentColor || '#9d765d',
+        backgroundColor: '#e9e3dc', objectPositionX: 50, objectPositionY: 50
+      };
+      return layer;
+    });
+    section.layers.push(...layers);
+    this.setLayerSelection(layers.map((layer) => layer.id));
+    this.inspectorView = 'properties';
+    this.autosaveState = 'Cambios pendientes';
+    this.flash(`${preset.name} agregado. Selecciona una foto en Propiedades para editarla.`);
+  }
+
+  applyPhotoCompositionPreset(key: string): void {
+    const section = this.selectedSection;
+    const frames = this.selectedCompositeFrames;
+    const preset = this.photoCompositionPresets.find((item) => item.key === key);
+    if (!section || !preset || !this.canReflowSelectedComposition || preset.slots.length !== frames.length) return;
+    const devices = ['mobile', 'tablet', 'desktop'] as const;
+    const current = {} as Record<typeof devices[number], VisualInvitationLayerLayout[]>;
+    for (const device of devices) {
+      current[device] = frames.map((frame) => ({
+        ...(this.design.responsiveMode === 'independent' && frame.layouts?.[device]
+          ? frame.layouts[device]!
+          : { x: frame.x, y: frame.y, width: frame.width, height: frame.height, rotation: frame.rotation || 0 })
+      }));
+    }
+    const layouts = reflowPhotoCompositionLayouts(preset, visualSectionHeight(section), current);
+    this.recordHistory();
+    this.design.responsiveMode = 'independent';
+    frames.forEach((frame, index) => {
+      frame.layouts = {
+        mobile: layouts.mobile[index], tablet: layouts.tablet[index], desktop: layouts.desktop[index]
+      };
+      Object.assign(frame, layouts.mobile[index]);
+    });
+    this.autosaveState = 'Cambios pendientes';
+    this.flash(`Distribución ${preset.name} aplicada.`);
+  }
+
+  setPhotoCompositionSpacing(value: number): void {
+    const section = this.selectedSection;
+    const frames = this.selectedCompositeFrames;
+    if (!section || !this.canReflowSelectedComposition) return;
+    const desired = this.bound(Number(value), 0, 40);
+    const height = visualSectionHeight(section);
+    const current = frames.map((frame) => ({ ...this.layoutFor(frame) }));
+    if (Math.abs(photoCompositionSpacing(current, this.artboardWidth, height) - desired) < .5) return;
+    const adjusted = withPhotoCompositionSpacing(current, this.artboardWidth, height, desired);
+    if (adjusted.every((layout, index) => layout.width === current[index].width && layout.height === current[index].height)) return;
+    const editKey = `${frames[0].groupId}:${this.device}`;
+    if (this.photoSpacingEditKey !== editKey) {
+      this.recordHistory();
+      this.photoSpacingEditKey = editKey;
+    }
+    frames.forEach((frame, index) => Object.assign(
+      this.design.responsiveMode === 'independent' ? this.editableLayout(frame) : frame,
+      adjusted[index]
+    ));
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  finishPhotoCompositionSpacing(): void {
+    this.photoSpacingEditKey = '';
+  }
+
+  selectCompositeFrame(layer: VisualInvitationLayer): void {
+    this.setLayerSelection([layer.id]);
+    this.inspectorView = 'properties';
+  }
+
+  selectCompositeGroup(layer: VisualInvitationLayer): void {
+    const section = this.selectedSection;
+    if (!section || !layer.groupId) return;
+    this.setLayerSelection(section.layers.filter((item) => item.groupId === layer.groupId).map((item) => item.id), layer.id);
+    this.inspectorView = 'properties';
+  }
+
+  beginPhotoSwapDrag(event: DragEvent, frame: VisualInvitationLayer): void {
+    if (!frame.groupId || frame.locked || frame.binding || !frame.style?.frameEnabled) {
+      event.preventDefault();
+      return;
+    }
+    this.photoSwapSourceId = frame.id;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', 'kyndra-photo-swap');
+    }
+  }
+
+  dragPhotoSwapOver(event: DragEvent, target: VisualInvitationLayer): void {
+    if (!this.photoSwapSourceId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.photoSwapTargetId = this.canSwapCompositePhotos(target) ? target.id : '';
+    if (event.dataTransfer) event.dataTransfer.dropEffect = this.photoSwapTargetId ? 'move' : 'none';
+  }
+
+  leavePhotoSwapTarget(target: VisualInvitationLayer): void {
+    if (this.photoSwapTargetId === target.id) this.photoSwapTargetId = '';
+  }
+
+  dropPhotoSwap(event: DragEvent, target: VisualInvitationLayer): void {
+    if (!this.photoSwapSourceId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const source = this.canSwapCompositePhotos(target)
+      ? this.selectedSection?.layers.find((layer) => layer.id === this.photoSwapSourceId)
+      : undefined;
+    if (source) this.swapCompositePhotos(source, target);
+    this.endPhotoSwapDrag();
+  }
+
+  endPhotoSwapDrag(): void {
+    this.photoSwapSourceId = '';
+    this.photoSwapTargetId = '';
+  }
+
+  swapCompositePhotos(source: VisualInvitationLayer, target: VisualInvitationLayer): void {
+    if (!source.groupId || source.groupId !== target.groupId || source.id === target.id ||
+        source.type !== 'image' || target.type !== 'image' ||
+        !source.style?.frameEnabled || !target.style?.frameEnabled ||
+        source.locked || target.locked || source.binding || target.binding ||
+        !this.selectedSection?.layers.includes(source) || !this.selectedSection?.layers.includes(target)) return;
+    this.recordHistory();
+    const sourceUrl = source.url;
+    source.url = target.url;
+    target.url = sourceUrl;
+    const photoStyleKeys: Array<keyof VisualInvitationLayerStyle> = [
+      'objectFit', 'preserveAspectRatio', 'objectPositionX', 'objectPositionY', 'imageScale',
+      'brightness', 'contrast', 'saturation', 'blur'
+    ];
+    const sourceStyle = { ...source.style } as Record<string, unknown>;
+    const targetStyle = { ...target.style } as Record<string, unknown>;
+    for (const key of photoStyleKeys) {
+      const sourceValue = sourceStyle[key];
+      const targetValue = targetStyle[key];
+      if (targetValue === undefined) delete sourceStyle[key]; else sourceStyle[key] = targetValue;
+      if (sourceValue === undefined) delete targetStyle[key]; else targetStyle[key] = sourceValue;
+    }
+    source.style = sourceStyle as VisualInvitationLayerStyle;
+    target.style = targetStyle as VisualInvitationLayerStyle;
+    this.autosaveState = 'Cambios pendientes';
+    this.flash('Fotos intercambiadas.');
+  }
+
+  private canSwapCompositePhotos(target: VisualInvitationLayer): boolean {
+    const source = this.selectedSection?.layers.find((layer) => layer.id === this.photoSwapSourceId);
+    return Boolean(source && source.id !== target.id && source.groupId && source.groupId === target.groupId &&
+      source.type === 'image' && target.type === 'image' && source.style?.frameEnabled && target.style?.frameEnabled &&
+      !source.locked && !target.locked && !source.binding && !target.binding);
+  }
+
   get filteredIconCatalog(): VisualIconOption[] {
     const query = this.iconSearch.trim().toLocaleLowerCase('es');
     return this.iconCatalog.filter((icon) => {
@@ -1834,6 +2090,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   dragPaletteOver(event: DragEvent, section: VisualInvitationSection): void {
+    if (this.photoSwapSourceId) {
+      event.preventDefault();
+      event.stopPropagation();
+      const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+      const target = section.layers.find((layer) => layer.id === targetId);
+      this.photoSwapTargetId = target && this.selectedSectionId === section.id && this.canSwapCompositePhotos(target) ? target.id : '';
+      if (event.dataTransfer) event.dataTransfer.dropEffect = this.photoSwapTargetId ? 'move' : 'none';
+      return;
+    }
     if (!this.paletteDragItem) return;
     event.preventDefault();
     event.stopPropagation();
@@ -1848,6 +2113,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   dropPaletteItem(event: DragEvent, section: VisualInvitationSection): void {
+    if (this.photoSwapSourceId) {
+      event.preventDefault();
+      event.stopPropagation();
+      const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+      const target = section.layers.find((layer) => layer.id === targetId);
+      if (target && this.selectedSectionId === section.id) this.dropPhotoSwap(event, target);
+      this.endPhotoSwapDrag();
+      return;
+    }
     const item = this.paletteDragItem;
     if (!item) return;
     event.preventDefault();
@@ -1872,6 +2146,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
     if (item.kind === 'component') {
       this.addComponent(item.key);
+      this.centerLayersAt(this.selectedLayers, x, y);
+    } else if (item.kind === 'composition') {
+      this.addPhotoComposition(item.key);
       this.centerLayersAt(this.selectedLayers, x, y);
     } else if (item.kind === 'rsvp-control') {
       this.addFunctionalControl(item.binding);
@@ -2178,7 +2455,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private activateImageCrop(section: VisualInvitationSection, layer: VisualInvitationLayer): void {
     if (layer.locked || layer.type !== 'image' || !this.boundImageUrl(layer)) return;
-    this.applyLayerSelection(section, layer, false);
+    this.selectedSectionId = section.id;
+    if (layer.groupId && layer.style?.frameEnabled) this.setLayerSelection([layer.id]);
+    else this.applyLayerSelection(section, layer, false);
     layer.style = {
       ...(layer.style || {}),
       objectFit: 'cover',
@@ -2494,6 +2773,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown', ['$event'])
   handleKeyboard(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
+    if (event.key === 'Escape' && this.tutorialStep >= 0) { this.closeTutorial(); return; }
     if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName)) return;
     const modifier = event.ctrlKey || event.metaKey;
     if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? this.redo() : this.undo(); return; }
@@ -3608,6 +3888,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   applyCompleteDesign(): void {
     if (!this.libraryPreviewDesign || (!this.showOnboarding && !this.confirmReplaceDesign())) return;
+    const wasOnboarding = this.showOnboarding;
     this.recordHistory();
     const assets = this.design.assets || [];
     this.design = this.clone(this.libraryPreviewDesign);
@@ -3618,6 +3899,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.showOnboarding = false;
     this.closeDesignLibrary();
     this.autosaveState = 'Cambios pendientes';
+    if (wasOnboarding) this.maybeStartTutorial();
   }
 
   private recommendedCompleteDesignKey(): string {
@@ -3632,6 +3914,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.clearLayerSelection();
     this.showOnboarding = false;
     this.autosaveState = 'Cambios pendientes';
+    this.maybeStartTutorial();
   }
 
   openDesignImporter(): void {
