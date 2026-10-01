@@ -11,97 +11,55 @@
 </div>
 
 <!-- PLANTILLAS Y FORMATO DE DISEÑO -->
-<section class="nw-card" style="margin-bottom: 24px;">
-  <!-- Encabezado de la Sección -->
-  <div
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+<section class="inv-template-section">
+  <div class="inv-template-heading">
     <div>
-      <h2
-        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        📋 Plantillas y Estructura de Invitación
-        <span class="nw-badge"
-          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
-          {{ totalTemplatesCount }} plantillas
-        </span>
-        <span *ngIf="pendingCustomCount > 0" class="nw-pill warning" style="font-size: 12px; font-weight: 700;">
-          ⏳ {{ pendingCustomCount }} en revisión
-        </span>
-        <span *ngIf="approvedCustomCount > 0" class="nw-pill success" style="font-size: 12px; font-weight: 700;">
-          ✨ {{ approvedCustomCount }} personalizadas
-        </span>
-      </h2>
-      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
-        Elige la experiencia de navegación para tus invitados al abrir la invitación o diseña una exclusiva con IA.
-      </p>
+      <h2>Plantillas <span class="inv-template-count">{{ totalTemplatesCount }}</span></h2>
+      <p>En uso: <strong>{{ activeTemplateDisplayName }}</strong></p>
+    </div>
+    <div class="inv-template-heading-actions">
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showPanel('preview')">Vista previa actual</button>
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showPanel('plan')">Ver plan</button>
     </div>
   </div>
 
-  <!-- BANNER HERO DE IA GEMINI -->
-  <div
-    style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(121, 40, 202, 0.08) 0%, rgba(255, 0, 128, 0.05) 50%, var(--nw-surface-2, #f5f1ea) 100%); border: 1px solid rgba(121, 40, 202, 0.25); border-radius: var(--nw-radius-sm, 12px); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-    <div style="display: flex; gap: 14px; align-items: center;">
-      <div
-        style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #7928ca, #ff0080); display: flex; align-items: center; justify-content: center; color: #ffffff; flex-shrink: 0; box-shadow: 0 4px 12px rgba(121, 40, 202, 0.3);">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polygon
-            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-          </polygon>
-        </svg>
-      </div>
-      <div>
-        <h4
-          style="margin: 0; font-size: 15px; font-weight: 700; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 8px;">
-          Generador Inteligente de Plantillas e Interactividad
-          <span class="nw-pill accent" style="font-size: 10.5px;">Potenciado por Gemini</span>
-        </h4>
-        <p style="margin: 3px 0 0; font-size: 12.5px; color: var(--nw-text-2, #6e6157); line-height: 1.4;">
-          Crea estructuras dinámicas, paletas de color y módulos interactivos adaptados al estilo y temática de tu
-          evento.
-        </p>
-      </div>
+  <div class="inv-template-controls">
+    <label class="inv-template-search">
+      <span>Buscar plantilla</span>
+      <input type="search" [(ngModel)]="templateSearch" placeholder="Nombre, estilo o tipo de evento" autocomplete="off">
+    </label>
+    <div class="inv-template-filters" role="group" aria-label="Filtrar plantillas">
+      <button type="button" [class.active]="activeFilterTab === 'all'" [attr.aria-pressed]="activeFilterTab === 'all'"
+        (click)="activeFilterTab = 'all'">Todas ({{ totalTemplatesCount }})</button>
+      <button type="button" [class.active]="activeFilterTab === 'builtin'" [attr.aria-pressed]="activeFilterTab === 'builtin'"
+        (click)="activeFilterTab = 'builtin'">Base ({{ builtinTemplates.length }})</button>
+      <button type="button" [class.active]="activeFilterTab === 'custom'" [attr.aria-pressed]="activeFilterTab === 'custom'"
+        (click)="activeFilterTab = 'custom'">Mis versiones ({{ customSubmissions.length }})</button>
     </div>
-    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openAiWizard.emit()"
-      style="font-size: 12.5px; height: 36px; padding: 0 16px; font-weight: 700; background: linear-gradient(135deg, #7928ca, #ff0080) !important; border: none !important; color: #ffffff !important; display: inline-flex; align-items: center; gap: 6px;">
-      <span>✨ Abrir Diseñador IA</span>
-      <span style="font-size: 11px;">→</span>
-    </button>
+    <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm inv-template-ai" (click)="openAiWizard.emit()">Crear con IA</button>
   </div>
 
-  <!-- FILTROS SEGMENTADOS POR PILLS (SECCIÓN 5) -->
-  <div
-    style="display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
-    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'all'"
-      [class.nw-btn-primary]="activeFilterTab === 'all'" [class.nw-btn-ghost]="activeFilterTab !== 'all'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      🖼️ Todas ({{ totalTemplatesCount }})
-    </button>
+  <p class="inv-template-selection-note">Al usar otra plantilla, el diseño actual se reemplaza y se guarda. Usa «Vista previa» para revisarla primero.</p>
 
-    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'builtin'"
-      [class.nw-btn-primary]="activeFilterTab === 'builtin'" [class.nw-btn-ghost]="activeFilterTab !== 'builtin'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      🏛️ Plantillas Base ({{ builtinTemplates.length }})
-    </button>
-
-    <button type="button" class="nw-btn nw-btn-sm" (click)="activeFilterTab = 'custom'"
-      [class.nw-btn-primary]="activeFilterTab === 'custom'" [class.nw-btn-ghost]="activeFilterTab !== 'custom'"
-      style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600;">
-      ✨ Versiones Editadas e IA ({{ customSubmissions.length }})
-    </button>
-  </div>
+  <div *ngIf="templateSearch && ((activeFilterTab === 'builtin' && !filteredBuiltinTemplates.length) || (activeFilterTab === 'custom' && !filteredCustomSubmissions.length) || (activeFilterTab === 'all' && !filteredBuiltinTemplates.length && !filteredCustomSubmissions.length))"
+    class="inv-template-no-results">No encontramos plantillas con ese término. Prueba otro nombre o estilo.</div>
 
   <!-- CUADRÍCULA DE TARJETAS DE PLANTILLAS -->
-  <div
-    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; margin-bottom: 20px;">
+  <div class="inv-template-grid">
 
     <!-- 1. TARJETAS DE PLANTILLAS BASE (CLEAN ORIGINALS) -->
     <ng-container *ngIf="activeFilterTab === 'all' || activeFilterTab === 'builtin'">
-      <div *ngFor="let tpl of builtinTemplates" class="nw-card-item"
+      <div *ngFor="let tpl of filteredBuiltinTemplates" class="nw-card-item inv-template-card"
         [style.border]="isBuiltinActive(tpl.id) ? '2px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
         [style.box-shadow]="isBuiltinActive(tpl.id) ? '0 4px 16px rgba(192, 156, 120, 0.2)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
         style="background: var(--nw-surface, #ffffff); border-radius: var(--nw-radius-sm, 12px); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; box-sizing: border-box;">
 
         <div>
+          <button type="button" class="inv-template-thumbnail" (click)="previewBuiltinTemplate(tpl.id)"
+            [attr.aria-label]="'Vista previa de ' + tpl.name" title="Ver esta plantilla sin aplicarla">
+            <img [src]="'assets/template-previews/' + tpl.id + '.jpg'" [alt]="'Diseño de ' + tpl.name"
+              width="768" height="1100" loading="lazy" decoding="async">
+          </button>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div
               style="width: 40px; height: 40px; border-radius: 10px; background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); display: flex; align-items: center; justify-content: center; color: var(--nw-accent, #c09c78);">
@@ -128,7 +86,7 @@
 
             <div style="display: flex; gap: 6px; align-items: center;">
               <span *ngIf="isBuiltinActive(tpl.id)" class="nw-pill success" style="font-size: 11px; font-weight: 700;">
-                Activa ✅
+                En uso
               </span>
               <span class="nw-pill"
                 style="font-size: 11px; background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157);">
@@ -144,40 +102,40 @@
             {{ tpl.description }}
           </p>
 
-          <ul
-            style="margin: 0; padding-left: 18px; font-size: 12px; color: var(--nw-text-3, #8c7e72); line-height: 1.55;">
-            <li *ngFor="let feat of tpl.features">{{ feat }}</li>
-          </ul>
+          <details class="inv-template-features">
+            <summary>Características ({{ tpl.features.length }})</summary>
+            <ul><li *ngFor="let feat of tpl.features">{{ feat }}</li></ul>
+          </details>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 12px;">
-          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="isBuiltinActive(tpl.id)"
-            [class.nw-btn-secondary]="!isBuiltinActive(tpl.id)" (click)="setBuiltinTemplate(tpl.id)"
+          <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="setBuiltinTemplate(tpl.id)"
+            [disabled]="isBuiltinActive(tpl.id)"
             style="width: 100%; height: 36px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">
-            {{ isBuiltinActive(tpl.id) ? '✓ Seleccionada' : 'Usar esta plantilla' }}
+            {{ isBuiltinActive(tpl.id) ? 'Plantilla en uso' : 'Usar esta plantilla' }}
           </button>
 
           <div style="display: flex; gap: 6px; align-items: center;">
             <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="editCleanBuiltin(tpl.id)"
-              title="Editar textos desde la plantilla base limpia"
+              title="Editar textos de esta plantilla"
               style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 8px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
-              <span>Editar</span>
+              <span>Editar textos</span>
             </button>
 
-            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewBuiltinTemplate(tpl.id)"
-              title="Ver vista previa limpia"
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm inv-template-preview" (click)="previewBuiltinTemplate(tpl.id)"
+              title="Abrir vista previa sin cambiar la plantilla en uso"
               style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 8px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <span>Ver</span>
+              <span>Vista previa</span>
             </button>
           </div>
         </div>
@@ -187,7 +145,7 @@
 
     <!-- 2. TARJETAS DE VERSIONES / RUTINAS EDITADAS E IA (INDIVIDUALES) -->
     <ng-container *ngIf="activeFilterTab === 'all' || activeFilterTab === 'custom'">
-      <div *ngFor="let sub of customSubmissions" class="nw-card-item"
+      <div *ngFor="let sub of filteredCustomSubmissions" class="nw-card-item inv-template-card"
         [style.border]="isCustomSubmissionActive(sub) ? '2px solid var(--nw-accent, #c09c78)' : '1px solid var(--nw-border, #eadecc)'"
         [style.box-shadow]="isCustomSubmissionActive(sub) ? '0 4px 16px rgba(121, 40, 202, 0.25)' : 'var(--nw-shadow-sm, 0 2px 6px rgba(0,0,0,0.04))'"
         style="background: linear-gradient(180deg, rgba(121, 40, 202, 0.04) 0%, var(--nw-surface, #ffffff) 100%); border-radius: var(--nw-radius-sm, 12px); padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; box-sizing: border-box;">
@@ -212,7 +170,7 @@
             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
               <span *ngIf="isCustomSubmissionActive(sub)" class="nw-pill success"
                 style="font-size: 11px; font-weight: 700;">
-                Activa ✅
+                En uso
               </span>
               <span *ngIf="sub.status === 'approved'" class="nw-pill accent" style="font-size: 11px; font-weight: 700;">
                 ✓ Aprobada
@@ -248,10 +206,10 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--nw-border, #eadecc); padding-top: 12px;">
-          <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="isCustomSubmissionActive(sub)"
-            [class.nw-btn-secondary]="!isCustomSubmissionActive(sub)" (click)="setCustomSubmission(sub)"
+          <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="setCustomSubmission(sub)"
+            [disabled]="isCustomSubmissionActive(sub)"
             style="width: 100%; height: 36px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">
-            {{ isCustomSubmissionActive(sub) ? '✓ Seleccionada' : 'Usar esta versión' }}
+            {{ isCustomSubmissionActive(sub) ? 'Versión en uso' : 'Usar esta versión' }}
           </button>
 
           <div style="display: flex; gap: 6px; align-items: center;">
@@ -263,18 +221,18 @@
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
-              <span>Editar</span>
+              <span>Editar versión</span>
             </button>
 
-            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="previewCustomSubmission(sub)"
-              title="Previsualizar esta versión"
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm inv-template-preview" (click)="previewCustomSubmission(sub)"
+              title="Abrir vista previa sin cambiar la versión en uso"
               style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; font-size: 12px; padding: 0 6px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <span>Ver</span>
+              <span>Vista previa</span>
             </button>
 
             <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="deleteCustomSubmission(sub, $event)"
@@ -291,15 +249,14 @@
   </div>
 
   <!-- ESTADO VACÍO CUANDO NO HAY VERSIONES PERSONALIZADAS Y SE FILTRA POR ELLAS -->
-  <div *ngIf="activeFilterTab === 'custom' && customSubmissions.length === 0 && !loadingSubmissions" class="nw-empty"
+  <div *ngIf="activeFilterTab === 'custom' && customSubmissions.length === 0 && !loadingSubmissions && !templateSearch" class="nw-empty"
     style="padding: 40px 20px; text-align: center; color: var(--nw-text-3, #9e9083); background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 12px); border: 1px dashed var(--nw-border, #eadecc); margin-bottom: 20px;">
     <span class="empty-icon" style="font-size: 40px; display: block; margin-bottom: 8px;">✨</span>
     <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--nw-text, #2e2621);">
       No tienes versiones o rutinas editadas aún
     </h3>
     <p style="font-size: 13px; margin: 4px 0 16px; color: var(--nw-text-2, #6e6157);">
-      Haz clic en "Editar" en cualquiera de las plantillas base o utiliza el Asistente IA para crear tu primera rutina
-      personalizada.
+      Usa «Editar textos» en una plantilla base o crea tu primera versión con IA.
     </p>
     <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openAiWizard.emit()"
       style="background: linear-gradient(135deg, #7928ca, #ff0080) !important; border: none !important; color: #ffffff !important;">
@@ -328,7 +285,7 @@
 </section>
 
 <!-- VISTA PREVIA RÁPIDA EN VIVO (DINÁMICA POR PLANTILLA SELECCIONADA) -->
-<div class="nw-card" style="margin-bottom: 24px;" *ngIf="invitation">
+<div id="templateLivePreview" class="nw-card inv-template-anchor" style="margin-bottom: 24px;" *ngIf="invitation">
   <div class="nw-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
     <div style="display: flex; align-items: center; gap: 10px;">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
@@ -396,7 +353,7 @@
 </div>
 
 <!-- PLAN Y LICENCIA DEL EVENTO (COLAPSABLE, INICIA COLAPSADO ABAJO DE VISTA PREVIA) -->
-<div class="nw-card" style="margin-bottom: 24px;">
+<div id="invitationPlan" class="nw-card inv-template-anchor" style="margin-bottom: 24px;">
   <div class="nw-card-header" (click)="togglePlanCollapsed()"
     style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
     <div style="display: flex; align-items: center; gap: 10px;">

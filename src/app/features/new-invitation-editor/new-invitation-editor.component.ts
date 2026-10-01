@@ -4,8 +4,12 @@ import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
+import { applyPaletteToVisualDesign, InvitationPaletteColors, paletteFromVisualDesign, validPaletteColor } from './visual-palette';
 
-@Component({ selector: 'app-new-invitation-editor', templateUrl: './new-invitation-editor.component.html' })
+@Component({
+  selector: 'app-new-invitation-editor',
+  templateUrl: './new-invitation-editor.component.html'
+})
 export class NewInvitationEditorComponent implements OnInit {
   @ViewChild(EditorPlansTabComponent) plansTab?: EditorPlansTabComponent;
 
@@ -114,6 +118,11 @@ export class NewInvitationEditorComponent implements OnInit {
 
   activeSectionsCollapsed = false;
   inactiveSectionsCollapsed = true;
+  sectionsNavigatorCollapsed = true;
+
+  toggleSectionsNavigator(): void {
+    this.sectionsNavigatorCollapsed = !this.sectionsNavigatorCollapsed;
+  }
 
   toggleActiveSections(): void {
     this.activeSectionsCollapsed = !this.activeSectionsCollapsed;
@@ -125,6 +134,7 @@ export class NewInvitationEditorComponent implements OnInit {
 
   setActiveTab(tab: string, scrollToEditor = false): void {
     this.activeTab = tab;
+    this.sectionsNavigatorCollapsed = true;
     if (tab === 'plans') {
       setTimeout(() => {
         this.plansTab?.loadCustomSubmissions();
@@ -145,10 +155,10 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   scrollToCardsGrid(): void {
-    const el = document.getElementById('sectionsGridHeader');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    this.sectionsNavigatorCollapsed = false;
+    setTimeout(() => {
+      document.getElementById('sectionsGridHeader')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
   }
 
   toggleSection(sectionKey: string): void {
@@ -527,6 +537,7 @@ export class NewInvitationEditorComponent implements OnInit {
         if (this.invitation.content) {
           this.invitation.content.template = effectiveTemplate;
         }
+        this.syncVisualPalette();
         if (id) localStorage.setItem(`inv_tpl_${id}`, effectiveTemplate);
         if (this.invitation.slug) localStorage.setItem(`inv_tpl_${this.invitation.slug}`, effectiveTemplate);
 
@@ -663,6 +674,11 @@ export class NewInvitationEditorComponent implements OnInit {
 
   applyPalette(palette: { primary: string; secondary: string; accent: string; name?: string }): void {
     if (!this.invitation) return;
+    if (![palette.primary, palette.secondary, palette.accent].every(validPaletteColor)) return;
+    const visualDesign = this.invitation.content.visualDesign;
+    if (this.invitation.content.template === 'visual-builder' && visualDesign?.active) {
+      applyPaletteToVisualDesign(visualDesign, palette);
+    }
     this.invitation.content.palette = {
       primary: palette.primary,
       secondary: palette.secondary,
@@ -670,6 +686,17 @@ export class NewInvitationEditorComponent implements OnInit {
     };
     this.message = palette.name ? `Estilo aplicado: ${palette.name}` : 'Estilo aplicado.';
     this.clearMessageAfterDelay();
+  }
+
+  onPaletteChange(palette: InvitationPaletteColors): void {
+    this.applyPalette(palette);
+  }
+
+  private syncVisualPalette(): void {
+    if (this.invitation?.content?.template !== 'visual-builder') return;
+    const design = this.invitation.content.visualDesign;
+    const palette = design?.active ? paletteFromVisualDesign(design) : undefined;
+    if (palette) this.invitation.content.palette = palette;
   }
 
   applyStoryPreset(type: 'story' | 'welcome' | 'thanks'): void {

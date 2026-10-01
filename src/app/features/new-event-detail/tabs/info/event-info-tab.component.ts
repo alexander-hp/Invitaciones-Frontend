@@ -14,6 +14,7 @@ import {
 export class EventInfoTabComponent implements OnInit, OnChanges {
   @Input() event!: EventModel;
   @Input() metrics: Partial<DashboardMetrics> = {};
+  @Input() focusSection = '';
   @Output() eventUpdated = new EventEmitter<void>();
   @Output() openInvitationWizard = new EventEmitter<void>();
 
@@ -69,11 +70,12 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   rolePermissions: Record<string, EventPermission[]> = {};
 
   collapsedCards: Record<string, boolean> = {
-    details: false,
-    plans: false,
+    details: true,
+    plans: true,
     invitations: false,
-    team: false,
-    external: false
+    cover: true,
+    team: true,
+    external: true
   };
 
   collapsedTeamInvite = true;
@@ -145,6 +147,9 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['focusSection'] && Object.prototype.hasOwnProperty.call(this.collapsedCards, this.focusSection)) {
+      this.collapsedCards[this.focusSection] = false;
+    }
     if (changes['event'] && !changes['event'].firstChange && (this.event?._id || this.event?.id)) {
       this.loadTabData();
     }

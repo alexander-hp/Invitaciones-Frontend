@@ -37,7 +37,7 @@
     <!-- Fila 2: Todos los Botones Reunidos -->
     <div
       style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-top:1px dashed var(--nw-border); padding-top:14px;">
-      <button class="nw-btn nw-btn-primary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
+      <button data-event-section="table-create" class="nw-btn nw-btn-primary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
         (click)="openCreateModal()">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -45,7 +45,7 @@
         </svg>
         Nueva Mesa / Elemento
       </button>
-      <button class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
+      <button data-event-section="table-assign" class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
         (click)="openAssignModal()">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -53,7 +53,7 @@
         </svg>
         Asignar Invitado
       </button>
-      <button class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
+      <button data-event-section="table-auto-assign" class="nw-btn nw-btn-secondary" style="padding:10px 18px; font-size:13.5px; font-weight:700; display: inline-flex; align-items: center; gap: 6px;"
         (click)="openAutoAssignModal()">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
@@ -70,7 +70,7 @@
         </svg>
         Crear mesas asignadas ({{ missingAssignedTables.length }})
       </button>
-      <button class="nw-btn nw-btn-ghost"
+      <button data-event-section="table-map" class="nw-btn nw-btn-ghost"
         style="padding:10px 18px; font-size:13.5px; font-weight:700; border:1px solid var(--nw-border); background:var(--nw-surface-2); display: inline-flex; align-items: center; gap: 6px;"
         (click)="goToSeating()">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

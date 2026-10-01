@@ -4,14 +4,14 @@
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
       <h2
-        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
+        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
+          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
         Centro de Comunicación
         <span class="nw-badge"
-          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc);">
+          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc); white-space: nowrap; flex-shrink: 0;">
           {{ guests.length }} invitados
         </span>
         <span *ngIf="pendingCommunicationGuests > 0" class="nw-pill warning"
@@ -890,7 +890,7 @@
           seleccionados</span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <button class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()"
+        <button data-event-section="email-send" class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()"
           [disabled]="emailBulkSending || !activeEmailRecipientsCount"
           style="display: inline-flex; align-items: center; gap: 6px;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
@@ -900,7 +900,7 @@
           </svg>
           {{ emailBulkSending ? 'Enviando Email...' : 'Enviar Email Masivo (' + activeEmailRecipientsCount + ')' }}
         </button>
-        <button class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
+        <button data-event-section="whatsapp-send" class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
           [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeWhatsappRecipientsCount"
           style="display: inline-flex; align-items: center; gap: 6px;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"

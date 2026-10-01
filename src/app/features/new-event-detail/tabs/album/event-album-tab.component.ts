@@ -12,6 +12,7 @@ export const TAG_ME_ENCANTA = 'Me encanta';
 export class EventAlbumTabComponent implements OnInit, OnChanges {
   @Input() eventId!: string;
   @Input() event?: EventModel;
+  @Input() focusSection = '';
 
   albumAssets: AlbumAssetModel[] = [];
   loadingAlbum = false;
@@ -227,9 +228,12 @@ export class EventAlbumTabComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     const id = this.eventId || this.event?._id || this.event?.id;
-    if (id) {
+    if (id && ((changes['eventId'] && !changes['eventId'].firstChange) || (changes['event'] && !changes['event'].firstChange))) {
       this.loadAlbum();
       this.loadAlbumAccessLinks();
+    }
+    if (changes['focusSection'] && this.focusSection === 'album-access') {
+      this.isAccessLinksCollapsed = false;
     }
   }
 

@@ -35,7 +35,7 @@
     <!-- Botones de Acción del Encabezado -->
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <!-- Botón de Acceso a Revisión Rápida -->
-      <button type="button" class="nw-btn nw-btn-primary" (click)="openQuickReview()"
+      <button data-event-section="album-review" type="button" class="nw-btn nw-btn-primary" (click)="openQuickReview()"
         style="display: flex; align-items: center; gap: 8px; font-size: 13px; height: 38px; font-weight: 700; box-shadow: 0 4px 12px rgba(192, 156, 120, 0.25);">
         ⚡ Revisión Rápida
         <span *ngIf="pendingAlbumAssets > 0" class="nw-badge"
@@ -52,7 +52,7 @@
   </div>
 
   <!-- 📲 SECCIÓN: CÓDIGOS QR Y ENLACES DE ACCESO AL ÁLBUM (COLAPSABLE) -->
-  <div
+  <div data-event-section="album-access"
     style="margin-bottom: 24px; background: var(--nw-surface-2, #f9f6f0); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 18px;">
 
     <!-- Encabezado con Toggle para desplegar/colapsar -->
@@ -254,7 +254,7 @@
   </div>
 
   <!-- Barra de Filtros Segmentados por Estado -->
-  <div
+  <div data-event-section="album-filters"
     style="display: flex; gap: 8px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
 
     <!-- Selector DROPDOWN solo en Mobile (<=640px) -->

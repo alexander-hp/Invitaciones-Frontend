@@ -32,9 +32,14 @@
     <div class="nw-page-header">
       <div>
         <h1>Eventos</h1>
-        <p>Gestiona todos tus eventos y sus invitaciones</p>
+        <p>Encuentra el evento que necesitas y continúa su preparación.</p>
       </div>
-      <button class="nw-btn nw-btn-focus" (click)="showCreateModal = true"
+      <div class="events-header-actions">
+      <button type="button" class="events-help-button" (click)="openGettingStarted()" aria-label="Abrir guía para empezar">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a7 7 0 0 0-8-1.5v13a7 7 0 0 1 8 1.5 7 7 0 0 1 8-1.5V5a7 7 0 0 0-8 1.5Z"/><path d="M12 6.5v13"/></svg>
+        <span>Guía para empezar</span>
+      </button>
+      <button type="button" class="nw-btn nw-btn-focus" (click)="openCreateModal()"
         style="display: inline-flex; align-items: center; gap: 6px;">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#f5d0a9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -42,25 +47,37 @@
         </svg>
         <span>Nuevo evento</span>
       </button>
+      </div>
     </div>
 
     <p *ngIf="loading" class="nw-alert info nw-loading">Cargando eventos...</p>
     <p *ngIf="error" class="nw-alert error">{{ error }}</p>
 
-    <!-- Filters -->
-    <!-- Filters -->
+    <div class="events-overview" *ngIf="!loading && events.length > 0" aria-label="Resumen de eventos">
+      <div><strong>{{ upcomingCount }}</strong><span>Próximos</span></div>
+      <div><strong>{{ draftCount }}</strong><span>Borradores</span></div>
+      <div><strong>{{ pastCount }}</strong><span>Ya realizados</span></div>
+    </div>
+
     <div class="nw-events-filters" *ngIf="events.length > 0">
-      <div style="position: relative; display: flex; align-items: center; flex: 1; min-width: 200px; max-width: 250px;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round"
-          style="position: absolute; left: 12px; color: var(--nw-text-3); pointer-events: none;">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input class="nw-input" style="padding-left: 36px; height: 42px; width: 100%;"
-          placeholder="Buscar por título, lugar..." [(ngModel)]="filterSearch" (ngModelChange)="onFilterChange()">
+      <button type="button" class="events-search-trigger" (click)="openEventSearch()" [attr.aria-expanded]="showEventSearch" aria-controls="events-search-panel" title="Buscar eventos">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <span>{{ filterSearch ? 'Buscar: ' + filterSearch : 'Buscar evento' }}</span>
+      </button>
+      <div *ngIf="showEventSearch" id="events-search-panel" class="events-search" role="search">
+        <label for="events-search-input" class="event-finder-sr-only">Buscar por evento, anfitrión o lugar</label>
+        <input #eventSearchInput id="events-search-input" class="nw-input" type="search" autocomplete="off"
+          placeholder="Nombre, anfitrión o lugar" [(ngModel)]="filterSearch" (ngModelChange)="onFilterChange()">
+        <button type="button" class="events-search-close" (click)="showEventSearch = false" aria-label="Cerrar búsqueda" title="Cerrar búsqueda">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-      <select class="nw-select" style="width: auto; min-width: 150px;" [(ngModel)]="filterType"
+      <select class="nw-select" aria-label="Filtrar por fecha" [(ngModel)]="filterMoment" (ngModelChange)="onFilterChange()">
+        <option value="">Todas las fechas</option>
+        <option value="upcoming">Próximos</option>
+        <option value="past">Ya realizados</option>
+      </select>
+      <select class="nw-select" aria-label="Filtrar por tipo" [(ngModel)]="filterType"
         (ngModelChange)="onFilterChange()">
         <option value="">Todos los tipos</option>
         <option value="boda">Boda</option>
@@ -70,23 +87,27 @@
         <option value="bautizo">Bautizo</option>
         <option value="otro">Otro</option>
       </select>
-      <select class="nw-select" style="width: auto; min-width: 150px;" [(ngModel)]="filterStatus"
+      <select class="nw-select" aria-label="Filtrar por estado" [(ngModel)]="filterStatus"
         (ngModelChange)="onFilterChange()">
         <option value="">Todos los estados</option>
         <option value="draft">Borrador</option>
         <option value="published">Publicado</option>
         <option value="archived">Archivado</option>
       </select>
-      <span class="nw-pill" style="align-self: center;">{{ filteredEvents.length }} evento{{ filteredEvents.length !== 1
-        ? 's' : '' }}</span>
+      <button *ngIf="filterSearch || filterType || filterStatus || filterMoment" type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+
+    <div id="events-list" class="events-list-heading" *ngIf="!loading && filteredEvents.length > 0">
+      <h2>Eventos <span>{{ filteredEvents.length }}</span></h2>
+      <p>Próximos primero; los realizados aparecen al final.</p>
     </div>
 
     <!-- Events Grid -->
     <div *ngIf="!loading && filteredEvents.length === 0 && events.length === 0" class="nw-empty">
-      <span class="empty-icon">🎪</span>
+      <span class="empty-icon" aria-hidden="true">+</span>
       <h3>Aún no tienes eventos</h3>
       <p>Crea tu primer evento para comenzar a gestionar invitados, mesas y RSVP.</p>
-      <button class="nw-btn nw-btn-focus nw-btn-sm" style="margin-top: 16px; display: inline-flex; align-items: center; gap: 6px;" (click)="showCreateModal = true">
+      <button class="nw-btn nw-btn-focus nw-btn-sm" style="margin-top: 16px; display: inline-flex; align-items: center; gap: 6px;" (click)="openCreateModal()">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#f5d0a9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -98,10 +119,11 @@
     <div *ngIf="!loading && filteredEvents.length === 0 && events.length > 0" class="nw-empty">
       <h3>Sin resultados</h3>
       <p>No hay eventos que coincidan con los filtros seleccionados.</p>
+      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearFilters()">Ver todos los eventos</button>
     </div>
 
     <div class="nw-events-grid" *ngIf="filteredEvents.length > 0">
-      <div class="nw-event-card" *ngFor="let ev of paginatedEvents" (click)="goToEvent(ev)" style="cursor: pointer;"
+      <a class="nw-event-card" *ngFor="let ev of paginatedEvents" [routerLink]="['/new/events', getEventId(ev)]"
         [attr.data-type]="getNormalizedEventType(ev)">
         <div class="card-banner">
           <div class="card-banner-bg" *ngIf="!getCoverImage(ev)"></div>
@@ -186,8 +208,9 @@
             <span class="nw-pill danger" *ngIf="isPast(ev)">Pasado</span>
             <span class="nw-pill accent" *ngIf="ev.mode === 'external_dashboard'">Dashboard externo</span>
           </div>
+          <div class="events-card-action">Abrir evento <span aria-hidden="true">→</span></div>
         </div>
-      </div>
+      </a>
     </div>
 
     <!-- Barra de Paginación -->
@@ -227,22 +250,32 @@
     </div>
 
     <!-- Create Modal -->
-    <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="showCreateModal = false">
-      <div class="nw-modal" (click)="$event.stopPropagation()">
-        <h2>Nuevo evento</h2>
+    <div class="nw-modal-backdrop" *ngIf="showCreateModal" (click)="closeCreateModal()">
+      <div class="nw-modal events-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-event-title" (click)="$event.stopPropagation()">
+        <div class="events-create-header">
+          <div>
+            <h2 id="create-event-title">Nuevo evento</h2>
+            <p>Empieza con lo esencial. Podrás completar el resto después.</p>
+          </div>
+          <button type="button" class="events-icon-button" aria-label="Cerrar" (click)="closeCreateModal()">×</button>
+        </div>
         <p *ngIf="createError" class="nw-alert error" style="margin-bottom: 14px;">{{ createError }}</p>
         <div class="nw-form-grid">
           <label class="nw-label nw-form-wide">
-            Título del evento
+            Nombre del evento *
             <input class="nw-input" [(ngModel)]="newEvent.title" placeholder="Ej: Boda Ana & Carlos">
           </label>
-          <label class="nw-label">
-            Modo
-            <select class="nw-select" [(ngModel)]="newEvent.mode">
-              <option value="invitation">Invitación digital completa</option>
-              <option value="external_dashboard">Solo dashboard para evento externo</option>
-            </select>
-          </label>
+          <fieldset class="events-mode-choice nw-form-wide">
+            <legend>¿Cómo usarás este evento?</legend>
+            <label [class.selected]="newEvent.mode === 'invitation'">
+              <input type="radio" name="eventMode" value="invitation" [(ngModel)]="newEvent.mode">
+              <span><strong>Invitación digital</strong><small>Diseña la invitación y organiza a tus invitados.</small></span>
+            </label>
+            <label [class.selected]="newEvent.mode === 'external_dashboard'">
+              <input type="radio" name="eventMode" value="external_dashboard" [(ngModel)]="newEvent.mode">
+              <span><strong>Dashboard externo</strong><small>Conecta tu página si la tienes y organiza invitados desde aquí.</small></span>
+            </label>
+          </fieldset>
           <label class="nw-label">
             Tipo
             <select class="nw-select" [(ngModel)]="newEvent.type">
@@ -255,9 +288,18 @@
             </select>
           </label>
           <label class="nw-label">
-            Fecha
+            Fecha *
             <input class="nw-input" type="date" [(ngModel)]="newEvent.date">
           </label>
+          <label class="nw-label nw-form-wide" *ngIf="newEvent.mode === 'external_dashboard'">
+            Enlace de tu página (opcional)
+            <input class="nw-input" type="url" [(ngModel)]="newEvent.externalSiteUrl" placeholder="https://pagina-del-evento.com">
+          </label>
+        </div>
+
+        <details class="events-optional-fields">
+          <summary>Agregar lugar, hora y otros detalles <span>Opcional</span></summary>
+          <div class="nw-form-grid">
           <label class="nw-label">
             <span style="display: flex; align-items: center; justify-content: space-between;">
               <span>Hora</span>
@@ -348,23 +390,32 @@
 
           <ng-container *ngIf="newEvent.mode === 'external_dashboard'">
             <label class="nw-label nw-form-wide">
-              URL de página externa
-              <input class="nw-input" [(ngModel)]="newEvent.externalSiteUrl"
-                placeholder="https://pagina-del-evento.com">
-            </label>
-            <label class="nw-label nw-form-wide">
               Etiqueta de página externa
               <input class="nw-input" [(ngModel)]="newEvent.externalSiteLabel" placeholder="Ej: Ver página principal">
             </label>
           </ng-container>
-        </div>
+          </div>
+        </details>
         <div class="nw-modal-actions">
-          <button class="nw-btn nw-btn-ghost" (click)="showCreateModal = false">Cancelar</button>
-          <button class="nw-btn nw-btn-primary" [disabled]="creating" (click)="createEvent()">
+          <button type="button" class="nw-btn nw-btn-ghost" (click)="closeCreateModal()">Cancelar</button>
+          <button type="button" class="nw-btn nw-btn-primary" [disabled]="creating || !newEvent.title.trim() || !newEvent.date" (click)="createEvent()">
             {{ creating ? 'Creando...' : 'Crear evento' }}
           </button>
         </div>
       </div>
+    </div>
+    <div *ngIf="showGettingStarted" class="events-guide-backdrop" (click)="showGettingStarted = false">
+      <section class="events-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="events-guide-title" (click)="$event.stopPropagation()">
+        <div class="events-guide-top"><span>PASO {{ gettingStartedStep + 1 }} DE {{ gettingStartedSteps.length }}</span><button type="button" class="events-icon-button" (click)="showGettingStarted = false" aria-label="Cerrar guía">×</button></div>
+        <h2 id="events-guide-title">{{ gettingStartedSteps[gettingStartedStep].title }}</h2>
+        <p>{{ gettingStartedSteps[gettingStartedStep].text }}</p>
+        <div class="events-guide-dots" aria-label="Progreso de la guía"><span *ngFor="let step of gettingStartedSteps; let index = index" [class.active]="index === gettingStartedStep"></span></div>
+        <div class="events-guide-actions">
+          <button type="button" class="nw-btn nw-btn-ghost" (click)="gettingStartedStep = gettingStartedStep - 1" [disabled]="gettingStartedStep === 0">Anterior</button>
+          <button type="button" class="nw-btn nw-btn-ghost" *ngIf="gettingStartedStep < gettingStartedSteps.length - 1" (click)="gettingStartedStep = gettingStartedStep + 1">Siguiente</button>
+          <button type="button" class="nw-btn nw-btn-primary" (click)="beginFromGuide()">{{ gettingStartedStep === 0 || !events.length ? 'Crear evento' : 'Ver mis eventos' }}</button>
+        </div>
+      </section>
     </div>
   </main>
 </div>

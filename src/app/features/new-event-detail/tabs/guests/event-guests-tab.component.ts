@@ -12,6 +12,7 @@ import {
 export class EventGuestsTabComponent implements OnInit, OnChanges {
   @Input() eventId!: string;
   @Input() tables: EventTableModel[] = [];
+  @Input() focusSection = '';
   @Output() guestsUpdated = new EventEmitter<void>();
 
   guests: GuestModel[] = [];
@@ -173,6 +174,9 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['eventId'] && !changes['eventId'].firstChange && this.eventId) {
       this.loadGuests();
+    }
+    if (changes['focusSection'] && this.focusSection === 'guest-import') {
+      this.showImpExpMenu = true;
     }
   }
 

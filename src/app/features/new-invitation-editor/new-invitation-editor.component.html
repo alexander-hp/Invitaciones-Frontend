@@ -62,13 +62,43 @@
       <app-event-header [event]="event" [backUrl]="'/new/events/' + getEventId()"
         [backLabel]="event?.title || 'Detalle del Evento'"></app-event-header>
 
-      <section style="display:flex;align-items:center;justify-content:space-between;gap:18px;margin:18px 0;padding:16px 18px;background:#252220;color:#fff;border-left:4px solid #d9917f;">
-        <div style="display:grid;gap:4px;"><strong>Editor visual</strong><span style="font-size:13px;color:#ddd5d0;">Diseña arrastrando textos, imágenes y secciones sobre una vista real de tu invitación.</span></div>
-        <a [routerLink]="['/new/invitations', invitation._id || invitation.id, 'visual-editor']" style="flex:none;padding:10px 14px;background:#fff;color:#252220;text-decoration:none;font-weight:700;">Abrir editor visual</a>
-      </section>
+      <div class="inv-editor-toolbar">
+        <div class="inv-editor-toolbar-main">
+          <div class="inv-editor-heading">
+            <strong>Editar invitación</strong>
+            <span class="nw-pill" [class.success]="invitation.status === 'published'"
+              [class.warning]="invitation.status !== 'published'">
+              {{ invitation.status === 'published' ? 'Publicada' : 'Borrador' }}
+            </span>
+          </div>
+          <div class="inv-editor-save-actions">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="save()" [disabled]="saving">
+              {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+            <button type="button" *ngIf="invitation.status !== 'published'" class="nw-btn nw-btn-primary nw-btn-sm"
+              (click)="publish()" [disabled]="publishing">
+              {{ publishing ? 'Publicando...' : 'Publicar' }}
+            </button>
+            <a class="nw-btn nw-btn-ghost nw-btn-sm" [routerLink]="['/i', invitation.slug]" target="_blank"
+              *ngIf="invitation.slug">Ver pública ↗</a>
+          </div>
+        </div>
+        <nav class="inv-editor-navigation" aria-label="Herramientas de la invitación">
+          <button type="button" class="inv-editor-nav-button" [class.active]="activeTab !== 'plans' && activeTab !== 'all'"
+            (click)="setActiveTab('content', true)">Editar por pasos</button>
+          <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'plans'"
+            (click)="setActiveTab('plans', true)">Plantillas y plan</button>
+          <button type="button" class="inv-editor-nav-button" [attr.aria-expanded]="!sectionsNavigatorCollapsed"
+            [class.active]="!sectionsNavigatorCollapsed" (click)="toggleSectionsNavigator()">Secciones <span>{{ activeConfigurableSections.length + 2 }}</span></button>
+          <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'all'"
+            (click)="setActiveTab('all', true)">Ver todo</button>
+          <a class="inv-editor-nav-button" [routerLink]="['/new/invitations', invitation._id || invitation.id, 'visual-editor']">Editor visual ↗</a>
+          <a class="inv-editor-nav-button" [routerLink]="['/new/invitations', invitation._id || invitation.id, 'sections']">Configurar secciones ↗</a>
+        </nav>
+      </div>
 
       <!-- Sub-Menú de Secciones Organizado en Grid -->
-      <div id="sectionsGridHeader" class="nw-cat-grid-wrapper" style="margin-bottom: 36px;">
+      <div *ngIf="!sectionsNavigatorCollapsed" id="sectionsGridHeader" class="nw-cat-grid-wrapper inv-editor-section-grid">
         <div class="nw-cat-grid-header">
           <div>
             <h3 class="nw-cat-title">
@@ -462,48 +492,6 @@
           </div>
         </div>
 
-        <!-- Botones de Utilidad Global -->
-        <div
-          style="display:flex; gap:8px; border-top: 1px solid var(--nw-border); padding-top: 16px; margin-top: 20px; align-items:center; flex-wrap: wrap;">
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'plans'"
-            (click)="setActiveTab('plans', true)" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-              <polyline points="2 17 12 22 22 17"></polyline>
-              <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
-            <span>Plantillas / Plan</span>
-          </button>
-
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" [class.nw-btn-primary]="activeTab === 'all'"
-            (click)="setActiveTab('all')" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <span>Ver todo</span>
-          </button>
-
-          <a class="nw-btn nw-btn-ghost nw-btn-sm"
-            [routerLink]="['/new/invitations', invitation._id || invitation.id, 'sections']"
-            style="font-weight:700; margin-left: auto; display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
-            </svg>
-            <span>Configurar Secciones</span>
-          </a>
-        </div>
       </div>
 
       <!-- Stepper / Barra de Navegación Paso a Paso entre Secciones -->
@@ -547,21 +535,21 @@
             </div>
 
             <!-- Acceso para volver arriba a la cuadrícula de tarjetas -->
-            <button type="button" class="nw-stepper-jump-btn" (click)="scrollToCardsGrid()" title="Ver cuadrícula completa de secciones arriba">
+            <button type="button" class="nw-stepper-jump-btn" (click)="scrollToCardsGrid()" title="Ver todas las secciones">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="18 15 12 9 6 15"></polyline>
               </svg>
-              <span>Ver cuadrícula de tarjetas</span>
+              <span>Elegir sección</span>
             </button>
           </div>
 
           <!-- Botón Siguiente -->
           <button type="button" class="nw-stepper-nav-btn next"
-            (click)="nextSection ? goToNextSection() : setActiveTab('plans', true)"
-            [title]="nextSection ? 'Ir a: ' + nextSection.title : 'Ver Plantillas y Plan'">
+            (click)="nextSection ? goToNextSection() : setActiveTab('content', true)"
+            [title]="nextSection ? 'Ir a: ' + nextSection.title : 'Volver al primer paso'">
             <div class="nw-stepper-btn-text align-right">
-              <span class="nw-stepper-btn-sub">{{ nextSection ? 'Siguiente' : 'Finalizar' }}</span>
-              <span class="nw-stepper-btn-title">{{ nextSection ? (nextSection.shortTitle || nextSection.title) : 'Plantillas & Plan' }}</span>
+              <span class="nw-stepper-btn-sub">{{ nextSection ? 'Siguiente' : 'Recorrido completo' }}</span>
+              <span class="nw-stepper-btn-title">{{ nextSection ? (nextSection.shortTitle || nextSection.title) : 'Volver al inicio' }}</span>
             </div>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
@@ -597,7 +585,7 @@
 
       <!-- 2. Estilo y Paleta (Mandatorio) -->
       <app-editor-style-tab *ngIf="activeTab === 'style' || activeTab === 'all'" [invitation]="invitation"
-        [palettePresets]="palettePresets" (applyPalette)="applyPalette($event)">
+        [palettePresets]="palettePresets" (applyPalette)="applyPalette($event)" (paletteChange)="onPaletteChange($event)">
       </app-editor-style-tab>
 
       <!-- 3. Mensaje & Nuestra Historia (story) -->
@@ -971,66 +959,18 @@
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="18 15 12 9 6 15"></polyline>
             </svg>
-            <span>Subir a cuadrícula de tarjetas</span>
+            <span>Elegir sección</span>
           </button>
 
           <button type="button" class="nw-btn nw-btn-primary nw-btn-next"
-            (click)="nextSection ? goToNextSection() : setActiveTab('plans', true)">
-            <span>{{ nextSection ? 'Siguiente: ' + (nextSection.shortTitle || nextSection.title) : 'Ir a Plantillas y Plan' }}</span>
+            (click)="nextSection ? goToNextSection() : setActiveTab('content', true)">
+            <span>{{ nextSection ? 'Siguiente: ' + (nextSection.shortTitle || nextSection.title) : 'Volver al inicio' }}</span>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </button>
         </div>
       </div>
-
-      <!-- Floating Save Bar at the bottom for quick access -->
-      <div class="nw-floating-save-bar">
-        <div class="nw-floating-bar-content">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="nw-pill" [class.success]="invitation.status === 'published'"
-              [class.warning]="invitation.status === 'draft'">
-              {{ invitation.status === 'published' ? 'Publicado' : 'Borrador' }}
-            </span>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <button class="nw-btn nw-floating-save-btn nw-btn-sm" (click)="save()" [disabled]="saving"
-              style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-              <span>{{ saving ? 'Guardando...' : 'Guardar cambios' }}</span>
-            </button>
-            <button *ngIf="invitation.status !== 'published'" class="nw-btn nw-btn-primary nw-btn-sm"
-              (click)="publish()" [disabled]="publishing" style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-                </path>
-              </svg>
-              <span>{{ publishing ? 'Publicando...' : 'Publicar' }}</span>
-            </button>
-            <a class="nw-btn nw-btn-ghost nw-btn-sm" [routerLink]="['/i', invitation.slug]" target="_blank"
-              style="display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              <span>Ver pública</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Espaciador inferior para evitar que la barra flotante tape el contenido al hacer scroll -->
-      <div style="height: 90px;" aria-hidden="true"></div>
 
     </ng-container>
   </main>

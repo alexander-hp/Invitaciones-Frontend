@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { InvitationModel } from '../../../../core/models';
+import { InvitationPaletteColors, validPaletteColor } from '../../visual-palette';
 
 @Component({
   selector: 'app-editor-style-tab',
@@ -9,6 +10,17 @@ export class EditorStyleTabComponent {
   @Input() invitation!: InvitationModel;
   @Input() palettePresets: Array<{ name: string; primary: string; secondary: string; accent: string }> = [];
   @Output() applyPalette = new EventEmitter<{ name: string; primary: string; secondary: string; accent: string }>();
+  @Output() paletteChange = new EventEmitter<InvitationPaletteColors>();
+
+  onPaletteFieldChange(field: keyof InvitationPaletteColors, value: string): void {
+    const palette = this.invitation.content.palette;
+    if (!palette) return;
+    palette[field] = value;
+    if (palette.primary && palette.secondary && palette.accent &&
+      [palette.primary, palette.secondary, palette.accent].every(validPaletteColor)) {
+      this.paletteChange.emit(palette as InvitationPaletteColors);
+    }
+  }
 
   onApplyPalette(preset: { name: string; primary: string; secondary: string; accent: string }): void {
     this.applyPalette.emit(preset);

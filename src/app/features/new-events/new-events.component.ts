@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { EventModel, EventType } from '../../core/models';
 
-@Component({ selector: 'app-new-events', templateUrl: './new-events.component.html' })
+@Component({ selector: 'app-new-events', templateUrl: './new-events.component.html', styleUrls: ['./new-events.component.css'] })
 export class NewEventsComponent implements OnInit {
   sidebarOpen = false;
   loading = true;
@@ -14,7 +14,17 @@ export class NewEventsComponent implements OnInit {
 
   filterType = '';
   filterStatus = '';
+  filterMoment = '';
   filterSearch = '';
+  showEventSearch = false;
+  showGettingStarted = false;
+  gettingStartedStep = 0;
+  readonly gettingStartedSteps = [
+    { title: 'Crea tu evento', text: 'Elige entre invitación digital y dashboard externo. Indica el nombre y la fecha para empezar.' },
+    { title: 'Abre el panel del evento', text: 'Al crear el evento llegarás a su panel. Si ya tienes uno, abre su tarjeta desde esta lista.' },
+    { title: 'Sigue la guía del evento', text: 'Dentro del evento, el botón Guía te lleva paso a paso a invitación, invitados, mesas y comunicación.' }
+  ];
+  @ViewChild('eventSearchInput') eventSearchInput?: ElementRef<HTMLInputElement>;
   showCreateModal = false;
 
   // Paginación
@@ -105,6 +115,41 @@ export class NewEventsComponent implements OnInit {
     this.load();
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.showEventSearch = false;
+    this.showGettingStarted = false;
+    this.closeCreateModal();
+  }
+
+  openGettingStarted(): void {
+    this.gettingStartedStep = 0;
+    this.showGettingStarted = true;
+  }
+
+  beginFromGuide(): void {
+    this.showGettingStarted = false;
+    if (this.gettingStartedStep === 0 || !this.events.length) {
+      this.openCreateModal();
+    } else {
+      document.getElementById('events-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  openEventSearch(): void {
+    this.showEventSearch = true;
+    setTimeout(() => this.eventSearchInput?.nativeElement.focus());
+  }
+
+  openCreateModal(): void {
+    this.createError = '';
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal(): void {
+    if (!this.creating) this.showCreateModal = false;
+  }
+
   load(): void {
     this.loading = true;
     this.api.listEvents().subscribe({
@@ -145,6 +190,8 @@ export class NewEventsComponent implements OnInit {
     return this.events.filter(ev => {
       if (this.filterType && ev.type !== this.filterType) return false;
       if (this.filterStatus && ev.status !== this.filterStatus) return false;
+      if (this.filterMoment === 'upcoming' && (this.isPast(ev) || ev.status === 'archived')) return false;
+      if (this.filterMoment === 'past' && !this.isPast(ev)) return false;
       if (this.filterSearch) {
         const query = this.filterSearch.toLowerCase().trim();
         const titleMatch = ev.title?.toLowerCase().includes(query);
@@ -154,7 +201,34 @@ export class NewEventsComponent implements OnInit {
         if (!titleMatch && !venueNameMatch && !venueAddressMatch && !hostsMatch) return false;
       }
       return true;
+    }).sort((a, b) => {
+      const aPast = this.isPast(a);
+      const bPast = this.isPast(b);
+      if (aPast !== bPast) return aPast ? 1 : -1;
+      const aDate = this.eventDay(a);
+      const bDate = this.eventDay(b);
+      return aPast ? bDate.localeCompare(aDate) : aDate.localeCompare(bDate);
     });
+  }
+
+  get upcomingCount(): number {
+    return this.events.filter(ev => !this.isPast(ev) && ev.status !== 'archived').length;
+  }
+
+  get draftCount(): number {
+    return this.events.filter(ev => ev.status === 'draft').length;
+  }
+
+  get pastCount(): number {
+    return this.events.filter(ev => this.isPast(ev)).length;
+  }
+
+  clearFilters(): void {
+    this.filterSearch = '';
+    this.filterType = '';
+    this.filterStatus = '';
+    this.filterMoment = '';
+    this.currentPage = 1;
   }
 
   get paginatedEvents(): EventModel[] {
@@ -204,17 +278,17 @@ export class NewEventsComponent implements OnInit {
   }
 
   createEvent(): void {
-    if (!this.newEvent.title || !this.newEvent.date) { this.createError = 'Título y fecha son requeridos'; return; }
+    if (!this.newEvent.title.trim() || !this.newEvent.date) { this.createError = 'Escribe un nombre y selecciona la fecha del evento.'; return; }
     this.creating = true;
     this.createError = '';
     
     const payload: any = {
       mode: this.newEvent.mode,
       type: this.newEvent.type,
-      title: this.newEvent.title,
+      title: this.newEvent.title.trim(),
       date: this.newEvent.date,
       time: this.newEvent.time ? this.newEvent.time.trim() : undefined,
-      hosts: this.newEvent.hosts ? this.newEvent.hosts.split(',').map(s => s.trim()) : [],
+      hosts: this.newEvent.hosts ? this.newEvent.hosts.split(',').map(s => s.trim()).filter(Boolean) : [],
       venue: { 
         name: this.newEvent.venueName, 
         address: this.newEvent.venueAddress,
@@ -286,5 +360,13 @@ export class NewEventsComponent implements OnInit {
     this.router.navigate(['/new/events', this.getEventId(ev)]);
   }
 
-  isPast(ev: EventModel): boolean { return new Date(ev.date) < new Date(); }
+  private eventDay(ev: EventModel): string {
+    return String(ev.date || '').slice(0, 10);
+  }
+
+  isPast(ev: EventModel): boolean {
+    const today = new Date();
+    const localDay = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return this.eventDay(ev) < localDay;
+  }
 }

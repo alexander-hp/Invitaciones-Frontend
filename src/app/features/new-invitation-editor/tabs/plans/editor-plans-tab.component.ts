@@ -28,6 +28,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   customSubmissions: CustomTemplateSubmission[] = [];
   loadingSubmissions = false;
   activeFilterTab: 'all' | 'builtin' | 'custom' = 'all';
+  templateSearch = '';
 
   // Live preview & Plan collapse states
   planCollapsed = true; // Section starts collapsed as requested
@@ -308,6 +309,22 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     return this.builtinTemplates.length + this.customSubmissions.length;
   }
 
+  private matchesTemplateSearch(parts: Array<string | undefined>): boolean {
+    const normalize = (value: string) => value.toLocaleLowerCase('es-MX').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const query = normalize(this.templateSearch.trim());
+    return !query || normalize(parts.filter(Boolean).join(' ')).includes(query);
+  }
+
+  get filteredBuiltinTemplates(): typeof this.builtinTemplates {
+    return this.builtinTemplates.filter(tpl =>
+      this.matchesTemplateSearch([tpl.name, tpl.badge, tpl.description, ...tpl.features]));
+  }
+
+  get filteredCustomSubmissions(): CustomTemplateSubmission[] {
+    return this.customSubmissions.filter(sub =>
+      this.matchesTemplateSearch([sub.name, sub.description, sub.sourceTemplateKey]));
+  }
+
   get approvedCustomCount(): number {
     return this.customSubmissions.filter(s => s.status === 'approved').length;
   }
@@ -480,6 +497,14 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     this.planCollapsed = !this.planCollapsed;
   }
 
+  showPanel(panel: 'preview' | 'plan'): void {
+    if (panel === 'plan') this.planCollapsed = false;
+    setTimeout(() => {
+      document.getElementById(panel === 'plan' ? 'invitationPlan' : 'templateLivePreview')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }
+
   get activeTemplateDisplayName(): string {
     const activeSubId = this.activeCustomSubmissionId;
     if (activeSubId) {
@@ -544,6 +569,8 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getBuiltinName(key: string): string {
+    if (key === 'visual-builder') return 'Diseño del editor visual';
+    if (key === 'custom-html') return 'Diseño personalizado';
     const found = this.builtinTemplates.find(t => t.id === key);
     return found ? found.name : key;
   }
