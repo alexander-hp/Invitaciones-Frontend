@@ -8,7 +8,6 @@ import { AppComponent } from './app.component';
 import { AuthTokenInterceptor } from './core/auth-token.interceptor';
 import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
 import { ContactComponent } from './features/contact/contact.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { EventDetailComponent } from './features/event-detail/event-detail.component';
 import { EventsComponent } from './features/events/events.component';
 import { EventAccessComponent } from './features/event-access/event-access.component';
@@ -118,7 +117,6 @@ import { GuestActivityComponent } from './features/guest-activity/guest-activity
     UnauthorizedComponent,
     CheckInStaffComponent,
     ContactComponent,
-    DashboardComponent,
     EventAccessComponent,
     EventDetailComponent,
     EventsComponent,

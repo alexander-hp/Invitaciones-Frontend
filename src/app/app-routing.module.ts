@@ -4,7 +4,6 @@ import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
 import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
 import { ContactComponent } from './features/contact/contact.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { EventDetailComponent } from './features/event-detail/event-detail.component';
 import { EventsComponent } from './features/events/events.component';
 import { EventAccessComponent } from './features/event-access/event-access.component';
@@ -47,7 +46,7 @@ const routes: Routes = [
   { path: 'password-reset', redirectTo: 'new/password-reset' },
   { path: 'password-reset/confirm', redirectTo: 'new/password-reset/confirm' },
   { path: 'contact', component: ContactComponent },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
+  { path: 'dashboard', redirectTo: 'new/dashboard' },
   { path: 'events', component: EventsComponent, canActivate: [AuthGuard] },
   { path: 'events/:id', component: EventDetailComponent, canActivate: [AuthGuard] },
   { path: 'invitations/:id/editor', component: InvitationEditorComponent, canActivate: [AuthGuard] },
