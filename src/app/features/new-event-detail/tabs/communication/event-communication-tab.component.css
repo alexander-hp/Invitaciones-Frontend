@@ -1,0 +1,277 @@
+.communication-workspace {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.communication-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 0;
+}
+
+.communication-eyebrow {
+  margin: 0 0 5px;
+  color: var(--nw-accent, #a8825c);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.communication-heading h2 {
+  margin: 0;
+  color: var(--nw-text, #2e2621);
+  font-family: var(--nw-font-display);
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.communication-intro {
+  margin: 6px 0 0;
+  color: var(--nw-text-2, #6e6157);
+  font-size: 13px;
+}
+
+.communication-channel-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  color: var(--nw-text-2, #6e6157);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.communication-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nw-danger, #b95757);
+}
+
+.communication-status-dot.is-ready {
+  background: var(--nw-success, #2c8d63);
+}
+
+.communication-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--nw-border, #eadecc);
+  border-bottom: 1px solid var(--nw-border, #eadecc);
+}
+
+.communication-overview > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 13px 16px;
+  min-width: 0;
+}
+
+.communication-overview > div + div {
+  border-left: 1px solid var(--nw-border, #eadecc);
+}
+
+.communication-overview strong {
+  color: var(--nw-text, #2e2621);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.communication-overview span {
+  color: var(--nw-text-2, #6e6157);
+  font-size: 12px;
+}
+
+.communication-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-bottom: 2px;
+}
+
+.communication-jumps button {
+  padding: 7px 11px;
+  border: 1px solid var(--nw-border, #eadecc);
+  border-radius: 4px;
+  background: var(--nw-surface, #fff);
+  color: var(--nw-text, #2e2621);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.communication-jumps button:hover,
+.communication-jumps button:focus-visible {
+  border-color: var(--nw-accent, #a8825c);
+  background: var(--nw-surface-2, #f5f1ea);
+}
+
+.communication-details {
+  min-width: 0;
+  border-bottom: 1px solid var(--nw-border, #eadecc);
+  scroll-margin-top: 110px;
+}
+
+.communication-details summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 12px;
+  padding: 12px 4px;
+  color: var(--nw-text, #2e2621);
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.communication-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.communication-details summary::before {
+  content: '+';
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.communication-details[open] summary::before {
+  content: '−';
+}
+
+.communication-details summary small {
+  color: var(--nw-text-2, #6e6157);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.communication-results .nw-metrics {
+  margin-top: 12px;
+}
+
+.communication-advanced .nw-card:first-of-type {
+  margin-top: 12px;
+}
+
+.communication-workspace > .nw-card {
+  min-width: 0;
+}
+
+#comms-config-card,
+#comms-recipients-card {
+  scroll-margin-top: 110px;
+}
+
+.communication-filters {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.5fr) repeat(3, minmax(135px, 1fr)) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px;
+  background: var(--nw-surface-2, #f5f1ea);
+  border: 1px solid var(--nw-border, #eadecc);
+  border-radius: 6px;
+}
+
+.communication-filters .nw-select,
+.communication-filters .nw-input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+  font-size: 13px;
+}
+
+.communication-search {
+  min-width: 0;
+}
+
+.communication-filter-count {
+  white-space: nowrap;
+}
+
+.communication-sendbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 13px 16px;
+  margin-bottom: 14px;
+  background: var(--nw-surface-2, #f5f1ea);
+  border: 1px solid var(--nw-border, #eadecc);
+  border-radius: 6px;
+}
+
+.communication-channel-counts {
+  color: var(--nw-text-2, #6e6157);
+  font-size: 12px;
+}
+
+.communication-preview-note {
+  margin: 0;
+  padding: 8px 10px;
+  color: var(--nw-text-2, #6e6157);
+  border-left: 3px solid var(--nw-accent, #a8825c);
+  background: var(--nw-surface, #fff);
+  font-size: 12px;
+}
+
+.communication-empty {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 13px 16px;
+  border: 1px solid var(--nw-border, #eadecc);
+  background: var(--nw-surface, #fff);
+  font-size: 13px;
+}
+
+.communication-empty span {
+  color: var(--nw-text-2, #6e6157);
+}
+
+@media (max-width: 1100px) {
+  .communication-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .communication-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .communication-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .communication-overview > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  .communication-overview > div:nth-child(n + 3) {
+    border-top: 1px solid var(--nw-border, #eadecc);
+  }
+
+  .communication-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .communication-filter-count {
+    white-space: normal;
+  }
+
+  .communication-sendbar > div,
+  .communication-sendbar button {
+    width: 100%;
+  }
+}

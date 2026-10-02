@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
@@ -31,15 +31,18 @@ export interface ProgressModalState {
 
 @Component({
   selector: 'app-event-communication-tab',
-  templateUrl: './event-communication-tab.component.html'
+  templateUrl: './event-communication-tab.component.html',
+  styleUrls: ['./event-communication-tab.component.css']
 })
 export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() event?: EventModel;
   @Input() guests: GuestModel[] = [];
+  @Input() eventMetrics: Partial<DashboardMetrics> = {};
+  @Output() messagesSent = new EventEmitter<void>();
+  @Output() openGuests = new EventEmitter<void>();
 
   private progressInterval: any = null;
 
-  eventMetrics: Partial<DashboardMetrics> = {};
   whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
 
   guestMessage = '';
@@ -248,6 +251,16 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     });
   }
 
+  get whatsappReady(): boolean {
+    return this.whatsappEnabled && (this.whatsappProvider !== 'openwa' || this.openWaReady);
+  }
+
+  scrollToSection(id: string): void {
+    const section = document.getElementById(id);
+    if (section instanceof HTMLDetailsElement) section.open = true;
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   get guestGroups(): string[] {
     const groups = new Set<string>();
     for (const g of this.guests) {
@@ -375,7 +388,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   canSendRealWhatsapp(g: GuestModel): boolean {
-    return this.canWhatsappGuest(g) && this.whatsappEnabled && this.openWaReady;
+    return this.canWhatsappGuest(g) && this.whatsappReady;
   }
 
   getCommunicationStatus(g: GuestModel): GuestCommunicationStatus {
@@ -808,6 +821,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
           const failed = res.failed || 0;
           this.finishProgressModal(sent, failed, `Proceso finalizado: ${sent} emails enviados exitosamente.`);
           this.guestMessage = `Se enviaron ${sent} emails con éxito.` + (failed > 0 ? ` (${failed} fallidos)` : '');
+          this.messagesSent.emit();
         },
         error: err => {
           this.emailBulkSending = false;
@@ -849,6 +863,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
           const failed = res.failed || 0;
           this.finishProgressModal(sent, failed, `Proceso finalizado: ${sent} mensajes de WhatsApp enviados.`);
           this.guestMessage = `Se enviaron ${sent} mensajes de WhatsApp con éxito.` + (failed > 0 ? ` (${failed} fallidos)` : '');
+          this.messagesSent.emit();
         },
         error: err => {
           this.whatsappBulkSending = false;
@@ -872,6 +887,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
         g.communicationStatus = 'sent';
         g.lastMessageType = this.selectedMessageType;
         this.guestMessage = `Email enviado a ${g.name}`;
+        this.messagesSent.emit();
       },
       error: err => {
         this.emailSending = '';
@@ -893,17 +909,13 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
         g.communicationStatus = 'sent';
         g.lastMessageType = this.selectedMessageType;
         this.guestMessage = `WhatsApp enviado a ${g.name}`;
+        this.messagesSent.emit();
       },
       error: err => {
         this.whatsappSending = '';
         this.guestError = err?.error?.message || `Error al enviar WhatsApp a ${g.name}`;
       }
     });
-  }
-
-  markMessageSent(g: GuestModel, channel: 'email' | 'whatsapp'): void {
-    g.communicationStatus = 'sent';
-    g.lastMessageType = this.selectedMessageType;
   }
 
   setCommunicationStatus(g: GuestModel, status: GuestCommunicationStatus): void {

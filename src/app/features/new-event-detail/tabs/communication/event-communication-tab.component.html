@@ -1,34 +1,35 @@
-<section class="nw-card">
-  <!-- Encabezado de la Sección -->
-  <div
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+<section class="communication-workspace">
+  <header class="communication-heading">
     <div>
-      <h2
-        style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78); flex-shrink: 0;">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        Centro de Comunicación
-        <span class="nw-badge"
-          style="background: var(--nw-surface-2, #f5f1ea); color: var(--nw-text-2, #6e6157); font-size: 13px; padding: 2px 10px; border-radius: 20px; font-weight: 600; border: 1px solid var(--nw-border, #eadecc); white-space: nowrap; flex-shrink: 0;">
-          {{ guests.length }} invitados
-        </span>
-        <span *ngIf="pendingCommunicationGuests > 0" class="nw-pill warning"
-          style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          {{ pendingCommunicationGuests }} por enviar
-        </span>
-      </h2>
-      <p style="margin: 4px 0 0; font-size: 13px; color: var(--nw-text-2, #6e6157);">
-        Envía invitaciones, confirmaciones y recordatorios por Correo Electrónico o WhatsApp de forma masiva o
-        individual.
-      </p>
+      <p class="communication-eyebrow">EVENTO / COMUNICACIÓN</p>
+      <h2>Invitaciones y mensajes</h2>
+      <p class="communication-intro">Prepara el mensaje, revisa destinatarios y elige el canal de envío.</p>
     </div>
+    <div class="communication-channel-status" role="status">
+      <span class="communication-status-dot" [class.is-ready]="whatsappReady"></span>
+      <span>WhatsApp {{ whatsappProvider === 'meta' ? 'Meta' : (whatsappProvider === 'openwa' ? 'OpenWA' : '') }}:
+        {{ whatsappReady ? 'listo' : (whatsappEnabled ? 'no conectado' : 'no disponible') }}</span>
+    </div>
+  </header>
+
+  <div class="communication-overview" aria-label="Resumen de comunicación">
+    <div><strong>{{ guests.length }}</strong><span>Invitados</span></div>
+    <div><strong>{{ pendingCommunicationGuests }}</strong><span>Por enviar</span></div>
+    <div><strong>{{ failedCommunicationGuests }}</strong><span>Fallidos</span></div>
+    <div><strong>{{ confirmedCommunicationGuests }}</strong><span>Confirmados</span></div>
+  </div>
+
+  <nav class="communication-jumps" aria-label="Secciones de comunicación">
+    <button type="button" (click)="scrollToSection('comms-config-card')">1. Mensaje</button>
+    <button type="button" (click)="scrollToSection('comms-recipients-card')">2. Destinatarios y envío</button>
+    <button type="button" (click)="scrollToSection('comms-passes')">Pases especiales</button>
+    <button type="button" (click)="scrollToSection('comms-results')">Resultados</button>
+  </nav>
+
+  <div *ngIf="!guests.length" class="communication-empty">
+    <strong>Aún no hay destinatarios.</strong>
+    <span>Agrega invitados para enviar mensajes desde este evento.</span>
+    <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="openGuests.emit()">Ir a invitados</button>
   </div>
 
   <!-- 🌟 NOTIFICACIONES EMERGENTES FLOTANTES (TOASTS) 🌟 -->
@@ -61,6 +62,8 @@
     </div>
   </div>
 
+  <details id="comms-results" class="communication-details communication-results">
+    <summary><span>Resultados y seguimiento</span><small>Envíos, aperturas y confirmaciones</small></summary>
   <!-- Metrics Row 1 -->
   <div class="nw-metrics" style="margin-bottom:16px;">
     <div class="nw-metric info">
@@ -203,6 +206,8 @@
     </div>
   </div>
 
+  </details>
+
   <!-- Configuración de envío -->
   <div id="comms-config-card" class="nw-card" style="margin-bottom:16px;">
     <div class="nw-card-header">
@@ -218,7 +223,7 @@
     </div>
 
     <!-- Indicador de alerta solo en caso de falla de WhatsApp -->
-    <div *ngIf="whatsappEnabled && !openWaReady" style="margin-bottom:14px;">
+    <div *ngIf="whatsappProvider === 'openwa' && whatsappEnabled && !openWaReady" style="margin-bottom:14px;">
       <span class="nw-pill danger" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
         <span
           style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--nw-danger);"></span>
@@ -261,7 +266,7 @@
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
-            Editar mensaje
+            Simular texto
           </button>
           <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewTabMode === 'preview'"
             [class.nw-btn-ghost]="previewTabMode !== 'preview'" (click)="previewTabMode = 'preview'"
@@ -379,11 +384,12 @@
           <span style="font-size: 11px; color: var(--nw-text-3); margin-left: auto;">(Se inserta automáticamente)</span>
         </div>
 
+        <p class="communication-preview-note">Esta edición solo cambia la simulación. El envío real utiliza la plantilla seleccionada arriba.</p>
         <!-- Bloque Editable: Cuerpo del Mensaje -->
         <div>
           <label
             style="font-size: 12px; font-weight: 600; color: var(--nw-text-2); display: block; margin-bottom: 4px;">
-            Texto del mensaje (editable):
+            Texto para la simulación:
           </label>
           <textarea class="nw-input" rows="3" [(ngModel)]="customMessageBody" (ngModelChange)="onCustomBodyChange()"
             placeholder="Escribe el cuerpo de tu mensaje..."
@@ -523,6 +529,8 @@
     </div>
   </div>
 
+  <details id="comms-passes" class="communication-details communication-advanced">
+    <summary><span>Pases especiales</span><small>Descarga ZIP y envío con imagen a grupos seleccionados</small></summary>
   <!-- Sección Independiente: Descarga Masiva de Pases VIP -->
   <div class="nw-card" style="margin-bottom:16px; box-sizing:border-box; max-width:100%;">
     <div class="nw-card-header"
@@ -728,6 +736,8 @@
     </div>
   </div>
 
+  </details>
+
   <!-- WhatsApp Media (Comentado temporalmente) -->
   <!--
   <div class="nw-card" style="margin-bottom:16px;">
@@ -780,7 +790,7 @@
   -->
 
   <!-- Lista de Destinatarios y Excepciones -->
-  <div class="nw-card" style="margin-bottom:16px;">
+  <div id="comms-recipients-card" class="nw-card" style="margin-bottom:16px;">
     <div class="nw-card-header"
       style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div>
@@ -812,11 +822,10 @@
           excepciones</button>
       </div>
     </div>
-    <div
-      style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto; width: 100%;">
+    <div class="communication-filters">
 
       <!-- Buscador Destinatario -->
-      <div style="position: relative; flex: 1; min-width: 220px;">
+      <div class="communication-search" style="position: relative;">
         <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--nw-text-3);">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -824,14 +833,13 @@
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
         </span>
-        <input class="nw-input" [(ngModel)]="guestSearch" (ngModelChange)="guestPage = 1"
+        <input class="nw-input" [(ngModel)]="guestSearch" (ngModelChange)="guestPage = 1" aria-label="Buscar destinatario"
           placeholder="Buscar destinatario..."
           style="height: 42px; padding: 0 14px 0 36px; width: 100%; font-size: 13px; box-sizing: border-box;">
       </div>
 
       <!-- Select Filtro 1 (Estado) -->
-      <select class="nw-select" [(ngModel)]="guestStatusFilter" (ngModelChange)="guestPage = 1"
-        style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <select class="nw-select" [(ngModel)]="guestStatusFilter" (ngModelChange)="guestPage = 1" aria-label="Filtrar por RSVP">
         <option value="">Todos los estados</option>
         <option value="pending">Pendientes</option>
         <option value="confirmed">Confirmados</option>
@@ -839,8 +847,7 @@
       </select>
 
       <!-- Select Filtro 2 (Seguimiento) -->
-      <select class="nw-select" [(ngModel)]="guestCommunicationFilter" (ngModelChange)="guestPage = 1"
-        style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <select class="nw-select" [(ngModel)]="guestCommunicationFilter" (ngModelChange)="guestPage = 1" aria-label="Filtrar por seguimiento">
         <option value="">Seguimiento</option>
         <option value="pending">Por enviar</option>
         <option value="sent">Enviados</option>
@@ -852,8 +859,7 @@
       </select>
 
       <!-- Select Filtro 3 (Grupos) -->
-      <select class="nw-select" [(ngModel)]="guestGroupFilter" (ngModelChange)="guestPage = 1"
-        style="height: 42px; padding: 0 28px 0 12px; width: 165px; font-size: 13px; flex-shrink: 0; box-sizing: border-box; vertical-align: middle;">
+      <select class="nw-select" [(ngModel)]="guestGroupFilter" (ngModelChange)="guestPage = 1" aria-label="Filtrar por grupo">
         <option value="">Todos los grupos</option>
         <option *ngFor="let group of guestGroups" [value]="group">{{ group }}</option>
       </select>
@@ -870,13 +876,12 @@
         Limpiar
       </button>
 
-      <span class="nw-pill" style="margin-left:auto; flex-shrink: 0;">{{ activeRecipients.length }} activos / {{
+      <span class="nw-pill communication-filter-count">{{ activeRecipients.length }} activos / {{
         filteredGuests.length }} filtrados</span>
     </div>
 
     <!-- BARRA DESTACADA DE ACCIONES DE ENVÍO JUNTO A LA TABLA -->
-    <div
-      style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; background:rgba(192, 156, 120, 0.08); border:1px solid rgba(192, 156, 120, 0.3); border-radius:10px; margin-bottom:14px;">
+    <div class="communication-sendbar">
       <div style="display:flex; align-items:center; gap:10px;">
         <span
           style="font-size:14px; font-weight:700; color:var(--nw-text); display: inline-flex; align-items: center; gap: 6px;">
@@ -888,6 +893,7 @@
         </span>
         <span class="nw-pill success" style="font-weight:700;">{{ activeRecipients.length }} activos
           seleccionados</span>
+        <span class="communication-channel-counts">{{ activeEmailRecipientsCount }} con correo · {{ activeWhatsappRecipientsCount }} con teléfono</span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button data-event-section="email-send" class="nw-btn nw-btn-ghost" (click)="sendBulkEmail()"
@@ -901,7 +907,7 @@
           {{ emailBulkSending ? 'Enviando Email...' : 'Enviar Email Masivo (' + activeEmailRecipientsCount + ')' }}
         </button>
         <button data-event-section="whatsapp-send" class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
-          [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeWhatsappRecipientsCount"
+          [disabled]="whatsappBulkSending || !whatsappReady || !activeWhatsappRecipientsCount"
           style="display: inline-flex; align-items: center; gap: 6px;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -1019,19 +1025,10 @@
                     </svg>
                     WA
                   </button>
-                  <a *ngIf="canEmailGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
-                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
-                    [href]="getEmailLink(g)" (click)="markMessageSent(g, 'email')" title="Abrir en gestor local">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                      <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
-                  </a>
                   <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
                     style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
-                    [href]="getWhatsappLink(g)" target="_blank" (click)="markMessageSent(g, 'whatsapp')"
-                    title="Abrir WhatsApp Web">
+                    [href]="getWhatsappLink(g)" target="_blank" rel="noopener noreferrer"
+                    title="Abrir WhatsApp Web; abrir el enlace no confirma el envío">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
                       stroke-linecap="round" stroke-linejoin="round">
                       <path
@@ -1074,7 +1071,7 @@
             {{ emailBulkSending ? 'Enviando...' : 'Enviar Email (' + activeEmailRecipientsCount + ')' }}
           </button>
           <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="sendBulkWhatsapp()"
-            [disabled]="whatsappBulkSending || !whatsappEnabled || !openWaReady || !activeWhatsappRecipientsCount"
+            [disabled]="whatsappBulkSending || !whatsappReady || !activeWhatsappRecipientsCount"
             style="display: inline-flex; align-items: center; gap: 4px;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">

@@ -302,7 +302,9 @@
 
       <app-event-album-tab *ngIf="activeTab === 'album'" [eventId]="eventId" [event]="event" [focusSection]="selectedSection"></app-event-album-tab>
 
-      <app-event-communication-tab *ngIf="activeTab === 'communication'" [event]="event" [guests]="guests"></app-event-communication-tab>
+      <app-event-communication-tab *ngIf="activeTab === 'communication'" [event]="event" [guests]="guests"
+        [eventMetrics]="eventMetrics" (messagesSent)="loadMetricsAndCounts()"
+        (openGuests)="selectTab('guests')"></app-event-communication-tab>
 
       <app-event-dj-tab *ngIf="activeTab === 'dj'" [eventId]="eventId" [canEditInvitation]="can('edit_event')"></app-event-dj-tab>
 
