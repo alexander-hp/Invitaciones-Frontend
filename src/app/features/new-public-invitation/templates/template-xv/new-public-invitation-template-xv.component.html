@@ -105,8 +105,8 @@
       </div>
 
       <div class="txv-hero-content">
-        <div *ngIf="invitation.content.brandLogoUrl" class="txv-tiara-badge" data-aos="zoom-in">
-          <img [src]="invitation.content.brandLogoUrl" alt="Monograma XV Años" class="txv-tiara-img">
+        <div *ngIf="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" class="txv-tiara-badge" data-aos="zoom-in">
+          <img [src]="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" alt="Monograma XV Años" class="txv-tiara-img">
         </div>
 
         <span class="txv-hero-cursive" data-aos="fade-up" data-aos-delay="100">

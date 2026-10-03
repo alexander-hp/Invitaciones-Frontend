@@ -201,15 +201,28 @@ describe('VisualInvitationRendererComponent', () => {
     expect(component.layerStyle(layer)).toEqual(jasmine.objectContaining({ position: 'fixed', right: '24px', bottom: '24px', width: '72px', height: '72px' }));
   });
 
-  it('keeps YouTube audio in its required visible player', () => {
+  it('renders YouTube audio as a floating control that opens its official player', () => {
     const layer = {
       id: 'youtube-music', type: 'audio' as const, url: 'https://www.youtube.com/watch?v=wC7IH002Ypk',
       x: 10, y: 10, width: 40, height: 24,
       style: { audioPresentation: 'button' as const, audioPosition: 'fixed' as const }
     };
 
-    expect(component.isFloatingAudio(layer)).toBeFalse();
-    expect(component.layerStyle(layer)['position']).not.toBe('fixed');
+    expect(component.isFloatingAudio(layer)).toBeTrue();
+    expect(component.layerStyle(layer)['position']).toBe('fixed');
+  });
+
+  it('routes bound visual music controls through the public invitation player', () => {
+    const main = { id: 'main-music', type: 'audio' as const, binding: 'music.toggle', x: 0, y: 0, width: 10, height: 10 };
+    const section = { ...main, id: 'story-music', binding: 'music.section.story' };
+    spyOn(component.toggleMusic, 'emit');
+    spyOn(component.toggleSectionMusic, 'emit');
+
+    component.handleBoundMusicControl(main);
+    component.handleBoundMusicControl(section);
+
+    expect(component.toggleMusic.emit).toHaveBeenCalled();
+    expect(component.toggleSectionMusic.emit).toHaveBeenCalledWith('story');
   });
 
   it('only publishes location actions backed by real data', () => {

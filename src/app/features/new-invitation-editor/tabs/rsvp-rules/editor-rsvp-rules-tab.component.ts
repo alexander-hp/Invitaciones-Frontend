@@ -3,9 +3,17 @@ import { EventModel, GuestModel, InvitationModel } from '../../../../core/models
 
 @Component({
   selector: 'app-editor-rsvp-rules-tab',
-  templateUrl: './editor-rsvp-rules-tab.component.html'
+  templateUrl: './editor-rsvp-rules-tab.component.html',
+  styleUrls: ['./editor-rsvp-rules-tab.component.css']
 })
 export class EditorRsvpRulesTabComponent {
+  readonly questionPresets = {
+    song: { key: 'cancion_preferida_para_la_fiesta', label: 'Canción preferida para la fiesta' },
+    diet: { key: 'restricciones_o_alergias_alimenticias', label: 'Restricciones o alergias alimenticias' },
+    menu: { key: 'opcion_de_platillo_preferido', label: 'Opción de platillo preferido' },
+    transport: { key: 'requieres_transporte_del_hotel_a_la_recepcion', label: '¿Requieres transporte del hotel a la recepción?' }
+  } as const;
+
   @Input() invitation!: InvitationModel;
   @Input() event?: EventModel;
   @Input() loadedGuests: GuestModel[] = [];
@@ -36,6 +44,125 @@ export class EditorRsvpRulesTabComponent {
 
   newCustomRole = '';
   newCustomGroup = '';
+
+  isQuestionPresetSelected(presetKey: keyof typeof this.questionPresets): boolean {
+    const preset = this.questionPresets[presetKey];
+    return this.customQuestionsList.some(question => {
+      const questionKey = this.normalizeQuestionKey(question.key || question.label);
+      return questionKey === preset.key || this.normalizeQuestionKey(question.label) === preset.key;
+    });
+  }
+
+  private normalizeQuestionKey(value: unknown): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  get deadlineDate(): string {
+    return String(this.invitation?.rsvpSettings?.deadline || '').slice(0, 10);
+  }
+
+  get deadlineTime(): string {
+    const value = String(this.invitation?.rsvpSettings?.deadline || '');
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value) ? value.slice(11, 16) : '';
+  }
+
+  get deadlineMinDate(): string {
+    return this.toLocalDateInput(new Date());
+  }
+
+  get deadlineMaxDate(): string {
+    const eventDate = this.getEventDateTime();
+    return eventDate ? this.toLocalDateInput(eventDate) : '';
+  }
+
+  get deadlineMinTime(): string {
+    if (this.deadlineDate !== this.deadlineMinDate) return '00:00';
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1, 0, 0);
+    return this.toLocalTimeInput(now);
+  }
+
+  get deadlineMaxTime(): string {
+    if (!this.deadlineMaxDate || this.deadlineDate !== this.deadlineMaxDate) return '23:59';
+    const eventDate = this.getEventDateTime();
+    return eventDate ? this.toLocalTimeInput(eventDate) : '23:59';
+  }
+
+  get hasAvailableDeadlineRange(): boolean {
+    const eventDate = this.getEventDateTime();
+    return Boolean(eventDate && eventDate.getTime() >= this.currentMinute().getTime());
+  }
+
+  get deadlineRangeLabel(): string {
+    const eventDate = this.getEventDateTime();
+    if (!eventDate) return 'Primero define la fecha del evento.';
+    if (!this.hasAvailableDeadlineRange) return 'El evento ya ocurrió; actualiza su fecha para recibir confirmaciones.';
+    return `Puedes recibir respuestas desde hoy hasta ${this.formatLongDateTime(eventDate)}.`;
+  }
+
+  get deadlineValidationMessage(): string {
+    const raw = this.invitation?.rsvpSettings?.deadline;
+    if (!raw) return '';
+    const deadline = this.parseDateTime(raw);
+    const eventDate = this.getEventDateTime();
+    if (!deadline) return 'Selecciona una fecha y hora válidas.';
+    if (deadline.getTime() < this.currentMinute().getTime()) {
+      return 'La fecha límite no puede estar en el pasado.';
+    }
+    if (eventDate && deadline.getTime() > eventDate.getTime()) {
+      return 'La fecha límite no puede ser posterior al inicio del evento.';
+    }
+    return '';
+  }
+
+  get selectedDeadlineLabel(): string {
+    const deadline = this.parseDateTime(this.invitation?.rsvpSettings?.deadline);
+    return deadline && !this.deadlineValidationMessage ? this.formatLongDateTime(deadline) : '';
+  }
+
+  onDeadlineDateChange(value: string): void {
+    if (!this.invitation?.rsvpSettings) return;
+    if (!value) {
+      this.invitation.rsvpSettings.deadline = '';
+      return;
+    }
+    const initialTime = this.deadlineTime || this.defaultTimeForDate(value);
+    this.invitation.rsvpSettings.deadline = `${value}T${this.clampTimeForDate(value, initialTime)}`;
+  }
+
+  onDeadlineTimeChange(value: string): void {
+    if (!this.invitation?.rsvpSettings || !this.deadlineDate) return;
+    this.invitation.rsvpSettings.deadline = `${this.deadlineDate}T${this.clampTimeForDate(this.deadlineDate, value || this.defaultTimeForDate(this.deadlineDate))}`;
+  }
+
+  clearDeadline(): void {
+    if (this.invitation?.rsvpSettings) this.invitation.rsvpSettings.deadline = '';
+  }
+
+  setDeadlineDaysBeforeEvent(days: number): void {
+    const eventDate = this.getEventDateTime();
+    if (!eventDate || !this.invitation?.rsvpSettings) return;
+    const target = new Date(eventDate);
+    target.setDate(target.getDate() - days);
+    target.setHours(23, 59, 0, 0);
+    if (target.getTime() > eventDate.getTime()) target.setTime(eventDate.getTime());
+    if (target.getTime() < this.currentMinute().getTime()) return;
+    this.invitation.rsvpSettings.deadline = `${this.toLocalDateInput(target)}T${this.toLocalTimeInput(target)}`;
+  }
+
+  isQuickDeadlineDisabled(days: number): boolean {
+    const eventDate = this.getEventDateTime();
+    if (!eventDate) return true;
+    const target = new Date(eventDate);
+    target.setDate(target.getDate() - days);
+    target.setHours(23, 59, 0, 0);
+    return target.getTime() < this.currentMinute().getTime();
+  }
 
   get availableRoleOptions(): Array<{ value: string; label: string }> {
     const defaults = [
@@ -282,5 +409,57 @@ export class EditorRsvpRulesTabComponent {
     } catch {
       return null;
     }
+  }
+
+  private getEventDateTime(): Date | null {
+    const rawDate = this.event?.date || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.date : '');
+    if (!rawDate) return null;
+    const datePart = /^\d{4}-\d{2}-\d{2}/.test(String(rawDate))
+      ? String(rawDate).slice(0, 10)
+      : this.toLocalDateInput(new Date(rawDate));
+    const eventTime = this.event?.time || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.time : '') || '23:59';
+    return this.parseDateTime(`${datePart}T${String(eventTime).slice(0, 5)}`);
+  }
+
+  private parseDateTime(value?: string): Date | null {
+    if (!value) return null;
+    const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!match) return null;
+    const parsed = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), Number(match[4]), Number(match[5]), 0, 0);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private currentMinute(): Date {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    return now;
+  }
+
+  private defaultTimeForDate(date: string): string {
+    if (date === this.deadlineMaxDate) return this.deadlineMaxTime;
+    if (date === this.deadlineMinDate) return this.deadlineMinTime;
+    return '23:59';
+  }
+
+  private clampTimeForDate(date: string, time: string): string {
+    let result = time;
+    if (date === this.deadlineMinDate && result < this.deadlineMinTime) result = this.deadlineMinTime;
+    if (date === this.deadlineMaxDate && result > this.deadlineMaxTime) result = this.deadlineMaxTime;
+    return result;
+  }
+
+  private toLocalDateInput(value: Date): string {
+    if (Number.isNaN(value.getTime())) return '';
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+  }
+
+  private toLocalTimeInput(value: Date): string {
+    return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`;
+  }
+
+  private formatLongDateTime(value: Date): string {
+    return new Intl.DateTimeFormat('es-MX', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit'
+    }).format(value);
   }
 }

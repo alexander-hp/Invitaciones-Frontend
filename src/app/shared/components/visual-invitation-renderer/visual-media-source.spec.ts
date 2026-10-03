@@ -12,6 +12,14 @@ describe('resolveVisualMediaSource', () => {
     expect(resolveVisualMediaSource('https://youtube.com/shorts/wC7IH002Ypk').provider).toBe('youtube');
   });
 
+  it('preserves YouTube fragments and lets the editor override the range', () => {
+    const fromUrl = resolveVisualMediaSource('https://youtu.be/wC7IH002Ypk?t=1m12s');
+    const overridden = resolveVisualMediaSource('https://youtu.be/wC7IH002Ypk?t=12', 30, 55);
+    expect(fromUrl.embedUrl).toContain('start=72');
+    expect(overridden.embedUrl).toContain('start=30');
+    expect(overridden.embedUrl).toContain('end=55');
+  });
+
   it('converts Spotify tracks into embeds', () => {
     const media = resolveVisualMediaSource('https://open.spotify.com/track/1234567890ABCDEF');
     expect(media.provider).toBe('spotify');

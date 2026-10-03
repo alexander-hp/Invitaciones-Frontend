@@ -230,6 +230,9 @@
         WhatsApp desconectado: {{ openWaStatus || 'Servicio no disponible' }}
       </span>
     </div>
+    <p *ngIf="isMessageEdited && whatsappProvider === 'meta'" class="communication-preview-note">
+      WhatsApp Meta no admite este texto libre. Puedes enviarlo por correo; para WhatsApp, restablece el mensaje y usa la plantilla aprobada.
+    </p>
 
     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
       <label class="nw-label" style="flex:1; min-width:260px;">Plantilla de mensaje activa
@@ -266,7 +269,7 @@
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
-            Simular texto
+            Editar mensaje
           </button>
           <button type="button" class="nw-btn nw-btn-sm" [class.nw-btn-primary]="previewTabMode === 'preview'"
             [class.nw-btn-ghost]="previewTabMode !== 'preview'" (click)="previewTabMode = 'preview'"
@@ -384,14 +387,15 @@
           <span style="font-size: 11px; color: var(--nw-text-3); margin-left: auto;">(Se inserta automáticamente)</span>
         </div>
 
-        <p class="communication-preview-note">Esta edición solo cambia la simulación. El envío real utiliza la plantilla seleccionada arriba.</p>
+        <p class="communication-preview-note">Este texto se aplicará a este envío por correo y OpenWA; no cambia la plantilla permanente. El saludo y el enlace individual se agregan automáticamente. Meta solo admite su plantilla aprobada.</p>
         <!-- Bloque Editable: Cuerpo del Mensaje -->
         <div>
           <label
             style="font-size: 12px; font-weight: 600; color: var(--nw-text-2); display: block; margin-bottom: 4px;">
-            Texto para la simulación:
+            Texto del mensaje:
           </label>
           <textarea class="nw-input" rows="3" [(ngModel)]="customMessageBody" (ngModelChange)="onCustomBodyChange()"
+            maxlength="2000"
             placeholder="Escribe el cuerpo de tu mensaje..."
             style="font-family: inherit; font-size: 13px; line-height: 1.5; resize: vertical; width: 100%; box-sizing: border-box; background: #ffffff;"></textarea>
         </div>
@@ -480,7 +484,7 @@
                   Hola {{ (previewGuest?.name || sampleGuest.name) }},
                 </p>
                 <p style="margin:0 0 16px; font-size:13.5px; line-height:1.6; color:#524c46; white-space:pre-wrap;">{{
-                  buildMessage(previewGuest || sampleGuest, selectedMessageType) }}</p>
+                  getEmailPreviewBody(selectedMessageType) }}</p>
                 <div
                   *ngIf="getEventDateText() || getEventLocationText() || (previewGuest?.tableName || sampleGuest.tableName)"
                   style="margin:16px 0; background-color:#fcfaf7; border:1px solid #efe4d8; border-radius:10px; padding:12px; font-size:13px; display:grid; gap:6px;">
@@ -581,7 +585,7 @@
       <!-- Selector de Modo de Entrega con Tarjetas Visuales -->
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
         <!-- Opción 1: Enlace Normal -->
-        <div (click)="deliveryModeWithImage = false"
+        <div (click)="setDeliveryModeWithImage(false)"
           [style.borderColor]="!deliveryModeWithImage ? 'var(--nw-accent)' : 'var(--nw-border)'"
           [style.background]="!deliveryModeWithImage ? 'var(--nw-surface-2)' : 'var(--nw-surface)'"
           style="border:1.5px solid; border-radius:10px; padding:12px 14px; cursor:pointer; display:flex; gap:12px; align-items:flex-start; transition:all 0.2s;">
@@ -604,7 +608,7 @@
         </div>
 
         <!-- Opción 2: Imagen para Invitados Especiales -->
-        <div (click)="deliveryModeWithImage = true"
+        <div (click)="setDeliveryModeWithImage(true)"
           [style.borderColor]="deliveryModeWithImage ? 'var(--nw-accent)' : 'var(--nw-border)'"
           [style.background]="deliveryModeWithImage ? 'var(--nw-surface-2)' : 'var(--nw-surface)'"
           style="border:1.5px solid; border-radius:10px; padding:12px 14px; cursor:pointer; display:flex; gap:12px; align-items:flex-start; transition:all 0.2s;">
@@ -638,13 +642,19 @@
               Selección de Invitados Especiales por Roles
             </h4>
             <p style="margin:2px 0 0; color:var(--nw-text-3); font-size:12px;">
-              A estos invitados se les enviará la imagen con su pase de acceso. Máximo 30 invitados permitidos.
+              A estos invitados se les enviará el mensaje con su pase PNG personalizado. Máximo 30 envíos con imagen por evento.
+            </p>
+            <p *ngIf="specialPassesSentCount > 0" style="margin:4px 0 0; color:var(--nw-text-3); font-size:12px;">
+              Los pases aceptados por OpenWA no se seleccionan otra vez en el lote; esto no confirma su entrega. Usa “Reenviar pase” para enviar otra copia.
+            </p>
+            <p *ngIf="!passImageReady" style="margin:4px 0 0; color:var(--nw-danger, #b42318); font-size:12px;">
+              Para enviar imágenes, conecta OpenWA y espera a que aparezca como listo.
             </p>
           </div>
           <span class="nw-pill"
             [class.success]="selectedSpecialGuestCount > 0 && selectedSpecialGuestCount <= maxSpecialGuests"
-            [class.danger]="selectedSpecialGuestCount >= maxSpecialGuests" style="font-weight:700; font-size:12px;">
-            {{ selectedSpecialGuestCount }} / {{ maxSpecialGuests }} invitados seleccionados
+            [class.danger]="selectedSpecialGuestCount + specialPassesSentCount >= maxSpecialGuests" style="font-weight:700; font-size:12px;">
+            {{ selectedSpecialGuestCount }} seleccionados · {{ specialPassesSentCount }} enviados / {{ maxSpecialGuests }}
           </span>
         </div>
 
@@ -657,8 +667,7 @@
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
           <div>
-            <strong>Límite de Pases Especiales alcanzado:</strong> Ya se enviaron los pases especiales para este evento.
-            Esta acción ha sido completada y el cupo se encuentra bloqueado.
+            <strong>Límite de pases especiales alcanzado:</strong> Ya se enviaron {{ maxSpecialGuests }} pases con imagen desde este navegador.
           </div>
         </div>
 
@@ -668,7 +677,7 @@
             [class.nw-btn-primary]="isRoleFullySelectedForSpecialGuests(role.key)"
             [class.nw-btn-ghost]="!isRoleFullySelectedForSpecialGuests(role.key)"
             (click)="toggleRoleForSpecialGuests(role.key)"
-            [disabled]="specialPassesAlreadySent || (!isRoleFullySelectedForSpecialGuests(role.key) && selectedSpecialGuestCount >= maxSpecialGuests)"
+            [disabled]="specialPassesAlreadySent || !hasUnsentSpecialGuests(role.key) || (!isRoleFullySelectedForSpecialGuests(role.key) && selectedSpecialGuestCount + specialPassesSentCount >= maxSpecialGuests)"
             style="font-size:12px; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;">
             <span>{{ role.label }}</span>
             <span class="nw-pill" style="font-size:10px; padding:1px 5px; background:rgba(0,0,0,0.06);">
@@ -699,14 +708,21 @@
               <div *ngFor="let g of getGuestsByRole(role.key)"
                 style="display:flex; align-items:center; gap:8px; font-size:13px; padding:3px 2px;">
                 <input type="checkbox" [checked]="isSpecialGuestSelected(g)" (change)="toggleSpecialGuest(g)"
-                  [disabled]="specialPassesAlreadySent || (!isSpecialGuestSelected(g) && selectedSpecialGuestCount >= maxSpecialGuests)"
+                  [disabled]="specialPassesAlreadySent || !g.phone || wasSpecialPassSent(g) || (!isSpecialGuestSelected(g) && selectedSpecialGuestCount + specialPassesSentCount >= maxSpecialGuests)"
                   style="flex-shrink:0; width:15px; height:15px; cursor:pointer;">
                 <span
                   style="flex:1; min-width:0; word-break:break-word; line-height:1.3; color:var(--nw-text); font-weight:600;">
                   {{ g.name }}
+                  <span *ngIf="wasSpecialPassSent(g)" class="nw-pill success" style="font-size:10px; margin-left:4px;" title="OpenWA aceptó el envío; la entrega al teléfono puede confirmarse después.">Aceptado por OpenWA</span>
+                  <span *ngIf="!g.phone" class="nw-pill" style="font-size:10px; margin-left:4px;">Sin teléfono</span>
                   <span *ngIf="g.group && g.group.toLowerCase() !== role.key.toLowerCase()" class="nw-pill"
                     style="font-size:10px; margin-left:4px; font-weight:normal;">{{ g.group }}</span>
                 </span>
+                <button *ngIf="wasSpecialPassSent(g) && g.phone" type="button" class="nw-btn nw-btn-sm nw-btn-ghost"
+                  (click)="resendSpecialGuestPass(g)" [disabled]="!!resendingSpecialGuestId || !passImageReady || !customWhatsappSupported"
+                  title="Enviar otra copia del pase con imagen a este invitado" style="flex-shrink:0; font-size:11px; padding:4px 7px;">
+                  {{ resendingSpecialGuestId === getGuestId(g) ? 'Enviando...' : 'Reenviar pase' }}
+                </button>
               </div>
             </div>
           </div>
@@ -716,11 +732,11 @@
         <div
           style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--nw-border); padding-top:12px; margin-top:6px;">
           <span style="font-size:12px; color:var(--nw-text-3);">
-            {{ specialPassesAlreadySent ? 'Cupo cerrado para este evento.' : 'Se enviará el mensaje con pase VIP adjunto
+            {{ specialPassesAlreadySent ? 'Cupo de pases nuevos alcanzado; aún puedes reenviar un pase existente.' : 'Se enviará el mensaje con pase VIP adjunto
             a los ' + selectedSpecialGuestCount + ' invitados seleccionados.' }}
           </span>
           <button type="button" class="nw-btn nw-btn-primary" (click)="sendSpecialGuestsPasses()"
-            [disabled]="specialGuestsSending || specialPassesAlreadySent || selectedSpecialGuestCount === 0 || selectedSpecialGuestCount > maxSpecialGuests"
+            [disabled]="specialGuestsSending || specialPassesAlreadySent || !passImageReady || !customWhatsappSupported || selectedSpecialGuestCount === 0 || selectedSpecialGuestCount + specialPassesSentCount > maxSpecialGuests"
             style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; padding:8px 18px;">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -907,7 +923,7 @@
           {{ emailBulkSending ? 'Enviando Email...' : 'Enviar Email Masivo (' + activeEmailRecipientsCount + ')' }}
         </button>
         <button data-event-section="whatsapp-send" class="nw-btn nw-btn-primary" (click)="sendBulkWhatsapp()"
-          [disabled]="whatsappBulkSending || !whatsappReady || !activeWhatsappRecipientsCount"
+          [disabled]="whatsappBulkSending || !whatsappReady || !customWhatsappSupported || !activeWhatsappRecipientsCount"
           style="display: inline-flex; align-items: center; gap: 6px;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -1016,25 +1032,27 @@
                   </button>
                   <button *ngIf="canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
                     style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; gap: 4px;"
-                    (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)">
+                    (click)="sendRealWhatsapp(g)" [disabled]="whatsappSending === getGuestId(g)"
+                    [title]="shouldAttachPassToWhatsapp(g) ? 'Enviar automáticamente el mensaje y el mismo pase PNG descargable con OpenWA' : 'Enviar automáticamente el mensaje de texto con OpenWA'">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
                       stroke-linecap="round" stroke-linejoin="round">
                       <path
                         d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
                       </path>
                     </svg>
-                    WA
+                    {{ whatsappSending === getGuestId(g) ? 'Enviando...' : (shouldAttachPassToWhatsapp(g) ? 'Auto + pase' : 'Enviar auto') }}
                   </button>
-                  <a *ngIf="canWhatsappGuest(g) && !canSendRealWhatsapp(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
-                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
+                  <a *ngIf="canWhatsappGuest(g)" class="nw-btn nw-btn-ghost nw-btn-sm"
+                    style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center; gap:4px;"
                     [href]="getWhatsappLink(g)" target="_blank" rel="noopener noreferrer"
-                    title="Abrir WhatsApp Web; abrir el enlace no confirma el envío">
+                    title="Abrir WhatsApp para enviar el texto manualmente. No adjunta el pase ni confirma el envío">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
                       stroke-linecap="round" stroke-linejoin="round">
                       <path
                         d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
                       </path>
                     </svg>
+                    Abrir WA
                   </a>
                   <button class="nw-btn nw-btn-ghost nw-btn-sm"
                     style="min-height:28px; padding:2px 6px; font-size:12px; display: inline-flex; align-items: center; justify-content: center;"
@@ -1071,7 +1089,7 @@
             {{ emailBulkSending ? 'Enviando...' : 'Enviar Email (' + activeEmailRecipientsCount + ')' }}
           </button>
           <button class="nw-btn nw-btn-primary nw-btn-sm" (click)="sendBulkWhatsapp()"
-            [disabled]="whatsappBulkSending || !whatsappReady || !activeWhatsappRecipientsCount"
+            [disabled]="whatsappBulkSending || !whatsappReady || !customWhatsappSupported || !activeWhatsappRecipientsCount"
             style="display: inline-flex; align-items: center; gap: 4px;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -1126,7 +1144,7 @@
     </div>
   </div>
 
-  <!-- 🎟️ Sección: Adjuntar Pase VIP (Al final de la página, desactivado por defecto) -->
+  <!-- Adjuntar Pase VIP en envíos generales -->
   <div class="nw-card" style="margin-bottom:16px;">
     <div class="nw-card-header">
       <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
@@ -1141,18 +1159,18 @@
       </h3>
     </div>
     <p style="margin: 0 0 12px 0; color: var(--nw-text-2); font-size: 13px;">
-      Permite adjuntar el pase de acceso personalizado con código QR como tarjeta interactiva / archivo dentro de las
-      comunicaciones de correo electrónico y WhatsApp.
+      Esta opción aplica a los envíos generales por correo y WhatsApp. En “Imagen Adjunta para Especiales” el pase PNG se incluye siempre, aunque este switch esté apagado.
     </p>
     <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
       <span class="nw-switch">
-        <input type="checkbox" [(ngModel)]="includePassInMessage">
+        <input type="checkbox" [ngModel]="includePassInMessage" (ngModelChange)="setIncludePassInMessage($event)">
         <span class="nw-slider"></span>
       </span>
       <span style="font-size:14px; font-weight:600; color: var(--nw-text);">
-        Adjuntar Pase VIP como tarjeta/archivo en los mensajes (Email y WhatsApp)
+        Adjuntar Pase VIP en los mensajes generales
       </span>
     </label>
+    <p style="margin:8px 0 0; color:var(--nw-text-3); font-size:12px;">Esta preferencia se recuerda en este navegador para este evento. WhatsApp con imagen requiere OpenWA y admite hasta 30 destinatarios por envío.</p>
   </div>
 
   <!-- Modal de Previsualización Email / WhatsApp -->
@@ -1244,7 +1262,7 @@
               </p>
 
               <p style="margin:0 0 18px; font-size:14px; line-height:1.6; color:#524c46; white-space:pre-wrap;">{{
-                buildMessage(previewGuest || guests[0] || { name: 'Invitado' }, selectedMessageType) }}</p>
+                getEmailPreviewBody(selectedMessageType) }}</p>
 
               <!-- Details Box -->
               <div *ngIf="getEventDateText() || getEventLocationText() || previewGuest?.tableName"

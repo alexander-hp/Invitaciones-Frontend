@@ -49,11 +49,21 @@
 .layer-panel-title > span { flex: 0 0 auto; }
 .audio-style-editor .audio-toggle-grid { grid-template-columns: minmax(0, 1fr); }
 
+.ve-notice.draft-info { position: static; display: flex; align-items: center; gap: 10px; min-height: 38px; box-sizing: border-box; padding: 7px 16px; transform: none; background: #edf7f3; color: #174f3d; box-shadow: none; border-bottom: 1px solid #cce5da; font-size: 11px; }
+.ve-notice.draft-info strong { white-space: nowrap; }
+.ve-notice.draft-info span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ve-notice.draft-info button { margin-left: auto; border: 1px solid #7eae9b; background: #fff; color: #174f3d; padding: 6px 9px; white-space: nowrap; cursor: pointer; }
+.onboarding-dialog > div:first-child > p { margin: -14px 0 22px; color: #675f5a; font-size: 13px; line-height: 1.5; }
+
 @media (max-width: 1280px) {
   .ve-tutorial { bottom: 70px; }
 }
 
 @media (max-width: 700px) {
+  .ve-notice.draft-info { min-height: 40px; padding: 5px 10px; }
+  .ve-notice.draft-info span { display: none; }
+  .ve-notice.draft-info button { padding: 4px 7px; }
+  .has-draft-notice .ve-stage { height: calc(100dvh - 96px); }
   .ve-tutorial { right: 8px; bottom: calc(68px + env(safe-area-inset-bottom)); left: 8px; width: auto; max-height: min(40dvh, 250px); overflow-y: auto; padding: 11px 13px 12px; }
   .ve-tutorial h2 { font-size: 15px; }
   .ve-tutorial footer { margin-top: 10px; }

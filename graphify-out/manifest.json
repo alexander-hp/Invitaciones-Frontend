@@ -5,8 +5,8 @@
     "semantic_hash": "de2c9fc7f31d538849f584f165841ac7"
   },
   "src/app/app-routing.module.ts": {
-    "mtime": 1781376957.9452968,
-    "ast_hash": "5573512e66cbe906be91f062bea9ace0",
+    "mtime": 1790899209.366621,
+    "ast_hash": "5214980871103e5e51f1ddb2fa03635a",
     "semantic_hash": ""
   },
   "src/app/app.component.spec.ts": {
@@ -15,33 +15,33 @@
     "semantic_hash": "724285b1fbee754b0c1754c704bf233c"
   },
   "src/app/app.component.ts": {
-    "mtime": 1780729051.384767,
-    "ast_hash": "dff28c1326b5d64ab407113d263e81b6",
-    "semantic_hash": "dff28c1326b5d64ab407113d263e81b6"
+    "mtime": 1785625073.5252469,
+    "ast_hash": "cba0a45210db9183f021ed02542e7e4c",
+    "semantic_hash": ""
   },
   "src/app/app.module.ts": {
-    "mtime": 1781382269.2592854,
-    "ast_hash": "8265e7683090a22bbc557bf63a2a68e1",
+    "mtime": 1790899210.6092968,
+    "ast_hash": "a7849e3f736486079c196444fca12ce4",
     "semantic_hash": ""
   },
   "src/app/core/api.service.ts": {
-    "mtime": 1781377134.6721191,
-    "ast_hash": "52f141e5c59ccd8f234ee8ce190bba80",
+    "mtime": 1790976648.1556168,
+    "ast_hash": "473cf8ad6c744b666f9a4bf4dc095ff4",
     "semantic_hash": ""
   },
   "src/app/core/auth.guard.ts": {
-    "mtime": 1780729051.3817577,
-    "ast_hash": "1c3775b4253c6cf610baa1f331b18ed6",
-    "semantic_hash": "1c3775b4253c6cf610baa1f331b18ed6"
+    "mtime": 1786061570.8210914,
+    "ast_hash": "e65fb0f8f0d872b0b16e5b5f6ec8470a",
+    "semantic_hash": ""
   },
   "src/app/core/auth.service.ts": {
-    "mtime": 1780729051.380252,
-    "ast_hash": "acd0740881d844415760273cfa4ef8c3",
-    "semantic_hash": "acd0740881d844415760273cfa4ef8c3"
+    "mtime": 1786061570.8210914,
+    "ast_hash": "b0b6ab98bf492b539fedb46c98a9e455",
+    "semantic_hash": ""
   },
   "src/app/core/models.ts": {
-    "mtime": 1781377128.6947699,
-    "ast_hash": "7500cb7c33817fedd0f909ce371e2279",
+    "mtime": 1790985438.364696,
+    "ast_hash": "be13427d58351d5134c45b6c3ee5fe91",
     "semantic_hash": ""
   },
   "src/app/features/contact/contact.component.ts": {
@@ -49,30 +49,25 @@
     "ast_hash": "5f29a1fee5d0d8775fcb9ec10b3f5407",
     "semantic_hash": "5f29a1fee5d0d8775fcb9ec10b3f5407"
   },
-  "src/app/features/dashboard/dashboard.component.ts": {
-    "mtime": 1781296650.1099968,
-    "ast_hash": "f7eeb7c6bf326879f875c5b8cb42c8e8",
-    "semantic_hash": ""
-  },
   "src/app/features/event-detail/event-detail.component.ts": {
-    "mtime": 1781384074.5286517,
-    "ast_hash": "d4566c081aac2909f4018122be5b041f",
+    "mtime": 1790972686.1275647,
+    "ast_hash": "18cb5e7b0ebd5e7cb9d63c65a6b8ac4f",
     "semantic_hash": ""
   },
   "src/app/features/events/events.component.ts": {
-    "mtime": 1781325578.6035078,
-    "ast_hash": "e56a7397e5dd8ba00fdf8707bf5fc001",
+    "mtime": 1789494248.2390163,
+    "ast_hash": "dc6e4881f58259bde67633e89d14c562",
     "semantic_hash": ""
   },
   "src/app/features/invitation-editor/invitation-editor.component.ts": {
-    "mtime": 1781296631.7514796,
-    "ast_hash": "2b3f4e6ba46e953323cca71a08db6dae",
+    "mtime": 1790972683.5219383,
+    "ast_hash": "c111892bdf5b62a3c6cf3726573112b8",
     "semantic_hash": ""
   },
   "src/app/features/login/login.component.ts": {
-    "mtime": 1780729051.3882892,
-    "ast_hash": "4667d5dcd35f174cba3aa457221b17be",
-    "semantic_hash": "4667d5dcd35f174cba3aa457221b17be"
+    "mtime": 1788323375.9673762,
+    "ast_hash": "6b7b9f744f685c3c199a61fe40a8f3c0",
+    "semantic_hash": ""
   },
   "src/app/features/password-reset-confirm/password-reset-confirm.component.ts": {
     "mtime": 1780773169.141359,
@@ -80,14 +75,14 @@
     "semantic_hash": "70664602a5245e404ff03e9984e72287"
   },
   "src/app/features/public-invitation/public-invitation.component.ts": {
-    "mtime": 1780970487.3883877,
-    "ast_hash": "fea4c74c64dacb43f67bdc5d97fce2cd",
+    "mtime": 1790488024.070677,
+    "ast_hash": "7fe26ca8463a411a3594da5818c89037",
     "semantic_hash": ""
   },
   "src/app/features/register/register.component.ts": {
-    "mtime": 1780729051.390306,
-    "ast_hash": "27a2ffabe5a2947e112ada5ad0d1cb4b",
-    "semantic_hash": "27a2ffabe5a2947e112ada5ad0d1cb4b"
+    "mtime": 1785625073.553585,
+    "ast_hash": "2670ed3f4f355396c728d6fddb9fa26a",
+    "semantic_hash": ""
   },
   "src/environments/environment.prod.ts": {
     "mtime": 1780723452.551966,
@@ -115,23 +110,1248 @@
     "semantic_hash": "2f9ce74108349781ed4e2b825a499c89"
   },
   "src/app/features/check-in-staff/check-in-staff.component.ts": {
-    "mtime": 1780899819.633544,
-    "ast_hash": "69ea820e3e17ce1845edb7631b51644e",
+    "mtime": 1785625073.5335433,
+    "ast_hash": "96017d8345fa455da6a25b10de374740",
     "semantic_hash": ""
   },
   "src/app/features/event-access/event-access.component.ts": {
-    "mtime": 1781325376.0626829,
-    "ast_hash": "f52bd1c515b28a30fdf29c62e07270db",
+    "mtime": 1786061570.8262906,
+    "ast_hash": "56adad9c34617e9a8de17f0c2fc4deec",
     "semantic_hash": ""
   },
   "src/app/features/external-portal/external-portal.component.ts": {
-    "mtime": 1781325314.5321665,
-    "ast_hash": "5fa636c87b2431b49fc50eb2e39c87ca",
+    "mtime": 1781554689.0312276,
+    "ast_hash": "99bf6d716a98dac853c87b5e8ff98012",
     "semantic_hash": ""
   },
   "src/app/features/external-embed/external-embed.component.ts": {
-    "mtime": 1781376948.4991062,
-    "ast_hash": "b887a6ac5f5a3835750ba28308652ebb",
+    "mtime": 1781554590.5766146,
+    "ast_hash": "12c27e43039bafab037e23b625a73e80",
+    "semantic_hash": ""
+  },
+  "src/app/core/admin.guard.ts": {
+    "mtime": 1788323375.9562552,
+    "ast_hash": "7974eab70d847911ced7bfa4b95905cd",
+    "semantic_hash": ""
+  },
+  "src/app/core/confirm-dialog.service.ts": {
+    "mtime": 1786061570.8232849,
+    "ast_hash": "645ea33b010fe9a79e4161b1b46cb84b",
+    "semantic_hash": ""
+  },
+  "src/app/core/confirm-dialog/confirm-dialog.component.ts": {
+    "mtime": 1785625073.5290792,
+    "ast_hash": "5460f071931d336ce5ed612ea83d07dd",
+    "semantic_hash": ""
+  },
+  "src/app/core/event-header/event-header.component.ts": {
+    "mtime": 1790972107.021132,
+    "ast_hash": "94787ff7fd1f4394510700272d72c3b9",
+    "semantic_hash": ""
+  },
+  "src/app/core/guest-pass-image.ts": {
+    "mtime": 1788323375.9562552,
+    "ast_hash": "087c063d993bd1a0f6452d954c63e6ef",
+    "semantic_hash": ""
+  },
+  "src/app/core/qr-scanner-modal/qr-scanner-modal.component.ts": {
+    "mtime": 1785625073.5335433,
+    "ast_hash": "3572283d7fede4138ed33f5cccbd6a06",
+    "semantic_hash": ""
+  },
+  "src/app/core/template-text-overlay.service.ts": {
+    "mtime": 1788323375.9562552,
+    "ast_hash": "d64a985da0fb373492df7f3121bc907c",
+    "semantic_hash": ""
+  },
+  "src/app/core/universal-invitation-runtime.ts": {
+    "mtime": 1790030107.6135893,
+    "ast_hash": "3b9c3d696975afccd7235bd9519e3fc1",
+    "semantic_hash": ""
+  },
+  "src/app/core/visual-template-bindings.ts": {
+    "mtime": 1790108032.317618,
+    "ast_hash": "f5847125039585e108ed97b6d031d708",
+    "semantic_hash": ""
+  },
+  "src/app/features/documentation/documentation-data.ts": {
+    "mtime": 1788323375.9562552,
+    "ast_hash": "fd8f775f61d121f2af20876ce91451b5",
+    "semantic_hash": ""
+  },
+  "src/app/features/documentation/documentation.component.ts": {
+    "mtime": 1788323375.9562552,
+    "ast_hash": "f70e4a515e89d64e120853cbaa1fd1ae",
+    "semantic_hash": ""
+  },
+  "src/app/features/documentation/documentation.models.ts": {
+    "mtime": 1788323375.965029,
+    "ast_hash": "ef8e41bc4a1495164973c3b1b7b66fdd",
+    "semantic_hash": ""
+  },
+  "src/app/features/guest-activity/guest-activity.component.ts": {
+    "mtime": 1790489050.687046,
+    "ast_hash": "e20b5656ced000899384b726f31b7a4b",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-check-in-staff/new-check-in-staff.component.ts": {
+    "mtime": 1786061570.8332896,
+    "ast_hash": "64020c35284d2bdc14863f7fc0627eae",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-contact/new-contact.component.ts": {
+    "mtime": 1788323375.9693923,
+    "ast_hash": "e7123b3c4bd08f454dc16b6cad3b2fcb",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-custom-templates/new-custom-templates.component.ts": {
+    "mtime": 1788323375.9693923,
+    "ast_hash": "34abdd8a6f046e631a33582413d3d8c3",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-dashboard/new-dashboard.component.ts": {
+    "mtime": 1789494248.2429042,
+    "ast_hash": "621a18211b2099270cb5a19635582473",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/new-event-access.component.ts": {
+    "mtime": 1790102845.687175,
+    "ast_hash": "37a532e78545b800e4e42505cdfafc67",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-album-gallery-view.component.ts": {
+    "mtime": 1788323375.9740276,
+    "ast_hash": "0d64dcaf9c25e811a4996b3948578c1f",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-album-view.component.ts": {
+    "mtime": 1788323375.9740276,
+    "ast_hash": "b5b6ec522af9773c07c326aaf5647db1",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-checkin-view.component.ts": {
+    "mtime": 1788323375.9740276,
+    "ast_hash": "c6c15eef72c2354f66639766d86cade0",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-client-view.component.ts": {
+    "mtime": 1786061570.8402088,
+    "ast_hash": "54c9b8dfebcb18f5331d196da7dd14af",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-dj-view.component.ts": {
+    "mtime": 1790102843.857405,
+    "ast_hash": "c63ac0b6ad019426d156da20ecf37de5",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-guestops-view.component.ts": {
+    "mtime": 1788323375.9740276,
+    "ast_hash": "99343f758234a7d5b9a0a4309c47c6f4",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-integration-api-view.component.ts": {
+    "mtime": 1789159696.1334095,
+    "ast_hash": "124b2c559105782f64eea33184b4c9b1",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-access/views/access-photographer-view.component.ts": {
+    "mtime": 1788323375.9820187,
+    "ast_hash": "e67b49650efcb53ec6c69e1e96203e76",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/new-event-detail.component.spec.ts": {
+    "mtime": 1790747520.3283434,
+    "ast_hash": "2c665701dabf0894fc641778d5485322",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/new-event-detail.component.ts": {
+    "mtime": 1790747824.6321957,
+    "ast_hash": "6ba8fe6cba295749b86d24a687268186",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/album/event-album-tab.component.spec.ts": {
+    "mtime": 1790744602.7049172,
+    "ast_hash": "9f0d5fd8e51b45292e75b04660e8027d",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/album/event-album-tab.component.ts": {
+    "mtime": 1790744564.7945304,
+    "ast_hash": "f922a61de3f4d2e247dbf5fb8e861b77",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/communication/event-communication-tab.component.spec.ts": {
+    "mtime": 1790960544.4728713,
+    "ast_hash": "1554b91f5703e80e1559237a958b861d",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/communication/event-communication-tab.component.ts": {
+    "mtime": 1790960324.633314,
+    "ast_hash": "c440e8d4a02275a3d9a07a290f543840",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/dedications/event-dedications-tab.component.ts": {
+    "mtime": 1788323375.9827256,
+    "ast_hash": "946b1a4920a472bb7c68869aaceb4796",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/dj/event-dj-tab.component.ts": {
+    "mtime": 1790102841.9331803,
+    "ast_hash": "364b0beef06ec123f7a2a78021982448",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/guests/event-guests-tab.component.spec.ts": {
+    "mtime": 1790744240.480239,
+    "ast_hash": "311d81a5fcc69cac199e60e794ee7c5d",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/guests/event-guests-tab.component.ts": {
+    "mtime": 1790744078.8929949,
+    "ast_hash": "a3c8843b2074303f11ef877fa9f6754e",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/info/event-info-tab.component.spec.ts": {
+    "mtime": 1790742247.481337,
+    "ast_hash": "5df7054e989d249e1c970773e740a940",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/info/event-info-tab.component.ts": {
+    "mtime": 1790742165.847921,
+    "ast_hash": "4f8b0efcda75f48a451cc6fc627537b0",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/integration/event-integration-tab.component.ts": {
+    "mtime": 1789769895.2507236,
+    "ast_hash": "12a573ba734e3a9a702c7c0e94aa6f4a",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/logs/event-logs-tab.component.ts": {
+    "mtime": 1788323375.9827256,
+    "ast_hash": "a4547fecb23c997191ba2caac0fd655c",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/rsvps/event-rsvps-tab.component.ts": {
+    "mtime": 1788323375.9978118,
+    "ast_hash": "2bc76754b97620271117c39a13a4715f",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-event-detail/tabs/tables/event-tables-tab.component.ts": {
+    "mtime": 1788323375.9997382,
+    "ast_hash": "cccaaecfc4f946ee34095b644f7e249a",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-events/new-events.component.spec.ts": {
+    "mtime": 1790748157.3086338,
+    "ast_hash": "b417cf17a07674d3d8c9d857a20ea152",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-events/new-events.component.ts": {
+    "mtime": 1790748098.7646172,
+    "ast_hash": "7a13be53bf4666dd7da9322d5e6f1074",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-external-embed/new-external-embed.component.ts": {
+    "mtime": 1786061570.8651547,
+    "ast_hash": "7c72811a806b288d30acb983a673ff8b",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-external-portal/new-external-portal.component.ts": {
+    "mtime": 1788323376.0021987,
+    "ast_hash": "bc7193ac389a93008f0fe483c94c67cd",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/modals/ai-template-wizard-modal/ai-template-wizard-modal.component.ts": {
+    "mtime": 1789494248.2460778,
+    "ast_hash": "f0cb1635a4e072946350df86374e9ae6",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/modals/visual-template-customizer-modal/visual-template-customizer-modal.component.ts": {
+    "mtime": 1788814911.1903431,
+    "ast_hash": "fef967465c93fda0a0ddc7cea20c472e",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator.ts": {
+    "mtime": 1788323376.0092008,
+    "ast_hash": "2a9bee8b2966c8edf3d6114c3c738ffd",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/modals/visual-template-text-editor-modal/visual-template-text-editor-modal.component.ts": {
+    "mtime": 1788814911.1913345,
+    "ast_hash": "2a2b149445c0e52710de6ba2d55d7cde",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/new-invitation-editor.component.ts": {
+    "mtime": 1790980462.6122947,
+    "ast_hash": "29b4e8fa3a7349cab143f4008d1a17ef",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/assets/editor-assets-tab.component.ts": {
+    "mtime": 1790985307.247854,
+    "ast_hash": "bc995365bd65d8a7e9837b87f58d0e78",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/content/editor-content-tab.component.ts": {
+    "mtime": 1790970008.4275033,
+    "ast_hash": "8869c18c8f88dbe887b0c59f976fc49b",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/dedications/editor-dedications-tab.component.ts": {
+    "mtime": 1786410574.8892417,
+    "ast_hash": "1ea6312f950c78838e4c028c030b97f1",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/gifts/editor-gifts-tab.component.ts": {
+    "mtime": 1790972612.2005062,
+    "ast_hash": "db0a57c0edbcb076dd7392a2beb2ab04",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/itinerary/editor-itinerary-tab.component.ts": {
+    "mtime": 1789494248.260375,
+    "ast_hash": "e2656438b2f0f19ce8f9600f123585db",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/locations/editor-locations-tab.component.ts": {
+    "mtime": 1790985308.6314993,
+    "ast_hash": "1b895d7261ed40cefbde13c3afee5845",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/plans/editor-plans-tab.component.spec.ts": {
+    "mtime": 1790753648.868048,
+    "ast_hash": "e3f13fa2dabfb71f93d9d749a9fec0a9",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/plans/editor-plans-tab.component.ts": {
+    "mtime": 1790753448.833659,
+    "ast_hash": "9470cf1fefb1ac7974f82e629d85ae81",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/rsvp-rules/editor-rsvp-rules-tab.component.ts": {
+    "mtime": 1790973414.9312942,
+    "ast_hash": "9320e7046308e768f5ea1173bec74b31",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/tabs/style/editor-style-tab.component.ts": {
+    "mtime": 1790837476.319809,
+    "ast_hash": "0902fb10998f2b53dc6da80528939aad",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/visual-palette.spec.ts": {
+    "mtime": 1790837523.7160861,
+    "ast_hash": "8aa10e50521c0afbe7e6e741bfe8fcde",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-editor/visual-palette.ts": {
+    "mtime": 1790836860.8310466,
+    "ast_hash": "2b438b0140cab5aba947d874dd1b6b8b",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-invitation-sections/new-invitation-sections.component.ts": {
+    "mtime": 1789494248.2644417,
+    "ast_hash": "541c5e1059b95259cf317466cbfd6380",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-login/new-login.component.ts": {
+    "mtime": 1785625073.5494454,
+    "ast_hash": "338b52998ad9bde7b5c85cd825b7cebc",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-member-invite/new-member-invite.component.ts": {
+    "mtime": 1786428684.5734727,
+    "ast_hash": "9b5f1ebf80337a0e86d73f92daa1dcbc",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-password-reset-confirm/new-password-reset-confirm.component.ts": {
+    "mtime": 1789515215.007906,
+    "ast_hash": "c3b5b2b2ed3cdd6b8ac7638b1cfecd8a",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-password-reset/new-password-reset.component.ts": {
+    "mtime": 1789515215.007906,
+    "ast_hash": "7bc5eb7fb90f2c097b5705dc3f88d14a",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-plan/new-plan.component.ts": {
+    "mtime": 1788323376.0244744,
+    "ast_hash": "c07c47711e38da7f5446084e42356601",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/guest-pass-template.ts": {
+    "mtime": 1788655652.38874,
+    "ast_hash": "960a1732c5109b0e84b512768311d9dd",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/new-public-invitation.component.spec.ts": {
+    "mtime": 1790489077.4852233,
+    "ast_hash": "0ff83ae7271281ceecbf732818501428",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/new-public-invitation.component.ts": {
+    "mtime": 1790985708.5974221,
+    "ast_hash": "656d2b2b72e117a90377ea7962fdcfc2",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/pass/guest-pass-template.ts": {
+    "mtime": 1788655652.3927183,
+    "ast_hash": "7be349b4e65c1bb6a7f4e1f67257d75f",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/boda-cards-lateral/new-public-invitation-boda-cards-lateral.component.ts": {
+    "mtime": 1789515215.010416,
+    "ast_hash": "2771406ebd58aca44678cf69070e6830",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/boda-creativa-premium/new-public-invitation-boda-creativa-premium.component.ts": {
+    "mtime": 1788814911.19705,
+    "ast_hash": "a84f47b28220152f6a438428da3f33a0",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/boda-desktop-first/new-public-invitation-boda-desktop-first.component.ts": {
+    "mtime": 1788814911.198331,
+    "ast_hash": "6181180a60e849f1f772f507ce7db586",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/boda-mobile-first/new-public-invitation-boda-mobile-first.component.ts": {
+    "mtime": 1788814911.1998477,
+    "ast_hash": "21f184d714454d8bd07bc3dbecf15277",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/classic-vertical/new-public-invitation-classic-vertical.component.ts": {
+    "mtime": 1788655652.4036965,
+    "ast_hash": "3a4d5ccdbec5fafef25798efe585f276",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/envelope-cards/new-public-invitation-envelope-cards.component.ts": {
+    "mtime": 1789515215.020028,
+    "ast_hash": "4881f26fed69f7e2ccada8500a958db2",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/maison-dore/new-public-invitation-maison-dore.component.ts": {
+    "mtime": 1789494248.2659621,
+    "ast_hash": "a34bd0b7d7e119ac56df0c95b514ea37",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-3/new-public-invitation-template3.component.ts": {
+    "mtime": 1788323376.030478,
+    "ast_hash": "845d316d1897309408cc6d3bb22ded14",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-bautizo/new-public-invitation-template-bautizo.component.ts": {
+    "mtime": 1788814911.202362,
+    "ast_hash": "fdf024f9cf0f52a5c6ccb1ccd0c90f66",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda-eleganza/new-public-invitation-boda-eleganza.component.ts": {
+    "mtime": 1789515701.5582175,
+    "ast_hash": "5549e5926d36c342c069bc728b104782",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda-girasoles/new-public-invitation-boda-girasoles.component.ts": {
+    "mtime": 1789515701.5608544,
+    "ast_hash": "f036736a7b979888c4ca2056f07ba7a4",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda-navy-blue/new-public-invitation-boda-navy-blue.component.ts": {
+    "mtime": 1789515701.5624497,
+    "ast_hash": "35aaf91f8d143cd8816c2ff16cca3d3c",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda-rosas/new-public-invitation-boda-rosas.component.ts": {
+    "mtime": 1789515701.5640924,
+    "ast_hash": "93914779e7a3dcc746d2104e8049cad8",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda-teatro/new-public-invitation-boda-teatro.component.ts": {
+    "mtime": 1789515701.566215,
+    "ast_hash": "b58d7d7db944537a53c83f8f8a20261e",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda-villa-perle/new-public-invitation-boda-villa-perle.component.ts": {
+    "mtime": 1789515701.5683222,
+    "ast_hash": "bec59bdd1b55fdbb8a1d0ebfd95a6aa5",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-boda/new-public-invitation-template-boda.component.ts": {
+    "mtime": 1788814911.2053976,
+    "ast_hash": "e1916bc70ac10dd270c11efe21cdec82",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-cumpleanos/new-public-invitation-template-cumpleanos.component.ts": {
+    "mtime": 1788814911.207548,
+    "ast_hash": "f9dab3f4e9672ab624d3bd2e76709790",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-graduacion/new-public-invitation-template-graduacion.component.ts": {
+    "mtime": 1788814911.2100682,
+    "ast_hash": "6d8350adba2c3959085d65e35d4a46a4",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-otro/new-public-invitation-template-otro.component.ts": {
+    "mtime": 1788814911.2120638,
+    "ast_hash": "e2ba0c66834ddca99c57a6e060c2104c",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-public-invitation/templates/template-xv/new-public-invitation-template-xv.component.ts": {
+    "mtime": 1788814911.2145805,
+    "ast_hash": "3f35aef25770aaa060fcc0d3ff247b2b",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-register/new-register.component.ts": {
+    "mtime": 1785625073.553585,
+    "ast_hash": "3550ac399949226471f63fe7cba52331",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-sidebar/new-sidebar.component.ts": {
+    "mtime": 1788323376.0314772,
+    "ast_hash": "053a368492c695366b573afb7d76bf7f",
+    "semantic_hash": ""
+  },
+  "src/app/features/new-user-guide/new-user-guide.component.ts": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "0e5199e259087d3aa52f06b555d518a5",
+    "semantic_hash": ""
+  },
+  "src/app/features/seating-chart/seating-chart.component.ts": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "c8a72805e31fc046b36fe149e72f42b7",
+    "semantic_hash": ""
+  },
+  "src/app/features/unauthorized/unauthorized.component.ts": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "b183ba023b51c09c03543adfb3e4150d",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/complete-design-library.spec.ts": {
+    "mtime": 1790564771.542509,
+    "ast_hash": "ca92cc047dea7420e9573b6fe85003a0",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/complete-design-library.ts": {
+    "mtime": 1790557657.6268203,
+    "ast_hash": "05ae631252d02550ad561da67b4549f0",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/photo-composition-presets.spec.ts": {
+    "mtime": 1790657099.327776,
+    "ast_hash": "d1b1267b75b4f38648f82119e93fef89",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/photo-composition-presets.ts": {
+    "mtime": 1790656936.6217365,
+    "ast_hash": "153f55568c37f88e962ce1a158174f4a",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-button-presets.ts": {
+    "mtime": 1790577715.2783191,
+    "ast_hash": "a64c6c84e937d8950ae322f863d117ab",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-design-exchange.spec.ts": {
+    "mtime": 1790658866.0902798,
+    "ast_hash": "2d14e9d04b4c7bb0f64e9d5350156a65",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-design-exchange.ts": {
+    "mtime": 1790658818.2553487,
+    "ast_hash": "77626d8e7c06bfefcf71f4d268eb1082",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-design-importer.service.spec.ts": {
+    "mtime": 1790571659.36931,
+    "ast_hash": "7292afeeb0d5b021546566424ad68cb8",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-design-importer.service.ts": {
+    "mtime": 1790571581.4815724,
+    "ast_hash": "0ded2714c89c0b828903cee944d4f4d2",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-font-catalog.ts": {
+    "mtime": 1790402295.3872588,
+    "ast_hash": "eb6c310c06ea43b1df3e735c774a8de1",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-font-picker.component.spec.ts": {
+    "mtime": 1790402393.568681,
+    "ast_hash": "70dd474bd2e95ae3152314dadc103b65",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-font-picker.component.ts": {
+    "mtime": 1790402425.2096004,
+    "ast_hash": "48105199b966ec575273ae492db54ccc",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-invitation-animated-export.service.spec.ts": {
+    "mtime": 1790446290.859753,
+    "ast_hash": "99187a01fbe9d3c86fce3b96b1252cdd",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-invitation-animated-export.service.ts": {
+    "mtime": 1790476345.4791484,
+    "ast_hash": "f795d760ccb0ebd9f6dd2717d90df7cd",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-invitation-editor.component.spec.ts": {
+    "mtime": 1790664274.9520864,
+    "ast_hash": "d6ee6dec129a6a0418f98e4560ea08c2",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-invitation-editor.component.ts": {
+    "mtime": 1790986934.3465903,
+    "ast_hash": "934ad714cbcd1b50cc9b55da5c54c868",
+    "semantic_hash": ""
+  },
+  "src/app/features/visual-invitation-editor/visual-invitation-editor.module.ts": {
+    "mtime": 1790402300.2184167,
+    "ast_hash": "3585fa0fef4888e84fa9737d3a35f162",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/event-book-widget/event-book-widget.component.ts": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "7dbf50f91c2d473fb4fda9950c8d3e1d",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/image-dropzone/image-dropzone.component.ts": {
+    "mtime": 1789515215.0362744,
+    "ast_hash": "61e5711c1e0741673b99afd093b65758",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-canvas-geometry.ts": {
+    "mtime": 1790529583.9157462,
+    "ast_hash": "c8e15773b559f2b0a0cba93a29686ba4",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-functional-controls.ts": {
+    "mtime": 1790491803.185276,
+    "ast_hash": "33c964861313c8b2ac997d088a71c5ba",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-icon-catalog.ts": {
+    "mtime": 1790664217.7051947,
+    "ast_hash": "3f3cfdbd631080a204a4beaa79167710",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-invitation-renderer.component.spec.ts": {
+    "mtime": 1790987096.6575673,
+    "ast_hash": "3a993b37681464c1bb120424218365a0",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-invitation-renderer.component.ts": {
+    "mtime": 1790986902.1243124,
+    "ast_hash": "736a32f63b6adaedd1a54b0b35bf0ad7",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-invitation-renderer.module.ts": {
+    "mtime": 1790482619.3605165,
+    "ast_hash": "066c57706d0109850b7a57c7f5632627",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-media-player.component.ts": {
+    "mtime": 1790986900.8257854,
+    "ast_hash": "15c68e7546fab89475cfe794d05453c5",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-media-source.spec.ts": {
+    "mtime": 1790985768.4899147,
+    "ast_hash": "e9eca6d497e9a05c121593770b472dbb",
+    "semantic_hash": ""
+  },
+  "src/app/shared/components/visual-invitation-renderer/visual-media-source.ts": {
+    "mtime": 1790985439.029691,
+    "ast_hash": "31d1d9f89e58098fcc7011ce6fbdd230",
+    "semantic_hash": ""
+  },
+  "src/assets/kyndra-embed.js": {
+    "mtime": 1786061570.8922775,
+    "ast_hash": "24ec4440e09ff260a09914df7bc5f843",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/index-BWd-SODq.js": {
+    "mtime": 1789494248.3939655,
+    "ast_hash": "fdc53d28009e97c3850679fa666424d5",
+    "semantic_hash": ""
+  },
+  "src/gifenc.d.ts": {
+    "mtime": 1790446289.7107112,
+    "ast_hash": "f68313cfeab7ba326edb762846032a54",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/dress-code-frame.png": {
+    "mtime": 1789515701.5720282,
+    "ast_hash": "751506a55997499f721e35c32d33c254",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/eleganza-poster.jpg": {
+    "mtime": 1789515701.5741906,
+    "ast_hash": "ec09b4687c33130bd2ca69ff3626f358",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/gifts-frame.png": {
+    "mtime": 1789515701.614722,
+    "ast_hash": "9d919dc948776e9d28888e657ed43aa6",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/hero-frame-oval.png": {
+    "mtime": 1789515701.6162457,
+    "ast_hash": "5e6f2ea47082cef855c68ab07fa38391",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/key-tassel.png": {
+    "mtime": 1789515701.617256,
+    "ast_hash": "b5ad132030d7c31c98ef7b464e23ac40",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/programme-linen.png": {
+    "mtime": 1789515701.6182678,
+    "ast_hash": "dd8b718b19a6372dbca1b3db8ff1f6fc",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/rsvp-frame.png": {
+    "mtime": 1789515701.6207597,
+    "ast_hash": "9bd47265d7a1e6c55baff79655998feb",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/venue-villa.png": {
+    "mtime": 1789515701.6227648,
+    "ast_hash": "6561beda74807650d51829169a27cab8",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/villa-illustration.png": {
+    "mtime": 1789515701.6256754,
+    "ast_hash": "4e1de8fdfc3ee4c8433fee4ffbb4acd2",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/when-where-frame.png": {
+    "mtime": 1789515701.6593351,
+    "ast_hash": "7d89c9f940accb33dac83191fcf33bf5",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-girasoles/flores-girasoles.webp": {
+    "mtime": 1789515701.6776257,
+    "ast_hash": "87d3c346132e8f82224938709454ef9f",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-girasoles/portada-bg.webp": {
+    "mtime": 1789515701.6848805,
+    "ast_hash": "01e721f871988f207239c2228a5b5db6",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-girasoles/wedding-rings.png": {
+    "mtime": 1789515701.6859162,
+    "ast_hash": "9cf3fdc1f70f6426a1f8babcef0ada92",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/flor-navy-1.webp": {
+    "mtime": 1789515701.6859162,
+    "ast_hash": "8a2c2b9af0567ebe9558872bfd9d741f",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/flor-navy-2.webp": {
+    "mtime": 1789515701.6869938,
+    "ast_hash": "ed9e4eff3e8c104fef8b554ad5934ed5",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/flor-navy-3.webp": {
+    "mtime": 1789515701.6879942,
+    "ast_hash": "0660c5e6925e53e04a73b8c674f4fc91",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/flor-navy-4.webp": {
+    "mtime": 1789515701.6879942,
+    "ast_hash": "ba25f394b4f0cf6ff512cac6c5d23f1f",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/flores-divisor-gold.png": {
+    "mtime": 1789515701.6896453,
+    "ast_hash": "7ed34d2e788a81581ec05cab1cc7fc85",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/watercolor-navy-bg.jpg": {
+    "mtime": 1789515701.7185607,
+    "ast_hash": "8071f9a5180a4c7ade5ce18d54524739",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/champagne-tower.png": {
+    "mtime": 1789515701.7403293,
+    "ast_hash": "de96c8abdaebc74adf27ca80887366e9",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/floral-border-left.png": {
+    "mtime": 1789515701.7412827,
+    "ast_hash": "a8f5675ea65884a1dd17057df5d0c71a",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/floral-border-right.png": {
+    "mtime": 1789515701.7437925,
+    "ast_hash": "cb7f4511d1e5525845dd0d90884ccf66",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/floral-corner.png": {
+    "mtime": 1789515701.7481904,
+    "ast_hash": "864abbdd03713033648fde128574a8fa",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/floral-divider.png": {
+    "mtime": 1789515701.753538,
+    "ast_hash": "b72d76932b5fd32a7dbf17951bea719f",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/hero-oval.png": {
+    "mtime": 1789515701.753538,
+    "ast_hash": "ce882c3a09148c8cc5a0b1d99e5afea6",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/intro-poster.jpg": {
+    "mtime": 1789515701.7583008,
+    "ast_hash": "2754b75e2ef8b7270841268564a878bb",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/rsvp-envelope.png": {
+    "mtime": 1789515701.7988195,
+    "ast_hash": "202752f52559c1b71a77b0a4f5b5a92e",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/curtain-closed.jpg": {
+    "mtime": 1789515701.8048215,
+    "ast_hash": "2251cfd8e24662699564b96eb417a99c",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/curtain-open.jpg": {
+    "mtime": 1789515701.807916,
+    "ast_hash": "f275d511ec24d3ce581888da4b3393ca",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/dresscode-illustration.png": {
+    "mtime": 1789515701.8284554,
+    "ast_hash": "23edc0bfd3fe8b42d27d07e5ad9a7496",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/flowers-divider.gif": {
+    "mtime": 1789515701.832969,
+    "ast_hash": "a014e9e1799c0d187a33982a40b81c7a",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/gift-icon.png": {
+    "mtime": 1789515701.838772,
+    "ast_hash": "c47f2566ae36ea02aa969a591f328fe3",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/menu-frame.png": {
+    "mtime": 1789515701.8586254,
+    "ast_hash": "0a6b66fbf14babb590f7ca50738f6298",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/scratch-gold.png": {
+    "mtime": 1789515701.8586254,
+    "ast_hash": "427870717fe4728cbf329a3613e219ef",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/transport-icon.png": {
+    "mtime": 1789515701.860936,
+    "ast_hash": "9d180105bbca9f9602981487083c9802",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/venue-illustration.png": {
+    "mtime": 1789515701.861925,
+    "ast_hash": "3d033a2c55d5915e46531a3801acfbf2",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/carriage.png": {
+    "mtime": 1789515701.907981,
+    "ast_hash": "3243f3ecd6c0f3a470be9f7c824f4052",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/dress-code-a.png": {
+    "mtime": 1789515701.910494,
+    "ast_hash": "f6c0a1cac8d6c6b99684257f5a5efa17",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/dress-code-b.png": {
+    "mtime": 1789515701.9119947,
+    "ast_hash": "5b3223d30f2ed8ea00bc8c93d6f49bca",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/envelope-frame-v3.png": {
+    "mtime": 1789515701.9119947,
+    "ast_hash": "dd096bdb5ad7690babbea9841ac9d59e",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/gifts-frame.png": {
+    "mtime": 1789515701.9516182,
+    "ast_hash": "6f8dd34594f8c14eda7c63b58c623adb",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/hero-end-frame.webp": {
+    "mtime": 1789515701.9531226,
+    "ast_hash": "6e40a95905e9b459a67e645adf8c7820",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/pearl-divider.png": {
+    "mtime": 1789515701.9890287,
+    "ast_hash": "2a53840050afa2d43b7c69255e2a5f4d",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/program-frame.png": {
+    "mtime": 1789515701.9986234,
+    "ast_hash": "df025b02eabe9dd5f925cab26d5a93da",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/venue-oval-frame.png": {
+    "mtime": 1789515701.999534,
+    "ast_hash": "39390f7fd65bddd5108e3a9b97714933",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/venue-photo.png": {
+    "mtime": 1789515702.0005333,
+    "ast_hash": "6fdadc789e61ad9177f485b0fbc1e1eb",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/liverpool-logo.jpg": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "3dd9139d3d19ede0cc21575e58fc3c05",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/logo-amazon.png": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "93d3b6b7d55b868f280036366db06234",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/logo_uniko.webp": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "a1dc70d3bd7a2584ee43089cada53b9b",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/mercado-libre-logo.png": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "8ed2820c6257a94c8216966191e2174f",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/palacio-logo.png": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "a152dbeb497405d1e98d293417fcdebd",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/palacio.jpg": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "61998e6eac2eea179afbfc49d67a755e",
+    "semantic_hash": ""
+  },
+  "src/assets/giftTable/sears_logo.jpg": {
+    "mtime": 1788323376.0324752,
+    "ast_hash": "779c9cd8a449ddad9aa4ba21e6086e70",
+    "semantic_hash": ""
+  },
+  "src/assets/login-banner.png": {
+    "mtime": 1785625073.5637856,
+    "ast_hash": "36bde9c645de738ddeb5104cc2413ff6",
+    "semantic_hash": ""
+  },
+  "src/assets/logos/velisse.svg": {
+    "mtime": 1789515215.041373,
+    "ast_hash": "bf8b578f06731a67b0a4f8fc3fa0c8fb",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-cards-lateral.jpg": {
+    "mtime": 1790835640.3962078,
+    "ast_hash": "62610eacfae447f5115090d091e6f97e",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-creativa-premium.jpg": {
+    "mtime": 1790835640.41099,
+    "ast_hash": "56e7b93c52fd259dbb7da70f3421fd63",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-desktop-first.jpg": {
+    "mtime": 1790835640.423362,
+    "ast_hash": "8b811f1b594bb83d84c05b398bf3b32e",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-eleganza.jpg": {
+    "mtime": 1790835640.4399593,
+    "ast_hash": "f2856690885902daa66cb12f7e18c0d3",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-girasoles.jpg": {
+    "mtime": 1790835640.4555173,
+    "ast_hash": "31228dc3b152e4c7eaf31b15813e8741",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-mobile-first.jpg": {
+    "mtime": 1790835640.4640305,
+    "ast_hash": "036ccdf08f8c87cde581e162b116abcd",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-navy-blue.jpg": {
+    "mtime": 1790835640.478523,
+    "ast_hash": "c17eff76f8660ff68fca283e46fde772",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-rosas.jpg": {
+    "mtime": 1790835640.4929154,
+    "ast_hash": "90cdc6c51daaa399d30ef02acddebf79",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-teatro.jpg": {
+    "mtime": 1790835640.5109267,
+    "ast_hash": "240189109c5cafc0253fa9c2923d3c1d",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/boda-villa-perle.jpg": {
+    "mtime": 1790835640.527759,
+    "ast_hash": "47ad89bb247183f8734ef00dab242e34",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/classic-vertical.jpg": {
+    "mtime": 1790835640.537814,
+    "ast_hash": "439330ea38e5d1c3870522b3260e9cb8",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/envelope-cards.jpg": {
+    "mtime": 1790835640.5485237,
+    "ast_hash": "2d84b09f1e59cdd21a0623b49e9f852c",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/maison-dore.jpg": {
+    "mtime": 1790835640.5729399,
+    "ast_hash": "b9c3608ebe1aae2b2e2e140aa768f294",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/modern-minimal.jpg": {
+    "mtime": 1790835640.580961,
+    "ast_hash": "62ebfb24f2ac287e6bf3d4f6453ded31",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/template-bautizo.jpg": {
+    "mtime": 1790835640.5861058,
+    "ast_hash": "c6ef95105651b2ba265add8c8954ce7a",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/template-boda.jpg": {
+    "mtime": 1790835640.5936377,
+    "ast_hash": "f01819fbacd1e67d487ac697b168fa4d",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/template-cumpleanos.jpg": {
+    "mtime": 1790835640.6015918,
+    "ast_hash": "e206c667285de6e12cc18ad2b2ccb0df",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/template-graduacion.jpg": {
+    "mtime": 1790835640.6076279,
+    "ast_hash": "141eac12c1c719642c14f422d915dbbf",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/template-otro.jpg": {
+    "mtime": 1790835640.615163,
+    "ast_hash": "fad3fcd29b43dfb144dc5cb7ab212762",
+    "semantic_hash": ""
+  },
+  "src/assets/template-previews/template-xv.jpg": {
+    "mtime": 1790835640.6230145,
+    "ast_hash": "9d2fea54d79bb49e845b2ca4b04444cc",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/bouquet-BbYUpj3K.png": {
+    "mtime": 1789494248.2842193,
+    "ast_hash": "0342f7960ced1c39429085d7af7ffdb0",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/candles-BlDM94c8.png": {
+    "mtime": 1789494248.2862153,
+    "ast_hash": "26d9c0d5fa962785f65458ba88202f02",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/column-left-Deau9Trj.png": {
+    "mtime": 1789494248.299024,
+    "ast_hash": "87b30ea91db7317108412df23e8eaaa0",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/column-right-Dq5wy1M7.png": {
+    "mtime": 1789494248.3060606,
+    "ast_hash": "e1932c03a6fd4000874a94d6197f5191",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/curtain-center-new-EwKr26ZU.png": {
+    "mtime": 1789494248.3144555,
+    "ast_hash": "786e53f2d4f4086d8a99aeed1ebbf9a2",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/curtain-left-new-C9yBPbWK.png": {
+    "mtime": 1789494248.3189807,
+    "ast_hash": "9668170c12707b44e4103d71acdcff00",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/curtain-right-new-Dusl3IYi.png": {
+    "mtime": 1789494248.3239784,
+    "ast_hash": "f60063ed0d6687d2f2a680735ebdaac5",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/cypress-trees-Bn8J7j_a.png": {
+    "mtime": 1789494248.3310623,
+    "ast_hash": "4919be1883255bc5dc8a9939ab9c9cbd",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/envelope-poster-CthGb2ks.jpg": {
+    "mtime": 1789494248.3395934,
+    "ast_hash": "0287480658a7caaedc4ca429ab1e7bfc",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/floral-divider-DJovYoL0.png": {
+    "mtime": 1789494248.3471332,
+    "ast_hash": "afbab8556bec6cf2368fe9148e011f9e",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/flower-stand-BmJQHDXB.png": {
+    "mtime": 1789494248.3481345,
+    "ast_hash": "65303b90f7b09598065dd6ec6fb0f2d0",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/flower-vase-B9_turUq.png": {
+    "mtime": 1789494248.3542697,
+    "ast_hash": "7d1e84d50d3544d8146a717e3851c7c0",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/hotel-marriott-wV0E4Iky.png": {
+    "mtime": 1789494248.3662632,
+    "ast_hash": "2d92eac3ac5c33881c05d4071f11b291",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/hotel-novotel-CUyCHsIf.png": {
+    "mtime": 1789494248.3800967,
+    "ast_hash": "af5282cb6b627a7195e115158ea512bf",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/hotel-peninsula-Is4jSbdC.png": {
+    "mtime": 1789494248.389632,
+    "ast_hash": "92e59b59f988eada4662c88850e0178d",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/intro-poster-new-B2unBQtC.jpg": {
+    "mtime": 1789494248.3974712,
+    "ast_hash": "042adae3956d67308c45b811be9e7897",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/monogram-Dd4GSvtc.png": {
+    "mtime": 1789494248.476151,
+    "ast_hash": "95b4ee9836cad10ca7b43dffd59a9cee",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/ornate-frame-D9OWvdd0.png": {
+    "mtime": 1789494248.4781542,
+    "ast_hash": "cf9168b933eaaa4e1cd84f88fdde9628",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/peninsula-hotel-DfDFGUc8.png": {
+    "mtime": 1789494248.4892457,
+    "ast_hash": "2bff678d89b45f656b6ea17b1ff796d3",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/roses-bottom-right-C-Wj2fia.png": {
+    "mtime": 1789494248.4939206,
+    "ast_hash": "523ad31e8c0ebe162ee1e8540ec454d2",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/roses-top-left-D0RRxzlV.png": {
+    "mtime": 1789494248.497926,
+    "ast_hash": "675404fc3c2c145678daa0c8ccc8d1cd",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/social-logo.webp": {
+    "mtime": 1789494248.525882,
+    "ast_hash": "bd0e94233d00331b33ec26670c8d1d47",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/vase-left-DfaX_fU4.png": {
+    "mtime": 1789494248.5375028,
+    "ast_hash": "c4d9d824a99228337121cd9841852ebd",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/vase-right-BfgTPz8l.png": {
+    "mtime": 1789494248.541507,
+    "ast_hash": "3561141a565e5a8d522d93d9ac955d57",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/yacht-illustration-BxPtm2NZ.png": {
+    "mtime": 1789494248.5830832,
+    "ast_hash": "cde9047237c40d1a88654325519696bb",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/eleganza.mp4": {
+    "mtime": 1789515701.610607,
+    "ast_hash": "892b9856668157cab8c25516cc9b4eaa",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-eleganza/waltz-sentimental.mp3": {
+    "mtime": 1789515701.6562114,
+    "ast_hash": "6d2cce674f70ac869f6a5ab032de1f42",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-girasoles/all-of-me.mp3": {
+    "mtime": 1789515701.6766248,
+    "ast_hash": "9135b671fde88afe33bb070816a2c67a",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-navy-blue/perfect.mp3": {
+    "mtime": 1789515701.715977,
+    "ast_hash": "601d27aaf2ae037c3eda3818d2d26a9b",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/ballerina.mp3": {
+    "mtime": 1789515701.7372465,
+    "ast_hash": "9d79b154e7b31eb77389a2f9fe16fd6a",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/intro-video-mobile.mp4": {
+    "mtime": 1789515701.7673545,
+    "ast_hash": "b68e979e819a01bc25607a06410751f4",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-rosas/plantilla-floral-hero.mp4": {
+    "mtime": 1789515701.793943,
+    "ast_hash": "2abb298bda2c2e36b3b08488e2655b4b",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/curtain-video.mp4": {
+    "mtime": 1789515701.8264508,
+    "ast_hash": "9b81550f1b99bb5d09f1a809d466785b",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-teatro/intro-music.mp3": {
+    "mtime": 1789515701.8565505,
+    "ast_hash": "9d79b154e7b31eb77389a2f9fe16fd6a",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/autumn-wind.mp3": {
+    "mtime": 1789515701.9070632,
+    "ast_hash": "c608406c2d0d8358bb634fe640fde7fa",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/envelope-open-v3.mp4": {
+    "mtime": 1789515701.9435632,
+    "ast_hash": "b1443f4f5081fe1cec0168f51582ffa8",
+    "semantic_hash": ""
+  },
+  "src/assets/boda-villa-perle/lanterns.mp4": {
+    "mtime": 1789515701.9855168,
+    "ast_hash": "5c59adceeacfa07480af578386844d71",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/envelope-video-Dp_L7sB9.mp4": {
+    "mtime": 1789494248.3446174,
+    "ast_hash": "bbdfcab58212915633262422e58531a7",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/intro-video-new-NNPe0W7X.mp4": {
+    "mtime": 1789494248.476151,
+    "ast_hash": "4e4660d98b7f65a25fbdd9b85e0143be",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/rsvp-confirmation-DYbKwzwP.webm": {
+    "mtime": 1789494248.525882,
+    "ast_hash": "10c22078a6a6531ce982fb0c8cb37bec",
+    "semantic_hash": ""
+  },
+  "src/assets/templates/maison-dore/wedding-background-music-yxy0nS2O.mp3": {
+    "mtime": 1789494248.576086,
+    "ast_hash": "7faaecf6e2dca483f9ce00840ae86f4d",
     "semantic_hash": ""
   }
 }

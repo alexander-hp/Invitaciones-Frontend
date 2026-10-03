@@ -86,9 +86,17 @@
             <input class="nw-input" [(ngModel)]="location.websiteUrl" type="url" placeholder="https://lugar.com">
           </label>
 
-          <label class="nw-label nw-form-wide">Horarios
-            <textarea class="nw-input" [ngModel]="scheduleValue(i)" (ngModelChange)="setSchedule(i, $event)" rows="3" placeholder="Sábado: acceso desde 16:00&#10;Ceremonia: 18:00"></textarea>
-          </label>
+          <section class="nw-repeat-editor nw-form-wide">
+            <header><div><strong>Horarios</strong><small>Agrega una indicación por campo.</small></div><button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addSchedule(i)">+ Añadir horario</button></header>
+            <div *ngIf="location.schedule?.length; else noLocationSchedule" class="nw-repeat-list">
+              <div *ngFor="let schedule of location.schedule; let scheduleIndex = index; trackBy: trackByIndex" class="nw-repeat-row">
+                <span class="nw-repeat-number">{{ scheduleIndex + 1 }}</span>
+                <input class="nw-input" [ngModel]="schedule" (ngModelChange)="updateSchedule(i, scheduleIndex, $event)" placeholder="Ej. Ceremonia: 18:00">
+                <div class="nw-repeat-actions"><button type="button" (click)="moveSchedule(i, scheduleIndex, -1)" [disabled]="scheduleIndex === 0" title="Subir">↑</button><button type="button" (click)="moveSchedule(i, scheduleIndex, 1)" [disabled]="scheduleIndex === (location.schedule?.length || 0) - 1" title="Bajar">↓</button><button type="button" class="danger" (click)="removeSchedule(i, scheduleIndex)" title="Quitar horario">×</button></div>
+              </div>
+            </div>
+            <ng-template #noLocationSchedule><p class="nw-repeat-empty">Sin horarios. Agrega acceso, ceremonia, recepción u otra indicación.</p></ng-template>
+          </section>
 
           <label class="nw-label">Estacionamiento
             <input class="nw-input" [(ngModel)]="location.parking" placeholder="Valet parking y estacionamiento gratuito">

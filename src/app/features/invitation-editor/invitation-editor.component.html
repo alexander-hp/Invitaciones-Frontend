@@ -206,8 +206,12 @@
         <div class="form-grid" *ngIf="invitation.content.digitalEnvelope as envelope">
           <label>Banco<input name="envelopeBank" [(ngModel)]="envelope.bank"></label>
           <label>Titular<input name="envelopeHolder" [(ngModel)]="envelope.holder"></label>
-          <label>Cuenta<input name="envelopeAccount" [(ngModel)]="envelope.account"></label>
-          <label>CLABE<input name="envelopeClabe" [(ngModel)]="envelope.clabe"></label>
+          <label>Cuenta<input name="envelopeAccount" type="text" inputmode="numeric" pattern="[0-9]*"
+              maxlength="20" [ngModel]="envelope.account"
+              (ngModelChange)="envelope.account = sanitizeBankDigits($event, 20)"></label>
+          <label>CLABE<input name="envelopeClabe" type="text" inputmode="numeric" pattern="[0-9]*"
+              maxlength="18" [ngModel]="envelope.clabe"
+              (ngModelChange)="envelope.clabe = sanitizeBankDigits($event, 18)"></label>
           <div class="wide" style="display:flex; flex-direction:column; gap:6px;">
             <label>Foto / Imagen de Código QR (Banco / CoDi / SPEI)</label>
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">

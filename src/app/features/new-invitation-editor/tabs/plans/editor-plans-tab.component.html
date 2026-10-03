@@ -10,8 +10,58 @@
   </div>
 </div>
 
+<section id="designMethodChooser" class="inv-design-methods" [class.has-design]="hasSelectedDesign">
+  <header class="inv-design-methods-header">
+    <div>
+      <span class="inv-design-eyebrow">Diseño de la invitación</span>
+      <h2>{{ hasSelectedDesign ? 'Puedes cambiar el diseño cuando quieras' : '¿Cómo quieres crear tu invitación?' }}</h2>
+      <p>Los datos, invitados y secciones que ya capturaste se conservan. Cambiar de método solo actualiza la presentación.</p>
+    </div>
+    <span class="inv-design-status" [class.ready]="hasSelectedDesign">
+      {{ hasSelectedDesign ? 'Diseño seleccionado' : 'Elección pendiente' }}
+    </span>
+  </header>
+
+  <div class="inv-design-method-grid">
+    <button type="button" class="inv-design-method" (click)="focusTemplateCatalog()">
+      <span class="inv-design-method-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect>
+        </svg>
+      </span>
+      <span><strong>Usar una plantilla</strong><small>Elige un diseño listo y personaliza textos, colores y fotos.</small></span>
+      <span class="inv-design-method-action">Explorar plantillas</span>
+    </button>
+
+    <button type="button" class="inv-design-method" (click)="openVisualEditor.emit()">
+      <span class="inv-design-method-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+        </svg>
+      </span>
+      <span><strong>Diseñar visualmente</strong><small>Arrastra textos, imágenes, videos y funciones sobre el lienzo.</small></span>
+      <span class="inv-design-method-action">Abrir editor visual</span>
+    </button>
+
+    <button type="button" class="inv-design-method" (click)="openAiWizard.emit()">
+      <span class="inv-design-method-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 3-1.4 3.6L7 8l3.6 1.4L12 13l1.4-3.6L17 8l-3.6-1.4Z"></path>
+          <path d="m5 14-.8 2.2L2 17l2.2.8L5 20l.8-2.2L8 17l-2.2-.8Z"></path>
+          <path d="m19 13-1 2.5-2.5 1 2.5 1 1 2.5 1-2.5 2.5-1-2.5-1Z"></path>
+        </svg>
+      </span>
+      <span><strong>Crear con IA</strong><small>Describe el estilo y genera una propuesta editable para este evento.</small></span>
+      <span class="inv-design-method-action">Comenzar con IA</span>
+    </button>
+  </div>
+
+  <p class="inv-design-change-help"><strong>Para cambiar después:</strong> vuelve a “Plantillas y plan” desde la barra superior, revisa una vista previa y elige otro método.</p>
+</section>
+
 <!-- PLANTILLAS Y FORMATO DE DISEÑO -->
-<section class="inv-template-section">
+<section id="templateCatalog" class="inv-template-section">
   <div class="inv-template-heading">
     <div>
       <h2>Plantillas <span class="inv-template-count">{{ totalTemplatesCount }}</span></h2>
@@ -331,7 +381,7 @@
 
   <div class="nw-card-body" style="padding: 20px 16px; display: flex; justify-content: center; background: var(--nw-surface-2, #f5f1ea); border-radius: 0 0 12px 12px;">
     <!-- Render Iframe with active template URL -->
-    <div *ngIf="livePreviewUrl" [style.max-width]="previewViewport === 'mobile' ? '400px' : '100%'"
+    <div *ngIf="livePreviewUrl; else noDesignPreview" [style.max-width]="previewViewport === 'mobile' ? '400px' : '100%'"
       style="width: 100%; transition: all 0.3s ease; position: relative;">
       
       <!-- Container frame -->
@@ -349,6 +399,13 @@
           allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
       </div>
     </div>
+    <ng-template #noDesignPreview>
+      <div class="inv-preview-empty">
+        <strong>Primero elige cómo diseñar tu invitación</strong>
+        <p>La vista previa aparecerá aquí después de seleccionar una plantilla, guardar un diseño visual o crear uno con IA.</p>
+        <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="focusTemplateCatalog()">Ver opciones de diseño</button>
+      </div>
+    </ng-template>
   </div>
 </div>
 

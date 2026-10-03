@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
 import {
-  EventModel, GuestModel, DashboardMetrics, WhatsAppProvider,
+  EventModel, GuestModel, InvitationModel, DashboardMetrics, WhatsAppProvider,
   WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaType, GuestMessageType, GuestCommunicationStatus
 } from '../../../../core/models';
 import { generateGuestPassHtml } from '../../../new-public-invitation/guest-pass-template';
@@ -37,11 +37,13 @@ export interface ProgressModalState {
 export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() event?: EventModel;
   @Input() guests: GuestModel[] = [];
+  @Input() invitation?: InvitationModel;
   @Input() eventMetrics: Partial<DashboardMetrics> = {};
   @Output() messagesSent = new EventEmitter<void>();
   @Output() openGuests = new EventEmitter<void>();
 
   private progressInterval: any = null;
+  private whatsappStatusInterval: ReturnType<typeof setInterval> | null = null;
 
   whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
 
@@ -99,7 +101,9 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   readonly maxSpecialGuests = 30;
   deliveryModeWithImage = false;
   selectedSpecialGuestIds = new Set<string>();
+  private sentSpecialGuestIds = new Set<string>();
   specialGuestsSending = false;
+  resendingSpecialGuestId = '';
 
   selectedMessageType: GuestMessageType = 'invitation';
   messageTemplates: MessageTemplateOption[] = [
@@ -196,7 +200,9 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   ngOnInit(): void {
     const id = this.event?._id || this.event?.id;
     if (id) {
+      this.restoreDeliveryPreferences();
       this.loadCommunicationData();
+      this.whatsappStatusInterval = setInterval(() => this.refreshWhatsAppStatus(), 15000);
     }
     this.initSpecialGuests();
     this.updatePreviewMessage();
@@ -204,8 +210,9 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
 
   ngOnChanges(changes: SimpleChanges): void {
     const id = this.event?._id || this.event?.id;
-    if (changes['event'] && !changes['event'].firstChange && id) {
-      this.loadCommunicationData();
+    if (changes['event'] && id) {
+      this.restoreDeliveryPreferences();
+      if (!changes['event'].firstChange) this.loadCommunicationData();
     }
     if (changes['guests'] && this.guests.length) {
       if (!this.selectedSpecialGuestIds.size) {
@@ -217,15 +224,52 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     }
   }
 
+  private deliveryPreferenceKey(): string | undefined {
+    const id = this.event?._id || this.event?.id;
+    return id ? `communication_delivery_preferences_${id}` : undefined;
+  }
+
+  private restoreDeliveryPreferences(): void {
+    const key = this.deliveryPreferenceKey();
+    if (!key) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || '{}');
+      this.includePassInMessage = saved.includePassInMessage === true;
+      this.deliveryModeWithImage = saved.deliveryModeWithImage === true;
+    } catch {
+      this.includePassInMessage = false;
+      this.deliveryModeWithImage = false;
+    }
+  }
+
+  private saveDeliveryPreferences(): void {
+    const key = this.deliveryPreferenceKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify({
+      includePassInMessage: this.includePassInMessage,
+      deliveryModeWithImage: this.deliveryModeWithImage
+    }));
+  }
+
+  setDeliveryModeWithImage(enabled: boolean): void {
+    this.deliveryModeWithImage = enabled;
+    this.saveDeliveryPreferences();
+  }
+
+  setIncludePassInMessage(enabled: boolean): void {
+    this.includePassInMessage = enabled;
+    this.saveDeliveryPreferences();
+  }
+
   initSpecialGuests(): void {
     const vips = this.getGuestsByRole('vip');
     const family = this.getGuestsByRole('familia');
     const padrinos = this.getGuestsByRole('padrino');
     const initialList = [...vips, ...family, ...padrinos];
     for (const g of initialList) {
-      if (this.selectedSpecialGuestIds.size >= this.maxSpecialGuests) break;
+      if (this.selectedSpecialGuestIds.size >= this.maxSpecialGuests - this.specialPassesSentCount) break;
       const gId = this.getGuestId(g);
-      if (gId) this.selectedSpecialGuestIds.add(gId);
+      if (gId && g.phone && !this.wasSpecialPassSent(g)) this.selectedSpecialGuestIds.add(gId);
     }
   }
 
@@ -233,6 +277,28 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     const id = (this.event?._id || this.event?.id);
     if (!id) return;
 
+    this.refreshWhatsAppStatus();
+    this.refreshSpecialPassStatus();
+    this.apiService.listWhatsAppMedia(id).subscribe({
+      next: res => { this.whatsappMediaAssets = res.assets || []; },
+      error: () => { }
+    });
+  }
+
+  private refreshSpecialPassStatus(): void {
+    const id = this.event?._id || this.event?.id;
+    if (!id) return;
+    this.apiService.getWhatsAppPassStatus(id).subscribe({
+      next: res => {
+        if (id !== (this.event?._id || this.event?.id)) return;
+        this.sentSpecialGuestIds = new Set(res.sentGuestIds || []);
+        for (const guestId of this.sentSpecialGuestIds) this.selectedSpecialGuestIds.delete(guestId);
+      },
+      error: () => { this.guestError = 'No se pudo consultar el historial de pases con imagen. Revisa el estado antes de reenviar.'; }
+    });
+  }
+
+  refreshWhatsAppStatus(): void {
     this.apiService.getWhatsAppStatus().subscribe({
       next: res => {
         this.whatsappProvider = res.provider || 'disabled';
@@ -244,15 +310,34 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       },
       error: () => { }
     });
-
-    this.apiService.listWhatsAppMedia(id).subscribe({
-      next: res => { this.whatsappMediaAssets = res.assets || []; },
-      error: () => { }
-    });
   }
 
   get whatsappReady(): boolean {
     return this.whatsappEnabled && (this.whatsappProvider !== 'openwa' || this.openWaReady);
+  }
+
+  get passImageReady(): boolean {
+    return this.whatsappProvider === 'openwa' && this.whatsappReady;
+  }
+
+  get customMessageForSend(): string | undefined {
+    return this.isMessageEdited ? this.customMessageBody.trim() : undefined;
+  }
+
+  get customWhatsappSupported(): boolean {
+    return !this.isMessageEdited || this.whatsappProvider !== 'meta';
+  }
+
+  private canSendEditedMessage(channel: 'email' | 'whatsapp'): boolean {
+    if (this.isMessageEdited && !this.customMessageBody.trim()) {
+      this.guestError = 'Escribe el texto del mensaje o restablece la plantilla antes de enviar.';
+      return false;
+    }
+    if (channel === 'whatsapp' && !this.customWhatsappSupported) {
+      this.guestError = 'Meta solo permite plantillas aprobadas. Restablece el texto o usa OpenWA para enviar uno personalizado.';
+      return false;
+    }
+    return true;
   }
 
   scrollToSection(id: string): void {
@@ -388,7 +473,12 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   canSendRealWhatsapp(g: GuestModel): boolean {
-    return this.canWhatsappGuest(g) && this.whatsappReady;
+    return this.canWhatsappGuest(g) && this.whatsappReady && this.customWhatsappSupported
+      && (!this.shouldAttachPassToWhatsapp(g) || this.passImageReady);
+  }
+
+  shouldAttachPassToWhatsapp(g: GuestModel): boolean {
+    return this.includePassInMessage || (this.deliveryModeWithImage && (this.isSpecialGuestSelected(g) || this.wasSpecialPassSent(g)));
   }
 
   getCommunicationStatus(g: GuestModel): GuestCommunicationStatus {
@@ -428,9 +518,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   onMessageTypeChange(): void {
-    if (!this.isMessageEdited) {
-      this.updatePreviewMessage();
-    }
+    if (!this.isMessageEdited) this.updatePreviewMessage();
   }
 
   getBodyTemplateForType(type: GuestMessageType): string {
@@ -462,11 +550,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   refreshCustomPreview(): void {
-    const sample = this.sampleGuest;
-    const evId = this.event?._id || this.event?.id;
-    const link = `${window.location.origin}/new/i/${evId}?guestToken=${sample.invitationToken || 'TOKEN_INVITADO'}`;
-    const body = this.customMessageBody || this.getBodyTemplateForType(this.selectedMessageType);
-    this.customMessagePreview = `Hola ${sample.name},\n\n${body}\n${link}`;
+    this.customMessagePreview = this.buildMessage(this.sampleGuest, this.selectedMessageType);
   }
 
   resetMessagePreview(): void {
@@ -525,51 +609,24 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     return roleName.charAt(0).toUpperCase() + roleName.slice(1);
   }
 
-  // --- Bloqueo con Cookies y LocalStorage tras envío ---
-  specialPassesSentSession = false;
-
   get specialPassesAlreadySent(): boolean {
-    if (this.specialPassesSentSession) return true;
-    const id = this.event?._id || this.event?.id;
-    if (!id) return false;
-    
-    // 1. Checar LocalStorage
-    const localVal = localStorage.getItem(`special_passes_sent_${id}`);
-    if (localVal === 'true') return true;
-    const localCount = localStorage.getItem(`special_passes_sent_count_${id}`);
-    if (localCount && parseInt(localCount, 10) > 0) return true;
-
-    // 2. Checar Cookies
-    const cookieMatch = document.cookie.match(new RegExp(`(?:^|;\\s*)special_passes_sent_${id}=([^;]*)`));
-    if (cookieMatch && (cookieMatch[1] === 'true' || Number(cookieMatch[1]) > 0)) {
-      return true;
-    }
-    const cookieCountMatch = document.cookie.match(new RegExp(`(?:^|;\\s*)special_passes_sent_count_${id}=([^;]*)`));
-    if (cookieCountMatch && Number(cookieCountMatch[1]) > 0) {
-      return true;
-    }
-    return false;
+    return this.specialPassesSentCount >= this.maxSpecialGuests;
   }
 
   get specialPassesSentCount(): number {
-    const id = this.event?._id || this.event?.id;
-    if (!id) return 0;
-    const localVal = localStorage.getItem(`special_passes_sent_count_${id}`);
-    return localVal ? parseInt(localVal, 10) : 0;
+    return this.sentSpecialGuestIds.size;
   }
 
-  markSpecialPassesAsSent(count: number): void {
-    this.specialPassesSentSession = true;
-    const id = this.event?._id || this.event?.id;
-    if (!id) return;
-    const currentSent = this.specialPassesSentCount + count;
-    localStorage.setItem(`special_passes_sent_${id}`, 'true');
-    localStorage.setItem(`special_passes_sent_count_${id}`, String(currentSent));
-    
-    // Cookie persistente por 60 días
-    const expires = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toUTCString();
-    document.cookie = `special_passes_sent_${id}=true; expires=${expires}; path=/; SameSite=Lax`;
-    document.cookie = `special_passes_sent_count_${id}=${currentSent}; expires=${expires}; path=/; SameSite=Lax`;
+  wasSpecialPassSent(g: GuestModel): boolean {
+    return this.sentSpecialGuestIds.has(this.getGuestId(g));
+  }
+
+  markSpecialPassesAsSent(results: { guest: string; status: string }[]): void {
+    for (const result of results) {
+      if (result.status !== 'sent' || !result.guest) continue;
+      this.sentSpecialGuestIds.add(String(result.guest));
+      this.selectedSpecialGuestIds.delete(String(result.guest));
+    }
   }
 
   isSpecialGuestSelected(g: GuestModel): boolean {
@@ -578,13 +635,13 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   toggleSpecialGuest(g: GuestModel): void {
-    if (this.specialPassesAlreadySent) return;
+    if (this.specialPassesAlreadySent || this.wasSpecialPassSent(g) || !g.phone) return;
     const id = this.getGuestId(g);
     if (!id) return;
     if (this.selectedSpecialGuestIds.has(id)) {
       this.selectedSpecialGuestIds.delete(id);
     } else {
-      if (this.selectedSpecialGuestIds.size >= this.maxSpecialGuests) {
+      if (this.selectedSpecialGuestIds.size + this.specialPassesSentCount >= this.maxSpecialGuests) {
         this.guestError = `Límite alcanzado: Máximo ${this.maxSpecialGuests} invitados especiales pueden recibir imagen.`;
         return;
       }
@@ -593,14 +650,18 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   isRoleFullySelectedForSpecialGuests(roleKey: string): boolean {
-    const guestsInRole = this.getGuestsByRole(roleKey);
+    const guestsInRole = this.getGuestsByRole(roleKey).filter(g => g.phone && !this.wasSpecialPassSent(g));
     if (!guestsInRole.length) return false;
     return guestsInRole.every(g => this.selectedSpecialGuestIds.has(this.getGuestId(g)));
   }
 
+  hasUnsentSpecialGuests(roleKey: string): boolean {
+    return this.getGuestsByRole(roleKey).some(g => Boolean(g.phone) && !this.wasSpecialPassSent(g));
+  }
+
   toggleRoleForSpecialGuests(roleKey: string): void {
     if (this.specialPassesAlreadySent) return;
-    const guestsInRole = this.getGuestsByRole(roleKey);
+    const guestsInRole = this.getGuestsByRole(roleKey).filter(g => g.phone && !this.wasSpecialPassSent(g));
     if (!guestsInRole.length) return;
     const allSelected = this.isRoleFullySelectedForSpecialGuests(roleKey);
 
@@ -610,12 +671,12 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       }
     } else {
       for (const g of guestsInRole) {
-        if (this.selectedSpecialGuestIds.size >= this.maxSpecialGuests) {
+        if (this.selectedSpecialGuestIds.size + this.specialPassesSentCount >= this.maxSpecialGuests) {
           this.guestError = `Se agregaron invitados hasta alcanzar el límite de ${this.maxSpecialGuests}.`;
           break;
         }
         const id = this.getGuestId(g);
-        if (id) this.selectedSpecialGuestIds.add(id);
+        if (id && g.phone && !this.wasSpecialPassSent(g)) this.selectedSpecialGuestIds.add(id);
       }
     }
   }
@@ -630,6 +691,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
 
   ngOnDestroy(): void {
     this.clearProgressInterval();
+    if (this.whatsappStatusInterval) clearInterval(this.whatsappStatusInterval);
   }
 
   clearProgressInterval(): void {
@@ -746,16 +808,20 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   sendSpecialGuestsPasses(): void {
     const id = this.event?._id || this.event?.id;
     const count = this.selectedSpecialGuestCount;
-    if (!id || count === 0 || this.specialPassesAlreadySent) return;
+    if (!id || count === 0 || this.specialPassesAlreadySent || !this.canSendEditedMessage('whatsapp')) return;
+    if (!this.passImageReady) {
+      this.guestError = 'El envío de pases con imagen requiere OpenWA conectado y listo.';
+      return;
+    }
 
-    if (count > this.maxSpecialGuests) {
+    if (count + this.specialPassesSentCount > this.maxSpecialGuests) {
       this.guestError = `Solo puedes enviar pases a un máximo de ${this.maxSpecialGuests} invitados especiales.`;
       return;
     }
 
     this.confirmDialogService.confirm({
       title: 'Envío de Pases a Invitados Especiales',
-      message: `¿Deseas enviar la imagen de pase VIP a los ${count} invitados especiales seleccionados? Una vez completado el envío, el cupo de ${this.maxSpecialGuests} pases especiales para este evento quedará bloqueado.`,
+      message: `¿Deseas enviar la imagen de pase VIP a los ${count} invitados especiales seleccionados? Solo se descontarán los envíos exitosos del cupo de ${this.maxSpecialGuests}.`,
       confirmText: `Sí, enviar ${count} pases`,
       cancelText: 'Cancelar',
       type: 'info'
@@ -770,16 +836,19 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       this.apiService.sendBulkWhatsApp(id, {
         confirm: true,
         messageType: this.selectedMessageType,
+        messageBody: this.customMessageForSend,
         guestIds: guestIds,
         attachPass: true
       }).subscribe({
         next: (res: any) => {
           this.specialGuestsSending = false;
-          this.markSpecialPassesAsSent(count);
-          const sent = res.sent || count;
-          const failed = res.failed || 0;
-          this.finishProgressModal(sent, failed, `Se enviaron ${sent} pases VIP con imagen correctamente.`);
-          this.guestMessage = `Se enviaron exitosamente ${sent} pases con imagen a los invitados especiales.`;
+          const sent = res.sent ?? 0;
+          const failed = (res.failed ?? 0) + (res.skipped ?? 0) + Math.max(0, count - (res.requested ?? count));
+          this.markSpecialPassesAsSent(res.results || []);
+          this.finishProgressModal(sent, failed, sent ? `Se enviaron ${sent} pases VIP con imagen.${failed ? ` ${failed} no se enviaron; puedes reintentarlos.` : ''}` : 'No se envió ningún pase con imagen. Revisa los resultados y vuelve a intentarlo.');
+          this.guestMessage = sent ? `Se enviaron ${sent} pases con imagen.${failed ? ` ${failed} pendientes de reintento.` : ''}` : '';
+          this.guestError = sent ? '' : (res.results?.find((result: any) => result.error)?.error || 'No se envió ningún pase con imagen.');
+          if (sent > 0) this.messagesSent.emit();
         },
         error: (err: any) => {
           this.specialGuestsSending = false;
@@ -790,14 +859,54 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     });
   }
 
+  resendSpecialGuestPass(g: GuestModel): void {
+    const guestId = this.getGuestId(g);
+    if (!guestId || !g.phone || !this.wasSpecialPassSent(g) || this.resendingSpecialGuestId || !this.canSendEditedMessage('whatsapp')) return;
+    if (!this.passImageReady) {
+      this.guestError = 'El reenvío de pases con imagen requiere OpenWA conectado y listo.';
+      return;
+    }
+
+    this.confirmDialogService.confirm({
+      title: 'Reenviar pase con imagen',
+      message: `El pase de ${g.name} ya fue aceptado por OpenWA anteriormente. ¿Deseas enviarle otra copia con imagen?`,
+      confirmText: 'Sí, reenviar pase',
+      cancelText: 'Cancelar',
+      type: 'info'
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.resendingSpecialGuestId = guestId;
+      this.apiService.sendGuestWhatsApp(guestId, {
+        messageType: this.selectedMessageType,
+        messageBody: this.customMessageForSend,
+        attachPass: true
+      }).subscribe({
+        next: res => {
+          this.resendingSpecialGuestId = '';
+          if (res.status === 'sent') {
+            this.guestMessage = `Pase con imagen reenviado a ${g.name}.`;
+            this.guestError = '';
+            this.messagesSent.emit();
+          } else {
+            this.guestError = `No se confirmó el reenvío del pase a ${g.name}.`;
+          }
+        },
+        error: err => {
+          this.resendingSpecialGuestId = '';
+          this.guestError = err?.error?.message || `No se pudo reenviar el pase a ${g.name}.`;
+        }
+      });
+    });
+  }
+
   sendBulkEmail(): void {
     const id = (this.event?._id || this.event?.id);
     const recipients = this.activeEmailRecipients;
-    if (!id || !recipients.length) return;
+    if (!id || !recipients.length || !this.canSendEditedMessage('email')) return;
 
     this.confirmDialogService.confirm({
       title: 'Envío Masivo de Email',
-      message: `¿Enviar emails masivos a ${recipients.length} invitados activos con correo válido?`,
+      message: `¿Enviar emails a ${recipients.length} invitados con ${this.isMessageEdited ? 'el texto personalizado' : 'la plantilla seleccionada'}?`,
       confirmText: 'Sí, enviar emails',
       cancelText: 'Cancelar',
       type: 'info'
@@ -812,6 +921,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       this.apiService.sendBulkEmail(id, {
         confirm: true,
         messageType: this.selectedMessageType,
+        messageBody: this.customMessageForSend,
         guestIds: recipients.map(g => this.getGuestId(g)),
         attachPass: this.includePassInMessage
       }).subscribe({
@@ -835,11 +945,11 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   sendBulkWhatsapp(): void {
     const id = (this.event?._id || this.event?.id);
     const recipients = this.activeWhatsappRecipients;
-    if (!id || !recipients.length) return;
+    if (!id || !recipients.length || !this.canSendEditedMessage('whatsapp')) return;
 
     this.confirmDialogService.confirm({
       title: 'Envío Masivo de WhatsApp',
-      message: `¿Enviar mensajes de WhatsApp masivos a ${recipients.length} invitados activos con teléfono válido?`,
+      message: `¿Enviar mensajes de WhatsApp a ${recipients.length} invitados con ${this.isMessageEdited ? 'el texto personalizado' : 'la plantilla seleccionada'}?`,
       confirmText: 'Sí, enviar WhatsApp',
       cancelText: 'Cancelar',
       type: 'info'
@@ -854,6 +964,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       this.apiService.sendBulkWhatsApp(id, {
         confirm: true,
         messageType: this.selectedMessageType,
+        messageBody: this.customMessageForSend,
         guestIds: recipients.map(g => this.getGuestId(g)),
         attachPass: this.includePassInMessage
       }).subscribe({
@@ -876,10 +987,11 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
 
   sendRealEmail(g: GuestModel): void {
     const gId = this.getGuestId(g);
-    if (!gId) return;
+    if (!gId || !this.canSendEditedMessage('email')) return;
     this.emailSending = gId;
     this.apiService.sendGuestEmail(gId, {
       messageType: this.selectedMessageType,
+      messageBody: this.customMessageForSend,
       attachPass: this.includePassInMessage
     }).subscribe({
       next: () => {
@@ -898,17 +1010,29 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
 
   sendRealWhatsapp(g: GuestModel): void {
     const gId = this.getGuestId(g);
-    if (!gId) return;
+    if (!gId || !this.canSendEditedMessage('whatsapp')) return;
+    const attachPass = this.shouldAttachPassToWhatsapp(g);
+    if (attachPass && !this.passImageReady) {
+      this.guestError = 'Para adjuntar el pase PNG necesitas OpenWA conectado y listo. Puedes abrir WhatsApp manualmente para enviar solo el texto.';
+      return;
+    }
     this.whatsappSending = gId;
     this.apiService.sendGuestWhatsApp(gId, {
       messageType: this.selectedMessageType,
-      attachPass: this.includePassInMessage
+      messageBody: this.customMessageForSend,
+      attachPass
     }).subscribe({
-      next: () => {
+      next: res => {
         this.whatsappSending = '';
+        if (res.status !== 'sent') {
+          this.guestError = `OpenWA no confirmó el envío a ${g.name}.`;
+          return;
+        }
         g.communicationStatus = 'sent';
         g.lastMessageType = this.selectedMessageType;
-        this.guestMessage = `WhatsApp enviado a ${g.name}`;
+        if (attachPass) this.markSpecialPassesAsSent([{ guest: gId, status: 'sent' }]);
+        this.guestError = '';
+        this.guestMessage = `WhatsApp ${attachPass ? 'con pase PNG ' : ''}aceptado por el proveedor para ${g.name}.`;
         this.messagesSent.emit();
       },
       error: err => {
@@ -995,10 +1119,29 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   buildMessage(g: GuestModel, type: GuestMessageType): string {
-    const evId = this.event?._id || this.event?.id;
-    const link = `${window.location.origin}/new/i/${evId}?guestToken=${g.invitationToken || 'TOKEN'}`;
-    const body = this.isMessageEdited ? this.customMessageBody : this.getBodyTemplateForType(type);
-    return `Hola ${g.name},\n\n${body}\n${link}`;
+    const baseUrl = this.invitation?.slug
+      ? `${window.location.origin}/i/${this.invitation.slug}`
+      : (this.event?.mode === 'external_dashboard' && this.event.externalPortalSlug
+        ? `${window.location.origin}/e/${this.event.externalPortalSlug}`
+        : '');
+    const link = baseUrl && g.invitationToken ? `${baseUrl}?t=${encodeURIComponent(g.invitationToken)}` : baseUrl;
+    const links = this.event?.mode === 'external_dashboard'
+      ? [this.event.externalSiteUrl ? `Página del evento: ${this.event.externalSiteUrl}` : '', link ? `RSVP, pase y álbum: ${link}` : '']
+      : [link];
+    const body = this.isMessageEdited ? this.customMessageBody.trim() : this.getBodyTemplateForType(type);
+    return [`Hola ${g.name},`, body, ...links.filter(Boolean)].filter(Boolean).join('\n\n');
+  }
+
+  getEmailPreviewBody(type: GuestMessageType): string {
+    if (this.isMessageEdited) return this.customMessageBody.trim();
+    const title = this.event?.title || 'nuestro evento';
+    switch (type) {
+      case 'reminder': return `Te recordamos amablemente confirmar tu asistencia para ${title}. Tu respuesta es muy importante para la organización del evento.`;
+      case 'event_reminder': return `¡Falta muy poco para ${title}! Te compartimos la información para que estés listo(a).`;
+      case 'location_change': return `Te informamos que hay una actualización importante en la ubicación para ${title}. Revisa los detalles actualizados.`;
+      case 'thanks': return `¡Muchas gracias por confirmar tu asistencia a ${title}! Estamos muy emocionados de compartir este momento contigo.`;
+      default: return `Te enviamos tu invitación digital para ${title}. Nos dará muchísimo gusto contar con tu presencia en este día tan especial.`;
+    }
   }
 
   getMessageSubject(type: GuestMessageType): string {

@@ -36,6 +36,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Input() forcedDevice?: 'mobile' | 'tablet' | 'desktop';
   @Input() exportMode = false;
   @Input() sandboxResetKey = 0;
+  @Input() isPlayingMusic = false;
+  @Input() musicControlReady = true;
+  @Input() currentActiveSection = 'hero';
+  @Input() currentPlayingTrackUrl = '';
 
   @Output() verifyGuestAccess = new EventEmitter<{ email: string; phone: string }>();
   @Output() submitRsvp = new EventEmitter<any>();
@@ -48,6 +52,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @Output() removeActivityItem = new EventEmitter<{ kind: 'album' | 'song' | 'dedication'; id: string }>();
   @Output() updateActivityDedication = new EventEmitter<{ id: string; publicName?: string; message: string; visibility?: 'public' | 'hosts_only' }>();
   @Output() markActivityNotificationsRead = new EventEmitter<void>();
+  @Output() toggleMusic = new EventEmitter<void>();
+  @Output() toggleSectionMusic = new EventEmitter<string>();
 
   activityPanelOpen = false;
   quickRsvp = { response: 'confirmed' as RsvpResponse, companions: 0, companionNames: '', message: '' };
@@ -148,6 +154,23 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   get floatingAudioLayers(): VisualInvitationLayer[] {
     if (this.exportMode) return [];
     return this.sections.flatMap((section) => section.layers.filter((layer) => !layer.hidden && this.isFloatingAudio(layer)));
+  }
+
+  isBoundMusicControl(layer: VisualInvitationLayer): boolean {
+    return layer.type === 'audio' && (layer.binding === 'music.toggle' || String(layer.binding || '').startsWith('music.section.'));
+  }
+
+  boundMusicControlPlaying(layer: VisualInvitationLayer): boolean {
+    if (!this.isPlayingMusic) return false;
+    if (layer.binding === 'music.toggle') return true;
+    const sectionKey = String(layer.binding || '').replace('music.section.', '');
+    return Boolean(sectionKey && sectionKey === this.currentActiveSection);
+  }
+
+  handleBoundMusicControl(layer: VisualInvitationLayer): void {
+    const sectionKey = String(layer.binding || '').replace('music.section.', '');
+    if (layer.binding === 'music.toggle') this.toggleMusic.emit();
+    else if (sectionKey) this.toggleSectionMusic.emit(sectionKey);
   }
 
   get maxCompanions(): number {
@@ -1018,7 +1041,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     return layer.type === 'audio'
       && layer.style?.audioPresentation === 'button'
       && layer.style?.audioPosition === 'fixed'
-      && resolveVisualMediaSource(layer.url).provider === 'direct';
+      && ['direct', 'youtube', 'spotify'].includes(resolveVisualMediaSource(layer.url).provider);
   }
 
   private sharedStyleScale(): number {

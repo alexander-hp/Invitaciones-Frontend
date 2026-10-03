@@ -22,9 +22,51 @@
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
     <div class="nw-form-grid" style="gap:16px; align-items:start;" *ngIf="invitation.rsvpSettings as rsvpSettings">
-      <label class="nw-label">Fecha límite de respuesta
-        <input class="nw-input" type="datetime-local" [(ngModel)]="rsvpSettings.deadline">
-      </label>
+      <section class="deadline-panel nw-form-wide" [class.deadline-panel-error]="deadlineValidationMessage">
+        <div class="deadline-panel-header">
+          <div class="deadline-title-group">
+            <span class="deadline-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </span>
+            <div>
+              <strong>Fecha límite de respuesta</strong>
+              <span>{{ deadlineRangeLabel }}</span>
+            </div>
+          </div>
+          <button *ngIf="rsvpSettings.deadline" type="button" class="deadline-clear" (click)="clearDeadline()">Quitar fecha</button>
+        </div>
+
+        <div class="deadline-fields">
+          <label class="deadline-field">
+            <span>Fecha</span>
+            <input type="date" [ngModel]="deadlineDate" (ngModelChange)="onDeadlineDateChange($event)"
+              [min]="deadlineMinDate" [max]="deadlineMaxDate" [disabled]="!hasAvailableDeadlineRange">
+          </label>
+          <label class="deadline-field">
+            <span>Hora de cierre</span>
+            <input type="time" [ngModel]="deadlineTime" (ngModelChange)="onDeadlineTimeChange($event)"
+              [min]="deadlineMinTime" [max]="deadlineMaxTime" [disabled]="!deadlineDate || !hasAvailableDeadlineRange">
+          </label>
+          <div class="deadline-summary" [class.has-value]="selectedDeadlineLabel">
+            <span>{{ selectedDeadlineLabel ? 'Las respuestas cierran' : 'Selecciona fecha y hora' }}</span>
+            <strong>{{ selectedDeadlineLabel || 'Antes de que comience el evento' }}</strong>
+          </div>
+        </div>
+
+        <div class="deadline-quick-actions" *ngIf="hasAvailableDeadlineRange">
+          <span>Sugerencias rápidas</span>
+          <button type="button" (click)="setDeadlineDaysBeforeEvent(7)" [disabled]="isQuickDeadlineDisabled(7)">7 días antes</button>
+          <button type="button" (click)="setDeadlineDaysBeforeEvent(14)" [disabled]="isQuickDeadlineDisabled(14)">14 días antes</button>
+          <button type="button" (click)="setDeadlineDaysBeforeEvent(30)" [disabled]="isQuickDeadlineDisabled(30)">30 días antes</button>
+        </div>
+
+        <p class="deadline-error" *ngIf="deadlineValidationMessage">{{ deadlineValidationMessage }}</p>
+      </section>
       <label class="nw-label">Días antes para recordatorio
         <input class="nw-input" type="number" min="0" max="60" [(ngModel)]="rsvpSettings.reminderDaysBeforeDeadline">
       </label>
@@ -196,10 +238,15 @@
         </div>
 
         <!-- Quick Presets -->
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
-          <span style="font-size:12px; color:var(--nw-text-3); font-weight:600;">Sugeridas:</span>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('song')"
-            style="display:inline-flex; align-items:center; gap:6px;">
+        <div class="question-presets">
+          <div class="question-presets-heading">
+            <span>Sugeridas</span>
+            <small>Selecciona las que quieras incluir. Vuelve a pulsar para quitarlas.</small>
+          </div>
+          <div class="question-presets-list">
+          <button class="question-preset" [class.is-selected]="isQuestionPresetSelected('song')"
+            [attr.aria-pressed]="isQuestionPresetSelected('song')" type="button"
+            (click)="addQuestionPreset.emit('song')">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 18V5l12-2v13"></path>
@@ -207,17 +254,21 @@
               <circle cx="18" cy="16" r="3"></circle>
             </svg>
             <span>Canción preferida</span>
+            <span *ngIf="isQuestionPresetSelected('song')" class="question-preset-check" aria-hidden="true">✓</span>
           </button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('diet')"
-            style="display:inline-flex; align-items:center; gap:6px;">
+          <button class="question-preset" [class.is-selected]="isQuestionPresetSelected('diet')"
+            [attr.aria-pressed]="isQuestionPresetSelected('diet')" type="button"
+            (click)="addQuestionPreset.emit('diet')">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
             </svg>
             <span>Restricciones alimenticias</span>
+            <span *ngIf="isQuestionPresetSelected('diet')" class="question-preset-check" aria-hidden="true">✓</span>
           </button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('menu')"
-            style="display:inline-flex; align-items:center; gap:6px;">
+          <button class="question-preset" [class.is-selected]="isQuestionPresetSelected('menu')"
+            [attr.aria-pressed]="isQuestionPresetSelected('menu')" type="button"
+            (click)="addQuestionPreset.emit('menu')">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
@@ -227,9 +278,11 @@
               <line x1="14" y1="1" x2="14" y2="4"></line>
             </svg>
             <span>Selección de menú</span>
+            <span *ngIf="isQuestionPresetSelected('menu')" class="question-preset-check" aria-hidden="true">✓</span>
           </button>
-          <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addQuestionPreset.emit('transport')"
-            style="display:inline-flex; align-items:center; gap:6px;">
+          <button class="question-preset" [class.is-selected]="isQuestionPresetSelected('transport')"
+            [attr.aria-pressed]="isQuestionPresetSelected('transport')" type="button"
+            (click)="addQuestionPreset.emit('transport')">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2"></rect>
@@ -239,7 +292,9 @@
               <circle cx="16.5" cy="14.5" r="1.5"></circle>
             </svg>
             <span>Transporte</span>
+            <span *ngIf="isQuestionPresetSelected('transport')" class="question-preset-check" aria-hidden="true">✓</span>
           </button>
+          </div>
         </div>
 
         <p *ngIf="!customQuestionsList.length" style="font-size:13px; color:var(--nw-text-3); margin-bottom:12px;">
@@ -309,16 +364,6 @@
                 <p *ngIf="!q.options?.length" style="margin:6px 0 0; font-size:12px; color:var(--nw-text-3);">
                   Sin opciones aún. Haz clic en <strong>Agregar opción</strong> para definir las respuestas elegibles.
                 </p>
-
-                <!-- Vista rápida / fallback de texto -->
-                <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--nw-border);">
-                  <label class="nw-label" style="font-size:11.5px; color:var(--nw-text-3);">
-                    Vista rápida en texto plano (separadas por punto y coma ;)
-                    <input class="nw-input" [(ngModel)]="q.optionsText"
-                      (ngModelChange)="q.options = parseOptionsText(q.optionsText); syncQuestions.emit()"
-                      placeholder="Pollo; Carne; Vegetariano; Menú infantil" style="font-size:12px; height:32px;">
-                  </label>
-                </div>
               </div>
             </div>
             <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeCustomQuestion.emit(i)"

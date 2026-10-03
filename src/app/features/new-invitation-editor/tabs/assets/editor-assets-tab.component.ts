@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
-import { InvitationModel, AssetFolder, MusicCueSettings, MusicPlaybackSettings } from '../../../../core/models';
+import { InvitationModel, AssetFolder, MusicCueSettings, MusicPlaybackSettings, PlaceSearchResult } from '../../../../core/models';
 
 @Component({
   selector: 'app-editor-assets-tab',
@@ -10,6 +10,9 @@ export class EditorAssetsTabComponent implements OnChanges {
   @Input() activeTab = 'all';
   @Input() assetUploading = false;
   @Input() musicError = false;
+  @Input() lodgingSearchResults: Record<number, PlaceSearchResult[]> = {};
+  @Input() lodgingSearchLoading: Record<number, boolean> = {};
+  @Input() lodgingExtractLoading: Record<number, boolean> = {};
   @Input() sectionMusicOptions: Array<{ key: string; label: string }> = [
     { key: 'story', label: '📖 Nuestra Historia' },
     { key: 'locations', label: '📍 Ubicaciones & Cómo Llegar' },
@@ -34,6 +37,9 @@ export class EditorAssetsTabComponent implements OnChanges {
   @Output() musicPlaybackError = new EventEmitter<void>();
   @Output() addLodgingItem = new EventEmitter<void>();
   @Output() removeLodgingItem = new EventEmitter<number>();
+  @Output() searchLodging = new EventEmitter<{ index: number; query: string }>();
+  @Output() selectLodgingResult = new EventEmitter<{ index: number; result: PlaceSearchResult }>();
+  @Output() extractLodgingMapInfo = new EventEmitter<number>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
 
   ngOnChanges(): void {
@@ -97,14 +103,53 @@ export class EditorAssetsTabComponent implements OnChanges {
     return settings[key] !== false;
   }
 
-  lodgingServices(index: number): string {
-    return (this.invitation.content.lodging?.[index]?.services || []).join(', ');
-  }
-
-  setLodgingServices(index: number, value: string): void {
+  addLodgingService(index: number): void {
     const item = this.invitation.content.lodging?.[index];
     if (!item) return;
-    item.services = [...new Set(value.split(/[;,\n]/).map((service) => service.trim()).filter(Boolean))];
+    item.services = [...(item.services || []), ''];
+  }
+
+  updateLodgingService(index: number, serviceIndex: number, value: string): void {
+    const item = this.invitation.content.lodging?.[index];
+    if (!item) return;
+    item.services = [...(item.services || [])];
+    item.services[serviceIndex] = value;
+  }
+
+  removeLodgingService(index: number, serviceIndex: number): void {
+    const item = this.invitation.content.lodging?.[index];
+    if (!item?.services) return;
+    item.services.splice(serviceIndex, 1);
+  }
+
+  addLodgingSchedule(index: number): void {
+    const item = this.invitation.content.lodging?.[index];
+    if (!item) return;
+    item.schedule = [...(item.schedule || []), ''];
+  }
+
+  updateLodgingSchedule(index: number, scheduleIndex: number, value: string): void {
+    const item = this.invitation.content.lodging?.[index];
+    if (!item) return;
+    item.schedule = [...(item.schedule || [])];
+    item.schedule[scheduleIndex] = value;
+  }
+
+  removeLodgingSchedule(index: number, scheduleIndex: number): void {
+    const item = this.invitation.content.lodging?.[index];
+    if (!item?.schedule) return;
+    item.schedule.splice(scheduleIndex, 1);
+  }
+
+  moveListItem(values: string[] | undefined, index: number, direction: number): void {
+    if (!values) return;
+    const target = index + direction;
+    if (target < 0 || target >= values.length) return;
+    [values[index], values[target]] = [values[target], values[index]];
+  }
+
+  trackByIndex(index: number): number {
+    return index;
   }
 
   moveLodgingItem(index: number, direction: number): void {
@@ -153,6 +198,17 @@ export class EditorAssetsTabComponent implements OnChanges {
 
   isYouTubeUrl(url?: string): boolean {
     return Boolean(this.getYouTubeVideoId(url));
+  }
+
+  isSpotifyUrl(url?: string): boolean {
+    if (!url) return false;
+    return /^(spotify:|https?:\/\/(?:open\.)?spotify\.com\/)/i.test(url.trim());
+  }
+
+  musicProviderLabel(url?: string): string {
+    if (this.isYouTubeUrl(url)) return 'YouTube';
+    if (this.isSpotifyUrl(url)) return 'Spotify';
+    return 'Archivo de audio';
   }
 
   getYouTubeVideoId(url?: string): string | null {

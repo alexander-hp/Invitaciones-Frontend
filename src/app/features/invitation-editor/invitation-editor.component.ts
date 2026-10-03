@@ -9,6 +9,10 @@ export class InvitationEditorComponent implements OnInit {
   private readonly audioTypes = new Set(['audio/mpeg', 'audio/mp3', 'audio/wav']);
   private readonly maxImageSize = 5 * 1024 * 1024;
   private readonly maxAudioSize = 10 * 1024 * 1024;
+
+  sanitizeBankDigits(value: unknown, maxLength: number): string {
+    return String(value ?? '').replace(/\D/g, '').slice(0, maxLength);
+  }
   invitation?: InvitationModel;
   event?: EventModel;
   templates: TemplateModel[] = [];

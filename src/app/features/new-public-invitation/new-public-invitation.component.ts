@@ -31,12 +31,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   isPlayingMusic = false;
   currentActiveSection = 'hero';
   currentPlayingTrackUrl = '';
+  spotifyPlayerVisible = false;
   private audioRef?: HTMLAudioElement;
   private ytPlayer?: any;
   private isYtApiLoaded = false;
   private isYtReady = false;
   private pendingYtVideoId?: string;
   private firstInteractionHandler?: (event: Event) => void;
+  private suppressNextMusicClick = false;
+  private suppressNextMusicClickTimer?: ReturnType<typeof setTimeout>;
   private observer?: IntersectionObserver;
   private timerInterval?: any;
   private editedTextsApplied = false;
@@ -160,6 +163,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.iframeBridgeListener) {
       window.removeEventListener('message', this.iframeBridgeListener);
     }
+    if (this.suppressNextMusicClickTimer) clearTimeout(this.suppressNextMusicClickTimer);
     this.removeFirstInteractionPlayback();
   }
 
@@ -229,6 +233,21 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   private fetchPublishedInvitation(slug: string, token?: string): void {
+    const previewRequested = this.route.snapshot.queryParamMap.get('preview') === 'true';
+    const ownerToken = localStorage.getItem('invitaciones_token');
+    if (previewRequested && ownerToken) {
+      this.api.getInvitationPreview(slug).subscribe({
+        next: ({ invitation }) => {
+          this.accessRequired = false;
+          this.applyInvitation(invitation, slug);
+        },
+        error: (error) => {
+          this.loading = false;
+          this.error = error?.error?.message || 'No se pudo cargar la vista previa del borrador';
+        }
+      });
+      return;
+    }
     this.api.getPublicInvitation(slug, token).subscribe({
       next: ({ invitation }) => { this.accessRequired = false; this.applyInvitation(invitation, slug); },
       error: (error) => {
@@ -446,6 +465,18 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return Boolean(typeof secMusic === 'object' && Object.values(secMusic).some(Boolean));
   }
 
+  showVisualMusicFallback(): boolean {
+    if (!this.isVisualBuilderTemplate() || !this.hasMusicTrack()) return false;
+    const sections = this.invitation?.content?.visualDesign?.sections || [];
+    return !sections.some((section) => section.layers?.some((layer) => !layer.hidden && layer.type === 'audio' && layer.binding === 'music.toggle'));
+  }
+
+  isMusicControlReady(): boolean {
+    const targetUrl = this.getAudioUrlForSection(this.currentActiveSection) || this.invitation?.content?.musicUrl || '';
+    const youtubeId = this.extractYouTubeVideoId(targetUrl);
+    return !youtubeId || this.isYtReady;
+  }
+
   private getMusicSettings(): MusicPlaybackSettings {
     return {
       playbackMode: 'first_interaction', sectionChangeMode: 'automatic', loop: true,
@@ -467,9 +498,17 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     };
   }
 
+  private shouldAutoplayMusic(): boolean {
+    if (!this.hasMusicTrack()) return false;
+    const mode = this.getMusicSettings().playbackMode;
+    if (mode === 'manual') return false;
+    if (mode === 'after_access' && this.requiresGuestValidation && !this.verifiedGuest) return false;
+    return true;
+  }
+
   private setupFirstInteractionPlayback(): void {
     this.removeFirstInteractionPlayback();
-    if (typeof document === 'undefined' || this.getMusicSettings().playbackMode !== 'first_interaction' || !this.hasMusicTrack()) return;
+    if (typeof document === 'undefined' || !this.shouldAutoplayMusic()) return;
     if (this.requiresGuestValidation && !this.verifiedGuest) return;
     this.firstInteractionHandler = (event: Event) => {
       const target = event.target as HTMLElement | null;
@@ -519,6 +558,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return Boolean(this.extractYouTubeVideoId(url));
   }
 
+  isSpotifyUrl(url?: string): boolean {
+    if (!url) return false;
+    return /^(spotify:|https?:\/\/(?:open\.)?spotify\.com\/)/i.test(url.trim());
+  }
+
   private hasAnyYouTubeTrack(): boolean {
     if (this.extractYouTubeVideoId(this.invitation?.content?.musicUrl)) return true;
     const secMusic = this.invitation?.content?.sectionMusic;
@@ -560,9 +604,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (!container) return;
 
     try {
+      const initialVideoId = this.extractYouTubeVideoId(this.currentPlayingTrackUrl) || undefined;
       this.ytPlayer = new (window as any).YT.Player('nw-pub-yt-player', {
         height: '1',
         width: '1',
+        videoId: initialVideoId,
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -578,6 +624,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
               const vid = this.pendingYtVideoId;
               this.pendingYtVideoId = undefined;
               this.playYouTubeVideo(vid, true);
+            } else if (initialVideoId && this.shouldAutoplayMusic()) {
+              this.playYouTubeVideo(initialVideoId, true, this.currentActiveSection);
             }
           },
           onStateChange: (event: any) => {
@@ -620,7 +668,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.ytPlayer.loadVideoById({ videoId, startSeconds: cue.startSeconds || 0, endSeconds: cue.endSeconds });
       if (forcePlay || this.isPlayingMusic) {
         this.ytPlayer.playVideo();
-        this.isPlayingMusic = true;
       }
     } catch (err) {
       console.warn('Error playing YouTube video:', err);
@@ -664,22 +711,29 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const initialUrl = this.getAudioUrlForSection('hero') || this.invitation?.content.musicUrl;
     if (!initialUrl) return;
 
-    if (this.hasAnyYouTubeTrack()) {
-      this.initYouTubeApi();
-    }
+    this.currentPlayingTrackUrl = initialUrl;
+
+    if (this.hasAnyYouTubeTrack()) this.initYouTubeApi();
 
     const ytId = this.extractYouTubeVideoId(initialUrl);
-    if (ytId) {
-      this.currentPlayingTrackUrl = initialUrl;
+    if (ytId) return;
+
+    if (this.isSpotifyUrl(initialUrl)) {
       return;
     }
 
-    this.currentPlayingTrackUrl = initialUrl;
     this.audioRef = new Audio(initialUrl);
     this.configureHtmlAudio('hero', true);
     this.audioRef.onerror = () => {
       this.isPlayingMusic = false;
     };
+    if (this.shouldAutoplayMusic()) {
+      this.audioRef.play().then(() => {
+        this.isPlayingMusic = true;
+      }).catch(() => {
+        this.isPlayingMusic = false;
+      });
+    }
   }
 
   private setupSectionObserver(): void {
@@ -716,12 +770,24 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
     const ytId = this.extractYouTubeVideoId(url);
     if (ytId) {
+      this.spotifyPlayerVisible = false;
       if (this.audioRef) {
         this.audioRef.pause();
       }
       this.playYouTubeVideo(ytId, forcePlay, sectionKey);
       return;
     }
+
+
+    if (this.isSpotifyUrl(url)) {
+      if (this.audioRef) this.audioRef.pause();
+      if (this.ytPlayer && this.isYtReady && typeof this.ytPlayer.pauseVideo === 'function') this.ytPlayer.pauseVideo();
+      this.spotifyPlayerVisible = forcePlay || this.spotifyPlayerVisible;
+      this.isPlayingMusic = this.spotifyPlayerVisible;
+      return;
+    }
+
+    this.spotifyPlayerVisible = false;
 
     if (this.ytPlayer && this.isYtReady && typeof this.ytPlayer.pauseVideo === 'function') {
       this.ytPlayer.pauseVideo();
@@ -791,8 +857,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         this.isPlayingMusic = false;
       } else {
         this.ytPlayer.playVideo();
-        this.isPlayingMusic = true;
       }
+      return;
+    }
+
+    if (this.isSpotifyUrl(targetUrl)) {
+      this.spotifyPlayerVisible = !this.spotifyPlayerVisible;
+      this.isPlayingMusic = this.spotifyPlayerVisible;
       return;
     }
 
@@ -813,6 +884,29 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         this.isPlayingMusic = false;
       });
     }
+  }
+
+  activateMusicOnPointerDown(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    this.suppressNextMusicClick = true;
+    if (this.suppressNextMusicClickTimer) clearTimeout(this.suppressNextMusicClickTimer);
+    this.suppressNextMusicClickTimer = setTimeout(() => {
+      this.suppressNextMusicClick = false;
+      this.suppressNextMusicClickTimer = undefined;
+    }, 750);
+    this.toggleMusic();
+  }
+
+  activateMusicOnClick(event: MouseEvent): void {
+    if (event.detail > 0 && this.suppressNextMusicClick) {
+      this.suppressNextMusicClick = false;
+      if (this.suppressNextMusicClickTimer) {
+        clearTimeout(this.suppressNextMusicClickTimer);
+        this.suppressNextMusicClickTimer = undefined;
+      }
+      return;
+    }
+    this.toggleMusic();
   }
 
   submit(): void {
@@ -1209,7 +1303,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       eventDateFormatted: this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
       locationAddress: this.invitation.content.locations?.[0]?.address || this.invitation.content.locations?.[0]?.name,
       dressCode: this.invitation.content.dressCode,
-      brandLogoUrl: this.invitation.content.brandLogoUrl,
+      brandLogoUrl: this.invitation.content.passLogoUrl || this.invitation.content.brandLogoUrl,
       coverImageUrl: this.invitation.content.coverImageUrl,
       primaryColor: this.invitation.content.palette?.primary,
       accentColor: this.invitation.content.palette?.accent

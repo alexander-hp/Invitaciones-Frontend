@@ -16,7 +16,8 @@
 
   <aside class="nw-sidebar" [class.open]="sidebarOpen" app-new-sidebar></aside>
 
-  <main class="nw-main">
+  <main class="nw-main" (input)="scheduleAutoSave()" (change)="scheduleAutoSave()"
+    (click)="onEditorInteraction($event)">
     <!-- Floating Toast Notifications (Top Right, non-blocking) -->
     <div class="nw-toast-container" *ngIf="loading || error || message || assetMessage">
       <div *ngIf="loading" class="nw-toast info">
@@ -72,6 +73,12 @@
             </span>
           </div>
           <div class="inv-editor-save-actions">
+            <span class="inv-editor-autosave" [class.is-saving]="autoSaveStatus === 'saving'"
+              [class.is-saved]="autoSaveStatus === 'saved'" [class.is-error]="autoSaveStatus === 'error' || autoSaveStatus === 'paused'"
+              aria-live="polite" [title]="autoSaveStatusText">
+              <span class="inv-editor-autosave-dot"></span>
+              {{ autoSaveStatusText }}
+            </span>
             <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="save()" [disabled]="saving">
               {{ saving ? 'Guardando...' : 'Guardar cambios' }}
             </button>
@@ -79,15 +86,17 @@
               (click)="publish()" [disabled]="publishing">
               {{ publishing ? 'Publicando...' : 'Publicar' }}
             </button>
-            <a class="nw-btn nw-btn-ghost nw-btn-sm" [routerLink]="['/i', invitation.slug]" target="_blank"
-              *ngIf="invitation.slug">Ver pública ↗</a>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="viewPublic()"
+              *ngIf="invitation.slug">
+              {{ invitation.status === 'published' ? 'Ver pública ↗' : 'Vista previa ↗' }}
+            </button>
           </div>
         </div>
         <nav class="inv-editor-navigation" aria-label="Herramientas de la invitación">
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab !== 'plans' && activeTab !== 'all'"
             (click)="setActiveTab('content', true)">Editar por pasos</button>
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'plans'"
-            (click)="setActiveTab('plans', true)">Plantillas y plan</button>
+            (click)="setActiveTab('plans', true)">Plantillas y plan <span *ngIf="!hasSelectedDesign">Pendiente</span></button>
           <button type="button" class="inv-editor-nav-button" [attr.aria-expanded]="!sectionsNavigatorCollapsed"
             [class.active]="!sectionsNavigatorCollapsed" (click)="toggleSectionsNavigator()">Secciones <span>{{ activeConfigurableSections.length + 2 }}</span></button>
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'all'"
@@ -576,11 +585,13 @@
 
       <!-- 1. Contenido Principal (Mandatorio) -->
       <app-editor-content-tab *ngIf="activeTab === 'content' || activeTab === 'all'" [invitation]="invitation"
-        [loadedGuests]="loadedGuests" [canUseWhiteLabel]="canUseWhiteLabel()" [allowedRolesText]="allowedRolesText"
+        [loadedGuests]="loadedGuests" [canUseWhiteLabel]="canUseWhiteLabel()" [assetUploading]="assetUploading" [allowedRolesText]="allowedRolesText"
         [allowedGroupsText]="allowedGroupsText" [allowedEmailsText]="allowedEmailsText"
         [allowedPhonesText]="allowedPhonesText" (allowedRolesTextChange)="allowedRolesText = $event"
         (allowedGroupsTextChange)="allowedGroupsText = $event" (allowedEmailsTextChange)="allowedEmailsText = $event"
-        (allowedPhonesTextChange)="allowedPhonesText = $event" (applyTextVariant)="applyTextVariant($event)">
+        (allowedPhonesTextChange)="allowedPhonesText = $event" (applyTextVariant)="applyTextVariant($event)"
+        (uploadBrandAsset)="uploadBrandAsset($event.target, $event.files)"
+        (removeBrandAsset)="removeBrandAsset($event)">
       </app-editor-content-tab>
 
       <!-- 2. Estilo y Paleta (Mandatorio) -->
@@ -927,20 +938,27 @@
       <app-editor-assets-tab
         *ngIf="activeTab === 'assets' || activeTab === 'gallery' || activeTab === 'lodging' || activeTab === 'backgroundMusic' || activeTab === 'all'"
         [invitation]="invitation" [activeTab]="activeTab" [assetUploading]="assetUploading" [musicError]="musicError"
+        [lodgingSearchResults]="lodgingSearchResults" [lodgingSearchLoading]="lodgingSearchLoading"
+        [lodgingExtractLoading]="lodgingExtractLoading"
         (selectAsset)="selectAsset($event, $event.folder)" (removeCover)="removeCover()"
         (removeMusic)="removeMusic()" (removeGalleryImage)="removeGalleryImage($event)"
         (uploadSectionMusic)="uploadSectionMusic($event.event, $event.sectionKey)"
         (removeSectionMusic)="removeSectionMusic($event)" (musicPlaybackError)="onMusicPlaybackError()"
         (addLodgingItem)="addLodgingItem()" (removeLodgingItem)="removeLodgingItem($event)"
+        (searchLodging)="onLodgingNameInput($event.index, $event.query)"
+        (selectLodgingResult)="selectLodgingSearchResult($event.index, $event.result)"
+        (extractLodgingMapInfo)="extractLodgingMapInfo($event)"
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
       </app-editor-assets-tab>
 
       <!-- Plantillas / Plan del evento -->
       <app-editor-plans-tab *ngIf="activeTab === 'plans' || activeTab === 'all'" [invitation]="invitation"
         [event]="event" [templates]="templates" [plans]="plans" [currentPlan]="currentPlan"
-        [checkoutLoading]="checkoutLoading" [payments]="payments" (selectTemplateKey)="onSelectTemplateKey($event)"
+        [checkoutLoading]="checkoutLoading" [payments]="payments" [hasSelectedDesign]="hasSelectedDesign"
+        (selectTemplateKey)="onSelectTemplateKey($event)"
         (applyTemplate)="applyTemplate($event)" (saveChanges)="save()" (checkout)="checkout($event)"
-        (openAiWizard)="openAiWizard()" (openTextEditor)="openTextEditor($event)">
+        (openAiWizard)="openAiWizard()" (openVisualEditor)="openVisualEditor()"
+        (openTextEditor)="openTextEditor($event)">
       </app-editor-plans-tab>
 
       <!-- Barra Inferior de Navegación entre Secciones -->

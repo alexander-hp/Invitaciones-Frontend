@@ -6,6 +6,9 @@ import { InvitationModel } from '../../../../core/models';
   templateUrl: './editor-gifts-tab.component.html'
 })
 export class EditorGiftsTabComponent {
+  readonly bankAccountMaxLength = 20;
+  readonly clabeLength = 18;
+
   @Input() invitation!: InvitationModel;
   @Input() activeTab = 'all';
   @Input() assetUploading = false;
@@ -18,6 +21,20 @@ export class EditorGiftsTabComponent {
   onQrFilesSelected(files: File[]): void {
     if (!files || !files.length) return;
     this.uploadEnvelopeQr.emit(files[0]);
+  }
+
+  updateEnvelopeDigits(envelope: any, field: 'account' | 'clabe', value: unknown, maxLength: number): void {
+    if (!envelope) return;
+    envelope[field] = String(value ?? '').replace(/\D/g, '').slice(0, maxLength);
+  }
+
+  envelopeValueLength(value: unknown): number {
+    return String(value ?? '').length;
+  }
+
+  isClabeIncomplete(value: unknown): boolean {
+    const clabe = String(value ?? '');
+    return clabe.length > 0 && clabe.length !== this.clabeLength;
   }
 
   showStoreGuide = false;

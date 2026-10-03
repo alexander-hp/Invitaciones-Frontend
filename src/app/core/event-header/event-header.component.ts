@@ -42,6 +42,10 @@ export class EventHeaderComponent {
 
   formatDate(dateStr?: string): string {
     if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+    const dateOnly = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const date = dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12)
+      : new Date(dateStr);
+    return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 }

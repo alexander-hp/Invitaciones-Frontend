@@ -90,8 +90,8 @@
 
       <div class="bdf-hero-frame">
         <div class="bdf-hero-inner" data-aos="fade-up" data-aos-duration="1000">
-          <div *ngIf="invitation.content.brandLogoUrl" class="bdf-monogram-box">
-            <img [src]="invitation.content.brandLogoUrl" alt="Monograma de los novios" class="bdf-monogram-img">
+          <div *ngIf="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" class="bdf-monogram-box">
+            <img [src]="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" alt="Monograma de los novios" class="bdf-monogram-img">
           </div>
 
           <span class="bdf-hero-cursive">{{ invitation.content.subheadline || 'Nuestra Boda' }}</span>

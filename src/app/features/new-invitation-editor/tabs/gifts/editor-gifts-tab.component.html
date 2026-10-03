@@ -238,10 +238,32 @@
             placeholder="BBVA / Banamex / Nu"></label>
         <label class="nw-label">Titular <input class="nw-input" [(ngModel)]="envelope.holder"
             placeholder="Nombre del titular"></label>
-        <label class="nw-label">Cuenta <input class="nw-input" [(ngModel)]="envelope.account"
-            placeholder="Número de cuenta"></label>
-        <label class="nw-label">CLABE <input class="nw-input" [(ngModel)]="envelope.clabe"
-            placeholder="18 dígitos CLABE"></label>
+        <label class="nw-label">
+          <span style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            Cuenta
+            <small style="font-weight:600; color:#8a796d;">{{ envelopeValueLength(envelope.account) }}/{{ bankAccountMaxLength }}</small>
+          </span>
+          <input class="nw-input" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*"
+            [attr.maxlength]="bankAccountMaxLength" [ngModel]="envelope.account"
+            (ngModelChange)="updateEnvelopeDigits(envelope, 'account', $event, bankAccountMaxLength)"
+            placeholder="Número de cuenta">
+          <small style="font-weight:500; color:#8a796d;">Solo números, máximo {{ bankAccountMaxLength }} dígitos.</small>
+        </label>
+        <label class="nw-label">
+          <span style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            CLABE
+            <small [style.color]="isClabeIncomplete(envelope.clabe) ? '#b42318' : '#8a796d'"
+              style="font-weight:600;">{{ envelopeValueLength(envelope.clabe) }}/{{ clabeLength }}</small>
+          </span>
+          <input class="nw-input" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*"
+            [attr.maxlength]="clabeLength" [ngModel]="envelope.clabe"
+            (ngModelChange)="updateEnvelopeDigits(envelope, 'clabe', $event, clabeLength)"
+            [style.border-color]="isClabeIncomplete(envelope.clabe) ? '#d92d20' : null"
+            placeholder="18 dígitos CLABE">
+          <small [style.color]="isClabeIncomplete(envelope.clabe) ? '#b42318' : '#8a796d'" style="font-weight:500;">
+            {{ isClabeIncomplete(envelope.clabe) ? 'La CLABE debe tener exactamente 18 dígitos.' : 'Solo números; debe contener exactamente 18 dígitos.' }}
+          </small>
+        </label>
 
         <div class="nw-form-wide" style="display:flex; flex-direction:column; gap:8px;">
           <label class="nw-label">Foto / Imagen de Código QR (Banco, CoDi, SPEI, PayPal)</label>

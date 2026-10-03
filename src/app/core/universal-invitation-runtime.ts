@@ -117,7 +117,7 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
 
   function enableFirstInteractionPlayback() {
     var settings = CONFIG.musicSettings || {};
-    if (!CONFIG.musicUrl || settings.playbackMode !== 'first_interaction') return;
+    if (!CONFIG.musicUrl || settings.playbackMode === 'manual') return;
     var start = function(event) {
       if (event.target && event.target.closest && event.target.closest('.nw-pub-audio-btn, .audio-btn, .music-btn, [data-action="toggle-music"]')) return;
       document.removeEventListener('pointerdown', start, true);
@@ -126,6 +126,21 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
     };
     document.addEventListener('pointerdown', start, true);
     document.addEventListener('keydown', start, true);
+  }
+
+  function attemptAutomaticPlayback() {
+    var settings = CONFIG.musicSettings || {};
+    if (!CONFIG.musicUrl || settings.playbackMode === 'manual') return;
+    if (window.parent && window.parent !== window) return;
+    if (!audioElement) initAudio();
+    if (!audioElement) return;
+    audioElement.play().then(function() {
+      isPlayingMusic = true;
+      updateMusicButtons();
+    }).catch(function() {
+      isPlayingMusic = false;
+      updateMusicButtons();
+    });
   }
 
   function toggleMusic() {
@@ -505,11 +520,13 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
     document.addEventListener('DOMContentLoaded', function() {
       initCountdown();
       attachListeners();
+      attemptAutomaticPlayback();
       enableFirstInteractionPlayback();
     });
   } else {
     initCountdown();
     attachListeners();
+    attemptAutomaticPlayback();
     enableFirstInteractionPlayback();
   }
   window.addEventListener('load', attachListeners);

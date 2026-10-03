@@ -135,8 +135,8 @@
 
         <div class="bcl-card-scroll-wrap">
           <div class="bcl-card-content center-content">
-            <div *ngIf="invitation.content.brandLogoUrl" class="bcl-monogram-ring">
-              <img [src]="invitation.content.brandLogoUrl" alt="Monograma" class="bcl-monogram-img">
+            <div *ngIf="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" class="bcl-monogram-ring">
+              <img [src]="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" alt="Monograma" class="bcl-monogram-img">
             </div>
 
             <span class="bcl-cursive-hero">{{ invitation.content.subheadline || '¡Nos Casamos!' }}</span>

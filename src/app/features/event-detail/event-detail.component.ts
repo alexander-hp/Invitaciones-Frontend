@@ -400,6 +400,13 @@ export class EventDetailComponent implements OnInit {
     this.importDuplicateDetails = [];
   }
 
+  sanitizeEnvelopeControl(controlName: 'envelopeAccount' | 'envelopeClabe', event: Event, maxLength: number): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(/\D/g, '').slice(0, maxLength);
+    input.value = value;
+    this.externalForm.get(controlName)?.setValue(value, { emitEvent: false });
+  }
+
   importGuests(): void {
     const eventId = this.getEventId();
     if (!eventId || !this.selectedImportFile) return;
@@ -1361,7 +1368,7 @@ export class EventDetailComponent implements OnInit {
       eventDateFormatted: this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
       locationAddress: primaryInvitation?.content?.locations?.[0]?.address || this.event?.venue?.address || this.event?.venue?.name,
       dressCode: primaryInvitation?.content?.dressCode,
-      brandLogoUrl: primaryInvitation?.content?.brandLogoUrl,
+      brandLogoUrl: primaryInvitation?.content?.passLogoUrl || primaryInvitation?.content?.brandLogoUrl,
       coverImageUrl: primaryInvitation?.content?.coverImageUrl,
       primaryColor: primaryInvitation?.content?.palette?.primary,
       accentColor: primaryInvitation?.content?.palette?.accent

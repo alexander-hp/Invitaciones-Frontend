@@ -1,5 +1,5 @@
 <div class="ve-loading" *ngIf="loading">Preparando editor visual...</div>
-<div class="visual-editor" *ngIf="!loading && invitation && design" [class.mobile-has-selection]="mobilePanel === 'canvas' && selectedLayerCount" (focusin)="beginPropertyEdit($event)">
+<div class="visual-editor" *ngIf="!loading && invitation && design" [class.mobile-has-selection]="mobilePanel === 'canvas' && selectedLayerCount" [class.has-draft-notice]="invitation.status === 'published'" (focusin)="beginPropertyEdit($event)">
   <header class="ve-topbar">
     <button class="icon-button" type="button" title="Volver" (click)="back()">←</button>
     <div class="ve-title"><strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong><span>Editor visual · {{ autosaving ? 'Guardando...' : (hasUnsavedChanges ? 'Cambios pendientes' : autosaveState) }}</span></div>
@@ -20,14 +20,16 @@
         <button type="button" (click)="moreMenu.open=false;openResponsivePreview()"><lucide-icon name="panels-top-left" [strokeWidth]="1.8"></lucide-icon> Comparar dispositivos</button>
         <button type="button" (click)="moreMenu.open=false;openExportDialog()"><lucide-icon name="download" [strokeWidth]="1.8"></lucide-icon> Descargar</button>
         <button type="button" (click)="moreMenu.open=false;openFunctionalTest()"><lucide-icon name="flask-conical" [strokeWidth]="1.8"></lucide-icon> Probar funciones</button>
-        <button class="mobile-preview-command" type="button" (click)="moreMenu.open=false;openPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> {{ invitation?.status === 'published' ? 'Vista pública' : 'Vista previa' }}</button>
+        <button class="mobile-preview-command" type="button" (click)="moreMenu.open=false;openDraftPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Abrir borrador en pestaña</button>
+        <button *ngIf="invitation?.status === 'published'" type="button" (click)="moreMenu.open=false;openPublicVersion()"><lucide-icon name="external-link" [strokeWidth]="1.8"></lucide-icon> Ver versión pública</button>
       </div>
     </details>
-    <button class="secondary preview-command" type="button" (click)="openPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>{{ invitation?.status === 'published' ? 'Vista pública' : 'Vista previa' }}</button>
+    <button class="secondary preview-command" type="button" (click)="openDraftPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>Vista previa borrador ↗</button>
     <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
-    <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : 'Publicar' }}</button>
+    <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : (invitation?.status === 'published' ? 'Publicar cambios' : 'Publicar') }}</button>
   </header>
 
+  <div class="ve-notice draft-info" *ngIf="invitation?.status === 'published'"><strong>Editando borrador</strong><span>Guardar y autoguardar no cambian la invitación pública. Usa “Publicar cambios” cuando esté lista.</span><button type="button" (click)="openPublicVersion()">Ver pública</button></div>
   <div class="ve-notice error" *ngIf="error">{{ error }}</div><div class="ve-notice success" *ngIf="message">{{ message }}</div>
   <section class="ve-tutorial" *ngIf="tutorialStep >= 0" role="region" aria-labelledby="tutorialTitle" aria-live="polite">
     <header><span>Guía del editor</span><button type="button" title="Cerrar guía" aria-label="Cerrar guía" (click)="closeTutorial()">×</button></header>
@@ -299,7 +301,7 @@
   </div>
   <div class="onboarding-backdrop" *ngIf="showOnboarding">
     <section class="onboarding-dialog">
-      <div><span>Nuevo diseño</span><h1>¿Cómo quieres empezar?</h1></div>
+      <div><span>{{ invitation?.status === 'published' ? 'Nuevo borrador visual' : 'Nuevo diseño' }}</span><h1>¿Cómo quieres empezar?</h1><p *ngIf="invitation?.status === 'published'">Tu plantilla pública seguirá visible mientras preparas esta nueva versión.</p></div>
       <div class="onboarding-options">
         <button *ngFor="let preset of builtInPresets" type="button" (click)="chooseStartingDesign(preset.key)">
           <span class="preset-preview"><i [style.background]="preset.colors[0]"></i><i [style.background]="preset.colors[1]"></i></span>
@@ -363,6 +365,12 @@
         <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'button'})" (dragend)="endPaletteDrag()" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
         <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'shape'})" (dragend)="endPaletteDrag()" (click)="addLayer('shape')"><b>●</b><span>Forma</span></button>
       </div>
+      <button *ngIf="invitation?.content?.musicUrl" type="button" class="event-music-shortcut" (click)="addMainMusicControl()">
+        <b>♪</b><span><strong>Agregar música principal</strong><small>Usa la canción, fragmento y volumen configurados en la invitación.</small></span>
+      </button>
+      <button *ngIf="selectedSectionMusic as sectionMusic" type="button" class="event-music-shortcut" (click)="addSelectedSectionMusicControl()">
+        <b>♫</b><span><strong>Agregar audio de esta sección</strong><small>{{ sectionMusic.label }} · conserva su fragmento, volumen y repetición.</small></span>
+      </button>
       <h2>Iconos</h2>
       <div class="icon-catalog-tools">
         <input [(ngModel)]="iconSearch" type="search" placeholder="Buscar iconos...">
@@ -709,7 +717,7 @@
                 <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)" (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''" [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder frame-empty" [ngStyle]="imageMaskStyle(layer)"><span [ngStyle]="framePreviewStyle(layer.style?.imageMask || 'none')">Arrastra una foto</span></div>
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
+                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [startSeconds]="layer.style?.audioStartSeconds || 0" [endSeconds]="layer.style?.audioEndSeconds" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
                 <div *ngIf="(layer.type === 'video' || layer.type === 'audio') && !isMediaPreviewActive(layer)" class="media-editor-interaction" role="button" aria-label="Seleccionar y mover elemento multimedia" title="Arrastra para mover. Usa Probar reproducción para controlar el contenido."></div>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
                   <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
@@ -851,18 +859,22 @@
           <button *ngIf="!isDynamicOutputLayer(layer)" type="button" class="content-add" (click)="makeFieldTransparent(layer)">Dejar campo transparente</button>
         </ng-container>
         <aside *ngIf="isDynamicImageOutputLayer(layer)" class="plugin-binding-note"><strong>Imagen vinculada</strong><code>{{ layer.binding }}</code><span>Cambia el archivo desde la configuración de contenido. Aquí puedes ajustar tamaño, recorte, posición y estilo.</span></aside>
-        <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">{{ layer.type === 'image' ? 'URL del archivo' : 'URL del archivo o proveedor' }}<input [(ngModel)]="layer.url" type="url" [placeholder]="layer.type === 'video' ? 'YouTube, Vimeo o archivo MP4/WebM' : (layer.type === 'audio' ? 'Spotify, YouTube o archivo MP3/WAV' : 'https://...')"></label>
+        <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">{{ layer.type === 'image' ? 'URL del archivo' : 'URL del archivo o proveedor' }}<input [ngModel]="layer.url" (ngModelChange)="onMediaUrlChange(layer, $event)" type="url" [placeholder]="layer.type === 'video' ? 'YouTube, Vimeo o archivo MP4/WebM' : (layer.type === 'audio' ? 'Spotify, YouTube o archivo MP3/WAV' : 'https://...')"></label>
         <aside *ngIf="(layer.type === 'video' || layer.type === 'audio') && layer.url" class="plugin-binding-note"><strong>{{ mediaProviderLabel(layer.url) }}</strong><span>{{ mediaProviderHelp(layer) }}</span></aside>
         <label *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">Subir archivo<input #layerUpload type="file" [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')" (change)="uploadImage(layerUpload, 'layer')"></label>
         <section *ngIf="layer.type === 'audio' && layer.style as audioStyle" class="audio-style-editor">
           <div class="inspector-heading"><h3>Reproductor de música</h3></div>
-          <p *ngIf="!canUseCustomAudio(layer)" class="audio-provider-warning">Este proveedor requiere un reproductor visible. Sube un archivo de audio para usar un botón discreto o flotante.</p>
+          <p *ngIf="!canUseCustomAudio(layer)" class="audio-provider-warning">Este proveedor requiere un reproductor visible dentro del lienzo.</p>
           <label>Presentación<select [ngModel]="canUseCustomAudio(layer) ? (audioStyle.audioPresentation || 'button') : 'native'" (ngModelChange)="audioStyle.audioPresentation=$event" [disabled]="!canUseCustomAudio(layer)"><option value="button">Botón personalizado</option><option value="native">Reproductor completo</option></select></label>
           <div class="audio-toggle-grid">
             <div class="ve-help-row"><label class="toggle"><input [(ngModel)]="audioStyle.audioAutoplay" type="checkbox"> Intentar reproducir al entrar</label><details class="ve-context-help"><summary title="Ayuda sobre reproducción automática" aria-label="Ayuda sobre reproducción automática"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Algunos navegadores impiden iniciar audio con sonido hasta que el invitado toque la página. El control de reproducir seguirá disponible. Los enlaces de YouTube y Spotify requieren un reproductor visible.</p></details></div>
             <label class="toggle"><input [(ngModel)]="audioStyle.audioLoop" type="checkbox"> Repetir</label>
           </div>
           <label>Volumen inicial<input [ngModel]="audioStyle.audioVolume ?? 0.8" (ngModelChange)="audioStyle.audioVolume=$event" type="range" min="0" max="1" step="0.05"><span>{{ ((audioStyle.audioVolume ?? 0.8) * 100) | number:'1.0-0' }}%</span></label>
+          <div *ngIf="mediaProviderLabel(layer.url) !== 'Spotify detectado'" class="two-columns">
+            <label>Iniciar en<input [ngModel]="audioStyle.audioStartSeconds ?? 0" (ngModelChange)="audioStyle.audioStartSeconds=$event" type="number" min="0" step="1"><span>segundos</span></label>
+            <label>Finalizar en<input [ngModel]="audioStyle.audioEndSeconds ?? ''" (ngModelChange)="audioStyle.audioEndSeconds=$event === '' ? undefined : $event" type="number" [min]="(audioStyle.audioStartSeconds || 0) + 1" step="1" placeholder="Hasta el final"><span>opcional</span></label>
+          </div>
           <ng-container *ngIf="canUseCustomAudio(layer) && (audioStyle.audioPresentation || 'button') === 'button'">
             <label class="toggle"><input [checked]="(audioStyle.audioPosition || 'fixed') === 'fixed'" (change)="audioStyle.audioPosition=$any($event.target).checked ? 'fixed' : 'inline'" type="checkbox"> Mantener visible al desplazarse</label>
             <label *ngIf="audioStyle.audioPosition !== 'inline'">Esquina<select [(ngModel)]="audioStyle.audioCorner"><option value="bottom-right">Abajo derecha</option><option value="bottom-left">Abajo izquierda</option><option value="top-right">Arriba derecha</option><option value="top-left">Arriba izquierda</option></select></label>
@@ -1213,8 +1225,12 @@
                 <div class="content-fields two-columns">
                   <label>Banco<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.bank" (focus)="beginContentEdit()" type="text"></label>
                   <label>Titular<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.holder" (focus)="beginContentEdit()" type="text"></label>
-                  <label>Cuenta<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.account" (focus)="beginContentEdit()" type="text"></label>
-                  <label>CLABE<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.clabe" (focus)="beginContentEdit()" type="text"></label>
+                  <label>Cuenta<input [ngModel]="currentInvitation.content.digitalEnvelope!.account"
+                      (ngModelChange)="currentInvitation.content.digitalEnvelope!.account = sanitizeBankDigits($event, 20)"
+                      (focus)="beginContentEdit()" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="20"></label>
+                  <label>CLABE<input [ngModel]="currentInvitation.content.digitalEnvelope!.clabe"
+                      (ngModelChange)="currentInvitation.content.digitalEnvelope!.clabe = sanitizeBankDigits($event, 18)"
+                      (focus)="beginContentEdit()" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="18"></label>
                   <label>Nota<textarea [(ngModel)]="currentInvitation.content.digitalEnvelope!.note" (focus)="beginContentEdit()" rows="2"></textarea></label>
                   <label>QR o imagen del sobre<input [(ngModel)]="currentInvitation.content.digitalEnvelope!.qrImageUrl" (focus)="beginContentEdit()" type="url" placeholder="https://..."></label>
                   <label>Subir QR<input #envelopeQrUpload type="file" accept="image/*" (change)="uploadContentImage(envelopeQrUpload, 'envelopeQr')"></label>

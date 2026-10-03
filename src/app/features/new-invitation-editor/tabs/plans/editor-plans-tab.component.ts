@@ -16,12 +16,14 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentPlan?: PlanDefinition;
   @Input() checkoutLoading = '';
   @Input() payments: any[] = [];
+  @Input() hasSelectedDesign = false;
 
   @Output() applyTemplate = new EventEmitter<TemplateModel>();
   @Output() checkout = new EventEmitter<PaymentPackage>();
   @Output() selectTemplateKey = new EventEmitter<string>();
   @Output() saveChanges = new EventEmitter<void>();
   @Output() openAiWizard = new EventEmitter<void>();
+  @Output() openVisualEditor = new EventEmitter<void>();
   @Output() openTextEditor = new EventEmitter<{ templateKey: string; submission?: CustomTemplateSubmission; clean?: boolean } | string>();
 
   // Custom submissions / Edited routine cards
@@ -376,6 +378,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isBuiltinActive(tplId: string): boolean {
+    if (!this.hasSelectedDesign) return false;
     const activeSubId = this.activeCustomSubmissionId;
     if (activeSubId) {
       const activeSub = this.customSubmissions.find(s => (s.id || s._id) === activeSubId);
@@ -413,6 +416,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     delete this.invitation.template;
 
     this.invitation.content.template = key;
+    this.hasSelectedDesign = true;
 
     const invId = this.invitation._id || this.invitation.id;
     const slug = this.invitation.slug;
@@ -461,6 +465,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
 
     const targetTpl = sub.sourceTemplateKey || 'custom-html';
     this.invitation.content.template = targetTpl;
+    this.hasSelectedDesign = true;
 
     const slug = this.invitation.slug;
     const invId = this.invitation._id || this.invitation.id;
@@ -498,6 +503,11 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   showPanel(panel: 'preview' | 'plan'): void {
+    if (panel === 'preview' && !this.hasSelectedDesign) {
+      document.getElementById('designMethodChooser')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      this.showError('Primero elige una forma de diseñar tu invitación.');
+      return;
+    }
     if (panel === 'plan') this.planCollapsed = false;
     setTimeout(() => {
       document.getElementById(panel === 'plan' ? 'invitationPlan' : 'templateLivePreview')
@@ -506,6 +516,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   get activeTemplateDisplayName(): string {
+    if (!this.hasSelectedDesign) return 'Sin diseño seleccionado';
     const activeSubId = this.activeCustomSubmissionId;
     if (activeSubId) {
       const foundSub = this.customSubmissions.find(s => (s.id || s._id) === activeSubId);
@@ -519,7 +530,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   private lastPreviewUrlString = '';
 
   updateLivePreviewUrl(forceRefresh = false): void {
-    if (!this.invitation?.slug) {
+    if (!this.invitation?.slug || !this.hasSelectedDesign) {
       this.livePreviewUrl = null;
       this.lastPreviewUrlString = '';
       return;
@@ -532,7 +543,8 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       this.previewRefreshKey = Date.now();
     }
 
-    let rawUrl = `${window.location.origin}/new/i/${slug}?tpl=${encodeURIComponent(currentKey)}&preview=true`;
+    const invitationId = this.invitation._id || this.invitation.id || '';
+    let rawUrl = `${window.location.origin}/new/i/${slug}?tpl=${encodeURIComponent(currentKey)}&preview=true&previewId=${encodeURIComponent(invitationId)}`;
     if (activeSubId) {
       rawUrl += `&subId=${encodeURIComponent(activeSubId)}`;
     } else {
@@ -556,10 +568,14 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   openLivePreviewWindow(): void {
-    if (!this.invitation?.slug) return;
+    if (!this.invitation?.slug || !this.hasSelectedDesign) {
+      this.showPanel('preview');
+      return;
+    }
     const currentKey = this.currentTemplateKey;
     const activeSubId = this.activeCustomSubmissionId;
-    let url = `/new/i/${this.invitation.slug}?tpl=${encodeURIComponent(currentKey)}&preview=true`;
+    const invitationId = this.invitation._id || this.invitation.id || '';
+    let url = `/new/i/${this.invitation.slug}?tpl=${encodeURIComponent(currentKey)}&preview=true&previewId=${encodeURIComponent(invitationId)}`;
     if (activeSubId) {
       url += `&subId=${encodeURIComponent(activeSubId)}`;
     } else {
@@ -581,7 +597,8 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
 
   previewBuiltinTemplate(key: string): void {
     if (this.invitation?.slug) {
-      window.open(`/new/i/${this.invitation.slug}?tpl=${key}&preview=true&clean=1`, '_blank');
+      const invitationId = this.invitation._id || this.invitation.id || '';
+      window.open(`/new/i/${this.invitation.slug}?tpl=${key}&preview=true&previewId=${encodeURIComponent(invitationId)}&clean=1`, '_blank');
     }
   }
 
@@ -589,8 +606,16 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     if (this.invitation?.slug) {
       const subId = sub.id || sub._id;
       const tpl = sub.sourceTemplateKey || 'custom-html';
-      window.open(`/new/i/${this.invitation.slug}?tpl=${tpl}&preview=true&subId=${subId}`, '_blank');
+      const invitationId = this.invitation._id || this.invitation.id || '';
+      window.open(`/new/i/${this.invitation.slug}?tpl=${tpl}&preview=true&previewId=${encodeURIComponent(invitationId)}&subId=${subId}`, '_blank');
     }
+  }
+
+  focusTemplateCatalog(): void {
+    this.activeFilterTab = 'all';
+    setTimeout(() => {
+      document.getElementById('templateCatalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
   }
 
   editCleanBuiltin(key: string): void {

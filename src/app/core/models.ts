@@ -329,6 +329,11 @@ export interface InvitationLodgingItem {
   address?: string;
   phone?: string;
   mapUrl?: string;
+  wazeUrl?: string;
+  websiteUrl?: string;
+  schedule?: string[];
+  lat?: number;
+  lon?: number;
   agreementLabel?: string;
   discountCode?: string;
   discountDescription?: string;
@@ -403,6 +408,8 @@ export interface VisualInvitationLayerStyle {
   audioAutoplay?: boolean;
   audioLoop?: boolean;
   audioVolume?: number;
+  audioStartSeconds?: number;
+  audioEndSeconds?: number;
   audioSize?: number;
   audioOffset?: number;
 }
@@ -606,6 +613,8 @@ export interface InvitationContent {
   moderationSettings?: InvitationModerationSettings;
   sectionSettings?: SectionSettings;
   brandLogoUrl?: string;
+  brandMonogramUrl?: string;
+  passLogoUrl?: string;
   hideBranding?: boolean;
   lodging?: InvitationLodgingItem[];
   storyTitle?: string;
@@ -617,6 +626,7 @@ export interface InvitationContent {
   privateAlbum?: string[];
   privateAlbumEnabled?: boolean;
   visualDesign?: VisualInvitationDesign;
+  visualDesignDraft?: VisualInvitationDesign;
   editedTexts?: Record<string, string>;
   sourceTemplateKey?: string;
   activeCustomTemplateId?: string;
@@ -728,6 +738,7 @@ export interface InvitationModel {
   rsvpSettings?: RsvpSettings;
   status: InvitationStatus;
   content: InvitationContent;
+  publishedContent?: InvitationContent;
   premiumLocked?: boolean;
   publishedAt?: string;
   createdAt?: string;

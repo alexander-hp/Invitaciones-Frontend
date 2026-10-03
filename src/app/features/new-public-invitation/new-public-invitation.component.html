@@ -1,6 +1,19 @@
 <!-- Hidden YouTube Iframe Audio Player -->
 <div id="nw-pub-yt-player" style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;"></div>
 
+<aside *ngIf="spotifyPlayerVisible && currentPlayingTrackUrl" class="nw-pub-spotify-player" aria-label="Reproductor de Spotify">
+  <button type="button" class="nw-pub-spotify-close" (click)="toggleMusic()" aria-label="Cerrar reproductor">×</button>
+  <app-visual-media-player type="audio" [url]="currentPlayingTrackUrl" label="Música del evento" presentation="native"></app-visual-media-player>
+</aside>
+
+<button *ngIf="showVisualMusicFallback()" type="button" class="nw-pub-audio-btn nw-pub-visual-music-fallback"
+  [class.is-playing]="isPlayingMusic" [disabled]="!isMusicControlReady()"
+  [attr.aria-label]="!isMusicControlReady() ? 'Preparando música' : (isPlayingMusic ? 'Pausar música' : 'Reproducir música')"
+  [title]="!isMusicControlReady() ? 'Preparando música' : (isPlayingMusic ? 'Pausar música' : 'Reproducir música')"
+  (pointerdown)="activateMusicOnPointerDown($event)" (click)="activateMusicOnClick($event)">
+  <span aria-hidden="true">{{ !isMusicControlReady() ? '...' : (isPlayingMusic ? '❚❚' : '▶') }}</span>
+</button>
+
 <!-- Feedback Toast Notification -->
 <div *ngIf="toastMessage" class="nw-pub-toast-notification" role="alert">
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toast-svg-icon">
@@ -82,6 +95,10 @@
     [albumMessage]="albumMessage"
     [dedicationMessage]="dedicationMessage"
     [songRequestMessage]="songRequestMessage"
+    [isPlayingMusic]="isPlayingMusic"
+    [musicControlReady]="isMusicControlReady()"
+    [currentActiveSection]="currentActiveSection"
+    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
     (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
     (submitRsvp)="submitVisualRsvp($event)"
     (uploadPhoto)="onFileSelectedDirect($event)"
@@ -92,6 +109,8 @@
     (removeActivityItem)="removeGuestActivityItem($event)"
     (updateActivityDedication)="updateGuestActivityDedication($event)"
     (markActivityNotificationsRead)="markGuestActivityNotificationsRead()"
+    (toggleMusic)="toggleMusic()"
+    (toggleSectionMusic)="toggleSectionMusic($event)"
     (openLightbox)="openLightbox($event)">
   </app-visual-invitation-renderer>
 

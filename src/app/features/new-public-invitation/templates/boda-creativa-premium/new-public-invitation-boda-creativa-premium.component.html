@@ -92,8 +92,8 @@
       <div class="bcp-hero-vignette"></div>
 
       <div class="bcp-hero-cathedral-arch" data-aos="zoom-in" data-aos-duration="1000">
-        <div *ngIf="invitation.content.brandLogoUrl" class="bcp-crest-box">
-          <img [src]="invitation.content.brandLogoUrl" alt="Monograma Real" class="bcp-crest-img">
+        <div *ngIf="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" class="bcp-crest-box">
+          <img [src]="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" alt="Monograma Real" class="bcp-crest-img">
         </div>
 
         <span class="bcp-cursive-accent">{{ invitation.content.subheadline || 'Una Celebración Eterna' }}</span>

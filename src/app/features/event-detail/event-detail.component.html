@@ -262,8 +262,10 @@
           </div>
           <label>Banco<input formControlName="envelopeBank"></label>
           <label>Titular<input formControlName="envelopeHolder"></label>
-          <label>Cuenta<input formControlName="envelopeAccount"></label>
-          <label>CLABE<input formControlName="envelopeClabe"></label>
+          <label>Cuenta<input formControlName="envelopeAccount" type="text" inputmode="numeric" pattern="[0-9]*"
+              maxlength="20" (input)="sanitizeEnvelopeControl('envelopeAccount', $event, 20)"></label>
+          <label>CLABE<input formControlName="envelopeClabe" type="text" inputmode="numeric" pattern="[0-9]*"
+              maxlength="18" (input)="sanitizeEnvelopeControl('envelopeClabe', $event, 18)"></label>
           <label class="wide">Nota<textarea formControlName="envelopeNote" rows="2"></textarea></label>
           <label class="wide">QR / imagen<input formControlName="envelopeQrImageUrl"
               placeholder="https://.../qr.png"></label>

@@ -452,3 +452,4 @@ th { color: #607080; font-size: 13px; }
   }
 }
 
+.event-music-shortcut{display:flex;width:100%;align-items:center;gap:10px;margin:10px 0 18px;padding:11px;border:1px solid #b8d3c5;background:#f2f8f4;color:#244c40;text-align:left;cursor:pointer}.event-music-shortcut>b{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:50%;background:#2f6b58;color:#fff;font-size:20px}.event-music-shortcut>span{display:grid;gap:2px}.event-music-shortcut strong{font-size:13px}.event-music-shortcut small{color:#55766c;font-size:10.5px;line-height:1.35}.event-music-shortcut:hover,.event-music-shortcut:focus-visible{border-color:#2f6b58;background:#e8f3ec}

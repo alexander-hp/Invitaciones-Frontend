@@ -139,10 +139,11 @@
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-bottom:16px; padding:12px; border:1px solid var(--nw-border); border-radius:8px; background:var(--nw-surface);">
       <label style="font-size:12px;">Cuándo iniciar
         <select class="nw-input" [(ngModel)]="musicSettings.playbackMode">
-          <option value="first_interaction">Al primer toque del invitado</option>
+          <option value="first_interaction">Automática al cargar (recomendada)</option>
           <option value="after_access">Después de validar su acceso</option>
           <option value="manual">Solo al pulsar reproducir</option>
         </select>
+        <small>Si el navegador bloquea el audio automático, iniciará con el primer toque del invitado.</small>
       </label>
       <label style="font-size:12px;">Cambio entre secciones
         <select class="nw-input" [(ngModel)]="musicSettings.sectionChangeMode">
@@ -190,7 +191,7 @@
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
             </svg>
-            <span>Pegar Link / YouTube</span>
+            <span>Pegar enlace</span>
           </button>
         </div>
       </div>
@@ -199,7 +200,7 @@
       <div *ngIf="activeUrlInputKey === 'global'"
         style="display:flex; gap:6px; align-items:center; margin-top:4px; padding:8px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:6px;">
         <input class="nw-input" [(ngModel)]="tempInputUrl"
-          placeholder="https://www.youtube.com/watch?v=... o https://.../cancion.mp3"
+          placeholder="YouTube, Spotify o enlace directo a MP3/WAV/M4A"
           style="font-size:12px; height:32px; flex:1;" (keydown.enter)="saveUrlInput()">
         <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="saveUrlInput()"
           style="font-size:11.5px; padding:4px 10px;">Guardar</button>
@@ -228,18 +229,23 @@
             [title]="getCleanSongName(invitation.content.musicUrl)">
             {{ getCleanSongName(invitation.content.musicUrl) }}
           </span>
+          <span class="nw-music-provider">{{ musicProviderLabel(invitation.content.musicUrl) }}</span>
         </div>
         <button class="nw-btn nw-btn-danger nw-btn-sm" type="button" (click)="removeMusic.emit()"
           style="padding:2px 6px; font-size:11px;" title="Quitar audio">✕</button>
       </div>
 
       <!-- Barra de reproducción gris estándar para MP3 -->
-      <audio *ngIf="invitation.content.musicUrl && !isYouTubeUrl(invitation.content.musicUrl)" controls
+      <audio *ngIf="invitation.content.musicUrl && !isYouTubeUrl(invitation.content.musicUrl) && !isSpotifyUrl(invitation.content.musicUrl)" controls
         [src]="invitation.content.musicUrl" (error)="musicPlaybackError.emit()"
         style="width:100%; height:32px; margin-top:2px;"></audio>
       <div *ngIf="invitation.content.musicUrl && isYouTubeUrl(invitation.content.musicUrl)"
         style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--nw-text-3); padding:4px 8px; background:var(--nw-surface); border-radius:4px;">
         <span>▶ Audio de YouTube listo. Sonará de fondo automáticamente en la invitación.</span>
+      </div>
+      <div *ngIf="invitation.content.musicUrl && isSpotifyUrl(invitation.content.musicUrl)" class="nw-music-provider-notice">
+        <strong>Spotify usa su reproductor oficial.</strong>
+        <span>El invitado iniciará la reproducción desde el control de Spotify; el navegador no permite ocultarlo ni garantizar autoplay.</span>
       </div>
 
       <div *ngIf="musicError"
@@ -289,7 +295,7 @@
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                 </svg>
-                <span>Link / YT</span>
+                <span>Enlace</span>
               </button>
             </div>
           </div>
@@ -297,7 +303,7 @@
           <!-- Input para pegar URL en sección -->
           <div *ngIf="activeUrlInputKey === sec.key"
             style="display:flex; gap:4px; align-items:center; padding:6px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:6px;">
-            <input class="nw-input" [(ngModel)]="tempInputUrl" placeholder="https://youtu.be/... o .mp3"
+            <input class="nw-input" [(ngModel)]="tempInputUrl" placeholder="YouTube, Spotify o MP3/WAV/M4A"
               style="font-size:11.5px; height:28px; flex:1;" (keydown.enter)="saveUrlInput()">
             <button class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="saveUrlInput()"
               style="font-size:11px; padding:2px 8px;">OK</button>
@@ -333,13 +339,17 @@
 
           <!-- Barra de reproducción gris estándar para MP3 -->
           <audio
-            *ngIf="invitation.content.sectionMusic?.[sec.key] && !isYouTubeUrl(invitation.content.sectionMusic?.[sec.key])"
+            *ngIf="invitation.content.sectionMusic?.[sec.key] && !isYouTubeUrl(invitation.content.sectionMusic?.[sec.key]) && !isSpotifyUrl(invitation.content.sectionMusic?.[sec.key])"
             controls [src]="invitation.content.sectionMusic?.[sec.key]"
             style="width:100%; height:32px; margin-top:2px;"></audio>
           <div
             *ngIf="invitation.content.sectionMusic?.[sec.key] && isYouTubeUrl(invitation.content.sectionMusic?.[sec.key])"
             style="font-size:11px; color:var(--nw-text-3); padding:3px 6px; background:var(--nw-surface); border-radius:4px;">
             <span>▶ Audio de YouTube asignado</span>
+          </div>
+          <div *ngIf="invitation.content.sectionMusic?.[sec.key] && isSpotifyUrl(invitation.content.sectionMusic?.[sec.key])"
+            class="nw-music-provider-notice compact">
+            <span>Spotify: el invitado reproducirá desde el control oficial visible.</span>
           </div>
           <div *ngIf="invitation.content.sectionMusic?.[sec.key]"
             style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; padding-top:4px; border-top:1px solid var(--nw-border);">
@@ -399,6 +409,13 @@
     </div>
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
+    <div class="nw-lodging-helper">
+      <div class="nw-lodging-helper-icon" aria-hidden="true">⌖</div>
+      <div>
+        <strong>Detecta el hospedaje y después completa el beneficio</strong>
+        <p>Busca el hotel por nombre o pega su enlace de Google Maps. Podemos completar nombre, dirección, teléfono, sitio, Waze y horarios; tú conservas el control para corregirlos y agregar convenio, tarifa y fecha límite.</p>
+      </div>
+    </div>
     <p *ngIf="!invitation.content.lodging?.length" style="font-size:14px; color:var(--nw-text-3);">
       Sin hoteles configurados. Agrega sugerencias de alojamiento para tus invitados de fuera.
     </p>
@@ -406,8 +423,31 @@
       <div *ngFor="let item of invitation.content.lodging; let i = index"
         style="padding:14px; background:var(--nw-surface-2); border-radius:var(--nw-radius-sm); border:1px solid var(--nw-border);">
         <div class="nw-form-grid" style="gap:10px;">
-          <label class="nw-label">Nombre del hotel / hospedaje
-            <input class="nw-input" [(ngModel)]="item.name" placeholder="Hotel Gran Plaza">
+          <label class="nw-label nw-form-wide nw-lodging-search">Nombre del hotel / Buscar hospedaje
+            <input class="nw-input" [(ngModel)]="item.name"
+              (input)="searchLodging.emit({ index: i, query: item.name || '' })"
+              placeholder="Ej. Hotel Fiesta Americana Puebla">
+            <span *ngIf="lodgingSearchLoading[i]" class="nw-lodging-searching">Buscando hospedajes...</span>
+            <ul *ngIf="lodgingSearchResults[i]?.length" class="nw-lodging-results">
+              <li *ngFor="let result of lodgingSearchResults[i]"
+                (click)="selectLodgingResult.emit({ index: i, result: result })">
+                <strong>{{ result.name }}</strong>
+                <small *ngIf="result.address">{{ result.address }}</small>
+                <span *ngIf="result.type">{{ result.type }}</span>
+              </li>
+            </ul>
+          </label>
+          <label class="nw-label nw-form-wide">Enlace de Google Maps
+            <span class="nw-field-hint">Pega un enlace del hotel y extrae sus datos.</span>
+            <div class="nw-lodging-map-row">
+              <input class="nw-input" [(ngModel)]="item.mapUrl" type="url"
+                placeholder="https://maps.app.goo.gl/...">
+              <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button"
+                (click)="extractLodgingMapInfo.emit(i)"
+                [disabled]="!item.mapUrl || lodgingExtractLoading[i]">
+                {{ lodgingExtractLoading[i] ? 'Detectando...' : 'Detectar hotel' }}
+              </button>
+            </div>
           </label>
           <label class="nw-label">¿Por qué lo recomiendas?
             <input class="nw-input" [(ngModel)]="item.description" placeholder="Cerca del evento, transporte incluido...">
@@ -421,8 +461,12 @@
           <label class="nw-label">Teléfono
             <input class="nw-input" [(ngModel)]="item.phone" type="tel" placeholder="+52 55 1234 5678">
           </label>
-          <label class="nw-label">Mapa (URL)
-            <input class="nw-input" [(ngModel)]="item.mapUrl" type="url" placeholder="https://maps.google.com/..."></label>
+          <label class="nw-label">Waze
+            <input class="nw-input" [(ngModel)]="item.wazeUrl" type="url" placeholder="Se completa al detectar el hotel">
+          </label>
+          <label class="nw-label">Sitio oficial detectado
+            <input class="nw-input" [(ngModel)]="item.websiteUrl" type="url" placeholder="https://hotel.com">
+          </label>
           <label class="nw-label">Enlace de reservación
             <input class="nw-input" [(ngModel)]="item.url" type="url" placeholder="https://hotel.com/reservar">
           </label>
@@ -438,9 +482,28 @@
           <label class="nw-label">Tarifa orientativa
             <input class="nw-input" [(ngModel)]="item.priceLabel" placeholder="Desde $1,450 MXN por noche">
           </label>
-          <label class="nw-label nw-form-wide">Servicios incluidos
-            <input class="nw-input" [ngModel]="lodgingServices(i)" (ngModelChange)="setLodgingServices(i, $event)" placeholder="Desayuno, estacionamiento, transporte">
-          </label>
+          <section class="nw-repeat-editor nw-form-wide">
+            <header><div><strong>Servicios incluidos</strong><small>Agrega un servicio por campo para que sea fácil editarlo y ordenarlo.</small></div><button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingService(i)">+ Añadir servicio</button></header>
+            <div *ngIf="item.services?.length; else noLodgingServices" class="nw-repeat-list">
+              <div *ngFor="let service of item.services; let serviceIndex = index; trackBy: trackByIndex" class="nw-repeat-row">
+                <span class="nw-repeat-number">{{ serviceIndex + 1 }}</span>
+                <input class="nw-input" [ngModel]="service" (ngModelChange)="updateLodgingService(i, serviceIndex, $event)" placeholder="Ej. Desayuno incluido">
+                <div class="nw-repeat-actions"><button type="button" (click)="moveListItem(item.services, serviceIndex, -1)" [disabled]="serviceIndex === 0" title="Subir">↑</button><button type="button" (click)="moveListItem(item.services, serviceIndex, 1)" [disabled]="serviceIndex === (item.services?.length || 0) - 1" title="Bajar">↓</button><button type="button" class="danger" (click)="removeLodgingService(i, serviceIndex)" title="Quitar servicio">×</button></div>
+              </div>
+            </div>
+            <ng-template #noLodgingServices><p class="nw-repeat-empty">Sin servicios. Puedes añadir desayuno, estacionamiento, transporte u otro beneficio.</p></ng-template>
+          </section>
+          <section class="nw-repeat-editor nw-form-wide">
+            <header><div><strong>Horarios del hospedaje</strong><small>Usa una fila para cada horario o condición.</small></div><button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="addLodgingSchedule(i)">+ Añadir horario</button></header>
+            <div *ngIf="item.schedule?.length; else noLodgingSchedule" class="nw-repeat-list">
+              <div *ngFor="let schedule of item.schedule; let scheduleIndex = index; trackBy: trackByIndex" class="nw-repeat-row">
+                <span class="nw-repeat-number">{{ scheduleIndex + 1 }}</span>
+                <input class="nw-input" [ngModel]="schedule" (ngModelChange)="updateLodgingSchedule(i, scheduleIndex, $event)" placeholder="Ej. Check-in: 15:00">
+                <div class="nw-repeat-actions"><button type="button" (click)="moveListItem(item.schedule, scheduleIndex, -1)" [disabled]="scheduleIndex === 0" title="Subir">↑</button><button type="button" (click)="moveListItem(item.schedule, scheduleIndex, 1)" [disabled]="scheduleIndex === (item.schedule?.length || 0) - 1" title="Bajar">↓</button><button type="button" class="danger" (click)="removeLodgingSchedule(i, scheduleIndex)" title="Quitar horario">×</button></div>
+              </div>
+            </div>
+            <ng-template #noLodgingSchedule><p class="nw-repeat-empty">Sin horarios. Agrega check-in, check-out, recepción u otra indicación.</p></ng-template>
+          </section>
           <label class="nw-label nw-form-wide">Notas para reservar
             <textarea class="nw-input" [(ngModel)]="item.notes" rows="2" placeholder="Reserva antes del 10 de noviembre y menciona el evento."></textarea>
           </label>

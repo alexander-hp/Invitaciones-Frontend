@@ -25,12 +25,34 @@ export class EditorLocationsTabComponent {
     return settings[key] !== false;
   }
 
-  scheduleValue(index: number): string {
-    return (this.invitation.content.locations?.[index]?.schedule || []).join('\n');
+  addSchedule(index: number): void {
+    const location = this.invitation.content.locations?.[index];
+    if (!location) return;
+    location.schedule = [...(location.schedule || []), ''];
   }
 
-  setSchedule(index: number, value: string): void {
+  updateSchedule(index: number, scheduleIndex: number, value: string): void {
     const location = this.invitation.content.locations?.[index];
-    if (location) location.schedule = value.split('\n').map((line) => line.trim()).filter(Boolean);
+    if (!location) return;
+    location.schedule = [...(location.schedule || [])];
+    location.schedule[scheduleIndex] = value;
+  }
+
+  removeSchedule(index: number, scheduleIndex: number): void {
+    const location = this.invitation.content.locations?.[index];
+    if (!location?.schedule) return;
+    location.schedule.splice(scheduleIndex, 1);
+  }
+
+  moveSchedule(index: number, scheduleIndex: number, direction: number): void {
+    const schedule = this.invitation.content.locations?.[index]?.schedule;
+    if (!schedule) return;
+    const target = scheduleIndex + direction;
+    if (target < 0 || target >= schedule.length) return;
+    [schedule[scheduleIndex], schedule[target]] = [schedule[target], schedule[scheduleIndex]];
+  }
+
+  trackByIndex(index: number): number {
+    return index;
   }
 }

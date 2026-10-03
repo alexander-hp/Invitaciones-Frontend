@@ -84,6 +84,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   readonly buttonPresets = VISUAL_BUTTON_PRESETS;
   readonly buttonPresetStyle = buttonPresetStyle;
   readonly photoCompositionPresets = PHOTO_COMPOSITION_PRESETS;
+
+  sanitizeBankDigits(value: unknown, maxLength: number): string {
+    return String(value ?? '').replace(/\D/g, '').slice(0, maxLength);
+  }
   invitation?: InvitationModel;
   event?: EventModel;
   design!: VisualInvitationDesign;
@@ -550,7 +554,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       next: ({ invitations }) => {
         this.invitation = invitations.find((item) => (item._id || item.id) === id);
         if (!this.invitation) return this.fail('Invitación no encontrada.');
-        const storedDesign = this.invitation.content?.visualDesign;
+        const draftDesign = this.invitation.content?.visualDesignDraft;
+        const publishedVisualDesign = this.invitation.content?.template === 'visual-builder'
+          ? this.invitation.content?.visualDesign
+          : undefined;
+        const storedDesign = draftDesign?.sections?.length ? draftDesign : publishedVisualDesign;
         this.showOnboarding = !storedDesign?.sections?.length;
         this.design = this.clone(storedDesign?.sections?.length ? storedDesign : this.createDefaultDesign());
         this.design.presentationMode = this.design.presentationMode || 'continuous';
@@ -1707,6 +1715,89 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection([layer.id]);
   }
 
+  addMainMusicControl(): void {
+    const url = this.invitation?.content?.musicUrl;
+    if (!url) { this.error = 'Primero configura la música principal de la invitación.'; return; }
+    this.addLayer('audio');
+    const layer = this.selectedLayer;
+    if (!layer) return;
+    const settings = this.invitation?.content?.musicSettings || {};
+    layer.url = url;
+    layer.name = 'Música principal';
+    layer.binding = 'music.toggle';
+    layer.style = {
+      ...(layer.style || {}),
+      audioStartSeconds: Number(settings.startSeconds || 0),
+      audioEndSeconds: settings.endSeconds,
+      audioVolume: Number(settings.volume ?? .7),
+      audioLoop: settings.loop !== false,
+      audioAutoplay: settings.playbackMode !== 'manual'
+    };
+    this.adaptAudioLayerToProvider(layer);
+    this.flash('Música principal agregada al diseño.');
+  }
+
+  get selectedSectionMusic(): { key: string; url: string; label: string } | null {
+    const section = this.selectedSection;
+    const configured = this.invitation?.content?.sectionMusic as any;
+    if (!section || !configured) return null;
+    const candidates: Record<string, string[]> = {
+      story: ['story'], locations: ['locations'], itinerary: ['itinerary'], dressCode: ['dressCode'],
+      rsvp: ['rsvp'], gifts: ['giftRegistry', 'digitalEnvelope'], lodging: ['lodging'], gallery: ['gallery'],
+      album: ['guestAlbum'], dedications: ['dedications'], songs: ['songRequests']
+    };
+    for (const key of candidates[section.type] || [section.type]) {
+      const value = typeof configured.get === 'function' ? configured.get(key) : configured[key];
+      if (typeof value === 'string' && value.trim()) return { key, url: value.trim(), label: section.title || section.type };
+    }
+    return null;
+  }
+
+  addSelectedSectionMusicControl(): void {
+    const configured = this.selectedSectionMusic;
+    if (!configured) { this.error = 'Esta sección no tiene audio configurado en Música de Fondo.'; return; }
+    this.addLayer('audio');
+    const layer = this.selectedLayer;
+    if (!layer) return;
+    const defaults = this.invitation?.content?.musicSettings || {};
+    const cue = this.invitation?.content?.sectionMusicCues?.[configured.key] || {};
+    layer.url = configured.url;
+    layer.name = `Música: ${configured.label}`;
+    layer.binding = `music.section.${configured.key}`;
+    layer.style = {
+      ...(layer.style || {}),
+      audioStartSeconds: Number(cue.startSeconds ?? defaults.startSeconds ?? 0),
+      audioEndSeconds: cue.endSeconds ?? defaults.endSeconds,
+      audioVolume: Number(cue.volume ?? defaults.volume ?? .7),
+      audioLoop: cue.loop ?? defaults.loop ?? true,
+      audioAutoplay: false
+    };
+    this.adaptAudioLayerToProvider(layer);
+    this.flash(`Control de audio agregado a ${configured.label}.`);
+  }
+
+  onMediaUrlChange(layer: VisualInvitationLayer, value: string): void {
+    layer.url = value;
+    if (layer.type === 'audio') this.adaptAudioLayerToProvider(layer);
+  }
+
+  private adaptAudioLayerToProvider(layer: VisualInvitationLayer): void {
+    const provider = resolveVisualMediaSource(layer.url).provider;
+    layer.style = layer.style || {};
+    if (provider === 'youtube' || provider === 'spotify') {
+      layer.style.audioPresentation = 'button';
+      layer.style.audioPosition = 'fixed';
+    } else if (provider === 'vimeo') {
+      layer.style.audioPresentation = 'native';
+      layer.style.audioPosition = 'inline';
+      const layout = this.layoutFor(layer);
+      layout.width = Math.max(layout.width, 58);
+      layout.height = Math.max(layout.height, 30);
+      layout.x = this.bound(layout.x, 0, 100 - layout.width);
+      layout.y = this.bound(layout.y, 0, 100 - layout.height);
+    }
+  }
+
   addFrame(mask: ImageMask): void {
     const section = this.selectedSection;
     if (!section) return;
@@ -1950,9 +2041,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   mediaProviderHelp(layer: VisualInvitationLayer): string {
     const provider = resolveVisualMediaSource(layer.url).provider;
     if (provider === 'youtube') return layer.type === 'audio'
-      ? 'YouTube exige que su reproductor permanezca visible. Para mostrar solo un botón de música, sube un archivo MP3, WAV o M4A propio.'
+      ? 'El botón abre el reproductor oficial visible y respeta el fragmento configurado. Para reproducir sin mostrar proveedor, sube un MP3, WAV o M4A propio.'
       : 'El enlace se convertirá automáticamente al reproductor embebido de YouTube.';
-    if (provider === 'spotify') return 'Se mostrará el reproductor oficial de Spotify, incluso con enlaces regionales; la reproducción requiere interacción del invitado.';
+    if (provider === 'spotify') return layer.type === 'audio' ? 'El botón abre el reproductor oficial de Spotify; la reproducción requiere interacción del invitado.' : 'Se mostrará el reproductor oficial de Spotify.';
     if (provider === 'vimeo') return 'El enlace se convertirá automáticamente al reproductor embebido de Vimeo.';
     return layer.type === 'video'
       ? 'Se usará el reproductor nativo. La URL debe entregar directamente un MP4 o WebM compatible.'
@@ -1961,7 +2052,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   canUseCustomAudio(layer: VisualInvitationLayer): boolean {
     const provider = resolveVisualMediaSource(layer.url).provider;
-    return provider === 'direct' || provider === 'empty';
+    return ['direct', 'empty', 'youtube', 'spotify'].includes(provider);
   }
 
   addShape(kind: ShapeKind): void {
@@ -2756,6 +2847,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layer.type = media.type;
     layer.url = media.url;
     layer.name = media.label;
+    if (media.type === 'audio') {
+      if (media.url === this.invitation?.content?.musicUrl) {
+        const settings = this.invitation.content.musicSettings || {};
+        layer.style = { ...(layer.style || {}), audioStartSeconds: Number(settings.startSeconds || 0), audioEndSeconds: settings.endSeconds, audioVolume: Number(settings.volume ?? .7), audioLoop: settings.loop !== false };
+      }
+      this.adaptAudioLayerToProvider(layer);
+    }
   }
 
   setSectionBackground(media: DesignMedia): void {
@@ -3837,6 +3935,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   chooseStartingDesign(key: string): void {
     this.openDesignLibrary(key);
+    this.applyCompleteDesign();
   }
 
   get filteredCompleteDesigns(): CompleteDesignPreset[] {
@@ -3899,6 +3998,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.showOnboarding = false;
     this.closeDesignLibrary();
     this.autosaveState = 'Cambios pendientes';
+    if (wasOnboarding) setTimeout(() => this.save(), 0);
     if (wasOnboarding) this.maybeStartTutorial();
   }
 
@@ -3914,6 +4014,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.clearLayerSelection();
     this.showOnboarding = false;
     this.autosaveState = 'Cambios pendientes';
+    setTimeout(() => this.save(), 0);
     this.maybeStartTutorial();
   }
 
@@ -4552,13 +4653,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const id = this.invitation._id || this.invitation.id || '';
     const request = this.persistDesign();
     const snapshot = this.designSnapshot();
-    request.pipe(switchMap(() => this.api.publishInvitation(id))).subscribe({
+    request.pipe(switchMap(() => this.api.publishInvitation(id, 'visual'))).subscribe({
       next: ({ invitation }) => {
         this.acceptSavedDesign(invitation, snapshot);
         this.publishing = false;
         this.showPublishAudit = false;
         this.flash(this.hasUnsavedChanges ? 'Publicado; hay cambios nuevos pendientes.' : 'Diseño publicado.');
-        if (!this.hasUnsavedChanges) this.openPreview();
+        if (!this.hasUnsavedChanges) this.openPublicVersion();
       },
       error: (error) => { this.publishing = false; this.error = this.designRequestError(error, 'No fue posible publicar.'); }
     });
@@ -4594,23 +4695,52 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   openPreview(): void {
+    this.openResponsivePreview();
+  }
+
+  openDraftPreview(): void {
     if (!this.invitation?.slug) return;
-    if (this.invitation.status !== 'published') {
-      this.openResponsivePreview();
+    const previewWindow = window.open('', '_blank');
+    const openSavedDraft = () => {
+      const id = this.invitation?._id || this.invitation?.id || '';
+      const url = `/new/i/${this.invitation?.slug}?preview=true&previewId=${encodeURIComponent(id)}`;
+      if (previewWindow) previewWindow.location.href = url;
+      else window.open(url, '_blank');
+    };
+    if (!this.hasUnsavedChanges) {
+      openSavedDraft();
       return;
     }
+    const snapshot = this.designSnapshot();
+    this.saving = true;
+    this.persistDesign().subscribe({
+      next: ({ invitation }) => {
+        this.acceptSavedDesign(invitation, snapshot);
+        this.saving = false;
+        openSavedDraft();
+      },
+      error: (error) => {
+        this.saving = false;
+        if (previewWindow) previewWindow.close();
+        this.error = this.designRequestError(error, 'No fue posible guardar el borrador para previsualizarlo.');
+      }
+    });
+  }
+
+  openPublicVersion(): void {
+    if (this.invitation?.status !== 'published' || !this.invitation.slug) return;
     window.open(`/new/i/${this.invitation.slug}`, '_blank');
   }
 
   private persistDesign() {
     const id = this.invitation?._id || this.invitation?.id || '';
     this.design.active = true;
+    this.normalizeDesignGeometry();
     this.syncLegacyGallery();
     const content = this.stripMongoMetadata({
       ...this.invitation?.content,
       galleryItems: (this.invitation?.content.galleryItems || []).filter((item) => item.url.trim()),
-      template: 'visual-builder',
-      visualDesign: this.design
+      visualDesignDraft: this.design
     });
     return this.api.updateInvitation(id, {
       content,
@@ -4673,6 +4803,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private normalizeModuleStyles(): void {
+    this.normalizeDesignGeometry();
     for (const section of this.design.sections) {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
       if (section.type === 'hero' || section.type === 'custom') continue;
@@ -5797,6 +5928,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private designSnapshot(): string {
     const content = { ...(this.invitation?.content || {}) };
     delete content.visualDesign;
+    delete content.visualDesignDraft;
     return JSON.stringify(this.stripMongoMetadata({ design: this.design, content, rsvpSettings: this.invitation?.rsvpSettings || {} }));
   }
 
@@ -5956,6 +6088,34 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       clean[key] = this.stripMongoMetadata(item);
       return clean;
     }, {} as Record<string, unknown>) as T;
+  }
+
+  private normalizeDesignGeometry(): void {
+    const devices: DeviceMode[] = ['mobile', 'tablet', 'desktop'];
+    for (const section of this.design.sections || []) {
+      section.height = this.bound(this.finiteNumber(section.height, 640), 240, 1600);
+      for (const layer of section.layers || []) {
+        this.normalizeStoredLayout(layer);
+        if (!layer.layouts) continue;
+        for (const device of devices) {
+          const layout = layer.layouts[device];
+          if (layout) this.normalizeStoredLayout(layout);
+        }
+      }
+    }
+  }
+
+  private normalizeStoredLayout(layout: VisualInvitationLayerLayout): void {
+    layout.x = this.bound(this.finiteNumber(layout.x, 0), -100, 200);
+    layout.y = this.bound(this.finiteNumber(layout.y, 0), -10000, 10000);
+    layout.width = this.bound(this.finiteNumber(layout.width, 1), 1, 100);
+    layout.height = this.bound(this.finiteNumber(layout.height, 1), 1, 100);
+    if (layout.rotation !== undefined) layout.rotation = this.bound(this.finiteNumber(layout.rotation, 0), -360, 360);
+  }
+
+  private finiteNumber(value: unknown, fallback: number): number {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
   }
 
   private bound(value: number, min: number, max: number): number {

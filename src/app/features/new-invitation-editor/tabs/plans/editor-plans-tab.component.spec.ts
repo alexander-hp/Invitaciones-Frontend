@@ -34,4 +34,19 @@ describe('EditorPlansTabComponent catalog', () => {
     expect(component.getBuiltinName('visual-builder')).toBe('Diseño del editor visual');
     expect(component.getBuiltinName('custom-html')).toBe('Diseño personalizado');
   });
+
+  it('keeps the preview empty when the invitation has no selected design', () => {
+    component.invitation = {
+      id: 'invitation-1',
+      slug: 'invitacion-sin-diseno',
+      content: {}
+    } as any;
+    component.hasSelectedDesign = false;
+
+    component.updateLivePreviewUrl();
+
+    expect(component.isBuiltinActive('envelope-cards')).toBeFalse();
+    expect(component.activeTemplateDisplayName).toBe('Sin diseño seleccionado');
+    expect(component.livePreviewUrl).toBeNull();
+  });
 });

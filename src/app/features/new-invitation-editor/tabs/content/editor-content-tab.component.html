@@ -27,36 +27,103 @@
         <input class="nw-input" [(ngModel)]="invitation.content.subheadline"
           placeholder="Nos encantaría que nos acompañes">
       </label>
-      <label class="nw-label">Logo de anfitrión
-        <input class="nw-input" [(ngModel)]="invitation.content.brandLogoUrl" placeholder="https://.../logo.png">
-      </label>
-      <div *ngIf="invitation.content.brandLogoUrl" class="nw-form-wide"
-        style="padding:14px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); display:flex; align-items:center; gap:16px; box-shadow:var(--nw-shadow-sm);">
-        <div
-          style="width:120px; height:80px; background:#ffffff; border-radius:8px; border:1px solid var(--nw-border); padding:6px; display:flex; align-items:center; justify-content:center;">
-          <img [src]="invitation.content.brandLogoUrl" alt="Logo Anfitrión"
-            style="max-width:100%; max-height:100%; object-fit:contain;">
-        </div>
-        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
-          <div style="display:flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--nw-success)" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <strong style="font-size:13.5px; color:var(--nw-text);">Logo de Anfitrión Configurado</strong>
+      <div class="nw-form-wide"
+        style="padding:18px; background:var(--nw-surface); border:1px solid var(--nw-border); border-radius:var(--nw-radius-md);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+          <div>
+            <strong style="display:block; font-size:14px; color:var(--nw-text);">Identidad visual del anfitrión</strong>
+            <span style="display:block; margin-top:3px; font-size:12px; color:var(--nw-text-3); line-height:1.45;">
+              Sube cada formato por separado para que se vea correctamente en su ubicación. PNG o WebP transparente, máximo 5 MB por archivo.
+            </span>
           </div>
-          <span style="font-size:12px; color:var(--nw-text-3);">Esta imagen se mostrará en el encabezado o pie de la
-            invitación digital.</span>
-          <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="invitation.content.brandLogoUrl=''"
-            style="width:fit-content; margin-top:4px; display:inline-flex; align-items:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-            <span>Eliminar Logo</span>
+          <span class="nw-pill" [class.success]="invitation.content.brandLogoUrl || invitation.content.brandMonogramUrl || invitation.content.passLogoUrl">
+            {{ (invitation.content.brandLogoUrl || invitation.content.brandMonogramUrl || invitation.content.passLogoUrl) ? 'Identidad configurada' : 'Opcional' }}
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
+          <section>
+            <strong style="display:block; font-size:13px; color:var(--nw-text);">1. Logo horizontal</strong>
+            <span style="display:block; min-height:48px; margin:3px 0 9px; font-size:12px; color:var(--nw-text-3); line-height:1.4;">
+              800 × 400 px. Se usa en encabezados y portadas editoriales. También es el respaldo de los otros formatos.
+            </span>
+            <app-image-dropzone
+              label="Logo horizontal"
+              hint="Arrastra, pega o selecciona el archivo"
+              [currentImageUrl]="invitation.content.brandLogoUrl"
+              [loading]="assetUploading"
+              [disabled]="assetUploading"
+              [canRemove]="true"
+              [compact]="true"
+              iconType="image"
+              (filesSelected)="onBrandAssetSelected('horizontal', $event)"
+              (removeImage)="onRemoveBrandAsset('horizontal')">
+            </app-image-dropzone>
+          </section>
+
+          <section>
+            <strong style="display:block; font-size:13px; color:var(--nw-text);">2. Monograma cuadrado</strong>
+            <span style="display:block; min-height:48px; margin:3px 0 9px; font-size:12px; color:var(--nw-text-3); line-height:1.4;">
+              600 × 600 px. Aparece en emblemas circulares o cuadrados de las portadas temáticas.
+            </span>
+            <app-image-dropzone
+              label="Monograma"
+              hint="Arrastra, pega o selecciona el archivo"
+              [currentImageUrl]="invitation.content.brandMonogramUrl"
+              [loading]="assetUploading"
+              [disabled]="assetUploading"
+              [canRemove]="true"
+              [compact]="true"
+              iconType="image"
+              (filesSelected)="onBrandAssetSelected('monogram', $event)"
+              (removeImage)="onRemoveBrandAsset('monogram')">
+            </app-image-dropzone>
+          </section>
+
+          <section>
+            <strong style="display:block; font-size:13px; color:var(--nw-text);">3. Logo para pase VIP</strong>
+            <span style="display:block; min-height:48px; margin:3px 0 9px; font-size:12px; color:var(--nw-text-3); line-height:1.4;">
+              1000 × 300 px. Aparece arriba del pase descargable y en la imagen enviada por WhatsApp.
+            </span>
+            <app-image-dropzone
+              label="Logo del pase"
+              hint="Arrastra, pega o selecciona el archivo"
+              [currentImageUrl]="invitation.content.passLogoUrl"
+              [loading]="assetUploading"
+              [disabled]="assetUploading"
+              [canRemove]="true"
+              [compact]="true"
+              iconType="image"
+              (filesSelected)="onBrandAssetSelected('pass', $event)"
+              (removeImage)="onRemoveBrandAsset('pass')">
+            </app-image-dropzone>
+          </section>
+        </div>
+
+        <div style="margin-top:14px;">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="toggleExternalLogoInput()">
+            {{ showExternalLogoInput ? 'Cancelar enlace externo' : 'Usar un enlace externo' }}
           </button>
+          <div *ngIf="showExternalLogoInput" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; margin-top:10px;">
+            <label class="nw-label" style="flex:1 1 260px;">Enlace externo del logo
+              <input class="nw-input" type="url" [(ngModel)]="externalBrandLogoUrl"
+                placeholder="https://ejemplo.com/logo.png" autocomplete="off">
+            </label>
+            <button type="button" class="nw-btn nw-btn-secondary" (click)="applyExternalBrandLogoUrl()">
+              Aplicar enlace
+            </button>
+          </div>
+          <p *ngIf="externalLogoError" style="margin:8px 0 0; color:var(--nw-danger); font-size:12px;">
+            {{ externalLogoError }}
+          </p>
+          <p *ngIf="showExternalLogoInput" style="margin:8px 0 0; color:var(--nw-text-3); font-size:12px;">
+            Solo usa esta opción si el archivo está alojado fuera de Velisse. La dirección interna de los archivos subidos no se muestra.
+          </p>
+        </div>
+
+        <div style="margin-top:12px; padding:12px 14px; background:var(--nw-surface-2); border-left:3px solid var(--nw-accent); border-radius:6px; font-size:12px; color:var(--nw-text-2); line-height:1.5;">
+          <strong style="color:var(--nw-text);">Compatibilidad automática:</strong>
+          si no subes monograma o logo del pase, se reutilizará el logo horizontal. Los archivos internos se mantienen ocultos y las imágenes conservan su proporción.
         </div>
       </div>
 
@@ -116,7 +183,8 @@
       <div class="nw-toggle-row nw-form-wide">
         <div class="nw-toggle-info">
           <strong>Ocultar marca Velisse by KyndraSoft</strong>
-          <span>Remueve la marca y créditos de Velisse (Requiere plan Pro).</span>
+          <span *ngIf="canUseWhiteLabel">Incluido en tu plan actual. Remueve la marca y los créditos de Velisse.</span>
+          <span *ngIf="!canUseWhiteLabel">Disponible con Planner Pro. La marca seguirá visible en la invitación pública.</span>
         </div>
         <label class="nw-switch">
           <input type="checkbox" [(ngModel)]="invitation.content.hideBranding" [disabled]="!canUseWhiteLabel">

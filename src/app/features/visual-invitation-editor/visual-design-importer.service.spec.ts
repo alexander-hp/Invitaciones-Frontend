@@ -51,7 +51,8 @@ describe('VisualDesignImporterService', () => {
     const result = service.fromJson(JSON.stringify({ presentationMode: 'continuous', sections: [
       { id: 'one', type: 'hero', enabled: true, layout: 'canvas', height: 640, layers: [
         { id: 'crossing', type: 'text', x: 10, y: 125, width: 40, height: 12 },
-        { id: 'invalid', type: 'text', x: 'bad', y: -12, width: 'bad', height: 10 }
+        { id: 'invalid', type: 'text', x: 'bad', y: -12, width: 'bad', height: 0,
+          layouts: { mobile: { x: 0, y: 0, width: 20, height: 0 } } }
       ] },
       { id: 'two', type: 'custom', enabled: true, layout: 'canvas', height: 640, layers: [] }
     ] }));
@@ -59,6 +60,8 @@ describe('VisualDesignImporterService', () => {
     expect(result.design.sections[0].layers[1].x).toBe(0);
     expect(result.design.sections[0].layers[1].width).toBe(20);
     expect(result.design.sections[0].layers[1].y).toBe(-12);
+    expect(result.design.sections[0].layers[1].height).toBe(1);
+    expect(result.design.sections[0].layers[1].layouts?.mobile?.height).toBe(1);
   });
 
   it('keeps decorative bleed and converts supported AI animation and rotation', () => {

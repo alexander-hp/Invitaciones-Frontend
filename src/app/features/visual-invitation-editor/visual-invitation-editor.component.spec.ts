@@ -6,11 +6,14 @@ import { VisualDesignImporterService } from './visual-design-importer.service';
 describe('VisualInvitationEditorComponent persistence', () => {
   let component: VisualInvitationEditorComponent;
   let responses: Subject<{ invitation: InvitationModel }>;
-  let api: { updateInvitation: jasmine.Spy };
+  let api: { updateInvitation: jasmine.Spy; publishInvitation: jasmine.Spy };
 
   beforeEach(() => {
     responses = new Subject<{ invitation: InvitationModel }>();
-    api = { updateInvitation: jasmine.createSpy().and.returnValue(responses.asObservable()) };
+    api = {
+      updateInvitation: jasmine.createSpy().and.returnValue(responses.asObservable()),
+      publishInvitation: jasmine.createSpy()
+    };
     component = new VisualInvitationEditorComponent({} as any, {} as any, api as any, {} as any, {} as any);
     component.design = {
       version: 1, active: true, mode: 'easy', sections: [
@@ -54,12 +57,22 @@ describe('VisualInvitationEditorComponent persistence', () => {
     localStorage.removeItem('kyndra-visual-editor-tutorial-v1');
   });
 
+  it('applies the selected starting design instead of leaving it as a library preview', () => {
+    spyOn(component, 'openDesignLibrary');
+    spyOn(component, 'applyCompleteDesign');
+
+    component.chooseStartingDesign('editorial');
+
+    expect(component.openDesignLibrary).toHaveBeenCalledWith('editorial');
+    expect(component.applyCompleteDesign).toHaveBeenCalled();
+  });
+
   it('keeps edits made while a save request is in flight pending', () => {
     component.save();
     component.design.sections[0].title = 'Cambio posterior';
     responses.next({ invitation: {
       ...component.invitation!,
-      content: { ...component.invitation!.content, visualDesign: { ...component.design, sections: [{ ...component.design.sections[0], title: 'Original' }] } }
+      content: { ...component.invitation!.content, visualDesignDraft: { ...component.design, sections: [{ ...component.design.sections[0], title: 'Original' }] } }
     } });
 
     expect(component.design.sections[0].title).toBe('Cambio posterior');
@@ -72,11 +85,42 @@ describe('VisualInvitationEditorComponent persistence', () => {
     component.save();
     responses.next({ invitation: {
       ...component.invitation!,
-      content: { ...component.invitation!.content, visualDesign: component.design }
+      content: { ...component.invitation!.content, visualDesignDraft: component.design }
     } });
 
     expect(component.hasUnsavedChanges).toBeFalse();
     expect(component.autosaveState).toBe('Guardado');
+  });
+
+  it('saves visual work as a draft without replacing the published template', () => {
+    const publishedDesign = { ...component.design, sections: [{ ...component.design.sections[0], title: 'Producción' }] };
+    component.invitation = {
+      ...component.invitation!,
+      status: 'published',
+      content: { ...component.invitation!.content, template: 'maison-dore', visualDesign: publishedDesign }
+    };
+    component.design.sections[0].title = 'Nuevo borrador';
+
+    component.save();
+
+    const content = api.updateInvitation.calls.mostRecent().args[1].content;
+    expect(content.template).toBe('maison-dore');
+    expect(content.visualDesign.sections[0].title).toBe('Producción');
+    expect(content.visualDesignDraft.sections[0].title).toBe('Nuevo borrador');
+  });
+
+  it('repairs zero-sized imported layers before persisting the draft', () => {
+    component.design.responsiveMode = 'independent';
+    component.design.sections[0].layers.push({
+      id: 'svg-decoration', type: 'shape', name: 'SVG decorativo', x: 10, y: 20, width: 40, height: 0,
+      layouts: { desktop: { x: 10, y: 20, width: 40, height: 0 } }
+    });
+
+    component.save();
+
+    const layer = api.updateInvitation.calls.mostRecent().args[1].content.visualDesignDraft.sections[0].layers[0];
+    expect(layer.height).toBe(1);
+    expect(layer.layouts.desktop.height).toBe(1);
   });
 
   it('downloads the current editable design in the AI exchange format', async () => {
@@ -116,10 +160,10 @@ describe('VisualInvitationEditorComponent persistence', () => {
     component.setPresentationMode('chapters');
     expect(component.hasUnsavedChanges).toBeTrue();
     component.save();
-    expect(api.updateInvitation.calls.mostRecent().args[1].content.visualDesign.presentationMode).toBe('chapters');
+    expect(api.updateInvitation.calls.mostRecent().args[1].content.visualDesignDraft.presentationMode).toBe('chapters');
     responses.next({ invitation: {
       ...component.invitation!,
-      content: { ...component.invitation!.content, visualDesign: component.design }
+      content: { ...component.invitation!.content, visualDesignDraft: component.design }
     } });
     expect(component.hasUnsavedChanges).toBeFalse();
   });

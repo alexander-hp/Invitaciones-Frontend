@@ -96,8 +96,8 @@
       <div class="tboda-hero-overlay"></div>
 
       <div class="tboda-hero-content">
-        <div *ngIf="invitation.content.brandLogoUrl" class="tboda-monogram-ring" data-aos="zoom-in">
-          <img [src]="invitation.content.brandLogoUrl" alt="Monograma de Bodas" class="tboda-monogram-img">
+        <div *ngIf="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" class="tboda-monogram-ring" data-aos="zoom-in">
+          <img [src]="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" alt="Monograma de Bodas" class="tboda-monogram-img">
         </div>
 
         <span class="tboda-hero-cursive" data-aos="fade-up" data-aos-delay="100">

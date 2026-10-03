@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
@@ -10,7 +10,7 @@ import { applyPaletteToVisualDesign, InvitationPaletteColors, paletteFromVisualD
   selector: 'app-new-invitation-editor',
   templateUrl: './new-invitation-editor.component.html'
 })
-export class NewInvitationEditorComponent implements OnInit {
+export class NewInvitationEditorComponent implements OnInit, OnDestroy {
   @ViewChild(EditorPlansTabComponent) plansTab?: EditorPlansTabComponent;
 
   private readonly imageTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -47,6 +47,12 @@ export class NewInvitationEditorComponent implements OnInit {
     optionsText?: string;
     options?: string[];
   }> = [];
+  private readonly questionPresets = {
+    song: { key: 'cancion_preferida_para_la_fiesta', label: 'Canción preferida para la fiesta', type: 'text' as const, optionsText: '', required: false },
+    diet: { key: 'restricciones_o_alergias_alimenticias', label: 'Restricciones o alergias alimenticias', type: 'textarea' as const, optionsText: '', required: false },
+    menu: { key: 'opcion_de_platillo_preferido', label: 'Opción de platillo preferido', type: 'select' as const, optionsText: 'Pollo supremo; Filete de res; Opción vegetariana; Menú infantil', required: true },
+    transport: { key: 'requieres_transporte_del_hotel_a_la_recepcion', label: '¿Requieres transporte del hotel a la recepción?', type: 'boolean' as const, optionsText: '', required: false }
+  };
   allowedRolesText = '';
   allowedGroupsText = '';
   allowedEmailsText = '';
@@ -54,10 +60,23 @@ export class NewInvitationEditorComponent implements OnInit {
   locationSearchResults: Record<number, PlaceSearchResult[]> = {};
   locationSearchLoading: Record<number, boolean> = {};
   locationExtractLoading: Record<number, boolean> = {};
+  lodgingSearchResults: Record<number, PlaceSearchResult[]> = {};
+  lodgingSearchLoading: Record<number, boolean> = {};
+  lodgingExtractLoading: Record<number, boolean> = {};
   private searchTimeouts: Record<number, any> = {};
+  private lodgingSearchTimeouts: Record<number, any> = {};
+
+  autoSaveStatus: 'idle' | 'pending' | 'saving' | 'saved' | 'paused' | 'error' = 'idle';
+  autoSaveBlockedReason = '';
+  private autoSaveTimer?: ReturnType<typeof setTimeout>;
+  private autoSaveInFlight = false;
+  private autoSaveQueued = false;
+  private lastAutoSavedPayload = '';
+  private lastAutoSavedEventSettings = '';
 
   activeSection = 'content';
   activeTab: string = 'content';
+  hasSelectedDesign = false;
   collapsedSections: Record<string, boolean> = {};
 
   showAiWizardModal = false;
@@ -108,6 +127,7 @@ export class NewInvitationEditorComponent implements OnInit {
       if (invId) {
         localStorage.setItem(`inv_tpl_${invId}`, 'custom-html');
       }
+      this.hasSelectedDesign = true;
     }
     this.message = `¡Plantilla "${result.name}" aplicada exitosamente a tu evento!`;
     this.save();
@@ -133,6 +153,9 @@ export class NewInvitationEditorComponent implements OnInit {
   }
 
   setActiveTab(tab: string, scrollToEditor = false): void {
+    if (this.invitation && tab !== this.activeTab) {
+      this.scheduleAutoSave(0);
+    }
     this.activeTab = tab;
     this.sectionsNavigatorCollapsed = true;
     if (tab === 'plans') {
@@ -143,6 +166,51 @@ export class NewInvitationEditorComponent implements OnInit {
     if (scrollToEditor) {
       this.scrollToEditor();
     }
+  }
+
+  openVisualEditor(): void {
+    if (!this.invitation) return;
+    this.router.navigate(['/new/invitations', this.getInvitationId(this.invitation), 'visual-editor']);
+  }
+
+  goToDesignChoice(message = 'Elige una plantilla, crea el diseño visual o genera una propuesta con IA antes de publicar.'): void {
+    this.activeTab = 'plans';
+    this.sectionsNavigatorCollapsed = true;
+    this.error = '';
+    this.message = message;
+    setTimeout(() => {
+      document.getElementById('designMethodChooser')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }
+
+  private hasCompletedInitialSetup(): boolean {
+    if (!this.invitation) return false;
+    if (this.invitation.status === 'published') return true;
+    return Boolean(
+      String(this.invitation.slug || '').trim() &&
+      String(this.invitation.content?.headline || '').trim() &&
+      String(this.invitation.content?.subheadline || '').trim()
+    );
+  }
+
+  private invitationHasPersistedDesign(invitation: InvitationModel): boolean {
+    const content = invitation.content || {};
+    const rootTemplate = invitation.template as any;
+    return Boolean(
+      String(content.template || '').trim() ||
+      String(content.customHtml || '').trim() ||
+      content.visualDesign?.active ||
+      (typeof rootTemplate === 'string' ? rootTemplate.trim() : rootTemplate?._id || rootTemplate?.id)
+    );
+  }
+
+  private selectedTemplateKey(): string | undefined {
+    if (!this.invitation || !this.hasSelectedDesign) return undefined;
+    const invId = this.getInvitationId(this.invitation);
+    const slug = this.invitation.slug;
+    return this.invitation.content?.template ||
+      (invId ? localStorage.getItem(`inv_tpl_${invId}`) || undefined : undefined) ||
+      (slug ? localStorage.getItem(`inv_tpl_${slug}`) || undefined : undefined);
   }
 
   scrollToEditor(): void {
@@ -499,6 +567,46 @@ export class NewInvitationEditorComponent implements OnInit {
     this.load();
   }
 
+  ngOnDestroy(): void {
+    const shouldFlushPendingChanges = Boolean(this.autoSaveTimer) && !this.saving && !this.publishing && !this.assetUploading && !this.autoSaveInFlight;
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.autoSaveTimer = undefined;
+    if (shouldFlushPendingChanges) this.runAutoSave();
+    Object.values(this.searchTimeouts).forEach((timer) => clearTimeout(timer));
+    Object.values(this.lodgingSearchTimeouts).forEach((timer) => clearTimeout(timer));
+  }
+
+  get autoSaveStatusText(): string {
+    switch (this.autoSaveStatus) {
+      case 'pending': return 'Cambios pendientes';
+      case 'saving': return 'Guardando automáticamente...';
+      case 'saved': return 'Guardado automáticamente';
+      case 'paused': return this.autoSaveBlockedReason || 'Autoguardado en pausa';
+      case 'error': return 'No se pudo autoguardar';
+      default: return 'Autoguardado activo';
+    }
+  }
+
+  scheduleAutoSave(delay = 900): void {
+    if (!this.invitation || this.loading || this.publishing) return;
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    if (this.autoSaveInFlight) {
+      this.autoSaveQueued = true;
+      this.autoSaveStatus = 'pending';
+      return;
+    }
+    this.autoSaveStatus = 'pending';
+    this.autoSaveBlockedReason = '';
+    this.autoSaveTimer = setTimeout(() => this.runAutoSave(), Math.max(0, delay));
+  }
+
+  onEditorInteraction(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('.inv-editor-toolbar, .nw-editor-stepper-wrapper, .nw-editor-bottom-nav, .nw-cat-grid-wrapper, a')) return;
+    this.scheduleAutoSave();
+  }
+
   eventTypeIcon(type?: string): string {
     switch (type) {
       case 'boda': return '💍';
@@ -531,15 +639,18 @@ export class NewInvitationEditorComponent implements OnInit {
           this.loading = false;
           return;
         }
-        const backendTpl = this.invitation.content?.template || (this.invitation.template && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template) ? this.invitation.template : undefined);
+        this.hasSelectedDesign = this.invitationHasPersistedDesign(this.invitation);
+        const backendTpl = this.invitation.content?.template || (typeof this.invitation.template === 'string' && !/^[0-9a-fA-F]{24}$/.test(this.invitation.template) ? this.invitation.template : undefined);
         const storedTplKey = (id ? localStorage.getItem(`inv_tpl_${id}`) : null) || (this.invitation.slug ? localStorage.getItem(`inv_tpl_${this.invitation.slug}`) : null);
         const effectiveTemplate = backendTpl || storedTplKey || 'envelope-cards';
-        if (this.invitation.content) {
+        if (this.invitation.content && this.hasSelectedDesign) {
           this.invitation.content.template = effectiveTemplate;
         }
         this.syncVisualPalette();
-        if (id) localStorage.setItem(`inv_tpl_${id}`, effectiveTemplate);
-        if (this.invitation.slug) localStorage.setItem(`inv_tpl_${this.invitation.slug}`, effectiveTemplate);
+        if (this.hasSelectedDesign) {
+          if (id) localStorage.setItem(`inv_tpl_${id}`, effectiveTemplate);
+          if (this.invitation.slug) localStorage.setItem(`inv_tpl_${this.invitation.slug}`, effectiveTemplate);
+        }
 
         const eventId = typeof this.invitation.event === 'string' ? this.invitation.event : (this.invitation.event?._id || this.invitation.event?.id);
         if (typeof this.invitation.event === 'object' && this.invitation.event) {
@@ -556,6 +667,7 @@ export class NewInvitationEditorComponent implements OnInit {
                 }
               }
               this.ensureContentCollections();
+              this.captureAutoSaveBaseline();
             },
             error: () => { }
           });
@@ -564,6 +676,7 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
+        this.captureAutoSaveBaseline();
         this.publicUrl = `${window.location.origin}/new/i/${this.invitation.slug}`;
         this.loadTemplates();
         this.loadPlans();
@@ -572,7 +685,7 @@ export class NewInvitationEditorComponent implements OnInit {
         if (queryTab) {
           this.activeTab = queryTab;
         } else {
-          this.activeTab = 'content';
+          this.activeTab = this.hasCompletedInitialSetup() ? 'plans' : 'content';
         }
         this.loading = false;
         setTimeout(() => {
@@ -626,6 +739,7 @@ export class NewInvitationEditorComponent implements OnInit {
   onSelectTemplateKey(key: string): void {
     if (!this.invitation) return;
     if (!this.invitation.content) this.invitation.content = {};
+    this.hasSelectedDesign = true;
     this.invitation.content.template = key;
     const invId = this.getInvitationId(this.invitation);
     const slug = this.invitation.slug;
@@ -656,6 +770,7 @@ export class NewInvitationEditorComponent implements OnInit {
     }
     if (!this.invitation.content) this.invitation.content = {};
     const tplKey = template.key || templateId || 'envelope-cards';
+    this.hasSelectedDesign = true;
     this.invitation.content.template = tplKey;
     const invId = this.getInvitationId(this.invitation);
     if (invId) {
@@ -740,19 +855,130 @@ export class NewInvitationEditorComponent implements OnInit {
     this.clearMessageAfterDelay();
   }
 
+  private invitationUpdatePayload(): any {
+    if (!this.invitation) return undefined;
+    const rootTemplate = (this.invitation.template && /^[0-9a-fA-F]{24}$/.test(this.invitation.template))
+      ? this.invitation.template
+      : undefined;
+    return {
+      slug: this.invitation.slug,
+      accessMode: this.invitation.accessMode,
+      rsvpSettings: this.sanitizePayload(this.getRsvpSettingsPayload()),
+      template: rootTemplate,
+      content: this.sanitizePayload(this.getContentPayload())
+    };
+  }
+
+  private captureAutoSaveBaseline(): void {
+    if (!this.invitation) return;
+    this.lastAutoSavedPayload = JSON.stringify(this.invitationUpdatePayload());
+    this.lastAutoSavedEventSettings = JSON.stringify(this.getCleanSongRequestSettings());
+    this.autoSaveStatus = 'idle';
+    this.autoSaveBlockedReason = '';
+  }
+
+  private runAutoSave(): void {
+    this.autoSaveTimer = undefined;
+    if (!this.invitation || this.loading) return;
+    if (this.saving || this.publishing || this.assetUploading) {
+      this.scheduleAutoSave(700);
+      return;
+    }
+    if (this.autoSaveInFlight) {
+      this.autoSaveQueued = true;
+      return;
+    }
+
+    const validationError = this.getRsvpDeadlineValidationError() || this.getDigitalEnvelopeValidationError();
+    if (validationError) {
+      this.autoSaveStatus = 'paused';
+      this.autoSaveBlockedReason = `Completa el dato marcado: ${validationError}`;
+      return;
+    }
+
+    const payload = this.invitationUpdatePayload();
+    const serialized = JSON.stringify(payload);
+    const eventSettings = this.getCleanSongRequestSettings();
+    const serializedEventSettings = JSON.stringify(eventSettings);
+    if (serialized === this.lastAutoSavedPayload && serializedEventSettings === this.lastAutoSavedEventSettings) {
+      this.autoSaveStatus = 'saved';
+      return;
+    }
+
+    this.autoSaveInFlight = true;
+    this.autoSaveStatus = 'saving';
+    this.api.updateInvitation(this.getInvitationId(this.invitation), payload).subscribe({
+      next: () => {
+        const eventId = this.getEventId();
+        if (eventId && this.event && serializedEventSettings !== this.lastAutoSavedEventSettings) {
+          const externalContent: ExternalContent = {
+            ...(this.event.externalContent || {}),
+            songRequestSettings: eventSettings
+          };
+          this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(externalContent) }).subscribe({
+            next: ({ event }) => {
+              this.event = event;
+              this.finishAutoSave(serialized, serializedEventSettings);
+            },
+            error: () => this.failAutoSave()
+          });
+          return;
+        }
+        this.finishAutoSave(serialized, serializedEventSettings);
+      },
+      error: () => this.failAutoSave()
+    });
+  }
+
+  private finishAutoSave(serialized: string, serializedEventSettings: string): void {
+    this.lastAutoSavedPayload = serialized;
+    this.lastAutoSavedEventSettings = serializedEventSettings;
+    this.autoSaveInFlight = false;
+    this.autoSaveStatus = 'saved';
+    if (this.autoSaveQueued) {
+      this.autoSaveQueued = false;
+      this.scheduleAutoSave(150);
+    }
+  }
+
+  private failAutoSave(): void {
+    this.autoSaveInFlight = false;
+    this.autoSaveStatus = 'error';
+    if (this.autoSaveQueued) {
+      this.autoSaveQueued = false;
+      this.scheduleAutoSave(1200);
+    }
+  }
+
   save(): void {
     if (!this.invitation) return;
+    if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+    this.autoSaveTimer = undefined;
+    const deadlineError = this.getRsvpDeadlineValidationError();
+    if (deadlineError) {
+      this.activeTab = 'rsvp';
+      this.message = '';
+      this.error = `❌ ${deadlineError}`;
+      return;
+    }
+    const envelopeError = this.getDigitalEnvelopeValidationError();
+    if (envelopeError) {
+      this.activeTab = 'digitalEnvelope';
+      this.message = '';
+      this.error = `❌ ${envelopeError}`;
+      return;
+    }
     this.saving = true;
     this.message = '';
     this.error = '';
 
     const invId = this.getInvitationId(this.invitation);
     const slug = this.invitation.slug;
-    const activeTemplateKey = this.invitation.content?.template || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : undefined) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : undefined) || 'envelope-cards';
-    if (invId) {
+    const activeTemplateKey = this.selectedTemplateKey();
+    if (invId && activeTemplateKey) {
       localStorage.setItem(`inv_tpl_${invId}`, activeTemplateKey);
     }
-    if (slug) {
+    if (slug && activeTemplateKey) {
       localStorage.setItem(`inv_tpl_${slug}`, activeTemplateKey);
     }
 
@@ -769,13 +995,17 @@ export class NewInvitationEditorComponent implements OnInit {
         this.invitation = invitation;
         if (rootTemplate) this.invitation.template = rootTemplate;
         if (!this.invitation.content) this.invitation.content = {};
-        this.invitation.content.template = activeTemplateKey;
+        if (activeTemplateKey) {
+          this.invitation.content.template = activeTemplateKey;
+          this.hasSelectedDesign = true;
+        }
         if (!this.invitation.content.palette) this.invitation.content.palette = { primary: '#1f2a44', secondary: '#f7f2ea', accent: '#b67b4b' };
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
+        this.captureAutoSaveBaseline();
         this.publicUrl = `${window.location.origin}/new/i/${invitation.slug}`;
 
         const eventId = this.getEventId();
@@ -841,6 +1071,24 @@ export class NewInvitationEditorComponent implements OnInit {
 
   publish(): void {
     if (!this.invitation) return;
+    if (!this.hasSelectedDesign) {
+      this.goToDesignChoice('Antes de publicar, elige cómo quieres diseñar tu invitación. Puedes cambiar de método después sin perder los datos del evento.');
+      return;
+    }
+    const deadlineError = this.getRsvpDeadlineValidationError();
+    if (deadlineError) {
+      this.activeTab = 'rsvp';
+      this.message = '';
+      this.error = `❌ ${deadlineError}`;
+      return;
+    }
+    const envelopeError = this.getDigitalEnvelopeValidationError();
+    if (envelopeError) {
+      this.activeTab = 'digitalEnvelope';
+      this.message = '';
+      this.error = `❌ ${envelopeError}`;
+      return;
+    }
     const invitationId = this.getInvitationId(this.invitation);
     this.publishing = true;
     this.message = '';
@@ -886,6 +1134,7 @@ export class NewInvitationEditorComponent implements OnInit {
               this.ensureContentCollections();
               this.ensureRsvpSettings();
               this.syncEditorTextFields();
+              this.captureAutoSaveBaseline();
             }
             this.publicUrl = publicUrl ? publicUrl.replace('/i/', '/new/i/') : `${window.location.origin}/new/i/${invitation.slug}`;
             let successMsg = '🎉 ¡Invitación guardada y publicada exitosamente (HTTP 200)!';
@@ -957,9 +1206,12 @@ export class NewInvitationEditorComponent implements OnInit {
 
   viewPublic(): void {
     if (!this.invitation) return;
+    if (!this.hasSelectedDesign) {
+      this.goToDesignChoice('Selecciona un diseño para poder abrir la vista previa.');
+      return;
+    }
     if (this.invitation.status !== 'published') {
-      this.message = '⚠️ La invitación está en borrador. Guardando y publicando para abrir la versión en vivo...';
-      this.publish();
+      window.open(`/new/i/${this.invitation.slug}?preview=true&previewId=${encodeURIComponent(this.getInvitationId(this.invitation))}`, '_blank');
       return;
     }
     window.open(this.publicUrl || `/new/i/${this.invitation.slug}`, '_blank');
@@ -1220,6 +1472,69 @@ export class NewInvitationEditorComponent implements OnInit {
     this.clearMessageAfterDelay();
   }
 
+  uploadBrandAsset(target: 'horizontal' | 'monogram' | 'pass', files: File[]): void {
+    const file = files?.[0];
+    if (!file || !this.invitation) return;
+
+    const validationError = this.validateAsset(file, 'covers');
+    if (validationError) {
+      this.error = validationError;
+      return;
+    }
+
+    this.assetUploading = true;
+    const label = target === 'monogram' ? 'monograma' : target === 'pass' ? 'logo del pase' : 'logo horizontal';
+    this.assetMessage = `Subiendo ${label}...`;
+    this.error = '';
+    this.api.createUploadUrl({
+      fileName: file.name,
+      contentType: file.type,
+      folder: 'covers',
+      event: this.getEventId(),
+      size: file.size
+    }).subscribe({
+      next: (upload) => {
+        this.api.uploadAsset(upload.uploadUrl, file).subscribe({
+          next: () => {
+            if (!this.invitation) return;
+            if (!this.invitation.content) this.invitation.content = {};
+            this.setBrandAssetUrl(target, upload.publicUrl);
+            this.persistUploadedAsset();
+            this.message = `${label.charAt(0).toUpperCase()}${label.slice(1)} subido correctamente.`;
+          },
+          error: () => {
+            this.error = 'No se pudo subir el logo. Revisa la conexión e intenta nuevamente.';
+            this.assetUploading = false;
+            this.assetMessage = '';
+          }
+        });
+      },
+      error: (error) => {
+        this.error = error.error?.message || 'No se pudo preparar la subida del logo.';
+        this.assetUploading = false;
+        this.assetMessage = '';
+      }
+    });
+  }
+
+  removeBrandAsset(target: 'horizontal' | 'monogram' | 'pass'): void {
+    if (!this.invitation?.content) return;
+    this.setBrandAssetUrl(target, '');
+    this.assetMessage = 'Imagen de identidad removida. Guarda la invitación para confirmar el cambio.';
+    this.clearMessageAfterDelay();
+  }
+
+  private setBrandAssetUrl(target: 'horizontal' | 'monogram' | 'pass', url: string): void {
+    if (!this.invitation?.content) return;
+    if (target === 'monogram') {
+      this.invitation.content.brandMonogramUrl = url;
+    } else if (target === 'pass') {
+      this.invitation.content.passLogoUrl = url;
+    } else {
+      this.invitation.content.brandLogoUrl = url;
+    }
+  }
+
   private validateAsset(file: File, folder: AssetFolder): string {
     const isMusic = folder === 'music';
     const allowedTypes = isMusic ? this.audioTypes : this.imageTypes;
@@ -1399,6 +1714,78 @@ export class NewInvitationEditorComponent implements OnInit {
     }
   }
 
+  onLodgingNameInput(index: number, query?: string): void {
+    if (this.lodgingSearchTimeouts[index]) clearTimeout(this.lodgingSearchTimeouts[index]);
+    const trimmed = (query || '').trim();
+    if (trimmed.length < 3) {
+      this.lodgingSearchResults[index] = [];
+      this.lodgingSearchLoading[index] = false;
+      return;
+    }
+    this.lodgingSearchLoading[index] = true;
+    this.lodgingSearchTimeouts[index] = setTimeout(() => {
+      this.api.searchPlaces(trimmed).subscribe({
+        next: (results) => {
+          this.lodgingSearchResults[index] = results;
+          this.lodgingSearchLoading[index] = false;
+        },
+        error: () => {
+          this.lodgingSearchResults[index] = [];
+          this.lodgingSearchLoading[index] = false;
+        }
+      });
+    }, 450);
+  }
+
+  selectLodgingSearchResult(index: number, result: PlaceSearchResult): void {
+    const lodging = this.invitation?.content.lodging?.[index];
+    if (!lodging) return;
+    if (result.name) lodging.name = result.name;
+    if (result.address) lodging.address = result.address;
+    if (result.mapUrl) lodging.mapUrl = result.mapUrl;
+    if (result.wazeUrl) lodging.wazeUrl = result.wazeUrl;
+    if (result.phone) lodging.phone = result.phone;
+    if (result.websiteUrl) {
+      lodging.websiteUrl = result.websiteUrl;
+      if (!lodging.url) lodging.url = result.websiteUrl;
+    }
+    if (result.schedule?.length) lodging.schedule = result.schedule;
+    lodging.lat = result.lat;
+    lodging.lon = result.lon;
+    this.lodgingSearchResults[index] = [];
+    this.message = 'Hotel detectado. Revisa el convenio, la tarifa y las instrucciones de reservación.';
+    this.clearMessageAfterDelay();
+    this.scheduleAutoSave();
+  }
+
+  async extractLodgingMapInfo(index: number): Promise<void> {
+    const lodging = this.invitation?.content.lodging?.[index];
+    if (!lodging?.mapUrl) return;
+    this.lodgingExtractLoading[index] = true;
+    try {
+      const parsed = await this.api.parseGoogleMapsUrl(lodging.mapUrl);
+      if (parsed.name) lodging.name = parsed.name;
+      if (parsed.address) lodging.address = parsed.address;
+      if (parsed.mapUrl) lodging.mapUrl = parsed.mapUrl;
+      if (parsed.wazeUrl) lodging.wazeUrl = parsed.wazeUrl;
+      if (parsed.phone) lodging.phone = parsed.phone;
+      if (parsed.websiteUrl) {
+        lodging.websiteUrl = parsed.websiteUrl;
+        if (!lodging.url) lodging.url = parsed.websiteUrl;
+      }
+      if (parsed.schedule?.length) lodging.schedule = parsed.schedule;
+      if (parsed.lat !== undefined) lodging.lat = parsed.lat;
+      if (parsed.lon !== undefined) lodging.lon = parsed.lon;
+      this.message = 'Datos del hospedaje extraídos desde Google Maps.';
+      this.clearMessageAfterDelay();
+      this.scheduleAutoSave();
+    } catch {
+      this.error = 'No se pudo extraer el hospedaje. Revisa que sea un enlace válido de Google Maps.';
+    } finally {
+      this.lodgingExtractLoading[index] = false;
+    }
+  }
+
   addGiftRegistryItem(): void {
     if (!this.invitation) return;
     this.ensureContentCollections();
@@ -1554,6 +1941,7 @@ export class NewInvitationEditorComponent implements OnInit {
         this.ensureContentCollections();
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
+        this.captureAutoSaveBaseline();
         this.publicUrl = `${window.location.origin}/new/i/${invitation.slug}`;
         this.assetMessage = 'Asset subido y guardado.';
         this.assetUploading = false;
@@ -1791,6 +2179,54 @@ export class NewInvitationEditorComponent implements OnInit {
     };
   }
 
+  private getRsvpDeadlineValidationError(): string | null {
+    const rawDeadline = this.invitation?.rsvpSettings?.deadline;
+    if (!rawDeadline) return null;
+
+    const deadlineMatch = String(rawDeadline).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!deadlineMatch) return 'Selecciona una fecha límite de respuesta válida.';
+    const deadline = new Date(
+      Number(deadlineMatch[1]), Number(deadlineMatch[2]) - 1, Number(deadlineMatch[3]),
+      Number(deadlineMatch[4]), Number(deadlineMatch[5]), 0, 0
+    );
+    const now = new Date();
+    now.setSeconds(0, 0);
+    if (deadline.getTime() < now.getTime()) {
+      return 'La fecha límite de respuesta no puede estar en el pasado.';
+    }
+
+    if (!this.event?.date) return null;
+    const rawEventDate = String(this.event.date);
+    const eventDatePart = /^\d{4}-\d{2}-\d{2}/.test(rawEventDate) ? rawEventDate.slice(0, 10) : '';
+    if (!eventDatePart) return null;
+    const eventTime = String(this.event.time || '23:59').slice(0, 5);
+    const eventMatch = `${eventDatePart}T${eventTime}`.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!eventMatch) return null;
+    const eventStartsAt = new Date(
+      Number(eventMatch[1]), Number(eventMatch[2]) - 1, Number(eventMatch[3]),
+      Number(eventMatch[4]), Number(eventMatch[5]), 0, 0
+    );
+    if (deadline.getTime() > eventStartsAt.getTime()) {
+      return 'La fecha límite de respuesta no puede ser posterior al inicio del evento.';
+    }
+    return null;
+  }
+
+  private getDigitalEnvelopeValidationError(): string | null {
+    const envelope = this.invitation?.content?.digitalEnvelope;
+    if (!envelope) return null;
+
+    const account = String(envelope.account ?? '').trim();
+    const clabe = String(envelope.clabe ?? '').trim();
+    if (account && !/^\d{1,20}$/.test(account)) {
+      return 'La cuenta bancaria solo puede contener números y un máximo de 20 dígitos.';
+    }
+    if (clabe && !/^\d{18}$/.test(clabe)) {
+      return 'La CLABE debe contener exactamente 18 dígitos.';
+    }
+    return null;
+  }
+
   private cleanSectionMusic(mapObj?: any): Record<string, string> {
     if (!mapObj) return {};
     const cleaned: Record<string, string> = {};
@@ -1859,8 +2295,13 @@ export class NewInvitationEditorComponent implements OnInit {
     if (!this.invitation) return undefined;
     const invId = this.getInvitationId(this.invitation);
     const slug = this.invitation.slug;
-    const activeTemplateKey = this.invitation.content?.template || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : undefined) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : undefined) || 'envelope-cards';
-    const rawContent: any = { ...this.invitation.content, template: activeTemplateKey };
+    const activeTemplateKey = this.selectedTemplateKey();
+    const rawContent: any = { ...this.invitation.content };
+    if (activeTemplateKey) {
+      rawContent.template = activeTemplateKey;
+    } else {
+      delete rawContent.template;
+    }
 
     if (rawContent.storyTitle !== undefined) {
       rawContent.subheadline = rawContent.storyTitle;
@@ -1875,7 +2316,6 @@ export class NewInvitationEditorComponent implements OnInit {
 
     return {
       ...rawContent,
-      template: activeTemplateKey,
       songRequestSettings: this.getCleanSongRequestSettings(),
       musicSettings: this.cleanMusicSettings(),
       sectionMusic: this.cleanSectionMusic(this.invitation.content.sectionMusic || {}),
@@ -1888,8 +2328,15 @@ export class NewInvitationEditorComponent implements OnInit {
         description: String(opt.description || '').trim()
       })).filter(opt => opt.title || opt.description),
       lodging: (this.invitation.content.lodging || [])
-        .filter((item) => item.name || item.description || item.url || item.imageUrl || item.address || item.phone || item.mapUrl || item.agreementLabel || item.discountCode || item.discountDescription || item.priceLabel || item.services?.length || item.notes)
-        .map((item, priority) => ({ ...item, services: (item.services || []).map((service) => service.trim()).filter(Boolean), priority }))
+        .filter((item) => item.name || item.description || item.url || item.imageUrl || item.address || item.phone || item.mapUrl || item.wazeUrl || item.websiteUrl || item.schedule?.length || item.agreementLabel || item.discountCode || item.discountDescription || item.priceLabel || item.services?.length || item.notes)
+        .map((item, priority) => ({
+          ...item,
+          services: (item.services || []).map((service) => service.trim()).filter(Boolean),
+          schedule: (item.schedule || []).map((line) => line.trim()).filter(Boolean),
+          lat: item.lat === undefined || item.lat === null ? undefined : Number(item.lat),
+          lon: item.lon === undefined || item.lon === null ? undefined : Number(item.lon),
+          priority
+        }))
     };
   }
 
@@ -1914,6 +2361,7 @@ export class NewInvitationEditorComponent implements OnInit {
     if (!this.invitation.content.lodging) this.invitation.content.lodging = [];
     this.invitation.content.lodging.push({
       name: '', description: '', url: '', imageUrl: '', address: '', phone: '', mapUrl: '',
+      wazeUrl: '', websiteUrl: '', schedule: [],
       agreementLabel: '', discountCode: '', discountDescription: '', priceLabel: '', services: [], notes: '',
       priority: this.invitation.content.lodging.length
     });
@@ -1922,11 +2370,23 @@ export class NewInvitationEditorComponent implements OnInit {
   removeLodgingItem(index: number): void {
     if (!this.invitation?.content?.lodging) return;
     this.invitation.content.lodging.splice(index, 1);
+    delete this.lodgingSearchResults[index];
+    delete this.lodgingSearchLoading[index];
+    delete this.lodgingExtractLoading[index];
   }
 
   syncCustomQuestionsFromInvitation(): void {
     const questions = this.invitation?.rsvpSettings?.customQuestions || [];
-    this.customQuestionsList = questions.map(q => ({
+    const seenPresetKeys = new Set<string>();
+    this.customQuestionsList = questions.filter(q => {
+      const normalizedKey = this.slugify(q.key || q.label || '');
+      const normalizedLabel = this.slugify(q.label || '');
+      const preset = Object.values(this.questionPresets).find(item => item.key === normalizedKey || item.key === normalizedLabel);
+      if (!preset) return true;
+      if (seenPresetKeys.has(preset.key)) return false;
+      seenPresetKeys.add(preset.key);
+      return true;
+    }).map(q => ({
       key: q.key || this.slugify(q.label || ''),
       label: q.label || '',
       type: q.type || 'text',
@@ -1971,16 +2431,25 @@ export class NewInvitationEditorComponent implements OnInit {
     this.syncCustomQuestionsToPayload();
   }
 
-  addQuestionPreset(presetKey: string): void {
-    if (presetKey === 'song') {
-      this.addCustomQuestion('Canción preferida para la fiesta', 'text', '', false);
-    } else if (presetKey === 'diet') {
-      this.addCustomQuestion('Restricciones o alergias alimenticias', 'textarea', '', false);
-    } else if (presetKey === 'menu') {
-      this.addCustomQuestion('Opción de platillo preferido', 'select', 'Pollo supremo; Filete de res; Opción vegetariana; Menú infantil', true);
-    } else if (presetKey === 'transport') {
-      this.addCustomQuestion('¿Requieres transporte del hotel a la recepción?', 'boolean', '', false);
+  addQuestionPreset(presetKey: keyof typeof this.questionPresets): void {
+    const preset = this.questionPresets[presetKey];
+    const previousLength = this.customQuestionsList.length;
+    this.customQuestionsList = this.customQuestionsList.filter(question => {
+      const normalizedKey = this.slugify(question.key || question.label || '');
+      return normalizedKey !== preset.key && this.slugify(question.label || '') !== preset.key;
+    });
+
+    if (this.customQuestionsList.length === previousLength) {
+      this.customQuestionsList.push({
+        key: preset.key,
+        label: preset.label,
+        type: preset.type,
+        required: preset.required,
+        optionsText: preset.optionsText,
+        options: preset.optionsText ? this.parseOptionsText(preset.optionsText) : []
+      });
     }
+    this.syncCustomQuestionsToPayload();
   }
 
   parseOptionsText(optionsText: string = ''): string[] {

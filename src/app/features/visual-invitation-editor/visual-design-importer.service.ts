@@ -558,11 +558,28 @@ export class VisualDesignImporterService {
           width, height: this.safeNumber(layer.height, 10, 1, 100),
           rotation: layer.rotation ?? (importedRotation ? this.safeNumber(importedRotation[1], 0, -360, 360) : undefined),
           zIndex: Math.round(this.safeNumber(layer.zIndex, layerIndex + 1, 0, 1000)),
-          locked: layer.locked, hidden: layer.hidden, animation, layouts: layer.layouts,
+          locked: layer.locked, hidden: layer.hidden, animation, layouts: this.normalizeLayouts(layer.layouts),
           style: style as VisualInvitationLayerStyle
         };
       })
     };
+  }
+
+  private normalizeLayouts(layouts: VisualInvitationLayer['layouts']): VisualInvitationLayer['layouts'] {
+    if (!layouts || typeof layouts !== 'object') return undefined;
+    const normalized: NonNullable<VisualInvitationLayer['layouts']> = {};
+    for (const device of ['mobile', 'tablet', 'desktop'] as const) {
+      const layout = layouts[device];
+      if (!layout || typeof layout !== 'object') continue;
+      normalized[device] = {
+        x: this.safeNumber(layout.x, 0, -100, 200),
+        y: this.safeNumber(layout.y, 0, -10000, 10000),
+        width: this.safeNumber(layout.width, 1, 1, 100),
+        height: this.safeNumber(layout.height, 1, 1, 100),
+        rotation: layout.rotation === undefined ? undefined : this.safeNumber(layout.rotation, 0, -360, 360)
+      };
+    }
+    return Object.keys(normalized).length ? normalized : undefined;
   }
 
   private importedAnimation(value: unknown): VisualInvitationLayer['animation'] | undefined {

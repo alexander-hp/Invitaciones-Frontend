@@ -148,8 +148,8 @@
 
         <div class="bmf-hero-content animate__animated animate__fadeIn">
           <!-- Monogram or Logo -->
-          <div *ngIf="invitation.content.brandLogoUrl" class="bmf-monogram-wrap">
-            <img class="bmf-brand-logo" [src]="invitation.content.brandLogoUrl" alt="Monograma de Boda">
+          <div *ngIf="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" class="bmf-monogram-wrap">
+            <img class="bmf-brand-logo" [src]="invitation.content.brandMonogramUrl || invitation.content.brandLogoUrl" alt="Monograma de Boda">
           </div>
 
           <!-- Romantic Subtitle -->

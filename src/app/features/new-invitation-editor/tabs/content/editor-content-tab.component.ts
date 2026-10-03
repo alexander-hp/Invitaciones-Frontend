@@ -1,6 +1,8 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { GuestModel, InvitationModel } from '../../../../core/models';
 
+type BrandAssetTarget = 'horizontal' | 'monogram' | 'pass';
+
 @Component({
   selector: 'app-editor-content-tab',
   templateUrl: './editor-content-tab.component.html'
@@ -9,6 +11,7 @@ export class EditorContentTabComponent {
   @Input() invitation!: InvitationModel;
   @Input() loadedGuests: GuestModel[] = [];
   @Input() canUseWhiteLabel = false;
+  @Input() assetUploading = false;
   @Input() allowedRolesText = '';
   @Input() allowedGroupsText = '';
   @Input() allowedEmailsText = '';
@@ -19,9 +22,14 @@ export class EditorContentTabComponent {
   @Output() allowedEmailsTextChange = new EventEmitter<string>();
   @Output() allowedPhonesTextChange = new EventEmitter<string>();
   @Output() applyTextVariant = new EventEmitter<'formal' | 'warm' | 'brief'>();
+  @Output() uploadBrandAsset = new EventEmitter<{ target: BrandAssetTarget; files: File[] }>();
+  @Output() removeBrandAsset = new EventEmitter<BrandAssetTarget>();
 
   newCustomRole = '';
   newCustomGroup = '';
+  showExternalLogoInput = false;
+  externalBrandLogoUrl = '';
+  externalLogoError = '';
 
   get availableRoleOptions(): Array<{ value: string; label: string }> {
     const defaults = [
@@ -130,5 +138,32 @@ export class EditorContentTabComponent {
 
   onApplyVariant(variant: 'formal' | 'warm' | 'brief'): void {
     this.applyTextVariant.emit(variant);
+  }
+
+  onBrandAssetSelected(target: BrandAssetTarget, files: File[]): void {
+    this.uploadBrandAsset.emit({ target, files });
+  }
+
+  onRemoveBrandAsset(target: BrandAssetTarget): void {
+    this.removeBrandAsset.emit(target);
+  }
+
+  toggleExternalLogoInput(): void {
+    this.showExternalLogoInput = !this.showExternalLogoInput;
+    this.externalBrandLogoUrl = '';
+    this.externalLogoError = '';
+  }
+
+  applyExternalBrandLogoUrl(): void {
+    const url = this.externalBrandLogoUrl.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      this.externalLogoError = 'Ingresa un enlace válido que comience con http:// o https://.';
+      return;
+    }
+
+    this.invitation.content.brandLogoUrl = url;
+    this.externalBrandLogoUrl = '';
+    this.externalLogoError = '';
+    this.showExternalLogoInput = false;
   }
 }

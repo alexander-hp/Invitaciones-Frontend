@@ -537,8 +537,8 @@ export class ApiService {
     return cleaned as T;
   }
 
-  publishInvitation(id: string): Observable<{ invitation: InvitationModel; publicUrl: string; message?: string; warning?: string }> {
-    return this.http.post<{ invitation: InvitationModel; publicUrl: string; message?: string; warning?: string }>(`${this.apiUrl}/invitations/${id}/publish`, {});
+  publishInvitation(id: string, source: 'standard' | 'visual' = 'standard'): Observable<{ invitation: InvitationModel; publicUrl: string; message?: string; warning?: string }> {
+    return this.http.post<{ invitation: InvitationModel; publicUrl: string; message?: string; warning?: string }>(`${this.apiUrl}/invitations/${id}/publish`, { source });
   }
 
   deleteInvitation(id: string): Observable<MessageResponse> {
@@ -549,6 +549,11 @@ export class ApiService {
     const params = new HttpParams().set('_v', Date.now().toString());
     const headers = guestSessionToken ? { Authorization: `Bearer ${guestSessionToken}` } : undefined;
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/public/${slug}`, { params, headers });
+  }
+
+  getInvitationPreview(slug: string): Observable<{ invitation: InvitationModel }> {
+    const params = new HttpParams().set('_v', Date.now().toString());
+    return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/preview/${slug}`, { params });
   }
 
   checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<{ message: string }> {
@@ -644,11 +649,15 @@ export class ApiService {
     return this.http.get<WhatsAppStatusResponse>(`${this.apiUrl}/guests/whatsapp/status`);
   }
 
-  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string; media?: WhatsAppMediaPayload; attachPass?: boolean }): Observable<WhatsAppSendResponse> {
+  getWhatsAppPassStatus(eventId: string): Observable<{ sentGuestIds: string[] }> {
+    return this.http.get<{ sentGuestIds: string[] }>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/pass-status`);
+  }
+
+  sendGuestWhatsApp(id: string, payload: { messageType: GuestMessageType; text?: string; messageBody?: string; media?: WhatsAppMediaPayload; attachPass?: boolean }): Observable<WhatsAppSendResponse> {
     return this.http.post<WhatsAppSendResponse>(`${this.apiUrl}/guests/${id}/whatsapp`, payload);
   }
 
-  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; media?: WhatsAppMediaPayload; attachPass?: boolean; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
+  sendBulkWhatsApp(eventId: string, payload: { confirm: boolean; messageType: GuestMessageType; messageBody?: string; media?: WhatsAppMediaPayload; attachPass?: boolean; guestIds?: string[]; filters?: { search?: string; status?: string; communicationStatus?: string; group?: string } }): Observable<WhatsAppBulkResponse> {
     return this.http.post<WhatsAppBulkResponse>(`${this.apiUrl}/guests/event/${eventId}/whatsapp/bulk`, payload);
   }
 
@@ -660,11 +669,11 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/guests/event/${eventId}/pass-images/zip`, { responseType: 'blob' });
   }
 
-  sendGuestEmail(id: string, payload: { messageType?: GuestMessageType; attachPass?: boolean }): Observable<EmailSendResponse> {
+  sendGuestEmail(id: string, payload: { messageType?: GuestMessageType; messageBody?: string; attachPass?: boolean }): Observable<EmailSendResponse> {
     return this.http.post<EmailSendResponse>(`${this.apiUrl}/guests/${id}/send-email`, payload);
   }
 
-  sendBulkEmail(eventId: string, payload: { confirm: boolean; messageType?: GuestMessageType; guestIds?: string[]; attachPass?: boolean }): Observable<EmailBulkResponse> {
+  sendBulkEmail(eventId: string, payload: { confirm: boolean; messageType?: GuestMessageType; messageBody?: string; guestIds?: string[]; attachPass?: boolean }): Observable<EmailBulkResponse> {
     return this.http.post<EmailBulkResponse>(`${this.apiUrl}/events/${eventId}/send-email`, payload);
   }
 
@@ -1060,10 +1069,32 @@ export class ApiService {
     );
   }
 
-  async parseGoogleMapsUrl(mapUrl: string): Promise<{ name?: string; address?: string; lat?: number; lon?: number; mapUrl?: string; wazeUrl?: string }> {
+  async parseGoogleMapsUrl(mapUrl: string): Promise<{
+    name?: string;
+    address?: string;
+    type?: string;
+    lat?: number;
+    lon?: number;
+    mapUrl?: string;
+    wazeUrl?: string;
+    phone?: string;
+    websiteUrl?: string;
+    schedule?: string[];
+  }> {
     const trimmed = mapUrl.trim();
     if (!trimmed) return {};
-    const response = await this.http.post<{ location: { name?: string; address?: string; lat?: number; lon?: number; mapUrl?: string; wazeUrl?: string } }>(
+    const response = await this.http.post<{ location: {
+      name?: string;
+      address?: string;
+      type?: string;
+      lat?: number;
+      lon?: number;
+      mapUrl?: string;
+      wazeUrl?: string;
+      phone?: string;
+      websiteUrl?: string;
+      schedule?: string[];
+    } }>(
       `${this.apiUrl}/locations/inspect-map-url`,
       { url: trimmed }
     ).toPromise();

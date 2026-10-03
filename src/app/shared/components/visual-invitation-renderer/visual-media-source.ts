@@ -6,7 +6,7 @@ export interface VisualMediaSource {
   embedUrl?: string;
 }
 
-export function resolveVisualMediaSource(value?: string): VisualMediaSource {
+export function resolveVisualMediaSource(value?: string, startSeconds?: number, endSeconds?: number): VisualMediaSource {
   const sourceUrl = String(value || '').trim();
   if (!sourceUrl) return { provider: 'empty', sourceUrl: '' };
 
@@ -26,10 +26,15 @@ export function resolveVisualMediaSource(value?: string): VisualMediaSource {
         ? parsed.pathname.split('/').filter(Boolean)[0]
         : parsed.searchParams.get('v') || youtubePathId(parsed.pathname);
       if (isSafeProviderId(videoId)) {
+        const start = normalizedSeconds(startSeconds) ?? youtubeTimeSeconds(parsed.searchParams.get('start') || parsed.searchParams.get('t'));
+        const end = normalizedSeconds(endSeconds) ?? normalizedSeconds(parsed.searchParams.get('end'));
+        const params = new URLSearchParams({ rel: '0', playsinline: '1' });
+        if (start !== undefined) params.set('start', String(start));
+        if (end !== undefined && (start === undefined || end > start)) params.set('end', String(end));
         return {
           provider: 'youtube',
           sourceUrl,
-          embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&playsinline=1`
+          embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`
         };
       }
     }
@@ -53,6 +58,20 @@ export function resolveVisualMediaSource(value?: string): VisualMediaSource {
   }
 
   return { provider: 'direct', sourceUrl };
+}
+
+function normalizedSeconds(value?: number | string | null): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : undefined;
+}
+
+function youtubeTimeSeconds(value?: string | null): number | undefined {
+  if (!value) return undefined;
+  if (/^\d+$/.test(value)) return Number(value);
+  const match = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/i);
+  if (!match) return undefined;
+  return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0);
 }
 
 function youtubePathId(pathname: string): string {
