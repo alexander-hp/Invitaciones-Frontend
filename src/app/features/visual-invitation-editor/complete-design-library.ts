@@ -9,6 +9,8 @@ export interface CompleteDesignPreset {
 }
 
 export const COMPLETE_DESIGN_PRESETS: CompleteDesignPreset[] = [
+  { key: 'haute-couture', name: 'Alta Costura Imperial', description: 'Est\u00e9tica de lujo editorial, marco arquitect\u00f3nico, oro fino y composici\u00f3n regia.', category: 'boda', colors: ['#fcfaf7', '#181514', '#c59b48'] },
+  { key: 'xv-burgundy', name: 'Mis XV Borgo\u00f1a Real', description: 'Terciopelo borgo\u00f1a, encaje victoriano, rosas 3D con perlas y caligraf\u00eda de gala.', category: 'xv', colors: ['#5c0d18', '#faf6f0', '#d4af37'] },
   { key: 'editorial', name: 'Editorial de autor', description: 'Fotograf\u00eda protagonista, tipograf\u00eda amplia y lectura limpia.', category: 'general', colors: ['#f7f5f1', '#202d2a', '#dc705b'] },
   { key: 'romantic', name: 'Jard\u00edn rom\u00e1ntico', description: 'Retrato en arco, detalles delicados y una historia cercana.', category: 'boda', colors: ['#fff8f6', '#684755', '#7c946e'] },
   { key: 'night', name: 'Noche de gala', description: 'Composici\u00f3n asim\u00e9trica y contraste para una celebraci\u00f3n formal.', category: 'xv', colors: ['#191c22', '#f4e9d4', '#c6a677'] },
@@ -23,6 +25,8 @@ type DesignPalette = {
 };
 
 const PALETTES: Record<string, DesignPalette> = {
+  'haute-couture': { background: '#fcfaf7', foreground: '#181514', accent: '#c59b48', secondary: '#f4efe6', muted: '#7a7269', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#181514', buttonText: '#ffffff' },
+  'xv-burgundy': { background: '#5c0d18', foreground: '#faf6f0', accent: '#d4af37', secondary: '#480a13', muted: '#e2d5c3', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#5c0d18' },
   editorial: { background: '#f7f5f1', foreground: '#202d2a', accent: '#dc705b', secondary: '#e9eee9', muted: '#6a706c', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', button: '#202d2a', buttonText: '#ffffff' },
   romantic: { background: '#fff8f6', foreground: '#684755', accent: '#7c946e', secondary: '#f3e7e8', muted: '#725f65', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', button: '#684755', buttonText: '#ffffff' },
   night: { background: '#191c22', foreground: '#f4e9d4', accent: '#c6a677', secondary: '#30383d', muted: '#d5c8b7', headingFont: 'Cinzel, serif', bodyFont: 'Montserrat, sans-serif', button: '#c6a677', buttonText: '#191c22' },
@@ -52,7 +56,7 @@ export function buildCompleteDesign(
   const title = content.headline ? '{{invitation.headline}}' : '{{event.title}}';
   const titleStyle: VisualInvitationLayer['style'] = { color: palette.foreground, fontFamily: palette.headingFont, fontSize: 44, fontWeight: 600, lineHeight: 1.08, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
   const bodyStyle: VisualInvitationLayer['style'] = { color: palette.muted, fontFamily: palette.bodyFont, fontSize: 16, fontWeight: 500, lineHeight: 1.45, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
-  const hero = section(nextId('section'), 'hero', 'Portada', palette.background, 760);
+  const hero = section(nextId('section'), 'hero', 'Portada', palette.background, variant === 'xv-burgundy' ? 840 : 760);
   const add = (type: VisualInvitationLayer['type'], text: string, x: number, y: number, width: number, height: number, style: VisualInvitationLayer['style'], extras: Partial<VisualInvitationLayer> = {}) => {
     hero.layers.push(layer(nextId('layer'), type, text, x, y, width, height, style, extras));
   };
@@ -61,7 +65,25 @@ export function buildCompleteDesign(
   };
   const rule = (x: number, y: number, width: number) => add('shape', '', x, y, width, .4, { backgroundColor: palette.accent, shapeKind: 'rectangle' }, { name: 'Linea decorativa' });
 
-  if (variant === 'editorial') {
+  if (variant === 'haute-couture') {
+    rule(20, 7, 60);
+    add('text', 'EXCLUSIVE CELEBRATION \u00b7 HAUTE COUTURE', 10, 10, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 10, fontWeight: 700, letterSpacing: 3 });
+    image(20, 16, 60, 44, 'arch');
+    rule(35, 62, 30);
+    add('text', title, 8, 65, 84, 18, { ...titleStyle, fontSize: 44, letterSpacing: 1 }, { name: 'Nombre del evento' });
+    if (event?.date) add('text', '{{event.date}}', 10, 84, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 600, letterSpacing: 2 }, { name: 'Fecha del evento' });
+  } else if (variant === 'xv-burgundy') {
+    hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg' };
+    add('image', '', 0, 0, 100, 24, { objectFit: 'cover', borderRadius: 0 }, { url: 'assets/templates/xv-burgundy/tiara-banner.jpg', name: 'Corona imperial y rosas' });
+    if (coverUrl) {
+      add('image', '', 29, 15, 42, 25, { objectFit: 'cover', imageMask: 'circle', borderRadius: 999, borderWidth: 3, borderColor: '#d4af37', borderStyle: 'solid', boxShadow: '0 12px 30px rgba(0,0,0,0.5)' }, { url: coverUrl, name: 'Foto de la quinceañera' });
+    }
+    add('text', 'Mis', 10, 42, 80, 7, { ...titleStyle, fontSize: 46, color: palette.accent, fontWeight: 400 }, { name: 'Mis' });
+    add('text', 'XV', 10, 49, 80, 11, { ...titleStyle, fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 58, fontWeight: 700, color: palette.accent, letterSpacing: 6 }, { name: 'XV Años' });
+    add('text', title, 6, 60, 88, 11, { ...titleStyle, fontSize: 42, color: '#faf6f0', fontWeight: 600, letterSpacing: 1 }, { name: 'Nombre de la quinceañera' });
+    add('image', '', 18, 71, 64, 6, { objectFit: 'contain', borderRadius: 0 }, { url: 'assets/templates/xv-burgundy/floral-cluster.jpg', name: 'Ramillete de rosas y perlas' });
+    if (event?.date) add('text', '{{event.date}}', 10, 77, 80, 4, { ...bodyStyle, color: '#e2d5c3', fontSize: 13, fontWeight: 600, letterSpacing: 3 }, { name: 'Fecha del evento' });
+  } else if (variant === 'editorial') {
     image(9, 7, 82, 45);
     add('text', 'UNA CELEBRACI\u00d3N ESPECIAL', 12, 54, 76, 5, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 2 });
     add('text', title, 10, 61, 80, 19, titleStyle, { name: 'Nombre del evento' });
@@ -100,34 +122,58 @@ export function buildCompleteDesign(
   }
 
   const sections: VisualInvitationSection[] = [hero];
-  if (!includeModules) return { version: 1, active: false, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: theme(palette), sections };
+  if (!includeModules) return { version: 1, active: false, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: theme(palette, variant), sections };
 
-  const intro = section(nextId('section'), 'custom', 'Bienvenida', variant === 'night' ? '#252a2e' : palette.secondary, 410);
-  const introEyebrow = variant === 'birthday' ? 'NOS VEMOS EN LA FIESTA' : variant === 'baptism' ? 'UN D\u00cdA PARA COMPARTIR' : 'NOS VEMOS PRONTO';
-  const introFallback = variant === 'birthday' ? 'Acomp\u00e1\u00f1anos a festejar' : variant === 'baptism' ? 'Celebremos este momento en familia' : 'Acomp\u00e1\u00f1anos a celebrar';
-  intro.layers = [
-    layer(nextId('layer'), 'text', introEyebrow, 15, 19, 70, 8, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 2 }),
-    layer(nextId('layer'), 'text', content.message || content.subheadline ? '{{invitation.message}}' : introFallback, 12, 35, 76, 28, { ...titleStyle, fontSize: 35 }, { name: 'Mensaje de bienvenida' })
-  ];
-  if (event?.date) intro.layers.push(layer(nextId('layer'), 'text', '{{event.date}}', 15, 72, 70, 9, { ...bodyStyle, color: palette.accent, fontSize: 16 }));
+  const introHeight = variant === 'xv-burgundy' ? 680 : 410;
+  const intro = section(nextId('section'), 'custom', 'Bienvenida', variant === 'night' ? '#252a2e' : (variant === 'xv-burgundy' ? '#480a13' : palette.secondary), introHeight);
+  const introEyebrow = variant === 'haute-couture'
+    ? 'NUESTRA CELEBRACI\u00d3N'
+    : variant === 'xv-burgundy'
+    ? 'MIS QUINCE A\u00d1OS'
+    : variant === 'birthday' ? 'NOS VEMOS EN LA FIESTA' : variant === 'baptism' ? 'UN D\u00cdA PARA COMPARTIR' : 'NOS VEMOS PRONTO';
+  const introFallback = variant === 'haute-couture'
+    ? 'Nos complace invitarte a ser parte de este momento inolvidable'
+    : variant === 'xv-burgundy'
+    ? 'Te invito a compartir conmigo una noche m\u00e1gica e inolvidable'
+    : variant === 'birthday' ? 'Acomp\u00e1\u00f1anos a festejar' : variant === 'baptism' ? 'Celebremos este momento en familia' : 'Acomp\u00e1\u00f1anos a celebrar';
+  if (variant === 'xv-burgundy') {
+    intro.background = { ...(intro.background || {}), color: '#480a13', imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg' };
+    intro.layers = [
+      layer(nextId('layer'), 'image', '', 5, 4, 90, 92, { objectFit: 'cover', borderRadius: 18, boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }, { url: 'assets/templates/xv-burgundy/welcome-card.jpg', name: 'Tarjeta de bienvenida' }),
+      layer(nextId('layer'), 'text', 'MIS QUINCE A\u00d1OS', 16, 17, 68, 6, { ...bodyStyle, color: '#5c0d18', fontSize: 12, fontWeight: 800, letterSpacing: 3 }, { name: 'Encabezado' }),
+      layer(nextId('layer'), 'text', 'Te invito a celebrar conmigo', 12, 24, 76, 9, { ...titleStyle, fontSize: 30, color: '#5c0d18', fontWeight: 600 }, { name: 'Título' }),
+      layer(nextId('layer'), 'text', content.message || content.subheadline ? '{{invitation.message}}' : introFallback, 14, 34, 72, 38, { ...titleStyle, fontFamily: "'Great Vibes', cursive", fontSize: 24, color: '#480a13', lineHeight: 1.55 }, { name: 'Mensaje de bienvenida' })
+    ];
+    if (event?.date) intro.layers.push(layer(nextId('layer'), 'text', '{{event.date}}', 16, 75, 68, 6, { ...bodyStyle, color: '#d4af37', fontSize: 14, fontWeight: 700, letterSpacing: 2 }, { name: 'Fecha' }));
+  } else {
+    intro.layers = [
+      layer(nextId('layer'), 'text', introEyebrow, 15, 19, 70, 8, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 2 }),
+      layer(nextId('layer'), 'text', content.message || content.subheadline ? '{{invitation.message}}' : introFallback, 12, 35, 76, 28, { ...titleStyle, fontSize: 35 }, { name: 'Mensaje de bienvenida' })
+    ];
+    if (event?.date) intro.layers.push(layer(nextId('layer'), 'text', '{{event.date}}', 15, 72, 70, 9, { ...bodyStyle, color: palette.accent, fontSize: 16 }));
+  }
   sections.push(intro);
 
   const settings = content.sectionSettings || {};
   const modules: Array<{ type: string; title: string; show: boolean; height: number }> = [
     { type: 'story', title: content.storyTitle || 'Nuestra historia', show: settings.story !== false && Boolean(content.storyBody), height: 620 },
-    { type: 'countdown', title: 'Cuenta regresiva', show: Boolean(event?.date), height: 760 },
-    { type: 'locations', title: 'Ubicaci\u00f3n y mapa', show: settings.locations !== false && Boolean(content.locations?.length), height: 760 },
-    { type: 'itinerary', title: 'Itinerario', show: settings.itinerary !== false && Boolean(content.itinerary?.length), height: 760 },
-    { type: 'dressCode', title: 'C\u00f3digo de vestimenta', show: settings.dressCode !== false && Boolean(content.dressCode || content.dressCodeDescription), height: 760 },
-    { type: 'gallery', title: 'Galer\u00eda', show: settings.gallery !== false && Boolean(content.galleryItems?.length || content.gallery?.length), height: 760 },
-    { type: 'gifts', title: 'Mesa de regalos', show: (settings.giftRegistry !== false && Boolean(content.giftRegistry?.length)) || (settings.digitalEnvelope !== false && Boolean(content.digitalEnvelope?.clabe || content.digitalEnvelope?.account)), height: 760 },
-    { type: 'lodging', title: 'Hospedaje', show: settings.lodging !== false && Boolean(content.lodging?.length), height: 760 },
-    { type: 'rsvp', title: 'Confirma tu asistencia', show: settings.rsvp !== false, height: 920 },
-    { type: 'album', title: '\u00c1lbum colectivo', show: settings.guestAlbum !== false, height: 760 },
-    { type: 'dedications', title: 'Dedicatorias', show: settings.dedications !== false, height: 760 },
-    { type: 'songs', title: 'Peticiones al DJ', show: settings.songRequests !== false, height: 760 }
+    { type: 'countdown', title: 'Cuenta regresiva', show: Boolean(event?.date), height: variant === 'xv-burgundy' ? 620 : 760 },
+    { type: 'locations', title: 'Ubicaci\u00f3n y mapa', show: settings.locations !== false && Boolean(content.locations?.length), height: variant === 'haute-couture' || variant === 'xv-burgundy' ? 820 : 760 },
+    { type: 'itinerary', title: 'Itinerario', show: settings.itinerary !== false && Boolean(content.itinerary?.length), height: variant === 'haute-couture' || variant === 'xv-burgundy' ? 800 : 760 },
+    { type: 'dressCode', title: 'C\u00f3digo de vestimenta', show: settings.dressCode !== false && Boolean(content.dressCode || content.dressCodeDescription), height: variant === 'xv-burgundy' ? 740 : 760 },
+    { type: 'gallery', title: 'Galer\u00eda', show: settings.gallery !== false && Boolean(content.galleryItems?.length || content.gallery?.length), height: variant === 'haute-couture' || variant === 'xv-burgundy' ? 840 : 760 },
+    { type: 'gifts', title: 'Mesa de regalos', show: (settings.giftRegistry !== false && Boolean(content.giftRegistry?.length)) || (settings.digitalEnvelope !== false && Boolean(content.digitalEnvelope?.clabe || content.digitalEnvelope?.account)), height: variant === 'haute-couture' || variant === 'xv-burgundy' ? 880 : 760 },
+    { type: 'lodging', title: 'Hospedaje', show: settings.lodging !== false && Boolean(content.lodging?.length), height: variant === 'xv-burgundy' ? 680 : 760 },
+    { type: 'rsvp', title: 'Confirma tu asistencia', show: settings.rsvp !== false, height: variant === 'xv-burgundy' ? 840 : 920 },
+    { type: 'album', title: '\u00c1lbum colectivo', show: settings.guestAlbum !== false, height: variant === 'xv-burgundy' ? 680 : 760 },
+    { type: 'dedications', title: 'Dedicatorias', show: settings.dedications !== false, height: variant === 'xv-burgundy' ? 680 : 760 },
+    { type: 'songs', title: 'Peticiones al DJ', show: settings.songRequests !== false, height: variant === 'xv-burgundy' ? 680 : 760 }
   ];
-  const order = variant === 'birthday'
+  const order = variant === 'haute-couture'
+    ? ['countdown', 'story', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'album', 'dedications', 'songs']
+    : variant === 'xv-burgundy'
+    ? ['countdown', 'gallery', 'dedications', 'locations', 'itinerary', 'dressCode', 'gifts', 'lodging', 'rsvp', 'story', 'album', 'songs']
+    : variant === 'birthday'
     ? ['countdown', 'locations', 'itinerary', 'gallery', 'rsvp', 'gifts', 'dressCode', 'story', 'album', 'songs', 'dedications', 'lodging']
     : variant === 'baptism'
       ? ['story', 'countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'rsvp', 'gifts', 'dedications', 'album', 'lodging', 'songs']
@@ -140,20 +186,20 @@ export function buildCompleteDesign(
     const module = modules.find((item) => item.type === type);
     if (!module?.show) return;
     const index = sections.length;
-    const background = index % 2 ? palette.background : (variant === 'night' ? '#252a2e' : palette.secondary);
+    const background = index % 2 ? palette.background : (variant === 'night' ? '#252a2e' : (variant === 'xv-burgundy' ? '#480a13' : palette.secondary));
     const item = section(nextId('section'), type, module.title, background, module.height);
-    item.moduleStyle = { layout: ['itinerary', 'locations', 'gallery'].includes(type) ? 'grid' : 'list', columns: type === 'gallery' ? 3 : 2, alignment: 'center', surface: 'transparent', cardStyle: 'none', gap: 14, showTitle: true };
+    item.moduleStyle = { layout: ['itinerary', 'locations', 'gallery'].includes(type) ? 'grid' : 'list', columns: type === 'gallery' ? 3 : 2, alignment: 'center', surface: variant === 'haute-couture' || variant === 'xv-burgundy' ? 'soft' : 'transparent', cardStyle: variant === 'haute-couture' || variant === 'xv-burgundy' ? 'elevated' : 'none', gap: variant === 'haute-couture' || variant === 'xv-burgundy' ? 16 : 14, showTitle: true };
     sections.push(item);
   });
   if (sections.some((item) => item.type === 'rsvp')) {
-    const buttonY = ['night', 'celebration', 'birthday', 'baptism'].includes(variant) ? 91 : 88;
-    hero.layers.push(layer(nextId('layer'), 'button', 'Confirmar asistencia', variant === 'celebration' ? 8 : 29, buttonY, 42, 7,
-      { backgroundColor: palette.button, color: palette.buttonText, fontFamily: palette.bodyFont, fontSize: 14, fontWeight: 700, textAlign: 'center', borderRadius: variant === 'romantic' ? 30 : 4, padding: 8 },
+    const buttonY = variant === 'xv-burgundy' ? 84 : ['haute-couture', 'night', 'celebration', 'birthday', 'baptism'].includes(variant) ? 90 : 88;
+    hero.layers.push(layer(nextId('layer'), 'button', 'Confirmar asistencia', variant === 'celebration' ? 8 : (variant === 'xv-burgundy' ? 24 : 29), buttonY, variant === 'xv-burgundy' ? 52 : 42, 7,
+      { backgroundColor: palette.button, color: palette.buttonText, fontFamily: palette.bodyFont, fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: variant === 'romantic' || variant === 'haute-couture' || variant === 'xv-burgundy' ? 30 : 4, padding: 8, boxShadow: variant === 'xv-burgundy' ? '0 8px 24px rgba(212, 175, 55, 0.45)' : undefined },
       { name: 'Ir a RSVP', binding: 'section:rsvp' }));
   }
-  return { version: 1, active: true, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: theme(palette), sections };
+  return { version: 1, active: true, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: theme(palette, variant), sections };
 }
 
-function theme(palette: DesignPalette): NonNullable<VisualInvitationDesign['theme']> {
-  return { backgroundColor: palette.background, textColor: palette.foreground, accentColor: palette.accent, headingFont: palette.headingFont, bodyFont: palette.bodyFont, buttonBackgroundColor: palette.button, buttonTextColor: palette.buttonText, buttonStyle: 'solid', buttonRadius: 4 };
+function theme(palette: DesignPalette, variant?: string): NonNullable<VisualInvitationDesign['theme']> {
+  return { backgroundColor: palette.background, textColor: palette.foreground, accentColor: palette.accent, headingFont: palette.headingFont, bodyFont: palette.bodyFont, buttonBackgroundColor: palette.button, buttonTextColor: palette.buttonText, buttonStyle: 'solid', buttonRadius: variant === 'romantic' || variant === 'haute-couture' || variant === 'xv-burgundy' ? 30 : 4 };
 }

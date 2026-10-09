@@ -456,6 +456,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   readonly builtInPresets = COMPLETE_DESIGN_PRESETS;
 
   readonly themePresets: Array<{ key: string; label: string; theme: VisualTheme }> = [
+    { key: 'haute-couture', label: 'Alta Costura', theme: { backgroundColor: '#fcfaf7', textColor: '#181514', accentColor: '#c59b48', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#181514', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 30 } },
+    { key: 'xv-burgundy', label: 'Mis XV Borgoña Real', theme: { backgroundColor: '#5c0d18', textColor: '#faf6f0', accentColor: '#d4af37', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#d4af37', buttonTextColor: '#5c0d18', buttonStyle: 'solid', buttonRadius: 30 } },
     { key: 'editorial', label: 'Editorial', theme: { backgroundColor: '#f6f1eb', textColor: '#24211f', accentColor: '#b57c62', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#24211f', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 4 } },
     { key: 'romantic', label: 'Romántico', theme: { backgroundColor: '#fff7f6', textColor: '#56383d', accentColor: '#b96775', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#9f5260', buttonTextColor: '#ffffff', buttonStyle: 'soft', buttonRadius: 18 } },
     { key: 'garden', label: 'Jardín', theme: { backgroundColor: '#f5f4ec', textColor: '#263c32', accentColor: '#66836f', headingFont: 'Cinzel, serif', bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#385947', buttonTextColor: '#ffffff', buttonStyle: 'outline', buttonRadius: 2 } },
@@ -3142,18 +3144,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   functionalPreviewStyle(section: VisualInvitationSection): Record<string, string> {
     const theme = this.design.theme || this.themePresets[0].theme;
     const moduleStyle = section.moduleStyle || {};
+    const isXv = this.isXvBurgundy();
     const buttonStyle = theme.buttonStyle || 'solid';
-    const buttonColor = String(theme.buttonBackgroundColor || '#292523');
+    const buttonColor = isXv ? '#d4af37' : String(theme.buttonBackgroundColor || '#292523');
     return {
-      '--module-background': String(theme.backgroundColor || '#ffffff'),
-      '--module-text': String(theme.textColor || '#292523'),
-      '--module-accent': String(theme.accentColor || '#9a6754'),
+      '--module-background': isXv ? '#faf6f0' : String(theme.backgroundColor || '#ffffff'),
+      '--module-text': isXv ? '#5c0d18' : String(theme.textColor || '#292523'),
+      '--module-accent': isXv ? '#d4af37' : String(theme.accentColor || '#9a6754'),
       '--module-heading-font': String(theme.headingFont || 'Georgia, serif'),
       '--module-body-font': String(theme.bodyFont || 'Arial, sans-serif'),
-      '--module-button-background': buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent',
-      '--module-button-text': buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor,
-      '--module-button-border': buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent',
-      '--module-button-radius': `${Number(theme.buttonRadius || 0)}px`,
+      '--module-button-background': isXv ? '#d4af37' : (buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent'),
+      '--module-button-text': isXv ? '#5c0d18' : (buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor),
+      '--module-button-border': isXv ? '1px solid #d4af37' : (buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent'),
+      '--module-button-radius': isXv ? '30px' : `${Number(theme.buttonRadius || 0)}px`,
       '--module-columns': String(moduleStyle.columns || 2),
       '--module-gap': `${Number(moduleStyle.gap ?? 11)}px`
     };
@@ -4811,20 +4814,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (this.isConfigurablePlugin(section.type)) section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
       if (section.type === 'rsvp') {
         this.ensureRsvpPluginDesign(section);
-        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : 820);
+        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (this.isXvBurgundy() ? 840 : 820));
         this.ensureRsvpCanvasLayers(section);
         this.ensureSeparatedRsvpFieldParts(section);
       }
       if (section.type === 'dedications') {
-        section.height = Math.max(section.height, 760);
+        section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
         this.ensureDedicationCanvasLayers(section);
       }
       if (section.type === 'songs') {
-        section.height = Math.max(section.height, 760);
+        section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
         this.ensureSongCanvasLayers(section);
       }
       if (section.type === 'album') {
-        section.height = Math.max(section.height, 760);
+        section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
         this.ensureAlbumCanvasLayers(section);
       }
       if (section.type === 'guestPass') {
@@ -4836,7 +4839,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.ensureGuestActivityCanvasLayers(section);
       }
       if (section.type === 'countdown') {
-        section.height = Math.max(section.height, 760);
+        section.height = Math.max(section.height, this.isXvBurgundy() ? 620 : 760);
         this.ensureCountdownCanvasLayers(section);
       }
       if (section.type === 'locations') {
@@ -4979,12 +4982,42 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createDedicationLayer(section: VisualInvitationSection, definition: ReturnType<typeof this.dedicationLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding;
     layer.placeholder = definition.placeholder;
     layer.zIndex = zIndex;
-    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'left', showPlaceholder: true };
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'field') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: isXv ? 12 : 8,
+        color: isXv ? '#5c0d18' : layer.style?.color,
+        padding: 10,
+        textAlign: 'left',
+        showPlaceholder: true
+      };
+    }
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+      }
+    }
+    if (definition.type === 'text' && isXv) {
+      if (definition.binding === 'display.dedications.eyebrow') {
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+      } else if (definition.binding === 'display.dedications.title') {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+      } else if (definition.binding === 'display.dedications.intro') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      } else if (definition.binding === 'dedication.feedback') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      }
+    }
     if (definition.binding === 'dedication.wall') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
     return layer;
   }
@@ -5017,12 +5050,42 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createSongLayer(definition: ReturnType<typeof this.songLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding;
     layer.placeholder = definition.placeholder;
     layer.zIndex = zIndex;
-    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'left', showPlaceholder: true };
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'field') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: isXv ? 12 : 8,
+        color: isXv ? '#5c0d18' : layer.style?.color,
+        padding: 10,
+        textAlign: 'left',
+        showPlaceholder: true
+      };
+    }
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+      }
+    }
+    if (definition.type === 'text' && isXv) {
+      if (definition.binding === 'display.songs.eyebrow') {
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+      } else if (definition.binding === 'display.songs.title') {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+      } else if (definition.binding === 'display.songs.intro') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      } else if (definition.binding === 'song.feedback') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      }
+    }
     return layer;
   }
 
@@ -5044,10 +5107,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createAlbumLayer(definition: ReturnType<typeof this.albumLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding;
     layer.zIndex = zIndex;
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+      }
+    }
+    if (definition.type === 'text' && isXv) {
+      if (definition.binding === 'display.album.eyebrow') {
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+      } else if (definition.binding === 'display.album.title') {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+      } else if (definition.binding === 'display.album.intro') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      } else if (definition.binding === 'album.feedback') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      }
+    }
     if (definition.binding === 'album.gallery') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
     return layer;
   }
@@ -5083,10 +5163,29 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createGuestPassLayer(definition: ReturnType<typeof this.guestPassLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding; layer.placeholder = definition.placeholder; layer.zIndex = zIndex;
-    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: definition.binding === 'pass.qr' ? '#ffffff' : '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'left', showPlaceholder: true };
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'field') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: definition.binding === 'pass.qr' ? '#ffffff' : (isXv ? '#faf6f0' : '#ffffff'),
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: isXv ? 12 : 8,
+        color: isXv ? '#5c0d18' : layer.style?.color,
+        padding: 10,
+        textAlign: 'left',
+        showPlaceholder: true
+      };
+    }
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+      }
+    }
     return layer;
   }
 
@@ -5122,27 +5221,64 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createGuestActivityLayer(definition: ReturnType<typeof this.guestActivityLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding; layer.placeholder = definition.placeholder; layer.zIndex = zIndex;
-    if (definition.type === 'field') layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, padding: 10, textAlign: 'center', showPlaceholder: true };
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'field') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: isXv ? 12 : 8,
+        color: isXv ? '#5c0d18' : layer.style?.color,
+        padding: 10,
+        textAlign: 'center',
+        showPlaceholder: true
+      };
+    }
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+      }
+    }
     return layer;
   }
 
-  private countdownLayerDefinitions(section: VisualInvitationSection): Array<{ binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+  private countdownLayerDefinitions(section: VisualInvitationSection): Array<{ type?: 'text' | 'image' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const isXv = this.isXvBurgundy();
+    if (isXv) {
+      return [
+        { type: 'text', binding: 'display.countdown.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'SÓLO FALTAN'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'display.countdown.title', label: section.title || 'Para este gran día', x: 10, y: 12, width: 80, height: 10, fontSize: 44 },
+        { type: 'text', binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada segundo nos acerca más a esta noche inolvidable.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
+        { type: 'image', binding: 'display.countdown.plaque', label: 'Marco de cuenta regresiva', url: 'assets/templates/xv-burgundy/countdown-box.jpg', x: 5, y: 32, width: 90, height: 38, fontSize: 12 },
+        { type: 'text', binding: 'countdown.days', label: String(this.countdownPreview.days), x: 9, y: 39, width: 18, height: 16, fontSize: 40 },
+        { type: 'text', binding: 'display.countdown.daysLabel', label: 'Días', x: 9, y: 55, width: 18, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 31, y: 39, width: 18, height: 16, fontSize: 40 },
+        { type: 'text', binding: 'display.countdown.hoursLabel', label: 'Horas', x: 31, y: 55, width: 18, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 51, y: 39, width: 18, height: 16, fontSize: 40 },
+        { type: 'text', binding: 'display.countdown.minutesLabel', label: 'Minutos', x: 51, y: 55, width: 18, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 73, y: 39, width: 18, height: 16, fontSize: 40 },
+        { type: 'text', binding: 'display.countdown.secondsLabel', label: 'Segundos', x: 73, y: 55, width: 18, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 74, width: 70, height: 12, fontSize: 32 }
+      ];
+    }
     return [
-      { binding: 'display.countdown.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Falta poco'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
-      { binding: 'display.countdown.title', label: section.title || 'Cuenta regresiva', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
-      { binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada vez falta menos para celebrar juntos.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
-      { binding: 'countdown.days', label: String(this.countdownPreview.days), x: 7, y: 37, width: 18, height: 14, fontSize: 44 },
-      { binding: 'display.countdown.daysLabel', label: 'Días', x: 7, y: 52, width: 18, height: 5, fontSize: 12 },
-      { binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 29, y: 37, width: 18, height: 14, fontSize: 44 },
-      { binding: 'display.countdown.hoursLabel', label: 'Horas', x: 29, y: 52, width: 18, height: 5, fontSize: 12 },
-      { binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 53, y: 37, width: 18, height: 14, fontSize: 44 },
-      { binding: 'display.countdown.minutesLabel', label: 'Minutos', x: 53, y: 52, width: 18, height: 5, fontSize: 12 },
-      { binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 75, y: 37, width: 18, height: 14, fontSize: 44 },
-      { binding: 'display.countdown.secondsLabel', label: 'Segundos', x: 75, y: 52, width: 18, height: 5, fontSize: 12 },
-      { binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 68, width: 70, height: 12, fontSize: 30 }
+      { type: 'text', binding: 'display.countdown.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Falta poco'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+      { type: 'text', binding: 'display.countdown.title', label: section.title || 'Cuenta regresiva', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
+      { type: 'text', binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada vez falta menos para celebrar juntos.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
+      { type: 'text', binding: 'countdown.days', label: String(this.countdownPreview.days), x: 7, y: 37, width: 18, height: 14, fontSize: 44 },
+      { type: 'text', binding: 'display.countdown.daysLabel', label: 'Días', x: 7, y: 52, width: 18, height: 5, fontSize: 12 },
+      { type: 'text', binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 29, y: 37, width: 18, height: 14, fontSize: 44 },
+      { type: 'text', binding: 'display.countdown.hoursLabel', label: 'Horas', x: 29, y: 52, width: 18, height: 5, fontSize: 12 },
+      { type: 'text', binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 53, y: 37, width: 18, height: 14, fontSize: 44 },
+      { type: 'text', binding: 'display.countdown.minutesLabel', label: 'Minutos', x: 53, y: 52, width: 18, height: 5, fontSize: 12 },
+      { type: 'text', binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 75, y: 37, width: 18, height: 14, fontSize: 44 },
+      { type: 'text', binding: 'display.countdown.secondsLabel', label: 'Segundos', x: 75, y: 52, width: 18, height: 5, fontSize: 12 },
+      { type: 'text', binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 68, width: 70, height: 12, fontSize: 30 }
     ];
   }
 
@@ -5153,12 +5289,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createCountdownLayer(definition: ReturnType<typeof this.countdownLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
-    const layer = this.newLayer('text', definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
-    layer.binding = definition.binding; layer.zIndex = zIndex;
+    const isXv = this.isXvBurgundy();
+    const layer = this.newLayer(definition.type || 'text', definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
+    layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = definition.type === 'image' ? Math.max(1, zIndex - 1) : zIndex;
+    if (definition.type === 'image') {
+      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.45)' };
+      return layer;
+    }
     if (definition.binding.startsWith('countdown.') && definition.binding !== 'countdown.expired') {
-      layer.style = { ...(layer.style || {}), fontWeight: 600, textAlign: 'center' };
+      layer.style = { ...(layer.style || {}), fontWeight: 700, textAlign: 'center', color: isXv ? '#5c0d18' : layer.style?.color, fontFamily: isXv ? "'Cinzel', 'Playfair Display', serif" : layer.style?.fontFamily };
+    }
+    if (isXv) {
+      if (definition.binding === 'display.countdown.eyebrow') {
+        layer.style = { ...(layer.style || {}), letterSpacing: 3, fontWeight: 700, color: '#d4af37' };
+      } else if (definition.binding === 'display.countdown.title') {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+      } else if (definition.binding === 'display.countdown.intro') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      } else if (definition.binding.endsWith('Label')) {
+        layer.style = { ...(layer.style || {}), letterSpacing: 1.5, textTransform: 'uppercase', fontSize: 11, color: '#8c1d2e', fontWeight: 700 };
+      } else if (definition.binding === 'countdown.expired') {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 34, fontWeight: 700, color: '#faf6f0' };
+      }
     }
     return layer;
+  }
+
+  isHauteCouture(): boolean {
+    const theme = this.design?.theme;
+    return Boolean(
+      theme?.headingFont?.includes('Cinzel Decorative') ||
+      (theme?.accentColor === '#c59b48' && theme?.buttonRadius === 30)
+    );
+  }
+
+  isXvBurgundy(): boolean {
+    const theme = this.design?.theme;
+    return Boolean(
+      theme?.headingFont?.includes('Great Vibes') ||
+      (theme?.accentColor === '#d4af37' && theme?.backgroundColor === '#5c0d18')
+    );
   }
 
   private locationSourceData(): InvitationLocation[] {
@@ -5170,31 +5340,61 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.previewLocations;
   }
 
-  private locationLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+  private locationLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
     const locations = this.locationSourceData();
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const rows = Math.max(1, Math.ceil(locations.length / 2));
-    const requiredHeight = Math.max(760, 250 + rows * 300);
+    const requiredHeight = Math.max(760, 250 + rows * (isXv ? 340 : isHaute ? 320 : 300));
     const pct = (pixels: number) => pixels / requiredHeight * 100;
-    const definitions: Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
-      { type: 'text', binding: 'display.locations.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Cómo llegar'), x: 15, y: pct(30), width: 70, height: pct(34), fontSize: 11 },
-      { type: 'text', binding: 'display.locations.title', label: section.title || 'Ubicaciones', x: 10, y: pct(72), width: 80, height: pct(70), fontSize: 34 },
-      { type: 'text', binding: 'display.locations.intro', label: String(this.pluginSetting(section, 'introText') || 'Consulta los datos y abre tu aplicación de navegación preferida.'), x: 12, y: pct(145), width: 76, height: pct(42), fontSize: 14 }
+    const definitions: Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
+      { type: 'text', binding: 'display.locations.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute ? 'CÓMO LLEGAR' : isXv ? 'DÓNDE & CUÁNDO' : 'Cómo llegar')), x: 15, y: pct(30), width: 70, height: pct(34), fontSize: 11 },
+      { type: 'text', binding: 'display.locations.title', label: section.title || 'Ubicaciones', x: 10, y: pct(72), width: 80, height: pct(70), fontSize: isXv ? 42 : 34 },
+      { type: 'text', binding: 'display.locations.intro', label: String(this.pluginSetting(section, 'introText') || (isXv ? 'Acompaña a la quinceañera en cada etapa de esta noche especial.' : 'Consulta los datos y abre tu aplicación de navegación preferida.')), x: 12, y: pct(145), width: 76, height: pct(42), fontSize: 14 }
     ];
     locations.forEach((location, index) => {
       const left = index % 2 === 0 ? 4 : 52;
-      const topPx = 210 + Math.floor(index / 2) * 300;
+      const topPx = 210 + Math.floor(index / 2) * (isXv ? 340 : isHaute ? 320 : 300);
       const prefix = `location.${index}`;
-      definitions.push(
-        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(270), fontSize: 14 },
-        { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 3, y: pct(topPx + 20), width: 38, height: pct(38), fontSize: 22 },
-        { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 64), width: 38, height: pct(38), fontSize: 13 },
-        { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 105), width: 38, height: pct(32), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.details`, label: 'Estacionamiento, transporte y horarios', x: left + 3, y: pct(topPx + 140), width: 38, height: pct(45), fontSize: 11 },
-        { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mapa'), x: left + 3, y: pct(topPx + 205), width: 17, height: pct(38), fontSize: 12 },
-        { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 22, y: pct(topPx + 205), width: 9, height: pct(38), fontSize: 12 },
-        { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 33, y: pct(topPx + 205), width: 8, height: pct(38), fontSize: 12 },
-        { type: 'button', binding: `${prefix}.website`, label: 'Sitio web', x: left + 22, y: pct(topPx + 248), width: 19, height: pct(18), fontSize: 10 }
-      );
+      if (isXv) {
+        const photoUrl = index === 0 ? 'assets/templates/xv-burgundy/church-card.jpg' : 'assets/templates/xv-burgundy/reception-doily.jpg';
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(320), fontSize: 14 },
+          { type: 'image', binding: `${prefix}.image`, label: `Foto ${index + 1}`, url: photoUrl, x: left + 2.5, y: pct(topPx + 10), width: 39, height: pct(100), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 2, y: pct(topPx + 118), width: 40, height: pct(38), fontSize: 26 },
+          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 158), width: 38, height: pct(34), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 194), width: 38, height: pct(28), fontSize: 11 },
+          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'VER UBICACIÓN'), x: left + 5, y: pct(topPx + 228), width: 34, height: pct(38), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 9, y: pct(topPx + 272), width: 26, height: pct(32), fontSize: 11 }
+        );
+        if (location.phone) {
+          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 11, y: pct(topPx + 310), width: 22, height: pct(26), fontSize: 11 });
+        }
+      } else if (isHaute) {
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(290), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 2, y: pct(topPx + 22), width: 40, height: pct(42), fontSize: 22 },
+          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 72), width: 38, height: pct(40), fontSize: 13 },
+          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 118), width: 38, height: pct(36), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'VER UBICACIÓN'), x: left + 5, y: pct(topPx + 175), width: 34, height: pct(40), fontSize: 13 },
+          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 9, y: pct(topPx + 228), width: 26, height: pct(36), fontSize: 12 }
+        );
+        if (location.phone) {
+          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 11, y: pct(topPx + 272), width: 22, height: pct(28), fontSize: 11 });
+        }
+      } else {
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(270), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 3, y: pct(topPx + 20), width: 38, height: pct(38), fontSize: 22 },
+          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 64), width: 38, height: pct(38), fontSize: 13 },
+          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 105), width: 38, height: pct(32), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.details`, label: 'Estacionamiento, transporte y horarios', x: left + 3, y: pct(topPx + 140), width: 38, height: pct(45), fontSize: 11 },
+          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mapa'), x: left + 3, y: pct(topPx + 205), width: 17, height: pct(38), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 22, y: pct(topPx + 205), width: 9, height: pct(38), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 33, y: pct(topPx + 205), width: 8, height: pct(38), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.website`, label: 'Sitio web', x: left + 22, y: pct(topPx + 248), width: 19, height: pct(18), fontSize: 10 }
+        );
+      }
     });
     return definitions;
   }
@@ -5203,7 +5403,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const hasLocationLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('display.locations.'));
     if (!indexes?.length && hasLocationLayers) return;
     const rows = Math.max(1, Math.ceil(this.locationSourceData().length / 2));
-    const requiredHeight = Math.max(760, 250 + rows * 300);
+    const requiredHeight = Math.max(760, 250 + rows * (this.isXvBurgundy() ? 340 : this.isHauteCouture() ? 320 : 300));
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.locationLayerDefinitions(section).filter((definition) => {
@@ -5233,12 +5433,63 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createLocationLayer(definition: ReturnType<typeof this.locationLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
-    layer.binding = definition.binding; layer.zIndex = zIndex;
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = zIndex;
+    if (definition.type === 'image') {
+      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 12, borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 6px 16px rgba(0,0,0,0.2)' };
+    }
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isHaute) {
+        if (definition.binding.endsWith('.waze')) {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', color: '#181514', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30 };
+        } else {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5 };
+        }
+      } else if (isXv) {
+        if (definition.binding.endsWith('.waze')) {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
+        } else {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+        }
+      }
+    }
     if (definition.type === 'shape') {
-      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+      } else {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      }
       layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    if (definition.type === 'text') {
+      if (isHaute) {
+        if (definition.binding.endsWith('.name')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514' };
+        } else if (definition.binding.endsWith('.notes')) {
+          layer.style = { ...(layer.style || {}), color: '#c59b48', fontStyle: 'italic' };
+        } else if (definition.binding === 'display.locations.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#c59b48' };
+        } else if (definition.binding === 'display.locations.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514' };
+        }
+      } else if (isXv) {
+        if (definition.binding.endsWith('.name')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontWeight: 600, fontSize: 30, color: '#5c0d18' };
+        } else if (definition.binding.endsWith('.address')) {
+          layer.style = { ...(layer.style || {}), color: '#3a0810', fontWeight: 500 };
+        } else if (definition.binding.endsWith('.notes')) {
+          layer.style = { ...(layer.style || {}), color: '#8c1d2e', fontStyle: 'italic' };
+        } else if (definition.binding === 'display.locations.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+        } else if (definition.binding === 'display.locations.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+        }
+      }
     }
     return layer;
   }
@@ -5249,43 +5500,115 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private giftLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const gifts = this.giftSourceData();
     const rows = Math.max(1, Math.ceil(gifts.length / 2));
     const requiredHeight = Math.max(900, 250 + rows * 290 + 330);
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
-      { type: 'text', binding: 'display.gifts.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Un detalle opcional'), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
-      { type: 'text', binding: 'display.gifts.title', label: section.title || 'Mesa de regalos', x: 10, y: pct(68), width: 80, height: pct(66), fontSize: 34 },
-      { type: 'text', binding: 'display.gifts.intro', label: String(this.pluginSetting(section, 'introText') || this.invitation?.content?.giftSettings?.introText || 'Tu presencia es lo más importante para nosotros.'), x: 12, y: pct(137), width: 76, height: pct(45), fontSize: 14 }
+      { type: 'text', binding: 'display.gifts.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute || isXv ? 'DETALLES Y PRESENTES' : 'Un detalle opcional')), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
+      { type: 'text', binding: 'display.gifts.title', label: section.title || 'Mesa de regalos', x: 10, y: pct(68), width: 80, height: pct(66), fontSize: isXv ? 42 : 34 },
+      { type: 'text', binding: 'display.gifts.intro', label: String(this.pluginSetting(section, 'introText') || this.invitation?.content?.giftSettings?.introText || (isXv ? 'El mejor regalo es tu presencia, pero si deseas tener un detalle con la quinceañera:' : isHaute ? 'Tu presencia y cariño son nuestro mejor regalo.' : 'Tu presencia es lo más importante para nosotros.')), x: 12, y: pct(137), width: 76, height: pct(45), fontSize: 14 }
     ];
     gifts.forEach((gift, index) => {
-      const left = index % 2 === 0 ? 4 : 52;
       const topPx = 200 + Math.floor(index / 2) * 290;
       const prefix = `gift.${index}`;
-      definitions.push(
-        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de regalo ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(255), fontSize: 14 },
-        { type: 'image', binding: `${prefix}.image`, label: `Logo de mesa ${index + 1}`, url: gift.imageUrl || '', x: left + 4, y: pct(topPx + 18), width: 14, height: pct(78), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: left + 20, y: pct(topPx + 22), width: 21, height: pct(38), fontSize: 20 },
-        { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: left + 20, y: pct(topPx + 64), width: 21, height: pct(28), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: left + 4, y: pct(topPx + 110), width: 36, height: pct(55), fontSize: 13 },
-        { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: left + 12, y: pct(topPx + 187), width: 28, height: pct(42), fontSize: 13 }
-      );
+      if (isHaute || isXv) {
+        const cardLeft = index % 2 === 0 ? 5 : 51;
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de regalo ${index + 1}`, x: cardLeft, y: pct(topPx), width: 44, height: pct(255), fontSize: 14 }
+        );
+        if (gift.imageUrl) {
+          definitions.push(
+            { type: 'image', binding: `${prefix}.image`, label: `Logo de mesa ${index + 1}`, url: gift.imageUrl, x: cardLeft + 14, y: pct(topPx + 16), width: 16, height: pct(60), fontSize: 12 },
+            { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: cardLeft + 3, y: pct(topPx + 82), width: 38, height: pct(36), fontSize: isXv ? 24 : 20 },
+            { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: cardLeft + 3, y: pct(topPx + 120), width: 38, height: pct(26), fontSize: 12 },
+            { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: cardLeft + 3, y: pct(topPx + 148), width: 38, height: pct(42), fontSize: 13 },
+            { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: cardLeft + 8, y: pct(topPx + 195), width: 28, height: pct(42), fontSize: 13 }
+          );
+        } else {
+          definitions.push(
+            { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: cardLeft + 3, y: pct(topPx + 28), width: 38, height: pct(42), fontSize: isXv ? 26 : 22 },
+            { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: cardLeft + 3, y: pct(topPx + 74), width: 38, height: pct(28), fontSize: 12 },
+            { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: cardLeft + 3, y: pct(topPx + 108), width: 38, height: pct(68), fontSize: 13 },
+            { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: cardLeft + 8, y: pct(topPx + 188), width: 28, height: pct(44), fontSize: 13 }
+          );
+        }
+      } else {
+        const left = index % 2 === 0 ? 4 : 52;
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de regalo ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(255), fontSize: 14 },
+          { type: 'image', binding: `${prefix}.image`, label: `Logo de mesa ${index + 1}`, url: gift.imageUrl || '', x: left + 4, y: pct(topPx + 18), width: 14, height: pct(78), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: left + 20, y: pct(topPx + 22), width: 21, height: pct(38), fontSize: 20 },
+          { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: left + 20, y: pct(topPx + 64), width: 21, height: pct(28), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: left + 4, y: pct(topPx + 110), width: 36, height: pct(55), fontSize: 13 },
+          { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: left + 12, y: pct(topPx + 187), width: 28, height: pct(42), fontSize: 13 }
+        );
+      }
     });
     const envelopeTop = 220 + rows * 290;
     const envelope = this.invitation?.content?.digitalEnvelope || {};
-    definitions.push(
-      { type: 'shape', binding: 'envelope.card', label: 'Tarjeta de sobre digital', x: 10, y: pct(envelopeTop), width: 80, height: pct(275), fontSize: 14 },
-      { type: 'text', binding: 'display.gifts.envelopeTitle', label: 'Sobre digital', x: 32, y: pct(envelopeTop + 18), width: 50, height: pct(38), fontSize: 24 },
-      { type: 'image', binding: 'envelope.qr', label: 'QR del sobre digital', url: envelope.qrImageUrl || '', x: 14, y: pct(envelopeTop + 20), width: 15, height: pct(112), fontSize: 12 },
-      { type: 'text', binding: 'envelope.bank', label: envelope.bank || 'Banco', x: 32, y: pct(envelopeTop + 62), width: 24, height: pct(28), fontSize: 13 },
-      { type: 'text', binding: 'envelope.holder', label: envelope.holder || 'Titular', x: 58, y: pct(envelopeTop + 62), width: 25, height: pct(28), fontSize: 13 },
-      { type: 'text', binding: 'envelope.account', label: envelope.account || 'Cuenta', x: 32, y: pct(envelopeTop + 98), width: 24, height: pct(30), fontSize: 12 },
-      { type: 'text', binding: 'envelope.clabe', label: envelope.clabe || 'CLABE', x: 58, y: pct(envelopeTop + 98), width: 25, height: pct(30), fontSize: 12 },
-      { type: 'text', binding: 'envelope.note', label: envelope.note || 'Agradecemos mucho tu detalle.', x: 18, y: pct(envelopeTop + 145), width: 64, height: pct(35), fontSize: 12 },
-      { type: 'button', binding: 'envelope.copyAccount', label: 'Copiar cuenta', x: 24, y: pct(envelopeTop + 196), width: 23, height: pct(40), fontSize: 12 },
-      { type: 'button', binding: 'envelope.copyClabe', label: String(this.pluginSetting(section, 'envelopeButtonText') || 'Copiar CLABE'), x: 53, y: pct(envelopeTop + 196), width: 23, height: pct(40), fontSize: 12 },
-      { type: 'text', binding: 'envelope.feedback', label: 'Aquí aparecerá la confirmación de copiado', x: 25, y: pct(envelopeTop + 242), width: 50, height: pct(24), fontSize: 11 }
-    );
+    const hasQr = Boolean(envelope.qrImageUrl);
+    if (isXv) {
+      definitions.push(
+        { type: 'shape', binding: 'envelope.card', label: 'Tarjeta de sobre digital', x: 8, y: pct(envelopeTop), width: 84, height: pct(285), fontSize: 14 },
+        { type: 'image', binding: 'envelope.art', label: 'Sobre de gala', url: 'assets/templates/xv-burgundy/gift-envelope.jpg', x: 12, y: pct(envelopeTop + 16), width: 22, height: pct(115), fontSize: 12 },
+        { type: 'text', binding: 'display.gifts.envelopeTitle', label: 'Lluvia de sobres y transferencias', x: 36, y: pct(envelopeTop + 16), width: 52, height: pct(38), fontSize: 26 },
+        { type: 'text', binding: 'envelope.bank', label: envelope.bank || 'Banco', x: 36, y: pct(envelopeTop + 58), width: 24, height: pct(28), fontSize: 13 },
+        { type: 'text', binding: 'envelope.holder', label: envelope.holder || 'Titular', x: 62, y: pct(envelopeTop + 58), width: 26, height: pct(28), fontSize: 13 },
+        { type: 'text', binding: 'envelope.account', label: envelope.account || 'Cuenta', x: 36, y: pct(envelopeTop + 92), width: 24, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: 'envelope.clabe', label: envelope.clabe || 'CLABE', x: 62, y: pct(envelopeTop + 92), width: 26, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: 'envelope.note', label: envelope.note || 'Agradecemos de corazón tu muestra de cariño.', x: 14, y: pct(envelopeTop + 148), width: 72, height: pct(35), fontSize: 13 },
+        { type: 'button', binding: 'envelope.copyAccount', label: 'Copiar cuenta', x: 20, y: pct(envelopeTop + 195), width: 27, height: pct(42), fontSize: 12 },
+        { type: 'button', binding: 'envelope.copyClabe', label: String(this.pluginSetting(section, 'envelopeButtonText') || 'Copiar CLABE'), x: 53, y: pct(envelopeTop + 195), width: 27, height: pct(42), fontSize: 12 },
+        { type: 'text', binding: 'envelope.feedback', label: 'Aquí aparecerá la confirmación de copiado', x: 14, y: pct(envelopeTop + 248), width: 72, height: pct(24), fontSize: 11 }
+      );
+    } else if (isHaute) {
+      definitions.push(
+        { type: 'shape', binding: 'envelope.card', label: 'Tarjeta de sobre digital', x: 8, y: pct(envelopeTop), width: 84, height: pct(275), fontSize: 14 }
+      );
+      if (hasQr) {
+        definitions.push(
+          { type: 'image', binding: 'envelope.qr', label: 'QR del sobre digital', url: envelope.qrImageUrl || '', x: 12, y: pct(envelopeTop + 20), width: 16, height: pct(115), fontSize: 12 },
+          { type: 'text', binding: 'display.gifts.envelopeTitle', label: 'Sobre digital', x: 31, y: pct(envelopeTop + 18), width: 55, height: pct(38), fontSize: 24 },
+          { type: 'text', binding: 'envelope.bank', label: envelope.bank || 'Banco', x: 31, y: pct(envelopeTop + 60), width: 26, height: pct(28), fontSize: 13 },
+          { type: 'text', binding: 'envelope.holder', label: envelope.holder || 'Titular', x: 59, y: pct(envelopeTop + 60), width: 27, height: pct(28), fontSize: 13 },
+          { type: 'text', binding: 'envelope.account', label: envelope.account || 'Cuenta', x: 31, y: pct(envelopeTop + 96), width: 26, height: pct(30), fontSize: 12 },
+          { type: 'text', binding: 'envelope.clabe', label: envelope.clabe || 'CLABE', x: 59, y: pct(envelopeTop + 96), width: 27, height: pct(30), fontSize: 12 },
+          { type: 'text', binding: 'envelope.note', label: envelope.note || 'Agradecemos mucho tu detalle.', x: 14, y: pct(envelopeTop + 148), width: 72, height: pct(35), fontSize: 12 },
+          { type: 'button', binding: 'envelope.copyAccount', label: 'Copiar cuenta', x: 20, y: pct(envelopeTop + 195), width: 26, height: pct(42), fontSize: 12 },
+          { type: 'button', binding: 'envelope.copyClabe', label: String(this.pluginSetting(section, 'envelopeButtonText') || 'Copiar CLABE'), x: 52, y: pct(envelopeTop + 195), width: 26, height: pct(42), fontSize: 12 },
+          { type: 'text', binding: 'envelope.feedback', label: 'Aquí aparecerá la confirmación de copiado', x: 18, y: pct(envelopeTop + 244), width: 64, height: pct(24), fontSize: 11 }
+        );
+      } else {
+        definitions.push(
+          { type: 'text', binding: 'display.gifts.envelopeTitle', label: 'Lluvia de sobres y transferencias', x: 12, y: pct(envelopeTop + 20), width: 76, height: pct(38), fontSize: 24 },
+          { type: 'text', binding: 'envelope.bank', label: envelope.bank || 'Banco', x: 14, y: pct(envelopeTop + 64), width: 35, height: pct(28), fontSize: 13 },
+          { type: 'text', binding: 'envelope.holder', label: envelope.holder || 'Titular', x: 51, y: pct(envelopeTop + 64), width: 35, height: pct(28), fontSize: 13 },
+          { type: 'text', binding: 'envelope.account', label: envelope.account || 'Cuenta', x: 14, y: pct(envelopeTop + 100), width: 35, height: pct(30), fontSize: 12 },
+          { type: 'text', binding: 'envelope.clabe', label: envelope.clabe || 'CLABE', x: 51, y: pct(envelopeTop + 100), width: 35, height: pct(30), fontSize: 12 },
+          { type: 'text', binding: 'envelope.note', label: envelope.note || 'Agradecemos de corazón tu muestra de cariño.', x: 14, y: pct(envelopeTop + 144), width: 72, height: pct(35), fontSize: 13 },
+          { type: 'button', binding: 'envelope.copyAccount', label: 'Copiar cuenta', x: 20, y: pct(envelopeTop + 192), width: 27, height: pct(42), fontSize: 12 },
+          { type: 'button', binding: 'envelope.copyClabe', label: String(this.pluginSetting(section, 'envelopeButtonText') || 'Copiar CLABE'), x: 53, y: pct(envelopeTop + 192), width: 27, height: pct(42), fontSize: 12 },
+          { type: 'text', binding: 'envelope.feedback', label: 'Aquí aparecerá la confirmación de copiado', x: 14, y: pct(envelopeTop + 242), width: 72, height: pct(24), fontSize: 11 }
+        );
+      }
+    } else {
+      definitions.push(
+        { type: 'shape', binding: 'envelope.card', label: 'Tarjeta de sobre digital', x: 10, y: pct(envelopeTop), width: 80, height: pct(275), fontSize: 14 },
+        { type: 'text', binding: 'display.gifts.envelopeTitle', label: 'Sobre digital', x: 32, y: pct(envelopeTop + 18), width: 50, height: pct(38), fontSize: 24 },
+        { type: 'image', binding: 'envelope.qr', label: 'QR del sobre digital', url: envelope.qrImageUrl || '', x: 14, y: pct(envelopeTop + 20), width: 15, height: pct(112), fontSize: 12 },
+        { type: 'text', binding: 'envelope.bank', label: envelope.bank || 'Banco', x: 32, y: pct(envelopeTop + 62), width: 24, height: pct(28), fontSize: 13 },
+        { type: 'text', binding: 'envelope.holder', label: envelope.holder || 'Titular', x: 58, y: pct(envelopeTop + 62), width: 25, height: pct(28), fontSize: 13 },
+        { type: 'text', binding: 'envelope.account', label: envelope.account || 'Cuenta', x: 32, y: pct(envelopeTop + 98), width: 24, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: 'envelope.clabe', label: envelope.clabe || 'CLABE', x: 58, y: pct(envelopeTop + 98), width: 25, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: 'envelope.note', label: envelope.note || 'Agradecemos mucho tu detalle.', x: 18, y: pct(envelopeTop + 145), width: 64, height: pct(35), fontSize: 12 },
+        { type: 'button', binding: 'envelope.copyAccount', label: 'Copiar cuenta', x: 24, y: pct(envelopeTop + 196), width: 23, height: pct(40), fontSize: 12 },
+        { type: 'button', binding: 'envelope.copyClabe', label: String(this.pluginSetting(section, 'envelopeButtonText') || 'Copiar CLABE'), x: 53, y: pct(envelopeTop + 196), width: 23, height: pct(40), fontSize: 12 },
+        { type: 'text', binding: 'envelope.feedback', label: 'Aquí aparecerá la confirmación de copiado', x: 25, y: pct(envelopeTop + 242), width: 50, height: pct(24), fontSize: 11 }
+      );
+    }
     return definitions;
   }
 
@@ -5307,13 +5630,99 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createGiftLayer(definition: ReturnType<typeof this.giftLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
     layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = zIndex;
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
-    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#ffffff', borderRadius: 8 };
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isHaute) {
+        if (definition.binding.includes('copy')) {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', color: '#181514', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 600 };
+        } else {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5 };
+        }
+      } else if (isXv) {
+        if (definition.binding.includes('copy')) {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
+        } else {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700 };
+        }
+      }
+    }
+    if (definition.type === 'image') {
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#faf8f5', borderColor: '#e8dcce', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, padding: 6 };
+      } else if (isXv) {
+        if (definition.binding === 'envelope.art') {
+          layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(92, 13, 24, 0.25)' };
+        } else {
+          layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#ffffff', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, padding: 6 };
+        }
+      } else {
+        layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#ffffff', borderRadius: 8 };
+      }
+    }
     if (definition.type === 'shape') {
-      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+      } else {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      }
       layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    if (definition.type === 'text') {
+      if (isHaute) {
+        if (definition.binding === 'display.gifts.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#c59b48', textAlign: 'center' };
+        } else if (definition.binding === 'display.gifts.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding === 'display.gifts.intro') {
+          layer.style = { ...(layer.style || {}), color: '#555555', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.store')) {
+          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 600, color: '#c59b48', letterSpacing: 1.5, textTransform: 'uppercase', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.note')) {
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#555555', textAlign: 'center' };
+        } else if (definition.binding === 'display.gifts.envelopeTitle') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding === 'envelope.bank' || definition.binding === 'envelope.holder') {
+          layer.style = { ...(layer.style || {}), fontWeight: 600, color: '#181514' };
+        } else if (definition.binding === 'envelope.account' || definition.binding === 'envelope.clabe') {
+          layer.style = { ...(layer.style || {}), color: '#c59b48', fontFamily: 'monospace', fontWeight: 600 };
+        } else if (definition.binding === 'envelope.note') {
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#555555', textAlign: 'center' };
+        } else if (definition.binding === 'envelope.feedback') {
+          layer.style = { ...(layer.style || {}), color: '#888888', textAlign: 'center' };
+        }
+      } else if (isXv) {
+        if (definition.binding === 'display.gifts.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37', textAlign: 'center' };
+        } else if (definition.binding === 'display.gifts.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
+        } else if (definition.binding === 'display.gifts.intro') {
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 28, fontWeight: 600, color: '#5c0d18', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.store')) {
+          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#d4af37', letterSpacing: 1.5, textTransform: 'uppercase', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.note')) {
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#8c1d2e', textAlign: 'center' };
+        } else if (definition.binding === 'display.gifts.envelopeTitle') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 32, fontWeight: 700, color: '#5c0d18', textAlign: 'center' };
+        } else if (definition.binding === 'envelope.bank' || definition.binding === 'envelope.holder') {
+          layer.style = { ...(layer.style || {}), fontWeight: 600, color: '#5c0d18' };
+        } else if (definition.binding === 'envelope.account' || definition.binding === 'envelope.clabe') {
+          layer.style = { ...(layer.style || {}), color: '#8c1d2e', fontFamily: 'monospace', fontWeight: 700 };
+        } else if (definition.binding === 'envelope.note') {
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#5c0d18', textAlign: 'center' };
+        } else if (definition.binding === 'envelope.feedback') {
+          layer.style = { ...(layer.style || {}), color: '#8c1d2e', textAlign: 'center' };
+        }
+      }
     }
     return layer;
   }
@@ -5325,24 +5734,37 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private itineraryLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> {
     const itinerary = this.itinerarySourceData();
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const requiredHeight = Math.max(760, 220 + Math.max(1, itinerary.length) * 190);
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
-      { type: 'text', binding: 'display.itinerary.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Programa'), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
-      { type: 'text', binding: 'display.itinerary.title', label: section.title || 'Itinerario', x: 10, y: pct(68), width: 80, height: pct(64), fontSize: 34 },
-      { type: 'text', binding: 'display.itinerary.intro', label: String(this.pluginSetting(section, 'introText') || 'Estos son los momentos principales de nuestra celebración.'), x: 12, y: pct(136), width: 76, height: pct(42), fontSize: 14 }
+      { type: 'text', binding: 'display.itinerary.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute ? 'PROGRAMA DE LA CELEBRACIÓN' : isXv ? 'EL PROGRAMA' : 'Programa')), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
+      { type: 'text', binding: 'display.itinerary.title', label: section.title || (isXv ? 'Itinerario de la Noche' : 'Itinerario'), x: 10, y: pct(68), width: 80, height: pct(64), fontSize: isXv ? 42 : 34 },
+      { type: 'text', binding: 'display.itinerary.intro', label: String(this.pluginSetting(section, 'introText') || (isXv ? 'Momentos especiales preparados para celebrar en grande.' : 'Estos son los momentos principales de nuestra celebración.')), x: 12, y: pct(136), width: 76, height: pct(42), fontSize: 14 }
     ];
     itinerary.forEach((item, index) => {
       const topPx = 200 + index * 190;
       const prefix = `itinerary.${index}`;
-      definitions.push(
-        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de actividad ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(160), fontSize: 14 },
-        { type: 'text', binding: `${prefix}.icon`, label: item.icon || '•', x: 12, y: pct(topPx + 22), width: 8, height: pct(40), fontSize: 25 },
-        { type: 'text', binding: `${prefix}.time`, label: item.time || 'Hora', x: 22, y: pct(topPx + 20), width: 18, height: pct(32), fontSize: 15 },
-        { type: 'text', binding: `${prefix}.title`, label: item.title || `Actividad ${index + 1}`, x: 42, y: pct(topPx + 18), width: 44, height: pct(38), fontSize: 21 },
-        { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción de la actividad', x: 22, y: pct(topPx + 66), width: 64, height: pct(42), fontSize: 13 },
-        { type: 'button', binding: `${prefix}.location`, label: item.locationLabel || 'Ver ubicación', x: 60, y: pct(topPx + 112), width: 26, height: pct(34), fontSize: 12 }
-      );
+      if (isHaute || isXv) {
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de actividad ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(160), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.icon`, label: item.icon || '✦', x: 11, y: pct(topPx + 22), width: 8, height: pct(38), fontSize: 18 },
+          { type: 'text', binding: `${prefix}.time`, label: item.time || 'Hora', x: 19, y: pct(topPx + 20), width: 22, height: pct(34), fontSize: 16 },
+          { type: 'text', binding: `${prefix}.title`, label: item.title || `Actividad ${index + 1}`, x: 42, y: pct(topPx + 18), width: 46, height: pct(38), fontSize: isXv ? 24 : 22 },
+          { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción de la actividad', x: 19, y: pct(topPx + 68), width: 44, height: pct(42), fontSize: 13 },
+          { type: 'button', binding: `${prefix}.location`, label: item.locationLabel || 'Ver ubicación', x: 65, y: pct(topPx + 112), width: 24, height: pct(36), fontSize: 12 }
+        );
+      } else {
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de actividad ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(160), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.icon`, label: item.icon || '•', x: 12, y: pct(topPx + 22), width: 8, height: pct(40), fontSize: 25 },
+          { type: 'text', binding: `${prefix}.time`, label: item.time || 'Hora', x: 22, y: pct(topPx + 20), width: 18, height: pct(32), fontSize: 15 },
+          { type: 'text', binding: `${prefix}.title`, label: item.title || `Actividad ${index + 1}`, x: 42, y: pct(topPx + 18), width: 44, height: pct(38), fontSize: 21 },
+          { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción de la actividad', x: 22, y: pct(topPx + 66), width: 64, height: pct(42), fontSize: 13 },
+          { type: 'button', binding: `${prefix}.location`, label: item.locationLabel || 'Ver ubicación', x: 60, y: pct(topPx + 112), width: 26, height: pct(34), fontSize: 12 }
+        );
+      }
     });
     return definitions;
   }
@@ -5364,41 +5786,124 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createItineraryLayer(definition: ReturnType<typeof this.itineraryLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
     layer.binding = definition.binding;
     layer.zIndex = zIndex;
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5 };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700 };
+      }
+    }
     if (definition.type === 'shape') {
-      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 10px 28px rgba(197, 155, 72, 0.12)' };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(92, 13, 24, 0.22)' };
+      } else {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      }
       layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    if (definition.type === 'text') {
+      if (isHaute) {
+        if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514' };
+        } else if (definition.binding.endsWith('.time')) {
+          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#c59b48', letterSpacing: 1 };
+        } else if (definition.binding.endsWith('.icon')) {
+          layer.style = { ...(layer.style || {}), color: '#c59b48' };
+        } else if (definition.binding === 'display.itinerary.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#c59b48' };
+        } else if (definition.binding === 'display.itinerary.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514' };
+        }
+      } else if (isXv) {
+        if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontWeight: 600, fontSize: 26, color: '#5c0d18' };
+        } else if (definition.binding.endsWith('.time')) {
+          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#d4af37', letterSpacing: 1 };
+        } else if (definition.binding.endsWith('.icon')) {
+          layer.style = { ...(layer.style || {}), color: '#d4af37', fontSize: 20 };
+        } else if (definition.binding.endsWith('.description')) {
+          layer.style = { ...(layer.style || {}), color: '#5c0d18' };
+        } else if (definition.binding === 'display.itinerary.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+        } else if (definition.binding === 'display.itinerary.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+        } else if (definition.binding === 'display.itinerary.intro') {
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+        }
+      }
     }
     return layer;
   }
 
   private dressCodeLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'image' | 'shape'; binding: string; label: string; url?: string; color?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const options = this.invitation?.content?.dressCodeOptions || [];
+    const dressImgUrl = isXv
+      ? (this.invitation?.content?.dressCodeImageUrl || 'assets/templates/xv-burgundy/dresscode-art.jpg')
+      : this.invitation?.content?.dressCodeImageUrl;
+    const hasImage = Boolean(dressImgUrl);
     const rows = Math.max(1, Math.ceil(options.length / 2));
-    const requiredHeight = Math.max(760, 490 + rows * 180);
+    const requiredHeight = isHaute || isXv
+      ? Math.max(760, (hasImage ? 460 : 380) + rows * 180)
+      : Math.max(760, 490 + rows * 180);
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'image' | 'shape'; binding: string; label: string; url?: string; color?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
-      { type: 'text', binding: 'display.dressCode.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Vestimenta'), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
-      { type: 'text', binding: 'display.dressCode.title', label: section.title || 'Código de vestimenta', x: 10, y: pct(66), width: 80, height: pct(62), fontSize: 34 },
-      { type: 'text', binding: 'display.dressCode.intro', label: String(this.pluginSetting(section, 'introText') || 'Inspírate con estas recomendaciones para la celebración.'), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 },
-      { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: this.invitation?.content?.dressCodeImageUrl || '', x: 10, y: pct(196), width: 34, height: pct(235), fontSize: 12 },
-      { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || 'Formal', x: 49, y: pct(220), width: 41, height: pct(48), fontSize: 28 },
-      { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || 'Agrega recomendaciones, colores o prendas sugeridas.', x: 49, y: pct(282), width: 41, height: pct(115), fontSize: 14 }
+      { type: 'text', binding: 'display.dressCode.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute || isXv ? 'CÓDIGO DE ETIQUETA' : 'Vestimenta')), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
+      { type: 'text', binding: 'display.dressCode.title', label: section.title || 'Código de vestimenta', x: 10, y: pct(66), width: 80, height: pct(62), fontSize: isXv ? 42 : 34 },
+      { type: 'text', binding: 'display.dressCode.intro', label: String(this.pluginSetting(section, 'introText') || (isXv ? 'Agradecemos vestir conforme a la etiqueta para lucir en esta noche de gala.' : isHaute ? 'Agradecemos vestir conforme a la etiqueta establecida para nuestra gala.' : 'Inspírate con estas recomendaciones para la celebración.')), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 }
     ];
-    options.forEach((option, index) => {
-      const left = index % 2 === 0 ? 8 : 52;
-      const topPx = 465 + Math.floor(index / 2) * 180;
-      const prefix = `dress.option.${index}`;
+    if (isHaute || isXv) {
+      if (hasImage) {
+        definitions.push(
+          { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: dressImgUrl, x: 10, y: pct(190), width: 34, height: pct(230), fontSize: 12 },
+          { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || (isXv ? 'Rigurosa Etiqueta / Gala' : 'Rigurosa Etiqueta'), x: 48, y: pct(210), width: 44, height: pct(52), fontSize: isXv ? 32 : 28 },
+          { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || (isXv ? 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.' : 'Caballeros: Frac o esmoquin negro clásico.\nDamas: Vestido largo de noche.'), x: 48, y: pct(272), width: 44, height: pct(130), fontSize: 14 }
+        );
+      } else {
+        definitions.push(
+          { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || (isXv ? 'Rigurosa Etiqueta / Gala' : 'Rigurosa Etiqueta'), x: 15, y: pct(190), width: 70, height: pct(58), fontSize: isXv ? 36 : 32 },
+          { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || (isXv ? 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.' : 'Caballeros: Frac o esmoquin negro clásico.\nDamas: Vestido largo de noche en tonos sugeridos.'), x: 15, y: pct(260), width: 70, height: pct(85), fontSize: 15 }
+        );
+      }
+      const startTopPx = hasImage ? 440 : 365;
+      options.forEach((option, index) => {
+        const left = index % 2 === 0 ? 8 : 52;
+        const topPx = startTopPx + Math.floor(index / 2) * 180;
+        const prefix = `dress.option.${index}`;
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de referencia ${index + 1}`, x: left, y: pct(topPx), width: 40, height: pct(155), fontSize: 12 },
+          { type: 'shape', binding: `${prefix}.color`, label: option.title ? `Color: ${option.title}` : `Color ${index + 1}`, color: option.color || (isXv ? '#5c0d18' : '#181514'), x: left + 3.5, y: pct(topPx + 22), width: 7, height: pct(54), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: option.title || `Etiqueta ${index + 1}`, x: left + 12, y: pct(topPx + 18), width: 26, height: pct(36), fontSize: 18 },
+          { type: 'text', binding: `${prefix}.description`, label: option.description || 'Recomendación de vestuario', x: left + 12, y: pct(topPx + 58), width: 26, height: pct(80), fontSize: 12 }
+        );
+      });
+    } else {
       definitions.push(
-        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de referencia ${index + 1}`, x: left, y: pct(topPx), width: 40, height: pct(150), fontSize: 12 },
-        { type: 'shape', binding: `${prefix}.color`, label: option.title ? `Color: ${option.title}` : `Color ${index + 1}`, color: option.color || '#d9c2b0', x: left + 3, y: pct(topPx + 24), width: 9, height: pct(72), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.title`, label: option.title || `Referencia ${index + 1}`, x: left + 15, y: pct(topPx + 20), width: 22, height: pct(36), fontSize: 17 },
-        { type: 'text', binding: `${prefix}.description`, label: option.description || 'Recomendación opcional', x: left + 15, y: pct(topPx + 62), width: 22, height: pct(58), fontSize: 12 }
+        { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: this.invitation?.content?.dressCodeImageUrl || '', x: 10, y: pct(196), width: 34, height: pct(235), fontSize: 12 },
+        { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || 'Formal', x: 49, y: pct(220), width: 41, height: pct(48), fontSize: 28 },
+        { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || 'Agrega recomendaciones, colores o prendas sugeridas.', x: 49, y: pct(282), width: 41, height: pct(115), fontSize: 14 }
       );
-    });
+      options.forEach((option, index) => {
+        const left = index % 2 === 0 ? 8 : 52;
+        const topPx = 465 + Math.floor(index / 2) * 180;
+        const prefix = `dress.option.${index}`;
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de referencia ${index + 1}`, x: left, y: pct(topPx), width: 40, height: pct(150), fontSize: 12 },
+          { type: 'shape', binding: `${prefix}.color`, label: option.title ? `Color: ${option.title}` : `Color ${index + 1}`, color: option.color || '#d9c2b0', x: left + 3, y: pct(topPx + 24), width: 9, height: pct(72), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: option.title || `Referencia ${index + 1}`, x: left + 15, y: pct(topPx + 20), width: 22, height: pct(36), fontSize: 17 },
+          { type: 'text', binding: `${prefix}.description`, label: option.description || 'Recomendación opcional', x: left + 15, y: pct(topPx + 62), width: 22, height: pct(58), fontSize: 12 }
+        );
+      });
+    }
     return definitions;
   }
 
@@ -5420,19 +5925,87 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createDressCodeLayer(definition: ReturnType<typeof this.dressCodeLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
+    const hasImage = Boolean(isXv ? (this.invitation?.content?.dressCodeImageUrl || 'assets/templates/xv-burgundy/dresscode-art.jpg') : this.invitation?.content?.dressCodeImageUrl);
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
     layer.binding = definition.binding;
     layer.url = definition.url;
     layer.zIndex = zIndex;
-    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
+    if (definition.type === 'image') {
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)' };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', boxShadow: '0 12px 30px rgba(92, 13, 24, 0.35)' };
+      } else {
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
+      }
+    }
     if (definition.type === 'shape') {
       const isColor = definition.binding.endsWith('.color');
-      layer.style = {
-        ...(layer.style || {}), backgroundColor: isColor ? definition.color || '#d9c2b0' : '#ffffff',
-        borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: isColor ? 999 : 8,
-        boxShadow: isColor ? 'none' : '0 8px 24px #00000012'
-      };
+      if (isHaute) {
+        layer.style = {
+          ...(layer.style || {}),
+          backgroundColor: isColor ? definition.color || '#181514' : '#ffffff',
+          borderColor: '#c59b48',
+          borderWidth: isColor ? 2 : 1,
+          borderStyle: 'solid',
+          borderRadius: isColor ? 999 : 16,
+          boxShadow: isColor ? '0 4px 12px rgba(197, 155, 72, 0.25)' : '0 10px 28px rgba(197, 155, 72, 0.12)'
+        };
+      } else if (isXv) {
+        layer.style = {
+          ...(layer.style || {}),
+          backgroundColor: isColor ? definition.color || '#5c0d18' : '#faf6f0',
+          borderColor: '#d4af37',
+          borderWidth: isColor ? 2 : 1.5,
+          borderStyle: 'solid',
+          borderRadius: isColor ? 999 : 16,
+          boxShadow: isColor ? '0 4px 12px rgba(212, 175, 55, 0.35)' : '0 12px 30px rgba(92, 13, 24, 0.22)'
+        };
+      } else {
+        layer.style = {
+          ...(layer.style || {}), backgroundColor: isColor ? definition.color || '#d9c2b0' : '#ffffff',
+          borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: isColor ? 999 : 8,
+          boxShadow: isColor ? 'none' : '0 8px 24px #00000012'
+        };
+      }
       if (!isColor) layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    if (definition.type === 'text') {
+      if (isHaute) {
+        if (definition.binding === 'display.dressCode.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#c59b48', textAlign: 'center' };
+        } else if (definition.binding === 'display.dressCode.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding === 'display.dressCode.intro') {
+          layer.style = { ...(layer.style || {}), color: '#555555', textAlign: 'center' };
+        } else if (definition.binding === 'dress.code') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: hasImage ? 'left' : 'center', letterSpacing: 1 };
+        } else if (definition.binding === 'dress.description') {
+          layer.style = { ...(layer.style || {}), color: '#333333', lineHeight: 1.6, textAlign: hasImage ? 'left' : 'center' };
+        } else if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514' };
+        } else if (definition.binding.endsWith('.description')) {
+          layer.style = { ...(layer.style || {}), color: '#555555', lineHeight: 1.4 };
+        }
+      } else if (isXv) {
+        if (definition.binding === 'display.dressCode.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37', textAlign: 'center' };
+        } else if (definition.binding === 'display.dressCode.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
+        } else if (definition.binding === 'display.dressCode.intro') {
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
+        } else if (definition.binding === 'dress.code') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 34, fontWeight: 700, color: hasImage ? '#faf6f0' : '#faf6f0', textAlign: hasImage ? 'left' : 'center', letterSpacing: 1 };
+        } else if (definition.binding === 'dress.description') {
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', lineHeight: 1.6, textAlign: hasImage ? 'left' : 'center' };
+        } else if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#5c0d18' };
+        } else if (definition.binding.endsWith('.description')) {
+          layer.style = { ...(layer.style || {}), color: '#5c0d18', lineHeight: 1.4 };
+        }
+      }
     }
     return layer;
   }
@@ -5485,44 +6058,109 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createLodgingLayer(definition: ReturnType<typeof this.lodgingLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
     layer.binding = definition.binding;
     layer.url = definition.url;
     layer.zIndex = zIndex;
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
-    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isXv) {
+        if (definition.binding.endsWith('.reserve')) {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+        } else {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 30, fontWeight: 700 };
+        }
+      }
+    }
+    if (definition.type === 'image') {
+      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: isXv ? 12 : 8, borderColor: isXv ? '#d4af37' : undefined, borderWidth: isXv ? 1 : 0 };
+    }
     if (definition.type === 'shape') {
-      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+      } else {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+      }
       layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    if (definition.type === 'text' && isXv) {
+      if (definition.binding === 'display.lodging.eyebrow') {
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+      } else if (definition.binding === 'display.lodging.title') {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
+      } else if (definition.binding === 'display.lodging.intro') {
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+      } else if (definition.binding.endsWith('.name')) {
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 26, fontWeight: 600, color: '#5c0d18' };
+      } else if (definition.binding.endsWith('.price') || definition.binding.endsWith('.agreement') || definition.binding.endsWith('.discount')) {
+        layer.style = { ...(layer.style || {}), color: '#8c1d2e', fontWeight: 600 };
+      } else {
+        layer.style = { ...(layer.style || {}), color: '#3a0810' };
+      }
     }
     return layer;
   }
 
+  private gallerySourceData(): Array<{ url?: string; title?: string; description?: string; dedication?: string }> {
+    const configured = this.invitation?.content?.galleryItems || [];
+    if (configured.length) return configured;
+    const legacy = (this.invitation?.content?.gallery || []).map((url, i) => ({ url, title: `Fotografía ${i + 1}` }));
+    if (legacy.length) return legacy;
+    return [{ title: 'Fotografía 1' }, { title: 'Fotografía 2' }];
+  }
+
   private galleryLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
-    const items = this.invitation?.content?.galleryItems || [];
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
+    const items = this.gallerySourceData();
     const rows = Math.max(1, Math.ceil(items.length / 2));
-    const requiredHeight = Math.max(760, 220 + rows * 330);
+    const requiredHeight = Math.max(760, 220 + rows * (isHaute || isXv ? 320 : 330));
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
-      { type: 'text', binding: 'display.gallery.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Momentos'), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
-      { type: 'text', binding: 'display.gallery.title', label: section.title || 'Galería', x: 10, y: pct(66), width: 80, height: pct(62), fontSize: 34 },
-      { type: 'text', binding: 'display.gallery.intro', label: String(this.pluginSetting(section, 'introText') || 'Una selección de momentos especiales.'), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 }
+      { type: 'text', binding: 'display.gallery.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute ? 'GALERÍA DE RECUERDOS' : isXv ? 'MIS MOMENTOS FAVORITOS' : 'Momentos')), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
+      { type: 'text', binding: 'display.gallery.title', label: section.title || (isHaute ? 'Galería de fotos' : isXv ? 'Galería de Recuerdos' : 'Galería'), x: 10, y: pct(66), width: 80, height: pct(62), fontSize: isXv ? 42 : 34 },
+      { type: 'text', binding: 'display.gallery.intro', label: String(this.pluginSetting(section, 'introText') || (isXv ? 'Una selección de momentos que han marcado mi camino hasta mis XV.' : isHaute ? 'Momentos especiales que atesoramos con amor.' : 'Una selección de momentos especiales.')), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 }
     ];
-    items.forEach((item, index) => {
-      const left = index % 2 === 0 ? 5 : 52;
-      const topPx = 200 + Math.floor(index / 2) * 330;
-      const prefix = `gallery.item.${index}`;
-      definitions.push(
-        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(300), fontSize: 12 },
-        { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || '', x: left + 3, y: pct(topPx + 16), width: 37, height: pct(185), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.title`, label: item.title || `Fotografía ${index + 1}`, x: left + 3, y: pct(topPx + 210), width: 37, height: pct(28), fontSize: 17 },
-        { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción', x: left + 3, y: pct(topPx + 241), width: 37, height: pct(25), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.dedication`, label: item.dedication || 'Dedicatoria', x: left + 3, y: pct(topPx + 270), width: 37, height: pct(22), fontSize: 11 }
-      );
-    });
+    if (isHaute || isXv) {
+      items.forEach((item, index) => {
+        const left = index % 2 === 0 ? 5 : 52;
+        const topPx = 200 + Math.floor(index / 2) * 320;
+        const prefix = `gallery.item.${index}`;
+        const defaultPhotoUrl = isXv ? (index === 0 ? 'assets/templates/xv-burgundy/portrait.jpg' : 'assets/templates/xv-burgundy/header.jpg') : '';
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(295), fontSize: 12 },
+          { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || defaultPhotoUrl, x: left + 2.5, y: pct(topPx + 14), width: 38, height: pct(225), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: item.title || `Fotografía ${index + 1}`, x: left + 2.5, y: pct(topPx + 250), width: 38, height: pct(30), fontSize: isXv ? 20 : 16 }
+        );
+        if (item.description) {
+          definitions.push(
+            { type: 'text', binding: `${prefix}.description`, label: item.description, x: left + 2.5, y: pct(topPx + 282), width: 38, height: pct(24), fontSize: 12 }
+          );
+        }
+        if (item.dedication) {
+          definitions.push(
+            { type: 'text', binding: `${prefix}.dedication`, label: item.dedication, x: left + 2.5, y: pct(topPx + 308), width: 38, height: pct(22), fontSize: 11 }
+          );
+        }
+      });
+    } else {
+      items.forEach((item, index) => {
+        const left = index % 2 === 0 ? 5 : 52;
+        const topPx = 200 + Math.floor(index / 2) * 330;
+        const prefix = `gallery.item.${index}`;
+        definitions.push(
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(300), fontSize: 12 },
+          { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || '', x: left + 3, y: pct(topPx + 16), width: 37, height: pct(185), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: item.title || `Fotografía ${index + 1}`, x: left + 3, y: pct(topPx + 210), width: 37, height: pct(28), fontSize: 17 },
+          { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción', x: left + 3, y: pct(topPx + 241), width: 37, height: pct(25), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.dedication`, label: item.dedication || 'Dedicatoria', x: left + 3, y: pct(topPx + 270), width: 37, height: pct(22), fontSize: 11 }
+        );
+      });
+    }
     const first = items[0];
     definitions.push(
-      { type: 'image', binding: 'gallery.carousel.image', label: 'Fotografía actual', url: first?.url || '', x: 15, y: pct(205), width: 70, height: pct(340), fontSize: 12 },
+      { type: 'image', binding: 'gallery.carousel.image', label: 'Fotografía actual', url: first?.url || (isXv ? 'assets/templates/xv-burgundy/portrait.jpg' : ''), x: 15, y: pct(205), width: 70, height: pct(340), fontSize: 12 },
       { type: 'text', binding: 'gallery.carousel.title', label: first?.title || 'Título de fotografía', x: 20, y: pct(565), width: 60, height: pct(38), fontSize: 22 },
       { type: 'text', binding: 'gallery.carousel.description', label: first?.description || 'Descripción', x: 20, y: pct(610), width: 60, height: pct(32), fontSize: 13 },
       { type: 'text', binding: 'gallery.carousel.dedication', label: first?.dedication || 'Dedicatoria', x: 20, y: pct(648), width: 60, height: pct(28), fontSize: 12 },
@@ -5536,8 +6174,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private ensureGalleryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasGalleryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gallery.') || String(layer.binding || '').startsWith('display.gallery.'));
     if (!indexes?.length && hasGalleryLayers) return;
-    const rows = Math.max(1, Math.ceil((this.invitation?.content?.galleryItems?.length || 0) / 2));
-    const requiredHeight = Math.max(760, 220 + rows * 330);
+    const rows = Math.max(1, Math.ceil(this.gallerySourceData().length / 2));
+    const requiredHeight = Math.max(760, 220 + rows * (this.isHauteCouture() || this.isXvBurgundy() ? 320 : 330));
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.galleryLayerDefinitions(section).filter((definition) => {
@@ -5551,15 +6189,77 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private createGalleryLayer(definition: ReturnType<typeof this.galleryLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
+    const isHaute = this.isHauteCouture();
+    const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
     layer.binding = definition.binding;
     layer.url = definition.url;
     layer.zIndex = zIndex;
-    if (definition.type === 'button') this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
-    if (definition.type === 'image') layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 4 };
+    if (definition.type === 'button') {
+      this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30 };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+      }
+    }
+    if (definition.type === 'image') {
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 12, borderColor: '#e8dcce', borderWidth: 1, borderStyle: 'solid' };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(92, 13, 24, 0.15)' };
+      } else {
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 4 };
+      }
+    }
     if (definition.type === 'shape') {
-      layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 4, boxShadow: '0 8px 24px #00000012' };
+      if (isHaute) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
+      } else if (isXv) {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+      } else {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 4, boxShadow: '0 8px 24px #00000012' };
+      }
       layer.zIndex = Math.max(1, zIndex - 1);
+    }
+    if (definition.type === 'text') {
+      if (isHaute) {
+        if (definition.binding === 'display.gallery.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#c59b48', textAlign: 'center' };
+        } else if (definition.binding === 'display.gallery.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding === 'display.gallery.intro') {
+          layer.style = { ...(layer.style || {}), color: '#555555', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.description')) {
+          layer.style = { ...(layer.style || {}), color: '#555555', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.dedication')) {
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#c59b48', textAlign: 'center' };
+        } else if (definition.binding === 'gallery.carousel.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel Decorative', serif", fontWeight: 700, color: '#181514', textAlign: 'center' };
+        } else if (definition.binding === 'gallery.carousel.counter') {
+          layer.style = { ...(layer.style || {}), color: '#c59b48', fontWeight: 700, textAlign: 'center' };
+        }
+      } else if (isXv) {
+        if (definition.binding === 'display.gallery.eyebrow') {
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37', textAlign: 'center' };
+        } else if (definition.binding === 'display.gallery.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
+        } else if (definition.binding === 'display.gallery.intro') {
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.title')) {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 24, fontWeight: 600, color: '#5c0d18', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.description')) {
+          layer.style = { ...(layer.style || {}), color: '#3a0810', textAlign: 'center' };
+        } else if (definition.binding.endsWith('.dedication')) {
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#8c1d2e', textAlign: 'center' };
+        } else if (definition.binding === 'gallery.carousel.title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 32, fontWeight: 700, color: '#5c0d18', textAlign: 'center' };
+        } else if (definition.binding === 'gallery.carousel.counter') {
+          layer.style = { ...(layer.style || {}), color: '#d4af37', fontWeight: 700, textAlign: 'center' };
+        }
+      }
     }
     return layer;
   }
@@ -5569,6 +6269,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     definition: { key: RsvpPartKey; type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string },
     zIndex: number
   ): VisualInvitationLayer {
+    const isXv = this.isXvBurgundy();
     const part = this.pluginPartDesign(section, definition.key);
     const configuredText: Partial<Record<RsvpPartKey, string>> = {
       eyebrow: String(this.pluginSetting(section, 'eyebrow') || definition.label),
@@ -5588,6 +6289,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       borderColor: part.borderColor, borderWidth: part.borderWidth, borderStyle: 'solid', borderRadius: part.borderRadius,
       padding: part.padding, boxShadow: part.boxShadow, controlShape: part.shape, controlVariant: part.variant
     };
+    if (isXv) {
+      if (definition.type === 'field') {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 12, color: '#5c0d18', padding: 10, textAlign: 'left', showPlaceholder: true };
+      } else if (definition.type === 'button') {
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+      } else if (definition.type === 'text') {
+        if (definition.key === 'eyebrow') {
+          layer.style = { ...(layer.style || {}), color: '#d4af37', letterSpacing: 2.5, fontWeight: 700 };
+        } else if (definition.key === 'title') {
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, color: '#faf6f0', fontWeight: 700 };
+        } else if (definition.key === 'intro') {
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+        }
+      }
+    }
     return layer;
   }
 

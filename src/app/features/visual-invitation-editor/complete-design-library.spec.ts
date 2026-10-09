@@ -71,4 +71,83 @@ describe('complete design library', () => {
     expect(types).not.toContain('songs');
     expect(design.sections[0].layers.some((item) => item.url === content.coverImageUrl)).toBeTrue();
   });
+
+  it('builds haute-couture design with luxury art direction, elevated cards and complete modules', () => {
+    const wedding = { ...event, title: 'Victoria & Alejandro', type: 'boda', date: '2026-11-20' } as EventModel;
+    const content: InvitationContent = {
+      coverImageUrl: 'https://example.com/victoria-cover.jpg',
+      storyBody: 'Una historia de amor inigualable.',
+      locations: [{ name: 'Catedral Metropolitana', address: 'Av. Hidalgo 1' }],
+      itinerary: [{ time: '18:00', title: 'Recepción Real' }],
+      dressCode: 'Rigurosa Etiqueta / Black Tie',
+      galleryItems: [{ url: 'https://example.com/gallery1.jpg', title: 'Editorial 1' }],
+      giftRegistry: [{ store: 'Liverpool', url: 'https://liverpool.com' }],
+      lodging: [{ name: 'Hotel Four Seasons', address: 'Paseo de la Reforma' }],
+      sectionSettings: {}
+    };
+    const design = buildCompleteDesign('haute-couture', content, wedding, nextId);
+    expect(design.theme?.headingFont).toBe("'Cinzel Decorative', serif");
+    expect(design.theme?.buttonRadius).toBe(30);
+
+    const hero = design.sections[0];
+    expect(hero.type).toBe('hero');
+    expect(hero.layers.some((l) => l.type === 'image' && l.style?.imageMask === 'arch')).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'button' && l.binding === 'section:rsvp')).toBeTrue();
+
+    const modules = design.sections.filter((s) => s.type !== 'hero' && s.type !== 'custom');
+    expect(modules.every((m) => m.moduleStyle?.surface === 'soft')).toBeTrue();
+    expect(modules.every((m) => m.moduleStyle?.cardStyle === 'elevated')).toBeTrue();
+    expect(modules.map((m) => m.type)).toEqual([
+      'countdown', 'story', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'album', 'dedications', 'songs'
+    ]);
+  });
+
+  it('builds xv-burgundy design with royal quinceanera art direction, velvet palette and Great Vibes calligraphy', () => {
+    const xvEvent = { ...event, title: 'María & Juan', type: 'xv', date: '2026-10-24' } as EventModel;
+    const content: InvitationContent = {
+      coverImageUrl: 'https://example.com/quinceanera.jpg',
+      storyBody: 'Una noche soñada rodeada de las personas que más quiero.',
+      locations: [{ name: 'Parroquia San Juan Bautista', address: 'Calle Principal 123' }],
+      itinerary: [{ time: '19:00', title: 'Recepción y Vals Real' }],
+      dressCode: 'Rigurosa Etiqueta / Gala',
+      galleryItems: [{ url: 'https://example.com/xv-gallery1.jpg', title: 'Recuerdo XV' }],
+      giftRegistry: [{ store: 'Mesa de Regalos Liverpool', url: 'https://liverpool.com' }],
+      lodging: [{ name: 'Hotel Gran Plaza', address: 'Centro Histórico' }],
+      sectionSettings: {}
+    };
+    const design = buildCompleteDesign('xv-burgundy', content, xvEvent, nextId);
+    expect(design.theme?.headingFont).toBe("'Great Vibes', cursive");
+    expect(design.theme?.accentColor).toBe('#d4af37');
+    expect(design.theme?.backgroundColor).toBe('#5c0d18');
+    expect(design.theme?.buttonRadius).toBe(30);
+
+    const hero = design.sections[0];
+    expect(hero.type).toBe('hero');
+    expect(hero.layers.some((l) => l.type === 'image' && l.url === 'assets/templates/xv-burgundy/tiara-banner.jpg')).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'image' && l.style?.imageMask === 'circle' && l.url === content.coverImageUrl)).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'image' && l.url === 'assets/templates/xv-burgundy/floral-cluster.jpg')).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'button' && l.binding === 'section:rsvp')).toBeTrue();
+
+    const intro = design.sections[1];
+    expect(intro.type).toBe('custom');
+    expect(intro.title).toBe('Bienvenida');
+    expect(intro.layers.some((l) => l.url === 'assets/templates/xv-burgundy/welcome-card.jpg')).toBeTrue();
+    expect(intro.layers.some((l) => l.text === 'MIS QUINCE AÑOS')).toBeTrue();
+
+    const modules = design.sections.filter((s) => s.type !== 'hero' && s.type !== 'custom');
+    expect(modules.every((m) => m.moduleStyle?.surface === 'soft')).toBeTrue();
+    expect(modules.every((m) => m.moduleStyle?.cardStyle === 'elevated')).toBeTrue();
+    expect(modules.map((m) => m.type)).toEqual([
+      'countdown', 'gallery', 'dedications', 'locations', 'itinerary', 'dressCode', 'gifts', 'lodging', 'rsvp', 'story', 'album', 'songs'
+    ]);
+
+    const locationsSec = design.sections.find((s) => s.type === 'locations');
+    expect(locationsSec?.height).toBe(820);
+    const itinerarySec = design.sections.find((s) => s.type === 'itinerary');
+    expect(itinerarySec?.height).toBe(800);
+    const gallerySec = design.sections.find((s) => s.type === 'gallery');
+    expect(gallerySec?.height).toBe(840);
+    const giftsSec = design.sections.find((s) => s.type === 'gifts');
+    expect(giftsSec?.height).toBe(880);
+  });
 });

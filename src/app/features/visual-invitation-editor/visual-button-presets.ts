@@ -8,6 +8,18 @@ export interface VisualButtonPreset {
 
 export const VISUAL_BUTTON_PRESETS: VisualButtonPreset[] = [
   {
+    key: 'haute-couture', name: 'Alta Costura',
+    style: { buttonVariant: 'solid', fontFamily: 'Montserrat, sans-serif', fontSize: 14, fontWeight: 700,
+      color: '#ffffff', backgroundColor: '#181514', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30,
+      padding: 12, boxShadow: '0 8px 22px rgba(24,21,20,.25)', hoverBackgroundColor: '#c59b48', hoverColor: '#181514' }
+  },
+  {
+    key: 'xv-burgundy', name: 'Borgoña Real',
+    style: { buttonVariant: 'solid', fontFamily: 'Montserrat, sans-serif', fontSize: 14, fontWeight: 700,
+      color: '#5c0d18', backgroundColor: '#d4af37', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30,
+      padding: 12, boxShadow: '0 8px 22px rgba(92,13,24,.35)', hoverBackgroundColor: '#f5c842', hoverColor: '#3a0810' }
+  },
+  {
     key: 'editorial', name: 'Editorial',
     style: { buttonVariant: 'solid', fontFamily: "'Cormorant Garamond', serif", fontSize: 21, fontWeight: 700,
       color: '#ffffff', backgroundColor: '#252321', borderWidth: 0, borderRadius: 2, padding: 12,
