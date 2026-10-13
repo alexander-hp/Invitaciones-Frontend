@@ -121,4 +121,4 @@
 .canvas-layer.file-drop-target .frame-empty span{background:#dff3e7 !important;color:#18683e !important;font-weight:600}
 .composite-frame-list button.file-drop-target{border-color:#1e8e5a;background:#e8faef;outline:2px solid #1e8e5a;outline-offset:-2px}
 .frame-empty{box-sizing:border-box;overflow:hidden}
-.frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:8px;background:#eee9e4;color:#5d5048;font-size:11px;text-align:center}
+.frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:8px;background:#eee9e4;color:#5d5048;font-size:11px;text-align:center;pointer-events:none}
