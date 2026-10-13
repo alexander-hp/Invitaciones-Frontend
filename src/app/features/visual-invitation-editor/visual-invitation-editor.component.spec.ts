@@ -1,4 +1,4 @@
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { InvitationModel } from '../../core/models';
 import { VisualInvitationEditorComponent } from './visual-invitation-editor.component';
 import { VisualDesignImporterService } from './visual-design-importer.service';
@@ -6,13 +6,16 @@ import { VisualDesignImporterService } from './visual-design-importer.service';
 describe('VisualInvitationEditorComponent persistence', () => {
   let component: VisualInvitationEditorComponent;
   let responses: Subject<{ invitation: InvitationModel }>;
-  let api: { updateInvitation: jasmine.Spy; publishInvitation: jasmine.Spy };
+  let api: { updateInvitation: jasmine.Spy; publishInvitation: jasmine.Spy; createUploadUrl: jasmine.Spy; uploadAsset: jasmine.Spy };
 
   beforeEach(() => {
     responses = new Subject<{ invitation: InvitationModel }>();
     api = {
       updateInvitation: jasmine.createSpy().and.returnValue(responses.asObservable()),
-      publishInvitation: jasmine.createSpy()
+      publishInvitation: jasmine.createSpy(),
+      createUploadUrl: jasmine.createSpy().and.callFake((payload: any) =>
+        of({ uploadUrl: `https://upload.example.com/${payload.fileName}`, publicUrl: `https://cdn.example.com/${payload.fileName}` })),
+      uploadAsset: jasmine.createSpy().and.returnValue(of({}))
     };
     component = new VisualInvitationEditorComponent({} as any, {} as any, api as any, {} as any, {} as any);
     component.design = {
@@ -493,7 +496,7 @@ describe('VisualInvitationEditorComponent persistence', () => {
   it('keeps the selected preview inside the filtered category', () => {
     component.openDesignLibrary('night');
     component.setLibraryCategory('boda');
-    expect(component.librarySelectedKey).toBe('romantic');
+    expect(component.librarySelectedKey).toBe('haute-couture');
     expect(component.libraryPreviewDesign?.sections.length).toBeGreaterThan(2);
   });
 
@@ -557,5 +560,139 @@ describe('VisualInvitationEditorComponent persistence', () => {
     component.fitCanvasToViewport();
 
     expect(component.canvasZoom).toBe(0.64);
+  });
+
+  it('highlights photo frame and allows drop when dragging a file from OS', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    const [first] = component.design.sections[0].layers;
+
+    const surface = document.createElement('div');
+    const target = document.createElement('div');
+    target.className = 'canvas-layer';
+    target.dataset['layerId'] = first.id;
+    surface.appendChild(target);
+
+    const preventDefaultSpy = jasmine.createSpy('preventDefault');
+    const event = {
+      target,
+      currentTarget: surface,
+      dataTransfer: {
+        types: ['Files'],
+        dropEffect: 'none'
+      },
+      preventDefault: preventDefaultSpy,
+      stopPropagation: jasmine.createSpy('stopPropagation')
+    } as unknown as DragEvent;
+
+    component.dragPaletteOver(event, component.design.sections[0]);
+
+    expect(preventDefaultSpy).toHaveBeenCalled();
+    expect(component.fileDropTargetLayerId).toBe(first.id);
+  });
+
+  it('uploads and assigns a dropped file to an empty frame in a photo composition', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    const [first, second] = component.design.sections[0].layers;
+    expect(first.url).toBeFalsy();
+
+    const surface = document.createElement('div');
+    const target = document.createElement('div');
+    target.className = 'canvas-layer';
+    target.dataset['layerId'] = first.id;
+    surface.appendChild(target);
+    spyOn(surface, 'getBoundingClientRect').and.returnValue({ left: 0, top: 0, width: 400, height: 600 } as DOMRect);
+
+    const mockFile = new File(['image-content'], 'foto-pareja.jpg', { type: 'image/jpeg' });
+    const event = {
+      target,
+      currentTarget: surface,
+      clientX: 50,
+      clientY: 50,
+      dataTransfer: {
+        files: [mockFile],
+        types: ['Files']
+      },
+      preventDefault: jasmine.createSpy('preventDefault'),
+      stopPropagation: jasmine.createSpy('stopPropagation')
+    } as unknown as DragEvent;
+
+    component.fileDropTargetLayerId = first.id;
+    component.dropPaletteItem(event, component.design.sections[0]);
+
+    expect(api.createUploadUrl).toHaveBeenCalled();
+    expect(api.uploadAsset).toHaveBeenCalled();
+    expect(first.url).toBe('https://cdn.example.com/foto-pareja.jpg');
+    expect(second.url).toBeFalsy();
+    expect(component.selectedLayerIds).toEqual([first.id]);
+    expect(component.design.assets?.some((a) => a.url === 'https://cdn.example.com/foto-pareja.jpg')).toBeTrue();
+  });
+
+  it('populates multiple frames in a composition when multiple files are dropped', () => {
+    component.selectedSectionId = 'hero';
+    component.addPhotoComposition('diptych');
+    const [first, second] = component.design.sections[0].layers;
+
+    const surface = document.createElement('div');
+    const target = document.createElement('div');
+    target.className = 'canvas-layer';
+    target.dataset['layerId'] = first.id;
+    surface.appendChild(target);
+    spyOn(surface, 'getBoundingClientRect').and.returnValue({ left: 0, top: 0, width: 400, height: 600 } as DOMRect);
+
+    const file1 = new File(['content1'], 'foto1.jpg', { type: 'image/jpeg' });
+    const file2 = new File(['content2'], 'foto2.jpg', { type: 'image/jpeg' });
+    const event = {
+      target,
+      currentTarget: surface,
+      clientX: 50,
+      clientY: 50,
+      dataTransfer: {
+        files: [file1, file2],
+        types: ['Files']
+      },
+      preventDefault: jasmine.createSpy('preventDefault'),
+      stopPropagation: jasmine.createSpy('stopPropagation')
+    } as unknown as DragEvent;
+
+    component.fileDropTargetLayerId = first.id;
+    component.dropPaletteItem(event, component.design.sections[0]);
+
+    expect(first.url).toBe('https://cdn.example.com/foto1.jpg');
+    expect(second.url).toBe('https://cdn.example.com/foto2.jpg');
+    expect(component.design.assets?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('creates new image layers when files are dropped onto empty canvas', () => {
+    component.selectedSectionId = 'hero';
+    const section = component.design.sections[0];
+    const initialLayerCount = section.layers.length;
+
+    const surface = document.createElement('div');
+    surface.className = 'layer-surface';
+    spyOn(surface, 'getBoundingClientRect').and.returnValue({ left: 0, top: 0, width: 400, height: 600 } as DOMRect);
+
+    const file = new File(['content'], 'paisaje.png', { type: 'image/png' });
+    const event = {
+      target: surface,
+      currentTarget: surface,
+      clientX: 120,
+      clientY: 180,
+      dataTransfer: {
+        files: [file],
+        types: ['Files']
+      },
+      preventDefault: jasmine.createSpy('preventDefault'),
+      stopPropagation: jasmine.createSpy('stopPropagation')
+    } as unknown as DragEvent;
+
+    component.dropPaletteItem(event, section);
+
+    expect(section.layers.length).toBe(initialLayerCount + 1);
+    const newLayer = section.layers[section.layers.length - 1];
+    expect(newLayer.type).toBe('image');
+    expect(newLayer.url).toBe('https://cdn.example.com/paisaje.png');
+    expect(component.selectedLayerIds).toEqual([newLayer.id]);
   });
 });

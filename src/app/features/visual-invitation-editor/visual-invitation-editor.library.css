@@ -117,5 +117,8 @@
 .composite-frame-thumb{display:block;flex:none;width:38px;height:38px;overflow:hidden;background:#e9e3dc}
 .composite-frame-thumb img{display:block;width:100%;height:100%;object-fit:cover}
 .canvas-layer.photo-swap-target{outline:3px solid #1689df;outline-offset:3px;box-shadow:0 0 0 7px #1689df33}
+.canvas-layer.file-drop-target{outline:3px solid #1e8e5a !important;outline-offset:3px;box-shadow:0 0 0 8px rgba(30,142,90,.25) !important}
+.canvas-layer.file-drop-target .frame-empty span{background:#dff3e7 !important;color:#18683e !important;font-weight:600}
+.composite-frame-list button.file-drop-target{border-color:#1e8e5a;background:#e8faef;outline:2px solid #1e8e5a;outline-offset:-2px}
 .frame-empty{box-sizing:border-box;overflow:hidden}
 .frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:8px;background:#eee9e4;color:#5d5048;font-size:11px;text-align:center}

@@ -352,6 +352,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private paletteDragItem?: PaletteDragItem;
   private photoSwapSourceId = '';
   photoSwapTargetId = '';
+  fileDropTargetLayerId = '';
   private photoSpacingEditKey = '';
   iconSearch = '';
   iconCategory: 'all' | VisualIconOption['category'] = 'all';
@@ -892,6 +893,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   @HostListener('window:resize')
   handleViewportResize(): void {
     if (this.mobilePanel === 'canvas') this.fitCanvasToViewport();
+  }
+
+  @HostListener('window:dragover', ['$event'])
+  onWindowDragOver(event: DragEvent): void {
+    if (this.isExternalFileDrag(event)) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'none';
+    }
+  }
+
+  @HostListener('window:drop', ['$event'])
+  onWindowDrop(event: DragEvent): void {
+    if (this.isExternalFileDrag(event)) {
+      event.preventDefault();
+    }
   }
 
   setCanvasZoom(value: number | string): void {
@@ -1928,31 +1944,73 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   dragPhotoSwapOver(event: DragEvent, target: VisualInvitationLayer): void {
-    if (!this.photoSwapSourceId) return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.photoSwapTargetId = this.canSwapCompositePhotos(target) ? target.id : '';
-    if (event.dataTransfer) event.dataTransfer.dropEffect = this.photoSwapTargetId ? 'move' : 'none';
+    if (this.photoSwapSourceId) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.photoSwapTargetId = this.canSwapCompositePhotos(target) ? target.id : '';
+      if (event.dataTransfer) event.dataTransfer.dropEffect = this.photoSwapTargetId ? 'move' : 'none';
+      return;
+    }
+    const isFileDrag = this.hasDataTransferFiles(event.dataTransfer);
+    const isMediaDrag = this.paletteDragItem?.kind === 'media' && this.paletteDragItem.media.type === 'image';
+    if (isFileDrag || isMediaDrag) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.photoSwapTargetId = target.id;
+      this.fileDropTargetLayerId = target.id;
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    }
   }
 
   leavePhotoSwapTarget(target: VisualInvitationLayer): void {
     if (this.photoSwapTargetId === target.id) this.photoSwapTargetId = '';
+    if (this.fileDropTargetLayerId === target.id) this.fileDropTargetLayerId = '';
   }
 
   dropPhotoSwap(event: DragEvent, target: VisualInvitationLayer): void {
-    if (!this.photoSwapSourceId) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const source = this.canSwapCompositePhotos(target)
-      ? this.selectedSection?.layers.find((layer) => layer.id === this.photoSwapSourceId)
-      : undefined;
-    if (source) this.swapCompositePhotos(source, target);
-    this.endPhotoSwapDrag();
+    if (this.photoSwapSourceId) {
+      event.preventDefault();
+      event.stopPropagation();
+      const source = this.canSwapCompositePhotos(target)
+        ? this.selectedSection?.layers.find((layer) => layer.id === this.photoSwapSourceId)
+        : undefined;
+      if (source) this.swapCompositePhotos(source, target);
+      this.endPhotoSwapDrag();
+      return;
+    }
+    const files = Array.from(event.dataTransfer?.files || []).filter((f) => {
+      const info = this.resolveFileType(f);
+      return ['image', 'video', 'audio'].includes(info.kind);
+    });
+    if (files.length && this.selectedSection) {
+      this.endPhotoSwapDrag();
+      this.handleDroppedFiles(files, this.selectedSection, event, target.id);
+      return;
+    }
+    if (this.paletteDragItem?.kind === 'media' && this.paletteDragItem.media.type === 'image') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.recordHistory();
+      target.url = this.paletteDragItem.media.url;
+      this.setLayerSelection([target.id]);
+      this.inspectorView = 'properties';
+      this.endPhotoSwapDrag();
+      this.endPaletteDrag();
+      this.flash('Foto colocada en el marco.');
+      return;
+    }
+    const externalImageUrl = this.extractImageUrlFromDataTransfer(event.dataTransfer);
+    if (externalImageUrl && this.selectedSection) {
+      this.endPhotoSwapDrag();
+      this.handleDroppedImageUrl(externalImageUrl, this.selectedSection, event, target.id);
+      return;
+    }
   }
 
   endPhotoSwapDrag(): void {
     this.photoSwapSourceId = '';
     this.photoSwapTargetId = '';
+    this.fileDropTargetLayerId = '';
   }
 
   swapCompositePhotos(source: VisualInvitationLayer, target: VisualInvitationLayer): void {
@@ -2183,6 +2241,66 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.paletteDropSectionId = '';
   }
 
+  isExternalFileDrag(event: DragEvent): boolean {
+    const dt = event.dataTransfer;
+    if (!dt) return false;
+    const types = Array.from(dt.types || []);
+    return types.includes('Files');
+  }
+
+  hasDataTransferFiles(dt: DataTransfer | null): boolean {
+    if (!dt) return false;
+    const types = Array.from(dt.types || []);
+    return types.includes('Files') || (dt.files && dt.files.length > 0);
+  }
+
+  hasExternalImageDrag(dt: DataTransfer | null): boolean {
+    if (!dt) return false;
+    const types = Array.from(dt.types || []);
+    return types.includes('text/uri-list') || types.includes('text/html') || types.includes('text/plain');
+  }
+
+  extractImageUrlFromDataTransfer(dt: DataTransfer | null): string | null {
+    if (!dt) return null;
+    const uriList = dt.getData('text/uri-list');
+    if (uriList && /^https?:\/\/.+\.(jpe?g|png|webp|gif|svg|avif)(\?.*)?$/i.test(uriList.trim())) {
+      return uriList.trim();
+    }
+    const url = dt.getData('URL');
+    if (url && /^https?:\/\/.+\.(jpe?g|png|webp|gif|svg|avif)(\?.*)?$/i.test(url.trim())) {
+      return url.trim();
+    }
+    const plain = dt.getData('text/plain');
+    if (plain && /^https?:\/\/.+\.(jpe?g|png|webp|gif|svg|avif)(\?.*)?$/i.test(plain.trim())) {
+      return plain.trim();
+    }
+    const html = dt.getData('text/html');
+    if (html) {
+      const match = /<img[^>]+src=["'](https?:\/\/[^"']+)["']/i.exec(html);
+      if (match) return match[1];
+    }
+    return null;
+  }
+
+  resolveFileType(file: File): { mimeType: string; kind: 'image' | 'video' | 'audio' } {
+    if (file.type?.startsWith('video/')) return { mimeType: file.type, kind: 'video' };
+    if (file.type?.startsWith('audio/')) return { mimeType: file.type, kind: 'audio' };
+    if (file.type?.startsWith('image/')) return { mimeType: file.type, kind: 'image' };
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'png') return { mimeType: 'image/png', kind: 'image' };
+    if (ext === 'jpg' || ext === 'jpeg') return { mimeType: 'image/jpeg', kind: 'image' };
+    if (ext === 'webp') return { mimeType: 'image/webp', kind: 'image' };
+    if (ext === 'gif') return { mimeType: 'image/gif', kind: 'image' };
+    if (ext === 'svg') return { mimeType: 'image/svg+xml', kind: 'image' };
+    if (ext === 'avif') return { mimeType: 'image/avif', kind: 'image' };
+    if (ext === 'mp4') return { mimeType: 'video/mp4', kind: 'video' };
+    if (ext === 'webm') return { mimeType: 'video/webm', kind: 'video' };
+    if (ext === 'mp3') return { mimeType: 'audio/mpeg', kind: 'audio' };
+    if (ext === 'wav') return { mimeType: 'audio/wav', kind: 'audio' };
+    if (ext === 'ogg') return { mimeType: 'audio/ogg', kind: 'audio' };
+    return { mimeType: file.type || 'image/jpeg', kind: 'image' };
+  }
+
   dragPaletteOver(event: DragEvent, section: VisualInvitationSection): void {
     if (this.photoSwapSourceId) {
       event.preventDefault();
@@ -2193,17 +2311,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (event.dataTransfer) event.dataTransfer.dropEffect = this.photoSwapTargetId ? 'move' : 'none';
       return;
     }
-    if (!this.paletteDragItem) return;
+
+    const isFileDrag = this.hasDataTransferFiles(event.dataTransfer);
+    const isPaletteDrag = !!this.paletteDragItem;
+    const isExternalImage = !isPaletteDrag && this.hasExternalImageDrag(event.dataTransfer);
+
+    if (!isPaletteDrag && !isFileDrag && !isExternalImage) return;
+
     event.preventDefault();
     event.stopPropagation();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-    this.paletteDropSectionId = section.id;
+
+    const targetElement = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer');
+    const targetId = targetElement?.dataset['layerId'];
+    const targetLayer = section.layers.find((layer) => layer.id === targetId);
+
+    if ((isFileDrag || isExternalImage || (isPaletteDrag && this.paletteDragItem?.kind === 'media' && this.paletteDragItem.media.type === 'image')) && targetLayer?.type === 'image') {
+      this.fileDropTargetLayerId = targetLayer.id;
+      this.paletteDropSectionId = '';
+    } else {
+      this.fileDropTargetLayerId = '';
+      this.paletteDropSectionId = section.id;
+    }
   }
 
   leavePaletteTarget(event: DragEvent, section: VisualInvitationSection): void {
     const target = event.currentTarget as HTMLElement;
     if (event.relatedTarget instanceof Node && target.contains(event.relatedTarget)) return;
     if (this.paletteDropSectionId === section.id) this.paletteDropSectionId = '';
+    this.fileDropTargetLayerId = '';
   }
 
   dropPaletteItem(event: DragEvent, section: VisualInvitationSection): void {
@@ -2216,6 +2352,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.endPhotoSwapDrag();
       return;
     }
+
+    const files = Array.from(event.dataTransfer?.files || []).filter((f) => {
+      const info = this.resolveFileType(f);
+      return ['image', 'video', 'audio'].includes(info.kind);
+    });
+
+    if (files.length > 0) {
+      this.handleDroppedFiles(files, section, event);
+      return;
+    }
+
+    const externalImageUrl = this.extractImageUrlFromDataTransfer(event.dataTransfer);
+    if (externalImageUrl) {
+      this.handleDroppedImageUrl(externalImageUrl, section, event);
+      return;
+    }
+
     const item = this.paletteDragItem;
     if (!item) return;
     event.preventDefault();
@@ -2226,8 +2379,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const y = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
     this.selectedSectionId = section.id;
 
-    const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
-    const imageTarget = section.layers.find((layer) => layer.id === targetId && layer.type === 'image' && layer.style?.frameEnabled);
+    const targetId = this.fileDropTargetLayerId || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+    this.fileDropTargetLayerId = '';
+    const imageTarget = section.layers.find((layer) => layer.id === targetId && layer.type === 'image');
     if (item.kind === 'media' && item.media.type === 'image' && imageTarget) {
       this.recordHistory();
       imageTarget.url = item.media.url;
@@ -2278,6 +2432,186 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.inspectorView = 'properties';
     this.endPaletteDrag();
     this.flash('Elemento agregado en el lienzo.');
+  }
+
+  handleDroppedImageUrl(url: string, section: VisualInvitationSection, event: DragEvent, targetLayerId?: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const droppedTargetId = targetLayerId || this.fileDropTargetLayerId || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+    this.fileDropTargetLayerId = '';
+    this.paletteDropSectionId = '';
+    this.selectedSectionId = section.id;
+    const targetLayer = section.layers.find((layer) => layer.id === droppedTargetId);
+    this.recordHistory();
+    if (targetLayer && targetLayer.type === 'image') {
+      targetLayer.url = url;
+      this.setLayerSelection([targetLayer.id]);
+      this.inspectorView = 'properties';
+      this.flash('Foto colocada en el marco.');
+    } else {
+      const surface = (event.currentTarget as HTMLElement) || (event.target as HTMLElement).closest<HTMLElement>('.layer-surface');
+      let x = 20;
+      let y = 20;
+      if (surface) {
+        const rect = surface.getBoundingClientRect();
+        x = this.bound((event.clientX - rect.left) / rect.width * 100, 0, 100);
+        y = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
+      }
+      const layer = this.newLayer('image', '', x, y, 45, 30);
+      layer.url = url;
+      layer.name = 'Imagen web';
+      section.layers.push(layer);
+      this.setLayerSelection([layer.id]);
+      this.inspectorView = 'properties';
+      this.flash('Foto agregada al lienzo.');
+    }
+    this.design.assets = this.design.assets || [];
+    if (!this.design.assets.some((a) => a.url === url)) {
+      this.design.assets.push({
+        id: this.uid('asset'),
+        url,
+        type: 'image',
+        name: 'Imagen web',
+        createdAt: new Date().toISOString()
+      });
+    }
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  handleDroppedFiles(files: File[], section: VisualInvitationSection, event: DragEvent, targetLayerId?: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.paletteDropSectionId = '';
+    const droppedTargetId = targetLayerId || this.fileDropTargetLayerId || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+    this.fileDropTargetLayerId = '';
+
+    const validFiles = files.filter((f) => {
+      const info = this.resolveFileType(f);
+      return ['image', 'video', 'audio'].includes(info.kind);
+    });
+
+    if (!validFiles.length) {
+      this.flash('Formato no compatible. Arrastra archivos de imagen, video o audio.');
+      return;
+    }
+
+    const eventId = this.invitation && (typeof this.invitation.event === 'string'
+      ? this.invitation.event
+      : (this.invitation.event._id || this.invitation.event.id));
+
+    if (!eventId) {
+      this.error = 'No se encontró el evento para subir el archivo.';
+      return;
+    }
+
+    const surface = (event.currentTarget as HTMLElement) || (event.target as HTMLElement).closest<HTMLElement>('.layer-surface');
+    let x = 20;
+    let y = 20;
+    if (surface) {
+      const rect = surface.getBoundingClientRect();
+      x = this.bound((event.clientX - rect.left) / rect.width * 100, 0, 100);
+      y = this.bound((event.clientY - rect.top) / rect.height * 100, 0, 100);
+    }
+    this.selectedSectionId = section.id;
+
+    const targetLayer = section.layers.find((layer) => layer.id === droppedTargetId);
+
+    this.uploading = true;
+    this.error = '';
+
+    const uploads = validFiles.map((file) => {
+      const { mimeType, kind } = this.resolveFileType(file);
+      const folder = kind === 'audio' ? 'music' : 'assets';
+      return this.api.createUploadUrl({ fileName: file.name, contentType: mimeType, folder, event: eventId, size: file.size }).pipe(
+        switchMap(({ uploadUrl, publicUrl }) => this.api.uploadAsset(uploadUrl, file).pipe(map(() => ({ file, publicUrl, type: kind }))))
+      );
+    });
+
+    forkJoin(uploads).subscribe({
+      next: (results) => {
+        this.recordHistory();
+        this.design.assets = this.design.assets || [];
+        const knownUrls = new Set(this.design.assets.map((asset) => asset.url));
+        const newAssets: VisualInvitationAsset[] = results.filter((res) => !knownUrls.has(res.publicUrl)).map((res) => ({
+          id: this.uid('asset'), url: res.publicUrl, type: res.type, name: res.file.name, createdAt: new Date().toISOString()
+        }));
+        this.design.assets.push(...newAssets);
+
+        const assignedLayerIds: string[] = [];
+
+        if (targetLayer && targetLayer.type === 'image') {
+          targetLayer.url = results[0].publicUrl;
+          assignedLayerIds.push(targetLayer.id);
+
+          if (results.length > 1 && targetLayer.groupId) {
+            const groupFrames = section.layers.filter((l) => l.groupId === targetLayer.groupId && l.id !== targetLayer.id && l.type === 'image');
+            const emptyFrames = groupFrames.filter((l) => !l.url);
+            const filledFrames = groupFrames.filter((l) => !!l.url);
+            const orderedSiblings = [...emptyFrames, ...filledFrames];
+
+            for (let i = 1; i < results.length; i++) {
+              if (i - 1 < orderedSiblings.length) {
+                const sibling = orderedSiblings[i - 1];
+                sibling.url = results[i].publicUrl;
+                assignedLayerIds.push(sibling.id);
+              } else {
+                const extraOffset = (i - orderedSiblings.length) * 4;
+                const newL = this.newLayer('image', '', this.bound(targetLayer.x + extraOffset, 5, 80), this.bound(targetLayer.y + extraOffset, 5, 80), targetLayer.width, targetLayer.height);
+                newL.url = results[i].publicUrl;
+                newL.name = results[i].file.name;
+                section.layers.push(newL);
+                assignedLayerIds.push(newL.id);
+              }
+            }
+          } else if (results.length > 1) {
+            for (let i = 1; i < results.length; i++) {
+              const extraOffset = i * 4;
+              const newL = this.newLayer('image', '', this.bound(targetLayer.x + extraOffset, 5, 80), this.bound(targetLayer.y + extraOffset, 5, 80), targetLayer.width, targetLayer.height);
+              newL.url = results[i].publicUrl;
+              newL.name = results[i].file.name;
+              section.layers.push(newL);
+              assignedLayerIds.push(newL.id);
+            }
+          }
+        } else if (targetLayer && (targetLayer.type === 'video' || targetLayer.type === 'audio') && results[0].type === targetLayer.type) {
+          targetLayer.url = results[0].publicUrl;
+          assignedLayerIds.push(targetLayer.id);
+        } else {
+          results.forEach((res, i) => {
+            const layerType = res.type;
+            const width = layerType === 'image' ? 45 : (layerType === 'video' ? 50 : 40);
+            const height = layerType === 'image' ? 30 : (layerType === 'video' ? 35 : 15);
+            const posX = this.bound(x + i * 4, 2, 85);
+            const posY = this.bound(y + i * 4, 2, 85);
+            const newL = this.newLayer(layerType, '', posX, posY, width, height);
+            newL.url = res.publicUrl;
+            newL.name = res.file.name;
+            if (layerType === 'image') {
+              newL.style = { ...newL.style, objectFit: 'cover' };
+            }
+            section.layers.push(newL);
+            assignedLayerIds.push(newL.id);
+          });
+        }
+
+        if (assignedLayerIds.length) {
+          this.setLayerSelection(assignedLayerIds);
+          this.inspectorView = 'properties';
+        }
+        this.uploading = false;
+        this.autosaveState = 'Cambios pendientes';
+        const count = results.length;
+        if (targetLayer && targetLayer.type === 'image') {
+          this.flash(count === 1 ? 'Foto colocada en el marco.' : `${count} fotos colocadas en la composición.`);
+        } else {
+          this.flash(count === 1 ? 'Elemento agregado en el lienzo.' : `${count} elementos agregados en el lienzo.`);
+        }
+      },
+      error: (error) => {
+        this.uploading = false;
+        this.error = error?.error?.message || 'No fue posible subir los archivos.';
+      }
+    });
   }
 
   uploadLibraryFiles(fileInput: HTMLInputElement): void {
@@ -3947,6 +4281,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           this.selectedSection.background = { ...(this.selectedSection.background || {}), imageUrl: publicUrl };
         } else if (this.selectedLayer) {
           this.selectedLayer.url = publicUrl;
+        }
+        this.design.assets = this.design.assets || [];
+        if (!this.design.assets.some((a) => a.url === publicUrl)) {
+          this.design.assets.push({
+            id: this.uid('asset'),
+            url: publicUrl,
+            type: file.type.startsWith('audio/') ? 'audio' : (file.type.startsWith('video/') ? 'video' : 'image'),
+            name: file.name,
+            createdAt: new Date().toISOString()
+          });
         }
         this.uploading = false;
         fileInput.value = '';
