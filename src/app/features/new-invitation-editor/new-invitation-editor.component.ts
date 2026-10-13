@@ -1025,7 +1025,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
           this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
             next: ({ event }) => {
               this.event = event;
-              this.message = '✅ Cambios guardados correctamente en el servidor (HTTP 200).';
+              this.message = '✅ Cambios guardados correctamente.';
               this.saving = false;
               this.clearMessageAfterDelay();
             },
@@ -1036,7 +1036,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
             }
           });
         } else {
-          this.message = '✅ Cambios guardados correctamente en el servidor (HTTP 200).';
+          this.message = '✅ Cambios guardados correctamente.';
           this.saving = false;
           this.clearMessageAfterDelay();
         }
@@ -1137,7 +1137,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
               this.captureAutoSaveBaseline();
             }
             this.publicUrl = publicUrl ? publicUrl.replace('/i/', '/new/i/') : `${window.location.origin}/new/i/${invitation.slug}`;
-            let successMsg = '🎉 ¡Invitación guardada y publicada exitosamente (HTTP 200)!';
+            let successMsg = '🎉 ¡Invitación guardada y publicada exitosamente!';
             if (message && message.includes('SMTP')) {
               successMsg += ' (Nota: no se envió correo por SMTP no configurado)';
             } else if (warning) {
@@ -1347,7 +1347,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
             }
             if (folder === 'music') {
               this.invitation.content.musicUrl = upload.publicUrl;
-              this.message = '🎉 ¡Archivo de música de fondo subido exitosamente en el servidor (HTTP 200)!';
+              this.message = '🎉 ¡Archivo de música de fondo subido exitosamente!';
             }
             if (folder === 'gallery') {
               this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
@@ -1404,7 +1404,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
             }
             this.invitation.content.digitalEnvelope.qrImageUrl = upload.publicUrl;
             this.persistUploadedAsset();
-            this.message = '✅ Foto de código QR bancario subida exitosamente (HTTP 200).';
+            this.message = '✅ Foto de código QR bancario subida exitosamente.';
             this.assetUploading = false;
           },
           error: () => {

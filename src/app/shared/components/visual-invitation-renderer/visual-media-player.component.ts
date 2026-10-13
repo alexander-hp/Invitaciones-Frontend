@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { resolveVisualMediaSource, VisualMediaProvider } from './visual-media-source';
 
@@ -7,7 +7,7 @@ import { resolveVisualMediaSource, VisualMediaProvider } from './visual-media-so
   templateUrl: './visual-media-player.component.html',
   styleUrls: ['./visual-media-player.component.css']
 })
-export class VisualMediaPlayerComponent implements OnChanges {
+export class VisualMediaPlayerComponent implements OnChanges, OnInit, OnDestroy {
   @Input() type = 'video';
   @Input() url = '';
   @Input() label = '';
@@ -35,6 +35,8 @@ export class VisualMediaPlayerComponent implements OnChanges {
   playing = false;
   providerOpen = false;
   private audioElement?: HTMLAudioElement;
+  private wasPlayingBeforeHidden = false;
+  private visibilityListener?: () => void;
   private suppressNextPointerClick = false;
   private suppressNextPointerClickTimer?: ReturnType<typeof setTimeout>;
 
@@ -45,6 +47,49 @@ export class VisualMediaPlayerComponent implements OnChanges {
   }
 
   constructor(private sanitizer: DomSanitizer) {}
+
+  ngOnInit(): void {
+    this.visibilityListener = () => {
+      if (typeof document === 'undefined') return;
+      if (document.hidden) {
+        if (this.audioElement && !this.audioElement.paused) {
+          this.wasPlayingBeforeHidden = true;
+          this.audioElement.pause();
+          this.playing = false;
+        }
+      } else {
+        if (this.wasPlayingBeforeHidden && this.audioElement) {
+          this.wasPlayingBeforeHidden = false;
+          this.audioElement.play().then(() => {
+            this.playing = true;
+          }).catch(() => {
+            this.playing = false;
+          });
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', this.visibilityListener);
+  }
+
+  ngOnDestroy(): void {
+    if (this.visibilityListener && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityListener);
+      this.visibilityListener = undefined;
+    }
+    if (this.suppressNextPointerClickTimer) {
+      clearTimeout(this.suppressNextPointerClickTimer);
+    }
+    if (this.audioElement) {
+      try {
+        this.audioElement.pause();
+        this.audioElement.src = '';
+        this.audioElement.load();
+      } catch { }
+      this.audioElement = undefined;
+    }
+    this.playing = false;
+  }
+
 
   ngOnChanges(): void {
     const media = resolveVisualMediaSource(this.url, this.startSeconds, this.endSeconds);

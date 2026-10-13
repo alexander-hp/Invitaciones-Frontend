@@ -192,7 +192,7 @@ export class InvitationEditorComponent implements OnInit {
         this.ensureRsvpSettings();
         this.syncEditorTextFields();
         this.publicUrl = `${window.location.origin}/i/${invitation.slug}`;
-        this.message = '✅ Cambios guardados correctamente (HTTP 200).';
+        this.message = '✅ Cambios guardados correctamente.';
         this.saving = false;
       },
       error: (error) => {
@@ -228,7 +228,7 @@ export class InvitationEditorComponent implements OnInit {
           this.syncEditorTextFields();
         }
         this.publicUrl = publicUrl || `${window.location.origin}/i/${invitation.slug}`;
-        let successMsg = '🎉 ¡Invitacion publicada con exito (HTTP 200)!';
+        let successMsg = '🎉 ¡Invitación publicada con éxito!';
         if (message && message.includes('SMTP')) {
           successMsg += ' (Nota: no se envio correo por SMTP no configurado)';
         } else if (warning) {
@@ -278,7 +278,7 @@ export class InvitationEditorComponent implements OnInit {
             if (folder === 'covers') this.invitation.content.coverImageUrl = upload.publicUrl;
             if (folder === 'music') {
               this.invitation.content.musicUrl = upload.publicUrl;
-              this.message = '🎉 ¡Archivo de musica de fondo subido exitosamente en el servidor (HTTP 200)!';
+              this.message = '🎉 ¡Archivo de música de fondo subido exitosamente!';
             }
             if (folder === 'gallery') this.invitation.content.gallery = [...(this.invitation.content.gallery || []), upload.publicUrl];
             if (folder === 'assets') {
@@ -319,7 +319,7 @@ export class InvitationEditorComponent implements OnInit {
             }
             this.invitation.content.digitalEnvelope.qrImageUrl = upload.publicUrl;
             this.persistUploadedAsset();
-            this.message = '✅ Foto de codigo QR bancario subida exitosamente (HTTP 200).';
+            this.message = '✅ Foto de código QR bancario subida exitosamente.';
             input.value = '';
           },
           error: () => {

@@ -89,6 +89,31 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
   // 3. Audio & Music Player Handler
   var audioElement = null;
   var isPlayingMusic = false;
+  var wasPlayingBeforeHidden = false;
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        if (isPlayingMusic && audioElement && !audioElement.paused) {
+          wasPlayingBeforeHidden = true;
+          audioElement.pause();
+          isPlayingMusic = false;
+          updateMusicButtons();
+        }
+      } else {
+        if (wasPlayingBeforeHidden && audioElement) {
+          wasPlayingBeforeHidden = false;
+          audioElement.play().then(function() {
+            isPlayingMusic = true;
+            updateMusicButtons();
+          }).catch(function() {
+            isPlayingMusic = false;
+            updateMusicButtons();
+          });
+        }
+      }
+    });
+  }
 
   function initAudio() {
     if (!CONFIG.musicUrl) return;
@@ -118,6 +143,7 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
   function enableFirstInteractionPlayback() {
     var settings = CONFIG.musicSettings || {};
     if (!CONFIG.musicUrl || settings.playbackMode === 'manual') return;
+    if (window.parent && window.parent !== window) return;
     var start = function(event) {
       if (event.target && event.target.closest && event.target.closest('.nw-pub-audio-btn, .audio-btn, .music-btn, [data-action="toggle-music"]')) return;
       document.removeEventListener('pointerdown', start, true);
@@ -196,7 +222,9 @@ export function generateInteractiveRuntimeScript(options: RuntimeOptions): strin
     }
     // Auto-play music on envelope open if configured
     if (!isPlayingMusic && CONFIG.musicUrl) {
-      toggleMusic();
+      if (!(window.parent && window.parent !== window)) {
+        toggleMusic();
+      }
     }
     sendToParent('INV_ENVELOPE_OPENED');
   }

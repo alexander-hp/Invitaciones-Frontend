@@ -80,11 +80,11 @@
           <div class="vte-phone-speaker"></div>
           <iframe #mobileFrame *ngIf="previewUrl" [src]="previewUrl" class="vte-iframe"
             (load)="onIframeLoad(mobileFrame)"
-            allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
+            allow="camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
         </div>
         <iframe #desktopFrame *ngIf="previewViewport === 'desktop' && previewUrl" [src]="previewUrl" class="vte-iframe"
           (load)="onIframeLoad(desktopFrame)"
-          allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
+          allow="camera; clipboard-write; encrypted-media" allowfullscreen></iframe>
       </div>
     </div>
 
