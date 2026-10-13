@@ -994,6 +994,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const style = layer.style || {};
     const shape = layer.type === 'shape';
+    const isIcon = layer.type === 'text' && Boolean(style.iconName);
     const maskedImage = layer.type === 'image' && !!style.imageMask && style.imageMask !== 'none';
     const responsiveScale = this.sharedStyleScale();
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
@@ -1005,14 +1006,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       color: String(style.color || '#25211f'), backgroundColor: shape || maskedImage ? 'transparent' : String(style.backgroundColor || 'transparent'),
       fontFamily: String(style.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(style.fontSize || 30, responsiveScale, 10)}px`,
       fontWeight: String(style.fontWeight || 400), fontStyle: String(style.fontStyle || 'normal'), textAlign: String(style.textAlign || 'center'),
-      lineHeight: String(style.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(style.letterSpacing || 0, responsiveScale)}px`, textTransform: String(style.textTransform || 'none'),
+      lineHeight: isIcon ? '1' : String(style.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(style.letterSpacing || 0, responsiveScale)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
       borderRadius: shape ? '0' : `${this.scaledLayerPixels(style.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
       borderStyle: !shape && !maskedImage && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape || maskedImage ? '0' : `${this.scaledLayerPixels(style.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && style.gradientEnabled
         ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})`
         : !shape && style.backgroundImageUrl ? `url("${String(style.backgroundImageUrl)}")` : 'none',
-      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${this.scaledLayerPixels(style.padding || 0, responsiveScale)}px`,
+      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape || isIcon ? '0' : `${this.scaledLayerPixels(style.padding || 0, responsiveScale)}px`,
       boxShadow: shape ? 'none' : String(style.boxShadow || 'none'), opacity: String(style.opacity ?? 1),
       '--button-hover-background': String(style.hoverBackgroundColor || style.backgroundColor || 'transparent'),
       '--button-hover-color': String(style.hoverColor || style.color || '#25211f'),

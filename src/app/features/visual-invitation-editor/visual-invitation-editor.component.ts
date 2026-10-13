@@ -390,6 +390,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     y: number;
     width: number;
     height: number;
+    layer?: VisualInvitationLayer;
   };
   private layerDragState?: {
     layer: VisualInvitationLayer;
@@ -2489,7 +2490,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const layout = this.editableLayout(layer);
     this.resizeState = {
       corner, section, layout, canvas, startX: event.clientX, startY: event.clientY,
-      x: layout.x, y: layout.y, width: layout.width, height: layout.height
+      x: layout.x, y: layout.y, width: layout.width, height: layout.height,
+      layer
     };
   }
 
@@ -2693,10 +2695,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const dy = (event.clientY - resize.startY) / resize.canvas.clientHeight * 100;
       const west = resize.corner.includes('w');
       const north = resize.corner.includes('n');
-      const nextX = west ? resize.x + dx : resize.x;
-      const nextY = north ? resize.y + dy : resize.y;
-      const nextWidth = west ? resize.width - dx : resize.width + dx;
-      const nextHeight = north ? resize.height - dy : resize.height + dy;
+      let nextX = west ? resize.x + dx : resize.x;
+      let nextY = north ? resize.y + dy : resize.y;
+      let nextWidth = west ? resize.width - dx : resize.width + dx;
+      let nextHeight = north ? resize.height - dy : resize.height + dy;
+      if (event.shiftKey && resize.width > 0 && resize.height > 0) {
+        const canvasW = resize.canvas.clientWidth || 1;
+        const canvasH = resize.canvas.clientHeight || 1;
+        const aspectPx = (resize.width * canvasW) / (resize.height * canvasH);
+        const candidateWidthPx = Math.max(1, nextWidth * canvasW);
+        const candidateHeightPx = Math.max(1, nextHeight * canvasH);
+        if (Math.abs(dx * canvasW) >= Math.abs(dy * canvasH)) {
+          const syncedH = (candidateWidthPx / aspectPx) / canvasH * 100;
+          if (north) nextY = resize.y + (resize.height - syncedH);
+          nextHeight = syncedH;
+        } else {
+          const syncedW = (candidateHeightPx * aspectPx) / canvasW * 100;
+          if (west) nextX = resize.x + (resize.width - syncedW);
+          nextWidth = syncedW;
+        }
+      }
       const precision = event.pointerType === 'touch' ? 2 : 100;
       const round = (value: number) => Math.round(value * precision) / precision;
       resize.layout.x = round(this.bound(nextX, -100, resize.x + resize.width - 4));
@@ -2903,6 +2921,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
     const s = layer.style || {};
     const shape = layer.type === 'shape';
+    const isIcon = this.isIconLayer(layer);
     const maskedImage = layer.type === 'image' && !!s.imageMask && s.imageMask !== 'none';
     const responsiveScale = this.sharedStyleScale(this.device);
     const layout = this.layoutFor(layer);
@@ -2912,14 +2931,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       color: String(s.color || '#2d2927'), backgroundColor: shape || maskedImage ? 'transparent' : String(s.backgroundColor || 'transparent'),
       fontFamily: String(s.fontFamily || 'Arial, sans-serif'), fontSize: `${this.scaledLayerPixels(s.fontSize || 30, responsiveScale, 10)}px`,
       fontWeight: String(s.fontWeight || 400), fontStyle: String(s.fontStyle || 'normal'), textAlign: String(s.textAlign || 'center'),
-      lineHeight: String(s.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(s.letterSpacing || 0, responsiveScale)}px`, textTransform: String(s.textTransform || 'none'),
+      lineHeight: isIcon ? '1' : String(s.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(s.letterSpacing || 0, responsiveScale)}px`, textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
       borderRadius: shape ? '0' : `${this.scaledLayerPixels(s.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
       borderStyle: !shape && !maskedImage && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape || maskedImage ? '0' : `${this.scaledLayerPixels(s.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && s.gradientEnabled
         ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`
         : !shape && s.backgroundImageUrl ? `url("${String(s.backgroundImageUrl)}")` : 'none',
-      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape ? '0' : `${this.scaledLayerPixels(s.padding || 0, responsiveScale)}px`,
+      backgroundSize: 'cover', backgroundPosition: 'center', padding: shape || isIcon ? '0' : `${this.scaledLayerPixels(s.padding || 0, responsiveScale)}px`,
       boxShadow: shape ? 'none' : String(s.boxShadow || 'none'), opacity: String(s.opacity ?? 1),
       '--button-hover-background': String(s.hoverBackgroundColor || s.backgroundColor || 'transparent'),
       '--button-hover-color': String(s.hoverColor || s.color || '#2d2927'),
