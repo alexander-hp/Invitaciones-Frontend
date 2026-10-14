@@ -454,6 +454,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   @ViewChildren('responsiveArtboard') responsiveArtboards?: QueryList<ElementRef<HTMLElement>>;
   responsivePreviewRuntimeIssues: Record<DeviceMode, string[]> = { mobile: [], tablet: [], desktop: [] };
   responsivePreviewMeasuredHeight: Record<DeviceMode, number> = { mobile: 0, tablet: 0, desktop: 0 };
+  responsivePreviewView: 'all' | DeviceMode = 'all';
+  showResponsiveAlertsModal = false;
+  selectedAlertsTab: 'all' | DeviceMode = 'all';
+  openAlertsDevice: DeviceMode | null = null;
   private responsiveAuditHandle?: ReturnType<typeof setTimeout>;
 
   readonly builtInPresets = COMPLETE_DESIGN_PRESETS;
@@ -969,6 +973,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       };
     }
+    this.responsivePreviewView = 'all';
     this.showResponsivePreview = true;
     this.responsivePreviewRuntimeIssues = { mobile: [], tablet: [], desktop: [] };
     this.responsivePreviewMeasuredHeight = { mobile: 0, tablet: 0, desktop: 0 };
@@ -977,6 +982,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   closeResponsivePreview(): void {
     this.showResponsivePreview = false;
+    this.showResponsiveAlertsModal = false;
+    this.openAlertsDevice = null;
     if (this.responsiveAuditHandle) clearTimeout(this.responsiveAuditHandle);
   }
 
@@ -1377,11 +1384,118 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       : heights.reduce((total, height) => total + height, 0);
   }
 
-  responsivePreviewStageStyle(preview: { key: DeviceMode; width: number; scale: number }): Record<string, string> {
+  get displayedPreviewDevices(): Array<{ key: DeviceMode; label: string; width: number; scale: number }> {
+    if (this.responsivePreviewView === 'all') {
+      return this.previewDevices;
+    }
+    return this.previewDevices.filter((preview) => preview.key === this.responsivePreviewView);
+  }
+
+  setResponsivePreviewView(view: 'all' | DeviceMode): void {
+    this.responsivePreviewView = view;
+    this.scheduleResponsiveAudit(200);
+  }
+
+  responsivePreviewScale(device: DeviceMode): number {
+    if (this.responsivePreviewView === 'all') {
+      if (device === 'mobile') return 0.62;
+      if (device === 'tablet') return 0.46;
+      if (device === 'desktop') return 0.41;
+      return 0.5;
+    }
+    if (device === 'mobile') return 0.95;
+    if (device === 'tablet') return 0.85;
+    if (device === 'desktop') return 0.80;
+    return 1;
+  }
+
+  responsivePreviewViewportStyle(preview: { key: DeviceMode; width: number }): Record<string, string> {
+    const scale = this.responsivePreviewScale(preview.key);
+    const viewportWidth = Math.round(preview.width * scale);
+    const viewportHeight = this.responsivePreviewView === 'all' ? 520 : 640;
     return {
-      width: `${preview.width * preview.scale}px`,
-      height: `${(this.responsivePreviewMeasuredHeight[preview.key] || this.responsivePreviewContentHeight()) * preview.scale}px`
+      width: `${viewportWidth}px`,
+      height: `${viewportHeight}px`
     };
+  }
+
+  responsivePreviewStageStyle(preview: { key: DeviceMode; width: number; scale: number }): Record<string, string> {
+    const scale = this.responsivePreviewScale(preview.key);
+    return {
+      width: `${preview.width * scale}px`,
+      height: `${(this.responsivePreviewMeasuredHeight[preview.key] || this.responsivePreviewContentHeight()) * scale}px`
+    };
+  }
+
+  toggleDeviceAlerts(device: DeviceMode): void {
+    this.openAlertsDevice = this.openAlertsDevice === device ? null : device;
+  }
+
+  openResponsiveAlertsModal(device: 'all' | DeviceMode = 'all'): void {
+    this.selectedAlertsTab = device;
+    this.showResponsiveAlertsModal = true;
+  }
+
+  closeResponsiveAlertsModal(): void {
+    this.showResponsiveAlertsModal = false;
+  }
+
+  deviceAlerts(device: DeviceMode): Array<{ id: string; severity: AuditSeverity; title: string; detail: string; device: DeviceMode; sectionId?: string; layerId?: string }> {
+    const list: Array<{ id: string; severity: AuditSeverity; title: string; detail: string; device: DeviceMode; sectionId?: string; layerId?: string }> = [];
+
+    for (const issue of this.publishAuditIssues) {
+      if (issue.device === device) {
+        list.push({
+          id: issue.id,
+          severity: issue.severity,
+          title: issue.title,
+          detail: issue.detail,
+          device,
+          sectionId: issue.sectionId,
+          layerId: issue.layerId
+        });
+      }
+    }
+
+    (this.responsivePreviewRuntimeIssues[device] || []).forEach((runtimeTitle, index) => {
+      list.push({
+        id: `runtime-${device}-${index}`,
+        severity: runtimeTitle.toLowerCase().includes('desbord') ? 'critical' : 'warning',
+        title: runtimeTitle,
+        detail: `Detectado durante el renderizado del lienzo en ${this.deviceLabel(device)}.`,
+        device
+      });
+    });
+
+    return list;
+  }
+
+  get totalResponsiveAlertsCount(): number {
+    return this.deviceAlerts('mobile').length + this.deviceAlerts('tablet').length + this.deviceAlerts('desktop').length;
+  }
+
+  get filteredResponsiveAlerts(): Array<{ id: string; severity: AuditSeverity; title: string; detail: string; device: DeviceMode; sectionId?: string; layerId?: string }> {
+    if (this.selectedAlertsTab === 'all') {
+      return [
+        ...this.deviceAlerts('mobile'),
+        ...this.deviceAlerts('tablet'),
+        ...this.deviceAlerts('desktop')
+      ];
+    }
+    return this.deviceAlerts(this.selectedAlertsTab);
+  }
+
+  goToResponsiveAlert(alert: { device: DeviceMode; sectionId?: string; layerId?: string }): void {
+    this.closeResponsivePreview();
+    this.showResponsiveAlertsModal = false;
+    this.device = alert.device;
+    if (alert.sectionId) this.selectedSectionId = alert.sectionId;
+    if (alert.layerId) this.setLayerSelection([alert.layerId]); else this.clearLayerSelection();
+    this.inspectorView = 'properties';
+    setTimeout(() => {
+      const selector = alert.layerId ? `[data-layer-id="${alert.layerId}"]` : (alert.sectionId ? `[data-section-id="${alert.sectionId}"]` : null);
+      if (selector) document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   }
 
   responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
