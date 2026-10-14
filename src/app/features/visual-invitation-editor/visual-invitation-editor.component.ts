@@ -4213,35 +4213,206 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
-  locationControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+  locationControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; fullLabel?: string; icon: string }> {
     const icons: Record<string, string> = { name: 'Aa', address: '⌖', notes: '≡', details: '☰', map: '⌖', waze: 'W', phone: '☎', website: '↗' };
+    const fieldNames: Record<string, string> = {
+      name: 'Nombre', address: 'Dirección', notes: 'Notas', details: 'Detalles',
+      map: 'Abrir mapa', waze: 'Waze', phone: 'Llamar', website: 'Sitio web'
+    };
     return this.locationLayerDefinitions(section)
       .filter((definition) => /^location\.\d+\.(name|address|notes|details|map|waze|phone|website)$/.test(definition.binding))
       .map((definition) => {
         const match = definition.binding.match(/^location\.(\d+)\.([^.]+)$/);
         const index = Number(match?.[1] || 0);
         const key = match?.[2] || 'name';
-        return { binding: definition.binding, label: `Ubicación ${index + 1}: ${definition.label}`, icon: icons[key] || '+' };
+        const fieldLabel = fieldNames[key] || definition.label;
+        const loc = this.locationSourceData()[index];
+        const locName = loc?.name || loc?.type || `Lugar ${index + 1}`;
+        return {
+          binding: definition.binding,
+          label: `Ubic. ${index + 1}: ${fieldLabel}`,
+          fullLabel: `Ubicación ${index + 1} (${locName}): ${fieldLabel}`,
+          icon: icons[key] || '+'
+        };
       });
   }
 
-  giftControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
-    return this.giftLayerDefinitions(section)
-      .filter((definition) => /^(gift\.\d+\.(image|title|store|note|open)|envelope\.(bank|holder|account|clabe|note|qr|copyAccount|copyClabe|feedback))$/.test(definition.binding))
-      .map((definition) => ({ binding: definition.binding, label: definition.label, icon: definition.type === 'image' ? '▧' : definition.type === 'button' ? '→' : 'Aa' }));
+  locationControlGroups(section: VisualInvitationSection): Array<{
+    badge: string;
+    title: string;
+    controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }>;
+  }> {
+    const icons: Record<string, string> = { name: 'Aa', address: '⌖', notes: '≡', details: '☰', map: '⌖', waze: 'W', phone: '☎', website: '↗' };
+    const fieldNames: Record<string, string> = {
+      name: 'Nombre', address: 'Dirección', notes: 'Notas', details: 'Detalles',
+      map: 'Abrir mapa', waze: 'Waze', phone: 'Llamar', website: 'Sitio web'
+    };
+    const locations = this.locationSourceData();
+    const count = Math.max(locations.length, 1);
+    const groups: Array<{ badge: string; title: string; controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }> }> = [];
+
+    for (let index = 0; index < count; index++) {
+      const loc = locations[index];
+      const locName = loc?.name?.trim() || loc?.type || `Ubicación ${index + 1}`;
+      const prefix = `location.${index}.`;
+      const controls = this.locationLayerDefinitions(section)
+        .filter((def) => def.binding.startsWith(prefix) && /^location\.\d+\.(name|address|notes|details|map|waze|phone|website)$/.test(def.binding))
+        .map((def) => {
+          const key = def.binding.replace(prefix, '');
+          const label = fieldNames[key] || def.label;
+          return {
+            binding: def.binding,
+            label,
+            fullLabel: `Ubicación ${index + 1} (${locName}): ${label}`,
+            icon: icons[key] || '+'
+          };
+        });
+
+      if (controls.length) {
+        groups.push({
+          badge: `Ubicación ${index + 1}`,
+          title: locName,
+          controls
+        });
+      }
+    }
+    return groups;
   }
 
-  itineraryControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+  giftControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; fullLabel?: string; icon: string }> {
+    return this.giftLayerDefinitions(section)
+      .filter((definition) => /^(gift\.\d+\.(image|title|store|note|open)|envelope\.(bank|holder|account|clabe|note|qr|copyAccount|copyClabe|feedback))$/.test(definition.binding))
+      .map((definition) => ({
+        binding: definition.binding,
+        label: definition.label,
+        icon: definition.type === 'image' ? '▧' : definition.type === 'button' ? '→' : 'Aa'
+      }));
+  }
+
+  giftControlGroups(section: VisualInvitationSection): Array<{
+    badge: string;
+    title: string;
+    controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }>;
+  }> {
+    const gifts = this.giftSourceData();
+    const groups: Array<{ badge: string; title: string; controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }> }> = [];
+    const giftFieldNames: Record<string, string> = {
+      image: 'Logo', title: 'Título', store: 'Tienda', note: 'Nota', open: 'Abrir mesa'
+    };
+
+    gifts.forEach((gift, index) => {
+      const giftName = gift.title || gift.store || `Mesa ${index + 1}`;
+      const prefix = `gift.${index}.`;
+      const controls = this.giftLayerDefinitions(section)
+        .filter((def) => def.binding.startsWith(prefix) && /^(image|title|store|note|open)$/.test(def.binding.replace(prefix, '')))
+        .map((def) => {
+          const key = def.binding.replace(prefix, '');
+          const label = giftFieldNames[key] || def.label;
+          return {
+            binding: def.binding,
+            label,
+            fullLabel: `Mesa ${index + 1} (${giftName}): ${label}`,
+            icon: def.type === 'image' ? '▧' : def.type === 'button' ? '→' : 'Aa'
+          };
+        });
+      if (controls.length) {
+        groups.push({
+          badge: `Mesa ${index + 1}`,
+          title: giftName,
+          controls
+        });
+      }
+    });
+
+    const envelopeFieldNames: Record<string, string> = {
+      bank: 'Banco', holder: 'Titular', account: 'Cuenta', clabe: 'CLABE',
+      note: 'Nota', qr: 'Código QR', copyAccount: 'Copiar cta.', copyClabe: 'Copiar CLABE', feedback: 'Confirmación'
+    };
+    const envelopeControls = this.giftLayerDefinitions(section)
+      .filter((def) => def.binding.startsWith('envelope.') && /^(bank|holder|account|clabe|note|qr|copyAccount|copyClabe|feedback)$/.test(def.binding.replace('envelope.', '')))
+      .map((def) => {
+        const key = def.binding.replace('envelope.', '');
+        const label = envelopeFieldNames[key] || def.label;
+        return {
+          binding: def.binding,
+          label,
+          fullLabel: `Sobre digital: ${label}`,
+          icon: def.type === 'image' ? '▧' : def.type === 'button' ? '→' : 'Aa'
+        };
+      });
+
+    if (envelopeControls.length) {
+      groups.push({
+        badge: 'Sobre digital',
+        title: 'Transferencias y regalos',
+        controls: envelopeControls
+      });
+    }
+
+    return groups;
+  }
+
+  itineraryControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; fullLabel?: string; icon: string }> {
     const icons: Record<string, string> = { icon: '★', time: '◷', title: 'Aa', description: '≡', location: '⌖' };
+    const fieldNames: Record<string, string> = { icon: 'Ícono', time: 'Horario', title: 'Título', description: 'Descripción', location: 'Lugar' };
     return this.itineraryLayerDefinitions(section)
       .filter((definition) => /^itinerary\.\d+\.(icon|time|title|description|location)$/.test(definition.binding))
       .map((definition) => {
         const match = definition.binding.match(/^itinerary\.(\d+)\.([^.]+)$/);
-        return { binding: definition.binding, label: `Actividad ${Number(match?.[1] || 0) + 1}: ${definition.label}`, icon: icons[match?.[2] || 'title'] || '+' };
+        const index = Number(match?.[1] || 0);
+        const key = match?.[2] || 'title';
+        const fieldLabel = fieldNames[key] || definition.label;
+        const item = this.itinerarySourceData()[index];
+        const itemTitle = item?.title || `Actividad ${index + 1}`;
+        return {
+          binding: definition.binding,
+          label: `Act. ${index + 1}: ${fieldLabel}`,
+          fullLabel: `Actividad ${index + 1} (${itemTitle}): ${fieldLabel}`,
+          icon: icons[key] || '+'
+        };
       });
   }
 
-  dressCodeControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+  itineraryControlGroups(section: VisualInvitationSection): Array<{
+    badge: string;
+    title: string;
+    controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }>;
+  }> {
+    const icons: Record<string, string> = { icon: '★', time: '◷', title: 'Aa', description: '≡', location: '⌖' };
+    const fieldNames: Record<string, string> = { icon: 'Ícono', time: 'Horario', title: 'Título', description: 'Descripción', location: 'Lugar' };
+    const activities = this.itinerarySourceData();
+    const count = Math.max(activities.length, 1);
+    const groups: Array<{ badge: string; title: string; controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }> }> = [];
+
+    for (let index = 0; index < count; index++) {
+      const item = activities[index];
+      const itemTitle = item?.time ? (item.title ? `${item.time} · ${item.title}` : item.time) : (item?.title || `Actividad ${index + 1}`);
+      const prefix = `itinerary.${index}.`;
+      const controls = this.itineraryLayerDefinitions(section)
+        .filter((def) => def.binding.startsWith(prefix) && /^itinerary\.\d+\.(icon|time|title|description|location)$/.test(def.binding))
+        .map((def) => {
+          const key = def.binding.replace(prefix, '');
+          const label = fieldNames[key] || def.label;
+          return {
+            binding: def.binding,
+            label,
+            fullLabel: `Actividad ${index + 1} (${itemTitle}): ${label}`,
+            icon: icons[key] || '+'
+          };
+        });
+
+      if (controls.length) {
+        groups.push({
+          badge: `Actividad ${index + 1}`,
+          title: itemTitle,
+          controls
+        });
+      }
+    }
+    return groups;
+  }
+
+  dressCodeControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; fullLabel?: string; icon: string }> {
     return this.dressCodeLayerDefinitions(section)
       .filter((definition) => definition.binding === 'dress.image' || definition.binding === 'dress.code' || definition.binding === 'dress.description' || /^dress\.option\.\d+\.(color|title|description)$/.test(definition.binding))
       .map((definition) => ({
@@ -4249,6 +4420,60 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         label: definition.label,
         icon: definition.type === 'image' ? '▧' : definition.type === 'shape' ? '■' : 'Aa'
       }));
+  }
+
+  dressCodeControlGroups(section: VisualInvitationSection): Array<{
+    badge: string;
+    title: string;
+    controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }>;
+  }> {
+    const groups: Array<{ badge: string; title: string; controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }> }> = [];
+    const mainControls = this.dressCodeLayerDefinitions(section)
+      .filter((def) => ['dress.image', 'dress.code', 'dress.description'].includes(def.binding))
+      .map((def) => {
+        const label = def.binding === 'dress.image' ? 'Foto guía' : def.binding === 'dress.code' ? 'Vestimenta' : 'Descripción';
+        return {
+          binding: def.binding,
+          label,
+          fullLabel: `Vestimenta: ${label}`,
+          icon: def.type === 'image' ? '▧' : 'Aa'
+        };
+      });
+
+    if (mainControls.length) {
+      groups.push({
+        badge: 'General',
+        title: this.invitation?.content?.dressCode || 'Código de vestimenta',
+        controls: mainControls
+      });
+    }
+
+    const options = this.invitation?.content?.dressCodeOptions || [];
+    options.forEach((opt, index) => {
+      const optTitle = opt.title || `Color ${index + 1}`;
+      const prefix = `dress.option.${index}.`;
+      const controls = this.dressCodeLayerDefinitions(section)
+        .filter((def) => def.binding.startsWith(prefix) && /^(color|title|description)$/.test(def.binding.replace(prefix, '')))
+        .map((def) => {
+          const key = def.binding.replace(prefix, '');
+          const label = key === 'color' ? 'Muestra' : key === 'title' ? 'Título' : 'Descripción';
+          return {
+            binding: def.binding,
+            label,
+            fullLabel: `Color ${index + 1} (${optTitle}): ${label}`,
+            icon: def.type === 'shape' ? '■' : 'Aa'
+          };
+        });
+      if (controls.length) {
+        groups.push({
+          badge: `Color ${index + 1}`,
+          title: optTitle,
+          controls
+        });
+      }
+    });
+
+    return groups;
   }
 
   addDressCodeOption(): void {
@@ -4284,17 +4509,75 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (layer) layer.style = { ...(layer.style || {}), backgroundColor: color };
   }
 
-  lodgingControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+  lodgingControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; fullLabel?: string; icon: string }> {
     const icons: Record<string, string> = { image: '▧', name: 'Aa', description: '≡', address: '⌖', price: '$', agreement: '%', discount: '%', services: '+', notes: '≡', reserve: '→', map: '⌖', phone: '☎' };
+    const fieldNames: Record<string, string> = {
+      image: 'Foto', name: 'Nombre', description: 'Descripción', address: 'Dirección',
+      price: 'Tarifa', agreement: 'Convenio', discount: 'Descuento', services: 'Servicios',
+      notes: 'Notas', reserve: 'Reservar', map: 'Abrir mapa', phone: 'Llamar'
+    };
     return this.lodgingLayerDefinitions(section)
       .filter((definition) => /^lodging\.\d+\.(image|name|description|address|price|agreement|discount|services|notes|reserve|map|phone)$/.test(definition.binding))
       .map((definition) => {
         const match = definition.binding.match(/^lodging\.(\d+)\.([^.]+)$/);
-        return { binding: definition.binding, label: `Hospedaje ${Number(match?.[1] || 0) + 1}: ${definition.label}`, icon: icons[match?.[2] || 'name'] || '+' };
+        const index = Number(match?.[1] || 0);
+        const fieldKey = match?.[2] || 'name';
+        const fieldLabel = fieldNames[fieldKey] || definition.label;
+        const hotelName = this.invitation?.content?.lodging?.[index]?.name;
+        const hotelTitle = hotelName ? `Hosp. ${index + 1} (${hotelName})` : `Hospedaje ${index + 1}`;
+        return {
+          binding: definition.binding,
+          label: `Hosp. ${index + 1}: ${fieldLabel}`,
+          fullLabel: `${hotelTitle}: ${fieldLabel}`,
+          icon: icons[fieldKey] || '+'
+        };
       });
   }
 
-  galleryControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; icon: string }> {
+  lodgingControlGroups(section: VisualInvitationSection): Array<{
+    badge: string;
+    title: string;
+    controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }>;
+  }> {
+    const icons: Record<string, string> = { image: '▧', name: 'Aa', description: '≡', address: '⌖', price: '$', agreement: '%', discount: '%', services: '+', notes: '≡', reserve: '→', map: '⌖', phone: '☎' };
+    const fieldNames: Record<string, string> = {
+      image: 'Foto', name: 'Nombre', description: 'Descripción', address: 'Dirección',
+      price: 'Tarifa', agreement: 'Convenio', discount: 'Descuento', services: 'Servicios',
+      notes: 'Notas', reserve: 'Reservar', map: 'Abrir mapa', phone: 'Llamar'
+    };
+    const hotels = this.invitation?.content?.lodging || [];
+    const count = Math.max(hotels.length, 1);
+    const groups: Array<{ badge: string; title: string; controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }> }> = [];
+
+    for (let index = 0; index < count; index++) {
+      const hotel = hotels[index];
+      const hotelName = hotel?.name?.trim() || `Hotel ${index + 1}`;
+      const prefix = `lodging.${index}.`;
+      const controls = this.lodgingLayerDefinitions(section)
+        .filter((def) => def.binding.startsWith(prefix) && /^lodging\.\d+\.(image|name|description|address|price|agreement|discount|services|notes|reserve|map|phone)$/.test(def.binding))
+        .map((def) => {
+          const fieldKey = def.binding.replace(prefix, '');
+          const label = fieldNames[fieldKey] || def.label;
+          return {
+            binding: def.binding,
+            label,
+            fullLabel: `Hospedaje ${index + 1} (${hotelName}): ${label}`,
+            icon: icons[fieldKey] || '+'
+          };
+        });
+
+      if (controls.length) {
+        groups.push({
+          badge: `Hospedaje ${index + 1}`,
+          title: hotelName,
+          controls
+        });
+      }
+    }
+    return groups;
+  }
+
+  galleryControlCatalog(section: VisualInvitationSection): Array<{ binding: string; label: string; fullLabel?: string; icon: string }> {
     const mode = this.galleryPreviewMode(section);
     return this.galleryLayerDefinitions(section)
       .filter((definition) => mode === 'carousel'
@@ -4305,6 +4588,73 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         label: definition.label,
         icon: definition.type === 'image' ? '▧' : definition.type === 'button' ? '→' : 'Aa'
       }));
+  }
+
+  galleryControlGroups(section: VisualInvitationSection): Array<{
+    badge: string;
+    title: string;
+    controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }>;
+  }> {
+    const mode = this.galleryPreviewMode(section);
+    const groups: Array<{ badge: string; title: string; controls: Array<{ binding: string; label: string; fullLabel: string; icon: string }> }> = [];
+
+    if (mode === 'carousel') {
+      const carouselLabels: Record<string, string> = {
+        image: 'Foto actual', counter: 'Contador', title: 'Título',
+        description: 'Descripción', dedication: 'Dedicatoria', prev: 'Anterior', next: 'Siguiente'
+      };
+      const controls = this.galleryLayerDefinitions(section)
+        .filter((def) => def.binding.startsWith('gallery.carousel.'))
+        .map((def) => {
+          const key = def.binding.replace('gallery.carousel.', '');
+          const label = carouselLabels[key] || def.label;
+          return {
+            binding: def.binding,
+            label,
+            fullLabel: `Carrusel: ${label}`,
+            icon: def.type === 'image' ? '▧' : def.type === 'button' ? '→' : 'Aa'
+          };
+        });
+      if (controls.length) {
+        groups.push({
+          badge: 'Carrusel',
+          title: 'Marco interactivo',
+          controls
+        });
+      }
+    } else {
+      const itemLabels: Record<string, string> = {
+        image: 'Foto', title: 'Título', description: 'Descripción', dedication: 'Dedicatoria'
+      };
+      const items = this.invitation?.content?.galleryItems || [];
+      const count = Math.max(items.length, 1);
+      for (let index = 0; index < count; index++) {
+        const item = items[index];
+        const itemTitle = item?.title?.trim() || `Foto ${index + 1}`;
+        const prefix = `gallery.item.${index}.`;
+        const controls = this.galleryLayerDefinitions(section)
+          .filter((def) => def.binding.startsWith(prefix) && /^gallery\.item\.\d+\.(image|title|description|dedication)$/.test(def.binding))
+          .map((def) => {
+            const key = def.binding.replace(prefix, '');
+            const label = itemLabels[key] || def.label;
+            return {
+              binding: def.binding,
+              label,
+              fullLabel: `Foto ${index + 1} (${itemTitle}): ${label}`,
+              icon: def.type === 'image' ? '▧' : 'Aa'
+            };
+          });
+        if (controls.length) {
+          groups.push({
+            badge: `Foto ${index + 1}`,
+            title: itemTitle,
+            controls
+          });
+        }
+      }
+    }
+
+    return groups;
   }
 
   shouldRenderEditorLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {

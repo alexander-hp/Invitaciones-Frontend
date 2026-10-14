@@ -704,43 +704,91 @@
       <ng-container *ngIf="selectedSection?.type === 'locations' && selectedSection as locationSection">
         <h2>Piezas de ubicaciones</h2>
         <p class="hint">Cada dato conserva el vínculo con la ubicación configurada. Los botones solo aparecen al público cuando existe el enlace o teléfono correspondiente.</p>
-        <div class="component-catalog smart-component-catalog">
-          <button *ngFor="let control of locationControlCatalog(locationSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        <div class="catalog-group-list">
+          <div class="catalog-group" *ngFor="let group of locationControlGroups(locationSection)">
+            <div class="catalog-group-header">
+              <span class="group-badge">{{ group.badge }}</span>
+              <strong class="group-title" [title]="group.title">{{ group.title }}</strong>
+            </div>
+            <div class="component-catalog smart-component-catalog">
+              <button *ngFor="let control of group.controls" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)" [title]="control.fullLabel"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+            </div>
+          </div>
         </div>
       </ng-container>
       <ng-container *ngIf="selectedSection?.type === 'gifts' && selectedSection as giftSection">
         <h2>Piezas de regalos</h2>
         <p class="hint">Los logos y datos se toman de la mesa de regalos y el sobre digital. Los botones mantienen su enlace o acción de copiar.</p>
-        <div class="component-catalog smart-component-catalog">
-          <button *ngFor="let control of giftControlCatalog(giftSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        <div class="catalog-group-list">
+          <div class="catalog-group" *ngFor="let group of giftControlGroups(giftSection)">
+            <div class="catalog-group-header">
+              <span class="group-badge">{{ group.badge }}</span>
+              <strong class="group-title" [title]="group.title">{{ group.title }}</strong>
+            </div>
+            <div class="component-catalog smart-component-catalog">
+              <button *ngFor="let control of group.controls" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)" [title]="control.fullLabel"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+            </div>
+          </div>
         </div>
       </ng-container>
       <ng-container *ngIf="selectedSection?.type === 'itinerary' && selectedSection as itinerarySection">
         <h2>Piezas del itinerario</h2>
         <p class="hint">Cada actividad conserva su hora, texto y enlace configurado. Puedes mover, ocultar o estilizar cada pieza sin perder la acción de ubicación.</p>
-        <div class="component-catalog smart-component-catalog">
-          <button *ngFor="let control of itineraryControlCatalog(itinerarySection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        <div class="catalog-group-list">
+          <div class="catalog-group" *ngFor="let group of itineraryControlGroups(itinerarySection)">
+            <div class="catalog-group-header">
+              <span class="group-badge">{{ group.badge }}</span>
+              <strong class="group-title" [title]="group.title">{{ group.title }}</strong>
+            </div>
+            <div class="component-catalog smart-component-catalog">
+              <button *ngFor="let control of group.controls" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)" [title]="control.fullLabel"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+            </div>
+          </div>
         </div>
       </ng-container>
       <ng-container *ngIf="selectedSection?.type === 'dressCode' && selectedSection as dressCodeSection">
         <h2>Piezas de vestimenta</h2>
         <p class="hint">La imagen, los textos y cada referencia de color son capas independientes. El contenido seguirá vinculado a la configuración de la invitación.</p>
-        <div class="component-catalog smart-component-catalog">
-          <button *ngFor="let control of dressCodeControlCatalog(dressCodeSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        <div class="catalog-group-list">
+          <div class="catalog-group" *ngFor="let group of dressCodeControlGroups(dressCodeSection)">
+            <div class="catalog-group-header">
+              <span class="group-badge">{{ group.badge }}</span>
+              <strong class="group-title" [title]="group.title">{{ group.title }}</strong>
+            </div>
+            <div class="component-catalog smart-component-catalog">
+              <button *ngFor="let control of group.controls" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)" [title]="control.fullLabel"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+            </div>
+          </div>
         </div>
       </ng-container>
       <ng-container *ngIf="selectedSection?.type === 'lodging' && selectedSection as lodgingSection">
         <h2>Piezas de hospedaje</h2>
         <p class="hint">Cada dato conserva la información del hotel. Los botones públicos solo aparecen cuando existe reservación, mapa o teléfono.</p>
-        <div class="component-catalog smart-component-catalog">
-          <button *ngFor="let control of lodgingControlCatalog(lodgingSection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        <div class="catalog-group-list">
+          <div class="catalog-group" *ngFor="let group of lodgingControlGroups(lodgingSection)">
+            <div class="catalog-group-header">
+              <span class="group-badge">{{ group.badge }}</span>
+              <strong class="group-title" [title]="group.title">{{ group.title }}</strong>
+            </div>
+            <div class="component-catalog smart-component-catalog">
+              <button *ngFor="let control of group.controls" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)" [title]="control.fullLabel"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+            </div>
+          </div>
         </div>
       </ng-container>
       <ng-container *ngIf="selectedSection?.type === 'gallery' && selectedSection as gallerySection">
         <h2>Piezas de galería</h2>
         <p class="hint">En cuadrícula o lista puedes editar cada foto y sus textos. En carrusel personalizas un marco compartido con navegación, contador y contenido dinámico.</p>
-        <div class="component-catalog smart-component-catalog">
-          <button *ngFor="let control of galleryControlCatalog(gallerySection)" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+        <div class="catalog-group-list">
+          <div class="catalog-group" *ngFor="let group of galleryControlGroups(gallerySection)">
+            <div class="catalog-group-header">
+              <span class="group-badge">{{ group.badge }}</span>
+              <strong class="group-title" [title]="group.title">{{ group.title }}</strong>
+            </div>
+            <div class="component-catalog smart-component-catalog">
+              <button *ngFor="let control of group.controls" type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'rsvp-control', binding:control.binding})" (dragend)="endPaletteDrag()" (click)="addFunctionalControl(control.binding)" [title]="control.fullLabel"><b>{{ control.icon }}</b><span>{{ control.label }}</span></button>
+            </div>
+          </div>
         </div>
       </ng-container>
       <h2>Secciones</h2>
