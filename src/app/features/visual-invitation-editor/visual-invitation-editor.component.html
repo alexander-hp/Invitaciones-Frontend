@@ -1115,6 +1115,12 @@
                   </div>
                 </ng-container>
                 <ng-container *ngSwitchCase="'guestPass'">
+                  <label>Vista en lienzo
+                    <select [ngModel]="pluginSetting(section, 'editorViewMode') || 'pass'" (ngModelChange)="setPluginSetting(section, 'editorViewMode', $event)">
+                      <option value="pass">Pase digital (invitado identificado)</option>
+                      <option value="form">Formulario de acceso inicial</option>
+                    </select>
+                  </label>
                   <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showGuestName')" (ngModelChange)="setPluginSetting(section, 'showGuestName', $event)" type="checkbox"> Mostrar nombre</label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showGroup')" (ngModelChange)="setPluginSetting(section, 'showGroup', $event)" type="checkbox"> Mostrar grupo</label>
@@ -1124,6 +1130,12 @@
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showQr')" (ngModelChange)="setPluginSetting(section, 'showQr', $event)" type="checkbox"> Mostrar código QR</label>
                 </ng-container>
                 <ng-container *ngSwitchCase="'guestActivity'">
+                  <label>Vista en lienzo
+                    <select [ngModel]="pluginSetting(section, 'editorViewMode') || 'activity'" (ngModelChange)="setPluginSetting(section, 'editorViewMode', $event)">
+                      <option value="activity">Panel de actividad (invitado identificado)</option>
+                      <option value="form">Formulario de acceso inicial</option>
+                    </select>
+                  </label>
                   <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
                   <label>Botón del centro completo<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showRsvp')" (ngModelChange)="setPluginSetting(section, 'showRsvp', $event)" type="checkbox"> Mostrar RSVP</label>

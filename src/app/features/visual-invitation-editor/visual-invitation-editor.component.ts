@@ -285,6 +285,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'album.gallery', label: 'Galería aprobada', icon: '▧' }
   ];
   readonly guestPassControlCatalog = [
+    { binding: 'pass.card', label: 'Tarjeta de pase', icon: '■' },
     { binding: 'pass.email', label: 'Correo de acceso', icon: '@' }, { binding: 'pass.phone', label: 'Teléfono de acceso', icon: '☎' },
     { binding: 'pass.identify', label: 'Identificar pase', icon: '→' }, { binding: 'pass.name', label: 'Nombre', icon: 'Aa' },
     { binding: 'pass.group', label: 'Grupo', icon: '●' }, { binding: 'pass.table', label: 'Mesa', icon: '▣' },
@@ -1688,6 +1689,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectLayerFromPanel(layer: VisualInvitationLayer, event: MouseEvent): void {
     event.stopPropagation();
     if (!this.selectedSection) return;
+    const binding = String(layer.binding || '');
+    if (this.selectedSection.type === 'guestPass') {
+      const isFormLayer = ['pass.email', 'pass.phone', 'pass.identify', 'pass.feedback'].includes(binding) || binding.startsWith('display.label.pass.');
+      const currentMode = this.pluginSetting(this.selectedSection, 'editorViewMode') || 'pass';
+      if (isFormLayer && currentMode !== 'form') {
+        this.setPluginSetting(this.selectedSection, 'editorViewMode', 'form');
+      } else if (!isFormLayer && currentMode === 'form') {
+        this.setPluginSetting(this.selectedSection, 'editorViewMode', 'pass');
+      }
+    } else if (this.selectedSection.type === 'guestActivity') {
+      const isFormLayer = ['activity.email', 'activity.phone', 'activity.identify'].includes(binding) || binding.startsWith('display.label.activity.');
+      const currentMode = this.pluginSetting(this.selectedSection, 'editorViewMode') || 'activity';
+      if (isFormLayer && currentMode !== 'form') {
+        this.setPluginSetting(this.selectedSection, 'editorViewMode', 'form');
+      } else if (!isFormLayer && currentMode === 'form') {
+        this.setPluginSetting(this.selectedSection, 'editorViewMode', 'activity');
+      }
+    }
     this.applyLayerSelection(this.selectedSection, layer, event.shiftKey);
     this.inspectorView = 'properties';
   }
@@ -4175,11 +4194,31 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   shouldRenderEditorLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
-    if (section.type !== 'gallery') return true;
-    const binding = String(layer.binding || '');
-    if (!binding.startsWith('gallery.')) return true;
-    const carousel = this.galleryPreviewMode(section) === 'carousel';
-    return carousel ? binding.startsWith('gallery.carousel.') : binding.startsWith('gallery.item.');
+    if (section.type === 'gallery') {
+      const binding = String(layer.binding || '');
+      if (!binding.startsWith('gallery.')) return true;
+      const carousel = this.galleryPreviewMode(section) === 'carousel';
+      return carousel ? binding.startsWith('gallery.carousel.') : binding.startsWith('gallery.item.');
+    }
+    if (section.type === 'guestPass') {
+      const binding = String(layer.binding || '');
+      if (binding.startsWith('display.guestPass.')) return true;
+      const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
+      const isFormLayer = ['pass.email', 'pass.phone', 'pass.identify'].includes(binding) || binding.startsWith('display.label.pass.');
+      const isPassLayer = ['pass.card', 'pass.qr', 'pass.name', 'pass.group', 'pass.table', 'pass.seat', 'pass.companions', 'pass.feedback'].includes(binding);
+      if (isFormMode) return isFormLayer || binding === 'pass.feedback';
+      return isPassLayer;
+    }
+    if (section.type === 'guestActivity') {
+      const binding = String(layer.binding || '');
+      if (binding.startsWith('display.guestActivity.')) return true;
+      const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
+      const isFormLayer = ['activity.email', 'activity.phone', 'activity.identify'].includes(binding) || binding.startsWith('display.label.activity.');
+      const isDashboardLayer = ['activity.greeting', 'activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications', 'activity.manage', 'activity.full'].includes(binding);
+      if (isFormMode) return isFormLayer;
+      return isDashboardLayer;
+    }
+    return true;
   }
 
   beginContentEdit(): void {
@@ -5636,21 +5675,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
-  private guestPassLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+  private guestPassLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button' | 'shape'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
     return [
-      { type: 'text', binding: 'display.guestPass.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Acceso personal'), x: 15, y: 4, width: 70, height: 5, fontSize: 11 },
-      { type: 'text', binding: 'display.guestPass.title', label: section.title || 'Mi mesa y pase', x: 10, y: 11, width: 80, height: 10, fontSize: 34 },
-      { type: 'text', binding: 'display.guestPass.intro', label: String(this.pluginSetting(section, 'introText') || 'Identifica tu invitación para consultar tu pase.'), x: 12, y: 22, width: 76, height: 7, fontSize: 14 },
-      { type: 'field', binding: 'pass.email', label: 'Correo', placeholder: 'correo@ejemplo.com', x: 10, y: 34, width: 36, height: 13 },
-      { type: 'field', binding: 'pass.phone', label: 'Teléfono', placeholder: 'Número de teléfono', x: 54, y: 34, width: 36, height: 13 },
-      { type: 'button', binding: 'pass.identify', label: String(this.pluginSetting(section, 'identifyButtonText') || 'Ver mi pase'), x: 30, y: 52, width: 40, height: 9 },
-      { type: 'field', binding: 'pass.qr', label: 'Código QR', x: 8, y: 34, width: 30, height: 35 },
-      { type: 'text', binding: 'pass.name', label: 'Invitado de ejemplo', x: 43, y: 35, width: 49, height: 10, fontSize: 26 },
-      { type: 'text', binding: 'pass.group', label: 'Familia', x: 43, y: 47, width: 49, height: 6, fontSize: 14 },
-      { type: 'text', binding: 'pass.table', label: 'Mesa 5', x: 43, y: 56, width: 49, height: 8, fontSize: 20 },
-      { type: 'text', binding: 'pass.seat', label: 'Lugar A-12', x: 43, y: 66, width: 24, height: 6, fontSize: 13 },
-      { type: 'text', binding: 'pass.companions', label: '2 acompañantes', x: 69, y: 66, width: 23, height: 6, fontSize: 13 },
-      { type: 'text', binding: 'pass.feedback', label: 'Aquí aparecerá el estado de identificación', x: 20, y: 76, width: 60, height: 6, fontSize: 12 }
+      { type: 'text', binding: 'display.guestPass.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Acceso personal'), x: 15, y: 5, width: 70, height: 4, fontSize: 11 },
+      { type: 'text', binding: 'display.guestPass.title', label: section.title || 'Mi mesa y pase', x: 10, y: 10, width: 80, height: 8, fontSize: 32 },
+      { type: 'text', binding: 'display.guestPass.intro', label: String(this.pluginSetting(section, 'introText') || 'Presenta este pase al ingresar.'), x: 12, y: 19, width: 76, height: 6, fontSize: 13 },
+      { type: 'shape', binding: 'pass.card', label: 'Tarjeta de pase', x: 8, y: 27, width: 84, height: 50, fontSize: 14 },
+      { type: 'field', binding: 'pass.qr', label: 'Código QR', x: 13, y: 32, width: 32, height: 26 },
+      { type: 'text', binding: 'pass.name', label: 'Invitado de ejemplo', x: 48, y: 32, width: 40, height: 7, fontSize: 22 },
+      { type: 'text', binding: 'pass.group', label: 'Familia', x: 48, y: 40, width: 40, height: 4, fontSize: 12 },
+      { type: 'text', binding: 'pass.table', label: 'Mesa 5', x: 48, y: 45, width: 40, height: 6, fontSize: 18 },
+      { type: 'text', binding: 'pass.seat', label: 'Lugar A-12', x: 48, y: 52, width: 19, height: 5, fontSize: 12 },
+      { type: 'text', binding: 'pass.companions', label: '2 acompañantes', x: 68, y: 52, width: 20, height: 5, fontSize: 12 },
+      { type: 'text', binding: 'pass.feedback', label: 'Aquí aparecerá el estado de identificación', x: 12, y: 64, width: 76, height: 5, fontSize: 11 },
+      { type: 'field', binding: 'pass.email', label: 'Correo', placeholder: 'correo@ejemplo.com', x: 12, y: 28, width: 76, height: 9 },
+      { type: 'field', binding: 'pass.phone', label: 'Teléfono', placeholder: 'Número de teléfono', x: 12, y: 40, width: 76, height: 9 },
+      { type: 'button', binding: 'pass.identify', label: String(this.pluginSetting(section, 'identifyButtonText') || 'Ver mi pase'), x: 20, y: 53, width: 60, height: 8 }
     ];
   }
 
@@ -5668,20 +5708,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private createGuestPassLayer(definition: ReturnType<typeof this.guestPassLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
     const isXv = this.isXvBurgundy();
+    const isHaute = this.isHauteCouture();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding; layer.placeholder = definition.placeholder; layer.zIndex = zIndex;
-    if (definition.type === 'field') {
+    if (definition.type === 'shape') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: definition.binding === 'pass.qr' ? '#ffffff' : (isXv ? '#faf6f0' : '#ffffff'),
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#e6ded8',
+        borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
-        borderRadius: isXv ? 12 : 8,
+        borderRadius: 18,
+        boxShadow: isXv ? '0 12px 30px rgba(92, 13, 24, 0.16)' : isHaute ? '0 12px 30px rgba(197, 155, 72, 0.14)' : '0 10px 28px rgba(0,0,0,0.06)'
+      };
+      layer.zIndex = 1;
+    }
+    if (definition.type === 'field') {
+      const isQr = definition.binding === 'pass.qr';
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: '#ffffff',
+        borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#d5cbc4',
+        borderWidth: isXv || isHaute ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: isQr ? 12 : 8,
         color: isXv ? '#5c0d18' : layer.style?.color,
-        padding: 10,
-        textAlign: 'left',
-        showPlaceholder: true
+        padding: isQr ? 8 : 10,
+        textAlign: isQr ? 'center' : 'left',
+        showPlaceholder: true,
+        boxShadow: isQr ? '0 2px 8px rgba(0,0,0,0.04)' : undefined
       };
     }
     if (definition.type === 'button') {
@@ -5690,25 +5745,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
       }
     }
+    if (definition.type === 'text') {
+      if (definition.binding === 'pass.name') {
+        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 22, color: isXv ? '#5c0d18' : isHaute ? '#181514' : layer.style?.color };
+      } else if (definition.binding === 'pass.group') {
+        layer.style = { ...(layer.style || {}), fontWeight: 600, fontSize: 12, color: isXv ? '#8c1d2e' : isHaute ? '#c59b48' : '#8a7d75', letterSpacing: 1 };
+      } else if (definition.binding === 'pass.table') {
+        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 18, color: isXv ? '#d4af37' : isHaute ? '#c59b48' : layer.style?.color };
+      } else if (definition.binding === 'pass.seat' || definition.binding === 'pass.companions') {
+        layer.style = { ...(layer.style || {}), fontWeight: 500, fontSize: 12, color: '#6b635e' };
+      } else if (definition.binding === 'pass.feedback') {
+        layer.style = { ...(layer.style || {}), fontSize: 11, color: '#99908a', textAlign: 'center' };
+      }
+    }
     return layer;
   }
 
   private guestActivityLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
     return [
-      { type: 'text', binding: 'display.guestActivity.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Tu espacio'), x: 15, y: 4, width: 70, height: 5, fontSize: 11 },
-      { type: 'text', binding: 'display.guestActivity.title', label: section.title || 'Mi pase y actividad', x: 10, y: 11, width: 80, height: 10, fontSize: 34 },
-      { type: 'text', binding: 'display.guestActivity.intro', label: String(this.pluginSetting(section, 'introText') || 'Consulta tu confirmación, pase y envíos sin salir de la invitación.'), x: 12, y: 22, width: 76, height: 7, fontSize: 14 },
-      { type: 'field', binding: 'activity.email', label: 'Correo', placeholder: 'correo@ejemplo.com', x: 10, y: 34, width: 36, height: 13 },
-      { type: 'field', binding: 'activity.phone', label: 'Teléfono', placeholder: 'Número de teléfono', x: 54, y: 34, width: 36, height: 13 },
-      { type: 'button', binding: 'activity.identify', label: String(this.pluginSetting(section, 'identifyButtonText') || 'Ver mi actividad'), x: 30, y: 52, width: 40, height: 9 },
-      { type: 'text', binding: 'activity.greeting', label: 'Hola, Invitado de ejemplo', x: 10, y: 32, width: 80, height: 7, fontSize: 17 },
-      { type: 'field', binding: 'activity.rsvp', label: 'Estado RSVP', x: 5, y: 43, width: 17, height: 18 },
-      { type: 'field', binding: 'activity.pass', label: 'Mesa y pase', x: 24, y: 43, width: 17, height: 18 },
-      { type: 'field', binding: 'activity.album', label: 'Fotografías', x: 43, y: 43, width: 17, height: 18 },
-      { type: 'field', binding: 'activity.songs', label: 'Canciones', x: 62, y: 43, width: 15, height: 18 },
-      { type: 'field', binding: 'activity.dedications', label: 'Dedicatorias', x: 79, y: 43, width: 16, height: 18 },
-      { type: 'button', binding: 'activity.manage', label: 'Administrar aquí', x: 15, y: 68, width: 32, height: 9 },
-      { type: 'button', binding: 'activity.full', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Ver toda mi actividad'), x: 53, y: 68, width: 32, height: 9 }
+      { type: 'text', binding: 'display.guestActivity.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Tu espacio'), x: 15, y: 5, width: 70, height: 4, fontSize: 11 },
+      { type: 'text', binding: 'display.guestActivity.title', label: section.title || 'Mi pase y actividad', x: 10, y: 10, width: 80, height: 8, fontSize: 32 },
+      { type: 'text', binding: 'display.guestActivity.intro', label: String(this.pluginSetting(section, 'introText') || 'Consulta tu confirmación, pase y envíos sin salir de la invitación.'), x: 12, y: 19, width: 76, height: 6, fontSize: 13 },
+      { type: 'text', binding: 'activity.greeting', label: 'Hola, Invitado de ejemplo', x: 10, y: 27, width: 80, height: 5, fontSize: 17 },
+      { type: 'field', binding: 'activity.rsvp', label: 'Estado RSVP', x: 8, y: 34, width: 40, height: 16, fontSize: 13 },
+      { type: 'field', binding: 'activity.pass', label: 'Mesa y pase', x: 52, y: 34, width: 40, height: 16, fontSize: 13 },
+      { type: 'field', binding: 'activity.album', label: 'Fotografías', x: 8, y: 53, width: 26, height: 15, fontSize: 12 },
+      { type: 'field', binding: 'activity.songs', label: 'Canciones', x: 37, y: 53, width: 26, height: 15, fontSize: 12 },
+      { type: 'field', binding: 'activity.dedications', label: 'Dedicatorias', x: 66, y: 53, width: 26, height: 15, fontSize: 12 },
+      { type: 'button', binding: 'activity.manage', label: 'Administrar aquí', x: 10, y: 72, width: 38, height: 8, fontSize: 12 },
+      { type: 'button', binding: 'activity.full', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Ver toda mi actividad'), x: 52, y: 72, width: 38, height: 8, fontSize: 12 },
+      { type: 'field', binding: 'activity.email', label: 'Correo', placeholder: 'correo@ejemplo.com', x: 12, y: 28, width: 76, height: 9 },
+      { type: 'field', binding: 'activity.phone', label: 'Teléfono', placeholder: 'Número de teléfono', x: 12, y: 40, width: 76, height: 9 },
+      { type: 'button', binding: 'activity.identify', label: String(this.pluginSetting(section, 'identifyButtonText') || 'Ver mi actividad'), x: 20, y: 53, width: 60, height: 8 }
     ];
   }
 
@@ -5726,26 +5794,45 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private createGuestActivityLayer(definition: ReturnType<typeof this.guestActivityLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
     const isXv = this.isXvBurgundy();
+    const isHaute = this.isHauteCouture();
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding; layer.placeholder = definition.placeholder; layer.zIndex = zIndex;
     if (definition.type === 'field') {
+      const isCard = ['activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications'].includes(definition.binding);
       layer.style = {
         ...(layer.style || {}),
         backgroundColor: isXv ? '#faf6f0' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#e2dbd5',
+        borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
-        borderRadius: isXv ? 12 : 8,
+        borderRadius: isCard ? 14 : 8,
         color: isXv ? '#5c0d18' : layer.style?.color,
         padding: 10,
-        textAlign: 'center',
-        showPlaceholder: true
+        textAlign: isCard ? 'center' : 'left',
+        showPlaceholder: true,
+        boxShadow: isCard ? '0 4px 16px rgba(0,0,0,0.05)' : undefined
       };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
-      if (isXv) {
+      if (definition.binding === 'activity.manage') {
+        layer.style = {
+          ...(layer.style || {}),
+          backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+          color: isXv ? '#5c0d18' : '#333333',
+          borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#d5cbc4',
+          borderWidth: 1,
+          borderStyle: 'solid',
+          borderRadius: 24,
+          fontWeight: 600
+        };
+      } else if (isXv) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+      }
+    }
+    if (definition.type === 'text') {
+      if (definition.binding === 'activity.greeting') {
+        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 17, textAlign: 'center', color: isXv ? '#5c0d18' : isHaute ? '#181514' : layer.style?.color };
       }
     }
     return layer;
@@ -5848,8 +5935,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const locations = this.locationSourceData();
     const isHaute = this.isHauteCouture();
     const isXv = this.isXvBurgundy();
-    const rows = Math.max(1, Math.ceil(locations.length / 2));
-    const requiredHeight = Math.max(760, 250 + rows * (isXv ? 340 : isHaute ? 320 : 300));
+    const isSingle = locations.length === 1;
+    const cardHeightPx = isXv ? 340 : isHaute ? 310 : 280;
+    const rows = isSingle ? 1 : Math.max(1, Math.ceil(locations.length / 2));
+    const requiredHeight = Math.max(760, 230 + rows * (cardHeightPx + 30));
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'button' | 'shape' | 'image'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
       { type: 'text', binding: 'display.locations.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute ? 'CÓMO LLEGAR' : isXv ? 'DÓNDE & CUÁNDO' : 'Cómo llegar')), x: 15, y: pct(30), width: 70, height: pct(34), fontSize: 11 },
@@ -5857,47 +5946,60 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       { type: 'text', binding: 'display.locations.intro', label: String(this.pluginSetting(section, 'introText') || (isXv ? 'Acompaña a la quinceañera en cada etapa de esta noche especial.' : 'Consulta los datos y abre tu aplicación de navegación preferida.')), x: 12, y: pct(145), width: 76, height: pct(42), fontSize: 14 }
     ];
     locations.forEach((location, index) => {
-      const left = index % 2 === 0 ? 4 : 52;
-      const topPx = 210 + Math.floor(index / 2) * (isXv ? 340 : isHaute ? 320 : 300);
+      const left = isSingle ? 8 : (index % 2 === 0 ? 5 : 51);
+      const cardWidth = isSingle ? 84 : 44;
+      const contentWidth = isSingle ? 76 : 38;
+      const contentLeft = isSingle ? 12 : left + 3;
+      const mapWidth = isSingle ? 54 : 36;
+      const mapLeft = isSingle ? 23 : left + 4;
+      const wazeWidth = isSingle ? 44 : 30;
+      const wazeLeft = isSingle ? 28 : left + 7;
+      const topPx = 210 + (isSingle ? 0 : Math.floor(index / 2) * (cardHeightPx + 30));
       const prefix = `location.${index}`;
       if (isXv) {
         const photoUrl = index === 0 ? 'assets/templates/xv-burgundy/church-card.jpg' : 'assets/templates/xv-burgundy/reception-doily.jpg';
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(320), fontSize: 14 },
-          { type: 'image', binding: `${prefix}.image`, label: `Foto ${index + 1}`, url: photoUrl, x: left + 2.5, y: pct(topPx + 10), width: 39, height: pct(100), fontSize: 12 },
-          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 2, y: pct(topPx + 118), width: 40, height: pct(38), fontSize: 26 },
-          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 158), width: 38, height: pct(34), fontSize: 12 },
-          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 194), width: 38, height: pct(28), fontSize: 11 },
-          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'VER UBICACIÓN'), x: left + 5, y: pct(topPx + 228), width: 34, height: pct(38), fontSize: 12 },
-          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 9, y: pct(topPx + 272), width: 26, height: pct(32), fontSize: 11 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: cardWidth, height: pct(cardHeightPx), fontSize: 14 },
+          { type: 'image', binding: `${prefix}.image`, label: `Foto ${index + 1}`, url: photoUrl, x: isSingle ? 13 : left + 2.5, y: pct(topPx + 10), width: isSingle ? 74 : 39, height: pct(100), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: contentLeft, y: pct(topPx + 118), width: contentWidth, height: pct(38), fontSize: isSingle ? 28 : 24 },
+          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: contentLeft, y: pct(topPx + 158), width: contentWidth, height: pct(34), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: contentLeft, y: pct(topPx + 194), width: contentWidth, height: pct(28), fontSize: 11 },
+          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'VER UBICACIÓN'), x: mapLeft, y: pct(topPx + 228), width: mapWidth, height: pct(38), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: wazeLeft, y: pct(topPx + 272), width: wazeWidth, height: pct(32), fontSize: 11 }
         );
         if (location.phone) {
-          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 11, y: pct(topPx + 310), width: 22, height: pct(26), fontSize: 11 });
+          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: wazeLeft, y: pct(topPx + 308), width: wazeWidth, height: pct(26), fontSize: 11 });
         }
       } else if (isHaute) {
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(290), fontSize: 14 },
-          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 2, y: pct(topPx + 22), width: 40, height: pct(42), fontSize: 22 },
-          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 72), width: 38, height: pct(40), fontSize: 13 },
-          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 118), width: 38, height: pct(36), fontSize: 12 },
-          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'VER UBICACIÓN'), x: left + 5, y: pct(topPx + 175), width: 34, height: pct(40), fontSize: 13 },
-          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 9, y: pct(topPx + 228), width: 26, height: pct(36), fontSize: 12 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: cardWidth, height: pct(cardHeightPx), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: contentLeft, y: pct(topPx + 22), width: contentWidth, height: pct(42), fontSize: isSingle ? 26 : 22 },
+          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: contentLeft, y: pct(topPx + 72), width: contentWidth, height: pct(40), fontSize: 13 },
+          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: contentLeft, y: pct(topPx + 118), width: contentWidth, height: pct(36), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'VER UBICACIÓN'), x: mapLeft, y: pct(topPx + 175), width: mapWidth, height: pct(40), fontSize: 13 },
+          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: wazeLeft, y: pct(topPx + 226), width: wazeWidth, height: pct(36), fontSize: 12 }
         );
         if (location.phone) {
-          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 11, y: pct(topPx + 272), width: 22, height: pct(28), fontSize: 11 });
+          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: wazeLeft, y: pct(topPx + 270), width: wazeWidth, height: pct(28), fontSize: 11 });
         }
       } else {
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: 44, height: pct(270), fontSize: 14 },
-          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: left + 3, y: pct(topPx + 20), width: 38, height: pct(38), fontSize: 22 },
-          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: left + 3, y: pct(topPx + 64), width: 38, height: pct(38), fontSize: 13 },
-          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: left + 3, y: pct(topPx + 105), width: 38, height: pct(32), fontSize: 12 },
-          { type: 'text', binding: `${prefix}.details`, label: 'Estacionamiento, transporte y horarios', x: left + 3, y: pct(topPx + 140), width: 38, height: pct(45), fontSize: 11 },
-          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mapa'), x: left + 3, y: pct(topPx + 205), width: 17, height: pct(38), fontSize: 12 },
-          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: left + 22, y: pct(topPx + 205), width: 9, height: pct(38), fontSize: 12 },
-          { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: left + 33, y: pct(topPx + 205), width: 8, height: pct(38), fontSize: 12 },
-          { type: 'button', binding: `${prefix}.website`, label: 'Sitio web', x: left + 22, y: pct(topPx + 248), width: 19, height: pct(18), fontSize: 10 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta ${index + 1}`, x: left, y: pct(topPx), width: cardWidth, height: pct(cardHeightPx), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.name`, label: location.name || location.type || `Ubicación ${index + 1}`, x: contentLeft, y: pct(topPx + 18), width: contentWidth, height: pct(36), fontSize: isSingle ? 24 : 20 },
+          { type: 'text', binding: `${prefix}.address`, label: location.address || 'Dirección pendiente', x: contentLeft, y: pct(topPx + 58), width: contentWidth, height: pct(34), fontSize: 13 },
+          { type: 'text', binding: `${prefix}.notes`, label: location.notes || 'Indicaciones del lugar', x: contentLeft, y: pct(topPx + 96), width: contentWidth, height: pct(28), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.map`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mapa'), x: mapLeft, y: pct(topPx + 140), width: mapWidth, height: pct(36), fontSize: 12 },
+          { type: 'button', binding: `${prefix}.waze`, label: 'Waze', x: wazeLeft, y: pct(topPx + 184), width: wazeWidth, height: pct(32), fontSize: 11 }
         );
+        if (location.phone) {
+          definitions.push({ type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: wazeLeft, y: pct(topPx + 224), width: wazeWidth, height: pct(28), fontSize: 11 });
+        }
+        if (location.websiteUrl) {
+          definitions.push({ type: 'button', binding: `${prefix}.website`, label: 'Sitio web', x: wazeLeft, y: pct(topPx + 258), width: wazeWidth, height: pct(28), fontSize: 11 });
+        }
+        if (location.parking || location.transport || location.accessibility || location.schedule?.length) {
+          definitions.push({ type: 'text', binding: `${prefix}.details`, label: 'Estacionamiento, transporte y horarios', x: contentLeft, y: pct(topPx + 224), width: contentWidth, height: pct(36), fontSize: 11 });
+        }
       }
     });
     return definitions;
@@ -5958,6 +6060,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         } else {
           layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
         }
+      } else {
+        layer.style = { ...(layer.style || {}), borderRadius: 24, fontWeight: 600 };
       }
     }
     if (definition.type === 'shape') {
@@ -5966,7 +6070,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       } else if (isXv) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
       } else {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#e6ded8', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 10px 28px rgba(0,0,0,0.06)' };
       }
       layer.zIndex = Math.max(1, zIndex - 1);
     }

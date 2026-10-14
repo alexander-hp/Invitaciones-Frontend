@@ -413,6 +413,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (binding.startsWith('display.guestPass.')) return true;
     if (binding === 'pass.feedback') return Boolean(this.error);
     if (!this.verifiedGuest) return ['pass.email', 'pass.phone', 'pass.identify'].includes(binding);
+    if (binding === 'pass.card') return true;
     if (binding === 'pass.name') return this.pluginSetting(section, 'showGuestName', true) !== false;
     if (binding === 'pass.group') return this.pluginSetting(section, 'showGroup', true) !== false && Boolean(this.verifiedGuest.group || this.verifiedGuest.relationshipLabel);
     if (binding === 'pass.table') return this.pluginSetting(section, 'showTable', true) !== false;
