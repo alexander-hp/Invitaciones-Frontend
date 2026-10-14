@@ -1983,6 +1983,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       allowCompanionsDefault: this.invitation.rsvpSettings?.allowCompanionsDefault === true,
       defaultAllowedCompanions: this.invitation.rsvpSettings?.defaultAllowedCompanions ?? 0,
       maxAttendees: this.invitation.rsvpSettings?.maxAttendees,
+      allowedGuestIds: (this.invitation.rsvpSettings?.allowedGuestIds || []).map((id: any) => typeof id === 'object' ? (id?._id || id?.id || String(id)) : String(id)),
       allowedRoles: this.invitation.rsvpSettings?.allowedRoles || [],
       allowedGroups: this.invitation.rsvpSettings?.allowedGroups || [],
       allowedEmails: this.invitation.rsvpSettings?.allowedEmails || [],
@@ -2171,6 +2172,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       identityMethods: (this.invitation.rsvpSettings.identityMethods?.length ? this.invitation.rsvpSettings.identityMethods : ['email', 'phone']) as Array<'email' | 'phone'>,
       defaultAllowedCompanions: Number(this.invitation.rsvpSettings.defaultAllowedCompanions || 0),
       maxAttendees: this.invitation.rsvpSettings.maxAttendees ? Number(this.invitation.rsvpSettings.maxAttendees) : undefined,
+      allowedGuestIds: (this.invitation.rsvpSettings.allowedGuestIds || []).map((id: any) => typeof id === 'object' ? (id?._id || id?.id || String(id)) : String(id)).filter(Boolean),
       allowedRoles: this.parseLines(this.allowedRolesText),
       allowedGroups: this.parseLines(this.allowedGroupsText),
       allowedEmails: this.parseLines(this.allowedEmailsText),
@@ -2353,6 +2355,9 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     this.allowedGroupsText = (this.invitation.rsvpSettings?.allowedGroups || []).join('\n');
     this.allowedEmailsText = (this.invitation.rsvpSettings?.allowedEmails || []).join('\n');
     this.allowedPhonesText = (this.invitation.rsvpSettings?.allowedPhones || []).join('\n');
+    if (this.invitation.rsvpSettings) {
+      this.invitation.rsvpSettings.allowedGuestIds = (this.invitation.rsvpSettings.allowedGuestIds || []).map((id: any) => typeof id === 'object' ? (id?._id || id?.id || String(id)) : String(id));
+    }
     this.syncCustomQuestionsFromInvitation();
   }
 

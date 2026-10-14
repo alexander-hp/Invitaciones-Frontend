@@ -136,6 +136,86 @@ export class EditorContentTabComponent {
     this.newCustomGroup = '';
   }
 
+  guestSearchTerm = '';
+
+  get allowedGuestIds(): string[] {
+    return (this.invitation?.rsvpSettings?.allowedGuestIds || []).map((id: any) =>
+      typeof id === 'object' ? (id?._id || id?.id || String(id)) : String(id)
+    );
+  }
+
+  get selectedGuestCount(): number {
+    return this.allowedGuestIds.length;
+  }
+
+  get filteredLoadedGuests(): GuestModel[] {
+    if (!this.guestSearchTerm?.trim()) {
+      return this.loadedGuests || [];
+    }
+    const term = this.guestSearchTerm.toLowerCase().trim();
+    return (this.loadedGuests || []).filter(g => {
+      const name = (g.name || '').toLowerCase();
+      const email = (g.email || '').toLowerCase();
+      const phone = (g.phone || '').toLowerCase();
+      const group = (g.group || g.visibilityGroup || '').toLowerCase();
+      const table = (g.tableName || '').toLowerCase();
+      const roles = (g.roles || []).join(' ').toLowerCase();
+      return name.includes(term) || email.includes(term) || phone.includes(term) || group.includes(term) || table.includes(term) || roles.includes(term);
+    });
+  }
+
+  getGuestId(guest: GuestModel): string {
+    return String(guest._id || guest.id || '');
+  }
+
+  isGuestSelected(guestId: string): boolean {
+    return this.allowedGuestIds.includes(guestId);
+  }
+
+  toggleGuest(guestId: string): void {
+    if (!this.invitation) return;
+    if (!this.invitation.rsvpSettings) {
+      this.invitation.rsvpSettings = {};
+    }
+    const current = [...this.allowedGuestIds];
+    const idx = current.indexOf(guestId);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(guestId);
+    }
+    this.invitation.rsvpSettings.allowedGuestIds = current;
+  }
+
+  selectAllGuests(): void {
+    if (!this.invitation) return;
+    if (!this.invitation.rsvpSettings) {
+      this.invitation.rsvpSettings = {};
+    }
+    this.invitation.rsvpSettings.allowedGuestIds = (this.loadedGuests || [])
+      .map(g => this.getGuestId(g))
+      .filter(Boolean);
+  }
+
+  deselectAllGuests(): void {
+    if (!this.invitation) return;
+    if (!this.invitation.rsvpSettings) {
+      this.invitation.rsvpSettings = {};
+    }
+    this.invitation.rsvpSettings.allowedGuestIds = [];
+  }
+
+  getGuestMeta(g: GuestModel): string {
+    const parts: string[] = [];
+    if (g.group || g.visibilityGroup) parts.push(g.group || g.visibilityGroup || '');
+    if (g.roles?.length) parts.push(g.roles.join(', '));
+    if (g.tableName) parts.push(`Mesa: ${g.tableName}`);
+    if (g.email) parts.push(g.email);
+    else if (g.phone) parts.push(g.phone);
+    if (g.allowedCompanions) parts.push(`+${g.allowedCompanions} acompañante(s)`);
+    return parts.join(' • ');
+  }
+
   onApplyVariant(variant: 'formal' | 'warm' | 'brief'): void {
     this.applyTextVariant.emit(variant);
   }
