@@ -444,8 +444,8 @@ export class VisualDesignImporterService {
     return {
       x: this.clamp((rect.left - rootRect.left) / rootWidth * 100, 0, 99),
       y: this.clamp((rect.top - rootRect.top) / sectionHeight * 100, 0, 99),
-      width: this.clamp(rect.width / rootWidth * 100, 4, 100),
-      height: this.clamp(rect.height / sectionHeight * 100, 4, 100)
+      width: this.clamp(rect.width / rootWidth * 100, 1, 100),
+      height: this.clamp(rect.height / sectionHeight * 100, 1, 100)
     };
   }
 

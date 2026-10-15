@@ -928,13 +928,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   normalizeLayerTransform(layer: VisualInvitationLayer, layout: VisualInvitationLayerLayout): void {
-    layout.width = this.bound(Number(layout.width) || 4, 4, 100);
-    layout.height = this.bound(Number(layout.height) || 4, 4, 100);
-    layout.x = this.bound(Number(layout.x) || 0, -100, 200);
+    layout.width = this.bound(this.finiteNumber(layout.width, 1), 1, 100);
+    layout.height = this.bound(this.finiteNumber(layout.height, 1), 1, 100);
+    layout.x = this.bound(this.finiteNumber(layout.x, 0), -100, 200);
     const range = this.verticalLayerBounds(this.selectedSection, layout.height);
-    layout.y = this.bound(Number(layout.y) || 0, range.min, range.max);
-    layout.rotation = this.bound(Number(layout.rotation) || 0, -180, 180);
-    layer.zIndex = Math.round(this.bound(Number(layer.zIndex) || 0, 0, 1000));
+    layout.y = this.bound(this.finiteNumber(layout.y, 0), range.min, range.max);
+    layout.rotation = this.bound(this.finiteNumber(layout.rotation, 0), -180, 180);
+    layer.zIndex = Math.round(this.bound(this.finiteNumber(layer.zIndex, 0), 0, 1000));
   }
 
   verticalLayerBounds(section: VisualInvitationSection | undefined, layerHeight: number): { min: number; max: number } {
@@ -3325,12 +3325,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       const precision = event.pointerType === 'touch' ? 2 : 100;
       const round = (value: number) => Math.round(value * precision) / precision;
-      resize.layout.x = round(this.bound(nextX, -100, resize.x + resize.width - 4));
-      const height = this.bound(nextHeight, 4, 100);
+      resize.layout.x = round(this.bound(nextX, -100, resize.x + resize.width - 1));
+      const height = this.bound(nextHeight, 1, 100);
       const range = this.verticalLayerBounds(resize.section, height);
-      resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 4)));
-      resize.layout.width = round(this.bound(nextWidth, 4, 100));
-      resize.layout.height = round(this.bound(height, 4, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
+      resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 1)));
+      resize.layout.width = round(this.bound(nextWidth, 1, 100));
+      resize.layout.height = round(this.bound(height, 1, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
       return;
     }
     const drag = this.layerDragState;

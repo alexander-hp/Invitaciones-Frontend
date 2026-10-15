@@ -416,6 +416,15 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(component.sectionHasOverflowLayers(first)).toBeFalse();
   });
 
+  it('allows separator or thin layer height to be set to 1 or 2', () => {
+    const layer = { id: 'divider', type: 'shape' as const, x: 15, y: 48, width: 70, height: 1 };
+    component.normalizeLayerTransform(layer, layer);
+    expect(layer.height).toBe(1);
+    layer.height = 2;
+    component.normalizeLayerTransform(layer, layer);
+    expect(layer.height).toBe(2);
+  });
+
   it('keeps a dragged image beyond its section rather than snapping it back', () => {
     const first = component.design.sections[0];
     component.design.sections.push({ id: 'next', type: 'custom', enabled: true, layout: 'canvas', height: 600, layers: [] });

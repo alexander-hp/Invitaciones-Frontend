@@ -1150,8 +1150,8 @@
           <div class="two-columns">
             <label>Posición X<input [(ngModel)]="layout.x" (change)="normalizeLayerTransform(layer, layout)" type="number" min="-100" max="200" step="0.5"></label>
             <label>Posición Y<input [(ngModel)]="layout.y" (change)="normalizeLayerTransform(layer, layout)" type="number" [min]="verticalLayerBounds(selectedSection, layout.height).min" [max]="verticalLayerBounds(selectedSection, layout.height).max" step="0.5"></label>
-            <label>Ancho<input [(ngModel)]="layout.width" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" max="100" step="0.5"></label>
-            <label>Alto<input [(ngModel)]="layout.height" (change)="normalizeLayerTransform(layer, layout)" type="number" min="4" [max]="design.presentationMode === 'chapters' ? 100 - layout.y : 100" step="0.5"></label>
+            <label>Ancho<input [(ngModel)]="layout.width" (change)="normalizeLayerTransform(layer, layout)" type="number" min="1" max="100" step="0.5"></label>
+            <label>Alto<input [(ngModel)]="layout.height" (change)="normalizeLayerTransform(layer, layout)" type="number" min="1" [max]="design.presentationMode === 'chapters' ? 100 - layout.y : 100" step="0.5"></label>
             <label>Giro<input [(ngModel)]="layout.rotation" (change)="normalizeLayerTransform(layer, layout)" type="number" min="-180" max="180" step="1"></label>
             <label>Capa<input [(ngModel)]="layer.zIndex" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" max="1000" step="1"></label>
           </div>
