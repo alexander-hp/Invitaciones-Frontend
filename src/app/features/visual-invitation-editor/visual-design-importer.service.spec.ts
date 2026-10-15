@@ -158,4 +158,42 @@ describe('VisualDesignImporterService', () => {
     expect(result.review[0].status).toBe('review');
     expect(result.design.sections[0].layers.some((layer) => layer.type === 'field' && layer.name === 'Campo 1')).toBeTrue();
   });
+
+  it('deduplicates container and child candidates with identical text', async () => {
+    const result = await service.fromHtml(`
+      <section aria-label="Historia de Amor">
+        <h2>Nuestra Historia</h2>
+        <blockquote>
+          <p>El amor verdadero trasciende el tiempo y la distancia.</p>
+        </blockquote>
+      </section>
+    `, 'section { min-height: 400px; }', theme);
+
+    const section = result.design.sections[0];
+    const textLayers = section.layers.filter((layer) => layer.type === 'text');
+    const quoteOccurrences = textLayers.filter((layer) =>
+      layer.text?.includes('El amor verdadero trasciende el tiempo y la distancia.')
+    );
+    // Should extract exactly once, avoiding duplicate layers for blockquote and p
+    expect(quoteOccurrences.length).toBe(1);
+  });
+
+  it('does not duplicate form submit buttons as independent button layers in functional sections', async () => {
+    const result = await service.fromHtml(`
+      <section data-kyndra-component="rsvp" aria-label="Confirmar Asistencia">
+        <h2>Confirmación</h2>
+        <form>
+          <input name="name" placeholder="Tu nombre">
+          <button type="submit" class="btn-primary">Confirmar ahora</button>
+        </form>
+      </section>
+    `, 'section { min-height: 500px; }', theme);
+
+    const section = result.design.sections[0];
+    const buttons = section.layers.filter((layer) => layer.type === 'button');
+    // Exactly 1 submit button should be created connected to rsvp.submit, not duplicated as both generic candidate and functional layer
+    expect(buttons.length).toBe(1);
+    expect(buttons[0].binding).toBe('rsvp.submit');
+  });
 });
+

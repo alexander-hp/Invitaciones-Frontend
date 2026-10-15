@@ -48,7 +48,7 @@ export class VisualDesignImporterService {
     const iframe = document.createElement('iframe');
     iframe.setAttribute('aria-hidden', 'true');
     Object.assign(iframe.style, {
-      position: 'fixed', left: '-100000px', top: '0', width: '390px', height: '1200px',
+      position: 'fixed', left: '-100000px', top: '0', width: '390px', height: '12000px',
       opacity: '0.001', pointerEvents: 'none', border: '0'
     });
     try {
@@ -58,6 +58,31 @@ export class VisualDesignImporterService {
       const doc = iframe.contentDocument;
       const win = iframe.contentWindow;
       if (!doc || !win) throw new Error('No fue posible leer la plantilla seleccionada.');
+      // Force all lazy images to eager so layout dimensions can be accurately measured
+      doc.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((img) => img.setAttribute('loading', 'eager'));
+      // Neutralize entrance animations, transitions, and AOS hidden states
+      const antiAnim = doc.createElement('style');
+      antiAnim.textContent = `
+        *, *::before, *::after {
+          animation-duration: 0s !important;
+          animation-delay: 0s !important;
+          transition-duration: 0s !important;
+          transition-delay: 0s !important;
+        }
+        [data-aos] {
+          opacity: 1 !important;
+          transform: none !important;
+          visibility: visible !important;
+        }
+        .md-intro-overlay, .intro-envelope-overlay, .envelope-overlay, [class*="intro-overlay"] {
+          display: none !important;
+        }
+        .md-hero-content, [class*="hero-content"] {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+      `;
+      doc.head.appendChild(antiAnim);
       await this.waitForLayout(doc);
       return this.convertDocument(doc, win, theme, ['La plantilla renderizada se convirtió a capas editables. Las animaciones complejas se simplificaron.'], 0);
     } finally {
@@ -195,8 +220,17 @@ export class VisualDesignImporterService {
   private sectionRoots(doc: Document): HTMLElement[] {
     const markedSections = Array.from(doc.querySelectorAll<HTMLElement>('[data-section-key]'))
       .filter((element) => !element.parentElement?.closest('[data-section-key]'));
-    if (markedSections.length) return markedSections;
     const renderedRoot = this.renderedTemplateRoot(doc);
+    if (markedSections.length) {
+      if (renderedRoot) {
+        const topHero = Array.from(renderedRoot.querySelectorAll<HTMLElement>('header,section,.hero,[class*="hero"]'))
+          .find((el) => !el.closest('[data-section-key]') && !el.hasAttribute('data-section-key') && (el.className.includes('hero') || el.tagName === 'HEADER'));
+        if (topHero && !markedSections.includes(topHero)) {
+          markedSections.unshift(topHero);
+        }
+      }
+      return markedSections;
+    }
     if (renderedRoot) {
       const candidates = Array.from(renderedRoot.querySelectorAll<HTMLElement>('section,.card-slide,header[data-section-key]'))
         .filter((element) => !element.parentElement?.closest('section,.card-slide,header[data-section-key]'));
@@ -236,12 +270,43 @@ export class VisualDesignImporterService {
     const candidates = Array.from(root.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6,p,blockquote,figcaption,li,img,video,audio,a,button,[data-kyndra-layer]'));
     if (this.matchesCandidate(root)) candidates.unshift(root);
     const unique = [...new Set(candidates)];
-    for (const element of unique) {
+    // Filter out container elements when a child candidate already captures the exact same text
+    const filteredCandidates = unique.filter((element) => {
+      const hasChildCandidateWithSameText = unique.some((other) => {
+        if (other === element || !element.contains(other)) return false;
+        const elText = (element.textContent || '').replace(/\s+/g, ' ').trim();
+        const otherText = (other.textContent || '').replace(/\s+/g, ' ').trim();
+        return elText && otherText && elText === otherText;
+      });
+      return !hasChildCandidateWithSameText;
+    });
+
+    for (const element of filteredCandidates) {
       if (layers.length >= 100) { ignored += 1; continue; }
+      if (this.supportsImportedControls(componentType) && element.matches('button,input,select,textarea')) continue;
       if (this.isFunctionalType(componentType) && element.matches('button') && element.closest('form')) continue;
       if (element.matches('a,button') && element.querySelector('img,video,audio') && !(element.textContent || '').trim()) continue;
       const layer = this.convertElement(element, rootRect, width, sectionHeight, layers.length, win);
-      if (layer) layers.push(layer); else ignored += 1;
+      if (!layer) { ignored += 1; continue; }
+
+      // Deduplicate overlapping duplicate layers
+      const isDuplicate = layers.some((existing) => {
+        if (existing.type !== layer.type) return false;
+        const closeX = Math.abs(existing.x - layer.x) < 3.5;
+        const closeY = Math.abs(existing.y - layer.y) < 4.5;
+        if (!closeX || !closeY) return false;
+        if (layer.type === 'image' && layer.url && existing.url === layer.url) return true;
+        if ((layer.type === 'text' || layer.type === 'button') && layer.text && existing.text) {
+          return layer.text.trim().toLowerCase() === existing.text.trim().toLowerCase();
+        }
+        return false;
+      });
+
+      if (isDuplicate) {
+        ignored += 1;
+        continue;
+      }
+      layers.push(layer);
     }
     if (this.supportsImportedControls(componentType)) {
       layers.push(...this.functionalLayers(root, componentType, rootRect, width, sectionHeight, layers.length, win));
@@ -265,7 +330,7 @@ export class VisualDesignImporterService {
   }
 
   private detectSectionType(root: HTMLElement, sectionKey: string): string {
-    const explicit = String(root.dataset['kyndraComponent'] || '').trim();
+    const explicit = String(root.getAttribute('data-kyndra-component') || root.dataset?.['kyndraComponent'] || '').trim();
     const aliases: Record<string, string> = {
       hero: 'hero', story: 'story', locations: 'locations', itinerary: 'itinerary', dressCode: 'dressCode', dress_code: 'dressCode',
       rsvp: 'rsvp', giftRegistry: 'gifts', gifts: 'gifts', digitalEnvelope: 'gifts', lodging: 'lodging', gallery: 'gallery',
@@ -279,7 +344,7 @@ export class VisualDesignImporterService {
     if (hasForm && /cancion|spotify|youtube|artista|\bdj\b/.test(text)) return 'songs';
     if (hasForm && /dedicator|buenos deseos|libro de mensajes|memoria|brindis/.test(text)) return 'dedications';
     if (/album colectivo|sube.*foto|subir.*foto|cargar.*imagen/.test(text)) return 'album';
-    if (hasForm && /confirmar asistencia|confirmacion de asistencia|\brsvp\b|acompanante|asistiras/.test(text)) return 'rsvp';
+    if (hasForm && /confirmar asistencia|confirmacion de asistencia|confirmacion|confirmar|\brsvp\b|acompanante|asistiras/.test(text)) return 'rsvp';
     if (hasForm && /mi pase|codigo qr|identifica.*invitacion|consulta.*mesa/.test(text)) return 'guestPass';
     if (/mesa de regalos|lista de regalos|lluvia de sobres|sobre digital|\bclabe\b/.test(text)) return 'gifts';
     if (/codigo de vestimenta|dress code/.test(text)) return 'dressCode';

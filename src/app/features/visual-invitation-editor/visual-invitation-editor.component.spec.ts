@@ -758,4 +758,42 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(newLayer.url).toBe('https://cdn.example.com/paisaje.png');
     expect(component.selectedLayerIds).toEqual([newLayer.id]);
   });
+
+  it('does not inject default module layers over populated imported sections', () => {
+    component.design.sections = [
+      {
+        id: 'imported-locations',
+        type: 'locations',
+        title: 'Ceremonia y Recepción',
+        enabled: true,
+        layout: 'canvas',
+        height: 600,
+        layers: [
+          { id: 'custom-text', type: 'text', text: 'Nuestra Boda en la Hacienda', x: 10, y: 15, width: 80, height: 10 }
+        ]
+      },
+      {
+        id: 'imported-dress',
+        type: 'dressCode',
+        title: 'Código de Vestimenta',
+        enabled: true,
+        layout: 'canvas',
+        height: 500,
+        layers: [
+          { id: 'custom-dress', type: 'text', text: 'Rigurosa Etiqueta', x: 15, y: 20, width: 70, height: 10 }
+        ]
+      }
+    ];
+
+    (component as any).normalizeModuleStyles();
+
+    const locationsSection = component.design.sections[0];
+    const dressSection = component.design.sections[1];
+
+    expect(locationsSection.layers.length).toBe(1);
+    expect(locationsSection.layers[0].id).toBe('custom-text');
+    expect(dressSection.layers.length).toBe(1);
+    expect(dressSection.layers[0].id).toBe('custom-dress');
+  });
 });
+

@@ -841,7 +841,7 @@
             <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
             <div class="section-label">{{ section.title || section.type }}</div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
-            <div *ngIf="section.type !== 'custom' && section.type !== 'hero' && !hasNativeFunctionalLayers(section)" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
+            <div *ngIf="section.type !== 'custom' && section.type !== 'hero' && !hasNativeFunctionalLayers(section) && !section.layers.length" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
               <ng-container [ngSwitch]="section.type">
                 <div *ngSwitchCase="'story'" class="preview-centered">
                   <small>Nuestra historia</small>

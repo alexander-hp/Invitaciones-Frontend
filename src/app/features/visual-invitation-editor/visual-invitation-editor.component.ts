@@ -5956,27 +5956,39 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.ensureSeparatedRsvpFieldParts(section);
       }
       if (section.type === 'dedications') {
-        section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('dedication.'))) {
+          section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        }
         this.ensureDedicationCanvasLayers(section);
       }
       if (section.type === 'songs') {
-        section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('song.'))) {
+          section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        }
         this.ensureSongCanvasLayers(section);
       }
       if (section.type === 'album') {
-        section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('album.'))) {
+          section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        }
         this.ensureAlbumCanvasLayers(section);
       }
       if (section.type === 'guestPass') {
-        section.height = Math.max(section.height, 760);
+        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('pass.'))) {
+          section.height = Math.max(section.height, 760);
+        }
         this.ensureGuestPassCanvasLayers(section);
       }
       if (section.type === 'guestActivity') {
-        section.height = Math.max(section.height, 760);
+        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('activity.'))) {
+          section.height = Math.max(section.height, 760);
+        }
         this.ensureGuestActivityCanvasLayers(section);
       }
       if (section.type === 'countdown') {
-        section.height = Math.max(section.height, this.isXvBurgundy() ? 620 : 760);
+        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('countdown.'))) {
+          section.height = Math.max(section.height, this.isXvBurgundy() ? 620 : 760);
+        }
         this.ensureCountdownCanvasLayers(section);
       }
       if (section.type === 'locations') {
@@ -6031,7 +6043,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureRsvpCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => this.isRsvpFunctionalLayer(layer))) return;
+    if (section.layers.some((layer) => this.isRsvpFunctionalLayer(layer)) || section.layers.length > 0) return;
     const definitions = this.rsvpLayerDefinitions();
     const topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     section.layers.push(...definitions.map((definition, index) => this.createRsvpLayer(section, definition, topZ + index + 1)));
@@ -6106,7 +6118,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureDedicationCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.'))) return;
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.')) || section.layers.length > 0) return;
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     const additions: VisualInvitationLayer[] = [];
     for (const definition of this.dedicationLayerDefinitions(section)) {
@@ -6174,7 +6186,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureSongCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => String(layer.binding || '').startsWith('song.') || String(layer.binding || '').startsWith('display.songs.'))) return;
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('song.') || String(layer.binding || '').startsWith('display.songs.')) || section.layers.length > 0) return;
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     const additions: VisualInvitationLayer[] = [];
     for (const definition of this.songLayerDefinitions(section)) {
@@ -6238,7 +6250,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureAlbumCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => String(layer.binding || '').startsWith('album.') || String(layer.binding || '').startsWith('display.album.'))) return;
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('album.') || String(layer.binding || '').startsWith('display.album.')) || section.layers.length > 0) return;
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     section.layers.push(...this.albumLayerDefinitions(section).map((definition) => this.createAlbumLayer(definition, ++topZ)));
   }
@@ -6289,7 +6301,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureGuestPassCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('display.guestPass.'))) return;
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('display.guestPass.')) || section.layers.length > 0) return;
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     const additions: VisualInvitationLayer[] = [];
     for (const definition of this.guestPassLayerDefinitions(section)) {
@@ -6375,7 +6387,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureGuestActivityCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => String(layer.binding || '').startsWith('activity.') || String(layer.binding || '').startsWith('display.guestActivity.'))) return;
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('activity.') || String(layer.binding || '').startsWith('display.guestActivity.')) || section.layers.length > 0) return;
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     const additions: VisualInvitationLayer[] = [];
     for (const definition of this.guestActivityLayerDefinitions(section)) {
@@ -6468,7 +6480,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private ensureCountdownCanvasLayers(section: VisualInvitationSection): void {
-    if (section.layers.some((layer) => String(layer.binding || '').startsWith('countdown.') || String(layer.binding || '').startsWith('display.countdown.'))) return;
+    if (section.layers.some((layer) => String(layer.binding || '').startsWith('countdown.') || String(layer.binding || '').startsWith('display.countdown.')) || section.layers.length > 0) return;
     let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
     section.layers.push(...this.countdownLayerDefinitions(section).map((definition) => this.createCountdownLayer(definition, ++topZ)));
   }
@@ -6601,7 +6613,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureLocationCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasLocationLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('display.locations.'));
-    if (!indexes?.length && hasLocationLayers) return;
+    if (!indexes?.length && (hasLocationLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil(this.locationSourceData().length / 2));
     const requiredHeight = Math.max(760, 250 + rows * (this.isXvBurgundy() ? 340 : this.isHauteCouture() ? 320 : 300));
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
@@ -6816,7 +6828,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureGiftCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasGiftLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('display.gifts.'));
-    if (!indexes?.length && hasGiftLayers) return;
+    if (!indexes?.length && (hasGiftLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil(this.giftSourceData().length / 2));
     const requiredHeight = Math.max(900, 250 + rows * 290 + 330);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
@@ -6973,7 +6985,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureItineraryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasItineraryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('display.itinerary.'));
-    if (!indexes?.length && hasItineraryLayers) return;
+    if (!indexes?.length && (hasItineraryLayers || section.layers.length > 0)) return;
     const requiredHeight = Math.max(760, 220 + Math.max(1, this.itinerarySourceData().length) * 190);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
@@ -7111,7 +7123,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureDressCodeCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasDressLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('display.dressCode.'));
-    if (!indexes?.length && hasDressLayers) return;
+    if (!indexes?.length && (hasDressLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil((this.invitation?.content?.dressCodeOptions?.length || 0) / 2));
     const requiredHeight = Math.max(760, 490 + rows * 180);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
@@ -7245,7 +7257,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureLodgingCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasLodgingLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('lodging.') || String(layer.binding || '').startsWith('display.lodging.'));
-    if (!indexes?.length && hasLodgingLayers) return;
+    if (!indexes?.length && (hasLodgingLayers || section.layers.length > 0)) return;
     const requiredHeight = Math.max(760, 220 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 420);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
@@ -7375,7 +7387,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureGalleryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasGalleryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gallery.') || String(layer.binding || '').startsWith('display.gallery.'));
-    if (!indexes?.length && hasGalleryLayers) return;
+    if (!indexes?.length && (hasGalleryLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil(this.gallerySourceData().length / 2));
     const requiredHeight = Math.max(760, 220 + rows * (this.isHauteCouture() || this.isXvBurgundy() ? 320 : 330));
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
