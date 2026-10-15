@@ -344,6 +344,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private redoStack: EditorHistoryState[] = [];
   private clipboardLayers: VisualInvitationLayer[] = [];
   private clipboardSectionType?: string;
+  private clipboardSectionId?: string;
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private touchZoomHideHandle?: ReturnType<typeof setTimeout>;
   private locationSearchTimeouts: Record<number, ReturnType<typeof setTimeout>> = {};
@@ -960,6 +961,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   layerHasHorizontalOverflow(layout: VisualInvitationLayerLayout): boolean {
     return layout.x < 0 || layout.x + layout.width > 100;
+  }
+
+  layerHasVerticalOverflow(layout: VisualInvitationLayerLayout): boolean {
+    return layout.y < 0 || layout.y + layout.height > 100;
+  }
+
+  fitLayerToSection(layer: VisualInvitationLayer, layout: VisualInvitationLayerLayout): void {
+    this.recordHistory();
+    const maxY = Math.max(0, 100 - layout.height);
+    layout.y = this.bound(layout.y, 0, maxY);
+    const maxX = Math.max(0, 100 - layout.width);
+    layout.x = this.bound(layout.x, 0, maxX);
+    this.normalizeLayerTransform(layer, layout);
   }
 
   openResponsivePreview(): void {
@@ -2948,25 +2962,43 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!layers.length) { this.flash('Los controles conectados son únicos. Selecciona el existente para editarlo.'); return; }
     this.recordHistory();
     const copiedGroup = layers.length > 1 ? this.uid('group') : undefined;
-    const copies = layers.map((layer) => {
+    const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
+
+    const sourceMinX = Math.min(...layers.map((l) => l.x));
+    const sourceMinY = Math.min(...layers.map((l) => l.y));
+    const sourceMaxX = Math.max(...layers.map((l) => l.x + l.width));
+    const sourceMaxY = Math.max(...layers.map((l) => l.y + l.height));
+    const groupWidth = Math.max(1, sourceMaxX - sourceMinX);
+    const groupHeight = Math.max(1, sourceMaxY - sourceMinY);
+    const maxX = Math.max(0, 100 - groupWidth);
+    const maxY = Math.max(0, 100 - groupHeight);
+    const nextGroupX = sourceMinX + 3 <= maxX ? sourceMinX + 3 : (sourceMinX - 3 >= 0 ? sourceMinX - 3 : maxX);
+    const nextGroupY = sourceMinY + 3 <= maxY ? sourceMinY + 3 : (sourceMinY - 3 >= 0 ? sourceMinY - 3 : maxY);
+    const deltaX = nextGroupX - sourceMinX;
+    const deltaY = nextGroupY - sourceMinY;
+
+    const copies = layers.map((layer, index) => {
       const copy = this.clone(layer);
       copy.id = this.uid('layer');
       copy.groupId = copiedGroup;
       copy.name = `${this.layerLabel(layer)} copia`;
-      copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
-      const range = this.verticalLayerBounds(section, copy.height);
-      copy.y = this.bound(copy.y + 3, range.min, range.max);
+      const layerMaxX = Math.max(0, 100 - copy.width);
+      const layerMaxY = Math.max(0, 100 - copy.height);
+      copy.x = this.bound(Math.round((copy.x + deltaX) * 10) / 10, 0, layerMaxX);
+      copy.y = this.bound(Math.round((copy.y + deltaY) * 10) / 10, 0, layerMaxY);
       if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
         if (!layout) return;
-        layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
-        const layoutRange = this.verticalLayerBounds(section, layout.height);
-        layout.y = this.bound(layout.y + 3, layoutRange.min, layoutRange.max);
+        const layoutMaxX = Math.max(0, 100 - layout.width);
+        const layoutMaxY = Math.max(0, 100 - layout.height);
+        layout.x = this.bound(Math.round((layout.x + deltaX) * 10) / 10, 0, layoutMaxX);
+        layout.y = this.bound(Math.round((layout.y + deltaY) * 10) / 10, 0, layoutMaxY);
       });
-      copy.zIndex = (copy.zIndex || 1) + 1;
+      copy.zIndex = topZ + index + 1;
       return copy;
     });
     section.layers.push(...copies);
     this.setLayerSelection(copies.map((copy) => copy.id));
+    if (copies.length) this.scrollLayerIntoView(copies[0].id);
     if (layers.length !== selected.length) this.flash('Se duplicaron solo los elementos decorativos; los controles conectados se conservan una vez.');
   }
 
@@ -2974,6 +3006,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.selectedLayers.length) return;
     this.clipboardLayers = this.clone(this.selectedLayers);
     this.clipboardSectionType = this.selectedSection?.type;
+    this.clipboardSectionId = this.selectedSection?.id;
     this.flash(`${this.clipboardLayers.length} elemento${this.clipboardLayers.length === 1 ? '' : 's'} copiado${this.clipboardLayers.length === 1 ? '' : 's'}.`);
   }
 
@@ -2981,6 +3014,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.selectedLayers.length) return;
     this.clipboardLayers = this.clone(this.selectedLayers);
     this.clipboardSectionType = this.selectedSection?.type;
+    this.clipboardSectionId = this.selectedSection?.id;
     this.removeLayer();
     this.flash('Elementos cortados. Selecciona otra sección y pégalos.');
   }
@@ -2999,6 +3033,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     const groupIds = new Map<string, string>();
     const topZ = Math.max(0, ...section.layers.map((item) => item.zIndex || 0));
+
+    const sourceMinX = Math.min(...sources.map((s) => s.x));
+    const sourceMinY = Math.min(...sources.map((s) => s.y));
+    const sourceMaxX = Math.max(...sources.map((s) => s.x + s.width));
+    const sourceMaxY = Math.max(...sources.map((s) => s.y + s.height));
+    const groupWidth = Math.max(1, sourceMaxX - sourceMinX);
+    const groupHeight = Math.max(1, sourceMaxY - sourceMinY);
+
+    const isCrossSection = Boolean(this.clipboardSectionId && this.clipboardSectionId !== section.id);
+    const isSourceVisible = !isCrossSection && this.isLayerPlacementVisible(section, sourceMinY, groupHeight);
+
+    let deltaX: number;
+    let deltaY: number;
+
+    if (!isCrossSection && isSourceVisible) {
+      const maxX = Math.max(0, 100 - groupWidth);
+      const maxY = Math.max(0, 100 - groupHeight);
+      const nextGroupX = sourceMinX + 3 <= maxX ? sourceMinX + 3 : (sourceMinX - 3 >= 0 ? sourceMinX - 3 : maxX);
+      const nextGroupY = sourceMinY + 3 <= maxY ? sourceMinY + 3 : (sourceMinY - 3 >= 0 ? sourceMinY - 3 : maxY);
+      deltaX = nextGroupX - sourceMinX;
+      deltaY = nextGroupY - sourceMinY;
+    } else {
+      const placement = this.getSectionVisiblePlacement(section, groupWidth, groupHeight);
+      deltaX = placement.x - sourceMinX;
+      deltaY = placement.y - sourceMinY;
+    }
+
     const copies = sources.map((source, index) => {
       const copy = this.clone(source);
       copy.id = this.uid('layer');
@@ -3007,21 +3068,84 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         copy.groupId = groupIds.get(copy.groupId);
       }
       copy.name = `${this.layerLabel(source)} copia`;
-      copy.x = this.bound(copy.x + 3, 0, 100 - copy.width);
-      const range = this.verticalLayerBounds(section, copy.height);
-      copy.y = this.bound(copy.y + 3, range.min, range.max);
+      const maxX = Math.max(0, 100 - copy.width);
+      const maxY = Math.max(0, 100 - copy.height);
+      copy.x = this.bound(Math.round((source.x + deltaX) * 10) / 10, 0, maxX);
+      copy.y = this.bound(Math.round((source.y + deltaY) * 10) / 10, 0, maxY);
       if (copy.layouts) Object.values(copy.layouts).forEach((layout) => {
         if (!layout) return;
-        layout.x = this.bound(layout.x + 3, 0, 100 - layout.width);
-        const layoutRange = this.verticalLayerBounds(section, layout.height);
-        layout.y = this.bound(layout.y + 3, layoutRange.min, layoutRange.max);
+        const layoutMaxX = Math.max(0, 100 - layout.width);
+        const layoutMaxY = Math.max(0, 100 - layout.height);
+        layout.x = this.bound(Math.round((layout.x + deltaX) * 10) / 10, 0, layoutMaxX);
+        layout.y = this.bound(Math.round((layout.y + deltaY) * 10) / 10, 0, layoutMaxY);
       });
       copy.zIndex = topZ + index + 1;
       return copy;
     });
     section.layers.push(...copies);
     this.setLayerSelection(copies.map((copy) => copy.id));
+    if (copies.length) this.scrollLayerIntoView(copies[0].id);
     this.flash(`${copies.length} elemento${copies.length === 1 ? '' : 's'} pegado${copies.length === 1 ? '' : 's'}.${copies.length !== this.clipboardLayers.length ? ' Se omitieron controles conectados duplicados.' : ''}`);
+  }
+
+  getSectionVisiblePlacement(section: VisualInvitationSection, contentWidth: number, contentHeight: number): { x: number; y: number } {
+    const maxAllowedX = Math.max(0, 100 - contentWidth);
+    const maxAllowedY = Math.max(0, 100 - contentHeight);
+
+    let targetY = 30;
+    let targetX = (100 - contentWidth) / 2;
+
+    if (typeof document !== 'undefined') {
+      const stageEl = this.stageElement || (document.querySelector('.ve-stage') as HTMLElement | null);
+      const sectionEl = document.querySelector(`.canvas-section[data-section-id="${section.id}"]`) as HTMLElement | null;
+
+      if (stageEl && sectionEl) {
+        const stageRect = stageEl.getBoundingClientRect();
+        const sectionRect = sectionEl.getBoundingClientRect();
+
+        if (sectionRect.height > 0) {
+          const visibleTop = Math.max(stageRect.top, sectionRect.top);
+          const visibleBottom = Math.min(stageRect.bottom, sectionRect.bottom);
+
+          if (visibleBottom > visibleTop) {
+            const visibleCenterYPx = (visibleTop + visibleBottom) / 2;
+            const relativeCenterYPx = visibleCenterYPx - sectionRect.top;
+            targetY = (relativeCenterYPx / sectionRect.height) * 100 - (contentHeight / 2);
+          }
+        }
+      }
+    }
+
+    return {
+      x: this.bound(Math.round(targetX * 10) / 10, 0, maxAllowedX),
+      y: this.bound(Math.round(targetY * 10) / 10, 0, maxAllowedY)
+    };
+  }
+
+  isLayerPlacementVisible(section: VisualInvitationSection, y: number, height: number): boolean {
+    if (typeof document === 'undefined') return true;
+    const stageEl = this.stageElement || (document.querySelector('.ve-stage') as HTMLElement | null);
+    const sectionEl = document.querySelector(`.canvas-section[data-section-id="${section.id}"]`) as HTMLElement | null;
+    if (!stageEl || !sectionEl) return true;
+
+    const stageRect = stageEl.getBoundingClientRect();
+    const sectionRect = sectionEl.getBoundingClientRect();
+    if (sectionRect.height <= 0) return true;
+
+    const layerTopPx = sectionRect.top + (y / 100) * sectionRect.height;
+    const layerBottomPx = layerTopPx + (height / 100) * sectionRect.height;
+
+    return layerBottomPx >= stageRect.top && layerTopPx <= stageRect.bottom;
+  }
+
+  private scrollLayerIntoView(layerId: string): void {
+    if (typeof document === 'undefined') return;
+    setTimeout(() => {
+      const el = document.querySelector(`.canvas-layer[data-layer-id="${layerId}"]`) as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+    }, 60);
   }
 
   removeSection(section: VisualInvitationSection): void {
@@ -4666,6 +4790,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     if (section.type === 'guestPass') {
       const binding = String(layer.binding || '');
+      if (!binding.startsWith('pass.') && !binding.startsWith('display.guestPass.') && !binding.startsWith('display.label.pass.')) {
+        return true;
+      }
       if (binding.startsWith('display.guestPass.')) return true;
       const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
       const isFormLayer = ['pass.email', 'pass.phone', 'pass.identify'].includes(binding) || binding.startsWith('display.label.pass.');
@@ -4675,6 +4802,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     if (section.type === 'guestActivity') {
       const binding = String(layer.binding || '');
+      if (!binding.startsWith('activity.') && !binding.startsWith('display.guestActivity.') && !binding.startsWith('display.label.activity.')) {
+        return true;
+      }
       if (binding.startsWith('display.guestActivity.')) return true;
       const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
       const isFormLayer = ['activity.email', 'activity.phone', 'activity.identify'].includes(binding) || binding.startsWith('display.label.activity.');

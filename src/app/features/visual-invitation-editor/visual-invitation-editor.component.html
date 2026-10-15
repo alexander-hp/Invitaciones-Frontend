@@ -1155,7 +1155,11 @@
             <label>Giro<input [(ngModel)]="layout.rotation" (change)="normalizeLayerTransform(layer, layout)" type="number" min="-180" max="180" step="1"></label>
             <label>Capa<input [(ngModel)]="layer.zIndex" (change)="normalizeLayerTransform(layer, layout)" type="number" min="0" max="1000" step="1"></label>
           </div>
-          <p class="layer-overflow-note" *ngIf="layerHasHorizontalOverflow(layout)">Este elemento sobresale del lienzo. Su posición se conserva y la parte exterior se recortará en la invitación pública.</p>
+          <p class="layer-overflow-note" *ngIf="layerHasHorizontalOverflow(layout)">Este elemento sobresale horizontalmente del lienzo. Su posición se conserva y la parte exterior se recortará en la invitación pública.</p>
+          <div class="layer-overflow-warning" *ngIf="layerHasVerticalOverflow(layout)">
+            <span>⚠️ Este elemento está fuera del área visible de esta sección (Y: {{ layout.y }}%).</span>
+            <button type="button" class="btn-fit-layer" (click)="fitLayerToSection(layer, layout)">Ajustar dentro de la sección</button>
+          </div>
         </div>
         <ng-container *ngIf="layer.style as style">
           <label *ngIf="layer.type === 'image' || layer.type === 'video'" class="toggle"><input [ngModel]="style.preserveAspectRatio !== false" (ngModelChange)="style.preserveAspectRatio=$event" type="checkbox"> Mostrar completo sin deformar ni recortar</label>

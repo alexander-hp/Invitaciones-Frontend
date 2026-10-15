@@ -425,6 +425,24 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(layer.height).toBe(2);
   });
 
+  it('keeps pasted and duplicated layers inside the section visible area', () => {
+    const section = component.design.sections[0];
+    const layer = { id: 'divider', type: 'shape' as const, x: 10, y: 98, width: 70, height: 2 };
+    section.layers.push(layer);
+    component.selectedSectionId = section.id;
+    component.selectLayer(section, layer, new MouseEvent('click'));
+    component.duplicateLayer();
+    const copy = section.layers[section.layers.length - 1];
+    expect(copy.y).toBeLessThanOrEqual(98);
+    expect(copy.y + copy.height).toBeLessThanOrEqual(100);
+
+    const overflowLayer = { id: 'outside', type: 'shape' as const, x: 10, y: 101, width: 70, height: 2 };
+    expect(component.layerHasVerticalOverflow(overflowLayer)).toBeTrue();
+    component.fitLayerToSection(overflowLayer, overflowLayer);
+    expect(overflowLayer.y).toBe(98);
+    expect(component.layerHasVerticalOverflow(overflowLayer)).toBeFalse();
+  });
+
   it('keeps a dragged image beyond its section rather than snapping it back', () => {
     const first = component.design.sections[0];
     component.design.sections.push({ id: 'next', type: 'custom', enabled: true, layout: 'canvas', height: 600, layers: [] });
@@ -482,6 +500,42 @@ describe('VisualInvitationEditorComponent persistence', () => {
     component.copySelectedLayers();
     component.pasteLayers();
     expect(section.layers.filter((layer) => layer.binding === 'song.submit').length).toBe(1);
+  });
+
+  it('renders decorative layers in guestPass and guestActivity without hiding them', () => {
+    const passSection: any = { id: 'pass-sec', type: 'guestPass', enabled: true, layout: 'canvas', height: 600, layers: [] };
+    const decorativeDivider: any = { id: 'div-1', type: 'shape', text: '', x: 10, y: 95, width: 80, height: 2 };
+    const functionalPassField: any = { id: 'field-1', type: 'field', binding: 'pass.email', x: 10, y: 20, width: 80, height: 10 };
+    const passCard: any = { id: 'card-1', type: 'shape', binding: 'pass.card', x: 10, y: 30, width: 80, height: 40 };
+
+    expect(component.shouldRenderEditorLayer(passSection, decorativeDivider)).toBeTrue();
+    expect(component.shouldRenderEditorLayer(passSection, passCard)).toBeTrue();
+
+    const activitySection: any = { id: 'act-sec', type: 'guestActivity', enabled: true, layout: 'canvas', height: 600, layers: [] };
+    const activitySeparator: any = { id: 'div-2', type: 'shape', text: '', x: 15, y: 50, width: 70, height: 2 };
+    expect(component.shouldRenderEditorLayer(activitySection, activitySeparator)).toBeTrue();
+  });
+
+  it('pastes layers across sections within valid bounds and centered', () => {
+    const sectionA = component.design.sections[0];
+    const sectionB: any = { id: 'sec-b', type: 'guestPass', enabled: true, layout: 'canvas', height: 800, layers: [] };
+    component.design.sections.push(sectionB);
+
+    const layerA: any = { id: 'sep-a', type: 'shape', text: '', x: 5, y: 96, width: 90, height: 2 };
+    sectionA.layers.push(layerA);
+    component.selectedSectionId = sectionA.id;
+    (component as any).setLayerSelection(['sep-a']);
+    component.copySelectedLayers();
+
+    component.selectSection(sectionB);
+    component.pasteLayers();
+
+    const pasted = sectionB.layers.find((l: any) => l.name === 'Separador copia' || l.type === 'shape');
+    expect(pasted).toBeDefined();
+    expect(pasted.y).toBeGreaterThanOrEqual(0);
+    expect(pasted.y + pasted.height).toBeLessThanOrEqual(100);
+    expect(pasted.x).toBeGreaterThanOrEqual(0);
+    expect(pasted.x + pasted.width).toBeLessThanOrEqual(100);
   });
 
   it('previews a complete design without changing the current design and keeps assets when applying it', () => {
