@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
-import { AssetFolder, EventAgendaItem, EventModel, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, EventPayload, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings, VisualInvitationDesign } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
 import { applyPaletteToVisualDesign, InvitationPaletteColors, paletteFromVisualDesign, validPaletteColor } from './visual-palette';
 
@@ -73,6 +73,26 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
   private autoSaveQueued = false;
   private lastAutoSavedPayload = '';
   private lastAutoSavedEventSettings = '';
+  private lastAutoSavedEventDate = '';
+  private lastAutoSavedEventTime = '';
+
+  onEventDateTimeChange(change: { date: string; time?: string }): void {
+    if (!this.event) {
+      this.event = {
+        title: '',
+        type: 'otro',
+        date: ''
+      } as EventModel;
+    }
+    this.event.date = change.date;
+    this.event.time = change.time;
+
+    if (this.invitation && typeof this.invitation.event === 'object' && this.invitation.event) {
+      (this.invitation.event as EventModel).date = change.date;
+      (this.invitation.event as EventModel).time = change.time;
+    }
+    this.scheduleAutoSave(600);
+  }
 
   activeSection = 'content';
   activeTab: string = 'content';
@@ -873,6 +893,8 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.invitation) return;
     this.lastAutoSavedPayload = JSON.stringify(this.invitationUpdatePayload());
     this.lastAutoSavedEventSettings = JSON.stringify(this.getCleanSongRequestSettings());
+    this.lastAutoSavedEventDate = this.event?.date || '';
+    this.lastAutoSavedEventTime = this.event?.time || '';
     this.autoSaveStatus = 'idle';
     this.autoSaveBlockedReason = '';
   }
@@ -900,7 +922,11 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     const serialized = JSON.stringify(payload);
     const eventSettings = this.getCleanSongRequestSettings();
     const serializedEventSettings = JSON.stringify(eventSettings);
-    if (serialized === this.lastAutoSavedPayload && serializedEventSettings === this.lastAutoSavedEventSettings) {
+    const eventDateChanged = (this.event?.date || '') !== this.lastAutoSavedEventDate;
+    const eventTimeChanged = (this.event?.time || '') !== this.lastAutoSavedEventTime;
+    const eventSettingsChanged = serializedEventSettings !== this.lastAutoSavedEventSettings;
+
+    if (serialized === this.lastAutoSavedPayload && !eventSettingsChanged && !eventDateChanged && !eventTimeChanged) {
       this.autoSaveStatus = 'saved';
       return;
     }
@@ -910,12 +936,17 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     this.api.updateInvitation(this.getInvitationId(this.invitation), payload).subscribe({
       next: () => {
         const eventId = this.getEventId();
-        if (eventId && this.event && serializedEventSettings !== this.lastAutoSavedEventSettings) {
-          const externalContent: ExternalContent = {
+        if (eventId && this.event && (eventSettingsChanged || eventDateChanged || eventTimeChanged)) {
+          const rawExternalContent: ExternalContent = {
             ...(this.event.externalContent || {}),
             songRequestSettings: eventSettings
           };
-          this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(externalContent) }).subscribe({
+          const eventUpdatePayload: Partial<EventPayload> = {
+            externalContent: this.sanitizePayload(rawExternalContent),
+            date: this.event.date,
+            time: this.event.time
+          };
+          this.api.updateEvent(eventId, eventUpdatePayload).subscribe({
             next: ({ event }) => {
               this.event = event;
               this.finishAutoSave(serialized, serializedEventSettings);
@@ -933,6 +964,8 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
   private finishAutoSave(serialized: string, serializedEventSettings: string): void {
     this.lastAutoSavedPayload = serialized;
     this.lastAutoSavedEventSettings = serializedEventSettings;
+    this.lastAutoSavedEventDate = this.event?.date || '';
+    this.lastAutoSavedEventTime = this.event?.time || '';
     this.autoSaveInFlight = false;
     this.autoSaveStatus = 'saved';
     if (this.autoSaveQueued) {
@@ -1022,9 +1055,17 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
             songRequestSettings: cleanDj
           };
 
-          this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
+          const eventPayload: Partial<EventPayload> = {
+            externalContent: this.sanitizePayload(rawExternalContent),
+            date: this.event.date,
+            time: this.event.time
+          };
+
+          this.api.updateEvent(eventId, eventPayload).subscribe({
             next: ({ event }) => {
               this.event = event;
+              this.lastAutoSavedEventDate = event.date || '';
+              this.lastAutoSavedEventTime = event.time || '';
               this.message = '✅ Cambios guardados correctamente.';
               this.saving = false;
               this.clearMessageAfterDelay();
@@ -1118,8 +1159,18 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
             songRequestSettings: cleanDj
           };
 
-          this.api.updateEvent(eventId, { externalContent: this.sanitizePayload(rawExternalContent) }).subscribe({
-            next: ({ event }) => this.event = event,
+          const eventPayload: Partial<EventPayload> = {
+            externalContent: this.sanitizePayload(rawExternalContent),
+            date: this.event.date,
+            time: this.event.time
+          };
+
+          this.api.updateEvent(eventId, eventPayload).subscribe({
+            next: ({ event }) => {
+              this.event = event;
+              this.lastAutoSavedEventDate = event.date || '';
+              this.lastAutoSavedEventTime = event.time || '';
+            },
             error: () => { }
           });
         }
@@ -1876,16 +1927,61 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private sanitizePayload<T>(obj: T): T {
+  private ensureVisualDesignIds(design?: VisualInvitationDesign): void {
+    if (!design || !Array.isArray(design.sections)) return;
+    const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const seen = new Set<string>();
+
+    for (const section of design.sections) {
+      if (!section) continue;
+      const s = section as any;
+      if (!s.id || typeof s.id !== 'string' || !s.id.trim() || seen.has(s.id)) {
+        s.id = s._id ? String(s._id) : uid('section');
+      }
+      seen.add(s.id);
+
+      if (Array.isArray(s.layers)) {
+        for (const layer of s.layers) {
+          if (!layer) continue;
+          const l = layer as any;
+          if (!l.id || typeof l.id !== 'string' || !l.id.trim() || seen.has(l.id)) {
+            l.id = l._id ? String(l._id) : uid('layer');
+          }
+          seen.add(l.id);
+        }
+      }
+    }
+
+    if (Array.isArray(design.assets)) {
+      for (const asset of design.assets) {
+        if (!asset) continue;
+        const a = asset as any;
+        if (!a.id || typeof a.id !== 'string' || !a.id.trim() || seen.has(a.id)) {
+          a.id = a._id ? String(a._id) : uid('asset');
+        }
+        seen.add(a.id);
+      }
+    }
+  }
+
+  private sanitizePayload<T>(obj: T, parentKey?: string): T {
     if (Array.isArray(obj)) {
-      return obj.map(item => this.sanitizePayload(item)) as unknown as T;
+      return obj.map(item => this.sanitizePayload(item, parentKey)) as unknown as T;
     }
     if (obj !== null && typeof obj === 'object') {
+      const record = obj as Record<string, unknown>;
       const cleaned: Record<string, unknown> = {};
-      for (const key of Object.keys(obj as Record<string, unknown>)) {
-        if (key !== '_id' && key !== 'id') {
-          cleaned[key] = this.sanitizePayload((obj as Record<string, unknown>)[key]);
-        }
+
+      const isVisualSection = parentKey === 'sections' || (Array.isArray(record['layers']) && typeof record['type'] === 'string');
+      const isVisualLayer = parentKey === 'layers' || (typeof record['type'] === 'string' && ('x' in record) && ('y' in record) && ('width' in record) && ('height' in record) && !Array.isArray(record['layers']));
+      const isVisualAsset = parentKey === 'assets' || (typeof record['url'] === 'string' && typeof record['name'] === 'string' && ['image', 'video', 'audio'].includes(record['type'] as string));
+      const isGalleryItem = parentKey === 'galleryItems';
+      const allowsId = isVisualSection || isVisualLayer || isVisualAsset || isGalleryItem;
+
+      for (const [key, val] of Object.entries(record)) {
+        if (key === '__v' || key === '_id') continue;
+        if (key === 'id' && !allowsId) continue;
+        cleaned[key] = this.sanitizePayload(val, key);
       }
       return cleaned as T;
     }
@@ -1907,8 +2003,19 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       return '❌ Esta URL (slug) ya está ocupada por otra invitación. Por favor elige una dirección o enlace diferente.';
     }
 
-    if (err.error?.details?.fieldErrors?.body) {
-      return `Error de validación: ${JSON.stringify(err.error.details.fieldErrors.body)}`;
+    const details = err.error?.details;
+    if (details?.issues?.length) {
+      const issueDetails = details.issues
+        .map((issue: any) => {
+          const path = issue.path ? issue.path.join('.') : 'campo';
+          return `${path}: ${issue.message}`;
+        })
+        .join('; ');
+      return `Error de validación: ${issueDetails}`;
+    }
+
+    if (details?.fieldErrors?.body) {
+      return `Error de validación: ${JSON.stringify(details.fieldErrors.body)}`;
     }
 
     return raw || 'Error al procesar la solicitud.';
@@ -2165,8 +2272,11 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
   private getRsvpSettingsPayload() {
     if (!this.invitation?.rsvpSettings) return undefined;
     this.syncCustomQuestionsToPayload();
+    const rawRsvp = { ...this.invitation.rsvpSettings } as any;
+    delete rawRsvp.id;
+    delete rawRsvp._id;
     return {
-      ...this.invitation.rsvpSettings,
+      ...rawRsvp,
       deadline: this.invitation.rsvpSettings.deadline || undefined,
       reminderDaysBeforeDeadline: Number(this.invitation.rsvpSettings.reminderDaysBeforeDeadline ?? 3),
       identityMethods: (this.invitation.rsvpSettings.identityMethods?.length ? this.invitation.rsvpSettings.identityMethods : ['email', 'phone']) as Array<'email' | 'phone'>,
@@ -2198,17 +2308,24 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     }
 
     if (!this.event?.date) return null;
+    let eventStartsAt: Date | null = null;
     const rawEventDate = String(this.event.date);
-    const eventDatePart = /^\d{4}-\d{2}-\d{2}/.test(rawEventDate) ? rawEventDate.slice(0, 10) : '';
-    if (!eventDatePart) return null;
-    const eventTime = String(this.event.time || '23:59').slice(0, 5);
-    const eventMatch = `${eventDatePart}T${eventTime}`.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-    if (!eventMatch) return null;
-    const eventStartsAt = new Date(
-      Number(eventMatch[1]), Number(eventMatch[2]) - 1, Number(eventMatch[3]),
-      Number(eventMatch[4]), Number(eventMatch[5]), 0, 0
-    );
-    if (deadline.getTime() > eventStartsAt.getTime()) {
+    const d = new Date(rawEventDate);
+    if (!isNaN(d.getTime())) {
+      const eventTime = String(this.event.time || '').trim();
+      if (eventTime && /^\d{2}:\d{2}/.test(eventTime)) {
+        const [hh, mm] = eventTime.split(':').map(Number);
+        eventStartsAt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm, 0, 0);
+      } else {
+        eventStartsAt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 0, 0);
+      }
+    } else {
+      const match = rawEventDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        eventStartsAt = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 23, 59, 0, 0);
+      }
+    }
+    if (eventStartsAt && deadline.getTime() > eventStartsAt.getTime()) {
       return 'La fecha límite de respuesta no puede ser posterior al inicio del evento.';
     }
     return null;
@@ -2315,6 +2432,11 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     delete rawContent.activeCustomTemplateId;
     delete rawContent.sourceTemplateKey;
     delete rawContent.editedTexts;
+    delete rawContent.id;
+    delete rawContent._id;
+
+    this.ensureVisualDesignIds(rawContent.visualDesign);
+    this.ensureVisualDesignIds(rawContent.visualDesignDraft);
 
     return {
       ...rawContent,

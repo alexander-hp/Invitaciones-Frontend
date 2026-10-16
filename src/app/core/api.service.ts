@@ -527,12 +527,22 @@ export class ApiService {
   private sanitizeInvitationPayload<T extends Partial<InvitationPayload>>(payload: T): T {
     if (!payload || typeof payload !== 'object') return payload;
     const cleaned = { ...payload } as any;
+    delete cleaned.id;
+    delete cleaned._id;
     if (cleaned.content && typeof cleaned.content === 'object') {
       const cleanContent = { ...cleaned.content };
       delete cleanContent.activeCustomTemplateId;
       delete cleanContent.sourceTemplateKey;
       delete cleanContent.editedTexts;
+      delete cleanContent.id;
+      delete cleanContent._id;
       cleaned.content = cleanContent;
+    }
+    if (cleaned.rsvpSettings && typeof cleaned.rsvpSettings === 'object') {
+      const cleanRsvp = { ...cleaned.rsvpSettings };
+      delete cleanRsvp.id;
+      delete cleanRsvp._id;
+      cleaned.rsvpSettings = cleanRsvp;
     }
     return cleaned as T;
   }

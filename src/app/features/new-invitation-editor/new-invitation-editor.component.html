@@ -915,7 +915,8 @@
         (toggleIdentityMethod)="toggleIdentityMethod($event.method, $event.checked)"
         (addCustomQuestion)="addCustomQuestion()" (removeCustomQuestion)="removeCustomQuestion($event)"
         (addQuestionPreset)="addQuestionPreset($event)" (syncQuestions)="syncCustomQuestionsToPayload()"
-        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)">
+        (toggleSectionActive)="toggleSectionActive($event.key, $event.active)"
+        (eventDateTimeChange)="onEventDateTimeChange($event)">
       </app-editor-rsvp-rules-tab>
 
       <!-- 9 & 10. Mesa de Regalos y Sobre Digital -->

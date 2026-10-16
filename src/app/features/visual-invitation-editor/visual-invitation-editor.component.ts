@@ -5877,14 +5877,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design.active = true;
     this.normalizeDesignGeometry();
     this.syncLegacyGallery();
-    const content = this.stripMongoMetadata({
+    const rawContent: any = {
       ...this.invitation?.content,
       galleryItems: (this.invitation?.content.galleryItems || []).filter((item) => item.url.trim()),
       visualDesignDraft: this.design
-    });
+    };
+    delete rawContent.id;
+    delete rawContent._id;
+    const content = this.stripMongoMetadata(rawContent);
+    const rawRsvp: any = { ...(this.invitation?.rsvpSettings || {}) };
+    delete rawRsvp.id;
+    delete rawRsvp._id;
+    const rsvpSettings = this.stripMongoMetadata(rawRsvp);
     return this.api.updateInvitation(id, {
       content,
-      rsvpSettings: this.stripMongoMetadata(this.invitation?.rsvpSettings || {})
+      rsvpSettings
     });
   }
 
@@ -8010,17 +8017,64 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return JSON.parse(JSON.stringify(value));
   }
 
-  private stripMongoMetadata<T>(value: T): T {
-    if (Array.isArray(value)) return value.map((item) => this.stripMongoMetadata(item)) as unknown as T;
+  private stripMongoMetadata<T>(value: T, parentKey?: string): T {
+    if (Array.isArray(value)) return value.map((item) => this.stripMongoMetadata(item, parentKey)) as unknown as T;
     if (!value || typeof value !== 'object') return value;
-    return Object.entries(value as Record<string, unknown>).reduce((clean, [key, item]) => {
-      if (key === '_id' || key === '__v') return clean;
-      clean[key] = this.stripMongoMetadata(item);
-      return clean;
-    }, {} as Record<string, unknown>) as T;
+    const record = value as Record<string, unknown>;
+    const clean: Record<string, unknown> = {};
+
+    const isVisualSection = parentKey === 'sections' || (Array.isArray(record['layers']) && typeof record['type'] === 'string');
+    const isVisualLayer = parentKey === 'layers' || (typeof record['type'] === 'string' && ('x' in record) && ('y' in record) && ('width' in record) && ('height' in record) && !Array.isArray(record['layers']));
+    const isVisualAsset = parentKey === 'assets' || (typeof record['url'] === 'string' && typeof record['name'] === 'string' && ['image', 'video', 'audio'].includes(record['type'] as string));
+    const isGalleryItem = parentKey === 'galleryItems';
+    const allowsId = isVisualSection || isVisualLayer || isVisualAsset || isGalleryItem;
+
+    for (const [key, item] of Object.entries(record)) {
+      if (key === '__v' || key === '_id') continue;
+      if (key === 'id' && !allowsId) continue;
+      clean[key] = this.stripMongoMetadata(item, key);
+    }
+    return clean as T;
+  }
+
+  private ensureDesignIds(design: VisualInvitationDesign = this.design): void {
+    if (!design || !Array.isArray(design.sections)) return;
+    const seen = new Set<string>();
+
+    for (const section of design.sections) {
+      if (!section) continue;
+      const s = section as any;
+      if (!s.id || typeof s.id !== 'string' || !s.id.trim() || seen.has(s.id)) {
+        s.id = s._id ? String(s._id) : this.uid('section');
+      }
+      seen.add(s.id);
+
+      if (Array.isArray(section.layers)) {
+        for (const layer of section.layers) {
+          if (!layer) continue;
+          const l = layer as any;
+          if (!l.id || typeof l.id !== 'string' || !l.id.trim() || seen.has(l.id)) {
+            l.id = l._id ? String(l._id) : this.uid('layer');
+          }
+          seen.add(l.id);
+        }
+      }
+    }
+
+    if (Array.isArray(design.assets)) {
+      for (const asset of design.assets) {
+        if (!asset) continue;
+        const a = asset as any;
+        if (!a.id || typeof a.id !== 'string' || !a.id.trim() || seen.has(a.id)) {
+          a.id = a._id ? String(a._id) : this.uid('asset');
+        }
+        seen.add(a.id);
+      }
+    }
   }
 
   private normalizeDesignGeometry(): void {
+    this.ensureDesignIds();
     const devices: DeviceMode[] = ['mobile', 'tablet', 'desktop'];
     for (const section of this.design.sections || []) {
       section.height = this.bound(this.finiteNumber(section.height, 640), 240, 1600);

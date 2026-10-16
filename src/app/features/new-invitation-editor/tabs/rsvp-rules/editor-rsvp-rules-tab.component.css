@@ -1,12 +1,28 @@
+.event-date-panel,
 .deadline-panel {
   padding: 18px;
   border: 1px solid var(--nw-border);
   border-radius: 8px;
   background: var(--nw-surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.event-date-panel {
+  margin-bottom: 4px;
+}
+
+.event-date-panel-warning {
+  border-color: var(--nw-warning, #f59e0b);
+  background: color-mix(in srgb, var(--nw-warning, #f59e0b) 4%, var(--nw-surface));
 }
 
 .deadline-panel-error {
   border-color: var(--nw-danger);
+}
+
+.deadline-icon.event-icon {
+  color: var(--nw-primary, #6366f1);
+  background: color-mix(in srgb, var(--nw-primary, #6366f1) 12%, transparent);
 }
 
 .deadline-panel-header,
@@ -29,7 +45,7 @@
 }
 
 .deadline-title-group strong,
-.deadline-title-group span {
+.deadline-title-group div > span {
   display: block;
 }
 
@@ -46,14 +62,22 @@
 }
 
 .deadline-icon {
-  display: grid;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
   width: 40px;
   height: 40px;
   flex: 0 0 40px;
-  place-items: center;
   border-radius: 8px;
   color: var(--nw-accent);
   background: color-mix(in srgb, var(--nw-accent) 12%, transparent);
+}
+
+.deadline-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: auto;
 }
 
 .deadline-clear,

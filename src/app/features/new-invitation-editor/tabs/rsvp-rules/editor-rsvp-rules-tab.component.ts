@@ -41,6 +41,7 @@ export class EditorRsvpRulesTabComponent {
   @Output() addQuestionPreset = new EventEmitter<'song' | 'diet' | 'menu' | 'transport'>();
   @Output() syncQuestions = new EventEmitter<void>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
+  @Output() eventDateTimeChange = new EventEmitter<{ date: string; time?: string }>();
 
   newCustomRole = '';
   newCustomGroup = '';
@@ -62,6 +63,97 @@ export class EditorRsvpRulesTabComponent {
       .replace(/^_+|_+$/g, '');
   }
 
+  get eventDateInput(): string {
+    const eventDate = this.getEventDateTime();
+    return eventDate ? this.toLocalDateInput(eventDate) : '';
+  }
+
+  get eventTimeInput(): string {
+    const time = this.event?.time || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.time : '');
+    if (time && /^\d{2}:\d{2}/.test(time)) return time.slice(0, 5);
+    const eventDate = this.getEventDateTime();
+    if (eventDate && (eventDate.getHours() !== 0 || eventDate.getMinutes() !== 0)) {
+      return this.toLocalTimeInput(eventDate);
+    }
+    return '';
+  }
+
+  get isEventInPast(): boolean {
+    const eventDate = this.getEventDateTime();
+    if (!eventDate) return false;
+    return eventDate.getTime() < this.currentMinute().getTime();
+  }
+
+  get eventDateNoticeLabel(): string {
+    const eventDate = this.getEventDateTime();
+    if (!eventDate) {
+      return 'Define la fecha de tu evento para calcular y habilitar las fechas límite de confirmación.';
+    }
+    if (this.isEventInPast) {
+      return `La fecha guardada (${this.formatShortDate(eventDate)}) ya pasó. Modifícala aquí mismo para habilitar las confirmaciones.`;
+    }
+    return `Tu evento se celebrará el ${this.formatLongDateTime(eventDate)}.`;
+  }
+
+  get formattedEventSummaryLabel(): string {
+    const eventDate = this.getEventDateTime();
+    if (!eventDate) return '';
+    return this.formatLongDateTime(eventDate);
+  }
+
+  onEventDateInputChange(value: string): void {
+    if (!this.event) {
+      this.event = {
+        title: '',
+        type: 'otro',
+        date: ''
+      } as EventModel;
+    }
+    if (!value) {
+      this.event.date = '';
+      if (this.invitation && typeof this.invitation.event === 'object' && this.invitation.event) {
+        (this.invitation.event as EventModel).date = '';
+      }
+      this.eventDateTimeChange.emit({ date: '', time: this.event.time });
+      return;
+    }
+    const time = this.eventTimeInput || '18:00';
+    const [y, m, d] = value.split('-').map(Number);
+    const [hh, mm] = time.split(':').map(Number);
+    const localDate = new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+    this.event.date = localDate.toISOString();
+    if (!this.event.time && time) {
+      this.event.time = time;
+    }
+    if (this.invitation && typeof this.invitation.event === 'object' && this.invitation.event) {
+      (this.invitation.event as EventModel).date = this.event.date;
+      (this.invitation.event as EventModel).time = this.event.time;
+    }
+    this.eventDateTimeChange.emit({ date: this.event.date, time: this.event.time });
+  }
+
+  onEventTimeInputChange(value: string): void {
+    if (!this.event) {
+      this.event = {
+        title: '',
+        type: 'otro',
+        date: ''
+      } as EventModel;
+    }
+    this.event.time = value || '';
+    if (this.eventDateInput) {
+      const [y, m, d] = this.eventDateInput.split('-').map(Number);
+      const [hh, mm] = (value || '00:00').split(':').map(Number);
+      const localDate = new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+      this.event.date = localDate.toISOString();
+    }
+    if (this.invitation && typeof this.invitation.event === 'object' && this.invitation.event) {
+      (this.invitation.event as EventModel).date = this.event.date;
+      (this.invitation.event as EventModel).time = this.event.time;
+    }
+    this.eventDateTimeChange.emit({ date: this.event.date, time: this.event.time });
+  }
+
   get deadlineDate(): string {
     return String(this.invitation?.rsvpSettings?.deadline || '').slice(0, 10);
   }
@@ -77,11 +169,14 @@ export class EditorRsvpRulesTabComponent {
 
   get deadlineMaxDate(): string {
     const eventDate = this.getEventDateTime();
-    return eventDate ? this.toLocalDateInput(eventDate) : '';
+    if (!eventDate) return '';
+    const today = this.toLocalDateInput(new Date());
+    const eventDateStr = this.toLocalDateInput(eventDate);
+    return eventDateStr >= today ? eventDateStr : '';
   }
 
   get deadlineMinTime(): string {
-    if (this.deadlineDate !== this.deadlineMinDate) return '00:00';
+    if (!this.deadlineDate || this.deadlineDate !== this.deadlineMinDate) return '00:00';
     const now = new Date();
     now.setMinutes(now.getMinutes() + 1, 0, 0);
     return this.toLocalTimeInput(now);
@@ -100,8 +195,8 @@ export class EditorRsvpRulesTabComponent {
 
   get deadlineRangeLabel(): string {
     const eventDate = this.getEventDateTime();
-    if (!eventDate) return 'Primero define la fecha del evento.';
-    if (!this.hasAvailableDeadlineRange) return 'El evento ya ocurrió; actualiza su fecha para recibir confirmaciones.';
+    if (!eventDate) return 'Primero define la fecha del evento arriba.';
+    if (!this.hasAvailableDeadlineRange) return 'La fecha del evento ya ocurrió; modifícala arriba para recibir confirmaciones.';
     return `Puedes recibir respuestas desde hoy hasta ${this.formatLongDateTime(eventDate)}.`;
   }
 
@@ -478,13 +573,14 @@ export class EditorRsvpRulesTabComponent {
   private parseLocalDate(dateStr: string): Date | null {
     if (!dateStr) return null;
     try {
-      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-        const parts = dateStr.split('T')[0].split('-').map(Number);
+      const trimmed = dateStr.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        const parts = trimmed.split('-').map(Number);
         if (parts.length === 3) {
           return new Date(parts[0], parts[1] - 1, parts[2]);
         }
       }
-      const d = new Date(dateStr);
+      const d = new Date(trimmed);
       return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
     } catch {
       return null;
@@ -494,11 +590,26 @@ export class EditorRsvpRulesTabComponent {
   private getEventDateTime(): Date | null {
     const rawDate = this.event?.date || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.date : '');
     if (!rawDate) return null;
-    const datePart = /^\d{4}-\d{2}-\d{2}/.test(String(rawDate))
-      ? String(rawDate).slice(0, 10)
-      : this.toLocalDateInput(new Date(rawDate));
-    const eventTime = this.event?.time || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.time : '') || '23:59';
-    return this.parseDateTime(`${datePart}T${String(eventTime).slice(0, 5)}`);
+    try {
+      const str = String(rawDate).trim();
+      let d: Date;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const [y, m, day] = str.split('-').map(Number);
+        d = new Date(y, m - 1, day);
+      } else {
+        d = new Date(str);
+      }
+      if (isNaN(d.getTime())) return null;
+
+      const eventTime = this.event?.time || (typeof this.invitation?.event === 'object' ? (this.invitation.event as EventModel)?.time : '');
+      if (eventTime && /^\d{2}:\d{2}/.test(eventTime)) {
+        const [hh, mm] = eventTime.split(':').map(Number);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm, 0, 0);
+      }
+      return d;
+    } catch {
+      return null;
+    }
   }
 
   private parseDateTime(value?: string): Date | null {
@@ -516,7 +627,7 @@ export class EditorRsvpRulesTabComponent {
   }
 
   private defaultTimeForDate(date: string): string {
-    if (date === this.deadlineMaxDate) return this.deadlineMaxTime;
+    if (this.deadlineMaxDate && date === this.deadlineMaxDate) return this.deadlineMaxTime;
     if (date === this.deadlineMinDate) return this.deadlineMinTime;
     return '23:59';
   }
@@ -524,7 +635,7 @@ export class EditorRsvpRulesTabComponent {
   private clampTimeForDate(date: string, time: string): string {
     let result = time;
     if (date === this.deadlineMinDate && result < this.deadlineMinTime) result = this.deadlineMinTime;
-    if (date === this.deadlineMaxDate && result > this.deadlineMaxTime) result = this.deadlineMaxTime;
+    if (this.deadlineMaxDate && date === this.deadlineMaxDate && result > this.deadlineMaxTime) result = this.deadlineMaxTime;
     return result;
   }
 
@@ -535,6 +646,12 @@ export class EditorRsvpRulesTabComponent {
 
   private toLocalTimeInput(value: Date): string {
     return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`;
+  }
+
+  formatShortDate(value: Date): string {
+    return new Intl.DateTimeFormat('es-MX', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    }).format(value);
   }
 
   private formatLongDateTime(value: Date): string {

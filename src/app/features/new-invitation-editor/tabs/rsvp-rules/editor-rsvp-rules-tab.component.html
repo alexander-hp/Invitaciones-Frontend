@@ -22,6 +22,48 @@
   </div>
   <div class="nw-card-body" style="padding-top:16px;">
     <div class="nw-form-grid" style="gap:16px; align-items:start;" *ngIf="invitation.rsvpSettings as rsvpSettings">
+      <!-- 0. Fecha y hora del evento -->
+      <section class="event-date-panel nw-form-wide" [class.event-date-panel-warning]="isEventInPast">
+        <div class="deadline-panel-header">
+          <div class="deadline-title-group">
+            <span class="deadline-icon event-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <circle cx="12" cy="15" r="2"></circle>
+              </svg>
+            </span>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <strong>Fecha y hora del evento</strong>
+                <span class="nw-pill success" *ngIf="eventDateInput && !isEventInPast" style="font-size:11px;">Programado</span>
+                <span class="nw-pill warning" *ngIf="isEventInPast" style="font-size:11px;">Evento ya ocurrido</span>
+                <span class="nw-pill" *ngIf="!eventDateInput" style="font-size:11px;">Sin fecha</span>
+              </div>
+              <span>{{ eventDateNoticeLabel }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="deadline-fields">
+          <label class="deadline-field">
+            <span>Fecha del evento *</span>
+            <input type="date" [ngModel]="eventDateInput" (ngModelChange)="onEventDateInputChange($event)" required>
+          </label>
+          <label class="deadline-field">
+            <span>Hora del evento (opcional)</span>
+            <input type="time" [ngModel]="eventTimeInput" (ngModelChange)="onEventTimeInputChange($event)">
+          </label>
+          <div class="deadline-summary" [class.has-value]="eventDateInput && !isEventInPast">
+            <span>Celebración del evento</span>
+            <strong>{{ formattedEventSummaryLabel || 'Selecciona la fecha del evento' }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1. Fecha límite de respuesta -->
       <section class="deadline-panel nw-form-wide" [class.deadline-panel-error]="deadlineValidationMessage">
         <div class="deadline-panel-header">
           <div class="deadline-title-group">
@@ -45,12 +87,12 @@
           <label class="deadline-field">
             <span>Fecha</span>
             <input type="date" [ngModel]="deadlineDate" (ngModelChange)="onDeadlineDateChange($event)"
-              [min]="deadlineMinDate" [max]="deadlineMaxDate" [disabled]="!hasAvailableDeadlineRange">
+              [min]="deadlineMinDate" [max]="deadlineMaxDate || null">
           </label>
           <label class="deadline-field">
             <span>Hora de cierre</span>
             <input type="time" [ngModel]="deadlineTime" (ngModelChange)="onDeadlineTimeChange($event)"
-              [min]="deadlineMinTime" [max]="deadlineMaxTime" [disabled]="!deadlineDate || !hasAvailableDeadlineRange">
+              [min]="deadlineMinTime" [max]="deadlineMaxTime" [disabled]="!deadlineDate">
           </label>
           <div class="deadline-summary" [class.has-value]="selectedDeadlineLabel">
             <span>{{ selectedDeadlineLabel ? 'Las respuestas cierran' : 'Selecciona fecha y hora' }}</span>

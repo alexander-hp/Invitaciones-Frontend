@@ -217,7 +217,7 @@
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span>{{ event.time || 'No especificada' }}</span>
+          <span>{{ eventTimeDisplay || 'No especificada' }}</span>
         </p>
       </div>
       <div>
@@ -274,7 +274,7 @@
         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--nw-text-2);">
           Fecha del evento
         </label>
-        <input type="datetime-local" class="nw-input" [(ngModel)]="editDetailsForm.date" style="width:100%; font-size:14px;">
+        <input type="date" class="nw-input" [(ngModel)]="editDetailsForm.date" style="width:100%; font-size:14px;">
       </div>
 
       <div>

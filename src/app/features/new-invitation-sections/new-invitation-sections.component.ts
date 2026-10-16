@@ -246,16 +246,24 @@ export class NewInvitationSectionsComponent implements OnInit {
     return this.invitation.event?._id || this.invitation.event?.id || '';
   }
 
-  private sanitizePayload<T>(obj: T): T {
+  private sanitizePayload<T>(obj: T, parentKey?: string): T {
     if (Array.isArray(obj)) {
-      return obj.map(item => this.sanitizePayload(item)) as unknown as T;
+      return obj.map(item => this.sanitizePayload(item, parentKey)) as unknown as T;
     }
     if (obj !== null && typeof obj === 'object') {
+      const record = obj as Record<string, unknown>;
       const cleaned: Record<string, unknown> = {};
-      for (const key of Object.keys(obj as Record<string, unknown>)) {
-        if (key !== '_id' && key !== 'id') {
-          cleaned[key] = this.sanitizePayload((obj as Record<string, unknown>)[key]);
-        }
+
+      const isVisualSection = parentKey === 'sections' || (Array.isArray(record['layers']) && typeof record['type'] === 'string');
+      const isVisualLayer = parentKey === 'layers' || (typeof record['type'] === 'string' && ('x' in record) && ('y' in record) && ('width' in record) && ('height' in record) && !Array.isArray(record['layers']));
+      const isVisualAsset = parentKey === 'assets' || (typeof record['url'] === 'string' && typeof record['name'] === 'string' && ['image', 'video', 'audio'].includes(record['type'] as string));
+      const isGalleryItem = parentKey === 'galleryItems';
+      const allowsId = isVisualSection || isVisualLayer || isVisualAsset || isGalleryItem;
+
+      for (const [key, val] of Object.entries(record)) {
+        if (key === '__v' || key === '_id') continue;
+        if (key === 'id' && !allowsId) continue;
+        cleaned[key] = this.sanitizePayload(val, key);
       }
       return cleaned as T;
     }
@@ -294,6 +302,8 @@ export class NewInvitationSectionsComponent implements OnInit {
 
     delete rawContent.storyTitle;
     delete rawContent.storyBody;
+    delete rawContent.id;
+    delete rawContent._id;
 
     const sanitizedContent = this.sanitizePayload(rawContent);
 

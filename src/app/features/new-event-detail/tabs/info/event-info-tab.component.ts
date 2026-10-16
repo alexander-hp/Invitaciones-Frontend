@@ -278,7 +278,14 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
   formatEventFullDate(dateStr?: string): string {
     if (!dateStr) return '';
     try {
-      const d = new Date(dateStr);
+      const trimmed = dateStr.trim();
+      let d: Date;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        const [y, m, day] = trimmed.split('-').map(Number);
+        d = new Date(y, m - 1, day);
+      } else {
+        d = new Date(trimmed);
+      }
       if (isNaN(d.getTime())) return dateStr;
       const dateFormatted = d.toLocaleDateString('es-ES', {
         weekday: 'long',
@@ -286,17 +293,36 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
         month: 'long',
         year: 'numeric'
       });
-      const capitalized = dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1);
-      const hours = d.getHours();
-      const minutes = d.getMinutes();
-      if ((hours !== 0 || minutes !== 0) || (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('T00:00:00'))) {
-        const timeFormatted = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true });
-        return `${capitalized} · ${timeFormatted}`;
-      }
-      return capitalized;
+      return dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1);
     } catch {
       return dateStr;
     }
+  }
+
+  get eventTimeDisplay(): string {
+    if (!this.event) return '';
+    if (this.event.time && this.event.time.trim()) {
+      return this.formatTime12h(this.event.time.trim());
+    }
+    if (this.event.date) {
+      try {
+        const d = new Date(this.event.date);
+        if (!isNaN(d.getTime()) && (d.getHours() !== 0 || d.getMinutes() !== 0)) {
+          return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+      } catch { }
+    }
+    return '';
+  }
+
+  formatTime12h(timeStr: string): string {
+    if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
+      const [h, m] = timeStr.split(':').map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    return timeStr;
   }
 
   toDatetimeLocal(isoStr?: string): string {
@@ -336,11 +362,25 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
 
   openEditDetails(): void {
     if (!this.event) return;
+    let initialDate = '';
+    let initialTime = this.event.time || '';
+    if (this.event.date) {
+      try {
+        const d = new Date(this.event.date);
+        if (!isNaN(d.getTime())) {
+          const pad = (n: number) => n.toString().padStart(2, '0');
+          initialDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+          if (!initialTime && (d.getHours() !== 0 || d.getMinutes() !== 0)) {
+            initialTime = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          }
+        }
+      } catch { }
+    }
     this.editDetailsForm = {
       title: this.event.title || '',
       type: (this.event.type as EventType) || 'otro',
-      date: this.toDatetimeLocal(this.event.date),
-      time: this.event.time || '',
+      date: initialDate,
+      time: initialTime,
       hosts: (this.event.hosts || []).join(', '),
       venueName: this.event.venue?.name || '',
       venueAddress: this.event.venue?.address || '',
@@ -367,11 +407,13 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
       ? this.editDetailsForm.hosts.split(',').map(h => h.trim()).filter(Boolean)
       : [];
 
+    const timeValue = this.editDetailsForm.time ? this.editDetailsForm.time.trim() : undefined;
+
     const payload: any = {
       title: this.editDetailsForm.title.trim(),
       type: this.editDetailsForm.type,
       hosts: hostsArray,
-      time: this.editDetailsForm.time ? this.editDetailsForm.time.trim() : undefined,
+      time: timeValue,
       venue: {
         ...(this.event.venue || {}),
         name: this.editDetailsForm.venueName.trim(),
@@ -381,7 +423,14 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     };
 
     if (this.editDetailsForm.date) {
-      payload.date = new Date(this.editDetailsForm.date).toISOString();
+      const datePart = this.editDetailsForm.date.slice(0, 10);
+      const [y, m, d] = datePart.split('-').map(Number);
+      if (timeValue && /^\d{1,2}:\d{2}/.test(timeValue)) {
+        const [hh, mm] = timeValue.split(':').map(Number);
+        payload.date = new Date(y, m - 1, d, hh, mm, 0, 0).toISOString();
+      } else {
+        payload.date = new Date(y, m - 1, d, 0, 0, 0, 0).toISOString();
+      }
     }
 
     this.apiService.updateEvent(id, payload).subscribe({
