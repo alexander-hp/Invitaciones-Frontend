@@ -246,7 +246,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'boda-eleganza', label: 'Eleganza Italiana' },
     { key: 'boda-rosas', label: 'Romance Floral' },
     { key: 'boda-girasoles', label: 'Elegancia Rústica' },
-    { key: 'boda-navy-blue', label: 'Navy Blue & Gold' }
+    { key: 'boda-navy-blue', label: 'Navy Blue & Gold' },
+    { key: 'xv-burgundy', label: 'Mis XV Borgoña Real' }
   ];
   readonly rsvpParts: Array<{ key: RsvpPartKey; label: string; binding: string; purpose: string }> = [
     { key: 'eyebrow', label: 'Texto superior', binding: 'display.rsvp.eyebrow', purpose: 'Presentación visual' },
@@ -3835,7 +3836,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
       border: `${Number(style.borderWidth || 0)}px ${String(style.borderStyle || 'solid')} ${String(style.borderColor || 'transparent')}`,
       borderRadius: `${Number(style.borderRadius || 0)}px`, boxShadow: String(style.boxShadow || 'none'),
-      clipPath: this.shapeClipPath(style.shapeKind || 'rectangle')
+      clipPath: this.shapeClipPath(style.shapeKind || 'rectangle'),
+      ...(style.backdropFilter ? { backdropFilter: style.backdropFilter, WebkitBackdropFilter: style.backdropFilter } : {})
     };
   }
 
@@ -3886,9 +3888,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   sectionStyle(section: VisualInvitationSection): Record<string, string> {
     const bg = section.background || {};
     const alpha = Math.round((bg.overlay || 0) * 255).toString(16).padStart(2, '0');
+    const isXv = this.isXvBurgundy();
+    const defaultBg = isXv ? '#240308' : '#ffffff';
+    const resolvedBgColor = bg.color && bg.color !== '#fff' && bg.color !== '#ffffff' ? bg.color : defaultBg;
     return {
-      height: `${visualSectionHeight(section)}px`, backgroundColor: bg.color || '#fff',
-      backgroundImage: bg.imageUrl ? `linear-gradient(#000000${alpha},#000000${alpha}),url("${bg.imageUrl}")` : 'none'
+      height: `${visualSectionHeight(section)}px`,
+      backgroundColor: resolvedBgColor,
+      backgroundImage: bg.imageUrl
+        ? `linear-gradient(#000000${alpha},#000000${alpha}),url("${bg.imageUrl}")`
+        : (isXv ? 'radial-gradient(ellipse at 50% 25%, #380712 0%, #1f0207 65%, #130104 100%)' : 'none')
     };
   }
 
@@ -3899,17 +3907,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const buttonStyle = theme.buttonStyle || 'solid';
     const buttonColor = isXv ? '#d4af37' : String(theme.buttonBackgroundColor || '#292523');
     return {
-      '--module-background': isXv ? '#fffdfa' : String(theme.backgroundColor || '#ffffff'),
-      '--module-text': isXv ? '#5c0d18' : String(theme.textColor || '#292523'),
+      '--module-background': isXv ? 'rgba(45, 6, 14, 0.88)' : String(theme.backgroundColor || '#ffffff'),
+      '--module-text': isXv ? '#faf6f0' : String(theme.textColor || '#292523'),
       '--module-accent': isXv ? '#d4af37' : String(theme.accentColor || '#9a6754'),
-      '--module-heading-font': String(theme.headingFont || 'Georgia, serif'),
-      '--module-body-font': String(theme.bodyFont || 'Arial, sans-serif'),
-      '--module-button-background': isXv ? '#d4af37' : (buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent'),
-      '--module-button-text': isXv ? '#480a13' : (buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor),
+      '--module-heading-font': String(theme.headingFont || "'Great Vibes', cursive"),
+      '--module-body-font': String(theme.bodyFont || 'Montserrat, sans-serif'),
+      '--module-button-background': isXv ? 'linear-gradient(135deg, #d4af37 0%, #b8860b 100%)' : (buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent'),
+      '--module-button-text': isXv ? '#240308' : (buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor),
       '--module-button-border': isXv ? '1px solid #e8c85c' : (buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent'),
       '--module-button-radius': isXv ? '30px' : `${Number(theme.buttonRadius || 0)}px`,
       '--module-columns': String(moduleStyle.columns || 2),
-      '--module-gap': `${Number(moduleStyle.gap ?? 11)}px`
+      '--module-gap': `${Number(moduleStyle.gap ?? 14)}px`
     };
   }
 
@@ -5485,8 +5493,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       let result;
       if (this.importSource === 'json' || this.importSource === 'ai') {
         result = this.designImporter.fromJson(this.importJsonSource.trim());
-      } else if (this.importSource === 'catalog' && this.invitation?.slug) {
-        result = await this.designImporter.fromUrl(this.templatePreviewUrl(this.importTemplateKey), this.design.theme || this.themePresets[0].theme);
+      } else if (this.importSource === 'catalog') {
+        if (this.invitation?.slug) {
+          try {
+            result = await this.designImporter.fromUrl(this.templatePreviewUrl(this.importTemplateKey), this.design.theme || this.themePresets[0].theme);
+          } catch (urlError) {
+            if (this.importTemplateKey === 'xv-burgundy' || COMPLETE_DESIGN_PRESETS.some((p) => p.key === this.importTemplateKey)) {
+              const presetDesign = this.buildPreset(this.importTemplateKey);
+              result = {
+                design: presetDesign,
+                warnings: [],
+                stats: { sections: presetDesign.sections.length, layers: presetDesign.sections.reduce((s, sec) => s + sec.layers.length, 0), ignored: 0 },
+                review: presetDesign.sections.map((sec, idx) => ({ sectionIndex: idx, status: 'connected' as const, title: sec.title || 'Sección', detail: 'Plantilla de catálogo importada.' }))
+              };
+            } else {
+              throw urlError;
+            }
+          }
+        } else if (this.importTemplateKey === 'xv-burgundy' || COMPLETE_DESIGN_PRESETS.some((p) => p.key === this.importTemplateKey)) {
+          const presetDesign = this.buildPreset(this.importTemplateKey);
+          result = {
+            design: presetDesign,
+            warnings: [],
+            stats: { sections: presetDesign.sections.length, layers: presetDesign.sections.reduce((s, sec) => s + sec.layers.length, 0), ignored: 0 },
+            review: presetDesign.sections.map((sec, idx) => ({ sectionIndex: idx, status: 'connected' as const, title: sec.title || 'Sección', detail: 'Plantilla de catálogo importada.' }))
+          };
+        } else {
+          const source = this.currentTemplateHtml();
+          if (!source.html.trim()) throw new Error('Agrega HTML o selecciona una plantilla que tenga contenido para importar.');
+          result = await this.designImporter.fromHtml(source.html, source.css, this.design.theme || this.themePresets[0].theme);
+        }
       } else if (this.importSource === 'current' && this.invitation?.content?.customHtml) {
         result = await this.designImporter.fromHtml(this.invitation.content.customHtml, this.invitation.content.customCss || '', this.design.theme || this.themePresets[0].theme);
       } else if (this.importSource === 'current' && this.invitation?.slug) {
@@ -5955,37 +5991,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (isXv) {
       if (!this.design.theme) {
         this.design.theme = {
-          backgroundColor: '#5c0d18',
+          backgroundColor: '#240308',
           textColor: '#faf6f0',
           accentColor: '#d4af37',
           headingFont: "'Great Vibes', cursive",
           bodyFont: 'Montserrat, sans-serif',
           buttonBackgroundColor: '#d4af37',
-          buttonTextColor: '#480a13',
+          buttonTextColor: '#240308',
           buttonStyle: 'solid',
           buttonRadius: 30
         };
       } else {
-        this.design.theme.backgroundColor = '#5c0d18';
+        this.design.theme.backgroundColor = '#240308';
         this.design.theme.accentColor = '#d4af37';
         this.design.theme.headingFont = "'Great Vibes', cursive";
         this.design.theme.bodyFont = 'Montserrat, sans-serif';
         this.design.theme.buttonBackgroundColor = '#d4af37';
-        this.design.theme.buttonTextColor = '#480a13';
+        this.design.theme.buttonTextColor = '#240308';
         this.design.theme.buttonRadius = 30;
       }
     }
     for (const section of this.design.sections) {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
-      if (isXv && (!section.background.imageUrl || section.background.imageUrl === 'none' || section.background.imageUrl.includes('velvet-bg.jpg'))) {
-        section.background = {
-          color: section.background.color && section.background.color !== '#ffffff' ? section.background.color : '#5c0d18',
-          imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg',
-          overlay: section.background.overlay || 0.08
-        };
-      }
       if (isXv) {
         if (section.type === 'hero') {
+          section.background = {
+            color: '#240308',
+            imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg',
+            overlay: 0.2
+          };
           const hasOldBanner = section.layers.some((l) => l.url?.includes('tiara-banner.jpg'));
           const hasWhiteFloral = section.layers.some((l) => l.url?.includes('floral-cluster'));
           const hasArchPortrait = section.layers.some((l) => l.style?.imageMask === 'arch' || l.name?.includes('Retrato'));
@@ -5996,7 +6030,6 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
                              'assets/templates/xv-burgundy/portrait.jpg';
             const title = this.invitation?.content?.headline ? '{{invitation.headline}}' : '{{event.title}}';
             section.height = 840;
-            section.background = { color: '#5c0d18', imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg', overlay: 0 };
             section.layers = [
               this.newLayer('text', 'MIS XV AÑOS', 10, 5, 80, 4, 13),
               this.newLayer('image', 'Retrato de la quinceañera', 18, 11, 64, 44, 14),
@@ -6014,17 +6047,25 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
             section.layers[4].style = { backgroundColor: '#d4af37', shapeKind: 'rectangle' };
             section.layers[5].style = { color: '#e2d5c3', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 600, letterSpacing: 3, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
             section.layers[6].binding = 'section:rsvp';
-            section.layers[6].style = { backgroundColor: '#d4af37', color: '#480a13', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: 30, padding: 8, borderWidth: 1, borderColor: '#e8c85c', borderStyle: 'solid', boxShadow: '0 8px 24px rgba(212, 175, 55, 0.45)' };
+            section.layers[6].style = { backgroundColor: '#d4af37', color: '#240308', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: 30, padding: 8, borderWidth: 1, borderColor: '#e8c85c', borderStyle: 'solid', boxShadow: '0 8px 24px rgba(212, 175, 55, 0.45)' };
           }
+        } else if (section.type === 'custom') {
+          section.background = { color: '#180104', overlay: 0 };
+        } else {
+          if (section.background.imageUrl?.includes('velvet-bg.jpg')) {
+            section.background.imageUrl = '';
+          }
+          section.background.color = '#240308';
+          section.background.overlay = 0;
         }
         section.layers = section.layers.filter((l) => !(l.url?.includes('floral-cluster') || l.name?.includes('Ramillete')));
       }
       if (section.type === 'hero' || section.type === 'custom') continue;
-      section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}) };
+      section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}), surface: 'transparent', cardStyle: 'bordered', gap: 16 };
       if (this.isConfigurablePlugin(section.type)) section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
       if (section.type === 'rsvp') {
         this.ensureRsvpPluginDesign(section);
-        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (isXv ? 840 : 820));
+        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (isXv ? 680 : 820));
         if (isXv) {
           const hasCard = section.layers.some((l) => l.binding === 'display.rsvp.card' || l.binding === 'rsvp.card');
           if (!hasCard) {
@@ -6039,7 +6080,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
       if (section.type === 'dedications') {
-        section.height = Math.max(section.height, isXv ? 680 : 760);
+        section.height = Math.max(section.height, isXv ? 520 : 760);
         if (isXv) {
           const hasCard = section.layers.some((l) => l.binding === 'dedication.card');
           if (!hasCard) {
@@ -6052,7 +6093,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
       if (section.type === 'songs') {
-        section.height = Math.max(section.height, isXv ? 680 : 760);
+        section.height = Math.max(section.height, isXv ? 520 : 760);
         if (isXv) {
           const hasCard = section.layers.some((l) => l.binding === 'song.card');
           if (!hasCard) {
@@ -6065,7 +6106,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
       if (section.type === 'album') {
-        section.height = Math.max(section.height, isXv ? 680 : 760);
+        section.height = Math.max(section.height, isXv ? 420 : 760);
         if (isXv) {
           const hasCard = section.layers.some((l) => l.binding === 'album.card');
           if (!hasCard) {
@@ -6077,19 +6118,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
       if (section.type === 'guestPass') {
-        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('pass.'))) {
-          section.height = Math.max(section.height, 760);
-        }
+        section.height = Math.max(section.height, isXv ? 540 : 760);
         this.ensureGuestPassCanvasLayers(section);
       }
       if (section.type === 'guestActivity') {
-        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('activity.'))) {
-          section.height = Math.max(section.height, 760);
-        }
+        section.height = Math.max(section.height, isXv ? 540 : 760);
         this.ensureGuestActivityCanvasLayers(section);
       }
       if (section.type === 'countdown') {
-        section.height = Math.max(section.height, isXv ? 620 : 760);
+        section.height = Math.max(section.height, isXv ? 360 : 760);
         if (isXv) {
           let plaque = section.layers.find((l) => l.binding === 'display.countdown.plaque');
           if (!plaque) {
@@ -6098,28 +6135,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
             plaque = section.layers.find((l) => l.binding === 'display.countdown.plaque');
           }
           if (plaque) {
-            plaque.url = 'assets/templates/xv-burgundy/countdown-box.jpg';
-            plaque.x = 7; plaque.y = 28; plaque.width = 86; plaque.height = 42;
-            plaque.style = { ...(plaque.style || {}), objectFit: 'cover', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.45)' };
+            plaque.type = 'shape';
+            plaque.url = undefined;
+            plaque.x = 6; plaque.y = 28; plaque.width = 88; plaque.height = 56;
+            plaque.style = {
+              ...(plaque.style || {}),
+              backgroundColor: 'rgba(38, 4, 10, 0.88)',
+              borderColor: 'rgba(212, 175, 55, 0.45)',
+              borderWidth: 1.5,
+              borderStyle: 'solid',
+              borderRadius: 20,
+              boxShadow: '0 18px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,230,150,0.25)',
+              backdropFilter: 'blur(12px)'
+            };
           }
           const expiredLayer = section.layers.find((l) => l.binding === 'countdown.expired');
           if (expiredLayer) expiredLayer.hidden = true;
           const days = section.layers.find((l) => l.binding === 'countdown.days');
           const daysLbl = section.layers.find((l) => l.binding === 'display.countdown.daysLabel');
-          if (days) { days.x = 24.1; days.y = 43.5; days.width = 14; days.height = 11; days.style = { ...(days.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
-          if (daysLbl) { daysLbl.x = 24.1; daysLbl.y = 53.5; daysLbl.width = 14; daysLbl.height = 4.5; daysLbl.style = { ...(daysLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          if (days) { days.x = 9; days.y = 35; days.width = 18; days.height = 24; days.style = { ...(days.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, fontSize: 32, color: '#dfba47', textAlign: 'center' }; }
+          if (daysLbl) { daysLbl.x = 9; daysLbl.y = 59; daysLbl.width = 18; daysLbl.height = 10; daysLbl.style = { ...(daysLbl.style || {}), letterSpacing: 2, fontWeight: 600, fontSize: 10, color: '#faf6f0', textAlign: 'center' }; }
           const hours = section.layers.find((l) => l.binding === 'countdown.hours');
           const hoursLbl = section.layers.find((l) => l.binding === 'display.countdown.hoursLabel');
-          if (hours) { hours.x = 37.8; hours.y = 43.5; hours.width = 14; hours.height = 11; hours.style = { ...(hours.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
-          if (hoursLbl) { hoursLbl.x = 37.8; hoursLbl.y = 53.5; hoursLbl.width = 14; hoursLbl.height = 4.5; hoursLbl.style = { ...(hoursLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          if (hours) { hours.x = 31; hours.y = 35; hours.width = 18; hours.height = 24; hours.style = { ...(hours.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, fontSize: 32, color: '#dfba47', textAlign: 'center' }; }
+          if (hoursLbl) { hoursLbl.x = 31; hoursLbl.y = 59; hoursLbl.width = 18; hoursLbl.height = 10; hoursLbl.style = { ...(hoursLbl.style || {}), letterSpacing: 2, fontWeight: 600, fontSize: 10, color: '#faf6f0', textAlign: 'center' }; }
           const mins = section.layers.find((l) => l.binding === 'countdown.minutes');
           const minsLbl = section.layers.find((l) => l.binding === 'display.countdown.minutesLabel');
-          if (mins) { mins.x = 52.8; mins.y = 43.5; mins.width = 14; mins.height = 11; mins.style = { ...(mins.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
-          if (minsLbl) { minsLbl.x = 52.8; minsLbl.y = 53.5; minsLbl.width = 14; minsLbl.height = 4.5; minsLbl.style = { ...(minsLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          if (mins) { mins.x = 53; mins.y = 35; mins.width = 18; mins.height = 24; mins.style = { ...(mins.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, fontSize: 32, color: '#dfba47', textAlign: 'center' }; }
+          if (minsLbl) { minsLbl.x = 53; minsLbl.y = 59; minsLbl.width = 18; minsLbl.height = 10; minsLbl.style = { ...(minsLbl.style || {}), letterSpacing: 2, fontWeight: 600, fontSize: 10, color: '#faf6f0', textAlign: 'center' }; }
           const secs = section.layers.find((l) => l.binding === 'countdown.seconds');
           const secsLbl = section.layers.find((l) => l.binding === 'display.countdown.secondsLabel');
-          if (secs) { secs.x = 66.5; secs.y = 43.5; secs.width = 14; secs.height = 11; secs.style = { ...(secs.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
-          if (secsLbl) { secsLbl.x = 66.5; secsLbl.y = 53.5; secsLbl.width = 14; secsLbl.height = 4.5; secsLbl.style = { ...(secsLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          if (secs) { secs.x = 75; secs.y = 35; secs.width = 18; secs.height = 24; secs.style = { ...(secs.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, fontSize: 32, color: '#dfba47', textAlign: 'center' }; }
+          if (secsLbl) { secsLbl.x = 75; secsLbl.y = 59; secsLbl.width = 18; secsLbl.height = 10; secsLbl.style = { ...(secsLbl.style || {}), letterSpacing: 2, fontWeight: 600, fontSize: 10, color: '#faf6f0', textAlign: 'center' }; }
         } else {
           this.ensureCountdownCanvasLayers(section);
         }
@@ -6150,6 +6197,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (section.type === 'gallery') {
         this.ensureGalleryCanvasLayers(section);
       }
+      if (isXv) {
+        this.refineXvBurgundySectionStyles(section);
+      }
     }
   }
 
@@ -6167,19 +6217,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const isXv = this.isXvBurgundy();
     const base = (x: number, y: number, width: number, height: number, extras: Partial<VisualPluginPartDesign> = {}): VisualPluginPartDesign => ({
       x, y, width, height, fontFamily: this.design?.theme?.bodyFont || 'Montserrat, sans-serif', fontSize: 14, fontWeight: 500,
-      color: isXv ? '#5c0d18' : (this.design?.theme?.textColor || '#292523'), backgroundColor: isXv ? '#fffdfa' : '#ffffff', borderColor: isXv ? '#d4af37' : '#d5cbc4', borderWidth: isXv ? 1.5 : 1,
-      borderRadius: isXv ? 12 : 8, padding: 10, textAlign: 'left', shape: 'rectangle', ...extras
+      color: isXv ? '#faf6f0' : (this.design?.theme?.textColor || '#292523'),
+      backgroundColor: isXv ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+      borderColor: isXv ? 'rgba(212, 175, 55, 0.4)' : '#d5cbc4',
+      borderWidth: 1,
+      borderRadius: isXv ? 12 : 8,
+      padding: 10,
+      textAlign: 'left',
+      shape: 'rectangle',
+      ...extras
     });
     if (isXv) {
       return {
         layout: 'flow', minHeight: 560,
         parts: {
-          eyebrow: base(15, 2, 70, 5, { fontSize: 11, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 2, color: '#d4af37' }),
+          eyebrow: base(15, 2, 70, 5, { fontSize: 11, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 2, color: '#dfba47' }),
           title: base(10, 8, 80, 10, { fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 3, color: '#faf6f0' }),
           intro: base(12, 18, 76, 5, { textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 2, color: '#e2d5c3' }),
           name: base(12, 26, 36, 11), contact: base(52, 26, 36, 11), response: base(12, 41, 36, 11), companions: base(52, 41, 36, 11),
           dietary: base(12, 56, 36, 11), message: base(52, 56, 36, 11),
-          submit: base(22, 72, 56, 9.5, { textAlign: 'center', fontWeight: 700, color: '#480a13', backgroundColor: '#d4af37', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, boxShadow: '0 6px 20px rgba(212,175,55,0.4)' }),
+          submit: base(22, 72, 56, 9.5, { textAlign: 'center', fontWeight: 700, color: '#240308', backgroundColor: '#d4af37', borderColor: '#f5d77f', borderWidth: 1, borderRadius: 30, boxShadow: '0 6px 20px rgba(212,175,55,0.4)' }),
           feedback: base(12, 84, 76, 5, { textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, fontSize: 12, color: '#e2d5c3' })
         }
       };
@@ -6207,12 +6264,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       card.binding = 'display.rsvp.card';
       card.zIndex = 1;
       card.style = {
-        backgroundColor: '#fffdfa',
-        borderColor: '#d4af37',
+        backgroundColor: 'rgba(38, 4, 10, 0.88)',
+        borderColor: 'rgba(212, 175, 55, 0.45)',
         borderWidth: 1.5,
         borderStyle: 'solid',
-        borderRadius: 18,
-        boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)'
+        borderRadius: 20,
+        boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)',
+        backdropFilter: 'blur(12px)'
       };
       section.layers.push(card);
     }
@@ -6323,45 +6381,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'shape') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        backgroundColor: isXv ? 'rgba(38, 4, 10, 0.88)' : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.45)' : '#d5cbc4',
+        borderWidth: 1.5,
         borderStyle: 'solid',
         borderRadius: 18,
-        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : '0 10px 28px rgba(0,0,0,0.06)'
+        backdropFilter: isXv ? 'blur(12px)' : undefined,
+        boxShadow: isXv ? '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' : '0 10px 28px rgba(0,0,0,0.06)'
       };
       layer.zIndex = 1;
     }
     if (definition.type === 'field') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        backgroundColor: isXv ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.4)' : '#d5cbc4',
+        borderWidth: 1,
         borderStyle: 'solid',
-        borderRadius: isXv ? 12 : 8,
-        color: isXv ? '#5c0d18' : layer.style?.color,
+        borderRadius: 12,
+        color: isXv ? '#faf6f0' : layer.style?.color,
         padding: 10,
         textAlign: 'left',
         showPlaceholder: true,
-        boxShadow: isXv ? 'inset 0 1px 3px rgba(92, 13, 24, 0.08), 0 2px 8px rgba(0,0,0,0.1)' : undefined
+        boxShadow: isXv ? 'inset 0 2px 6px rgba(0,0,0,0.35)' : undefined
       };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text' && isXv) {
       if (definition.binding === 'display.dedications.eyebrow') {
-        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47' };
       } else if (definition.binding === 'display.dedications.title') {
         layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
       } else if (definition.binding === 'display.dedications.intro') {
         layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
       } else if (definition.binding === 'dedication.feedback') {
-        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+        layer.style = { ...(layer.style || {}), color: '#dfba47' };
       }
     }
     if (definition.binding === 'dedication.wall') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
@@ -6419,45 +6478,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'shape') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        backgroundColor: isXv ? 'rgba(38, 4, 10, 0.88)' : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.45)' : '#d5cbc4',
+        borderWidth: 1.5,
         borderStyle: 'solid',
         borderRadius: 18,
-        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : '0 10px 28px rgba(0,0,0,0.06)'
+        backdropFilter: isXv ? 'blur(12px)' : undefined,
+        boxShadow: isXv ? '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' : '0 10px 28px rgba(0,0,0,0.06)'
       };
       layer.zIndex = 1;
     }
     if (definition.type === 'field') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        backgroundColor: isXv ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.4)' : '#d5cbc4',
+        borderWidth: 1,
         borderStyle: 'solid',
-        borderRadius: isXv ? 12 : 8,
-        color: isXv ? '#5c0d18' : layer.style?.color,
+        borderRadius: 12,
+        color: isXv ? '#faf6f0' : layer.style?.color,
         padding: 10,
         textAlign: 'left',
         showPlaceholder: true,
-        boxShadow: isXv ? 'inset 0 1px 3px rgba(92, 13, 24, 0.08), 0 2px 8px rgba(0,0,0,0.1)' : undefined
+        boxShadow: isXv ? 'inset 0 2px 6px rgba(0,0,0,0.35)' : undefined
       };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text' && isXv) {
       if (definition.binding === 'display.songs.eyebrow') {
-        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47' };
       } else if (definition.binding === 'display.songs.title') {
         layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
       } else if (definition.binding === 'display.songs.intro') {
         layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
       } else if (definition.binding === 'song.feedback') {
-        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+        layer.style = { ...(layer.style || {}), color: '#dfba47' };
       }
     }
     return layer;
@@ -6500,30 +6560,31 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'shape') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : '#d5cbc4',
-        borderWidth: isXv ? 1.5 : 1,
+        backgroundColor: isXv ? 'rgba(38, 4, 10, 0.88)' : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.45)' : '#d5cbc4',
+        borderWidth: 1.5,
         borderStyle: 'solid',
         borderRadius: 18,
-        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : '0 10px 28px rgba(0,0,0,0.06)'
+        backdropFilter: isXv ? 'blur(12px)' : undefined,
+        boxShadow: isXv ? '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' : '0 10px 28px rgba(0,0,0,0.06)'
       };
       layer.zIndex = 1;
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text' && isXv) {
       if (definition.binding === 'display.album.eyebrow') {
-        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47' };
       } else if (definition.binding === 'display.album.title') {
         layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
       } else if (definition.binding === 'display.album.intro') {
         layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
       } else if (definition.binding === 'album.feedback') {
-        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
+        layer.style = { ...(layer.style || {}), color: '#dfba47' };
       }
     }
     if (definition.binding === 'album.gallery') layer.style = { ...(layer.style || {}), backgroundColor: 'transparent', borderWidth: 0, padding: 0 };
@@ -6569,12 +6630,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'shape') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#e6ded8',
+        backgroundColor: isXv ? 'rgba(38, 4, 10, 0.88)' : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.45)' : isHaute ? '#c59b48' : '#e6ded8',
         borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
         borderRadius: 18,
-        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : isHaute ? '0 12px 30px rgba(197, 155, 72, 0.14)' : '0 10px 28px rgba(0,0,0,0.06)'
+        backdropFilter: isXv ? 'blur(12px)' : undefined,
+        boxShadow: isXv ? '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' : isHaute ? '0 12px 30px rgba(197, 155, 72, 0.14)' : '0 10px 28px rgba(0,0,0,0.06)'
       };
       layer.zIndex = 1;
     }
@@ -6582,35 +6644,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const isQr = definition.binding === 'pass.qr';
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: '#ffffff',
-        borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#d5cbc4',
+        backgroundColor: isQr ? '#ffffff' : (isXv ? 'rgba(255, 255, 255, 0.06)' : '#ffffff'),
+        borderColor: isXv ? (isQr ? '#dfba47' : 'rgba(212, 175, 55, 0.4)') : isHaute ? '#c59b48' : '#d5cbc4',
         borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
         borderRadius: isQr ? 12 : 8,
-        color: isXv ? '#5c0d18' : layer.style?.color,
+        color: isXv ? (isQr ? '#180104' : '#faf6f0') : layer.style?.color,
         padding: isQr ? 8 : 10,
         textAlign: isQr ? 'center' : 'left',
         showPlaceholder: true,
-        boxShadow: isQr ? '0 2px 8px rgba(0,0,0,0.04)' : undefined
+        boxShadow: isQr ? '0 4px 14px rgba(0,0,0,0.35)' : (isXv ? 'inset 0 2px 6px rgba(0,0,0,0.35)' : undefined)
       };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text') {
       if (definition.binding === 'pass.name') {
-        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 22, color: isXv ? '#5c0d18' : isHaute ? '#181514' : layer.style?.color };
+        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 22, color: isXv ? '#faf6f0' : isHaute ? '#181514' : layer.style?.color, fontFamily: isXv ? "'Cinzel', serif" : layer.style?.fontFamily };
       } else if (definition.binding === 'pass.group') {
-        layer.style = { ...(layer.style || {}), fontWeight: 600, fontSize: 12, color: isXv ? '#8c1d2e' : isHaute ? '#c59b48' : '#8a7d75', letterSpacing: 1 };
+        layer.style = { ...(layer.style || {}), fontWeight: 600, fontSize: 12, color: isXv ? '#dfba47' : isHaute ? '#c59b48' : '#8a7d75', letterSpacing: 1 };
       } else if (definition.binding === 'pass.table') {
-        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 18, color: isXv ? '#d4af37' : isHaute ? '#c59b48' : layer.style?.color };
+        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 18, color: isXv ? '#f5d77f' : isHaute ? '#c59b48' : layer.style?.color };
       } else if (definition.binding === 'pass.seat' || definition.binding === 'pass.companions') {
-        layer.style = { ...(layer.style || {}), fontWeight: 500, fontSize: 12, color: '#6b635e' };
+        layer.style = { ...(layer.style || {}), fontWeight: 500, fontSize: 12, color: isXv ? '#e2d5c3' : '#6b635e' };
       } else if (definition.binding === 'pass.feedback') {
-        layer.style = { ...(layer.style || {}), fontSize: 11, color: '#99908a', textAlign: 'center' };
+        layer.style = { ...(layer.style || {}), fontSize: 11, color: isXv ? '#dfba47' : '#99908a', textAlign: 'center' };
       }
     }
     return layer;
@@ -6656,16 +6718,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const isCard = ['activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications'].includes(definition.binding);
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-        borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#e2dbd5',
+        backgroundColor: isXv ? (isCard ? 'rgba(38, 4, 10, 0.88)' : 'rgba(255, 255, 255, 0.06)') : '#ffffff',
+        borderColor: isXv ? 'rgba(212, 175, 55, 0.45)' : isHaute ? '#c59b48' : '#e2dbd5',
         borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
         borderRadius: isCard ? 14 : 8,
-        color: isXv ? '#5c0d18' : layer.style?.color,
+        color: isXv ? '#faf6f0' : layer.style?.color,
         padding: 10,
         textAlign: isCard ? 'center' : 'left',
         showPlaceholder: true,
-        boxShadow: isCard ? (isXv ? '0 12px 28px rgba(40,4,10,0.35), inset 0 0 0 1px rgba(212,175,55,0.3)' : '0 4px 16px rgba(0,0,0,0.05)') : undefined
+        boxShadow: isCard ? (isXv ? '0 14px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,230,150,0.25)' : '0 4px 16px rgba(0,0,0,0.05)') : undefined,
+        backdropFilter: (isCard && isXv) ? 'blur(12px)' : undefined
       };
     }
     if (definition.type === 'button') {
@@ -6673,21 +6736,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (definition.binding === 'activity.manage') {
         layer.style = {
           ...(layer.style || {}),
-          backgroundColor: isXv ? '#fffdfa' : '#ffffff',
-          color: isXv ? '#5c0d18' : '#333333',
-          borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#d5cbc4',
+          backgroundColor: isXv ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
+          color: isXv ? '#faf6f0' : '#333333',
+          borderColor: isXv ? 'rgba(212, 175, 55, 0.5)' : isHaute ? '#c59b48' : '#d5cbc4',
           borderWidth: 1.5,
           borderStyle: 'solid',
           borderRadius: 24,
           fontWeight: 600
         };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212,175,55,0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212,175,55,0.35)' };
       }
     }
     if (definition.type === 'text') {
       if (definition.binding === 'activity.greeting') {
-        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 17, textAlign: 'center', color: isXv ? '#5c0d18' : isHaute ? '#181514' : layer.style?.color };
+        layer.style = { ...(layer.style || {}), fontWeight: 700, fontSize: 17, textAlign: 'center', color: isXv ? '#faf6f0' : isHaute ? '#181514' : layer.style?.color, fontFamily: isXv ? "'Cinzel', serif" : layer.style?.fontFamily };
       }
     }
     return layer;
@@ -6699,16 +6762,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       return [
         { type: 'text', binding: 'display.countdown.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'SÓLO FALTAN'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
         { type: 'text', binding: 'display.countdown.title', label: section.title || 'Para este gran día', x: 10, y: 12, width: 80, height: 10, fontSize: 44 },
-        { type: 'text', binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada segundo nos acerca más a esta noche inolvidable.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
-        { type: 'image', binding: 'display.countdown.plaque', label: 'Marco de cuenta regresiva', url: 'assets/templates/xv-burgundy/countdown-box.jpg', x: 4, y: 30, width: 92, height: 40, fontSize: 12 },
-        { type: 'text', binding: 'countdown.days', label: String(this.countdownPreview.days), x: 24.1, y: 43.5, width: 14, height: 11, fontSize: 34 },
-        { type: 'text', binding: 'display.countdown.daysLabel', label: 'DÍAS', x: 24.1, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 37.8, y: 43.5, width: 14, height: 11, fontSize: 34 },
-        { type: 'text', binding: 'display.countdown.hoursLabel', label: 'HORAS', x: 37.8, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 51.5, y: 43.5, width: 14, height: 11, fontSize: 34 },
-        { type: 'text', binding: 'display.countdown.minutesLabel', label: 'MINUTOS', x: 51.5, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 65.3, y: 43.5, width: 14, height: 11, fontSize: 34 },
-        { type: 'text', binding: 'display.countdown.secondsLabel', label: 'SEGUNDOS', x: 65.3, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
+        { type: 'text', binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada segundo nos acerca más a esta noche inolvidable.'), x: 12, y: 22, width: 76, height: 6, fontSize: 14 },
+        { type: 'shape', binding: 'display.countdown.plaque', label: 'Marco de cuenta regresiva', x: 6, y: 30, width: 88, height: 54, fontSize: 12 },
+        { type: 'text', binding: 'countdown.days', label: String(this.countdownPreview.days), x: 9, y: 36, width: 18, height: 22, fontSize: 32 },
+        { type: 'text', binding: 'display.countdown.daysLabel', label: 'DÍAS', x: 9, y: 58, width: 18, height: 10, fontSize: 10 },
+        { type: 'text', binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 31, y: 36, width: 18, height: 22, fontSize: 32 },
+        { type: 'text', binding: 'display.countdown.hoursLabel', label: 'HORAS', x: 31, y: 58, width: 18, height: 10, fontSize: 10 },
+        { type: 'text', binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 53, y: 36, width: 18, height: 22, fontSize: 32 },
+        { type: 'text', binding: 'display.countdown.minutesLabel', label: 'MINUTOS', x: 53, y: 58, width: 18, height: 10, fontSize: 10 },
+        { type: 'text', binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 75, y: 36, width: 18, height: 22, fontSize: 32 },
+        { type: 'text', binding: 'display.countdown.secondsLabel', label: 'SEGUNDOS', x: 75, y: 58, width: 18, height: 10, fontSize: 10 },
         { type: 'text', binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 74, width: 70, height: 12, fontSize: 36 }
       ];
     }
@@ -6737,25 +6800,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private createCountdownLayer(definition: ReturnType<typeof this.countdownLayerDefinitions>[number], zIndex: number): VisualInvitationLayer {
     const isXv = this.isXvBurgundy();
     const layer = this.newLayer(definition.type || 'text', definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
-    layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = definition.type === 'image' ? Math.max(1, zIndex - 1) : zIndex;
+    layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = definition.type === 'shape' ? Math.max(1, zIndex - 1) : (definition.type === 'image' ? Math.max(1, zIndex - 1) : zIndex);
+    if (definition.type === 'shape' && definition.binding === 'display.countdown.plaque') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: 'rgba(38, 4, 10, 0.88)',
+        borderColor: 'rgba(212, 175, 55, 0.45)',
+        borderWidth: 1.5,
+        borderStyle: 'solid',
+        borderRadius: 20,
+        boxShadow: '0 18px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,230,150,0.25)',
+        backdropFilter: 'blur(12px)'
+      };
+      return layer;
+    }
     if (definition.type === 'image') {
       layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.45)' };
       return layer;
     }
     if (definition.binding.startsWith('countdown.') && definition.binding !== 'countdown.expired') {
-      layer.style = { ...(layer.style || {}), fontWeight: 700, textAlign: 'center', color: isXv ? '#5c0d18' : layer.style?.color, fontFamily: isXv ? "'Cinzel', 'Playfair Display', serif" : layer.style?.fontFamily };
+      layer.style = { ...(layer.style || {}), fontWeight: 700, textAlign: 'center', color: isXv ? '#dfba47' : layer.style?.color, fontFamily: isXv ? "'Cinzel', 'Playfair Display', serif" : layer.style?.fontFamily };
     }
     if (isXv) {
       if (definition.binding === 'display.countdown.eyebrow') {
-        layer.style = { ...(layer.style || {}), letterSpacing: 3, fontWeight: 700, color: '#d4af37' };
+        layer.style = { ...(layer.style || {}), letterSpacing: 3, fontWeight: 700, color: '#dfba47' };
       } else if (definition.binding === 'display.countdown.title') {
         layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
       } else if (definition.binding === 'display.countdown.intro') {
         layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
       } else if (definition.binding.endsWith('Label')) {
-        layer.style = { ...(layer.style || {}), letterSpacing: 1.5, textTransform: 'uppercase', fontSize: 11, color: '#8c1d2e', fontWeight: 700 };
+        layer.style = { ...(layer.style || {}), letterSpacing: 2, textTransform: 'uppercase', fontSize: 10, color: '#faf6f0', fontWeight: 600, textAlign: 'center' };
       } else if (definition.binding === 'countdown.expired') {
-        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 36, fontWeight: 700, color: '#d4af37' };
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 36, fontWeight: 700, color: '#dfba47' };
       }
     }
     return layer;
@@ -6774,7 +6850,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const bg = String(theme?.backgroundColor || '').toLowerCase().trim();
     const accent = String(theme?.accentColor || '').toLowerCase().trim();
     const font = String(theme?.headingFont || '').toLowerCase();
-    if (font.includes('great vibes') || (bg === '#5c0d18' && (accent === '#d4af37' || accent === '#e8c85c'))) {
+    if (bg === '#240308' || bg === '#180104' || bg === '#5c0d18' || bg === '#2d060e') {
+      return true;
+    }
+    if (this.invitation?.template === 'xv-burgundy' || this.invitation?.content?.template === 'template-xv-burgundy' || this.invitation?.content?.template === 'xv-burgundy') {
+      return true;
+    }
+    if (font.includes('great vibes') || (accent === '#d4af37' || accent === '#e8c85c')) {
       return true;
     }
     if (this.design?.sections?.some((s) => s.background?.imageUrl?.includes('xv-burgundy'))) {
@@ -6873,7 +6955,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const hasLocationLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('display.locations.'));
     if (!indexes?.length && (hasLocationLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil(this.locationSourceData().length / 2));
-    const requiredHeight = Math.max(760, 250 + rows * (this.isXvBurgundy() ? 340 : this.isHauteCouture() ? 320 : 300));
+    const requiredHeight = this.isXvBurgundy()
+      ? (210 + rows * 330)
+      : Math.max(760, 250 + rows * (this.isHauteCouture() ? 320 : 300));
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.locationLayerDefinitions(section).filter((definition) => {
@@ -6920,9 +7004,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding.endsWith('.waze') || definition.binding.endsWith('.phone')) {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#faf6f0', borderColor: 'rgba(212, 175, 55, 0.5)', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 600 };
         } else {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
         }
       } else {
         layer.style = { ...(layer.style || {}), borderRadius: 24, fontWeight: 600 };
@@ -6932,7 +7016,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(38, 4, 10, 0.88)', borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, backdropFilter: 'blur(12px)', boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#e6ded8', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 10px 28px rgba(0,0,0,0.06)' };
       }
@@ -6951,13 +7035,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding.endsWith('.name')) {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontWeight: 600, fontSize: 30, color: '#5c0d18' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, fontSize: 20, color: '#faf6f0', letterSpacing: 0.5 };
         } else if (definition.binding.endsWith('.address')) {
-          layer.style = { ...(layer.style || {}), color: '#3a0810', fontWeight: 500 };
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', fontWeight: 400, fontSize: 12 };
         } else if (definition.binding.endsWith('.notes')) {
-          layer.style = { ...(layer.style || {}), color: '#8c1d2e', fontStyle: 'italic' };
+          layer.style = { ...(layer.style || {}), color: '#dfba47', fontStyle: 'italic', fontSize: 11 };
         } else if (definition.binding === 'display.locations.eyebrow') {
-          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47' };
         } else if (definition.binding === 'display.locations.title') {
           layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
         }
@@ -7099,7 +7183,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const hasGiftLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('display.gifts.'));
     if (!indexes?.length && (hasGiftLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil(this.giftSourceData().length / 2));
-    const requiredHeight = Math.max(900, 250 + rows * 290 + 330);
+    const requiredHeight = this.isXvBurgundy()
+      ? (200 + rows * 260 + 260)
+      : Math.max(900, 250 + rows * 290 + 330);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.giftLayerDefinitions(section).filter((definition) => {
@@ -7127,9 +7213,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding.includes('copy')) {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#faf6f0', borderColor: 'rgba(212, 175, 55, 0.5)', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 600 };
         } else {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
         }
       }
     }
@@ -7150,7 +7236,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(38, 4, 10, 0.88)', borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, backdropFilter: 'blur(12px)', boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7183,27 +7269,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding === 'display.gifts.eyebrow') {
-          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47', textAlign: 'center' };
         } else if (definition.binding === 'display.gifts.title') {
           layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding === 'display.gifts.intro') {
           layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
         } else if (definition.binding.endsWith('.title')) {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 28, fontWeight: 600, color: '#5c0d18', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding.endsWith('.store')) {
-          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#d4af37', letterSpacing: 1.5, textTransform: 'uppercase', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#dfba47', letterSpacing: 1.5, textTransform: 'uppercase', textAlign: 'center' };
         } else if (definition.binding.endsWith('.note')) {
-          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#8c1d2e', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#e2d5c3', textAlign: 'center' };
         } else if (definition.binding === 'display.gifts.envelopeTitle') {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 32, fontWeight: 700, color: '#5c0d18', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding === 'envelope.bank' || definition.binding === 'envelope.holder') {
-          layer.style = { ...(layer.style || {}), fontWeight: 600, color: '#5c0d18' };
+          layer.style = { ...(layer.style || {}), fontWeight: 600, color: '#faf6f0' };
         } else if (definition.binding === 'envelope.account' || definition.binding === 'envelope.clabe') {
-          layer.style = { ...(layer.style || {}), color: '#8c1d2e', fontFamily: 'monospace', fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), color: '#dfba47', fontFamily: 'monospace', fontWeight: 700 };
         } else if (definition.binding === 'envelope.note') {
-          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#5c0d18', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#e2d5c3', textAlign: 'center' };
         } else if (definition.binding === 'envelope.feedback') {
-          layer.style = { ...(layer.style || {}), color: '#8c1d2e', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), color: '#dfba47', textAlign: 'center' };
         }
       }
     }
@@ -7219,7 +7305,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const itinerary = this.itinerarySourceData();
     const isHaute = this.isHauteCouture();
     const isXv = this.isXvBurgundy();
-    const requiredHeight = Math.max(760, 220 + Math.max(1, itinerary.length) * 190);
+    const requiredHeight = isXv
+      ? Math.max(520, 190 + Math.max(1, itinerary.length) * 140)
+      : Math.max(760, 220 + Math.max(1, itinerary.length) * 190);
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
       { type: 'text', binding: 'display.itinerary.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute ? 'PROGRAMA DE LA CELEBRACIÓN' : isXv ? 'EL PROGRAMA' : 'Programa')), x: 15, y: pct(28), width: 70, height: pct(32), fontSize: 11 },
@@ -7227,16 +7315,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       { type: 'text', binding: 'display.itinerary.intro', label: String(this.pluginSetting(section, 'introText') || (isXv ? 'Momentos especiales preparados para celebrar en grande.' : 'Estos son los momentos principales de nuestra celebración.')), x: 12, y: pct(136), width: 76, height: pct(42), fontSize: 14 }
     ];
     itinerary.forEach((item, index) => {
-      const topPx = 200 + index * 190;
+      const topPx = isXv ? 190 + index * 140 : 200 + index * 190;
       const prefix = `itinerary.${index}`;
       if (isHaute || isXv) {
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de actividad ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(160), fontSize: 14 },
-          { type: 'text', binding: `${prefix}.icon`, label: item.icon || '✦', x: 11, y: pct(topPx + 22), width: 8, height: pct(38), fontSize: 18 },
-          { type: 'text', binding: `${prefix}.time`, label: item.time || 'Hora', x: 19, y: pct(topPx + 20), width: 22, height: pct(34), fontSize: 16 },
-          { type: 'text', binding: `${prefix}.title`, label: item.title || `Actividad ${index + 1}`, x: 42, y: pct(topPx + 18), width: 46, height: pct(38), fontSize: isXv ? 24 : 22 },
-          { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción de la actividad', x: 19, y: pct(topPx + 68), width: 44, height: pct(42), fontSize: 13 },
-          { type: 'button', binding: `${prefix}.location`, label: item.locationLabel || 'Ver ubicación', x: 65, y: pct(topPx + 112), width: 24, height: pct(36), fontSize: 12 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de actividad ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(isXv ? 122 : 160), fontSize: 14 },
+          { type: 'text', binding: `${prefix}.icon`, label: item.icon || '✦', x: 11, y: pct(topPx + (isXv ? 18 : 22)), width: 8, height: pct(38), fontSize: 18 },
+          { type: 'text', binding: `${prefix}.time`, label: item.time || 'Hora', x: 19, y: pct(topPx + (isXv ? 16 : 20)), width: 22, height: pct(34), fontSize: 16 },
+          { type: 'text', binding: `${prefix}.title`, label: item.title || `Actividad ${index + 1}`, x: 42, y: pct(topPx + (isXv ? 14 : 18)), width: 46, height: pct(38), fontSize: isXv ? 20 : 22 },
+          { type: 'text', binding: `${prefix}.description`, label: item.description || 'Descripción de la actividad', x: 19, y: pct(topPx + (isXv ? 54 : 68)), width: isXv ? 50 : 44, height: pct(isXv ? 38 : 42), fontSize: 13 },
+          { type: 'button', binding: `${prefix}.location`, label: item.locationLabel || 'Ver ubicación', x: isXv ? 70 : 65, y: pct(topPx + (isXv ? 68 : 112)), width: isXv ? 20 : 24, height: pct(34), fontSize: 11 }
         );
       } else {
         definitions.push(
@@ -7255,7 +7343,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private ensureItineraryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasItineraryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('display.itinerary.'));
     if (!indexes?.length && (hasItineraryLayers || section.layers.length > 0)) return;
-    const requiredHeight = Math.max(760, 220 + Math.max(1, this.itinerarySourceData().length) * 190);
+    const requiredHeight = this.isXvBurgundy()
+      ? Math.max(520, 190 + Math.max(1, this.itinerarySourceData().length) * 140)
+      : Math.max(760, 220 + Math.max(1, this.itinerarySourceData().length) * 190);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.itineraryLayerDefinitions(section).filter((definition) => {
@@ -7279,14 +7369,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5 };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'shape') {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 10px 28px rgba(197, 155, 72, 0.12)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 14px 34px rgba(40, 4, 10, 0.4), inset 0 0 0 1px rgba(212, 175, 55, 0.3)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(38, 4, 10, 0.88)', borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, backdropFilter: 'blur(12px)', boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7307,15 +7397,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding.endsWith('.title')) {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontWeight: 600, fontSize: 26, color: '#5c0d18' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, fontSize: 20, color: '#faf6f0' };
         } else if (definition.binding.endsWith('.time')) {
-          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#d4af37', letterSpacing: 1 };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#dfba47', letterSpacing: 1 };
         } else if (definition.binding.endsWith('.icon')) {
-          layer.style = { ...(layer.style || {}), color: '#d4af37', fontSize: 20 };
+          layer.style = { ...(layer.style || {}), color: '#dfba47', fontSize: 18 };
         } else if (definition.binding.endsWith('.description')) {
-          layer.style = { ...(layer.style || {}), color: '#5c0d18' };
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
         } else if (definition.binding === 'display.itinerary.eyebrow') {
-          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47' };
         } else if (definition.binding === 'display.itinerary.title') {
           layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
         } else if (definition.binding === 'display.itinerary.intro') {
@@ -7335,9 +7425,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       : this.invitation?.content?.dressCodeImageUrl;
     const hasImage = Boolean(dressImgUrl);
     const rows = Math.max(1, Math.ceil(options.length / 2));
-    const requiredHeight = isHaute || isXv
-      ? Math.max(760, (hasImage ? 460 : 380) + rows * 180)
-      : Math.max(760, 490 + rows * 180);
+    const requiredHeight = isXv
+      ? Math.max(540, (hasImage ? 420 : 320) + rows * 130)
+      : (isHaute ? Math.max(760, (hasImage ? 460 : 380) + rows * 180) : Math.max(760, 490 + rows * 180));
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'image' | 'shape'; binding: string; label: string; url?: string; color?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
       { type: 'text', binding: 'display.dressCode.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute || isXv ? 'CÓDIGO DE ETIQUETA' : 'Vestimenta')), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
@@ -7348,10 +7438,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (hasImage) {
         if (isXv) {
           definitions.push(
-            { type: 'shape', binding: 'dress.mainCard', label: 'Tarjeta de etiqueta', x: 8, y: pct(175), width: 84, height: pct(245), fontSize: 14 },
-            { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: dressImgUrl, x: 12, y: pct(190), width: 32, height: pct(215), fontSize: 12 },
-            { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || 'Rigurosa Etiqueta / Gala', x: 48, y: pct(200), width: 40, height: pct(52), fontSize: 30 },
-            { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.', x: 48, y: pct(258), width: 40, height: pct(145), fontSize: 13 }
+            { type: 'shape', binding: 'dress.mainCard', label: 'Tarjeta de etiqueta', x: 8, y: pct(175), width: 84, height: pct(225), fontSize: 14 },
+            { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: dressImgUrl, x: 12, y: pct(190), width: 32, height: pct(195), fontSize: 12 },
+            { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || 'Rigurosa Etiqueta / Gala', x: 48, y: pct(195), width: 40, height: pct(46), fontSize: 24 },
+            { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.', x: 48, y: pct(245), width: 40, height: pct(140), fontSize: 13 }
           );
         } else {
           definitions.push(
@@ -7366,16 +7456,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || (isXv ? 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.' : 'Caballeros: Frac o esmoquin negro clásico.\nDamas: Vestido largo de noche en tonos sugeridos.'), x: 15, y: pct(260), width: 70, height: pct(85), fontSize: 15 }
         );
       }
-      const startTopPx = hasImage ? 440 : 365;
+      const startTopPx = hasImage ? 415 : 340;
       options.forEach((option, index) => {
         const left = index % 2 === 0 ? 8 : 52;
-        const topPx = startTopPx + Math.floor(index / 2) * 180;
+        const topPx = startTopPx + Math.floor(index / 2) * (isXv ? 120 : 180);
         const prefix = `dress.option.${index}`;
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de referencia ${index + 1}`, x: left, y: pct(topPx), width: 40, height: pct(155), fontSize: 12 },
-          { type: 'shape', binding: `${prefix}.color`, label: option.title ? `Color: ${option.title}` : `Color ${index + 1}`, color: option.color || (isXv ? '#5c0d18' : '#181514'), x: left + 3.5, y: pct(topPx + 22), width: 7, height: pct(54), fontSize: 12 },
-          { type: 'text', binding: `${prefix}.title`, label: option.title || `Etiqueta ${index + 1}`, x: left + 12, y: pct(topPx + 18), width: 26, height: pct(36), fontSize: 18 },
-          { type: 'text', binding: `${prefix}.description`, label: option.description || 'Recomendación de vestuario', x: left + 12, y: pct(topPx + 58), width: 26, height: pct(80), fontSize: 12 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de referencia ${index + 1}`, x: left, y: pct(topPx), width: 40, height: pct(isXv ? 105 : 155), fontSize: 12 },
+          { type: 'shape', binding: `${prefix}.color`, label: option.title ? `Color: ${option.title}` : `Color ${index + 1}`, color: option.color || (isXv ? '#5c0d18' : '#181514'), x: left + 3.5, y: pct(topPx + (isXv ? 16 : 22)), width: 7, height: pct(isXv ? 40 : 54), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: option.title || `Etiqueta ${index + 1}`, x: left + 12, y: pct(topPx + (isXv ? 14 : 18)), width: 26, height: pct(36), fontSize: isXv ? 16 : 18 },
+          { type: 'text', binding: `${prefix}.description`, label: option.description || 'Recomendación de vestuario', x: left + 12, y: pct(topPx + (isXv ? 48 : 58)), width: 26, height: pct(isXv ? 50 : 80), fontSize: 12 }
         );
       });
     } else {
@@ -7403,7 +7493,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const hasDressLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('display.dressCode.'));
     if (!indexes?.length && (hasDressLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil((this.invitation?.content?.dressCodeOptions?.length || 0) / 2));
-    const requiredHeight = Math.max(760, 490 + rows * 180);
+    const requiredHeight = this.isXvBurgundy()
+      ? Math.max(540, ((this.invitation?.content?.dressCodeImageUrl || 'assets/templates/xv-burgundy/dresscode-art.jpg') ? 420 : 320) + rows * 130)
+      : Math.max(760, 490 + rows * 180);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.dressCodeLayerDefinitions(section).filter((definition) => {
@@ -7428,7 +7520,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', boxShadow: '0 16px 36px rgba(40, 4, 10, 0.5)' };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, borderColor: 'rgba(212, 175, 55, 0.5)', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 16px 36px rgba(0, 0, 0, 0.5)' };
       } else {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
       }
@@ -7448,12 +7540,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       } else if (isXv) {
         layer.style = {
           ...(layer.style || {}),
-          backgroundColor: isColor ? definition.color || '#5c0d18' : '#fffdfa',
-          borderColor: '#d4af37',
+          backgroundColor: isColor ? definition.color || '#5c0d18' : 'rgba(38, 4, 10, 0.88)',
+          borderColor: isColor ? '#dfba47' : 'rgba(212, 175, 55, 0.45)',
           borderWidth: isColor ? 2 : 1.5,
           borderStyle: 'solid',
-          borderRadius: isColor ? 999 : 16,
-          boxShadow: isColor ? '0 4px 12px rgba(212, 175, 55, 0.4)' : '0 14px 34px rgba(40, 4, 10, 0.4), inset 0 0 0 1px rgba(212, 175, 55, 0.3)'
+          borderRadius: isColor ? 999 : 18,
+          backdropFilter: isColor ? undefined : 'blur(12px)',
+          boxShadow: isColor ? '0 4px 12px rgba(212, 175, 55, 0.4)' : '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)'
         };
       } else {
         layer.style = {
@@ -7483,19 +7576,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding === 'display.dressCode.eyebrow') {
-          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47', textAlign: 'center' };
         } else if (definition.binding === 'display.dressCode.title') {
           layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding === 'display.dressCode.intro') {
           layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
         } else if (definition.binding === 'dress.code') {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 34, fontWeight: 700, color: hasImage ? '#faf6f0' : '#faf6f0', textAlign: hasImage ? 'left' : 'center', letterSpacing: 1 };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: '#dfba47', textAlign: hasImage ? 'left' : 'center', letterSpacing: 0.5 };
         } else if (definition.binding === 'dress.description') {
-          layer.style = { ...(layer.style || {}), color: '#e2d5c3', lineHeight: 1.6, textAlign: hasImage ? 'left' : 'center' };
+          layer.style = { ...(layer.style || {}), color: '#faf6f0', lineHeight: 1.5, textAlign: hasImage ? 'left' : 'center' };
         } else if (definition.binding.endsWith('.title')) {
-          layer.style = { ...(layer.style || {}), fontFamily: 'Montserrat, sans-serif', fontWeight: 700, color: '#5c0d18' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#faf6f0', fontSize: 16 };
         } else if (definition.binding.endsWith('.description')) {
-          layer.style = { ...(layer.style || {}), color: '#5c0d18', lineHeight: 1.4 };
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', lineHeight: 1.4 };
         }
       }
     }
@@ -7504,7 +7597,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private lodgingLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
     const hotels = this.invitation?.content?.lodging || [];
-    const requiredHeight = Math.max(760, 220 + Math.max(1, hotels.length) * 420);
+    const isXv = this.isXvBurgundy();
+    const requiredHeight = isXv
+      ? Math.max(540, 190 + Math.max(1, hotels.length) * 360)
+      : Math.max(760, 220 + Math.max(1, hotels.length) * 420);
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
       { type: 'text', binding: 'display.lodging.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Para invitados foráneos'), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
@@ -7512,22 +7608,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       { type: 'text', binding: 'display.lodging.intro', label: String(this.pluginSetting(section, 'introText') || 'Opciones seleccionadas para hacer más cómoda tu estancia.'), x: 12, y: pct(132), width: 76, height: pct(42), fontSize: 14 }
     ];
     hotels.forEach((hotel, index) => {
-      const topPx = 200 + index * 420;
+      const topPx = isXv ? 190 + index * 360 : 200 + index * 420;
+      const cardHeight = isXv ? 330 : 390;
       const prefix = `lodging.${index}`;
       definitions.push(
-        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de hospedaje ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(390), fontSize: 12 },
-        { type: 'image', binding: `${prefix}.image`, label: 'Imagen', url: hotel.imageUrl || '', x: 12, y: pct(topPx + 20), width: 28, height: pct(150), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.name`, label: hotel.name || `Hospedaje ${index + 1}`, x: 44, y: pct(topPx + 18), width: 43, height: pct(38), fontSize: 23 },
-        { type: 'text', binding: `${prefix}.description`, label: hotel.description || 'Motivo de recomendación', x: 44, y: pct(topPx + 62), width: 43, height: pct(42), fontSize: 13 },
-        { type: 'text', binding: `${prefix}.address`, label: hotel.address || 'Dirección', x: 44, y: pct(topPx + 112), width: 43, height: pct(34), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.price`, label: hotel.priceLabel || 'Tarifa', x: 12, y: pct(topPx + 190), width: 22, height: pct(30), fontSize: 13 },
-        { type: 'text', binding: `${prefix}.agreement`, label: hotel.agreementLabel || 'Convenio', x: 37, y: pct(topPx + 190), width: 23, height: pct(30), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.discount`, label: [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ') || 'Descuento', x: 63, y: pct(topPx + 190), width: 24, height: pct(30), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.services`, label: (hotel.services || []).join(' · ') || 'Servicios', x: 12, y: pct(topPx + 232), width: 75, height: pct(34), fontSize: 12 },
-        { type: 'text', binding: `${prefix}.notes`, label: hotel.notes || 'Notas adicionales', x: 12, y: pct(topPx + 274), width: 75, height: pct(34), fontSize: 12 },
-        { type: 'button', binding: `${prefix}.reserve`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Reservar'), x: 16, y: pct(topPx + 330), width: 24, height: pct(38), fontSize: 12 },
-        { type: 'button', binding: `${prefix}.map`, label: 'Abrir mapa', x: 42, y: pct(topPx + 330), width: 20, height: pct(38), fontSize: 12 },
-        { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: 64, y: pct(topPx + 330), width: 20, height: pct(38), fontSize: 12 }
+        { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de hospedaje ${index + 1}`, x: 8, y: pct(topPx), width: 84, height: pct(cardHeight), fontSize: 12 },
+        { type: 'image', binding: `${prefix}.image`, label: 'Imagen', url: hotel.imageUrl || '', x: 12, y: pct(topPx + 18), width: 28, height: pct(isXv ? 140 : 150), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.name`, label: hotel.name || `Hospedaje ${index + 1}`, x: 44, y: pct(topPx + 18), width: 44, height: pct(38), fontSize: isXv ? 20 : 23 },
+        { type: 'text', binding: `${prefix}.description`, label: hotel.description || 'Motivo de recomendación', x: 44, y: pct(topPx + 58), width: 44, height: pct(42), fontSize: 13 },
+        { type: 'text', binding: `${prefix}.address`, label: hotel.address || 'Dirección', x: 44, y: pct(topPx + 104), width: 44, height: pct(34), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.price`, label: hotel.priceLabel || 'Tarifa', x: 12, y: pct(topPx + (isXv ? 172 : 190)), width: 22, height: pct(30), fontSize: 13 },
+        { type: 'text', binding: `${prefix}.agreement`, label: hotel.agreementLabel || 'Convenio', x: 37, y: pct(topPx + (isXv ? 172 : 190)), width: 23, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.discount`, label: [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ') || 'Descuento', x: 63, y: pct(topPx + (isXv ? 172 : 190)), width: 24, height: pct(30), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.services`, label: (hotel.services || []).join(' · ') || 'Servicios', x: 12, y: pct(topPx + (isXv ? 212 : 232)), width: 75, height: pct(34), fontSize: 12 },
+        { type: 'text', binding: `${prefix}.notes`, label: hotel.notes || 'Notas adicionales', x: 12, y: pct(topPx + (isXv ? 250 : 274)), width: 75, height: pct(34), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.reserve`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Reservar'), x: 16, y: pct(topPx + (isXv ? 288 : 330)), width: 24, height: pct(34), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.map`, label: 'Abrir mapa', x: 42, y: pct(topPx + (isXv ? 288 : 330)), width: 20, height: pct(34), fontSize: 12 },
+        { type: 'button', binding: `${prefix}.phone`, label: 'Llamar', x: 64, y: pct(topPx + (isXv ? 288 : 330)), width: 20, height: pct(34), fontSize: 12 }
       );
     });
     return definitions;
@@ -7536,7 +7633,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private ensureLodgingCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasLodgingLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('lodging.') || String(layer.binding || '').startsWith('display.lodging.'));
     if (!indexes?.length && (hasLodgingLayers || section.layers.length > 0)) return;
-    const requiredHeight = Math.max(760, 220 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 420);
+    const requiredHeight = this.isXvBurgundy()
+      ? Math.max(540, 190 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 360)
+      : Math.max(760, 220 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 420);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.lodgingLayerDefinitions(section).filter((definition) => {
@@ -7559,18 +7658,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
         if (definition.binding.endsWith('.reserve')) {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 18px rgba(212, 175, 55, 0.35)' };
         } else {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 30, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(255, 255, 255, 0.08)', color: '#faf6f0', borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1, borderRadius: 30, fontWeight: 600 };
         }
       }
     }
     if (definition.type === 'image') {
-      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: isXv ? 12 : 8, borderColor: isXv ? '#d4af37' : undefined, borderWidth: isXv ? 1 : 0 };
+      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: isXv ? 12 : 8, borderColor: isXv ? 'rgba(212, 175, 55, 0.5)' : undefined, borderWidth: isXv ? 1.5 : 0 };
     }
     if (definition.type === 'shape') {
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(38, 4, 10, 0.88)', borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, backdropFilter: 'blur(12px)', boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7578,17 +7677,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     if (definition.type === 'text' && isXv) {
       if (definition.binding === 'display.lodging.eyebrow') {
-        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37' };
+        layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47' };
       } else if (definition.binding === 'display.lodging.title') {
         layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0' };
       } else if (definition.binding === 'display.lodging.intro') {
         layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
       } else if (definition.binding.endsWith('.name')) {
-        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 26, fontWeight: 600, color: '#5c0d18' };
+        layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: '#faf6f0' };
       } else if (definition.binding.endsWith('.price') || definition.binding.endsWith('.agreement') || definition.binding.endsWith('.discount')) {
-        layer.style = { ...(layer.style || {}), color: '#8c1d2e', fontWeight: 600 };
+        layer.style = { ...(layer.style || {}), color: '#dfba47', fontWeight: 600 };
       } else {
-        layer.style = { ...(layer.style || {}), color: '#3a0810' };
+        layer.style = { ...(layer.style || {}), color: '#e2d5c3' };
       }
     }
     return layer;
@@ -7607,7 +7706,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const isXv = this.isXvBurgundy();
     const items = this.gallerySourceData();
     const rows = Math.max(1, Math.ceil(items.length / 2));
-    const requiredHeight = Math.max(760, 220 + rows * (isHaute || isXv ? 320 : 330));
+    const requiredHeight = isXv
+      ? Math.max(520, 190 + rows * 280)
+      : Math.max(760, 220 + rows * (isHaute ? 320 : 330));
     const pct = (pixels: number) => pixels / requiredHeight * 100;
     const definitions: Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> = [
       { type: 'text', binding: 'display.gallery.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || (isHaute ? 'GALERÍA DE RECUERDOS' : isXv ? 'MIS MOMENTOS FAVORITOS' : 'Momentos')), x: 15, y: pct(28), width: 70, height: pct(30), fontSize: 11 },
@@ -7617,22 +7718,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (isHaute || isXv) {
       items.forEach((item, index) => {
         const left = index % 2 === 0 ? 5 : 52;
-        const topPx = 200 + Math.floor(index / 2) * 320;
+        const topPx = isXv ? (190 + Math.floor(index / 2) * 280) : (200 + Math.floor(index / 2) * 320);
         const prefix = `gallery.item.${index}`;
         const defaultPhotoUrl = isXv ? (index === 0 ? 'assets/templates/xv-burgundy/portrait.jpg' : (index % 2 === 1 ? 'assets/templates/xv-burgundy/church-card.jpg' : 'assets/templates/xv-burgundy/reception-doily.jpg')) : '';
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(295), fontSize: 12 },
-          { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || defaultPhotoUrl, x: left + 2.5, y: pct(topPx + 14), width: 38, height: pct(225), fontSize: 12 },
-          { type: 'text', binding: `${prefix}.title`, label: item.title || `Fotografía ${index + 1}`, x: left + 2.5, y: pct(topPx + 250), width: 38, height: pct(30), fontSize: isXv ? 20 : 16 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(isXv ? 260 : 295), fontSize: 12 },
+          { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || defaultPhotoUrl, x: left + 2.5, y: pct(topPx + 12), width: 38, height: pct(isXv ? 200 : 225), fontSize: 12 },
+          { type: 'text', binding: `${prefix}.title`, label: item.title || `Fotografía ${index + 1}`, x: left + 2.5, y: pct(topPx + (isXv ? 220 : 250)), width: 38, height: pct(30), fontSize: isXv ? 18 : 16 }
         );
         if (item.description) {
           definitions.push(
-            { type: 'text', binding: `${prefix}.description`, label: item.description, x: left + 2.5, y: pct(topPx + 282), width: 38, height: pct(24), fontSize: 12 }
+            { type: 'text', binding: `${prefix}.description`, label: item.description, x: left + 2.5, y: pct(topPx + (isXv ? 250 : 282)), width: 38, height: pct(24), fontSize: 12 }
           );
         }
         if (item.dedication) {
           definitions.push(
-            { type: 'text', binding: `${prefix}.dedication`, label: item.dedication, x: left + 2.5, y: pct(topPx + 308), width: 38, height: pct(22), fontSize: 11 }
+            { type: 'text', binding: `${prefix}.dedication`, label: item.dedication, x: left + 2.5, y: pct(topPx + (isXv ? 272 : 308)), width: 38, height: pct(22), fontSize: 11 }
           );
         }
       });
@@ -7667,7 +7768,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const hasGalleryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gallery.') || String(layer.binding || '').startsWith('display.gallery.'));
     if (!indexes?.length && (hasGalleryLayers || section.layers.length > 0)) return;
     const rows = Math.max(1, Math.ceil(this.gallerySourceData().length / 2));
-    const requiredHeight = Math.max(760, 220 + rows * (this.isHauteCouture() || this.isXvBurgundy() ? 320 : 330));
+    const requiredHeight = this.isXvBurgundy()
+      ? Math.max(520, 190 + rows * 280)
+      : Math.max(760, 220 + rows * (this.isHauteCouture() ? 320 : 330));
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.galleryLayerDefinitions(section).filter((definition) => {
@@ -7692,14 +7795,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30 };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#240308', borderColor: '#f5d77f', borderWidth: 1, borderRadius: 30, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'image') {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 12, borderColor: '#e8dcce', borderWidth: 1, borderStyle: 'solid' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(40, 4, 10, 0.25)' };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)' };
       } else {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 4 };
       }
@@ -7708,7 +7811,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: 'rgba(38, 4, 10, 0.88)', borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, backdropFilter: 'blur(12px)', boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 4, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7735,21 +7838,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding === 'display.gallery.eyebrow') {
-          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#d4af37', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), letterSpacing: 2.5, fontWeight: 700, color: '#dfba47', textAlign: 'center' };
         } else if (definition.binding === 'display.gallery.title') {
           layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding === 'display.gallery.intro') {
           layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
         } else if (definition.binding.endsWith('.title')) {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 24, fontWeight: 600, color: '#5c0d18', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontSize: 17, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding.endsWith('.description')) {
-          layer.style = { ...(layer.style || {}), color: '#3a0810', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), color: '#e2d5c3', textAlign: 'center' };
         } else if (definition.binding.endsWith('.dedication')) {
-          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#8c1d2e', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontStyle: 'italic', color: '#dfba47', textAlign: 'center' };
         } else if (definition.binding === 'gallery.carousel.title') {
-          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 32, fontWeight: 700, color: '#5c0d18', textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 32, fontWeight: 700, color: '#faf6f0', textAlign: 'center' };
         } else if (definition.binding === 'gallery.carousel.counter') {
-          layer.style = { ...(layer.style || {}), color: '#d4af37', fontWeight: 700, textAlign: 'center' };
+          layer.style = { ...(layer.style || {}), color: '#dfba47', fontWeight: 700, textAlign: 'center' };
         }
       }
     }
@@ -7783,12 +7886,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
     if (isXv) {
       if (definition.type === 'field') {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 12, color: '#5c0d18', padding: 10, textAlign: 'left', showPlaceholder: true, boxShadow: 'inset 0 1px 3px rgba(92, 13, 24, 0.08), 0 2px 8px rgba(0,0,0,0.1)' };
+        layer.style = {
+          ...(layer.style || {}),
+          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+          borderColor: 'rgba(212, 175, 55, 0.4)',
+          borderWidth: 1,
+          borderRadius: 12,
+          color: '#faf6f0',
+          padding: 10,
+          textAlign: 'left',
+          showPlaceholder: true,
+          boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.35)'
+        };
       } else if (definition.type === 'button') {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 20px rgba(212, 175, 55, 0.4)' };
+        layer.style = {
+          ...(layer.style || {}),
+          backgroundColor: '#d4af37',
+          color: '#240308',
+          borderColor: '#f5d77f',
+          borderWidth: 1,
+          borderRadius: 30,
+          fontWeight: 700,
+          letterSpacing: 0.5,
+          boxShadow: '0 6px 20px rgba(212, 175, 55, 0.4)'
+        };
       } else if (definition.type === 'text') {
         if (definition.key === 'eyebrow') {
-          layer.style = { ...(layer.style || {}), color: '#d4af37', letterSpacing: 2.5, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), color: '#dfba47', letterSpacing: 2.5, fontWeight: 700 };
         } else if (definition.key === 'title') {
           layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 44, color: '#faf6f0', fontWeight: 700 };
         } else if (definition.key === 'intro') {
@@ -7797,6 +7921,118 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
     }
     return layer;
+  }
+
+  private refineXvBurgundySectionStyles(section: VisualInvitationSection): void {
+    if (!section || !section.layers) return;
+    for (const layer of section.layers) {
+      if (!layer.style) layer.style = {};
+      const binding = String(layer.binding || '');
+
+      // 1. Shapes / Cards
+      if (layer.type === 'shape') {
+        if (binding.endsWith('.color')) {
+          layer.style.borderColor = '#dfba47';
+          layer.style.borderWidth = 2;
+          layer.style.borderRadius = 999;
+          layer.style.boxShadow = '0 4px 12px rgba(212, 175, 55, 0.4)';
+        } else if (binding === 'display.countdown.plaque') {
+          layer.style.backgroundColor = 'rgba(38, 4, 10, 0.88)';
+          layer.style.borderColor = 'rgba(212, 175, 55, 0.45)';
+          layer.style.borderWidth = 1.5;
+          layer.style.borderStyle = 'solid';
+          layer.style.borderRadius = 20;
+          layer.style.backdropFilter = 'blur(12px)';
+          layer.style.boxShadow = '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)';
+        } else if (binding === 'guestPass.qrCard') {
+          layer.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+          layer.style.borderColor = '#d4af37';
+          layer.style.borderWidth = 1.5;
+          layer.style.borderRadius = 16;
+        } else {
+          const currentBg = String(layer.style.backgroundColor || '').toLowerCase();
+          if (currentBg === '#fffdfa' || currentBg === '#ffffff' || currentBg.startsWith('#fff') || !layer.style.backgroundColor) {
+            layer.style.backgroundColor = 'rgba(38, 4, 10, 0.88)';
+            layer.style.borderColor = 'rgba(212, 175, 55, 0.45)';
+            layer.style.borderWidth = 1.5;
+            layer.style.borderStyle = 'solid';
+            layer.style.borderRadius = 18;
+            layer.style.backdropFilter = 'blur(12px)';
+            layer.style.boxShadow = '0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 150, 0.25)';
+          }
+        }
+      }
+
+      // 2. Fields / Inputs
+      if (layer.type === 'field') {
+        const currentBg = String(layer.style.backgroundColor || '').toLowerCase();
+        if (currentBg === '#fffdfa' || currentBg === '#ffffff' || currentBg.startsWith('#fff') || !layer.style.backgroundColor) {
+          layer.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+          layer.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+          layer.style.borderWidth = 1;
+          layer.style.borderRadius = 12;
+          layer.style.color = '#faf6f0';
+          layer.style.boxShadow = 'inset 0 2px 6px rgba(0,0,0,0.35)';
+        }
+      }
+
+      // 3. Buttons
+      if (layer.type === 'button') {
+        const currentBg = String(layer.style.backgroundColor || '').toLowerCase();
+        if (currentBg === '#fffdfa' || currentBg === '#ffffff') {
+          layer.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+          layer.style.color = '#faf6f0';
+          layer.style.borderColor = 'rgba(212, 175, 55, 0.45)';
+          layer.style.borderWidth = 1;
+          layer.style.borderRadius = 30;
+          layer.style.fontWeight = 600;
+        } else {
+          layer.style.backgroundColor = '#d4af37';
+          layer.style.color = '#240308';
+          layer.style.borderColor = '#f5d77f';
+          layer.style.borderWidth = 1;
+          layer.style.borderRadius = 30;
+          layer.style.fontWeight = 700;
+          layer.style.boxShadow = '0 6px 18px rgba(212, 175, 55, 0.35)';
+        }
+      }
+
+      // 4. Texts
+      if (layer.type === 'text') {
+        const currentColor = String(layer.style.color || '').toLowerCase();
+        if (currentColor === '#5c0d18' || currentColor === '#3a0810' || currentColor === '#181514' || currentColor === '#292523') {
+          if (binding.endsWith('.name') || binding.endsWith('.title') || binding === 'dress.code' || binding === 'pass.guestName') {
+            layer.style.color = '#faf6f0';
+            layer.style.fontFamily = "'Cinzel', 'Playfair Display', serif";
+            layer.style.fontWeight = 700;
+          } else {
+            layer.style.color = '#e2d5c3';
+          }
+        }
+        if (currentColor === '#8c1d2e') {
+          layer.style.color = '#dfba47';
+        }
+        if (binding.endsWith('.eyebrow')) {
+          layer.style.color = '#dfba47';
+          layer.style.letterSpacing = 2.5;
+          layer.style.fontWeight = 700;
+        }
+        if (binding.endsWith('.title') && layer.text && (layer.text.includes('Itinerario') || layer.text.includes('Galería') || layer.text.includes('Código') || layer.text.includes('Hospedaje') || layer.text.includes('Música') || layer.text.includes('Dedicatorias') || layer.text.includes('Mesa') || layer.text.includes('Ubicaciones') || layer.text.includes('Momentos'))) {
+          layer.style.fontFamily = "'Great Vibes', cursive";
+          layer.style.color = '#faf6f0';
+        }
+        if (binding.startsWith('countdown.') && !binding.endsWith('expired')) {
+          layer.style.fontFamily = "'Cinzel', 'Playfair Display', serif";
+          layer.style.color = '#dfba47';
+          layer.style.fontWeight = 700;
+        }
+        if (binding.startsWith('display.countdown.') && binding.endsWith('Label')) {
+          layer.style.color = '#faf6f0';
+          layer.style.letterSpacing = 2;
+          layer.style.fontWeight = 600;
+        }
+      }
+    }
   }
 
   private defaultPluginSettings(type: string): Record<string, string | number | boolean> {

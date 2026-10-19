@@ -1,0 +1,603 @@
+<!-- PLANTILLA: MIS XV BORGOÑA REAL (Terciopelo Borgoña, Oro Imperial, Rosas 3D & Perlas) -->
+<div class="xv-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- 1. REPRODUCTOR FLOTANTE DE AUDIO -->
+  <aside *ngIf="isSectionActive('music')" class="xv-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="xv-audio-btn" (click)="toggleMusic()"
+      [title]="isPlayingMusic ? 'Pausar música' : 'Reproducir música'">
+      <div class="xv-audio-icon-wrap">
+        <svg *ngIf="!isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg *ngIf="isPlayingMusic" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        </svg>
+      </div>
+      <span class="xv-audio-label">{{ isPlayingMusic ? 'Vals Real' : 'Música' }}</span>
+      <div *ngIf="isPlayingMusic" class="xv-sound-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+  </aside>
+
+  <!-- 2. PANTALLA SOBRE VIP DE VALIDACIÓN PRIVADA -->
+  <div *ngIf="requiresGuestValidation && !envelopeOpened" class="xv-vip-envelope-screen">
+    <div class="xv-vip-card" data-aos="zoom-in">
+      <div class="xv-seal-box">
+        <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Sello Imperial" class="xv-seal-img">
+      </div>
+      <span class="xv-vip-eyebrow">MIS QUINCE AÑOS</span>
+      <h2 class="xv-vip-title">Pase Real de Entrada</h2>
+      <p class="xv-vip-desc">Por favor introduce tu correo electrónico o teléfono registrado para acceder a tu invitación personalizada.</p>
+      
+      <div class="xv-vip-form">
+        <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo electrónico o teléfono..."
+          class="xv-input" (keyup.enter)="validateAndOpenEnvelope()">
+        <button type="button" class="xv-btn xv-btn-gold" (click)="validateAndOpenEnvelope()" [disabled]="checkingGuest">
+          <span *ngIf="!checkingGuest">Abrir Invitación Real</span>
+          <span *ngIf="checkingGuest">Verificando...</span>
+        </button>
+      </div>
+      <p *ngIf="error" class="xv-alert error">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL DE LA INVITACIÓN -->
+  <main *ngIf="!requiresGuestValidation || envelopeOpened" class="xv-invitation-body">
+
+    <!-- 3. PORTADA HERO DE GALA -->
+    <header *ngIf="isSectionActive('hero')" class="xv-hero-section" data-section-key="hero">
+      <div class="xv-hero-bg"></div>
+      <div class="xv-hero-overlay"></div>
+
+      <div class="xv-hero-content" data-aos="fade-up">
+        <!-- Corona / Tiara Banner -->
+        <div class="xv-tiara-banner-wrap">
+          <img src="assets/templates/xv-burgundy/tiara-banner.jpg" alt="Tiara Real" class="xv-tiara-img">
+        </div>
+
+        <span class="xv-hero-badge">MIS QUINCE AÑOS</span>
+        <h1 class="xv-hero-title">{{ invitation?.content?.headline || event?.title || 'Mis Quince Años' }}</h1>
+        <p class="xv-hero-subtitle">{{ invitation?.content?.subheadline || 'Una noche mágica donde los sueños se vuelven realidad' }}</p>
+
+        <!-- Divisor Ornamental Rosas y Perlas -->
+        <div class="xv-gold-divider">
+          <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas Reales" class="xv-divider-roses">
+        </div>
+
+        <!-- Retrato Real de la Quinceañera -->
+        <div class="xv-portrait-frame-wrap" data-aos="zoom-in" data-aos-delay="150">
+          <div class="xv-portrait-arch">
+            <img [src]="invitation?.content?.coverImageUrl || 'assets/templates/xv-burgundy/portrait.jpg'"
+                 alt="Quinceañera" class="xv-portrait-img"
+                 (click)="openLightbox(invitation?.content?.coverImageUrl || 'assets/templates/xv-burgundy/portrait.jpg')">
+          </div>
+        </div>
+
+        <div class="xv-date-badge">
+          <span class="date-text">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Fecha de Nuestra Gran Noche' }}</span>
+        </div>
+
+        <!-- CUENTA REGRESIVA REAL -->
+        <div *ngIf="isSectionActive('countdown')" class="xv-countdown-container" data-section-key="countdown" data-aos="fade-up" data-aos-delay="200">
+          <div class="xv-countdown-board">
+            <div class="cd-box">
+              <span class="cd-val">{{ countdown.days }}</span>
+              <span class="cd-lbl">Días</span>
+            </div>
+            <span class="cd-sep">✦</span>
+            <div class="cd-box">
+              <span class="cd-val">{{ countdown.hours }}</span>
+              <span class="cd-lbl">Horas</span>
+            </div>
+            <span class="cd-sep">✦</span>
+            <div class="cd-box">
+              <span class="cd-val">{{ countdown.minutes }}</span>
+              <span class="cd-lbl">Minutos</span>
+            </div>
+            <span class="cd-sep">✦</span>
+            <div class="cd-box">
+              <span class="cd-val">{{ countdown.seconds }}</span>
+              <span class="cd-lbl">Segundos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="xv-hero-actions">
+          <button type="button" class="xv-btn xv-btn-gold" (click)="scrollToSection('xv-rsvp-section')">
+            <span>Confirmar Asistencia</span>
+          </button>
+          <a *ngIf="calendarUrl" [href]="calendarUrl" target="_blank" rel="noopener noreferrer" class="xv-btn xv-btn-glass">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Agendar Fecha</span>
+          </a>
+          <button type="button" class="xv-btn xv-btn-glass" (click)="shareWhatsApp()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <span>Compartir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4. PASE VIP CONFIRMADO -->
+    <section *ngIf="verifiedGuest" class="xv-section" data-section-key="guestPass" data-aos="fade-up">
+      <div class="xv-container">
+        <div class="xv-pass-card">
+          <div class="pass-sparkle">👑</div>
+          <span class="pass-tag">Boleto de Honor VIP</span>
+          <h3 class="pass-guest-name">{{ verifiedGuest.name }}</h3>
+
+          <div class="pass-info-grid">
+            <div class="info-item" *ngIf="verifiedGuest.tableName">
+              <span class="lbl">Mesa Real</span>
+              <strong class="val">{{ verifiedGuest.tableName }}</strong>
+            </div>
+            <div class="info-item" *ngIf="verifiedGuest.seatLabel">
+              <span class="lbl">Asiento Asignado</span>
+              <strong class="val">{{ verifiedGuest.seatLabel }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="lbl">Pases Otorgados</span>
+              <strong class="val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} {{ ((verifiedGuest.allowedCompanions || 0) + 1) === 1 ? 'persona' : 'personas' }}</strong>
+            </div>
+            <div class="info-item">
+              <span class="lbl">Estatus</span>
+              <strong class="val">{{ guestAttendanceStatus }}</strong>
+            </div>
+          </div>
+
+          <div *ngIf="guestQrUrl" class="pass-qr-wrap" (click)="openLightbox(guestQrUrl)">
+            <img [src]="guestQrUrl" alt="QR" class="pass-qr-img">
+            <span class="qr-hint">Muestra este código al entrar a la recepción</span>
+          </div>
+
+          <div class="pass-footer">
+            <button type="button" class="xv-btn xv-btn-gold xv-btn-sm" (click)="downloadGuestPass()">
+              <span>Descargar Pase</span>
+            </button>
+            <button type="button" class="xv-btn xv-btn-glass xv-btn-sm" (click)="resetGuestAccess()">
+              <span>Cambiar de Invitado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. BIENVENIDA & HISTORIA / MENSAJE -->
+    <section *ngIf="isSectionActive('story')" class="xv-section" data-section-key="story">
+      <div class="xv-container">
+        <div class="xv-card xv-welcome-card" data-aos="fade-up">
+          <div class="welcome-card-bg-layer" style="background-image: url('assets/templates/xv-burgundy/welcome-card.jpg');"></div>
+          <div class="welcome-card-inner">
+            <span class="section-tag">MIS QUINCE AÑOS</span>
+            <h2 class="section-title">{{ invitation?.content?.storyTitle || 'Te Invito a Celebrar Conmigo' }}</h2>
+            <div class="xv-gold-divider mini">
+              <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+            </div>
+
+            <p class="story-paragraph">
+              {{ invitation?.content?.storyBody || invitation?.content?.message || 'Hoy dejo atrás mi infancia para comenzar una nueva etapa llena de ilusiones, sueños y esperanzas. Quiero compartir la alegría de mis quince años con las personas que más amo en el mundo. Tu presencia hará de esta noche un recuerdo imborrable.' }}
+            </p>
+
+            <!-- Padres y Padrinos -->
+            <div *ngIf="event?.hosts?.length" class="xv-hosts-block">
+              <span class="hosts-label">Con la bendición de Dios y el amor de mis padres y padrinos:</span>
+              <p class="hosts-list">{{ event?.hosts?.join(' • ') }}</p>
+            </div>
+
+            <div *ngIf="hasSectionMusic('story')" class="section-music-player">
+              <button type="button" class="sec-music-btn" (click)="toggleSectionMusic('story')">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                </svg>
+                <span>{{ isSectionMusicPlaying('story') ? 'Pausar melodía' : 'Escuchar melodía de bienvenida' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. UBICACIONES: MISA & RECEPCIÓN -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" class="xv-section" data-section-key="locations">
+      <div class="xv-container">
+        <div class="xv-section-header" data-aos="fade-up">
+          <span class="section-tag">CELEBRACIÓN</span>
+          <h2 class="section-title">Ceremonia & Recepción</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+        </div>
+
+        <div class="xv-locations-grid">
+          <article *ngFor="let loc of displayLocations; let i = index" class="xv-loc-card" data-aos="fade-up" [attr.data-aos-delay]="i * 150">
+            <div class="loc-illustration-wrap">
+              <img [src]="i === 0 ? 'assets/templates/xv-burgundy/church-card.jpg' : 'assets/templates/xv-burgundy/reception-doily.jpg'"
+                   [alt]="loc.name" class="loc-illustration-img">
+            </div>
+            <div class="loc-content-wrap">
+              <span class="loc-type-badge">{{ loc.type || (i === 0 ? 'Misa de Acción de Gracias' : 'Gran Noche de Gala') }}</span>
+              <h3 class="loc-name">{{ loc.name }}</h3>
+              <p *ngIf="loc.address" class="loc-address">{{ loc.address }}</p>
+
+              <div class="loc-actions">
+                <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="xv-btn xv-btn-gold xv-btn-sm">
+                  <span>Google Maps</span>
+                </a>
+                <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="xv-btn xv-btn-glass xv-btn-sm">
+                  <span>Waze</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. ITINERARIO REAL -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" class="xv-section" data-section-key="itinerary">
+      <div class="xv-container">
+        <div class="xv-card" data-aos="fade-up">
+          <span class="section-tag">MOMENTOS MÁGICOS</span>
+          <h2 class="section-title">Itinerario de Gala</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+
+          <div class="xv-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary" class="xv-timeline-item" data-aos="fade-up">
+              <div class="timeline-time">{{ item.time }}</div>
+              <div class="timeline-marker">
+                <span class="marker-symbol">✦</span>
+              </div>
+              <div class="timeline-body">
+                <h4 class="timeline-title">{{ item.title }}</h4>
+                <p *ngIf="item.description" class="timeline-desc">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. CÓDIGO DE VESTIMENTA -->
+    <section *ngIf="isSectionActive('dressCode') && (invitation?.content?.dressCode || invitation?.content?.dressCodeDescription)" class="xv-section" data-section-key="dressCode">
+      <div class="xv-container">
+        <div class="xv-card xv-dresscode-card" data-aos="fade-up">
+          <div class="dresscode-illustration">
+            <img src="assets/templates/xv-burgundy/dresscode-art.jpg" alt="Vestimenta de Gala" class="dresscode-art-img">
+          </div>
+          <div class="dresscode-info">
+            <span class="section-tag">ETIQUETA DE GALA</span>
+            <h2 class="section-title">{{ invitation?.content?.dressCode || 'Formal / Rigurosa Gala' }}</h2>
+            <div class="xv-gold-divider mini">
+              <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+            </div>
+            <p class="dresscode-text">
+              {{ invitation?.content?.dressCodeDescription || 'Agradecemos asistir en atuendo formal de noche para festejar esta ocasión especial. Se reserva el color borgoña exclusivamente para la quinceañera.' }}
+            </p>
+            <div class="dresscode-palettes">
+              <span class="palette-swatch gold" title="Dorado Imperial"></span>
+              <span class="palette-swatch midnight" title="Negro / Azul Medianoche"></span>
+              <span class="palette-swatch emerald" title="Verde Esmeralda"></span>
+              <span class="palette-swatch champagne" title="Champagne / Perla"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. GALERÍA DE FOTOS -->
+    <section *ngIf="isSectionActive('gallery') && (invitation?.content?.galleryItems?.length || invitation?.content?.gallery?.length)" class="xv-section" data-section-key="gallery">
+      <div class="xv-container">
+        <div class="xv-section-header" data-aos="fade-up">
+          <span class="section-tag">RECUERDOS</span>
+          <h2 class="section-title">Galería Fotográfica</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+        </div>
+
+        <div class="xv-gallery-grid">
+          <ng-container *ngIf="invitation?.content?.galleryItems?.length">
+            <div *ngFor="let item of invitation?.content?.galleryItems" class="gallery-photo-item"
+                 data-aos="zoom-in" (click)="openLightbox(item.url)">
+              <img [src]="item.url" [alt]="item.alt || item.title || 'Foto'" class="gallery-img">
+              <div class="gallery-hover-overlay">
+                <span>✦ Ampliar ✦</span>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="!invitation?.content?.galleryItems?.length && invitation?.content?.gallery?.length">
+            <div *ngFor="let url of invitation?.content?.gallery" class="gallery-photo-item"
+                 data-aos="zoom-in" (click)="openLightbox(url)">
+              <img [src]="url" alt="Foto" class="gallery-img">
+              <div class="gallery-hover-overlay">
+                <span>✦ Ampliar ✦</span>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. MESA DE REGALOS & SOBRE DIGITAL -->
+    <section *ngIf="isSectionActive('giftRegistry') || isSectionActive('digitalEnvelope')" class="xv-section" data-section-key="gifts">
+      <div class="xv-container">
+        <div class="xv-card" data-aos="fade-up">
+          <div class="xv-gift-header">
+            <img src="assets/templates/xv-burgundy/gift-envelope.jpg" alt="Sobre de Regalo" class="gift-art-img">
+          </div>
+
+          <span class="section-tag">DETALLES CON AMOR</span>
+          <h2 class="section-title">Mesa de Regalos & Lluvia de Sobres</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+
+          <p class="gift-intro-text">
+            {{ invitation?.content?.giftSettings?.introText || 'Tu presencia es mi mayor regalo, pero si deseas hacerme un presente, te comparto estas opciones para consentirme en mis quince años.' }}
+          </p>
+
+          <!-- Tiendas Físicas -->
+          <div *ngIf="invitation?.content?.giftRegistry?.length" class="xv-gift-registries">
+            <div *ngFor="let reg of invitation?.content?.giftRegistry" class="registry-pill-card">
+              <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || 'Tienda'" class="registry-logo">
+              <div class="registry-meta">
+                <strong class="reg-store">{{ reg.store || reg.title || 'Mesa de Regalos' }}</strong>
+                <span *ngIf="reg.note" class="reg-event-num">{{ reg.note }}</span>
+              </div>
+              <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="xv-btn xv-btn-gold xv-btn-sm">
+                <span>Ver Mesa</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Sobre Digital / Transferencia Bancaria -->
+          <div *ngIf="invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account"
+               class="xv-digital-envelope-box">
+            <h3 class="envelope-box-title">Sobre Digital / Transferencia</h3>
+            <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="envelope-note">
+              {{ invitation?.content?.digitalEnvelope?.note }}
+            </p>
+
+            <div class="envelope-details-grid">
+              <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="env-row">
+                <span class="lbl">Banco:</span>
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+              </div>
+              <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="env-row">
+                <span class="lbl">Beneficiario:</span>
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+              </div>
+              <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="env-row copyable">
+                <span class="lbl">CLABE Interbancaria:</span>
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                <button type="button" class="copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                  {{ copiedClabe ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+              <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="env-row copyable">
+                <span class="lbl">Número de Cuenta:</span>
+                <strong class="val">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                <button type="button" class="copy-btn" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                  {{ copiedAccount ? '¡Copiado!' : 'Copiar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. CONFIRMACIÓN DE ASISTENCIA (RSVP) -->
+    <section *ngIf="isSectionActive('rsvp')" id="xv-rsvp-section" class="xv-section" data-section-key="rsvp">
+      <div class="xv-container">
+        <div class="xv-card xv-rsvp-card" data-aos="fade-up">
+          <span class="section-tag">CONFIRMA TU ASISTENCIA</span>
+          <h2 class="section-title">¿Nos Acompañas?</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+
+          <p class="rsvp-intro-text">
+            Por favor confirma antes de la fecha límite para preparar tu lugar especial en mi gran noche.
+          </p>
+          <span *ngIf="deadlineLabel" class="rsvp-deadline-badge">Fecha límite: {{ deadlineLabel }}</span>
+
+          <form class="xv-rsvp-form" (ngSubmit)="submit()">
+            <!-- Nombre -->
+            <div class="form-group">
+              <label for="rsvpName">Nombre Completo *</label>
+              <input type="text" id="rsvpName" name="name" [(ngModel)]="rsvp.name" required
+                     placeholder="Tu nombre completo..." class="xv-input">
+            </div>
+
+            <!-- Correo / Teléfono -->
+            <div class="form-row-2">
+              <div class="form-group" *ngIf="canIdentifyByEmail">
+                <label for="rsvpEmail">Correo Electrónico</label>
+                <input type="email" id="rsvpEmail" name="email" [(ngModel)]="rsvp.email"
+                       placeholder="tu@correo.com..." class="xv-input">
+              </div>
+              <div class="form-group" *ngIf="canIdentifyByPhone">
+                <label for="rsvpPhone">Teléfono / WhatsApp</label>
+                <input type="tel" id="rsvpPhone" name="phone" [(ngModel)]="rsvp.phoneNationalNumber"
+                       placeholder="10 dígitos..." class="xv-input">
+              </div>
+            </div>
+
+            <!-- Asistencia: Sí / No -->
+            <div class="form-group">
+              <label>¿Podrás asistir?</label>
+              <div class="rsvp-response-options">
+                <button type="button" class="rsvp-choice-btn" [class.selected]="rsvp.response === 'confirmed'"
+                        (click)="rsvp.response = 'confirmed'; onResponseChange()">
+                  <span class="choice-icon">✓</span>
+                  <span>¡Sí, con mucho gusto!</span>
+                </button>
+                <button type="button" class="rsvp-choice-btn danger" [class.selected]="rsvp.response === 'declined'"
+                        (click)="rsvp.response = 'declined'; onResponseChange()">
+                  <span class="choice-icon">✕</span>
+                  <span>Lo siento, no podré asistir</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Acompañantes si está confirmado -->
+            <div *ngIf="rsvp.response === 'confirmed' && (maxCompanions || 0) > 0" class="form-group">
+              <label for="rsvpCompanions">Número de Acompañantes (Máx. {{ maxCompanions }})</label>
+              <input type="number" id="rsvpCompanions" name="companions" [(ngModel)]="rsvp.companions"
+                     min="0" [max]="maxCompanions || 5" class="xv-input">
+            </div>
+
+            <!-- Restricciones Alimentarias -->
+            <div *ngIf="rsvp.response === 'confirmed'" class="form-group">
+              <label for="dietary">Alergias o Restricciones Alimentarias (Opcional)</label>
+              <input type="text" id="dietary" name="dietary" [(ngModel)]="rsvp.dietaryRestrictions"
+                     placeholder="Vegetariano, sin gluten, alergias..." class="xv-input">
+            </div>
+
+            <!-- Mensaje para la Quinceañera -->
+            <div class="form-group">
+              <label for="rsvpMessage">Mensaje para la Quinceañera</label>
+              <textarea id="rsvpMessage" name="message" [(ngModel)]="rsvp.message" rows="3"
+                        placeholder="Escribe tus buenos deseos..." class="xv-textarea"></textarea>
+            </div>
+
+            <button type="submit" class="xv-btn xv-btn-gold xv-btn-block" [disabled]="sending || !rsvp.name.trim()">
+              <span *ngIf="!sending">Enviar Confirmación</span>
+              <span *ngIf="sending">Enviando respuesta...</span>
+            </button>
+          </form>
+
+          <p *ngIf="success" class="xv-alert success">{{ success }}</p>
+          <p *ngIf="error" class="xv-alert error">{{ error }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. ÁLBUM COLECTIVO DE FOTOS -->
+    <section *ngIf="isSectionActive('album')" class="xv-section" data-section-key="album">
+      <div class="xv-container">
+        <div class="xv-card" data-aos="fade-up">
+          <span class="section-tag">RECUERDOS DE NUESTROS INVITADOS</span>
+          <h2 class="section-title">Álbum Colectivo</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+
+          <p class="album-desc">
+            Sube las fotografías que tomes durante la misa y la fiesta. ¡Ayúdame a guardar cada instante de esta noche!
+          </p>
+
+          <div class="xv-album-upload-box">
+            <label class="xv-file-upload-label">
+              <input type="file" accept="image/*" (change)="selectAlbumFile($event)" class="file-hidden-input">
+              <span class="upload-icon">📷</span>
+              <span class="upload-text">{{ selectedAlbumFile ? selectedAlbumFile.name : 'Toca para elegir una foto' }}</span>
+            </label>
+            <button *ngIf="selectedAlbumFile" type="button" class="xv-btn xv-btn-gold xv-btn-sm"
+                    (click)="uploadAlbumPhoto()" [disabled]="uploadingAlbum">
+              <span *ngIf="!uploadingAlbum">Subir al Álbum</span>
+              <span *ngIf="uploadingAlbum">Subiendo foto...</span>
+            </button>
+          </div>
+
+          <div *ngIf="publicAlbumAssets.length" class="xv-album-photos-grid">
+            <div *ngFor="let asset of publicAlbumAssets" class="album-photo-card" (click)="openLightbox(asset.url)">
+              <img [src]="asset.url" alt="Recuerdo" class="album-photo-img">
+              <span *ngIf="asset.uploaderName" class="uploader-badge">{{ asset.uploaderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. PETICIONES AL DJ -->
+    <section *ngIf="isSectionActive('songRequests') || isSectionActive('dj')" class="xv-section" data-section-key="songs">
+      <div class="xv-container">
+        <div class="xv-card" data-aos="fade-up">
+          <span class="section-tag">LA PISTA DE BAILE</span>
+          <h2 class="section-title">Pide tu Canción al DJ</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+
+          <p class="dj-desc">
+            ¿Cuál es esa canción que no puede faltar en la fiesta? Búscala y agrégala a la lista de peticiones.
+          </p>
+
+          <div class="xv-song-search-box">
+            <input type="text" [(ngModel)]="songSearchQuery" placeholder="Buscar artista o canción..."
+                   class="xv-input" (keyup.enter)="searchSongForRequest()">
+            <button type="button" class="xv-btn xv-btn-gold" (click)="searchSongForRequest()" [disabled]="searchingSongs || !songSearchQuery.trim()">
+              <span>Buscar</span>
+            </button>
+          </div>
+
+          <!-- Resultados de búsqueda de canciones -->
+          <div *ngIf="songSearchResults.length" class="xv-song-results-list">
+            <div *ngFor="let song of songSearchResults" class="song-result-item" (click)="selectSongFromSearch(song)">
+              <img *ngIf="song.thumbnailUrl" [src]="song.thumbnailUrl" alt="Thumbnail" class="song-thumb">
+              <div class="song-meta">
+                <strong class="song-title">{{ song.title }}</strong>
+                <span class="song-artist">{{ song.artist }}</span>
+              </div>
+              <button type="button" class="xv-btn xv-btn-sm xv-btn-gold">Pedir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. MURO DE DEDICATORIAS -->
+    <section *ngIf="isSectionActive('dedications')" class="xv-section" data-section-key="dedications">
+      <div class="xv-container">
+        <div class="xv-card" data-aos="fade-up">
+          <span class="section-tag">BUENOS DESEOS</span>
+          <h2 class="section-title">Muro de Dedicatorias</h2>
+          <div class="xv-gold-divider mini">
+            <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+          </div>
+
+          <div class="xv-dedication-form">
+            <input type="text" [(ngModel)]="dedication.publicName" placeholder="Tu nombre..." class="xv-input">
+            <textarea [(ngModel)]="dedication.message" rows="3" placeholder="Deja tus hermosas palabras a la quinceañera..." class="xv-textarea"></textarea>
+            <button type="button" class="xv-btn xv-btn-gold" (click)="submitDedication()" [disabled]="!dedication.message.trim()">
+              <span>Publicar Dedicatoria</span>
+            </button>
+          </div>
+
+          <div *ngIf="dedications.length" class="xv-dedications-feed">
+            <div *ngFor="let item of dedications" class="dedication-bubble-card">
+              <span class="dedication-author">👑 {{ item.publicName || 'Invitado de Honor' }}</span>
+              <p class="dedication-content">{{ item.message }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. PIE DE PÁGINA REAL -->
+    <footer class="xv-footer">
+      <div class="xv-footer-roses">
+        <img src="assets/templates/xv-burgundy/floral-cluster.png" alt="Rosas" class="xv-divider-roses">
+      </div>
+      <h3 class="xv-footer-title">{{ invitation?.content?.headline || event?.title || 'Mis Quince Años' }}</h3>
+      <p class="xv-footer-thanks">¡Gracias por ser parte de este día tan especial e inolvidable!</p>
+      <span class="xv-footer-copy">Invitación Real creada con amor</span>
+    </footer>
+
+  </main>
+</div>

@@ -378,6 +378,7 @@ export interface VisualInvitationLayerStyle {
   borderStyle?: 'solid' | 'dashed' | 'dotted';
   boxShadow?: string;
   padding?: number;
+  backdropFilter?: string;
   gradientEnabled?: boolean;
   gradientStart?: string;
   gradientEnd?: string;

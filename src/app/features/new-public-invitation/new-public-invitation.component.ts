@@ -265,7 +265,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return themeBg;
     }
     const tpl = this.currentTemplate;
-    if (tpl === 'template-xv' || visualDesign?.theme?.headingFont?.includes('Great Vibes')) {
+    if (tpl === 'template-xv' || tpl === 'xv-burgundy' || tpl === 'template-xv-burgundy' || visualDesign?.theme?.headingFont?.includes('Great Vibes')) {
       return '#5c0d18';
     }
     if (tpl === 'template-boda-navy-blue') {
@@ -1715,7 +1715,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       !this.isBodaEleganzaTemplate() &&
       !this.isBodaRosasTemplate() &&
       !this.isBodaGirasolesTemplate() &&
-      !this.isBodaNavyBlueTemplate()
+      !this.isBodaNavyBlueTemplate() &&
+      !this.isXvBurgundyTemplate()
     );
   }
 
@@ -1831,6 +1832,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-navy-blue' || t === 'navy-blue' || t === 'modelo-navy-blue';
+  }
+
+  isXvBurgundyTemplate(): boolean {
+    if (this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'xv-burgundy' || t === 'template-xv-burgundy' || t === 'mis-xv-burgundy' || t === 'burgundy';
   }
 
   get requiresGuestValidation(): boolean {

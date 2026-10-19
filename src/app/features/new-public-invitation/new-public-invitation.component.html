@@ -1161,6 +1161,56 @@
     (downloadPass)="downloadGuestPass()">
   </app-new-public-invitation-boda-navy-blue>
 
+  <!-- PLANTILLA TEMÁTICA: MIS XV BORGOÑA REAL -->
+  <app-new-public-invitation-xv-burgundy
+    *ngIf="isXvBurgundyTemplate()"
+    [invitation]="invitation"
+    [event]="event"
+    [countdown]="countdown"
+    [verifiedGuest]="verifiedGuest"
+    [publicAlbumAssets]="allAlbumAssets"
+    [dedications]="dedications"
+    [isPlayingMusic]="isPlayingMusic"
+    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
+    [currentActiveSection]="currentActiveSection"
+    [sending]="sending"
+    [checkingGuest]="checkingGuest"
+    [uploadingAlbum]="uploadingAlbum"
+    [error]="error"
+    [success]="success"
+    [dedicationMessage]="dedicationMessage"
+    [albumMessage]="albumMessage"
+    [rsvp]="rsvp"
+    [companionNamesText]="companionNamesText"
+    [customAnswers]="customAnswers"
+    [declineConfirmed]="declineConfirmed"
+    [songSearchQuery]="songSearchQuery"
+    [songSearchResults]="songSearchResults"
+    [searchingSongs]="searchingSongs"
+    [songRequest]="songRequest"
+    [songRequestSending]="songRequestSending"
+    [songRequestMessage]="songRequestMessage"
+    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
+    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+    [requireSongApproval]="requireSongApproval"
+    [allowDedicationsEnabled]="allowDedicationsEnabled"
+    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
+    [guestAccessPhone]="guestAccessPhone"
+    [guestAccessEmail]="guestAccessEmail"
+    (toggleMusic)="toggleMusic()"
+    (toggleSectionMusic)="toggleSectionMusic($event)"
+    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
+    (submitRsvp)="submitRsvp()"
+    (submitDedication)="submitDedicationFromData($event)"
+    (uploadPhoto)="onFileSelectedDirect($event)"
+    (openLightbox)="openLightbox($event)"
+    (searchSong)="searchSongForRequestDirect($event)"
+    (selectSong)="selectSongFromSearch($event)"
+    (requestSong)="submitSongRequest()"
+    (resetGuest)="resetGuestAccess()"
+    (downloadPass)="downloadGuestPass()">
+  </app-new-public-invitation-xv-burgundy>
+
       </div> <!-- .nw-preview-content-surface -->
     </div> <!-- .nw-preview-device-stage -->
   </div> <!-- .nw-preview-viewport-wrapper -->

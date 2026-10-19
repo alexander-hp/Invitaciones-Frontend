@@ -204,6 +204,14 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       description: 'Elegancia nocturna con fondo de acuarela azul medianoche, divisores y ornamentos florales bañados en oro fino, tarjetas de cristal oscuro y la canción Perfect de Ed Sheeran.',
       iconKey: 'modern',
       features: ['Fondo de acuarela azul noche', 'Divisores florales de oro pulido', 'Tarjetas glassmorphism azul marino', 'Canción Perfect de Ed Sheeran']
+    },
+    {
+      id: 'xv-burgundy',
+      name: 'Mis XV Borgoña Real: Terciopelo, Oro Imperial & Rosas',
+      badge: 'Exclusiva Gala XV Años',
+      description: 'Majestuosidad en terciopelo borgoña profundo con filigranas de oro imperial, tiara real, rosas 3D con perlas, tarjeta victoriana y caligrafía de gala Great Vibes.',
+      iconKey: 'envelope',
+      features: ['Fondo de terciopelo borgoña y corona real', 'Marco victoriano y rosas 3D con perlas', 'Placa de cuenta regresiva ornamentada', 'Invitación interactiva completa para XV Años']
     }
   ];
 

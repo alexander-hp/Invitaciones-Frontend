@@ -77,6 +77,7 @@ import { NewPublicInvitationBodaEleganzaComponent } from './features/new-public-
 import { NewPublicInvitationBodaRosasComponent } from './features/new-public-invitation/templates/template-boda-rosas/new-public-invitation-boda-rosas.component';
 import { NewPublicInvitationBodaGirasolesComponent } from './features/new-public-invitation/templates/template-boda-girasoles/new-public-invitation-boda-girasoles.component';
 import { NewPublicInvitationBodaNavyBlueComponent } from './features/new-public-invitation/templates/template-boda-navy-blue/new-public-invitation-boda-navy-blue.component';
+import { NewPublicInvitationXvBurgundyComponent } from './features/new-public-invitation/templates/template-xv-burgundy/new-public-invitation-xv-burgundy.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
@@ -183,6 +184,7 @@ import { GuestActivityComponent } from './features/guest-activity/guest-activity
     NewPublicInvitationBodaRosasComponent,
     NewPublicInvitationBodaGirasolesComponent,
     NewPublicInvitationBodaNavyBlueComponent,
+    NewPublicInvitationXvBurgundyComponent,
     RegisterComponent,
     NewContactComponent,
     NewSidebarComponent,

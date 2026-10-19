@@ -1103,7 +1103,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
       border: `${Number(style.borderWidth || 0)}px ${String(style.borderStyle || 'solid')} ${String(style.borderColor || 'transparent')}`,
       borderRadius: `${Number(style.borderRadius || 0)}px`, boxShadow: String(style.boxShadow || 'none'),
-      clipPath: shapes[style.shapeKind || 'rectangle'] || 'none'
+      clipPath: shapes[style.shapeKind || 'rectangle'] || 'none',
+      ...(style.backdropFilter ? { backdropFilter: style.backdropFilter, WebkitBackdropFilter: style.backdropFilter } : {})
     };
   }
 
