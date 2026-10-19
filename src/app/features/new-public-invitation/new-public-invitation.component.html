@@ -68,18 +68,90 @@
 <!-- MAIN PUBLIC INVITATION CONTAINER -->
 <ng-container *ngIf="invitation">
 
-  <!-- PLANTILLA PERSONALIZADA HTML / CSS -->
-  <div *ngIf="isCustomHtmlTemplate()" class="nw-pub-custom-page-container" style="width:100vw; min-height:100vh; position:relative; background:transparent; overflow:hidden;">
-    <iframe *ngIf="customHtmlSafeSrcdoc" [srcdoc]="customHtmlSafeSrcdoc"
-      style="width:100vw; height:100vh; border:none; display:block; background:transparent;"
-      allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen>
-    </iframe>
-  </div>
+  <!-- BARRA DE CONTROL DE VISTA PREVIA BORRADOR -->
+  <aside *ngIf="showPreviewDeviceToolbar" class="nw-draft-preview-bar" [class.is-collapsed]="previewBarCollapsed" aria-label="Controles de vista previa borrador">
+    <div class="nw-draft-preview-bar-inner">
+      <div class="nw-draft-preview-brand">
+        <span class="nw-draft-preview-badge">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          Vista Previa Borrador
+        </span>
+        <span class="nw-draft-preview-title" [title]="invitationDisplayTitle">{{ invitationDisplayTitle }}</span>
+        <span class="nw-draft-preview-status-pill">Modo prueba</span>
+      </div>
 
-  <app-visual-invitation-renderer
-    *ngIf="isVisualBuilderTemplate()"
-    [invitation]="invitation"
-    [event]="event"
+      <!-- SELECTOR DE DISPOSITIVOS -->
+      <div class="nw-draft-preview-device-switch" role="group" aria-label="Simular tamaño de pantalla">
+        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'mobile'" (click)="setPreviewDevice('mobile')" title="Simular Celular (390px)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span>Celular (390px)</span>
+        </button>
+
+        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'tablet'" (click)="setPreviewDevice('tablet')" title="Simular Tablet (768px)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+          <span>Tablet (768px)</span>
+        </button>
+
+        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'desktop'" (click)="setPreviewDevice('desktop')" title="Pantalla Completa Web">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span>Web (100%)</span>
+        </button>
+      </div>
+
+      <div class="nw-draft-preview-actions">
+        <button type="button" class="nw-preview-btn-ghost" (click)="closePreviewWindow()" title="Cerrar vista previa y volver al editor">
+          ← Volver al editor
+        </button>
+        <button type="button" class="nw-preview-btn-toggle" (click)="togglePreviewBar()" [title]="previewBarCollapsed ? 'Mostrar barra' : 'Ocultar barra'">
+          {{ previewBarCollapsed ? '▼' : '▲' }}
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENEDOR VIEWPORT CON EFECTO DE BORDES Y AMBIENTE LATERAL -->
+  <div class="nw-preview-viewport-wrapper"
+       [class.is-preview-mode]="showPreviewDeviceToolbar"
+       [class.device-mode-mobile]="showPreviewDeviceToolbar && previewDevice === 'mobile'"
+       [class.device-mode-tablet]="showPreviewDeviceToolbar && previewDevice === 'tablet'"
+       [class.device-mode-desktop]="!showPreviewDeviceToolbar || previewDevice === 'desktop'"
+       [style.--preview-ambient-bg]="ambientThemeColor">
+
+    <div class="nw-preview-device-stage">
+      <!-- Notch superior en modo celular -->
+      <div *ngIf="showPreviewDeviceToolbar && previewDevice === 'mobile'" class="nw-preview-phone-notch" aria-hidden="true">
+        <div class="nw-preview-phone-speaker"></div>
+        <div class="nw-preview-phone-camera"></div>
+      </div>
+
+      <div class="nw-preview-content-surface">
+
+        <!-- PLANTILLA PERSONALIZADA HTML / CSS -->
+        <div *ngIf="isCustomHtmlTemplate()" class="nw-pub-custom-page-container" style="width:100vw; min-height:100vh; position:relative; background:transparent; overflow:hidden;">
+          <iframe *ngIf="customHtmlSafeSrcdoc" [srcdoc]="customHtmlSafeSrcdoc"
+            style="width:100vw; height:100vh; border:none; display:block; background:transparent;"
+            allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen>
+          </iframe>
+        </div>
+
+        <app-visual-invitation-renderer
+          *ngIf="isVisualBuilderTemplate()"
+          [invitation]="invitation"
+          [event]="event"
+          [forcedDevice]="showPreviewDeviceToolbar ? previewDevice : undefined"
     [verifiedGuest]="verifiedGuest"
     [guestActivity]="guestActivity"
     [guestActivityLoading]="guestActivityLoading"
@@ -1088,5 +1160,9 @@
     (resetGuest)="resetGuestAccess()"
     (downloadPass)="downloadGuestPass()">
   </app-new-public-invitation-boda-navy-blue>
+
+      </div> <!-- .nw-preview-content-surface -->
+    </div> <!-- .nw-preview-device-stage -->
+  </div> <!-- .nw-preview-viewport-wrapper -->
 
 </ng-container>

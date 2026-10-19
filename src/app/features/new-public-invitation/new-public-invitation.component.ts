@@ -111,6 +111,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }> = [];
 
   customHtmlSafeSrcdoc?: SafeHtml;
+  previewDevice: 'mobile' | 'tablet' | 'desktop' = 'mobile';
+  previewBarCollapsed = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -125,6 +127,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   private visibilityListener?: () => void;
 
   ngOnInit(): void {
+    const queryDevice = this.route.snapshot.queryParamMap.get('device');
+    if (queryDevice === 'mobile' || queryDevice === 'tablet' || queryDevice === 'desktop') {
+      this.previewDevice = queryDevice;
+    }
+
     this.iframeBridgeListener = this.handleIframeBridgeMessage.bind(this);
     window.addEventListener('message', this.iframeBridgeListener);
 
@@ -233,6 +240,74 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return hasToken || isIframe;
   }
 
+  get isPreviewMode(): boolean {
+    if (typeof window === 'undefined') return false;
+    return this.route.snapshot.queryParamMap.get('preview') === 'true' || Boolean(this.invitation?.id?.startsWith('preview-'));
+  }
+
+  get isIframe(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  }
+
+  get showPreviewDeviceToolbar(): boolean {
+    return this.isPreviewMode && !this.isIframe;
+  }
+
+  get ambientThemeColor(): string {
+    const visualDesign = this.invitation?.content?.visualDesign || this.invitation?.content?.visualDesignDraft;
+    const themeBg = visualDesign?.theme?.backgroundColor;
+    if (themeBg && themeBg !== '#ffffff' && themeBg !== '#fff' && themeBg !== 'transparent') {
+      return themeBg;
+    }
+    const tpl = this.currentTemplate;
+    if (tpl === 'template-xv' || visualDesign?.theme?.headingFont?.includes('Great Vibes')) {
+      return '#5c0d18';
+    }
+    if (tpl === 'template-boda-navy-blue') {
+      return '#0d1b2a';
+    }
+    if (tpl === 'maison-dore' || tpl === 'boda-creativa-premium') {
+      return '#1c1917';
+    }
+    if (tpl === 'template-boda-rosas') {
+      return '#56383d';
+    }
+    return themeBg || '#26221f';
+  }
+
+  get invitationDisplayTitle(): string {
+    const contentTitle = this.invitation?.content?.headline || (this.invitation?.content as any)?.title;
+    if (contentTitle) return contentTitle;
+    if (this.event?.title) return this.event.title;
+    if (typeof this.invitation?.event === 'object' && (this.invitation?.event as EventModel)?.title) {
+      return (this.invitation.event as EventModel).title;
+    }
+    return this.invitation?.slug || 'Invitación';
+  }
+
+  setPreviewDevice(device: 'mobile' | 'tablet' | 'desktop'): void {
+    this.previewDevice = device;
+  }
+
+  togglePreviewBar(): void {
+    this.previewBarCollapsed = !this.previewBarCollapsed;
+  }
+
+  closePreviewWindow(): void {
+    if (typeof window !== 'undefined') {
+      if (window.opener && !window.opener.closed) {
+        window.close();
+      } else {
+        window.history.back();
+      }
+    }
+  }
+
   get isEmbeddedOrPreview(): boolean {
     if (typeof window === 'undefined') return true;
     const isIframe = window.self !== window.top;
@@ -318,6 +393,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.api.getInvitationPreview(slug).subscribe({
         next: ({ invitation }) => {
           this.accessRequired = false;
+          if (invitation.content?.visualDesignDraft) {
+            invitation.content.visualDesign = {
+              ...invitation.content.visualDesignDraft,
+              active: true
+            };
+          }
           this.applyInvitation(invitation, slug);
         },
         error: (error) => {
@@ -346,6 +427,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   private applyInvitation(invitation: InvitationModel, slug: string): void {
     this.invitation = invitation;
+    if (this.isPreviewMode && this.invitation.content?.visualDesignDraft) {
+      this.invitation.content.visualDesign = {
+        ...this.invitation.content.visualDesignDraft,
+        active: true
+      };
+    }
     if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
     this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
     this.restoreGuestActivitySession(slug);

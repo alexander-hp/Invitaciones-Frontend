@@ -5843,7 +5843,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const previewWindow = window.open('', '_blank');
     const openSavedDraft = () => {
       const id = this.invitation?._id || this.invitation?.id || '';
-      const url = `/new/i/${this.invitation?.slug}?preview=true&previewId=${encodeURIComponent(id)}`;
+      const url = `/new/i/${this.invitation?.slug}?preview=true&previewId=${encodeURIComponent(id)}&device=${this.device}`;
       if (previewWindow) previewWindow.location.href = url;
       else window.open(url, '_blank');
     };

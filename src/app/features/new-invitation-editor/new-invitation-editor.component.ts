@@ -1262,7 +1262,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.invitation.status !== 'published') {
-      window.open(`/new/i/${this.invitation.slug}?preview=true&previewId=${encodeURIComponent(this.getInvitationId(this.invitation))}`, '_blank');
+      window.open(`/new/i/${this.invitation.slug}?preview=true&previewId=${encodeURIComponent(this.getInvitationId(this.invitation))}&device=mobile`, '_blank');
       return;
     }
     window.open(this.publicUrl || `/new/i/${this.invitation.slug}`, '_blank');

@@ -105,6 +105,7 @@ describe('NewPublicInvitationComponent public loading', () => {
 
   it('attempts background music automatically unless playback is manual', () => {
     const component = new NewPublicInvitationComponent(route as any, {} as any, {} as any, {} as any, {} as any, {} as any);
+    spyOnProperty(component, 'isEmbeddedOrPreview', 'get').and.returnValue(false);
     component.invitation = {
       content: {
         musicUrl: 'https://example.test/music.mp3',
@@ -119,4 +120,42 @@ describe('NewPublicInvitationComponent public loading', () => {
     component.invitation!.content!.sectionSettings!.backgroundMusic = false;
     expect((component as any).shouldAutoplayMusic()).toBeFalse();
   });
+
+  it('initializes previewDevice from query param and switches between devices', () => {
+    const previewRoute = {
+      snapshot: {
+        paramMap: convertToParamMap({ slug: 'invitacion-prueba' }),
+        queryParamMap: convertToParamMap({ preview: 'true', device: 'tablet' })
+      }
+    };
+    const api = {
+      getInvitationPreview: jasmine.createSpy().and.returnValue(throwError(() => ({}))),
+      getPublicInvitation: jasmine.createSpy().and.returnValue(throwError(() => ({})))
+    };
+    const component = new NewPublicInvitationComponent(previewRoute as any, api as any, {} as any, {} as any, {} as any, {} as any);
+    component.ngOnInit();
+
+    expect(component.isPreviewMode).toBeTrue();
+    expect(component.previewDevice).toBe('tablet');
+
+    component.setPreviewDevice('mobile');
+    expect(component.previewDevice).toBe('mobile');
+
+    component.setPreviewDevice('desktop');
+    expect(component.previewDevice).toBe('desktop');
+  });
+
+  it('computes ambient theme color from visual design theme or template fallbacks', () => {
+    const component = new NewPublicInvitationComponent(route as any, {} as any, {} as any, {} as any, {} as any, {} as any);
+    component.invitation = {
+      content: {
+        visualDesign: {
+          theme: { backgroundColor: '#5c0d18' }
+        }
+      }
+    } as any;
+
+    expect(component.ambientThemeColor).toBe('#5c0d18');
+  });
 });
+
