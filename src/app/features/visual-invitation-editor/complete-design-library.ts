@@ -26,7 +26,7 @@ type DesignPalette = {
 
 const PALETTES: Record<string, DesignPalette> = {
   'haute-couture': { background: '#fcfaf7', foreground: '#181514', accent: '#c59b48', secondary: '#f4efe6', muted: '#7a7269', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#181514', buttonText: '#ffffff' },
-  'xv-burgundy': { background: '#5c0d18', foreground: '#faf6f0', accent: '#d4af37', secondary: '#480a13', muted: '#e2d5c3', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#5c0d18' },
+  'xv-burgundy': { background: '#5c0d18', foreground: '#faf6f0', accent: '#d4af37', secondary: '#480a13', muted: '#e2d5c3', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#480a13' },
   editorial: { background: '#f7f5f1', foreground: '#202d2a', accent: '#dc705b', secondary: '#e9eee9', muted: '#6a706c', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', button: '#202d2a', buttonText: '#ffffff' },
   romantic: { background: '#fff8f6', foreground: '#684755', accent: '#7c946e', secondary: '#f3e7e8', muted: '#725f65', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', button: '#684755', buttonText: '#ffffff' },
   night: { background: '#191c22', foreground: '#f4e9d4', accent: '#c6a677', secondary: '#30383d', muted: '#d5c8b7', headingFont: 'Cinzel, serif', bodyFont: 'Montserrat, sans-serif', button: '#c6a677', buttonText: '#191c22' },
@@ -74,15 +74,13 @@ export function buildCompleteDesign(
     if (event?.date) add('text', '{{event.date}}', 10, 84, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 600, letterSpacing: 2 }, { name: 'Fecha del evento' });
   } else if (variant === 'xv-burgundy') {
     hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg' };
-    add('image', '', 0, 0, 100, 24, { objectFit: 'cover', borderRadius: 0 }, { url: 'assets/templates/xv-burgundy/tiara-banner.jpg', name: 'Corona imperial y rosas' });
-    if (coverUrl) {
-      add('image', '', 29, 15, 42, 25, { objectFit: 'cover', imageMask: 'circle', borderRadius: 999, borderWidth: 3, borderColor: '#d4af37', borderStyle: 'solid', boxShadow: '0 12px 30px rgba(0,0,0,0.5)' }, { url: coverUrl, name: 'Foto de la quinceañera' });
-    }
-    add('text', 'Mis', 10, 42, 80, 7, { ...titleStyle, fontSize: 46, color: palette.accent, fontWeight: 400 }, { name: 'Mis' });
-    add('text', 'XV', 10, 49, 80, 11, { ...titleStyle, fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 58, fontWeight: 700, color: palette.accent, letterSpacing: 6 }, { name: 'XV Años' });
-    add('text', title, 6, 60, 88, 11, { ...titleStyle, fontSize: 42, color: '#faf6f0', fontWeight: 600, letterSpacing: 1 }, { name: 'Nombre de la quinceañera' });
-    add('image', '', 18, 71, 64, 6, { objectFit: 'contain', borderRadius: 0 }, { url: 'assets/templates/xv-burgundy/floral-cluster.jpg', name: 'Ramillete de rosas y perlas' });
-    if (event?.date) add('text', '{{event.date}}', 10, 77, 80, 4, { ...bodyStyle, color: '#e2d5c3', fontSize: 13, fontWeight: 600, letterSpacing: 3 }, { name: 'Fecha del evento' });
+    add('text', 'MIS XV AÑOS', 10, 5, 80, 4, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 700, letterSpacing: 4 }, { name: 'Rótulo real' });
+    const portraitUrl = coverUrl || 'assets/templates/xv-burgundy/portrait.jpg';
+    add('image', '', 18, 11, 64, 44, { objectFit: 'cover', imageMask: 'arch', borderRadius: 18, borderWidth: 2.5, borderColor: '#d4af37', borderStyle: 'solid', boxShadow: '0 16px 42px rgba(0,0,0,0.6), 0 0 24px rgba(212,175,55,0.35)' }, { url: portraitUrl, name: 'Retrato de la quinceañera' });
+    add('text', 'Mis Quince', 10, 58, 80, 7, { ...titleStyle, fontSize: 46, color: palette.accent, fontWeight: 400 }, { name: 'Mis Quince' });
+    add('text', title, 6, 65, 88, 8, { ...titleStyle, fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 32, color: '#faf6f0', fontWeight: 700, letterSpacing: 1.5 }, { name: 'Nombre de la quinceañera' });
+    rule(28, 74, 44);
+    if (event?.date) add('text', '{{event.date}}', 10, 76, 80, 4, { ...bodyStyle, color: '#e2d5c3', fontSize: 13, fontWeight: 600, letterSpacing: 3 }, { name: 'Fecha del evento' });
   } else if (variant === 'editorial') {
     image(9, 7, 82, 45);
     add('text', 'UNA CELEBRACI\u00d3N ESPECIAL', 12, 54, 76, 5, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 2 });
@@ -139,12 +137,12 @@ export function buildCompleteDesign(
   if (variant === 'xv-burgundy') {
     intro.background = { ...(intro.background || {}), color: '#480a13', imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg' };
     intro.layers = [
-      layer(nextId('layer'), 'image', '', 5, 4, 90, 92, { objectFit: 'cover', borderRadius: 18, boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }, { url: 'assets/templates/xv-burgundy/welcome-card.jpg', name: 'Tarjeta de bienvenida' }),
-      layer(nextId('layer'), 'text', 'MIS QUINCE A\u00d1OS', 16, 17, 68, 6, { ...bodyStyle, color: '#5c0d18', fontSize: 12, fontWeight: 800, letterSpacing: 3 }, { name: 'Encabezado' }),
-      layer(nextId('layer'), 'text', 'Te invito a celebrar conmigo', 12, 24, 76, 9, { ...titleStyle, fontSize: 30, color: '#5c0d18', fontWeight: 600 }, { name: 'Título' }),
-      layer(nextId('layer'), 'text', content.message || content.subheadline ? '{{invitation.message}}' : introFallback, 14, 34, 72, 38, { ...titleStyle, fontFamily: "'Great Vibes', cursive", fontSize: 24, color: '#480a13', lineHeight: 1.55 }, { name: 'Mensaje de bienvenida' })
+      layer(nextId('layer'), 'image', '', 6, 4, 88, 92, { objectFit: 'cover', borderRadius: 18, boxShadow: '0 20px 50px rgba(0,0,0,0.6)' }, { url: 'assets/templates/xv-burgundy/welcome-card.jpg', name: 'Tarjeta de bienvenida' }),
+      layer(nextId('layer'), 'text', 'MIS QUINCE A\u00d1OS', 16, 19, 68, 5, { ...bodyStyle, color: '#8c1d2e', fontSize: 11, fontWeight: 800, letterSpacing: 3 }, { name: 'Encabezado' }),
+      layer(nextId('layer'), 'text', 'Te invito a celebrar conmigo', 12, 25, 76, 8, { ...titleStyle, fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 26, color: '#5c0d18', fontWeight: 700 }, { name: 'Título' }),
+      layer(nextId('layer'), 'text', content.message || content.subheadline ? '{{invitation.message}}' : introFallback, 15, 34, 70, 26, { ...titleStyle, fontFamily: "'Great Vibes', cursive", fontSize: 22, color: '#3a0810', lineHeight: 1.45, textAlign: 'center' }, { name: 'Mensaje de bienvenida' })
     ];
-    if (event?.date) intro.layers.push(layer(nextId('layer'), 'text', '{{event.date}}', 16, 75, 68, 6, { ...bodyStyle, color: '#d4af37', fontSize: 14, fontWeight: 700, letterSpacing: 2 }, { name: 'Fecha' }));
+    if (event?.date) intro.layers.push(layer(nextId('layer'), 'text', '{{event.date}}', 16, 62, 68, 5, { ...bodyStyle, color: '#d4af37', fontSize: 13, fontWeight: 700, letterSpacing: 2.5 }, { name: 'Fecha' }));
   } else {
     intro.layers = [
       layer(nextId('layer'), 'text', introEyebrow, 15, 19, 70, 8, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 2 }),
@@ -172,7 +170,7 @@ export function buildCompleteDesign(
   const order = variant === 'haute-couture'
     ? ['countdown', 'story', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'album', 'dedications', 'songs']
     : variant === 'xv-burgundy'
-    ? ['countdown', 'gallery', 'dedications', 'locations', 'itinerary', 'dressCode', 'gifts', 'lodging', 'rsvp', 'story', 'album', 'songs']
+    ? ['countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'story', 'dedications', 'album', 'songs']
     : variant === 'birthday'
     ? ['countdown', 'locations', 'itinerary', 'gallery', 'rsvp', 'gifts', 'dressCode', 'story', 'album', 'songs', 'dedications', 'lodging']
     : variant === 'baptism'
@@ -188,13 +186,20 @@ export function buildCompleteDesign(
     const index = sections.length;
     const background = index % 2 ? palette.background : (variant === 'night' ? '#252a2e' : (variant === 'xv-burgundy' ? '#480a13' : palette.secondary));
     const item = section(nextId('section'), type, module.title, background, module.height);
+    if (variant === 'xv-burgundy') {
+      item.background = {
+        color: index % 2 === 0 ? '#480a13' : '#5c0d18',
+        imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg',
+        overlay: index % 2 === 0 ? 0.12 : 0.04
+      };
+    }
     item.moduleStyle = { layout: ['itinerary', 'locations', 'gallery'].includes(type) ? 'grid' : 'list', columns: type === 'gallery' ? 3 : 2, alignment: 'center', surface: variant === 'haute-couture' || variant === 'xv-burgundy' ? 'soft' : 'transparent', cardStyle: variant === 'haute-couture' || variant === 'xv-burgundy' ? 'elevated' : 'none', gap: variant === 'haute-couture' || variant === 'xv-burgundy' ? 16 : 14, showTitle: true };
     sections.push(item);
   });
   if (sections.some((item) => item.type === 'rsvp')) {
-    const buttonY = variant === 'xv-burgundy' ? 84 : ['haute-couture', 'night', 'celebration', 'birthday', 'baptism'].includes(variant) ? 90 : 88;
-    hero.layers.push(layer(nextId('layer'), 'button', 'Confirmar asistencia', variant === 'celebration' ? 8 : (variant === 'xv-burgundy' ? 24 : 29), buttonY, variant === 'xv-burgundy' ? 52 : 42, 7,
-      { backgroundColor: palette.button, color: palette.buttonText, fontFamily: palette.bodyFont, fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: variant === 'romantic' || variant === 'haute-couture' || variant === 'xv-burgundy' ? 30 : 4, padding: 8, boxShadow: variant === 'xv-burgundy' ? '0 8px 24px rgba(212, 175, 55, 0.45)' : undefined },
+    const buttonY = variant === 'xv-burgundy' ? 83 : ['haute-couture', 'night', 'celebration', 'birthday', 'baptism'].includes(variant) ? 90 : 88;
+    hero.layers.push(layer(nextId('layer'), 'button', 'Confirmar asistencia', variant === 'celebration' ? 8 : (variant === 'xv-burgundy' ? 22 : 29), buttonY, variant === 'xv-burgundy' ? 56 : 42, 7,
+      { backgroundColor: palette.button, color: palette.buttonText, fontFamily: palette.bodyFont, fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: variant === 'romantic' || variant === 'haute-couture' || variant === 'xv-burgundy' ? 30 : 4, padding: 8, borderWidth: variant === 'xv-burgundy' ? 1 : undefined, borderColor: variant === 'xv-burgundy' ? '#e8c85c' : undefined, borderStyle: variant === 'xv-burgundy' ? 'solid' : undefined, boxShadow: variant === 'xv-burgundy' ? '0 8px 24px rgba(212, 175, 55, 0.45)' : undefined },
       { name: 'Ir a RSVP', binding: 'section:rsvp' }));
   }
   return { version: 1, active: true, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: theme(palette, variant), sections };

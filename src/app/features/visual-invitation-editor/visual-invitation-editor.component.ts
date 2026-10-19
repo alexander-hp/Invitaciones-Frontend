@@ -465,7 +465,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   readonly themePresets: Array<{ key: string; label: string; theme: VisualTheme }> = [
     { key: 'haute-couture', label: 'Alta Costura', theme: { backgroundColor: '#fcfaf7', textColor: '#181514', accentColor: '#c59b48', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#181514', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 30 } },
-    { key: 'xv-burgundy', label: 'Mis XV Borgoña Real', theme: { backgroundColor: '#5c0d18', textColor: '#faf6f0', accentColor: '#d4af37', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#d4af37', buttonTextColor: '#5c0d18', buttonStyle: 'solid', buttonRadius: 30 } },
+    { key: 'xv-burgundy', label: 'Mis XV Borgoña Real', theme: { backgroundColor: '#5c0d18', textColor: '#faf6f0', accentColor: '#d4af37', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#d4af37', buttonTextColor: '#480a13', buttonStyle: 'solid', buttonRadius: 30 } },
     { key: 'editorial', label: 'Editorial', theme: { backgroundColor: '#f6f1eb', textColor: '#24211f', accentColor: '#b57c62', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#24211f', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 4 } },
     { key: 'romantic', label: 'Romántico', theme: { backgroundColor: '#fff7f6', textColor: '#56383d', accentColor: '#b96775', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#9f5260', buttonTextColor: '#ffffff', buttonStyle: 'soft', buttonRadius: 18 } },
     { key: 'garden', label: 'Jardín', theme: { backgroundColor: '#f5f4ec', textColor: '#263c32', accentColor: '#66836f', headingFont: 'Cinzel, serif', bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#385947', buttonTextColor: '#ffffff', buttonStyle: 'outline', buttonRadius: 2 } },
@@ -3899,14 +3899,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const buttonStyle = theme.buttonStyle || 'solid';
     const buttonColor = isXv ? '#d4af37' : String(theme.buttonBackgroundColor || '#292523');
     return {
-      '--module-background': isXv ? '#faf6f0' : String(theme.backgroundColor || '#ffffff'),
+      '--module-background': isXv ? '#fffdfa' : String(theme.backgroundColor || '#ffffff'),
       '--module-text': isXv ? '#5c0d18' : String(theme.textColor || '#292523'),
       '--module-accent': isXv ? '#d4af37' : String(theme.accentColor || '#9a6754'),
       '--module-heading-font': String(theme.headingFont || 'Georgia, serif'),
       '--module-body-font': String(theme.bodyFont || 'Arial, sans-serif'),
       '--module-button-background': isXv ? '#d4af37' : (buttonStyle === 'solid' ? buttonColor : buttonStyle === 'soft' ? `color-mix(in srgb,${buttonColor} 16%,transparent)` : 'transparent'),
-      '--module-button-text': isXv ? '#5c0d18' : (buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor),
-      '--module-button-border': isXv ? '1px solid #d4af37' : (buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent'),
+      '--module-button-text': isXv ? '#480a13' : (buttonStyle === 'solid' ? String(theme.buttonTextColor || '#ffffff') : buttonColor),
+      '--module-button-border': isXv ? '1px solid #e8c85c' : (buttonStyle === 'outline' ? `1px solid ${buttonColor}` : '1px solid transparent'),
       '--module-button-radius': isXv ? '30px' : `${Number(theme.buttonRadius || 0)}px`,
       '--module-columns': String(moduleStyle.columns || 2),
       '--module-gap': `${Number(moduleStyle.gap ?? 11)}px`
@@ -5951,34 +5951,130 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private normalizeModuleStyles(): void {
     this.normalizeDesignGeometry();
+    const isXv = this.isXvBurgundy();
+    if (isXv) {
+      if (!this.design.theme) {
+        this.design.theme = {
+          backgroundColor: '#5c0d18',
+          textColor: '#faf6f0',
+          accentColor: '#d4af37',
+          headingFont: "'Great Vibes', cursive",
+          bodyFont: 'Montserrat, sans-serif',
+          buttonBackgroundColor: '#d4af37',
+          buttonTextColor: '#480a13',
+          buttonStyle: 'solid',
+          buttonRadius: 30
+        };
+      } else {
+        this.design.theme.backgroundColor = '#5c0d18';
+        this.design.theme.accentColor = '#d4af37';
+        this.design.theme.headingFont = "'Great Vibes', cursive";
+        this.design.theme.bodyFont = 'Montserrat, sans-serif';
+        this.design.theme.buttonBackgroundColor = '#d4af37';
+        this.design.theme.buttonTextColor = '#480a13';
+        this.design.theme.buttonRadius = 30;
+      }
+    }
     for (const section of this.design.sections) {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
+      if (isXv && (!section.background.imageUrl || section.background.imageUrl === 'none' || section.background.imageUrl.includes('velvet-bg.jpg'))) {
+        section.background = {
+          color: section.background.color && section.background.color !== '#ffffff' ? section.background.color : '#5c0d18',
+          imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg',
+          overlay: section.background.overlay || 0.08
+        };
+      }
+      if (isXv) {
+        if (section.type === 'hero') {
+          const hasOldBanner = section.layers.some((l) => l.url?.includes('tiara-banner.jpg'));
+          const hasWhiteFloral = section.layers.some((l) => l.url?.includes('floral-cluster'));
+          const hasArchPortrait = section.layers.some((l) => l.style?.imageMask === 'arch' || l.name?.includes('Retrato'));
+          if (hasOldBanner || hasWhiteFloral || !hasArchPortrait) {
+            const coverUrl = this.invitation?.content?.coverImageUrl ||
+                             this.invitation?.content?.galleryItems?.find((item) => item.url)?.url ||
+                             this.invitation?.content?.gallery?.find(Boolean) ||
+                             'assets/templates/xv-burgundy/portrait.jpg';
+            const title = this.invitation?.content?.headline ? '{{invitation.headline}}' : '{{event.title}}';
+            section.height = 840;
+            section.background = { color: '#5c0d18', imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg', overlay: 0 };
+            section.layers = [
+              this.newLayer('text', 'MIS XV AÑOS', 10, 5, 80, 4, 13),
+              this.newLayer('image', 'Retrato de la quinceañera', 18, 11, 64, 44, 14),
+              this.newLayer('text', 'Mis Quince', 10, 58, 80, 7, 46),
+              this.newLayer('text', title, 6, 65, 88, 8, 32),
+              this.newLayer('shape', 'Línea decorativa', 28, 74, 44, 0.4, 14),
+              this.newLayer('text', '{{event.date}}', 10, 76, 80, 4, 13),
+              this.newLayer('button', 'Confirmar asistencia', 22, 83, 56, 7, 13)
+            ];
+            section.layers[0].style = { color: '#d4af37', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: 4, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
+            section.layers[1].url = coverUrl;
+            section.layers[1].style = { objectFit: 'cover', imageMask: 'arch', borderRadius: 18, borderWidth: 2.5, borderColor: '#d4af37', borderStyle: 'solid', boxShadow: '0 16px 42px rgba(0,0,0,0.6), 0 0 24px rgba(212,175,55,0.35)' };
+            section.layers[2].style = { color: '#d4af37', fontFamily: "'Great Vibes', cursive", fontSize: 46, fontWeight: 400, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
+            section.layers[3].style = { color: '#faf6f0', fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 32, fontWeight: 700, letterSpacing: 1.5, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
+            section.layers[4].style = { backgroundColor: '#d4af37', shapeKind: 'rectangle' };
+            section.layers[5].style = { color: '#e2d5c3', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 600, letterSpacing: 3, textAlign: 'center', backgroundColor: 'transparent', padding: 0 };
+            section.layers[6].binding = 'section:rsvp';
+            section.layers[6].style = { backgroundColor: '#d4af37', color: '#480a13', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, textAlign: 'center', borderRadius: 30, padding: 8, borderWidth: 1, borderColor: '#e8c85c', borderStyle: 'solid', boxShadow: '0 8px 24px rgba(212, 175, 55, 0.45)' };
+          }
+        }
+        section.layers = section.layers.filter((l) => !(l.url?.includes('floral-cluster') || l.name?.includes('Ramillete')));
+      }
       if (section.type === 'hero' || section.type === 'custom') continue;
       section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}) };
       if (this.isConfigurablePlugin(section.type)) section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
       if (section.type === 'rsvp') {
         this.ensureRsvpPluginDesign(section);
-        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (this.isXvBurgundy() ? 840 : 820));
-        this.ensureRsvpCanvasLayers(section);
-        this.ensureSeparatedRsvpFieldParts(section);
+        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (isXv ? 840 : 820));
+        if (isXv) {
+          const hasCard = section.layers.some((l) => l.binding === 'display.rsvp.card' || l.binding === 'rsvp.card');
+          if (!hasCard) {
+            section.layers = [];
+            if (section.pluginSettings) delete section.pluginSettings['nativeFieldPartsSeparated'];
+            this.ensureRsvpCanvasLayers(section);
+            this.ensureSeparatedRsvpFieldParts(section);
+          }
+        } else {
+          this.ensureRsvpCanvasLayers(section);
+          this.ensureSeparatedRsvpFieldParts(section);
+        }
       }
       if (section.type === 'dedications') {
-        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('dedication.'))) {
-          section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        section.height = Math.max(section.height, isXv ? 680 : 760);
+        if (isXv) {
+          const hasCard = section.layers.some((l) => l.binding === 'dedication.card');
+          if (!hasCard) {
+            section.layers = [];
+            if (section.pluginSettings) delete section.pluginSettings['nativeFieldPartsSeparated'];
+            this.ensureDedicationCanvasLayers(section);
+          }
+        } else {
+          this.ensureDedicationCanvasLayers(section);
         }
-        this.ensureDedicationCanvasLayers(section);
       }
       if (section.type === 'songs') {
-        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('song.'))) {
-          section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        section.height = Math.max(section.height, isXv ? 680 : 760);
+        if (isXv) {
+          const hasCard = section.layers.some((l) => l.binding === 'song.card');
+          if (!hasCard) {
+            section.layers = [];
+            if (section.pluginSettings) delete section.pluginSettings['nativeFieldPartsSeparated'];
+            this.ensureSongCanvasLayers(section);
+          }
+        } else {
+          this.ensureSongCanvasLayers(section);
         }
-        this.ensureSongCanvasLayers(section);
       }
       if (section.type === 'album') {
-        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('album.'))) {
-          section.height = Math.max(section.height, this.isXvBurgundy() ? 680 : 760);
+        section.height = Math.max(section.height, isXv ? 680 : 760);
+        if (isXv) {
+          const hasCard = section.layers.some((l) => l.binding === 'album.card');
+          if (!hasCard) {
+            section.layers = [];
+            this.ensureAlbumCanvasLayers(section);
+          }
+        } else {
+          this.ensureAlbumCanvasLayers(section);
         }
-        this.ensureAlbumCanvasLayers(section);
       }
       if (section.type === 'guestPass') {
         if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('pass.'))) {
@@ -5993,10 +6089,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.ensureGuestActivityCanvasLayers(section);
       }
       if (section.type === 'countdown') {
-        if (!section.layers.length || section.layers.some((l) => String(l.binding || '').startsWith('countdown.'))) {
-          section.height = Math.max(section.height, this.isXvBurgundy() ? 620 : 760);
+        section.height = Math.max(section.height, isXv ? 620 : 760);
+        if (isXv) {
+          let plaque = section.layers.find((l) => l.binding === 'display.countdown.plaque');
+          if (!plaque) {
+            section.layers = [];
+            this.ensureCountdownCanvasLayers(section);
+            plaque = section.layers.find((l) => l.binding === 'display.countdown.plaque');
+          }
+          if (plaque) {
+            plaque.url = 'assets/templates/xv-burgundy/countdown-box.jpg';
+            plaque.x = 7; plaque.y = 28; plaque.width = 86; plaque.height = 42;
+            plaque.style = { ...(plaque.style || {}), objectFit: 'cover', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.45)' };
+          }
+          const expiredLayer = section.layers.find((l) => l.binding === 'countdown.expired');
+          if (expiredLayer) expiredLayer.hidden = true;
+          const days = section.layers.find((l) => l.binding === 'countdown.days');
+          const daysLbl = section.layers.find((l) => l.binding === 'display.countdown.daysLabel');
+          if (days) { days.x = 24.1; days.y = 43.5; days.width = 14; days.height = 11; days.style = { ...(days.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
+          if (daysLbl) { daysLbl.x = 24.1; daysLbl.y = 53.5; daysLbl.width = 14; daysLbl.height = 4.5; daysLbl.style = { ...(daysLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          const hours = section.layers.find((l) => l.binding === 'countdown.hours');
+          const hoursLbl = section.layers.find((l) => l.binding === 'display.countdown.hoursLabel');
+          if (hours) { hours.x = 37.8; hours.y = 43.5; hours.width = 14; hours.height = 11; hours.style = { ...(hours.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
+          if (hoursLbl) { hoursLbl.x = 37.8; hoursLbl.y = 53.5; hoursLbl.width = 14; hoursLbl.height = 4.5; hoursLbl.style = { ...(hoursLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          const mins = section.layers.find((l) => l.binding === 'countdown.minutes');
+          const minsLbl = section.layers.find((l) => l.binding === 'display.countdown.minutesLabel');
+          if (mins) { mins.x = 52.8; mins.y = 43.5; mins.width = 14; mins.height = 11; mins.style = { ...(mins.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
+          if (minsLbl) { minsLbl.x = 52.8; minsLbl.y = 53.5; minsLbl.width = 14; minsLbl.height = 4.5; minsLbl.style = { ...(minsLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+          const secs = section.layers.find((l) => l.binding === 'countdown.seconds');
+          const secsLbl = section.layers.find((l) => l.binding === 'display.countdown.secondsLabel');
+          if (secs) { secs.x = 66.5; secs.y = 43.5; secs.width = 14; secs.height = 11; secs.style = { ...(secs.style || {}), fontFamily: "'Cinzel', 'Playfair Display', serif", fontWeight: 700, color: '#5c0d18', textAlign: 'center' }; }
+          if (secsLbl) { secsLbl.x = 66.5; secsLbl.y = 53.5; secsLbl.width = 14; secsLbl.height = 4.5; secsLbl.style = { ...(secsLbl.style || {}), letterSpacing: 2, fontWeight: 700, color: '#480a13', textAlign: 'center' }; }
+        } else {
+          this.ensureCountdownCanvasLayers(section);
         }
-        this.ensureCountdownCanvasLayers(section);
       }
       if (section.type === 'locations') {
         this.ensureLocationCanvasLayers(section);
@@ -6008,7 +6134,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.ensureItineraryCanvasLayers(section);
       }
       if (section.type === 'dressCode') {
-        this.ensureDressCodeCanvasLayers(section);
+        if (isXv) {
+          const hasMainCard = section.layers.some((l) => l.binding === 'dress.mainCard');
+          if (!hasMainCard) {
+            section.layers = [];
+            this.ensureDressCodeCanvasLayers(section);
+          }
+        } else {
+          this.ensureDressCodeCanvasLayers(section);
+        }
       }
       if (section.type === 'lodging') {
         this.ensureLodgingCanvasLayers(section);
@@ -6030,11 +6164,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private defaultRsvpPluginDesign(): NonNullable<VisualInvitationSection['pluginDesign']> {
+    const isXv = this.isXvBurgundy();
     const base = (x: number, y: number, width: number, height: number, extras: Partial<VisualPluginPartDesign> = {}): VisualPluginPartDesign => ({
-      x, y, width, height, fontFamily: this.design?.theme?.bodyFont || 'Arial, sans-serif', fontSize: 14, fontWeight: 500,
-      color: this.design?.theme?.textColor || '#292523', backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1,
-      borderRadius: 8, padding: 10, textAlign: 'left', shape: 'rectangle', ...extras
+      x, y, width, height, fontFamily: this.design?.theme?.bodyFont || 'Montserrat, sans-serif', fontSize: 14, fontWeight: 500,
+      color: isXv ? '#5c0d18' : (this.design?.theme?.textColor || '#292523'), backgroundColor: isXv ? '#fffdfa' : '#ffffff', borderColor: isXv ? '#d4af37' : '#d5cbc4', borderWidth: isXv ? 1.5 : 1,
+      borderRadius: isXv ? 12 : 8, padding: 10, textAlign: 'left', shape: 'rectangle', ...extras
     });
+    if (isXv) {
+      return {
+        layout: 'flow', minHeight: 560,
+        parts: {
+          eyebrow: base(15, 2, 70, 5, { fontSize: 11, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 2, color: '#d4af37' }),
+          title: base(10, 8, 80, 10, { fontFamily: "'Great Vibes', cursive", fontSize: 44, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 3, color: '#faf6f0' }),
+          intro: base(12, 18, 76, 5, { textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, padding: 2, color: '#e2d5c3' }),
+          name: base(12, 26, 36, 11), contact: base(52, 26, 36, 11), response: base(12, 41, 36, 11), companions: base(52, 41, 36, 11),
+          dietary: base(12, 56, 36, 11), message: base(52, 56, 36, 11),
+          submit: base(22, 72, 56, 9.5, { textAlign: 'center', fontWeight: 700, color: '#480a13', backgroundColor: '#d4af37', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, boxShadow: '0 6px 20px rgba(212,175,55,0.4)' }),
+          feedback: base(12, 84, 76, 5, { textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, fontSize: 12, color: '#e2d5c3' })
+        }
+      };
+    }
     return {
       layout: 'flow', minHeight: 560,
       parts: {
@@ -6051,9 +6200,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureRsvpCanvasLayers(section: VisualInvitationSection): void {
     if (section.layers.some((layer) => this.isRsvpFunctionalLayer(layer)) || section.layers.length > 0) return;
+    const isXv = this.isXvBurgundy();
+    let topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
+    if (isXv) {
+      const card = this.newLayer('shape', 'Tarjeta de confirmación', 8, 23, 84, 71, 14);
+      card.binding = 'display.rsvp.card';
+      card.zIndex = 1;
+      card.style = {
+        backgroundColor: '#fffdfa',
+        borderColor: '#d4af37',
+        borderWidth: 1.5,
+        borderStyle: 'solid',
+        borderRadius: 18,
+        boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)'
+      };
+      section.layers.push(card);
+    }
     const definitions = this.rsvpLayerDefinitions();
-    const topZ = Math.max(0, ...section.layers.map((layer) => layer.zIndex || 0));
-    section.layers.push(...definitions.map((definition, index) => this.createRsvpLayer(section, definition, topZ + index + 1)));
+    section.layers.push(...definitions.map((definition, index) => this.createRsvpLayer(section, definition, ++topZ)));
     section.pluginDesign = { ...(section.pluginDesign || {}), layout: 'free' };
   }
 
@@ -6111,7 +6275,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private dedicationLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+  private dedicationLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button' | 'shape'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    const isXv = this.isXvBurgundy();
+    if (isXv) {
+      return [
+        { type: 'text', binding: 'display.dedications.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Libro de mensajes'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'display.dedications.title', label: section.title || 'Dedicatorias', x: 10, y: 12, width: 80, height: 10, fontSize: 44 },
+        { type: 'text', binding: 'display.dedications.intro', label: String(this.pluginSetting(section, 'introText') || 'Déjanos unas palabras para recordar.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
+        { type: 'shape', binding: 'dedication.card', label: 'Tarjeta de dedicatoria', x: 8, y: 31, width: 84, height: 58, fontSize: 14 },
+        { type: 'field', binding: 'dedication.publicName', label: 'Tu nombre', placeholder: 'Nombre completo', x: 12, y: 35, width: 76, height: 10, fontSize: 14 },
+        { type: 'field', binding: 'dedication.message', label: 'Mensaje', placeholder: 'Escribe tu dedicatoria...', x: 12, y: 48, width: 76, height: 20, fontSize: 14 },
+        { type: 'button', binding: 'dedication.submit', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Enviar dedicatoria'), x: 22, y: 72, width: 56, height: 8.5, fontSize: 14 },
+        { type: 'text', binding: 'dedication.feedback', label: 'Aquí aparecerá el estado del envío', x: 12, y: 82, width: 76, height: 5, fontSize: 12 }
+      ];
+    }
     return [
       { type: 'text', binding: 'display.dedications.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Libro de mensajes'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
       { type: 'text', binding: 'display.dedications.title', label: section.title || 'Dedicatorias', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
@@ -6143,10 +6320,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layer.binding = definition.binding;
     layer.placeholder = definition.placeholder;
     layer.zIndex = zIndex;
+    if (definition.type === 'shape') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: 18,
+        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : '0 10px 28px rgba(0,0,0,0.06)'
+      };
+      layer.zIndex = 1;
+    }
     if (definition.type === 'field') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
         borderColor: isXv ? '#d4af37' : '#d5cbc4',
         borderWidth: isXv ? 1.5 : 1,
         borderStyle: 'solid',
@@ -6154,13 +6343,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         color: isXv ? '#5c0d18' : layer.style?.color,
         padding: 10,
         textAlign: 'left',
-        showPlaceholder: true
+        showPlaceholder: true,
+        boxShadow: isXv ? 'inset 0 1px 3px rgba(92, 13, 24, 0.08), 0 2px 8px rgba(0,0,0,0.1)' : undefined
       };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text' && isXv) {
@@ -6178,7 +6368,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
-  private songLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+  private songLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button' | 'shape'; binding: string; label: string; placeholder?: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    const isXv = this.isXvBurgundy();
+    if (isXv) {
+      return [
+        { type: 'text', binding: 'display.songs.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Música'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'display.songs.title', label: section.title || 'Pide una canción', x: 10, y: 12, width: 80, height: 10, fontSize: 44 },
+        { type: 'text', binding: 'display.songs.intro', label: String(this.pluginSetting(section, 'introText') || 'Ayúdanos a crear la música de este momento.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
+        { type: 'shape', binding: 'song.card', label: 'Tarjeta de canciones', x: 8, y: 31, width: 84, height: 58, fontSize: 14 },
+        { type: 'field', binding: 'song.title', label: String(this.pluginSetting(section, 'songLabel') || 'Canción'), placeholder: 'Nombre de la canción', x: 12, y: 35, width: 36, height: 11 },
+        { type: 'field', binding: 'song.sourceUrl', label: 'Spotify / YouTube', placeholder: 'Enlace de la canción', x: 52, y: 35, width: 36, height: 11 },
+        { type: 'field', binding: 'song.artist', label: 'Artista', placeholder: 'Nombre del artista', x: 12, y: 49, width: 36, height: 11 },
+        { type: 'field', binding: 'song.dedication', label: 'Dedicatoria', placeholder: 'Mensaje opcional', x: 52, y: 49, width: 36, height: 11 },
+        { type: 'button', binding: 'song.submit', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Enviar al DJ'), x: 22, y: 64, width: 56, height: 8.5, fontSize: 14 },
+        { type: 'text', binding: 'song.feedback', label: 'Aquí aparecerá el estado del envío', x: 12, y: 76, width: 76, height: 5, fontSize: 12 }
+      ];
+    }
     return [
       { type: 'text', binding: 'display.songs.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Música'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
       { type: 'text', binding: 'display.songs.title', label: section.title || 'Pide una canción', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
@@ -6211,10 +6416,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layer.binding = definition.binding;
     layer.placeholder = definition.placeholder;
     layer.zIndex = zIndex;
+    if (definition.type === 'shape') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: 18,
+        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : '0 10px 28px rgba(0,0,0,0.06)'
+      };
+      layer.zIndex = 1;
+    }
     if (definition.type === 'field') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
         borderColor: isXv ? '#d4af37' : '#d5cbc4',
         borderWidth: isXv ? 1.5 : 1,
         borderStyle: 'solid',
@@ -6222,13 +6439,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         color: isXv ? '#5c0d18' : layer.style?.color,
         padding: 10,
         textAlign: 'left',
-        showPlaceholder: true
+        showPlaceholder: true,
+        boxShadow: isXv ? 'inset 0 1px 3px rgba(92, 13, 24, 0.08), 0 2px 8px rgba(0,0,0,0.1)' : undefined
       };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text' && isXv) {
@@ -6245,7 +6463,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
-  private albumLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+  private albumLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'field' | 'button' | 'shape'; binding: string; label: string; x: number; y: number; width: number; height: number; fontSize?: number }> {
+    const isXv = this.isXvBurgundy();
+    if (isXv) {
+      return [
+        { type: 'text', binding: 'display.album.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Álbum colectivo'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
+        { type: 'text', binding: 'display.album.title', label: section.title || 'Comparte tus fotos', x: 10, y: 12, width: 80, height: 10, fontSize: 44 },
+        { type: 'text', binding: 'display.album.intro', label: String(this.pluginSetting(section, 'introText') || 'Comparte tus mejores momentos con los anfitriones.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
+        { type: 'shape', binding: 'album.card', label: 'Tarjeta de álbum colectivo', x: 8, y: 31, width: 84, height: 54, fontSize: 14 },
+        { type: 'button', binding: 'album.upload', label: String(this.pluginSetting(section, 'primaryButtonText') || 'Seleccionar fotografía'), x: 18, y: 44, width: 64, height: 9.5, fontSize: 14 },
+        { type: 'text', binding: 'album.feedback', label: 'Aquí aparecerá el estado de la fotografía', x: 12, y: 58, width: 76, height: 6, fontSize: 12 },
+        { type: 'field', binding: 'album.gallery', label: 'Fotografías aprobadas', x: 12, y: 68, width: 76, height: 12, fontSize: 13 }
+      ];
+    }
     return [
       { type: 'text', binding: 'display.album.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'Álbum colectivo'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
       { type: 'text', binding: 'display.album.title', label: section.title || 'Comparte tus fotografías', x: 10, y: 12, width: 80, height: 10, fontSize: 34 },
@@ -6267,10 +6497,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize || 14);
     layer.binding = definition.binding;
     layer.zIndex = zIndex;
+    if (definition.type === 'shape') {
+      layer.style = {
+        ...(layer.style || {}),
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
+        borderColor: isXv ? '#d4af37' : '#d5cbc4',
+        borderWidth: isXv ? 1.5 : 1,
+        borderStyle: 'solid',
+        borderRadius: 18,
+        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : '0 10px 28px rgba(0,0,0,0.06)'
+      };
+      layer.zIndex = 1;
+    }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'text' && isXv) {
@@ -6327,12 +6569,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (definition.type === 'shape') {
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
         borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#e6ded8',
         borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
         borderRadius: 18,
-        boxShadow: isXv ? '0 12px 30px rgba(92, 13, 24, 0.16)' : isHaute ? '0 12px 30px rgba(197, 155, 72, 0.14)' : '0 10px 28px rgba(0,0,0,0.06)'
+        boxShadow: isXv ? '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' : isHaute ? '0 12px 30px rgba(197, 155, 72, 0.14)' : '0 10px 28px rgba(0,0,0,0.06)'
       };
       layer.zIndex = 1;
     }
@@ -6414,7 +6656,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const isCard = ['activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications'].includes(definition.binding);
       layer.style = {
         ...(layer.style || {}),
-        backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+        backgroundColor: isXv ? '#fffdfa' : '#ffffff',
         borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#e2dbd5',
         borderWidth: isXv || isHaute ? 1.5 : 1,
         borderStyle: 'solid',
@@ -6423,7 +6665,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         padding: 10,
         textAlign: isCard ? 'center' : 'left',
         showPlaceholder: true,
-        boxShadow: isCard ? '0 4px 16px rgba(0,0,0,0.05)' : undefined
+        boxShadow: isCard ? (isXv ? '0 12px 28px rgba(40,4,10,0.35), inset 0 0 0 1px rgba(212,175,55,0.3)' : '0 4px 16px rgba(0,0,0,0.05)') : undefined
       };
     }
     if (definition.type === 'button') {
@@ -6431,16 +6673,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (definition.binding === 'activity.manage') {
         layer.style = {
           ...(layer.style || {}),
-          backgroundColor: isXv ? '#faf6f0' : '#ffffff',
+          backgroundColor: isXv ? '#fffdfa' : '#ffffff',
           color: isXv ? '#5c0d18' : '#333333',
           borderColor: isXv ? '#d4af37' : isHaute ? '#c59b48' : '#d5cbc4',
-          borderWidth: 1,
+          borderWidth: 1.5,
           borderStyle: 'solid',
           borderRadius: 24,
           fontWeight: 600
         };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212,175,55,0.35)' };
       }
     }
     if (definition.type === 'text') {
@@ -6458,16 +6700,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         { type: 'text', binding: 'display.countdown.eyebrow', label: String(this.pluginSetting(section, 'eyebrow') || 'SÓLO FALTAN'), x: 15, y: 5, width: 70, height: 5, fontSize: 11 },
         { type: 'text', binding: 'display.countdown.title', label: section.title || 'Para este gran día', x: 10, y: 12, width: 80, height: 10, fontSize: 44 },
         { type: 'text', binding: 'display.countdown.intro', label: String(this.pluginSetting(section, 'introText') || 'Cada segundo nos acerca más a esta noche inolvidable.'), x: 12, y: 23, width: 76, height: 6, fontSize: 14 },
-        { type: 'image', binding: 'display.countdown.plaque', label: 'Marco de cuenta regresiva', url: 'assets/templates/xv-burgundy/countdown-box.jpg', x: 5, y: 32, width: 90, height: 38, fontSize: 12 },
-        { type: 'text', binding: 'countdown.days', label: String(this.countdownPreview.days), x: 9, y: 39, width: 18, height: 16, fontSize: 40 },
-        { type: 'text', binding: 'display.countdown.daysLabel', label: 'Días', x: 9, y: 55, width: 18, height: 5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 31, y: 39, width: 18, height: 16, fontSize: 40 },
-        { type: 'text', binding: 'display.countdown.hoursLabel', label: 'Horas', x: 31, y: 55, width: 18, height: 5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 51, y: 39, width: 18, height: 16, fontSize: 40 },
-        { type: 'text', binding: 'display.countdown.minutesLabel', label: 'Minutos', x: 51, y: 55, width: 18, height: 5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 73, y: 39, width: 18, height: 16, fontSize: 40 },
-        { type: 'text', binding: 'display.countdown.secondsLabel', label: 'Segundos', x: 73, y: 55, width: 18, height: 5, fontSize: 11 },
-        { type: 'text', binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 74, width: 70, height: 12, fontSize: 32 }
+        { type: 'image', binding: 'display.countdown.plaque', label: 'Marco de cuenta regresiva', url: 'assets/templates/xv-burgundy/countdown-box.jpg', x: 4, y: 30, width: 92, height: 40, fontSize: 12 },
+        { type: 'text', binding: 'countdown.days', label: String(this.countdownPreview.days), x: 24.1, y: 43.5, width: 14, height: 11, fontSize: 34 },
+        { type: 'text', binding: 'display.countdown.daysLabel', label: 'DÍAS', x: 24.1, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.hours', label: String(this.countdownPreview.hours), x: 37.8, y: 43.5, width: 14, height: 11, fontSize: 34 },
+        { type: 'text', binding: 'display.countdown.hoursLabel', label: 'HORAS', x: 37.8, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.minutes', label: String(this.countdownPreview.minutes), x: 51.5, y: 43.5, width: 14, height: 11, fontSize: 34 },
+        { type: 'text', binding: 'display.countdown.minutesLabel', label: 'MINUTOS', x: 51.5, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.seconds', label: String(this.countdownPreview.seconds), x: 65.3, y: 43.5, width: 14, height: 11, fontSize: 34 },
+        { type: 'text', binding: 'display.countdown.secondsLabel', label: 'SEGUNDOS', x: 65.3, y: 53.5, width: 14, height: 4.5, fontSize: 11 },
+        { type: 'text', binding: 'countdown.expired', label: String(this.pluginSetting(section, 'expiredText') || 'El gran día llegó'), x: 15, y: 74, width: 70, height: 12, fontSize: 36 }
       ];
     }
     return [
@@ -6513,7 +6755,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       } else if (definition.binding.endsWith('Label')) {
         layer.style = { ...(layer.style || {}), letterSpacing: 1.5, textTransform: 'uppercase', fontSize: 11, color: '#8c1d2e', fontWeight: 700 };
       } else if (definition.binding === 'countdown.expired') {
-        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 34, fontWeight: 700, color: '#faf6f0' };
+        layer.style = { ...(layer.style || {}), fontFamily: "'Great Vibes', cursive", fontSize: 36, fontWeight: 700, color: '#d4af37' };
       }
     }
     return layer;
@@ -6529,10 +6771,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   isXvBurgundy(): boolean {
     const theme = this.design?.theme;
-    return Boolean(
-      theme?.headingFont?.includes('Great Vibes') ||
-      (theme?.accentColor === '#d4af37' && theme?.backgroundColor === '#5c0d18')
-    );
+    const bg = String(theme?.backgroundColor || '').toLowerCase().trim();
+    const accent = String(theme?.accentColor || '').toLowerCase().trim();
+    const font = String(theme?.headingFont || '').toLowerCase();
+    if (font.includes('great vibes') || (bg === '#5c0d18' && (accent === '#d4af37' || accent === '#e8c85c'))) {
+      return true;
+    }
+    if (this.design?.sections?.some((s) => s.background?.imageUrl?.includes('xv-burgundy'))) {
+      return true;
+    }
+    if (this.design?.sections?.some((s) => s.layers?.some((l) => l.url?.includes('xv-burgundy')))) {
+      return true;
+    }
+    return false;
   }
 
   private locationSourceData(): InvitationLocation[] {
@@ -6668,10 +6919,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5 };
         }
       } else if (isXv) {
-        if (definition.binding.endsWith('.waze')) {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
+        if (definition.binding.endsWith('.waze') || definition.binding.endsWith('.phone')) {
+          layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
         } else {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
         }
       } else {
         layer.style = { ...(layer.style || {}), borderRadius: 24, fontWeight: 600 };
@@ -6681,7 +6932,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#e6ded8', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 10px 28px rgba(0,0,0,0.06)' };
       }
@@ -6736,24 +6987,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const topPx = 200 + Math.floor(index / 2) * 290;
       const prefix = `gift.${index}`;
       if (isHaute || isXv) {
-        const cardLeft = index % 2 === 0 ? 5 : 51;
+        const isSingleGift = gifts.length === 1;
+        const cardLeft = isSingleGift ? 8 : (index % 2 === 0 ? 5 : 51);
+        const cardWidth = isSingleGift ? 84 : 44;
         definitions.push(
-          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de regalo ${index + 1}`, x: cardLeft, y: pct(topPx), width: 44, height: pct(255), fontSize: 14 }
+          { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de regalo ${index + 1}`, x: cardLeft, y: pct(topPx), width: cardWidth, height: pct(255), fontSize: 14 }
         );
         if (gift.imageUrl) {
+          const imgLeft = isSingleGift ? 14 : cardLeft + 14;
+          const textLeft = isSingleGift ? 36 : cardLeft + 3;
+          const textWidth = isSingleGift ? 52 : 38;
+          const btnLeft = isSingleGift ? 36 : cardLeft + 8;
+          const btnWidth = isSingleGift ? 36 : 28;
           definitions.push(
-            { type: 'image', binding: `${prefix}.image`, label: `Logo de mesa ${index + 1}`, url: gift.imageUrl, x: cardLeft + 14, y: pct(topPx + 16), width: 16, height: pct(60), fontSize: 12 },
-            { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: cardLeft + 3, y: pct(topPx + 82), width: 38, height: pct(36), fontSize: isXv ? 24 : 20 },
-            { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: cardLeft + 3, y: pct(topPx + 120), width: 38, height: pct(26), fontSize: 12 },
-            { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: cardLeft + 3, y: pct(topPx + 148), width: 38, height: pct(42), fontSize: 13 },
-            { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: cardLeft + 8, y: pct(topPx + 195), width: 28, height: pct(42), fontSize: 13 }
+            { type: 'image', binding: `${prefix}.image`, label: `Logo de mesa ${index + 1}`, url: gift.imageUrl, x: imgLeft, y: pct(topPx + 16), width: isSingleGift ? 18 : 16, height: pct(60), fontSize: 12 },
+            { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: textLeft, y: pct(topPx + 82), width: textWidth, height: pct(36), fontSize: isXv ? 24 : 20 },
+            { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: textLeft, y: pct(topPx + 120), width: textWidth, height: pct(26), fontSize: 12 },
+            { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: textLeft, y: pct(topPx + 148), width: textWidth, height: pct(42), fontSize: 13 },
+            { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: btnLeft, y: pct(topPx + 195), width: btnWidth, height: pct(42), fontSize: 13 }
           );
         } else {
+          const textLeft = isSingleGift ? 12 : cardLeft + 3;
+          const textWidth = isSingleGift ? 76 : 38;
+          const btnLeft = isSingleGift ? 24 : cardLeft + 8;
+          const btnWidth = isSingleGift ? 52 : 28;
           definitions.push(
-            { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: cardLeft + 3, y: pct(topPx + 28), width: 38, height: pct(42), fontSize: isXv ? 26 : 22 },
-            { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: cardLeft + 3, y: pct(topPx + 74), width: 38, height: pct(28), fontSize: 12 },
-            { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: cardLeft + 3, y: pct(topPx + 108), width: 38, height: pct(68), fontSize: 13 },
-            { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: cardLeft + 8, y: pct(topPx + 188), width: 28, height: pct(44), fontSize: 13 }
+            { type: 'text', binding: `${prefix}.title`, label: gift.title || gift.store || `Mesa ${index + 1}`, x: textLeft, y: pct(topPx + 28), width: textWidth, height: pct(42), fontSize: isXv ? 26 : 22 },
+            { type: 'text', binding: `${prefix}.store`, label: gift.store || '', x: textLeft, y: pct(topPx + 74), width: textWidth, height: pct(28), fontSize: 12 },
+            { type: 'text', binding: `${prefix}.note`, label: gift.note || 'Regalo opcional', x: textLeft, y: pct(topPx + 108), width: textWidth, height: pct(68), fontSize: 13 },
+            { type: 'button', binding: `${prefix}.open`, label: String(this.pluginSetting(section, 'primaryButtonText') || 'Abrir mesa'), x: btnLeft, y: pct(topPx + 188), width: btnWidth, height: pct(44), fontSize: 13 }
           );
         }
       } else {
@@ -6865,9 +7127,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       } else if (isXv) {
         if (definition.binding.includes('copy')) {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 30, fontWeight: 700 };
         } else {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
         }
       }
     }
@@ -6876,7 +7138,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#faf8f5', borderColor: '#e8dcce', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, padding: 6 };
       } else if (isXv) {
         if (definition.binding === 'envelope.art') {
-          layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(92, 13, 24, 0.25)' };
+          layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(40, 4, 10, 0.3)' };
         } else {
           layer.style = { ...(layer.style || {}), objectFit: 'contain', backgroundColor: '#ffffff', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 12, padding: 6 };
         }
@@ -6888,7 +7150,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7017,14 +7279,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5 };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderStyle: 'solid', borderRadius: 30, letterSpacing: 0.5, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'shape') {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 10px 28px rgba(197, 155, 72, 0.12)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(92, 13, 24, 0.22)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 14px 34px rgba(40, 4, 10, 0.4), inset 0 0 0 1px rgba(212, 175, 55, 0.3)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7084,11 +7346,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     ];
     if (isHaute || isXv) {
       if (hasImage) {
-        definitions.push(
-          { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: dressImgUrl, x: 10, y: pct(190), width: 34, height: pct(230), fontSize: 12 },
-          { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || (isXv ? 'Rigurosa Etiqueta / Gala' : 'Rigurosa Etiqueta'), x: 48, y: pct(210), width: 44, height: pct(52), fontSize: isXv ? 32 : 28 },
-          { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || (isXv ? 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.' : 'Caballeros: Frac o esmoquin negro clásico.\nDamas: Vestido largo de noche.'), x: 48, y: pct(272), width: 44, height: pct(130), fontSize: 14 }
-        );
+        if (isXv) {
+          definitions.push(
+            { type: 'shape', binding: 'dress.mainCard', label: 'Tarjeta de etiqueta', x: 8, y: pct(175), width: 84, height: pct(245), fontSize: 14 },
+            { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: dressImgUrl, x: 12, y: pct(190), width: 32, height: pct(215), fontSize: 12 },
+            { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || 'Rigurosa Etiqueta / Gala', x: 48, y: pct(200), width: 40, height: pct(52), fontSize: 30 },
+            { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || 'Damas: Vestido largo de gala en tonos sugeridos.\nCaballeros: Traje formal oscuro o esmoquin.', x: 48, y: pct(258), width: 40, height: pct(145), fontSize: 13 }
+          );
+        } else {
+          definitions.push(
+            { type: 'image', binding: 'dress.image', label: 'Imagen de referencia', url: dressImgUrl, x: 10, y: pct(190), width: 34, height: pct(230), fontSize: 12 },
+            { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || 'Rigurosa Etiqueta', x: 48, y: pct(210), width: 44, height: pct(52), fontSize: 28 },
+            { type: 'text', binding: 'dress.description', label: this.invitation?.content?.dressCodeDescription || 'Caballeros: Frac o esmoquin negro clásico.\nDamas: Vestido largo de noche.', x: 48, y: pct(272), width: 44, height: pct(130), fontSize: 14 }
+          );
+        }
       } else {
         definitions.push(
           { type: 'text', binding: 'dress.code', label: this.invitation?.content?.dressCode || (isXv ? 'Rigurosa Etiqueta / Gala' : 'Rigurosa Etiqueta'), x: 15, y: pct(190), width: 70, height: pct(58), fontSize: isXv ? 36 : 32 },
@@ -7157,7 +7428,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', boxShadow: '0 12px 30px rgba(92, 13, 24, 0.35)' };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 16, borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', boxShadow: '0 16px 36px rgba(40, 4, 10, 0.5)' };
       } else {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 8 };
       }
@@ -7177,12 +7448,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       } else if (isXv) {
         layer.style = {
           ...(layer.style || {}),
-          backgroundColor: isColor ? definition.color || '#5c0d18' : '#faf6f0',
+          backgroundColor: isColor ? definition.color || '#5c0d18' : '#fffdfa',
           borderColor: '#d4af37',
           borderWidth: isColor ? 2 : 1.5,
           borderStyle: 'solid',
           borderRadius: isColor ? 999 : 16,
-          boxShadow: isColor ? '0 4px 12px rgba(212, 175, 55, 0.35)' : '0 12px 30px rgba(92, 13, 24, 0.22)'
+          boxShadow: isColor ? '0 4px 12px rgba(212, 175, 55, 0.4)' : '0 14px 34px rgba(40, 4, 10, 0.4), inset 0 0 0 1px rgba(212, 175, 55, 0.3)'
         };
       } else {
         layer.style = {
@@ -7288,9 +7559,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
       if (isXv) {
         if (definition.binding.endsWith('.reserve')) {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
         } else {
-          layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 30, fontWeight: 700 };
+          layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', color: '#5c0d18', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 30, fontWeight: 700 };
         }
       }
     }
@@ -7299,7 +7570,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     if (definition.type === 'shape') {
       if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 8, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7348,7 +7619,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         const left = index % 2 === 0 ? 5 : 52;
         const topPx = 200 + Math.floor(index / 2) * 320;
         const prefix = `gallery.item.${index}`;
-        const defaultPhotoUrl = isXv ? (index === 0 ? 'assets/templates/xv-burgundy/portrait.jpg' : 'assets/templates/xv-burgundy/header.jpg') : '';
+        const defaultPhotoUrl = isXv ? (index === 0 ? 'assets/templates/xv-burgundy/portrait.jpg' : (index % 2 === 1 ? 'assets/templates/xv-burgundy/church-card.jpg' : 'assets/templates/xv-burgundy/reception-doily.jpg')) : '';
         definitions.push(
           { type: 'shape', binding: `${prefix}.card`, label: `Tarjeta de fotografía ${index + 1}`, x: left, y: pct(topPx), width: 43, height: pct(295), fontSize: 12 },
           { type: 'image', binding: `${prefix}.image`, label: `Fotografía ${index + 1}`, url: item.url || defaultPhotoUrl, x: left + 2.5, y: pct(topPx + 14), width: 38, height: pct(225), fontSize: 12 },
@@ -7421,14 +7692,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#181514', color: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 30 };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, fontWeight: 700, boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)' };
       }
     }
     if (definition.type === 'image') {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 12, borderColor: '#e8dcce', borderWidth: 1, borderStyle: 'solid' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(92, 13, 24, 0.15)' };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(40, 4, 10, 0.25)' };
       } else {
         layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 4 };
       }
@@ -7437,7 +7708,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (isHaute) {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#c59b48', borderWidth: 1, borderStyle: 'solid', borderRadius: 16, boxShadow: '0 12px 30px rgba(197, 155, 72, 0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 2, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 14px 34px rgba(92, 13, 24, 0.28)' };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', borderRadius: 18, boxShadow: '0 16px 38px rgba(40, 4, 10, 0.45), inset 0 0 0 1px rgba(212, 175, 55, 0.35)' };
       } else {
         layer.style = { ...(layer.style || {}), backgroundColor: '#ffffff', borderColor: '#d5cbc4', borderWidth: 1, borderStyle: 'solid', borderRadius: 4, boxShadow: '0 8px 24px #00000012' };
       }
@@ -7512,9 +7783,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
     if (isXv) {
       if (definition.type === 'field') {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#faf6f0', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 12, color: '#5c0d18', padding: 10, textAlign: 'left', showPlaceholder: true };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#fffdfa', borderColor: '#d4af37', borderWidth: 1.5, borderRadius: 12, color: '#5c0d18', padding: 10, textAlign: 'left', showPlaceholder: true, boxShadow: 'inset 0 1px 3px rgba(92, 13, 24, 0.08), 0 2px 8px rgba(0,0,0,0.1)' };
       } else if (definition.type === 'button') {
-        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#5c0d18', borderColor: '#d4af37', borderRadius: 30, fontWeight: 700, letterSpacing: 0.5 };
+        layer.style = { ...(layer.style || {}), backgroundColor: '#d4af37', color: '#480a13', borderColor: '#e8c85c', borderWidth: 1, borderRadius: 30, fontWeight: 700, letterSpacing: 0.5, boxShadow: '0 6px 20px rgba(212, 175, 55, 0.4)' };
       } else if (definition.type === 'text') {
         if (definition.key === 'eyebrow') {
           layer.style = { ...(layer.style || {}), color: '#d4af37', letterSpacing: 2.5, fontWeight: 700 };

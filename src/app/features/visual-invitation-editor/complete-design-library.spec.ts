@@ -123,9 +123,9 @@ describe('complete design library', () => {
 
     const hero = design.sections[0];
     expect(hero.type).toBe('hero');
-    expect(hero.layers.some((l) => l.type === 'image' && l.url === 'assets/templates/xv-burgundy/tiara-banner.jpg')).toBeTrue();
-    expect(hero.layers.some((l) => l.type === 'image' && l.style?.imageMask === 'circle' && l.url === content.coverImageUrl)).toBeTrue();
-    expect(hero.layers.some((l) => l.type === 'image' && l.url === 'assets/templates/xv-burgundy/floral-cluster.jpg')).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'text' && l.text === 'MIS XV AÑOS')).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'image' && l.style?.imageMask === 'arch' && l.url === content.coverImageUrl)).toBeTrue();
+    expect(hero.layers.some((l) => l.type === 'text' && l.text === 'Mis Quince')).toBeTrue();
     expect(hero.layers.some((l) => l.type === 'button' && l.binding === 'section:rsvp')).toBeTrue();
 
     const intro = design.sections[1];
@@ -138,7 +138,7 @@ describe('complete design library', () => {
     expect(modules.every((m) => m.moduleStyle?.surface === 'soft')).toBeTrue();
     expect(modules.every((m) => m.moduleStyle?.cardStyle === 'elevated')).toBeTrue();
     expect(modules.map((m) => m.type)).toEqual([
-      'countdown', 'gallery', 'dedications', 'locations', 'itinerary', 'dressCode', 'gifts', 'lodging', 'rsvp', 'story', 'album', 'songs'
+      'countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'story', 'dedications', 'album', 'songs'
     ]);
 
     const locationsSec = design.sections.find((s) => s.type === 'locations');
