@@ -548,6 +548,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { publicName: 'Familia y amigos', message: 'Que esta nueva etapa esté llena de momentos inolvidables.' },
     { publicName: 'Tus invitados', message: 'Gracias por permitirnos acompañarlos en este día.' }
   ];
+  readonly previewLodging = [
+    {
+      name: 'Hotel Sede Recomendado',
+      description: 'Tarifa preferencial para invitados del evento.',
+      address: 'Zona hotelera centro',
+      priceLabel: '$1,850 / noche',
+      agreementLabel: 'Convenio especial',
+      discountCode: 'EVENTO2026',
+      services: ['Estacionamiento', 'Desayuno incluido', 'Wi-Fi'],
+      notes: 'Menciona el código de reservación al llamar.',
+      imageUrl: ''
+    }
+  ];
   readonly previewGallerySlots = [0, 1, 2, 3, 4, 5];
   readonly previewGuest = { name: 'Invitado de ejemplo', group: 'Familia', tableName: 'Mesa 5', seatLabel: 'A-12', allowedCompanions: 2 };
 
@@ -1842,7 +1855,51 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addSection(type: string, title: string): void {
     this.recordHistory();
-    const section = this.makeSection(type, title, this.design.theme?.backgroundColor || '#ffffff', type === 'rsvp' ? 820 : ['dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown'].includes(type) ? 760 : 540);
+    const isXv = this.isXvBurgundy();
+    const isHaute = this.isHauteCouture();
+    const index = this.design.sections.length;
+    const bgColor = isXv
+      ? (index % 2 === 0 ? '#180104' : '#240308')
+      : (this.design.theme?.backgroundColor || '#ffffff');
+
+    let height = 540;
+    if (isXv) {
+      const xvHeights: Record<string, number> = {
+        countdown: 360,
+        album: 420,
+        dressCode: 500,
+        story: 520,
+        gallery: 520,
+        dedications: 520,
+        songs: 520,
+        itinerary: 560,
+        lodging: 560,
+        guestPass: 540,
+        guestActivity: 540,
+        locations: 580,
+        gifts: 580,
+        rsvp: 680,
+        custom: 540
+      };
+      height = xvHeights[type] || 540;
+    } else {
+      if (type === 'rsvp') height = 820;
+      else if (['dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'itinerary', 'dressCode', 'lodging', 'gallery', 'gifts'].includes(type)) height = 760;
+      else if (type === 'story') height = 620;
+      else height = 540;
+    }
+
+    const section = this.makeSection(type, title, bgColor, height);
+    section.moduleStyle = {
+      layout: ['itinerary', 'locations', 'gallery'].includes(type) ? 'grid' : 'list',
+      columns: type === 'gallery' ? 3 : 2,
+      alignment: 'center',
+      surface: isXv ? 'transparent' : (isHaute ? 'soft' : 'solid'),
+      cardStyle: (isXv || isHaute) ? 'bordered' : 'none',
+      gap: (isXv || isHaute) ? 16 : 14,
+      showTitle: true
+    };
+
     if (type !== 'custom' && !this.isFunctionalType(type)) section.layers.push(this.newLayer('text', title, 15, 12, 70, 18));
     if (type === 'rsvp') { this.ensureRsvpPluginDesign(section); this.ensureRsvpCanvasLayers(section); this.ensureSeparatedRsvpFieldParts(section); }
     if (type === 'dedications') this.ensureDedicationCanvasLayers(section);
@@ -1857,6 +1914,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'dressCode') this.ensureDressCodeCanvasLayers(section);
     if (type === 'lodging') this.ensureLodgingCanvasLayers(section);
     if (type === 'gallery') this.ensureGalleryCanvasLayers(section);
+
+    if (isXv) {
+      this.refineXvBurgundySectionStyles(section);
+    }
+
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
@@ -3831,6 +3893,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   shapeContentStyle(layer: VisualInvitationLayer): Record<string, string> {
     const style = layer.style || {};
     return {
+      boxSizing: 'border-box',
       width: '100%', height: '100%',
       backgroundColor: String(style.backgroundColor || this.design.theme?.accentColor || '#d88f7d'),
       backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
@@ -4026,6 +4089,37 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   setPluginPartDesign(section: VisualInvitationSection, key: string, property: keyof VisualPluginPartDesign, value: string | number | boolean): void {
     this.ensureRsvpPluginDesign(section);
     section.pluginDesign!.parts![key] = { ...section.pluginDesign!.parts![key], [property]: value };
+    if (section.layers?.length) {
+      const bindingMap: Record<string, { labelBinding?: string; fieldBinding?: string }> = {
+        eyebrow: { labelBinding: 'display.rsvp.eyebrow' },
+        title: { labelBinding: 'display.rsvp.title' },
+        intro: { labelBinding: 'display.rsvp.intro' },
+        name: { labelBinding: 'display.label.rsvp.name', fieldBinding: 'rsvp.name' },
+        contact: { labelBinding: 'display.label.rsvp.email', fieldBinding: 'rsvp.email' },
+        response: { labelBinding: 'display.label.rsvp.response', fieldBinding: 'rsvp.response' },
+        companions: { labelBinding: 'display.label.rsvp.companions', fieldBinding: 'rsvp.companions' },
+        dietary: { labelBinding: 'display.label.rsvp.dietaryRestrictions', fieldBinding: 'rsvp.dietaryRestrictions' },
+        message: { labelBinding: 'display.label.rsvp.message', fieldBinding: 'rsvp.message' },
+        submit: { fieldBinding: 'rsvp.submit' },
+        feedback: { fieldBinding: 'rsvp.feedback' }
+      };
+      const mapping = bindingMap[key];
+      if (mapping) {
+        if (property === 'label') {
+          if (mapping.labelBinding) {
+            const labelLayer = section.layers.find((l) => l.binding === mapping.labelBinding);
+            if (labelLayer) labelLayer.text = String(value);
+          }
+          if (mapping.fieldBinding) {
+            const fieldLayer = section.layers.find((l) => l.binding === mapping.fieldBinding);
+            if (fieldLayer) fieldLayer.text = String(value);
+          }
+        } else if (property === 'placeholder' && mapping.fieldBinding) {
+          const fieldLayer = section.layers.find((l) => l.binding === mapping.fieldBinding);
+          if (fieldLayer) fieldLayer.placeholder = String(value);
+        }
+      }
+    }
     this.autosaveState = 'Cambios pendientes';
   }
 
@@ -6055,17 +6149,28 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           if (section.background.imageUrl?.includes('velvet-bg.jpg')) {
             section.background.imageUrl = '';
           }
-          section.background.color = '#240308';
+          const sIdx = this.design.sections.indexOf(section);
+          section.background.color = sIdx % 2 === 0 ? '#180104' : '#240308';
           section.background.overlay = 0;
         }
         section.layers = section.layers.filter((l) => !(l.url?.includes('floral-cluster') || l.name?.includes('Ramillete')));
       }
       if (section.type === 'hero' || section.type === 'custom') continue;
-      section.moduleStyle = { ...this.defaultModuleStyle(), ...(section.moduleStyle || {}), surface: 'transparent', cardStyle: 'bordered', gap: 16 };
+      section.moduleStyle = {
+        ...this.defaultModuleStyle(),
+        ...(section.moduleStyle || {}),
+        surface: isXv ? 'transparent' : (section.moduleStyle?.surface || 'solid'),
+        cardStyle: isXv ? 'bordered' : (section.moduleStyle?.cardStyle || 'none'),
+        gap: isXv ? 16 : (section.moduleStyle?.gap || 14)
+      };
       if (this.isConfigurablePlugin(section.type)) section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
       if (section.type === 'rsvp') {
         this.ensureRsvpPluginDesign(section);
-        section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (isXv ? 680 : 820));
+        if (isXv && section.height > 680) {
+          section.height = 680;
+        } else {
+          section.height = Math.max(section.height, section.pluginDesign?.layout === 'free' ? Number(section.pluginDesign.minHeight || 560) + 150 : (isXv ? 680 : 820));
+        }
         if (isXv) {
           const hasCard = section.layers.some((l) => l.binding === 'display.rsvp.card' || l.binding === 'rsvp.card');
           if (!hasCard) {
@@ -6118,11 +6223,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
       if (section.type === 'guestPass') {
-        section.height = Math.max(section.height, isXv ? 540 : 760);
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('pass.') || l.binding?.startsWith('display.guestPass.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 600) {
+          section.height = 540;
+        } else {
+          section.height = Math.max(section.height, isXv ? 540 : 760);
+        }
         this.ensureGuestPassCanvasLayers(section);
       }
       if (section.type === 'guestActivity') {
-        section.height = Math.max(section.height, isXv ? 540 : 760);
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('activity.') || l.binding?.startsWith('display.guestActivity.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 600) {
+          section.height = 540;
+        } else {
+          section.height = Math.max(section.height, isXv ? 540 : 760);
+        }
         this.ensureGuestActivityCanvasLayers(section);
       }
       if (section.type === 'countdown') {
@@ -6172,12 +6293,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
       if (section.type === 'locations') {
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('location.') || l.binding?.startsWith('display.locations.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 620) {
+          section.height = 580;
+        }
         this.ensureLocationCanvasLayers(section);
       }
       if (section.type === 'gifts') {
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('gift.') || l.binding?.startsWith('envelope.') || l.binding?.startsWith('display.gifts.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 620) {
+          section.height = 580;
+        }
         this.ensureGiftCanvasLayers(section);
       }
       if (section.type === 'itinerary') {
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('itinerary.') || l.binding?.startsWith('display.itinerary.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 600) {
+          section.height = 560;
+        }
         this.ensureItineraryCanvasLayers(section);
       }
       if (section.type === 'dressCode') {
@@ -6187,14 +6329,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
             section.layers = [];
             this.ensureDressCodeCanvasLayers(section);
           }
+          if (section.height > 600) {
+            section.height = 500;
+          }
         } else {
           this.ensureDressCodeCanvasLayers(section);
         }
       }
       if (section.type === 'lodging') {
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('lodging.') || l.binding?.startsWith('display.lodging.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 600) {
+          section.height = 560;
+        } else {
+          section.height = Math.max(section.height, isXv ? 560 : 760);
+        }
         this.ensureLodgingCanvasLayers(section);
       }
       if (section.type === 'gallery') {
+        const hasCard = section.layers.some((l) => l.binding?.startsWith('gallery.') || l.binding?.startsWith('display.gallery.'));
+        if (!hasCard) {
+          section.layers = [];
+        }
+        if (isXv && section.height > 600) {
+          section.height = 520;
+        }
         this.ensureGalleryCanvasLayers(section);
       }
       if (isXv) {
@@ -6953,7 +7114,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureLocationCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasLocationLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('location.') || String(layer.binding || '').startsWith('display.locations.'));
-    if (!indexes?.length && (hasLocationLayers || section.layers.length > 0)) return;
+    if (!indexes?.length && hasLocationLayers) return;
     const rows = Math.max(1, Math.ceil(this.locationSourceData().length / 2));
     const requiredHeight = this.isXvBurgundy()
       ? (210 + rows * 330)
@@ -7181,7 +7342,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureGiftCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasGiftLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gift.') || String(layer.binding || '').startsWith('envelope.') || String(layer.binding || '').startsWith('display.gifts.'));
-    if (!indexes?.length && (hasGiftLayers || section.layers.length > 0)) return;
+    if (!indexes?.length && hasGiftLayers) return;
     const rows = Math.max(1, Math.ceil(this.giftSourceData().length / 2));
     const requiredHeight = this.isXvBurgundy()
       ? (200 + rows * 260 + 260)
@@ -7342,7 +7503,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureItineraryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasItineraryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('itinerary.') || String(layer.binding || '').startsWith('display.itinerary.'));
-    if (!indexes?.length && (hasItineraryLayers || section.layers.length > 0)) return;
+    if (!indexes?.length && hasItineraryLayers) return;
     const requiredHeight = this.isXvBurgundy()
       ? Math.max(520, 190 + Math.max(1, this.itinerarySourceData().length) * 140)
       : Math.max(760, 220 + Math.max(1, this.itinerarySourceData().length) * 190);
@@ -7491,7 +7652,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureDressCodeCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasDressLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('dress.') || String(layer.binding || '').startsWith('display.dressCode.'));
-    if (!indexes?.length && (hasDressLayers || section.layers.length > 0)) return;
+    if (!indexes?.length && hasDressLayers) return;
     const rows = Math.max(1, Math.ceil((this.invitation?.content?.dressCodeOptions?.length || 0) / 2));
     const requiredHeight = this.isXvBurgundy()
       ? Math.max(540, ((this.invitation?.content?.dressCodeImageUrl || 'assets/templates/xv-burgundy/dresscode-art.jpg') ? 420 : 320) + rows * 130)
@@ -7595,8 +7756,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return layer;
   }
 
+  private lodgingSourceData(): any[] {
+    const configured = this.invitation?.content?.lodging || [];
+    if (configured.length) return configured;
+    return this.previewLodging;
+  }
+
   private lodgingLayerDefinitions(section: VisualInvitationSection): Array<{ type: 'text' | 'image' | 'button' | 'shape'; binding: string; label: string; url?: string; x: number; y: number; width: number; height: number; fontSize: number }> {
-    const hotels = this.invitation?.content?.lodging || [];
+    const hotels = this.lodgingSourceData();
     const isXv = this.isXvBurgundy();
     const requiredHeight = isXv
       ? Math.max(540, 190 + Math.max(1, hotels.length) * 360)
@@ -7632,10 +7799,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureLodgingCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasLodgingLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('lodging.') || String(layer.binding || '').startsWith('display.lodging.'));
-    if (!indexes?.length && (hasLodgingLayers || section.layers.length > 0)) return;
+    if (!indexes?.length && hasLodgingLayers) return;
+    const hotels = this.lodgingSourceData();
     const requiredHeight = this.isXvBurgundy()
-      ? Math.max(540, 190 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 360)
-      : Math.max(760, 220 + Math.max(1, this.invitation?.content?.lodging?.length || 0) * 420);
+      ? Math.max(540, 190 + Math.max(1, hotels.length) * 360)
+      : Math.max(760, 220 + Math.max(1, hotels.length) * 420);
     if (requiredHeight > section.height) this.resizeSectionPreservingLayerPixels(section, requiredHeight);
     const existing = new Set(section.layers.map((layer) => layer.binding).filter(Boolean));
     const definitions = this.lodgingLayerDefinitions(section).filter((definition) => {
@@ -7766,7 +7934,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private ensureGalleryCanvasLayers(section: VisualInvitationSection, indexes?: number[]): void {
     const hasGalleryLayers = section.layers.some((layer) => String(layer.binding || '').startsWith('gallery.') || String(layer.binding || '').startsWith('display.gallery.'));
-    if (!indexes?.length && (hasGalleryLayers || section.layers.length > 0)) return;
+    if (!indexes?.length && hasGalleryLayers) return;
     const rows = Math.max(1, Math.ceil(this.gallerySourceData().length / 2));
     const requiredHeight = this.isXvBurgundy()
       ? Math.max(520, 190 + rows * 280)
@@ -8017,7 +8185,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           layer.style.letterSpacing = 2.5;
           layer.style.fontWeight = 700;
         }
-        if (binding.endsWith('.title') && layer.text && (layer.text.includes('Itinerario') || layer.text.includes('Galería') || layer.text.includes('Código') || layer.text.includes('Hospedaje') || layer.text.includes('Música') || layer.text.includes('Dedicatorias') || layer.text.includes('Mesa') || layer.text.includes('Ubicaciones') || layer.text.includes('Momentos'))) {
+        if (binding.endsWith('.title') && (binding.startsWith('display.') || (layer.text && (layer.text.includes('Itinerario') || layer.text.includes('Galería') || layer.text.includes('Código') || layer.text.includes('Hospedaje') || layer.text.includes('Música') || layer.text.includes('Dedicatorias') || layer.text.includes('Mesa') || layer.text.includes('Ubicaciones') || layer.text.includes('Momentos') || layer.text.includes('Confirmación') || layer.text.includes('Regalos'))))) {
           layer.style.fontFamily = "'Great Vibes', cursive";
           layer.style.color = '#faf6f0';
         }
@@ -8271,7 +8439,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private isFunctionalType(type: string): boolean {
-    return ['story', 'locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs'].includes(type);
+    return ['story', 'locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs', 'lodging'].includes(type);
   }
 
   private hasEnvelopeContent(envelope = this.invitation?.content?.digitalEnvelope): boolean {

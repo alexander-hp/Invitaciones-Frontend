@@ -132,7 +132,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   get continuousCanvasHeight(): number {
-    return visualCanvasHeight(this.displayedSections);
+    return this.displayedSections.reduce((total, section) => total + this.sectionRenderHeight(section), 0);
   }
 
   get displayedSections(): VisualInvitationSection[] {
@@ -344,11 +344,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isRsvpFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return binding.startsWith('rsvp.') || binding.startsWith('display.rsvp.');
+    return binding.startsWith('rsvp.') || binding.startsWith('display.rsvp.') || binding.startsWith('display.label.rsvp.');
   }
 
   dedicationCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.'));
+    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('dedication.') || String(layer.binding || '').startsWith('display.dedications.') || String(layer.binding || '').startsWith('display.label.dedication.'));
   }
 
   hasDedicationCanvasLayers(section: VisualInvitationSection): boolean {
@@ -357,7 +357,19 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   isNativeFunctionalLayer(layer: VisualInvitationLayer): boolean {
     const binding = String(layer.binding || '');
-    return this.isRsvpFunctionalLayer(layer) || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('countdown.') || binding.startsWith('display.countdown.') || binding.startsWith('location.') || binding.startsWith('display.locations.') || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.') || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.') || binding.startsWith('dress.') || binding.startsWith('display.dressCode.') || binding.startsWith('lodging.') || binding.startsWith('display.lodging.') || binding.startsWith('gallery.') || binding.startsWith('display.gallery.');
+    return this.isRsvpFunctionalLayer(layer)
+      || binding.startsWith('dedication.') || binding.startsWith('display.dedications.') || binding.startsWith('display.label.dedication.')
+      || binding.startsWith('song.') || binding.startsWith('display.songs.') || binding.startsWith('display.label.song.')
+      || binding.startsWith('album.') || binding.startsWith('display.album.') || binding.startsWith('display.label.album.')
+      || binding.startsWith('pass.') || binding.startsWith('display.guestPass.') || binding.startsWith('display.label.pass.')
+      || binding.startsWith('activity.') || binding.startsWith('display.guestActivity.') || binding.startsWith('display.label.activity.')
+      || binding.startsWith('countdown.') || binding.startsWith('display.countdown.')
+      || binding.startsWith('location.') || binding.startsWith('display.locations.')
+      || binding.startsWith('gift.') || binding.startsWith('envelope.') || binding.startsWith('display.gifts.')
+      || binding.startsWith('itinerary.') || binding.startsWith('display.itinerary.')
+      || binding.startsWith('dress.') || binding.startsWith('display.dressCode.')
+      || binding.startsWith('lodging.') || binding.startsWith('display.lodging.')
+      || binding.startsWith('gallery.') || binding.startsWith('display.gallery.');
   }
 
   shouldRenderDedicationLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
@@ -400,7 +412,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   guestPassCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('display.guestPass.'));
+    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('pass.') || String(layer.binding || '').startsWith('display.guestPass.') || String(layer.binding || '').startsWith('display.label.pass.'));
   }
 
   hasGuestPassCanvasLayers(section: VisualInvitationSection): boolean {
@@ -410,9 +422,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   shouldRenderGuestPassLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
     const binding = String(layer.binding || '');
-    if (binding.startsWith('display.guestPass.')) return true;
+    if (binding.startsWith('display.guestPass.') || binding.startsWith('display.label.pass.')) return true;
     if (binding === 'pass.feedback') return Boolean(this.error);
-    if (!this.verifiedGuest) return ['pass.email', 'pass.phone', 'pass.identify'].includes(binding);
+    if (!this.verifiedGuest) return ['pass.email', 'pass.phone', 'pass.identify', 'pass.card', 'display.label.pass.email', 'display.label.pass.phone'].includes(binding);
     if (binding === 'pass.card') return true;
     if (binding === 'pass.name') return this.pluginSetting(section, 'showGuestName', true) !== false;
     if (binding === 'pass.group') return this.pluginSetting(section, 'showGroup', true) !== false && Boolean(this.verifiedGuest.group || this.verifiedGuest.relationshipLabel);
@@ -435,7 +447,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   guestActivityCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('activity.') || String(layer.binding || '').startsWith('display.guestActivity.'));
+    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('activity.') || String(layer.binding || '').startsWith('display.guestActivity.') || String(layer.binding || '').startsWith('display.label.activity.'));
   }
 
   hasGuestActivityCanvasLayers(section: VisualInvitationSection): boolean {
@@ -445,8 +457,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   shouldRenderGuestActivityLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
     const binding = String(layer.binding || '');
-    if (binding.startsWith('display.guestActivity.')) return true;
-    if (!this.verifiedGuest) return ['activity.email', 'activity.phone', 'activity.identify'].includes(binding);
+    if (binding.startsWith('display.guestActivity.') || binding.startsWith('display.label.activity.')) return true;
+    if (!this.verifiedGuest) return ['activity.email', 'activity.phone', 'activity.identify', 'display.label.activity.email', 'display.label.activity.phone'].includes(binding);
     if (binding === 'activity.greeting' || binding === 'activity.manage' || binding === 'activity.full') return true;
     if (binding === 'activity.rsvp') return this.pluginSetting(section, 'showRsvp', true) !== false;
     if (binding === 'activity.pass') return this.pluginSetting(section, 'showPass', true) !== false;
@@ -857,10 +869,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   shouldRenderRsvpLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
-    if (this.verifiedGuest && (layer.binding === 'rsvp.name' || layer.binding === 'rsvp.email')) return false;
-    if (layer.binding === 'rsvp.companions') return this.rsvp.response !== 'declined' && this.maxCompanions > 0;
-    if (layer.binding === 'rsvp.dietaryRestrictions') return this.pluginSetting(section, 'showDietary', true) !== false;
-    if (layer.binding === 'rsvp.message') return this.pluginSetting(section, 'showMessage', true) !== false;
+    const binding = String(layer.binding || '');
+    if (this.verifiedGuest && (binding === 'rsvp.name' || binding === 'rsvp.email' || binding === 'display.label.rsvp.name' || binding === 'display.label.rsvp.email')) return false;
+    if (binding === 'rsvp.companions' || binding === 'display.label.rsvp.companions') return this.rsvp.response !== 'declined' && this.maxCompanions > 0;
+    if (binding === 'rsvp.dietaryRestrictions' || binding === 'display.label.rsvp.dietaryRestrictions') return this.pluginSetting(section, 'showDietary', true) !== false;
+    if (binding === 'rsvp.message' || binding === 'display.label.rsvp.message') return this.pluginSetting(section, 'showMessage', true) !== false;
     if (layer.binding === 'rsvp.feedback') return Boolean(this.success || this.error);
     return true;
   }
@@ -936,19 +949,45 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     return `rgba(${red},${green},${blue},${alpha})`;
   }
 
+  isXvBurgundy(): boolean {
+    const theme = this.invitation?.content?.visualDesign?.theme;
+    const bg = String(theme?.backgroundColor || '').toLowerCase().trim();
+    const accent = String(theme?.accentColor || '').toLowerCase().trim();
+    const font = String(theme?.headingFont || '').toLowerCase();
+    if (bg === '#240308' || bg === '#180104' || bg === '#5c0d18' || bg === '#2d060e') {
+      return true;
+    }
+    if (this.invitation?.template === 'xv-burgundy' || this.invitation?.content?.template === 'template-xv-burgundy' || this.invitation?.content?.template === 'xv-burgundy') {
+      return true;
+    }
+    if (font.includes('great vibes') || (accent === '#d4af37' || accent === '#e8c85c')) {
+      return true;
+    }
+    if (this.sections?.some((s) => s.background?.imageUrl?.includes('xv-burgundy'))) {
+      return true;
+    }
+    if (this.sections?.some((s) => s.layers?.some((l) => l.url?.includes('xv-burgundy')))) {
+      return true;
+    }
+    return false;
+  }
+
   sectionStyle(section: VisualInvitationSection): Record<string, string> {
     const background = section.background || {};
     const moduleStyle = section.moduleStyle || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
     const height = this.sectionRenderHeight(section);
     const naturalFlow = this.presentationMode === 'chapters' && !this.exportMode && !section.layers.length && !['hero', 'custom'].includes(section.type);
+    const isXv = this.isXvBurgundy();
+    const defaultBg = isXv ? '#240308' : '#ffffff';
+    const resolvedBgColor = background.color && background.color !== '#fff' && background.color !== '#ffffff' ? background.color : defaultBg;
     return {
       height: naturalFlow ? 'auto' : `${height}px`,
       minHeight: `${height}px`,
-      backgroundColor: background.color || '#fff',
+      backgroundColor: resolvedBgColor,
       backgroundImage: background.imageUrl
         ? `linear-gradient(#000000${overlay},#000000${overlay}),url("${background.imageUrl}")`
-        : 'none',
+        : (isXv ? 'radial-gradient(ellipse at 50% 25%, #380712 0%, #1f0207 65%, #130104 100%)' : 'none'),
       '--module-columns': String(moduleStyle.columns || 2),
       '--module-gap': `${Number(moduleStyle.gap ?? 14)}px`
     };
@@ -966,17 +1005,26 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   sectionRenderHeight(section: VisualInvitationSection): number {
+    const isXv = this.isXvBurgundy();
+    if (section.type === 'rsvp' && isXv && section.height && section.height > 720 && this.hasRsvpCanvasLayers(section)) {
+      return 680;
+    }
     return visualSectionHeight(section);
+  }
+
+  continuousSectionOffset(section: VisualInvitationSection): number {
+    const index = this.displayedSections.indexOf(section);
+    return index < 0 ? 0 : this.displayedSections.slice(0, index).reduce((total, item) => total + this.sectionRenderHeight(item), 0);
   }
 
   continuousLayerStyle(section: VisualInvitationSection, layer: VisualInvitationLayer): Record<string, string> {
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
       ? layer.layouts[this.device]!
       : layer;
-    const height = visualSectionHeight(section);
+    const height = this.sectionRenderHeight(section);
     return {
       ...this.layerStyle(layer),
-      top: `${visualSectionOffset(this.displayedSections, section) + height * layout.y / 100}px`,
+      top: `${this.continuousSectionOffset(section) + height * layout.y / 100}px`,
       height: `${height * layout.height / 100}px`
     };
   }
@@ -1099,6 +1147,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)', line: 'inset(42% 0)'
     };
     return {
+      boxSizing: 'border-box',
       width: '100%', height: '100%', backgroundColor: String(style.backgroundColor || '#d88f7d'),
       backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
       border: `${Number(style.borderWidth || 0)}px ${String(style.borderStyle || 'solid')} ${String(style.borderColor || 'transparent')}`,
