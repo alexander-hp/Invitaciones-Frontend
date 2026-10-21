@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
 import {
   DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
   VisualInvitationLayer, VisualInvitationSection, VisualPluginPartDesign
@@ -11,10 +11,131 @@ import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from './
 @Component({
   selector: 'app-visual-invitation-renderer',
   templateUrl: './visual-invitation-renderer.component.html',
-  styleUrls: ['./visual-invitation-renderer.component.css']
+  styleUrls: ['./visual-invitation-renderer.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @ViewChild('visualInvitationRoot') private visualInvitationRoot?: ElementRef<HTMLElement>;
+
+  constructor(private cdr?: ChangeDetectorRef) {}
+
+  // Render & Style Memoization Caches
+  private cachedIsXvBurgundy: boolean | null = null;
+  private cachedSections: VisualInvitationSection[] | null = null;
+  private cachedDisplayedSections: VisualInvitationSection[] | null = null;
+  private cachedContinuousCanvasHeight: number | null = null;
+  private cachedDesignThemeStyle: Record<string, string> | null = null;
+
+  private cachedSectionOffsets = new Map<VisualInvitationSection, number>();
+  private cachedSectionHeights = new Map<VisualInvitationSection, number>();
+  private cachedSectionStyles = new Map<VisualInvitationSection, Record<string, string>>();
+  private cachedModuleClasses = new Map<VisualInvitationSection, string[]>();
+  private cachedVisualLayers = new Map<VisualInvitationSection, VisualInvitationLayer[]>();
+
+  private cachedContinuousLayerStyles = new Map<VisualInvitationLayer, {
+    section: VisualInvitationSection;
+    styleRef: any;
+    device: string;
+    exportMode: boolean;
+    sectionOffset: number;
+    sectionHeight: number;
+    result: Record<string, string>;
+  }>();
+
+  private cachedLayerStyles = new Map<VisualInvitationLayer, {
+    styleRef: any;
+    device: string;
+    exportMode: boolean;
+    result: Record<string, string>;
+  }>();
+
+  private cachedShapeContentStyles = new Map<VisualInvitationLayer, {
+    styleRef: any;
+    result: Record<string, string>;
+  }>();
+
+  private cachedImageMaskStyles = new Map<VisualInvitationLayer, {
+    styleRef: any;
+    device: string;
+    result: Record<string, string>;
+  }>();
+
+  private cachedImageStyles = new Map<VisualInvitationLayer, {
+    styleRef: any;
+    device: string;
+    result: Record<string, string>;
+  }>();
+
+  private cachedAnimationClasses = new Map<string, string[]>();
+  private cachedResolvedLayerTexts = new Map<string, string>();
+
+  private cachedPluginPartDesigns = new Map<string, VisualPluginPartDesign>();
+  private cachedPluginPartStyles = new Map<string, Record<string, string>>();
+  private cachedPluginPartClasses = new Map<string, string[]>();
+  private cachedRsvpDesignCanvasStyles = new Map<string, Record<string, string>>();
+
+  // Cache Consistency Tracking
+  private lastInvitationRef: any;
+  private lastEventRef: any;
+  private lastVerifiedGuestRef: any;
+  private lastDevice: any;
+  private lastForcedDevice: any;
+  private lastExportMode: any;
+  private lastChapterIndex = 0;
+  private lastPresentationMode: any;
+  private lastResponsiveMode: any;
+
+  clearRenderCache(): void {
+    this.cachedIsXvBurgundy = null;
+    this.cachedSections = null;
+    this.cachedDisplayedSections = null;
+    this.cachedContinuousCanvasHeight = null;
+    this.cachedDesignThemeStyle = null;
+    this.cachedSectionOffsets.clear();
+    this.cachedSectionHeights.clear();
+    this.cachedSectionStyles.clear();
+    this.cachedModuleClasses.clear();
+    this.cachedVisualLayers.clear();
+    this.cachedContinuousLayerStyles.clear();
+    this.cachedLayerStyles.clear();
+    this.cachedShapeContentStyles.clear();
+    this.cachedImageMaskStyles.clear();
+    this.cachedImageStyles.clear();
+    this.cachedAnimationClasses.clear();
+    this.cachedResolvedLayerTexts.clear();
+    this.cachedPluginPartDesigns.clear();
+    this.cachedPluginPartStyles.clear();
+    this.cachedPluginPartClasses.clear();
+    this.cachedRsvpDesignCanvasStyles.clear();
+  }
+
+  private checkCacheConsistency(): void {
+    const presentationMode = this.presentationMode;
+    const responsiveMode = this.invitation?.content?.visualDesign?.responsiveMode;
+    if (
+      this.invitation !== this.lastInvitationRef ||
+      this.event !== this.lastEventRef ||
+      this.verifiedGuest !== this.lastVerifiedGuestRef ||
+      this.device !== this.lastDevice ||
+      this.forcedDevice !== this.lastForcedDevice ||
+      this.exportMode !== this.lastExportMode ||
+      this.chapterIndex !== this.lastChapterIndex ||
+      presentationMode !== this.lastPresentationMode ||
+      responsiveMode !== this.lastResponsiveMode
+    ) {
+      this.clearRenderCache();
+      this.lastInvitationRef = this.invitation;
+      this.lastEventRef = this.event;
+      this.lastVerifiedGuestRef = this.verifiedGuest;
+      this.lastDevice = this.device;
+      this.lastForcedDevice = this.forcedDevice;
+      this.lastExportMode = this.exportMode;
+      this.lastChapterIndex = this.chapterIndex;
+      this.lastPresentationMode = presentationMode;
+      this.lastResponsiveMode = responsiveMode;
+    }
+  }
+
   device: 'mobile' | 'tablet' | 'desktop' = this.detectDevice();
   @Input() invitation?: InvitationModel;
   @Input() event?: EventModel;
@@ -124,7 +245,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   private countdownTimer?: ReturnType<typeof setInterval>;
 
   get sections(): VisualInvitationSection[] {
-    return (this.invitation?.content?.visualDesign?.sections || []).filter((section) => section.enabled);
+    this.checkCacheConsistency();
+    if (this.cachedSections) return this.cachedSections;
+    this.cachedSections = (this.invitation?.content?.visualDesign?.sections || []).filter((section) => section.enabled);
+    return this.cachedSections;
   }
 
   get presentationMode(): 'continuous' | 'chapters' {
@@ -132,12 +256,18 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   get continuousCanvasHeight(): number {
-    return this.displayedSections.reduce((total, section) => total + this.sectionRenderHeight(section), 0);
+    this.checkCacheConsistency();
+    if (this.cachedContinuousCanvasHeight !== null) return this.cachedContinuousCanvasHeight;
+    this.cachedContinuousCanvasHeight = this.displayedSections.reduce((total, section) => total + this.sectionRenderHeight(section), 0);
+    return this.cachedContinuousCanvasHeight;
   }
 
   get displayedSections(): VisualInvitationSection[] {
+    this.checkCacheConsistency();
+    if (this.cachedDisplayedSections) return this.cachedDisplayedSections;
     const sections = this.sections;
-    return this.presentationMode === 'chapters' ? sections.slice(this.currentChapterIndex, this.currentChapterIndex + 1) : sections;
+    this.cachedDisplayedSections = this.presentationMode === 'chapters' ? sections.slice(this.currentChapterIndex, this.currentChapterIndex + 1) : sections;
+    return this.cachedDisplayedSections;
   }
 
   get currentChapterIndex(): number {
@@ -147,8 +277,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   goToChapter(index: number): void {
     if (!Number.isInteger(index) || index < 0 || index >= this.sections.length || index === this.currentChapterIndex) return;
     this.chapterIndex = index;
+    this.cachedDisplayedSections = null;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     this.visualInvitationRoot?.nativeElement.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    this.cdr?.markForCheck();
   }
 
   get floatingAudioLayers(): VisualInvitationLayer[] {
@@ -207,6 +339,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (this.forcedDevice) this.device = this.forcedDevice;
     if (changes['invitation'] && changes['invitation'].previousValue?.id !== this.invitation?.id) this.chapterIndex = 0;
     if (changes['sandboxResetKey'] && !changes['sandboxResetKey'].firstChange) this.resetSandboxForms();
+    this.clearRenderCache();
     const featuredIndex = this.galleryItems.findIndex((item) => item.featured);
     this.galleryIndex = changes['invitation']
       ? Math.max(0, featuredIndex)
@@ -221,6 +354,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
         message: this.guestActivity.rsvp.message || ''
       };
     }
+    this.cdr?.markForCheck();
   }
 
   ngOnDestroy(): void {
@@ -239,6 +373,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   moveGallery(direction: number): void {
     if (!this.galleryItems.length) return;
     this.galleryIndex = (this.galleryIndex + direction + this.galleryItems.length) % this.galleryItems.length;
+    this.cdr?.markForCheck();
   }
 
   setExportGalleryIndex(index: number): void {
@@ -269,6 +404,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   pluginPartDesign(section: VisualInvitationSection, key: string): VisualPluginPartDesign {
+    this.checkCacheConsistency();
+    const cacheKey = `${section.id || ''}:${key}`;
+    const cached = this.cachedPluginPartDesigns.get(cacheKey);
+    if (cached) return cached;
     const theme = this.invitation?.content?.visualDesign?.theme;
     const displayPart = ['eyebrow', 'title', 'intro'].includes(key);
     const defaults: VisualPluginPartDesign = displayPart
@@ -277,7 +416,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (key === 'title') defaults.fontFamily = theme?.headingFont || 'Georgia, serif';
     if (key === 'submit') Object.assign(defaults, { backgroundColor: theme?.buttonBackgroundColor || '#292523', color: theme?.buttonTextColor || '#ffffff', borderWidth: 0, fontWeight: 700 });
     if (key === 'feedback') Object.assign(defaults, { backgroundColor: '#edf5fb', borderWidth: 0, fontSize: 12 });
-    return { ...defaults, ...(section.pluginDesign?.parts?.[key] || {}) };
+    const result = { ...defaults, ...(section.pluginDesign?.parts?.[key] || {}) };
+    this.cachedPluginPartDesigns.set(cacheKey, result);
+    return result;
   }
 
   pluginPartLabel(section: VisualInvitationSection, key: string, fallback: string): string {
@@ -289,14 +430,24 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   pluginPartClasses(section: VisualInvitationSection, key: string): string[] {
+    this.checkCacheConsistency();
+    const cacheKey = `${section.id || ''}:${key}`;
+    const cached = this.cachedPluginPartClasses.get(cacheKey);
+    if (cached) return cached;
     const design = this.pluginPartDesign(section, key);
-    return [`plugin-part-${key}`, `plugin-shape-${design.shape || 'rectangle'}`, design.variant === 'cards' ? 'plugin-variant-cards' : 'plugin-variant-default'];
+    const result = [`plugin-part-${key}`, `plugin-shape-${design.shape || 'rectangle'}`, design.variant === 'cards' ? 'plugin-variant-cards' : 'plugin-variant-default'];
+    this.cachedPluginPartClasses.set(cacheKey, result);
+    return result;
   }
 
   pluginPartStyle(section: VisualInvitationSection, key: string): Record<string, string> {
+    this.checkCacheConsistency();
+    const cacheKey = `${section.id || ''}:${key}`;
+    const cached = this.cachedPluginPartStyles.get(cacheKey);
+    if (cached) return cached;
     const part = this.pluginPartDesign(section, key);
     const free = section.pluginDesign?.layout === 'free';
-    return {
+    const result: Record<string, string> = {
       position: free ? 'absolute' : 'relative', left: free ? `${part.x ?? 5}%` : 'auto', top: free ? `${part.y ?? 5}%` : 'auto',
       width: free ? `${part.width ?? 90}%` : 'auto', minHeight: free ? `${part.height ?? 8}%` : '0',
       color: String(part.color || 'var(--visual-text)'), backgroundColor: String(part.backgroundColor || 'transparent'),
@@ -306,10 +457,18 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       borderStyle: Number(part.borderWidth || 0) ? 'solid' : 'none', borderRadius: `${Number(part.borderRadius || 0)}px`, padding: `${Number(part.padding ?? 8)}px`,
       boxShadow: String(part.boxShadow || 'none'), backgroundSize: 'cover', backgroundPosition: 'center', boxSizing: 'border-box'
     };
+    this.cachedPluginPartStyles.set(cacheKey, result);
+    return result;
   }
 
   rsvpDesignCanvasStyle(section: VisualInvitationSection): Record<string, string> {
-    return { minHeight: section.pluginDesign?.layout === 'free' ? `${Number(section.pluginDesign?.minHeight || 560)}px` : '0' };
+    this.checkCacheConsistency();
+    const cacheKey = section.id || '';
+    const cached = this.cachedRsvpDesignCanvasStyles.get(cacheKey);
+    if (cached) return cached;
+    const result = { minHeight: section.pluginDesign?.layout === 'free' ? `${Number(section.pluginDesign?.minHeight || 560)}px` : '0' };
+    this.cachedRsvpDesignCanvasStyles.set(cacheKey, result);
+    return result;
   }
 
   locationsFor(section: VisualInvitationSection): InvitationLocation[] {
@@ -327,11 +486,22 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   resolveLayerText(layer: VisualInvitationLayer): string {
-    return resolveVisualTemplateText(layer.text, visualTemplateContext(this.invitation, this.event, this.verifiedGuest));
+    this.checkCacheConsistency();
+    const key = `${layer.id || ''}:${layer.text || ''}`;
+    const cached = this.cachedResolvedLayerTexts.get(key);
+    if (cached !== undefined) return cached;
+    const result = resolveVisualTemplateText(layer.text, visualTemplateContext(this.invitation, this.event, this.verifiedGuest));
+    this.cachedResolvedLayerTexts.set(key, result);
+    return result;
   }
 
   visualLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return section.layers.filter((layer) => !this.isNativeFunctionalLayer(layer) && (this.exportMode || !this.isFloatingAudio(layer)));
+    this.checkCacheConsistency();
+    const cached = this.cachedVisualLayers.get(section);
+    if (cached) return cached;
+    const result = section.layers.filter((layer) => !this.isNativeFunctionalLayer(layer) && (this.exportMode || !this.isFloatingAudio(layer)));
+    this.cachedVisualLayers.set(section, result);
+    return result;
   }
 
   rsvpCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
@@ -919,9 +1089,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   designThemeStyle(): Record<string, string> {
+    this.checkCacheConsistency();
+    if (this.cachedDesignThemeStyle) return this.cachedDesignThemeStyle;
     const theme = this.invitation?.content?.visualDesign?.theme;
     if (!theme) return {};
-    return {
+    const result: Record<string, string> = {
       '--visual-background': theme.backgroundColor,
       '--visual-text': theme.textColor,
       '--visual-accent': theme.accentColor,
@@ -936,6 +1108,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       '--visual-button-border': theme.buttonStyle === 'outline' ? `2px solid ${theme.buttonBackgroundColor}` : '0 solid transparent',
       '--visual-button-radius': `${theme.buttonRadius}px`
     };
+    this.cachedDesignThemeStyle = result;
+    return result;
   }
 
   private colorWithAlpha(color: string, alpha: number, fallback: string): string {
@@ -950,29 +1124,32 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   isXvBurgundy(): boolean {
+    this.checkCacheConsistency();
+    if (this.cachedIsXvBurgundy !== null) return this.cachedIsXvBurgundy;
     const theme = this.invitation?.content?.visualDesign?.theme;
     const bg = String(theme?.backgroundColor || '').toLowerCase().trim();
     const accent = String(theme?.accentColor || '').toLowerCase().trim();
     const font = String(theme?.headingFont || '').toLowerCase();
+    let result = false;
     if (bg === '#240308' || bg === '#180104' || bg === '#5c0d18' || bg === '#2d060e') {
-      return true;
+      result = true;
+    } else if (this.invitation?.template === 'xv-burgundy' || this.invitation?.content?.template === 'template-xv-burgundy' || this.invitation?.content?.template === 'xv-burgundy') {
+      result = true;
+    } else if (font.includes('great vibes') || (accent === '#d4af37' || accent === '#e8c85c')) {
+      result = true;
+    } else if (this.sections?.some((s) => s.background?.imageUrl?.includes('xv-burgundy'))) {
+      result = true;
+    } else if (this.sections?.some((s) => s.layers?.some((l) => l.url?.includes('xv-burgundy')))) {
+      result = true;
     }
-    if (this.invitation?.template === 'xv-burgundy' || this.invitation?.content?.template === 'template-xv-burgundy' || this.invitation?.content?.template === 'xv-burgundy') {
-      return true;
-    }
-    if (font.includes('great vibes') || (accent === '#d4af37' || accent === '#e8c85c')) {
-      return true;
-    }
-    if (this.sections?.some((s) => s.background?.imageUrl?.includes('xv-burgundy'))) {
-      return true;
-    }
-    if (this.sections?.some((s) => s.layers?.some((l) => l.url?.includes('xv-burgundy')))) {
-      return true;
-    }
-    return false;
+    this.cachedIsXvBurgundy = result;
+    return result;
   }
 
   sectionStyle(section: VisualInvitationSection): Record<string, string> {
+    this.checkCacheConsistency();
+    const cached = this.cachedSectionStyles.get(section);
+    if (cached) return cached;
     const background = section.background || {};
     const moduleStyle = section.moduleStyle || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
@@ -981,7 +1158,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const isXv = this.isXvBurgundy();
     const defaultBg = isXv ? '#240308' : '#ffffff';
     const resolvedBgColor = background.color && background.color !== '#fff' && background.color !== '#ffffff' ? background.color : defaultBg;
-    return {
+    const result: Record<string, string> = {
       height: naturalFlow ? 'auto' : `${height}px`,
       minHeight: `${height}px`,
       backgroundColor: resolvedBgColor,
@@ -991,6 +1168,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       '--module-columns': String(moduleStyle.columns || 2),
       '--module-gap': `${Number(moduleStyle.gap ?? 14)}px`
     };
+    this.cachedSectionStyles.set(section, result);
+    return result;
   }
 
   sectionHasOverflowLayers(section: VisualInvitationSection): boolean {
@@ -1005,42 +1184,90 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   sectionRenderHeight(section: VisualInvitationSection): number {
+    this.checkCacheConsistency();
+    const cached = this.cachedSectionHeights.get(section);
+    if (cached !== undefined) return cached;
     const isXv = this.isXvBurgundy();
+    let height: number;
     if (section.type === 'rsvp' && isXv && section.height && section.height > 720 && this.hasRsvpCanvasLayers(section)) {
-      return 680;
+      height = 680;
+    } else {
+      height = visualSectionHeight(section);
     }
-    return visualSectionHeight(section);
+    this.cachedSectionHeights.set(section, height);
+    return height;
   }
 
   continuousSectionOffset(section: VisualInvitationSection): number {
-    const index = this.displayedSections.indexOf(section);
-    return index < 0 ? 0 : this.displayedSections.slice(0, index).reduce((total, item) => total + this.sectionRenderHeight(item), 0);
+    this.checkCacheConsistency();
+    const cached = this.cachedSectionOffsets.get(section);
+    if (cached !== undefined) return cached;
+    let offset = 0;
+    for (const item of this.displayedSections) {
+      this.cachedSectionOffsets.set(item, offset);
+      offset += this.sectionRenderHeight(item);
+    }
+    return this.cachedSectionOffsets.get(section) ?? 0;
   }
 
   continuousLayerStyle(section: VisualInvitationSection, layer: VisualInvitationLayer): Record<string, string> {
+    this.checkCacheConsistency();
+    const sectionOffset = this.continuousSectionOffset(section);
+    const sectionHeight = this.sectionRenderHeight(section);
+    const cached = this.cachedContinuousLayerStyles.get(layer);
+    if (
+      cached &&
+      cached.section === section &&
+      cached.styleRef === layer.style &&
+      cached.device === this.device &&
+      cached.exportMode === this.exportMode &&
+      cached.sectionOffset === sectionOffset &&
+      cached.sectionHeight === sectionHeight
+    ) {
+      return cached.result;
+    }
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
       ? layer.layouts[this.device]!
       : layer;
-    const height = this.sectionRenderHeight(section);
-    return {
+    const result: Record<string, string> = {
       ...this.layerStyle(layer),
-      top: `${this.continuousSectionOffset(section) + height * layout.y / 100}px`,
-      height: `${height * layout.height / 100}px`
+      top: `${sectionOffset + sectionHeight * layout.y / 100}px`,
+      height: `${sectionHeight * layout.height / 100}px`
     };
+    this.cachedContinuousLayerStyles.set(layer, {
+      section,
+      styleRef: layer.style,
+      device: this.device,
+      exportMode: this.exportMode,
+      sectionOffset,
+      sectionHeight,
+      result
+    });
+    return result;
   }
 
   moduleClasses(section: VisualInvitationSection): string[] {
+    this.checkCacheConsistency();
+    const cached = this.cachedModuleClasses.get(section);
+    if (cached) return cached;
     const style = section.moduleStyle || {};
-    return [
+    const result = [
       `module-layout-${style.layout || 'grid'}`,
       `module-align-${style.alignment || 'center'}`,
       `module-surface-${style.surface || 'solid'}`,
       `module-cards-${style.cardStyle || 'bordered'}`,
       style.showTitle === false ? 'module-title-hidden' : 'module-title-visible'
     ];
+    this.cachedModuleClasses.set(section, result);
+    return result;
   }
 
   layerStyle(layer: VisualInvitationLayer): Record<string, string> {
+    this.checkCacheConsistency();
+    const cached = this.cachedLayerStyles.get(layer);
+    if (cached && cached.styleRef === layer.style && cached.device === this.device && cached.exportMode === this.exportMode) {
+      return cached.result;
+    }
     const style = layer.style || {};
     const shape = layer.type === 'shape';
     const isIcon = layer.type === 'text' && Boolean(style.iconName);
@@ -1084,6 +1311,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       result['transform'] = 'none';
       result['zIndex'] = '12000';
     }
+    this.cachedLayerStyles.set(layer, { styleRef: layer.style, device: this.device, exportMode: this.exportMode, result });
     return result;
   }
 
@@ -1104,14 +1332,23 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   animationClass(layer: VisualInvitationLayer): string[] {
+    this.checkCacheConsistency();
     const type = layer.animation?.type || 'none';
-    return type === 'none' ? [`layer-${layer.type}`] : [`layer-${layer.type}`, 'animated-layer', `animation-${type}`];
+    const key = `${layer.id || ''}:${layer.type}:${type}`;
+    const cached = this.cachedAnimationClasses.get(key);
+    if (cached) return cached;
+    const result = type === 'none' ? [`layer-${layer.type}`] : [`layer-${layer.type}`, 'animated-layer', `animation-${type}`];
+    this.cachedAnimationClasses.set(key, result);
+    return result;
   }
 
   imageStyle(layer: VisualInvitationLayer): Record<string, string> {
+    this.checkCacheConsistency();
+    const cached = this.cachedImageStyles.get(layer);
+    if (cached && cached.styleRef === layer.style && cached.device === this.device) return cached.result;
     const style = layer.style || {};
     const scale = Number(style.imageScale || 1);
-    return {
+    const result: Record<string, string> = {
       objectFit: style.preserveAspectRatio !== false ? 'contain' : (style.objectFit || 'cover'),
       objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
       clipPath: style.imageMask && style.imageMask !== 'none' && Number(style.borderWidth || 0) > 0 ? this.imageMaskStyle(layer)['clipPath'] : 'none',
@@ -1119,9 +1356,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       transform: `scale(${scale * (style.flipX ? -1 : 1)},${scale * (style.flipY ? -1 : 1)}) rotate(${Number(style.imageRotation || 0)}deg)`,
       filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
     };
+    this.cachedImageStyles.set(layer, { styleRef: layer.style, device: this.device, result });
+    return result;
   }
 
   imageMaskStyle(layer: VisualInvitationLayer): Record<string, string> {
+    this.checkCacheConsistency();
+    const cached = this.cachedImageMaskStyles.get(layer);
+    if (cached && cached.styleRef === layer.style && cached.device === this.device) return cached.result;
     const mask = layer.style?.imageMask || 'none';
     const masks: Record<string, string> = {
       none: 'none', circle: 'circle(50% at 50% 50%)', rounded: 'inset(0 round 12%)',
@@ -1130,15 +1372,20 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       ticket: 'polygon(0 0,100% 0,100% 38%,92% 50%,100% 62%,100% 100%,0 100%,0 62%,8% 50%,0 38%)'
     };
     const framed = mask !== 'none' && Number(layer.style?.borderWidth || 0) > 0;
-    return {
+    const result: Record<string, string> = {
       clipPath: masks[mask] || 'none', borderRadius: mask === 'rounded' ? '12%' : '0',
       boxSizing: 'border-box',
       padding: framed ? `${this.scaledLayerPixels(Number(layer.style?.borderWidth || 0), this.sharedStyleScale())}px` : '0',
       backgroundColor: framed ? String(layer.style?.borderColor || '#ffffff') : 'transparent'
     };
+    this.cachedImageMaskStyles.set(layer, { styleRef: layer.style, device: this.device, result });
+    return result;
   }
 
   shapeContentStyle(layer: VisualInvitationLayer): Record<string, string> {
+    this.checkCacheConsistency();
+    const cached = this.cachedShapeContentStyles.get(layer);
+    if (cached && cached.styleRef === layer.style) return cached.result;
     const style = layer.style || {};
     const shapes: Record<string, string> = {
       rectangle: 'none', circle: 'circle(50% at 50% 50%)', ellipse: 'ellipse(50% 42% at 50% 50%)',
@@ -1146,7 +1393,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       star: 'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 93%,50% 72%,21% 93%,32% 57%,2% 35%,39% 35%)',
       hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)', line: 'inset(42% 0)'
     };
-    return {
+    const result: Record<string, string> = {
       boxSizing: 'border-box',
       width: '100%', height: '100%', backgroundColor: String(style.backgroundColor || '#d88f7d'),
       backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
@@ -1155,6 +1402,8 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       clipPath: shapes[style.shapeKind || 'rectangle'] || 'none',
       ...(style.backdropFilter ? { backdropFilter: style.backdropFilter, WebkitBackdropFilter: style.backdropFilter } : {})
     };
+    this.cachedShapeContentStyles.set(layer, { styleRef: layer.style, result });
+    return result;
   }
 
   assetCredit(url?: string): { label: string; url: string } | undefined {
@@ -1165,7 +1414,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   @HostListener('window:resize')
   onViewportResize(): void {
-    if (!this.forcedDevice) this.device = this.detectDevice();
+    if (!this.forcedDevice) {
+      const nextDevice = this.detectDevice();
+      if (nextDevice !== this.device) {
+        this.device = nextDevice;
+        this.clearRenderCache();
+        this.cdr?.markForCheck();
+      }
+    }
   }
 
   private resetSandboxForms(): void {
@@ -1209,7 +1465,13 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   copyGiftValue(value?: string): void {
     if (!value) return;
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(value).then(() => { this.giftCopyMessage = 'Datos copiados.'; }).catch(() => { this.giftCopyMessage = 'No fue posible copiar automáticamente.'; });
+      navigator.clipboard.writeText(value).then(() => {
+        this.giftCopyMessage = 'Datos copiados.';
+        this.cdr?.markForCheck();
+      }).catch(() => {
+        this.giftCopyMessage = 'No fue posible copiar automáticamente.';
+        this.cdr?.markForCheck();
+      });
       return;
     }
     const input = document.createElement('textarea');
@@ -1220,6 +1482,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     input.select();
     this.giftCopyMessage = document.execCommand('copy') ? 'Datos copiados.' : 'No fue posible copiar automáticamente.';
     input.remove();
+    this.cdr?.markForCheck();
   }
 
   private detectDevice(): 'mobile' | 'tablet' | 'desktop' {
@@ -1245,13 +1508,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   private updateCountdown(): void {
     const target = this.eventTargetDate();
-    if (!target) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    if (!target) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; this.cdr?.markForCheck(); return; }
     const distance = target.getTime() - Date.now();
-    if (Number.isNaN(distance) || distance <= 0) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; return; }
+    if (Number.isNaN(distance) || distance <= 0) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; this.cdr?.markForCheck(); return; }
     this.countdown = {
       days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
       minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
     };
+    this.cdr?.markForCheck();
   }
 
   private eventTargetDate(): Date | null {

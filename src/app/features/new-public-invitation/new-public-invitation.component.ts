@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
@@ -11,7 +11,8 @@ import { generateGuestPassHtml } from './guest-pass-template';
 @Component({
   selector: 'app-new-public-invitation',
   templateUrl: './new-public-invitation.component.html',
-  styleUrls: ['./new-public-invitation.component.css']
+  styleUrls: ['./new-public-invitation.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterViewChecked {
   invitation?: InvitationModel;
@@ -120,7 +121,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     private sanitizer: DomSanitizer,
     private textOverlay: TemplateTextOverlayService,
     private elRef: ElementRef,
-    private http: HttpClient
+    private http: HttpClient,
+    private cdr?: ChangeDetectorRef
   ) { }
   private iframeBridgeListener?: (e: MessageEvent) => void;
   private wasPlayingBeforeHidden = false;
@@ -234,10 +236,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     }
   }
 
+  private cachedIsOwnerOrInEditor?: boolean;
   get isOwnerOrInEditor(): boolean {
-    const hasToken = Boolean(localStorage.getItem('invitaciones_token'));
+    if (this.cachedIsOwnerOrInEditor !== undefined) return this.cachedIsOwnerOrInEditor;
+    const hasToken = typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('invitaciones_token'));
     const isIframe = typeof window !== 'undefined' && window.self !== window.top;
-    return hasToken || isIframe;
+    this.cachedIsOwnerOrInEditor = hasToken || isIframe;
+    return this.cachedIsOwnerOrInEditor;
   }
 
   get isPreviewMode(): boolean {
@@ -258,26 +263,39 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return this.isPreviewMode && !this.isIframe;
   }
 
+  private cachedAmbientThemeColor?: string;
+  private lastAmbientInvitationRef?: InvitationModel;
+
   get ambientThemeColor(): string {
+    if (this.cachedAmbientThemeColor && this.lastAmbientInvitationRef === this.invitation) {
+      return this.cachedAmbientThemeColor;
+    }
+    this.lastAmbientInvitationRef = this.invitation;
     const visualDesign = this.invitation?.content?.visualDesign || this.invitation?.content?.visualDesignDraft;
     const themeBg = visualDesign?.theme?.backgroundColor;
     if (themeBg && themeBg !== '#ffffff' && themeBg !== '#fff' && themeBg !== 'transparent') {
+      this.cachedAmbientThemeColor = themeBg;
       return themeBg;
     }
     const tpl = this.currentTemplate;
     if (tpl === 'template-xv' || tpl === 'xv-burgundy' || tpl === 'template-xv-burgundy' || visualDesign?.theme?.headingFont?.includes('Great Vibes')) {
+      this.cachedAmbientThemeColor = '#5c0d18';
       return '#5c0d18';
     }
     if (tpl === 'template-boda-navy-blue') {
+      this.cachedAmbientThemeColor = '#0d1b2a';
       return '#0d1b2a';
     }
     if (tpl === 'maison-dore' || tpl === 'boda-creativa-premium') {
+      this.cachedAmbientThemeColor = '#1c1917';
       return '#1c1917';
     }
     if (tpl === 'template-boda-rosas') {
+      this.cachedAmbientThemeColor = '#56383d';
       return '#56383d';
     }
-    return themeBg || '#26221f';
+    this.cachedAmbientThemeColor = themeBg || '#26221f';
+    return this.cachedAmbientThemeColor;
   }
 
   get invitationDisplayTitle(): string {
@@ -292,10 +310,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   setPreviewDevice(device: 'mobile' | 'tablet' | 'desktop'): void {
     this.previewDevice = device;
+    this.cdr?.markForCheck();
   }
 
   togglePreviewBar(): void {
     this.previewBarCollapsed = !this.previewBarCollapsed;
+    this.cdr?.markForCheck();
   }
 
   closePreviewWindow(): void {
@@ -379,6 +399,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           this.accessRequired = true;
           this.accessMessage = 'El enlace personal no es válido o ya no tiene acceso. Solicita uno nuevo.';
           this.loading = false;
+          this.cdr?.markForCheck();
         }
       });
       return;
@@ -404,6 +425,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         error: (error) => {
           this.loading = false;
           this.error = error?.error?.message || 'No se pudo cargar la vista previa del borrador';
+          this.cdr?.markForCheck();
         }
       });
       return;
@@ -421,12 +443,21 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         } else {
           this.error = error?.error?.message || 'Invitación no encontrada o no publicada';
         }
+        this.cdr?.markForCheck();
       }
     });
   }
 
   private applyInvitation(invitation: InvitationModel, slug: string): void {
     this.invitation = invitation;
+    this.cachedCurrentTemplate = undefined;
+    this.cachedCustomHtml = undefined;
+    this.cachedCustomCss = undefined;
+    this.cachedAmbientThemeColor = undefined;
+    this.lastTemplateInvitationRef = undefined;
+    this.lastCustomHtmlInvitationRef = undefined;
+    this.lastCustomCssInvitationRef = undefined;
+    this.lastAmbientInvitationRef = undefined;
     if (this.isPreviewMode && this.invitation.content?.visualDesignDraft) {
       this.invitation.content.visualDesign = {
         ...this.invitation.content.visualDesignDraft,
@@ -494,6 +525,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.loadEditedTexts(slug);
     this.updateAllAlbumAssets();
     this.loading = false;
+    this.cdr?.markForCheck();
   }
 
   updateCustomHtmlSafeSrcdoc(): void {
@@ -580,6 +612,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
     if (Number.isNaN(target) || diff <= 0) {
       this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
+      this.cdr?.markForCheck();
       return;
     }
 
@@ -590,6 +623,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       seconds: Math.floor((diff % (1000 * 60)) / 1000),
       isOver: false
     };
+    this.cdr?.markForCheck();
   }
 
   getStoreLogo(registry: any): string {
@@ -1523,14 +1557,28 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   showToast(message: string): void {
     this.toastMessage = message;
+    this.cdr?.markForCheck();
     setTimeout(() => {
       if (this.toastMessage === message) {
         this.toastMessage = '';
+        this.cdr?.markForCheck();
       }
     }, 3500);
   }
 
+  private cachedCurrentTemplate?: string;
+  private lastTemplateInvitationRef?: InvitationModel;
+
   get currentTemplate(): string {
+    if (this.cachedCurrentTemplate && this.lastTemplateInvitationRef === this.invitation) {
+      return this.cachedCurrentTemplate;
+    }
+    this.lastTemplateInvitationRef = this.invitation;
+    this.cachedCurrentTemplate = this.computeCurrentTemplate();
+    return this.cachedCurrentTemplate;
+  }
+
+  private computeCurrentTemplate(): string {
     const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
     if (queryTpl && (this.isOwnerOrInEditor || this.invitation?.id?.startsWith('preview-'))) {
       return queryTpl;
@@ -1540,25 +1588,32 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return this.detectedSourceTemplate;
     }
 
+    if (this.invitation?.content?.visualDesign?.active) {
+      return 'visual-builder';
+    }
+    const invContentTpl = (this.invitation?.content as any)?.template;
+    if (invContentTpl === 'visual-builder') {
+      return 'visual-builder';
+    }
+
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     const invId = this.invitation?._id || this.invitation?.id;
 
     // Check if source template was explicitly set to a native template
     const sourceTpl =
       this.invitation?.content?.sourceTemplateKey ||
-      (slug ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
-      (invId ? localStorage.getItem(`inv_source_tpl_${invId}`) : null);
+      (slug && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
+      (invId && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_source_tpl_${invId}`) : null);
 
     if (sourceTpl && sourceTpl !== 'custom-html') {
       return sourceTpl;
     }
 
-    const invContentTpl = (this.invitation?.content as any)?.template;
     if (invContentTpl === 'custom-html' || invContentTpl === 'html-css' || invContentTpl === 'custom') {
       return 'custom-html';
     }
 
-    const storedTpl = (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null) || (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null);
+    const storedTpl = (slug && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_tpl_${slug}`) : null) || (invId && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_tpl_${invId}`) : null);
     if (storedTpl === 'custom-html') {
       return 'custom-html';
     }
@@ -1593,6 +1648,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   isCustomHtmlTemplate(): boolean {
+    if (this.isVisualBuilderTemplate()) {
+      return false;
+    }
     if (this.detectedSourceTemplate) {
       return false;
     }
@@ -1601,8 +1659,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const invId = this.invitation?._id || this.invitation?.id;
     const sourceTpl =
       this.invitation?.content?.sourceTemplateKey ||
-      (slug ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
-      (invId ? localStorage.getItem(`inv_source_tpl_${invId}`) : null);
+      (slug && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_source_tpl_${slug}`) : null) ||
+      (invId && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_source_tpl_${invId}`) : null);
 
     if (sourceTpl && sourceTpl !== 'custom-html') {
       return false;
@@ -1624,12 +1682,28 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return this.currentTemplate === 'visual-builder' && Boolean(this.invitation?.content?.visualDesign?.active);
   }
 
+  private cachedCustomHtml?: string;
+  private lastCustomHtmlInvitationRef?: InvitationModel;
+
   get customHtmlContent(): string {
+    if (this.cachedCustomHtml !== undefined && this.lastCustomHtmlInvitationRef === this.invitation) {
+      return this.cachedCustomHtml;
+    }
+    this.lastCustomHtmlInvitationRef = this.invitation;
+    if (this.invitation?.content?.visualDesign?.active || (this.invitation?.content as any)?.template === 'visual-builder') {
+      this.cachedCustomHtml = '';
+      return '';
+    }
+    this.cachedCustomHtml = this.computeCustomHtmlContent();
+    return this.cachedCustomHtml;
+  }
+
+  private computeCustomHtmlContent(): string {
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     if (this.invitation?.content?.customHtml?.trim()) {
       return this.invitation.content.customHtml;
     }
-    if (slug) {
+    if (slug && typeof localStorage !== 'undefined') {
       const local1 = localStorage.getItem(`inv_custom_html_${slug}`);
       if (local1?.trim()) return local1;
       const local2 = localStorage.getItem(`custom_template_html_${slug}`);
@@ -1657,12 +1731,28 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return '';
   }
 
+  private cachedCustomCss?: string;
+  private lastCustomCssInvitationRef?: InvitationModel;
+
   get customCssContent(): string {
+    if (this.cachedCustomCss !== undefined && this.lastCustomCssInvitationRef === this.invitation) {
+      return this.cachedCustomCss;
+    }
+    this.lastCustomCssInvitationRef = this.invitation;
+    if (this.invitation?.content?.visualDesign?.active || (this.invitation?.content as any)?.template === 'visual-builder') {
+      this.cachedCustomCss = '';
+      return '';
+    }
+    this.cachedCustomCss = this.computeCustomCssContent();
+    return this.cachedCustomCss;
+  }
+
+  private computeCustomCssContent(): string {
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     if (this.invitation?.content?.customCss !== undefined && this.invitation?.content?.customCss !== null && this.invitation?.content?.customCss !== '') {
       return this.invitation.content.customCss;
     }
-    if (slug) {
+    if (slug && typeof localStorage !== 'undefined') {
       const local1 = localStorage.getItem(`inv_custom_css_${slug}`);
       if (local1 !== null && local1 !== '') return local1;
       const local2 = localStorage.getItem(`custom_template_css_${slug}`);
@@ -1694,7 +1784,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   isEnvelopeCardsTemplate(): boolean {
-    if (this.isCustomHtmlTemplate() || this.isVisualBuilderTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (
       !this.isClassicVerticalTemplate() &&
@@ -1721,121 +1811,121 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   isClassicVerticalTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'classic-vertical' || t === 'classic' || t === 'editorial';
   }
 
   isTemplate3(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'modern-minimal' || t === 'template-3' || t === 'plantilla-3' || t === 'minimal';
   }
 
   isBodaMobileFirstTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-mobile-first' || t === 'boda-mobile' || t === 'wedding-mobile-first';
   }
 
   isBodaDesktopFirstTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-desktop-first' || t === 'boda-desktop' || t === 'wedding-desktop-first';
   }
 
   isBodaCardsLateralTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-cards-lateral' || t === 'cards-lateral' || t === 'boda-cards' || t === 'wedding-cards-lateral';
   }
 
   isBodaCreativaPremiumTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-creativa-premium' || t === 'creativa-premium' || t === 'boda-premium' || t === 'wedding-creativa-premium';
   }
 
   isTemplateBoda(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-boda' || t === 'boda';
   }
 
   isTemplateXv(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-xv' || t === 'xv' || t === 'xv-anos';
   }
 
   isTemplateGraduacion(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-graduacion' || t === 'graduacion';
   }
 
   isTemplateCumpleanos(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-cumpleanos' || t === 'cumpleanos' || t === 'cumpleaños';
   }
 
   isTemplateBautizo(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-bautizo' || t === 'bautizo';
   }
 
   isTemplateOtro(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'template-otro' || t === 'otro';
   }
 
   isMaisonDoreTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'maison-dore' || t === 'la-maison-dore' || t === 'lamaisondore';
   }
 
   isBodaVillaPerleTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-villa-perle' || t === 'villa-perle';
   }
 
   isBodaTeatroTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-teatro' || t === 'teatro' || t === 'template-teatro';
   }
 
   isBodaEleganzaTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-eleganza' || t === 'eleganza' || t === 'template-eleganza';
   }
 
   isBodaRosasTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-rosas' || t === 'rosas' || t === 'rosas-template' || t === 'roses';
   }
 
   isBodaGirasolesTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-girasoles' || t === 'girasoles' || t === 'elegancia-girasoles';
   }
 
   isBodaNavyBlueTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'boda-navy-blue' || t === 'navy-blue' || t === 'modelo-navy-blue';
   }
 
   isXvBurgundyTemplate(): boolean {
-    if (this.isCustomHtmlTemplate()) return false;
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'xv-burgundy' || t === 'template-xv-burgundy' || t === 'mis-xv-burgundy' || t === 'burgundy';
   }
@@ -2242,6 +2332,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     // Skip if this is a custom-html template (those use full HTML replacement)
     if (this.isCustomHtmlTemplate()) {
       console.log('test edit: [PublicInv] loadEditedTexts() SKIPPED - isCustomHtmlTemplate is true');
+      return;
+    }
+
+    // Skip if this is a visual-builder template (visual builder has its own layer engine)
+    if (this.isVisualBuilderTemplate()) {
+      console.log('test edit: [PublicInv] loadEditedTexts() SKIPPED - isVisualBuilderTemplate is true');
       return;
     }
 
