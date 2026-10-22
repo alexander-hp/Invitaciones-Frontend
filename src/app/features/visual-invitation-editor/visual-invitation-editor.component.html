@@ -1,11 +1,23 @@
-<div class="ve-loading" *ngIf="loading">Preparando editor visual...</div>
+<div class="ve-loading" *ngIf="loading">
+  <div class="ve-loading-card">
+    <div class="ve-loading-spinner"></div>
+    <strong>Preparando editor visual...</strong>
+    <span>Cargando recursos y capas del diseño</span>
+  </div>
+</div>
 <div class="visual-editor" *ngIf="!loading && invitation && design" [class.mobile-has-selection]="mobilePanel === 'canvas' && selectedLayerCount" [class.has-draft-notice]="invitation.status === 'published'" (focusin)="beginPropertyEdit($event)">
   <header class="ve-topbar">
-    <button class="icon-button" type="button" title="Volver" (click)="back()">←</button>
-    <div class="ve-title"><strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong><span>Editor visual · {{ autosaving ? 'Guardando...' : (hasUnsavedChanges ? 'Cambios pendientes' : autosaveState) }}</span></div>
+    <button class="icon-button ve-back-button" type="button" title="Volver a la invitación" (click)="back()"><lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon></button>
+    <div class="ve-title">
+      <strong>{{ invitation.content.headline || event?.title || 'Invitación' }}</strong>
+      <span class="ve-autosave-indicator" [class.is-saving]="autosaving" [class.is-saved]="!autosaving && !hasUnsavedChanges">
+        <span class="ve-autosave-dot"></span>
+        <span>Editor visual · {{ autosaving ? 'Guardando...' : (hasUnsavedChanges ? 'Cambios pendientes' : autosaveState) }}</span>
+      </span>
+    </div>
     <div class="ve-history">
-      <button class="icon-button" type="button" title="Deshacer" (click)="undo()">↶</button>
-      <button class="icon-button" type="button" title="Rehacer" (click)="redo()">↷</button>
+      <button class="icon-button" type="button" title="Deshacer (Ctrl+Z)" (click)="undo()"><lucide-icon name="undo-2" [strokeWidth]="1.8"></lucide-icon></button>
+      <button class="icon-button" type="button" title="Rehacer (Ctrl+Y)" (click)="redo()"><lucide-icon name="redo-2" [strokeWidth]="1.8"></lucide-icon></button>
     </div>
     <div class="segmented" [class.tutorial-focus]="tutorialStep === 7" aria-label="Vista por dispositivo">
       <button type="button" [class.active]="device === 'mobile'" (click)="setDevice('mobile')">Celular</button>
@@ -24,12 +36,16 @@
         <button *ngIf="invitation?.status === 'published'" type="button" (click)="moreMenu.open=false;openPublicVersion()"><lucide-icon name="external-link" [strokeWidth]="1.8"></lucide-icon> Ver versión pública</button>
       </div>
     </details>
-    <button class="secondary preview-command" type="button" (click)="openDraftPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>Vista previa borrador ↗</button>
+    <button class="secondary preview-command" type="button" (click)="openDraftPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon><span>Vista previa borrador</span> ↗</button>
     <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
     <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : (invitation?.status === 'published' ? 'Publicar cambios' : 'Publicar') }}</button>
   </header>
 
-  <div class="ve-notice draft-info" *ngIf="invitation?.status === 'published'"><strong>Editando borrador</strong><span>Guardar y autoguardar no cambian la invitación pública. Usa “Publicar cambios” cuando esté lista.</span><button type="button" (click)="openPublicVersion()">Ver pública</button></div>
+  <div class="ve-notice draft-info" *ngIf="invitation?.status === 'published'">
+    <span class="draft-badge">Modo borrador</span>
+    <span class="draft-message">Guardar y autoguardar no cambian la invitación pública. Usa “Publicar cambios” cuando esté lista.</span>
+    <button type="button" class="draft-view-btn" (click)="openPublicVersion()"><lucide-icon name="external-link" [strokeWidth]="1.8"></lucide-icon><span>Ver pública</span></button>
+  </div>
   <div class="ve-notice error" *ngIf="error">{{ error }}</div><div class="ve-notice success" *ngIf="message">{{ message }}</div>
   <section class="ve-tutorial" *ngIf="tutorialStep >= 0" role="region" aria-labelledby="tutorialTitle" aria-live="polite">
     <header><span>Guía del editor</span><button type="button" title="Cerrar guía" aria-label="Cerrar guía" (click)="closeTutorial()">×</button></header>
@@ -518,6 +534,7 @@
         <button type="button" title="Elementos" [class.active]="toolCategory === 'elements'" [class.tutorial-focus]="tutorialStep === 2" [attr.aria-pressed]="toolCategory === 'elements'" (click)="toolCategory='elements';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="shapes" [strokeWidth]="1.8"></lucide-icon><span>Elementos</span></button>
         <button type="button" title="Archivos" [class.active]="toolCategory === 'assets'" [class.tutorial-focus]="tutorialStep === 3" [attr.aria-pressed]="toolCategory === 'assets'" (click)="toolCategory='assets';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Archivos</span></button>
         <button type="button" title="Funciones" [class.active]="toolCategory === 'functions'" [class.tutorial-focus]="tutorialStep === 4" [attr.aria-pressed]="toolCategory === 'functions'" (click)="toolCategory='functions';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="blocks" [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
+        <button type="button" title="Secciones" [class.active]="toolCategory === 'sections'" [attr.aria-pressed]="toolCategory === 'sections'" (click)="toolCategory='sections';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="layers" [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
       </nav>
       <div class="ve-tool-content" #toolContent>
       <ng-container *ngIf="toolCategory === 'design'">
@@ -648,10 +665,68 @@
       </section>
       </ng-container>
       <ng-container *ngIf="toolCategory === 'functions'">
+      <div class="active-functional-section-banner" *ngIf="selectedSection && isConfigurablePlugin(selectedSection.type)">
+        <div class="af-banner-header">
+          <span class="af-badge">Piezas activas</span>
+          <span class="af-order">Sección #{{ design.sections.indexOf(selectedSection) + 1 }}</span>
+        </div>
+        <div class="af-banner-main">
+          <b class="af-icon">{{ getSectionIcon(selectedSection) }}</b>
+          <div class="af-title-group">
+            <strong class="af-title" [title]="getSectionTitle(selectedSection)">{{ getSectionTitle(selectedSection) }}</strong>
+            <small class="af-subtitle">{{ getSectionTypeName(selectedSection.type) }}</small>
+          </div>
+          <button type="button" class="af-center-btn" (click)="navigateToSection(selectedSection, false)" title="Centrar esta sección en el lienzo">
+            <lucide-icon name="navigation" [strokeWidth]="1.8"></lucide-icon>
+            <span>Lienzo</span>
+          </button>
+        </div>
+        <div class="af-quick-switcher" *ngIf="functionalSections.length > 1">
+          <span class="af-switcher-label">Cambiar a:</span>
+          <div class="af-switcher-pills">
+            <button *ngFor="let fn of functionalSections"
+                    type="button"
+                    [class.active]="fn.id === selectedSectionId"
+                    (click)="navigateToSection(fn, true)"
+                    [title]="getSectionTitle(fn)">
+              <b>{{ getSectionIcon(fn) }}</b>
+              <span>{{ getSectionTitle(fn) }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="functional-selection-helper" *ngIf="(!selectedSection || !isConfigurablePlugin(selectedSection.type)) && functionalSections.length">
+        <div class="fsh-header">
+          <strong>Tus funciones agregadas</strong>
+          <button type="button" class="btn-text-link" (click)="toolCategory = 'sections'">Ver en Secciones →</button>
+        </div>
+        <p class="hint">Selecciona una función agregada para ver sus piezas y acomodarlas:</p>
+        <div class="fsh-list">
+          <button *ngFor="let fn of functionalSections" type="button" (click)="navigateToSection(fn, true)">
+            <b>{{ getSectionIcon(fn) }}</b>
+            <div>
+              <strong>{{ getSectionTitle(fn) }}</strong>
+              <small>{{ getSectionTypeName(fn.type) }}</small>
+            </div>
+            <i>Ver piezas →</i>
+          </button>
+        </div>
+      </div>
+
       <h2>Funciones</h2>
       <div class="plugin-catalog">
         <button *ngFor="let plugin of pluginCatalog" type="button" (click)="addSection(plugin.type, plugin.label)"><b>{{ plugin.icon }}</b><span>{{ plugin.label }}</span><i>Agregar</i></button>
       </div>
+      <ng-container *ngTemplateOutlet="functionalPiecesTemplate"></ng-container>
+      <h2>Secciones</h2>
+      <div class="section-catalog">
+        <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
+      </div>
+      <p class="hint">Agrega una sección y luego arrastra sus elementos directamente en el lienzo.</p>
+      </ng-container>
+
+      <ng-template #functionalPiecesTemplate>
       <ng-container *ngIf="selectedSection?.type === 'rsvp'">
         <h2>Campos RSVP</h2>
         <p class="hint">Cada opción agrega el control funcional y su texto como capas independientes. Combínalos con imágenes o formas y elimina lo que no necesites.</p>
@@ -791,11 +866,119 @@
           </div>
         </div>
       </ng-container>
-      <h2>Secciones</h2>
-      <div class="section-catalog">
-        <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)">+ {{ option.label }}</button>
+      </ng-template>
+
+      <ng-container *ngIf="toolCategory === 'sections'">
+      <div class="sections-drawer-header">
+        <h2>Secciones agregadas</h2>
+        <p class="hint">Navega a cualquier sección de tu invitación para centrarla en el lienzo y ver o arrastrar sus piezas directamente aquí.</p>
+        <div class="sections-filter-pills" *ngIf="functionalSections.length">
+          <button type="button" [class.active]="sectionsListFilter === 'all'" (click)="sectionsListFilter = 'all'">
+            Todas ({{ design.sections.length }})
+          </button>
+          <button type="button" [class.active]="sectionsListFilter === 'functions'" (click)="sectionsListFilter = 'functions'">
+            Solo funciones ({{ functionalSections.length }})
+          </button>
+        </div>
       </div>
-      <p class="hint">Agrega una sección y luego arrastra sus elementos directamente en el lienzo.</p>
+
+      <div class="sections-drawer-list">
+        <div *ngFor="let section of displayedSections"
+             class="section-card-item"
+             [class.active]="section.id === selectedSectionId"
+             [class.is-functional]="isConfigurablePlugin(section.type)">
+          <div class="section-card-main" (click)="navigateToSection(section, false)">
+            <div class="section-card-icon-badge">
+              <span class="section-card-order">#{{ design.sections.indexOf(section) + 1 }}</span>
+              <b class="section-card-icon">{{ getSectionIcon(section) }}</b>
+            </div>
+            <div class="section-card-info">
+              <div class="section-card-badge-row">
+                <span *ngIf="isConfigurablePlugin(section.type)" class="section-badge-pill functional">Función</span>
+                <span *ngIf="!isConfigurablePlugin(section.type)" class="section-badge-pill standard">Diseño</span>
+                <span *ngIf="section.id === selectedSectionId" class="section-badge-pill selected">Seleccionada</span>
+              </div>
+              <strong class="section-card-title" [title]="getSectionTitle(section)">{{ getSectionTitle(section) }}</strong>
+              <span class="section-card-meta">
+                {{ getSectionTypeName(section.type) }} • {{ section.layers.length }} {{ section.layers.length === 1 ? 'capa' : 'capas' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="section-card-actions">
+            <button type="button"
+                    class="btn-section-action"
+                    [class.primary-action]="isSectionExpanded(section)"
+                    (click)="toggleSectionCard(section, $event)"
+                    [title]="'Viajar a ' + getSectionTitle(section) + ' y desplegar sus piezas'">
+              <lucide-icon [name]="isConfigurablePlugin(section.type) ? 'blocks' : 'layers'" [strokeWidth]="1.8"></lucide-icon>
+              <span>{{ isSectionExpanded(section) ? 'Viendo piezas' : 'Ver piezas' }}</span>
+            </button>
+            <div class="section-card-sub-actions">
+              <button type="button"
+                      class="btn-mini-tool"
+                      [disabled]="isFirstSection(section)"
+                      (click)="moveSectionUp(design.sections.indexOf(section), $event)"
+                      title="Subir posición">
+                ↑
+              </button>
+              <button type="button"
+                      class="btn-mini-tool"
+                      [disabled]="isLastSection(section)"
+                      (click)="moveSectionDown(design.sections.indexOf(section), $event)"
+                      title="Bajar posición">
+                ↓
+              </button>
+              <button type="button"
+                      class="btn-mini-tool delete"
+                      [disabled]="design.sections.length <= 1"
+                      (click)="$event.stopPropagation(); removeSection(section)"
+                      title="Eliminar sección">
+                ×
+              </button>
+            </div>
+          </div>
+
+          <!-- Piezas desplegables dentro de ESTA card -->
+          <div class="section-card-pieces-body" *ngIf="isSectionExpanded(section)">
+            <div class="active-pieces-header">
+              <div class="aph-badge-row">
+                <span class="active-pieces-badge" [class.functional]="isConfigurablePlugin(section.type)">
+                  {{ isConfigurablePlugin(section.type) ? 'Piezas funcionales' : 'Sección de diseño' }}
+                </span>
+                <span class="aph-order">#{{ design.sections.indexOf(section) + 1 }} de {{ design.sections.length }}</span>
+              </div>
+              <strong class="active-pieces-title">{{ getSectionTitle(section) }}</strong>
+              <small class="aph-subtitle">{{ getSectionTypeName(section.type) }}</small>
+            </div>
+
+            <ng-container *ngIf="isConfigurablePlugin(section.type)">
+              <ng-container *ngTemplateOutlet="functionalPiecesTemplate"></ng-container>
+            </ng-container>
+
+            <ng-container *ngIf="!isConfigurablePlugin(section.type)">
+              <p class="hint">Esta sección es de diseño libre. Puedes arrastrar capas de texto, imagen o botones:</p>
+              <div class="component-catalog smart-component-catalog">
+                <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'text'})" (dragend)="endPaletteDrag()" (click)="addLayer('text')"><b>T</b><span>Texto</span></button>
+                <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'image'})" (dragend)="endPaletteDrag()" (click)="addLayer('image')"><b>▧</b><span>Imagen</span></button>
+                <button type="button" draggable="true" (dragstart)="beginPaletteDrag($event, {kind:'layer', type:'button'})" (dragend)="endPaletteDrag()" (click)="addLayer('button')"><b>▣</b><span>Botón</span></button>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="sections-add-footer">
+        <h3>Agregar nueva sección o función</h3>
+        <div class="section-quick-add-grid">
+          <button *ngFor="let plugin of pluginCatalog" type="button" (click)="addSection(plugin.type, plugin.label)" [title]="'Agregar ' + plugin.label">
+            <b>{{ plugin.icon }}</b><span>{{ plugin.label }}</span>
+          </button>
+          <button *ngFor="let option of sectionCatalog" type="button" (click)="addSection(option.type, option.label)" [title]="'Agregar ' + option.label">
+            <b>+</b><span>{{ option.label }}</span>
+          </button>
+        </div>
+      </div>
       </ng-container>
       <div class="save-template-box" *ngIf="toolCategory === 'design'">
         <label>Guardar diseño como plantilla<input [(ngModel)]="templateName" type="text" placeholder="Ej. Bodas elegantes"></label>

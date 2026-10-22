@@ -30,7 +30,7 @@ import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpa
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
-type ToolCategory = 'design' | 'elements' | 'assets' | 'functions';
+type ToolCategory = 'design' | 'elements' | 'assets' | 'functions' | 'sections';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
@@ -752,6 +752,111 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.touchZoomVisible = false;
       this.touchGestureLabel = '';
     }, 650);
+  }
+
+  sectionsListFilter: 'all' | 'functions' = 'all';
+
+  get functionalSections(): VisualInvitationSection[] {
+    return (this.design?.sections || []).filter((s) => this.isConfigurablePlugin(s.type));
+  }
+
+  get displayedSections(): VisualInvitationSection[] {
+    if (!this.design?.sections) return [];
+    if (this.sectionsListFilter === 'functions') {
+      return this.functionalSections;
+    }
+    return this.design.sections;
+  }
+
+  getSectionTitle(section?: VisualInvitationSection): string {
+    if (!section) return 'Sección';
+    if (section.title && section.title.trim()) return section.title.trim();
+    return this.getSectionTypeName(section.type);
+  }
+
+  getSectionTypeName(type: string): string {
+    const plugin = this.pluginCatalog.find((p) => p.type === type);
+    if (plugin) return plugin.label;
+    const sec = this.sectionCatalog.find((s) => s.type === type);
+    if (sec) return sec.label;
+    if (type === 'hero') return 'Portada';
+    return 'Sección libre';
+  }
+
+  getSectionIcon(section?: VisualInvitationSection): string {
+    if (!section) return '▦';
+    const plugin = this.pluginCatalog.find((p) => p.type === section.type);
+    if (plugin) return plugin.icon;
+    if (section.type === 'story') return '📖';
+    if (section.type === 'hero') return '★';
+    return '▦';
+  }
+
+  isFirstSection(section: VisualInvitationSection): boolean {
+    return this.design?.sections ? this.design.sections.indexOf(section) === 0 : true;
+  }
+
+  isLastSection(section: VisualInvitationSection): boolean {
+    return this.design?.sections ? this.design.sections.indexOf(section) === this.design.sections.length - 1 : true;
+  }
+
+  expandedSectionCardId: string = '';
+
+  isSectionExpanded(section: VisualInvitationSection): boolean {
+    if (this.expandedSectionCardId === '__none__') {
+      return false;
+    }
+    if (this.expandedSectionCardId) {
+      return this.expandedSectionCardId === section.id;
+    }
+    return this.selectedSectionId === section.id;
+  }
+
+  toggleSectionCard(section: VisualInvitationSection, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (this.isSectionExpanded(section)) {
+      this.expandedSectionCardId = '__none__';
+    } else {
+      this.expandedSectionCardId = section.id;
+      this.navigateToSection(section, false);
+    }
+  }
+
+  navigateToSection(section: VisualInvitationSection, openFunctionsMenu: boolean = false): void {
+    this.selectSection(section);
+    this.expandedSectionCardId = section.id;
+    if (openFunctionsMenu) {
+      this.toolCategory = 'functions';
+      this.toolsCollapsed = false;
+    }
+    setTimeout(() => {
+      const el = document.querySelector(`[data-section-id="${section.id}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+  }
+
+  moveSectionUp(index: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (index <= 0 || !this.design?.sections) return;
+    this.recordHistory();
+    const sections = [...this.design.sections];
+    const [removed] = sections.splice(index, 1);
+    sections.splice(index - 1, 0, removed);
+    this.design.sections = sections;
+  }
+
+  moveSectionDown(index: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!this.design?.sections || index >= this.design.sections.length - 1) return;
+    this.recordHistory();
+    const sections = [...this.design.sections];
+    const [removed] = sections.splice(index, 1);
+    sections.splice(index + 1, 0, removed);
+    this.design.sections = sections;
   }
 
   get selectedSection(): VisualInvitationSection | undefined {
