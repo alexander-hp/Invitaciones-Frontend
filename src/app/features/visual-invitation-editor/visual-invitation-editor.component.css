@@ -343,7 +343,7 @@
 @keyframes ve-spin{to{transform:rotate(360deg)}}
 .uploading{color:var(--nw-success, #4a7f62);font-size:13px}
 .responsive-preview-backdrop{position:fixed;inset:0;z-index:3900;display:grid;place-items:center;padding:18px;background:rgba(23,21,19,0.72);backdrop-filter:blur(6px)}
-.responsive-preview-dialog{width:min(1420px,98vw);max-height:94vh;overflow:auto;background:var(--nw-bg, #faf7f2);border-radius:20px;border:1px solid var(--nw-border, #eadecc);box-shadow:0 24px 80px rgba(46,37,33,0.22)}
+.responsive-preview-dialog{width:min(1420px,98vw);max-height:94vh;overflow:hidden !important;overflow-x:hidden !important;background:var(--nw-bg, #faf7f2);border-radius:20px;border:1px solid var(--nw-border, #eadecc);box-shadow:0 24px 80px rgba(46,37,33,0.22)}
 .responsive-preview-dialog>header{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:18px 24px;background:#fff;border-bottom:1px solid var(--nw-border, #eadecc)}
 .responsive-preview-dialog header span{font-size:11px;text-transform:uppercase;color:var(--nw-accent, #c09c78);font-weight:700;letter-spacing:0.4px}
 .responsive-preview-dialog h1{margin:4px 0;font-family:var(--nw-font-display, 'Outfit', sans-serif);font-size:24px;font-weight:700;color:var(--nw-text, #2e2621)}

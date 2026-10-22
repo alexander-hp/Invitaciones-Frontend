@@ -7,7 +7,9 @@
   max-height: 95vh;
   background: #f5f2ee !important;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
   display: flex;
   flex-direction: column;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4) !important;
@@ -118,9 +120,12 @@
   justify-content: center;
   gap: 24px;
   padding: 24px 20px 36px;
-  overflow-y: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   max-height: calc(95vh - 90px);
   background: #f5f2ee;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .responsive-preview-grid > article {
@@ -298,7 +303,8 @@
 
 .device-frame-mobile .responsive-preview-viewport {
   border-radius: 26px;
-  overflow: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   background: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
@@ -338,7 +344,8 @@
 
 .device-frame-tablet .responsive-preview-viewport {
   border-radius: 14px;
-  overflow: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   background: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
@@ -424,7 +431,8 @@
 .device-frame-desktop .responsive-preview-viewport {
   background: #ffffff;
   border-radius: 0;
-  overflow: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 
 .desktop-laptop-base {
@@ -453,9 +461,35 @@
 
 .responsive-preview-viewport {
   max-width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   margin: 0 auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(37, 33, 31, 0.25) transparent;
+}
+
+.responsive-preview-viewport::-webkit-scrollbar {
+  width: 4px;
+  height: 0px !important;
+}
+
+.responsive-preview-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.responsive-preview-viewport::-webkit-scrollbar-thumb {
+  background: rgba(37, 33, 31, 0.22);
+  border-radius: 999px;
+}
+
+.responsive-preview-viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 33, 31, 0.42);
+}
+
+.responsive-preview-viewport::-webkit-scrollbar-horizontal {
+  display: none !important;
+  height: 0px !important;
+  width: 0px !important;
 }
 
 .responsive-preview-stage {
