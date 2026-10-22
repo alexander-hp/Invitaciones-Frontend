@@ -596,8 +596,28 @@
         <button *ngFor="let icon of filteredIconCatalog" type="button" draggable="true" [title]="icon.label" (dragstart)="beginPaletteDrag($event, {kind:'icon', icon:icon})" (dragend)="endPaletteDrag()" (click)="addIcon(icon)"><lucide-icon [name]="icon.name" [strokeWidth]="1.8"></lucide-icon><span>{{ icon.label }}</span></button>
       </div>
       <h2>Formas</h2>
+      <div class="shape-catalog-tools">
+        <input [(ngModel)]="shapeSearch" type="search" placeholder="Buscar formas...">
+        <select [(ngModel)]="shapeCategory">
+          <option value="all">Todas las formas</option>
+          <option value="basic">Geométricas</option>
+          <option value="arch">Arcos y Marcos</option>
+          <option value="banner">Banners y Listones</option>
+          <option value="decorative">Decorativas</option>
+          <option value="divider">Líneas y Divisores</option>
+        </select>
+      </div>
       <div class="shape-catalog">
-        <button *ngFor="let shape of shapeCatalog" type="button" draggable="true" [title]="shape.label" (dragstart)="beginPaletteDrag($event, {kind:'shape', shape:shape.key})" (dragend)="endPaletteDrag()" (click)="addShape(shape.key)"><b>{{ shape.icon }}</b><span>{{ shape.label }}</span></button>
+        <button *ngFor="let shape of filteredShapeCatalog"
+                type="button"
+                draggable="true"
+                [title]="shape.label"
+                (dragstart)="beginPaletteDrag($event, {kind:'shape', shape:shape.key})"
+                (dragend)="endPaletteDrag()"
+                (click)="addShape(shape.key)">
+          <span class="shape-catalog-preview" [style.clip-path]="shapeClipPath(shape.key)"></span>
+          <span>{{ shape.label }}</span>
+        </button>
       </div>
       <h2>Marcos de foto</h2>
       <div class="frame-catalog">
@@ -1401,7 +1421,65 @@
             <label>Brillo<input [ngModel]="style.brightness ?? 100" (ngModelChange)="style.brightness=$event" type="range" min="25" max="200" step="5"><span>{{ style.brightness ?? 100 }}%</span></label>
             <label>Contraste<input [ngModel]="style.contrast ?? 100" (ngModelChange)="style.contrast=$event" type="range" min="25" max="200" step="5"><span>{{ style.contrast ?? 100 }}%</span></label>
             <label>Saturación<input [ngModel]="style.saturation ?? 100" (ngModelChange)="style.saturation=$event" type="range" min="0" max="200" step="5"><span>{{ style.saturation ?? 100 }}%</span></label>
-            <label>Desenfoque<input [ngModel]="style.blur ?? 0" (ngModelChange)="style.blur=$event" type="range" min="0" max="12" step="0.5"><span>{{ style.blur || 0 }} px</span></label>
+          </div>
+          <div *ngIf="layer.type === 'shape'" class="shape-inspector-settings">
+            <div class="inspector-heading">
+              <h3>Tipo de forma</h3>
+              <button type="button" (click)="resetShapeAdjustments(layer)">Restablecer</button>
+            </div>
+            <label>Seleccionar forma</label>
+            <div class="shape-picker-select-wrap">
+              <select [ngModel]="style.shapeKind || 'rectangle'" (ngModelChange)="setShapeKind(layer, $event)">
+                <optgroup label="Geométricas">
+                  <option value="rectangle">Rectángulo</option>
+                  <option value="rounded">Rectángulo suave</option>
+                  <option value="pill">Pastilla / Cápsula</option>
+                  <option value="circle">Círculo</option>
+                  <option value="ellipse">Óvalo</option>
+                  <option value="triangle">Triángulo</option>
+                  <option value="triangle-down">Triángulo invertido</option>
+                  <option value="diamond">Rombo</option>
+                  <option value="pentagon">Pentágono</option>
+                  <option value="hexagon">Hexágono</option>
+                  <option value="octagon">Octágono</option>
+                </optgroup>
+                <optgroup label="Arcos y Marcos">
+                  <option value="arch">Arco superior</option>
+                  <option value="arch-inverted">Arco invertido</option>
+                  <option value="window">Ventana imperial</option>
+                </optgroup>
+                <optgroup label="Banners y Listones">
+                  <option value="banner">Listón de dos puntas</option>
+                  <option value="pennant">Banderín</option>
+                  <option value="ticket">Ticket / Pase</option>
+                  <option value="chevron">Cinta chevron</option>
+                </optgroup>
+                <optgroup label="Decorativas">
+                  <option value="heart">Corazón</option>
+                  <option value="star">Estrella (5 puntas)</option>
+                  <option value="star-4">Destello (4 puntas)</option>
+                  <option value="star-8">Estrella octagonal</option>
+                  <option value="shield">Escudo</option>
+                  <option value="clover">Sello flor</option>
+                </optgroup>
+                <optgroup label="Líneas y Divisores">
+                  <option value="line">Línea recta</option>
+                  <option value="line-diamond">Divisor con rombo</option>
+                </optgroup>
+              </select>
+            </div>
+            <label>Catálogo visual</label>
+            <div class="shape-inspector-grid">
+              <button *ngFor="let s of shapeCatalog"
+                      type="button"
+                      class="shape-inspector-btn"
+                      [class.active]="(style.shapeKind || 'rectangle') === s.key"
+                      [title]="s.label"
+                      (click)="setShapeKind(layer, s.key)">
+                <span class="shape-inspector-preview" [style.clip-path]="shapeClipPath(s.key)"></span>
+                <span>{{ s.label }}</span>
+              </button>
+            </div>
           </div>
         </ng-container>
         <ng-container *ngIf="animationFor(layer) as animation">

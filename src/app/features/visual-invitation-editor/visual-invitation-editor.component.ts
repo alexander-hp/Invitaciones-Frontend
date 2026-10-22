@@ -314,12 +314,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'diamond', label: 'Rombo', icon: '◆' }, { key: 'hexagon', label: 'Hexágono', icon: '⬢' },
     { key: 'ticket', label: 'Recorte', icon: '◫' }
   ];
-  readonly shapeCatalog: Array<{ key: ShapeKind; label: string; icon: string }> = [
-    { key: 'rectangle', label: 'Rectángulo', icon: '■' }, { key: 'circle', label: 'Círculo', icon: '●' },
-    { key: 'ellipse', label: 'Óvalo', icon: '⬭' }, { key: 'triangle', label: 'Triángulo', icon: '▲' },
-    { key: 'diamond', label: 'Rombo', icon: '◆' }, { key: 'star', label: 'Estrella', icon: '★' },
-    { key: 'hexagon', label: 'Hexágono', icon: '⬢' }, { key: 'line', label: 'Línea', icon: '━' }
+  readonly shapeCatalog: Array<{ key: ShapeKind; label: string; icon: string; category: 'basic' | 'arch' | 'banner' | 'decorative' | 'divider' }> = [
+    { key: 'rectangle', label: 'Rectángulo', icon: '■', category: 'basic' },
+    { key: 'rounded', label: 'Suave', icon: '▢', category: 'basic' },
+    { key: 'pill', label: 'Pastilla', icon: '⬭', category: 'basic' },
+    { key: 'circle', label: 'Círculo', icon: '●', category: 'basic' },
+    { key: 'ellipse', label: 'Óvalo', icon: '⬭', category: 'basic' },
+    { key: 'triangle', label: 'Triángulo', icon: '▲', category: 'basic' },
+    { key: 'triangle-down', label: 'Triángulo inv.', icon: '▼', category: 'basic' },
+    { key: 'diamond', label: 'Rombo', icon: '◆', category: 'basic' },
+    { key: 'pentagon', label: 'Pentágono', icon: '⬟', category: 'basic' },
+    { key: 'hexagon', label: 'Hexágono', icon: '⬢', category: 'basic' },
+    { key: 'octagon', label: 'Octágono', icon: '🛑', category: 'basic' },
+    { key: 'arch', label: 'Arco superior', icon: '☖', category: 'arch' },
+    { key: 'arch-inverted', label: 'Arco invertido', icon: '☗', category: 'arch' },
+    { key: 'window', label: 'Ventana', icon: '🪟', category: 'arch' },
+    { key: 'banner', label: 'Listón', icon: '⚑', category: 'banner' },
+    { key: 'pennant', label: 'Banderín', icon: '🚩', category: 'banner' },
+    { key: 'ticket', label: 'Pase / Ticket', icon: '🎟️', category: 'banner' },
+    { key: 'chevron', label: 'Chevron', icon: '❯', category: 'banner' },
+    { key: 'heart', label: 'Corazón', icon: '♥', category: 'decorative' },
+    { key: 'star', label: 'Estrella 5p', icon: '★', category: 'decorative' },
+    { key: 'star-4', label: 'Destello', icon: '✦', category: 'decorative' },
+    { key: 'star-8', label: 'Estrella 8p', icon: '✸', category: 'decorative' },
+    { key: 'shield', label: 'Escudo', icon: '🛡️', category: 'decorative' },
+    { key: 'clover', label: 'Sello flor', icon: '✿', category: 'decorative' },
+    { key: 'line', label: 'Línea', icon: '━', category: 'divider' },
+    { key: 'line-diamond', label: 'Línea rombo', icon: '◈', category: 'divider' }
   ];
+
+  shapeSearch = '';
+  shapeCategory: 'all' | 'basic' | 'arch' | 'banner' | 'decorative' | 'divider' = 'all';
+
+  get filteredShapeCatalog(): Array<{ key: ShapeKind; label: string; icon: string; category: 'basic' | 'arch' | 'banner' | 'decorative' | 'divider' }> {
+    const q = this.shapeSearch ? this.shapeSearch.trim().toLowerCase() : '';
+    return this.shapeCatalog.filter((s) => {
+      const catMatch = this.shapeCategory === 'all' || s.category === this.shapeCategory;
+      const searchMatch = !q || s.label.toLowerCase().includes(q) || s.key.toLowerCase().includes(q);
+      return catMatch && searchMatch;
+    });
+  }
   readonly previewDevices: Array<{ key: DeviceMode; label: string; width: number; scale: number }> = [
     { key: 'mobile', label: 'Celular', width: 390, scale: .62 },
     { key: 'tablet', label: 'Tablet', width: 768, scale: .315 },
@@ -4028,20 +4062,71 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return masks[mask];
   }
 
-  private shapeClipPath(kind: ShapeKind): string {
-    const shapes: Record<ShapeKind, string> = {
-      rectangle: 'none', circle: 'circle(50% at 50% 50%)', ellipse: 'ellipse(50% 42% at 50% 50%)',
-      triangle: 'polygon(50% 0,100% 100%,0 100%)', diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
-      star: 'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 93%,50% 72%,21% 93%,32% 57%,2% 35%,39% 35%)',
-      hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)', line: 'inset(42% 0)'
+  shapeClipPath(kind?: string): string {
+    const shapes: Record<string, string> = {
+      rectangle: 'none',
+      rounded: 'inset(0 round 12px)',
+      pill: 'inset(0 round 9999px)',
+      circle: 'circle(50% at 50% 50%)',
+      ellipse: 'ellipse(50% 42% at 50% 50%)',
+      arch: 'inset(0 round 50% 50% 0 0)',
+      'arch-inverted': 'inset(0 round 0 0 50% 50%)',
+      window: 'inset(0 round 48% 48% 6% 6%)',
+      triangle: 'polygon(50% 0, 100% 100%, 0 100%)',
+      'triangle-down': 'polygon(0 0, 100% 0, 50% 100%)',
+      diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
+      pentagon: 'polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%)',
+      hexagon: 'polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)',
+      octagon: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)',
+      star: 'polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 93%, 50% 72%, 21% 93%, 32% 57%, 2% 35%, 39% 35%)',
+      'star-4': 'polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%)',
+      'star-8': 'polygon(50% 0, 65% 20%, 85% 15%, 80% 35%, 100% 50%, 80% 65%, 85% 85%, 65% 80%, 50% 100%, 35% 80%, 15% 85%, 20% 65%, 0 50%, 20% 35%, 15% 15%, 35% 20%)',
+      heart: 'polygon(50% 88%, 35% 73%, 20% 58%, 10% 42%, 8% 26%, 16% 12%, 30% 8%, 42% 14%, 50% 26%, 58% 14%, 70% 8%, 84% 12%, 92% 26%, 90% 42%, 80% 58%, 65% 73%)',
+      shield: 'polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%)',
+      ticket: 'polygon(0 0, 100% 0, 100% 38%, 92% 50%, 100% 62%, 100% 100%, 0 100%, 0 62%, 8% 50%, 0 38%)',
+      banner: 'polygon(100% 0, 90% 50%, 100% 100%, 0 100%, 10% 50%, 0 0)',
+      pennant: 'polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%)',
+      chevron: 'polygon(75% 0, 100% 50%, 75% 100%, 0 100%, 25% 50%, 0 0)',
+      clover: 'polygon(50% 0, 65% 8%, 80% 0, 92% 12%, 92% 28%, 100% 40%, 98% 56%, 92% 70%, 92% 86%, 80% 98%, 65% 90%, 50% 100%, 35% 90%, 20% 98%, 8% 86%, 8% 70%, 2% 56%, 0 40%, 8% 28%, 8% 12%, 20% 0, 35% 8%)',
+      line: 'inset(42% 0)',
+      'line-diamond': 'polygon(0 46%, 45% 46%, 50% 15%, 55% 46%, 100% 46%, 100% 54%, 55% 54%, 50% 85%, 45% 54%, 0 54%)'
     };
-    return shapes[kind];
+    return shapes[kind || 'rectangle'] || 'none';
   }
 
   private shapeDimensions(kind: ShapeKind): { width: number; height: number } {
-    if (kind === 'line') return { width: 58, height: 4 };
-    if (kind === 'ellipse') return { width: 42, height: 24 };
+    if (kind === 'line' || kind === 'line-diamond') return { width: 58, height: 4 };
+    if (kind === 'ellipse' || kind === 'banner' || kind === 'ticket') return { width: 44, height: 22 };
+    if (kind === 'arch' || kind === 'arch-inverted' || kind === 'window') return { width: 34, height: 46 };
+    if (kind === 'pill') return { width: 42, height: 18 };
     return { width: 30, height: 30 };
+  }
+
+  setShapeKind(layer: VisualInvitationLayer, kind: ShapeKind): void {
+    this.recordHistory();
+    if (!layer.style) layer.style = {};
+    const oldKind = layer.style.shapeKind || 'rectangle';
+    const oldOption = this.shapeCatalog.find((s) => s.key === oldKind);
+    const newOption = this.shapeCatalog.find((s) => s.key === kind);
+    layer.style.shapeKind = kind;
+    if (kind === 'rectangle' && !layer.style.borderRadius) {
+      layer.style.borderRadius = 8;
+    }
+    if (newOption && (!layer.name || layer.name === 'Forma' || (oldOption && layer.name === oldOption.label))) {
+      layer.name = newOption.label;
+    }
+  }
+
+  resetShapeAdjustments(layer: VisualInvitationLayer): void {
+    this.recordHistory();
+    if (!layer.style) layer.style = {};
+    layer.style.shapeKind = 'rectangle';
+    layer.style.borderRadius = 8;
+    layer.style.borderWidth = 0;
+    layer.style.borderColor = 'transparent';
+    layer.style.boxShadow = 'none';
+    layer.style.gradientEnabled = false;
+    layer.name = 'Rectángulo';
   }
 
   private applyShapePreset(layer: VisualInvitationLayer, kind: ShapeKind): void {

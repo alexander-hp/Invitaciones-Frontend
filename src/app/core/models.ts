@@ -385,7 +385,11 @@ export interface VisualInvitationLayerStyle {
   gradientAngle?: number;
   imageMask?: 'none' | 'circle' | 'rounded' | 'arch' | 'diamond' | 'hexagon' | 'ticket';
   frameEnabled?: boolean;
-  shapeKind?: 'rectangle' | 'circle' | 'ellipse' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line';
+  shapeKind?:
+    | 'rectangle' | 'rounded' | 'pill' | 'circle' | 'ellipse' | 'arch' | 'arch-inverted' | 'window'
+    | 'triangle' | 'triangle-down' | 'diamond' | 'pentagon' | 'hexagon' | 'octagon'
+    | 'star' | 'star-4' | 'star-8' | 'heart' | 'shield' | 'ticket' | 'banner' | 'pennant' | 'chevron' | 'clover'
+    | 'line' | 'line-diamond';
   controlVariant?: 'default' | 'cards';
   controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
   showPlaceholder?: boolean;

@@ -1388,10 +1388,32 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (cached && cached.styleRef === layer.style) return cached.result;
     const style = layer.style || {};
     const shapes: Record<string, string> = {
-      rectangle: 'none', circle: 'circle(50% at 50% 50%)', ellipse: 'ellipse(50% 42% at 50% 50%)',
-      triangle: 'polygon(50% 0,100% 100%,0 100%)', diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
-      star: 'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 93%,50% 72%,21% 93%,32% 57%,2% 35%,39% 35%)',
-      hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)', line: 'inset(42% 0)'
+      rectangle: 'none',
+      rounded: 'inset(0 round 12px)',
+      pill: 'inset(0 round 9999px)',
+      circle: 'circle(50% at 50% 50%)',
+      ellipse: 'ellipse(50% 42% at 50% 50%)',
+      arch: 'inset(0 round 50% 50% 0 0)',
+      'arch-inverted': 'inset(0 round 0 0 50% 50%)',
+      window: 'inset(0 round 48% 48% 6% 6%)',
+      triangle: 'polygon(50% 0, 100% 100%, 0 100%)',
+      'triangle-down': 'polygon(0 0, 100% 0, 50% 100%)',
+      diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
+      pentagon: 'polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%)',
+      hexagon: 'polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)',
+      octagon: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)',
+      star: 'polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 93%, 50% 72%, 21% 93%, 32% 57%, 2% 35%, 39% 35%)',
+      'star-4': 'polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%)',
+      'star-8': 'polygon(50% 0, 65% 20%, 85% 15%, 80% 35%, 100% 50%, 80% 65%, 85% 85%, 65% 80%, 50% 100%, 35% 80%, 15% 85%, 20% 65%, 0 50%, 20% 35%, 15% 15%, 35% 20%)',
+      heart: 'polygon(50% 88%, 35% 73%, 20% 58%, 10% 42%, 8% 26%, 16% 12%, 30% 8%, 42% 14%, 50% 26%, 58% 14%, 70% 8%, 84% 12%, 92% 26%, 90% 42%, 80% 58%, 65% 73%)',
+      shield: 'polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%)',
+      ticket: 'polygon(0 0, 100% 0, 100% 38%, 92% 50%, 100% 62%, 100% 100%, 0 100%, 0 62%, 8% 50%, 0 38%)',
+      banner: 'polygon(100% 0, 90% 50%, 100% 100%, 0 100%, 10% 50%, 0 0)',
+      pennant: 'polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%)',
+      chevron: 'polygon(75% 0, 100% 50%, 75% 100%, 0 100%, 25% 50%, 0 0)',
+      clover: 'polygon(50% 0, 65% 8%, 80% 0, 92% 12%, 92% 28%, 100% 40%, 98% 56%, 92% 70%, 92% 86%, 80% 98%, 65% 90%, 50% 100%, 35% 90%, 20% 98%, 8% 86%, 8% 70%, 2% 56%, 0 40%, 8% 28%, 8% 12%, 20% 0, 35% 8%)',
+      line: 'inset(42% 0)',
+      'line-diamond': 'polygon(0 46%, 45% 46%, 50% 15%, 55% 46%, 100% 46%, 100% 54%, 55% 54%, 50% 85%, 45% 54%, 0 54%)'
     };
     const result: Record<string, string> = {
       boxSizing: 'border-box',
