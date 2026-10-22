@@ -1,25 +1,99 @@
-<div class="font-picker">
-  <span class="font-picker-label">{{ label }}</span>
-  <button class="font-picker-trigger" type="button" [class.open]="open" (click)="toggle()" [attr.aria-expanded]="open">
-    <span [style.font-family]="selectedFont.family">{{ selectedFont.name }}</span><b>⌄</b>
+<div class="font-picker" [class.is-open]="open">
+  <span class="font-picker-label" *ngIf="label">{{ label }}</span>
+
+  <!-- Dropdown Trigger Button -->
+  <button class="font-picker-trigger"
+          type="button"
+          [class.open]="open"
+          (click)="toggle()"
+          [attr.aria-expanded]="open"
+          [title]="'Cambiar tipografía: ' + selectedFont.name">
+    <div class="font-trigger-info">
+      <span class="font-trigger-name" [style.font-family]="selectedFont.family">{{ selectedFont.name }}</span>
+      <span class="font-trigger-category">{{ getCategoryLabel(selectedFont.category) }}</span>
+    </div>
+    <span class="font-trigger-chevron" [class.rotated]="open">
+      <lucide-icon name="chevron-down" [strokeWidth]="2"></lucide-icon>
+    </span>
   </button>
-  <section class="font-picker-menu" *ngIf="open">
-    <div class="font-search"><span>⌕</span><input [(ngModel)]="query" type="search" placeholder="Buscar tipografía" aria-label="Buscar tipografía"></div>
-    <nav aria-label="Categorías de tipografía">
-      <button *ngFor="let item of categories" type="button" [class.active]="category === item.value" (click)="setCategory(item.value)">{{ item.label }}</button>
-    </nav>
-    <div class="font-list">
-      <ng-container *ngIf="!query && category === 'all' && recentFonts.length">
-        <small>Usadas recientemente</small>
-        <button *ngFor="let font of recentFonts; trackBy: trackFont" type="button" [class.selected]="font.family === value" (click)="select(font)">
-          <span [style.font-family]="font.family">Ag Nombre del evento</span><em>{{ font.name }}</em><b *ngIf="font.family === value">✓</b>
+
+  <!-- Dropdown Menu Popover -->
+  <section class="font-picker-dropdown" *ngIf="open" role="listbox">
+    <!-- Search Bar -->
+    <div class="font-search-container">
+      <div class="font-search-input-wrap">
+        <lucide-icon name="search" [strokeWidth]="1.8" class="font-search-icon"></lucide-icon>
+        <input [(ngModel)]="query"
+               type="text"
+               placeholder="Buscar tipografía..."
+               aria-label="Buscar tipografía"
+               (click)="$event.stopPropagation()">
+        <button *ngIf="query"
+                type="button"
+                class="btn-clear-search"
+                (click)="query = ''; $event.stopPropagation()"
+                title="Limpiar búsqueda">
+          <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
         </button>
-        <small>Todas las tipografías</small>
-      </ng-container>
-      <button *ngFor="let font of filteredFonts; trackBy: trackFont" type="button" [class.selected]="font.family === value" (click)="select(font)">
-        <span [style.font-family]="font.family">Ag Nombre del evento</span><em>{{ font.name }}</em><b *ngIf="font.family === value">✓</b>
+      </div>
+    </div>
+
+    <!-- Category Filter Chips -->
+    <nav class="font-category-chips" aria-label="Categorías de tipografía">
+      <button *ngFor="let item of categories"
+              type="button"
+              class="category-chip"
+              [class.active]="category === item.value"
+              (click)="setCategory(item.value); $event.stopPropagation()">
+        {{ item.label }}
       </button>
-      <p *ngIf="!filteredFonts.length">No encontramos una tipografía con ese nombre.</p>
+    </nav>
+
+    <!-- Font List -->
+    <div class="font-dropdown-list">
+      <!-- Recently used fonts -->
+      <ng-container *ngIf="!query && category === 'all' && recentFonts.length">
+        <div class="font-group-header">Recientes</div>
+        <button *ngFor="let font of recentFonts; trackBy: trackFont"
+                type="button"
+                class="font-option-row"
+                [class.selected]="isFontSelected(font)"
+                (click)="select(font)">
+          <div class="font-option-info">
+            <span class="font-option-name" [style.font-family]="font.family">{{ font.name }}</span>
+            <small class="font-option-meta">
+              <span class="font-option-category">{{ getCategoryLabel(font.category) }}</span>
+              <span class="font-option-sample" [style.font-family]="font.family">Aa Bb 123</span>
+            </small>
+          </div>
+          <span class="font-option-check" *ngIf="isFontSelected(font)">
+            <lucide-icon name="check" [strokeWidth]="2.5"></lucide-icon>
+          </span>
+        </button>
+        <div class="font-group-header">Todas las tipografías</div>
+      </ng-container>
+
+      <!-- Filtered Font List -->
+      <button *ngFor="let font of filteredFonts; trackBy: trackFont"
+              type="button"
+              class="font-option-row"
+              [class.selected]="isFontSelected(font)"
+              (click)="select(font)">
+        <div class="font-option-info">
+          <span class="font-option-name" [style.font-family]="font.family">{{ font.name }}</span>
+          <small class="font-option-meta">
+            <span class="font-option-category">{{ getCategoryLabel(font.category) }}</span>
+            <span class="font-option-sample" [style.font-family]="font.family">Aa Bb 123</span>
+          </small>
+        </div>
+        <span class="font-option-check" *ngIf="isFontSelected(font)">
+          <lucide-icon name="check" [strokeWidth]="2.5"></lucide-icon>
+        </span>
+      </button>
+
+      <div class="font-empty-search" *ngIf="!filteredFonts.length">
+        <p>No encontramos ninguna fuente con "{{ query }}".</p>
+      </div>
     </div>
   </section>
 </div>

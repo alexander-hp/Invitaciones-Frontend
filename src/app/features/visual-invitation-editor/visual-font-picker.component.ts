@@ -22,9 +22,22 @@ export class VisualFontPickerComponent {
     this.recentFamilies = this.readRecentFonts();
   }
 
+  private normalizeFamily(family?: string): string {
+    if (!family) return '';
+    const first = family.split(',')[0].replace(/['"]/g, '').trim().toLowerCase();
+    return this.normalize(first);
+  }
+
+  isFontSelected(font: VisualFontOption): boolean {
+    if (!this.value) return false;
+    return this.normalizeFamily(font.family) === this.normalizeFamily(this.value);
+  }
+
   get selectedFont(): VisualFontOption {
-    return this.fonts.find((font) => font.family === this.value)
-      || { name: this.cleanFamilyName(this.value), family: this.value || 'Arial, sans-serif', category: 'classic' };
+    const norm = this.normalizeFamily(this.value);
+    const found = this.fonts.find((font) => this.normalizeFamily(font.family) === norm);
+    if (found) return found;
+    return { name: this.cleanFamilyName(this.value), family: this.value || 'Arial, sans-serif', category: 'classic' };
   }
 
   get filteredFonts(): VisualFontOption[] {
@@ -37,7 +50,10 @@ export class VisualFontPickerComponent {
 
   get recentFonts(): VisualFontOption[] {
     return this.recentFamilies
-      .map((family) => this.fonts.find((font) => font.family === family))
+      .map((family) => {
+        const norm = this.normalizeFamily(family);
+        return this.fonts.find((font) => this.normalizeFamily(font.family) === norm);
+      })
       .filter((font): font is VisualFontOption => !!font);
   }
 
@@ -58,6 +74,11 @@ export class VisualFontPickerComponent {
     this.category = category;
   }
 
+  getCategoryLabel(category?: string): string {
+    const found = this.categories.find((c) => c.value === category);
+    return found ? found.label : 'General';
+  }
+
   trackFont(_index: number, font: VisualFontOption): string {
     return font.family;
   }
@@ -73,7 +94,8 @@ export class VisualFontPickerComponent {
   }
 
   private remember(family: string): void {
-    this.recentFamilies = [family, ...this.recentFamilies.filter((item) => item !== family)].slice(0, 4);
+    const norm = this.normalizeFamily(family);
+    this.recentFamilies = [family, ...this.recentFamilies.filter((item) => this.normalizeFamily(item) !== norm)].slice(0, 4);
     try {
       localStorage.setItem('visual-editor-recent-fonts', JSON.stringify(this.recentFamilies));
     } catch {}
