@@ -123,7 +123,15 @@
 .canvas-layer.photo-swap-target{outline:3px solid var(--nw-accent, #c09c78);outline-offset:3px;box-shadow:0 0 0 7px rgba(192,156,120,0.25)}
 .canvas-layer.file-drop-target{outline:3px solid var(--nw-accent, #c09c78) !important;outline-offset:3px;box-shadow:0 0 0 8px rgba(192,156,120,0.25) !important}
 .canvas-layer.file-drop-target .frame-empty span{background:var(--nw-accent-glow-strong, rgba(192,156,120,0.18)) !important;color:var(--nw-accent-dark, #8a6747) !important;font-weight:600}
+.canvas-layer.file-drop-target ::ng-deep .media-placeholder,
+.canvas-layer.file-drop-target .media-placeholder{background:var(--nw-accent-glow-strong, rgba(192,156,120,0.24)) !important;border-color:var(--nw-accent, #c09c78) !important;color:var(--nw-accent-dark, #8a6747) !important;font-weight:700 !important}
+.canvas-layer.file-drop-target app-visual-media-player{filter:brightness(1.08)}
+.media-drop-indicator{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(192,156,120,0.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:inherit;pointer-events:none;animation:mediaDropFadeIn .15s ease-out}
+@keyframes mediaDropFadeIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
+.media-drop-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 15px;border-radius:9999px;background:var(--nw-text, #2e2621);color:#ffffff;border:1.5px solid var(--nw-accent, #c09c78);box-shadow:0 8px 24px rgba(46,37,33,0.35);font-family:var(--nw-font,inherit);font-size:11px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.media-drop-badge lucide-icon{width:14px;height:14px;color:var(--nw-accent, #c09c78);flex-shrink:0}
 .composite-frame-list button.file-drop-target{border-color:var(--nw-accent, #c09c78);background:var(--nw-surface-2, #faf8f5);outline:2px solid var(--nw-accent, #c09c78);outline-offset:-2px}
 .frame-empty{box-sizing:border-box;overflow:hidden}
 .frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:8px;background:var(--nw-surface-2, #f5f1ea);color:var(--nw-text-2, #6e6157);font-size:11px;text-align:center;pointer-events:none}
+
 

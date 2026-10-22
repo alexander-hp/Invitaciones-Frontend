@@ -2639,6 +2639,44 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  getDraggedFileKind(dt: DataTransfer | null): 'image' | 'video' | 'audio' | 'any' {
+    if (this.paletteDragItem && this.paletteDragItem.kind === 'media') {
+      return this.paletteDragItem.media.type;
+    }
+    if (!dt) return 'any';
+    if (dt.items && dt.items.length > 0) {
+      for (let i = 0; i < dt.items.length; i++) {
+        const type = dt.items[i].type;
+        if (type.startsWith('image/')) return 'image';
+        if (type.startsWith('video/')) return 'video';
+        if (type.startsWith('audio/')) return 'audio';
+      }
+    }
+    if (this.hasExternalImageDrag(dt)) return 'image';
+    return 'any';
+  }
+
+  isLayerCompatibleDropTarget(layer: VisualInvitationLayer, dt: DataTransfer | null): boolean {
+    if (layer.type !== 'image' && layer.type !== 'video' && layer.type !== 'audio') {
+      return false;
+    }
+    if (this.paletteDragItem) {
+      if (this.paletteDragItem.kind === 'media') {
+        return this.paletteDragItem.media.type === layer.type;
+      }
+      return false;
+    }
+    const isExternalImage = this.hasExternalImageDrag(dt);
+    if (isExternalImage && layer.type === 'image') return true;
+    const isFileDrag = this.hasDataTransferFiles(dt);
+    if (isFileDrag) {
+      const kind = this.getDraggedFileKind(dt);
+      if (kind === 'any') return true;
+      return kind === layer.type;
+    }
+    return false;
+  }
+
   resolveFileType(file: File): { mimeType: string; kind: 'image' | 'video' | 'audio' } {
     if (file.type?.startsWith('video/')) return { mimeType: file.type, kind: 'video' };
     if (file.type?.startsWith('audio/')) return { mimeType: file.type, kind: 'audio' };
@@ -2705,13 +2743,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
 
-    if (layer.type === 'image') {
+    if (this.isLayerCompatibleDropTarget(layer, event.dataTransfer)) {
       if (this.fileDropTargetLayerId !== layer.id) {
         this.fileDropTargetLayerId = layer.id;
         this.paletteDropSectionId = '';
       }
     } else {
-      if (this.fileDropTargetLayerId !== '') {
+      if (this.fileDropTargetLayerId === layer.id) {
         this.fileDropTargetLayerId = '';
       }
     }
@@ -2755,7 +2793,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const targetId = targetElement?.dataset['layerId'];
     const targetLayer = section.layers.find((layer) => layer.id === targetId);
 
-    if ((isFileDrag || isExternalImage || (isPaletteDrag && this.paletteDragItem?.kind === 'media' && this.paletteDragItem.media.type === 'image')) && targetLayer?.type === 'image') {
+    if (targetLayer && this.isLayerCompatibleDropTarget(targetLayer, event.dataTransfer)) {
       if (this.fileDropTargetLayerId !== targetLayer.id) {
         this.fileDropTargetLayerId = targetLayer.id;
         this.paletteDropSectionId = '';
@@ -2815,15 +2853,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.selectedSectionId = section.id;
 
     const targetId = this.fileDropTargetLayerId || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
-    this.fileDropTargetLayerId = '';
-    const imageTarget = section.layers.find((layer) => layer.id === targetId && layer.type === 'image');
-    if (item.kind === 'media' && item.media.type === 'image' && imageTarget) {
+    const targetLayer = section.layers.find((layer) => layer.id === targetId);
+    if (item.kind === 'media' && targetLayer && targetLayer.type === item.media.type) {
       this.recordHistory();
-      imageTarget.url = item.media.url;
-      this.setLayerSelection([imageTarget.id]);
+      targetLayer.url = item.media.url;
+      if (item.media.label && (!targetLayer.name || targetLayer.name === 'Foto' || targetLayer.name === 'Imagen' || targetLayer.name === 'Video' || targetLayer.name === 'Audio' || targetLayer.name === 'Música')) {
+        targetLayer.name = item.media.label;
+      }
+      this.setLayerSelection([targetLayer.id]);
       this.inspectorView = 'properties';
       this.endPaletteDrag();
-      this.flash('Foto colocada en el marco.');
+      const msg = item.media.type === 'image'
+        ? 'Foto colocada en el marco.'
+        : item.media.type === 'video'
+        ? 'Video colocado en el reproductor.'
+        : 'Audio colocado en el reproductor.';
+      this.flash(msg);
       return;
     }
 
@@ -2968,33 +3013,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const previousTargetUrl = targetLayer?.url || '';
     const siblingReverts: Array<{ frame: VisualInvitationLayer; url: string }> = [];
 
-    if (targetLayer && targetLayer.type === 'image') {
-      const localUrl = makeBlob(validFiles[0]);
-      if (localUrl) targetLayer.url = localUrl;
+    if (targetLayer && (targetLayer.type === 'image' || targetLayer.type === 'video' || targetLayer.type === 'audio')) {
+      const firstFileKind = this.resolveFileType(validFiles[0]).kind;
+      if (targetLayer.type === firstFileKind) {
+        const localUrl = makeBlob(validFiles[0]);
+        if (localUrl) targetLayer.url = localUrl;
 
-      if (validFiles.length > 1 && targetLayer.groupId) {
-        const groupFrames = section.layers.filter((l) => l.groupId === targetLayer.groupId && l.id !== targetLayer.id && l.type === 'image');
-        const emptyFrames = groupFrames.filter((l) => !l.url);
-        const filledFrames = groupFrames.filter((l) => !!l.url);
-        const orderedSiblings = [...emptyFrames, ...filledFrames];
+        if (targetLayer.type === 'image' && validFiles.length > 1 && targetLayer.groupId) {
+          const groupFrames = section.layers.filter((l) => l.groupId === targetLayer.groupId && l.id !== targetLayer.id && l.type === 'image');
+          const emptyFrames = groupFrames.filter((l) => !l.url);
+          const filledFrames = groupFrames.filter((l) => !!l.url);
+          const orderedSiblings = [...emptyFrames, ...filledFrames];
 
-        for (let i = 1; i < validFiles.length; i++) {
-          if (i - 1 < orderedSiblings.length) {
-            const sibling = orderedSiblings[i - 1];
-            siblingReverts.push({ frame: sibling, url: sibling.url || '' });
-            const sLocalUrl = makeBlob(validFiles[i]);
-            if (sLocalUrl) sibling.url = sLocalUrl;
+          for (let i = 1; i < validFiles.length; i++) {
+            if (i - 1 < orderedSiblings.length) {
+              const sibling = orderedSiblings[i - 1];
+              siblingReverts.push({ frame: sibling, url: sibling.url || '' });
+              const sLocalUrl = makeBlob(validFiles[i]);
+              if (sLocalUrl) sibling.url = sLocalUrl;
+            }
           }
         }
-      }
 
-      if (validFiles.length > 1 && targetLayer.groupId) {
-        const allGroupFrames = section.layers.filter((l) => l.groupId === targetLayer.groupId);
-        this.setLayerSelection(allGroupFrames.map((l) => l.id));
-      } else {
-        this.setLayerSelection([targetLayer.id]);
+        if (validFiles.length > 1 && targetLayer.groupId) {
+          const allGroupFrames = section.layers.filter((l) => l.groupId === targetLayer.groupId);
+          this.setLayerSelection(allGroupFrames.map((l) => l.id));
+        } else {
+          this.setLayerSelection([targetLayer.id]);
+        }
+        this.inspectorView = 'properties';
       }
-      this.inspectorView = 'properties';
     }
 
     this.uploading = true;
@@ -3023,9 +3071,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
         const assignedLayerIds: string[] = [];
 
-        if (targetLayer && targetLayer.type === 'image') {
-          targetLayer.url = results[0].publicUrl;
-          assignedLayerIds.push(targetLayer.id);
+        if (targetLayer && (targetLayer.type === 'image' || targetLayer.type === 'video' || targetLayer.type === 'audio')) {
+          const matchingResult = results.find((r) => r.type === targetLayer.type);
+          if (matchingResult) {
+            targetLayer.url = matchingResult.publicUrl;
+            assignedLayerIds.push(targetLayer.id);
+          }
 
           if (results.length > 1 && targetLayer.groupId) {
             const groupFrames = section.layers.filter((l) => l.groupId === targetLayer.groupId && l.id !== targetLayer.id && l.type === 'image');

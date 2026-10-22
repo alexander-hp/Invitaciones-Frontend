@@ -1169,6 +1169,13 @@
                 <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
                 <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type" [url]="layer.url || ''" [label]="layer.name || layer.text || ''" [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true" [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false" [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1" [startSeconds]="layer.style?.audioStartSeconds || 0" [endSeconds]="layer.style?.audioEndSeconds" [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false" [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
                 <div *ngIf="(layer.type === 'video' || layer.type === 'audio') && !isMediaPreviewActive(layer)" class="media-editor-interaction" role="button" aria-label="Seleccionar y mover elemento multimedia" title="Arrastra para mover. Usa Probar reproducción para controlar el contenido."></div>
+                <!-- Indicador visual cuando se arrastra archivo/medio sobre la capa -->
+                <div *ngIf="fileDropTargetLayerId === layer.id && (layer.type === 'image' || layer.type === 'video' || layer.type === 'audio')" class="media-drop-indicator" aria-hidden="true">
+                  <div class="media-drop-badge">
+                    <lucide-icon [name]="layer.type === 'video' ? 'play' : layer.type === 'audio' ? 'music' : 'image'" [strokeWidth]="2.2"></lucide-icon>
+                    <span>Soltar {{ layer.type === 'video' ? 'video' : layer.type === 'audio' ? 'audio' : 'foto' }} aquí</span>
+                  </div>
+                </div>
                 <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
                   <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id" (pointerdown)="$event.stopPropagation()">
                     <span>Arrastra para encuadrar</span>
