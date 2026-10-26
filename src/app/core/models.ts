@@ -384,6 +384,7 @@ export interface VisualInvitationLayerStyle {
   gradientEnd?: string;
   gradientAngle?: number;
   imageMask?: 'none' | 'circle' | 'rounded' | 'arch' | 'diamond' | 'hexagon' | 'ticket';
+  clipPath?: string;
   frameEnabled?: boolean;
   shapeKind?:
     | 'rectangle' | 'rounded' | 'pill' | 'circle' | 'ellipse' | 'arch' | 'arch-inverted' | 'window'
@@ -535,10 +536,25 @@ export interface VisualInvitationSection {
   layers: VisualInvitationLayer[];
 }
 
+export type VisualDocumentType = 'web' | 'pass';
+
+export interface VisualCanvasSize {
+  preset?: 'phone-story' | 'badge-vertical' | 'badge-horizontal' | 'ticket-horizontal' | 'card-a6' | 'custom' | string;
+  name?: string;
+  width: number;
+  height: number;
+  unit?: 'px' | 'mm' | 'cm';
+  widthMm?: number;
+  heightMm?: number;
+  orientation?: 'portrait' | 'landscape';
+}
+
 export interface VisualInvitationDesign {
   version: number;
   active: boolean;
   mode: 'easy' | 'advanced';
+  documentType?: VisualDocumentType;
+  canvasSize?: VisualCanvasSize;
   presentationMode?: 'continuous' | 'chapters';
   responsiveMode?: 'shared' | 'independent';
   theme?: {
@@ -632,6 +648,8 @@ export interface InvitationContent {
   privateAlbumEnabled?: boolean;
   visualDesign?: VisualInvitationDesign;
   visualDesignDraft?: VisualInvitationDesign;
+  passDesign?: VisualInvitationDesign;
+  passDesignDraft?: VisualInvitationDesign;
   editedTexts?: Record<string, string>;
   sourceTemplateKey?: string;
   activeCustomTemplateId?: string;

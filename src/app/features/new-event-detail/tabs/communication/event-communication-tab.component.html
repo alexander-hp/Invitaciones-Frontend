@@ -19,11 +19,17 @@
     <div><strong>{{ confirmedCommunicationGuests }}</strong><span>Confirmados</span></div>
   </div>
 
-  <nav class="communication-jumps" aria-label="Secciones de comunicación">
+  <nav class="communication-jumps" aria-label="Secciones de comunicación" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
     <button type="button" (click)="scrollToSection('comms-config-card')">1. Mensaje</button>
     <button type="button" (click)="scrollToSection('comms-recipients-card')">2. Destinatarios y envío</button>
-    <button type="button" (click)="scrollToSection('comms-passes')">Pases especiales</button>
+    <button type="button" (click)="scrollToSection('comms-passes-banner')">Pases especiales</button>
     <button type="button" (click)="scrollToSection('comms-results')">Resultados</button>
+    <a *ngIf="invitation?._id || invitation?.id"
+       [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'pass-editor']"
+       class="comms-jump-pass-btn"
+       style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:12.5px; text-decoration:none; padding:6px 14px; border-radius:999px; background:linear-gradient(135deg, #c9a87c 0%, #b8925d 100%); color:#0f172a; margin-left:auto; box-shadow:0 2px 8px rgba(0,0,0,0.18);">
+      🎨 Diseñar Pase VIP 🎟️
+    </a>
   </nav>
 
   <div *ngIf="!guests.length" class="communication-empty">
@@ -533,8 +539,46 @@
     </div>
   </div>
 
-  <details id="comms-passes" class="communication-details communication-advanced">
-    <summary><span>Pases especiales</span><small>Descarga ZIP y envío con imagen a grupos seleccionados</small></summary>
+  <!-- Tarjeta Destacada: Diseñador de Pases VIP (SIEMPRE VISIBLE) -->
+  <div id="comms-passes-banner" class="nw-card" style="margin-bottom:16px; box-sizing:border-box; max-width:100%; border:2px solid var(--nw-accent, #c9a87c); background:linear-gradient(135deg, var(--nw-surface) 0%, rgba(201, 168, 124, 0.12) 100%); box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+    <div class="nw-card-header"
+      style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; padding:18px 20px;">
+      <div style="flex:1; min-width:280px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--nw-accent, #c9a87c); background:rgba(201, 168, 124, 0.2); padding:3px 10px; border-radius:999px; margin-bottom:8px;">
+          <span>🎨 Nuevo Editor Independiente</span>
+        </div>
+        <h3 style="display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size:17px; font-weight:700; color:var(--nw-text);">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c9a87c);">
+            <rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect>
+            <line x1="7" y1="8" x2="17" y2="8"></line>
+            <line x1="7" y1="12" x2="13" y2="12"></line>
+            <circle cx="16" cy="14" r="2"></circle>
+          </svg>
+          Editor Visual de Pases y Acreditaciones
+        </h3>
+        <p style="margin: 0; font-size: 13.5px; color: var(--nw-text-2); line-height:1.5;">
+          Personaliza tus pases con hojas independientes (Frente y Reverso), elige el formato (Historia 9:16, Gafete CR80, Boleto ticket, A6) e incluye códigos QR dinámicos y asignación de mesas.
+        </p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <a *ngIf="invitation?._id || invitation?.id"
+          [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'pass-editor']"
+          class="nw-btn nw-btn-primary"
+          style="display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:14px; height:42px; padding:0 22px; text-decoration:none; box-shadow:0 3px 12px rgba(201, 168, 124, 0.35);">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+          </svg>
+          Abrir Editor de Pases 🎟️
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <details id="comms-passes" class="communication-details communication-advanced" open>
+    <summary><span>Pases especiales y Descarga Masiva</span><small>Descarga ZIP y envío con imagen a grupos seleccionados</small></summary>
+
   <!-- Sección Independiente: Descarga Masiva de Pases VIP -->
   <div class="nw-card" style="margin-bottom:16px; box-sizing:border-box; max-width:100%;">
     <div class="nw-card-header"
@@ -1146,7 +1190,7 @@
 
   <!-- Adjuntar Pase VIP en envíos generales -->
   <div class="nw-card" style="margin-bottom:16px;">
-    <div class="nw-card-header">
+    <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
@@ -1157,6 +1201,12 @@
         </svg>
         Adjuntar Pase VIP
       </h3>
+      <a *ngIf="invitation?._id || invitation?.id"
+        [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'pass-editor']"
+        class="nw-btn nw-btn-secondary nw-btn-sm"
+        style="display:inline-flex; align-items:center; gap:6px; font-weight:600; text-decoration:none;">
+        🎨 Personalizar diseño del pase ↗
+      </a>
     </div>
     <p style="margin: 0 0 12px 0; color: var(--nw-text-2); font-size: 13px;">
       Esta opción aplica a los envíos generales por correo y WhatsApp. En “Imagen Adjunta para Especiales” el pase PNG se incluye siempre, aunque este switch esté apagado.
