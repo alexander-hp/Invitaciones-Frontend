@@ -122,9 +122,17 @@ export class PublicInvitationComponent implements OnInit {
     this.error = '';
     this.success = '';
     this.api.checkGuestAccess(this.invitation.slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
-      next: ({ message }) => {
-        this.success = message;
+      next: (res) => {
+        this.success = res.message;
         this.checkingGuest = false;
+        if (res.guest) {
+          this.verifiedGuest = res.guest;
+          this.rsvp.name = res.guest.name;
+          this.rsvp.email = res.guest.email || this.guestAccessEmail;
+          if (res.guestSessionToken) {
+            sessionStorage.setItem(`kyndra_guest_session_${this.invitation!.slug}`, res.guestSessionToken);
+          }
+        }
       },
       error: (error) => {
         this.verifiedGuest = undefined;

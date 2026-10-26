@@ -291,7 +291,7 @@ export class NewPublicInvitationBodaCreativaPremiumComponent implements OnInit, 
   }
 
   get guestQrUrl(): string {
-    const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
+    const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || (this.verifiedGuest as any)?.invitationToken || this.verifiedGuest?.id || '';
     return value ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(value)}` : '';
   }
 

@@ -56,9 +56,14 @@ export class GuestActivityComponent implements OnInit, OnDestroy {
     this.error = '';
     const payload = value.includes('@') ? { email: value } : { phone: value };
     this.api.checkGuestAccess(this.slug, payload).subscribe({
-      next: ({ message }) => {
+      next: (res) => {
         this.identifying = false;
-        this.actionMessage = message;
+        this.actionMessage = res.message;
+        if (res.guestSessionToken) {
+          this.sessionToken = res.guestSessionToken;
+          sessionStorage.setItem(this.storageKey, res.guestSessionToken);
+          this.loadStatus();
+        }
       },
       error: (error) => {
         this.identifying = false;

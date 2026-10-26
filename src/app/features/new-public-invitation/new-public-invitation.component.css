@@ -584,3 +584,343 @@
   }
 }
 
+/* ═════════════════════════════════════════════════════════════════════
+   DIGITAL PASS VIP MODAL (TICKET CARD)
+   ═════════════════════════════════════════════════════════════════════ */
+.nw-pub-pass-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 13500;
+  background: rgba(10, 10, 12, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+  animation: nwPassFadeIn 0.25s ease-out;
+}
+
+@keyframes nwPassFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.nw-pub-pass-ticket-modal {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  animation: nwPassSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nwPassSlideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.nw-pub-pass-close-btn {
+  position: absolute;
+  top: -12px;
+  right: -10px;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: #1e1b18;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.nw-pub-pass-close-btn:hover {
+  transform: scale(1.08);
+  background: #c09c78;
+}
+
+.nw-pub-pass-ticket-card {
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Card Header */
+.nw-pass-card-header {
+  position: relative;
+  background-color: #1a1614;
+  background-size: cover;
+  background-position: center;
+  padding: 30px 24px 24px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.nw-pass-card-header-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 16, 14, 0.85) 0%, rgba(20, 16, 14, 0.94) 100%);
+}
+
+.nw-pass-card-header-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nw-pass-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(192, 156, 120, 0.25);
+  border: 1px solid rgba(192, 156, 120, 0.6);
+  color: #dfba92;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.nw-pass-brand-logo {
+  max-height: 48px;
+  max-width: 140px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.nw-pass-subheadline {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d1c4b7;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.nw-pass-headline {
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Card Body */
+.nw-pass-card-body {
+  padding: 22px 20px 24px;
+  background: #ffffff;
+  color: #2b2521;
+}
+
+.nw-pass-date-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fbf7f2;
+  border: 1px solid #f0e6d8;
+  color: #7a2222;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-transform: capitalize;
+}
+
+.nw-pass-main-grid {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .nw-pass-main-grid {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.nw-pass-qr-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.nw-pass-qr-frame {
+  padding: 8px;
+  background: #ffffff;
+  border: 2px solid #e8dfd5;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.nw-pass-qr-section:hover .nw-pass-qr-frame {
+  transform: scale(1.03);
+}
+
+.nw-pass-qr-frame img {
+  display: block;
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+}
+
+.nw-pass-qr-sublabel {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #7b8fa3;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.nw-pass-info-deck {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.nw-pass-guest-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.nw-pass-guest-title h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #63121d;
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+
+.nw-pass-vip-tag {
+  background: #63121d;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.nw-pass-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #4a423b;
+}
+
+.nw-pass-info-row strong {
+  color: #1e1b18;
+}
+
+.nw-pass-dress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fbf7f2;
+  border: 1px solid #ebd9c8;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: #5c432d;
+  margin-top: 4px;
+}
+
+/* Perforated ticket line */
+.nw-pass-perforated-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 14px;
+  color: #d1b89d;
+}
+
+.nw-pass-perforated-line span {
+  flex-grow: 1;
+  border-bottom: 2px dashed #ded4c8;
+  height: 1px;
+}
+
+.nw-pass-footer-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #c44f4f;
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.nw-pass-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nw-pass-btn-download {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, #c09c78 0%, #a8825c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(192, 156, 120, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nw-pass-btn-download:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(192, 156, 120, 0.55);
+}
+
+.nw-pass-btn-close {
+  width: 100%;
+  padding: 11px 20px;
+  background: #f5ede4;
+  color: #695643;
+  border: 1px solid #e5d6c4;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.nw-pass-btn-close:hover {
+  background: #ede1d3;
+}
+
+

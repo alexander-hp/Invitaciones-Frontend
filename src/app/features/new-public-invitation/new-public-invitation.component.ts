@@ -74,6 +74,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   selectedAlbumFile?: File;
   declineConfirmed = false;
   verifiedGuest?: GuestAccessResponse['guest'];
+  showPassModal = false;
   guestActivity?: ExternalGuestStatusResponse;
   guestActivityLoading = false;
   activityNotifications: GuestActivityNotification[] = [];
@@ -1203,17 +1204,44 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.error = '';
     this.success = '';
     this.api.checkGuestAccess(slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
-      next: ({ message }) => {
-        this.accessMessage = message;
-        this.success = message;
+      next: (res) => {
         this.checkingGuest = false;
-        this.showToast(message);
+        if (res.guest && res.guestSessionToken) {
+          this.verifiedGuest = res.guest;
+          this.guestSessionToken = res.guestSessionToken;
+          if (this.invitation) {
+            sessionStorage.setItem(this.guestSessionStorageKey(this.invitation.slug), res.guestSessionToken);
+          }
+          this.rsvp.name = res.guest.name;
+          this.rsvp.email = res.guest.email || this.guestAccessEmail || '';
+          this.loadGuestActivity(false);
+          this.showToast(`¡Pase encontrado para ${res.guest.name}!`);
+          this.showPassModal = true;
+          this.cdr?.markForCheck();
+        } else {
+          this.accessMessage = res.message;
+          this.success = res.message;
+          this.showToast(res.message);
+          this.cdr?.markForCheck();
+        }
       },
       error: (error) => {
-        this.error = error.error?.message || 'No fue posible solicitar el enlace. Intenta más tarde.';
+        this.error = error.error?.message || 'No fue posible validar el pase. Intenta más tarde.';
         this.checkingGuest = false;
+        this.cdr?.markForCheck();
       }
     });
+  }
+
+  openPassModal(): void {
+    if (!this.verifiedGuest) return;
+    this.showPassModal = true;
+    this.cdr?.markForCheck();
+  }
+
+  closePassModal(): void {
+    this.showPassModal = false;
+    this.cdr?.markForCheck();
   }
 
   resetGuestAccess(): void {
@@ -1223,6 +1251,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.guestSessionToken = '';
     this.guestActivity = undefined;
     this.verifiedGuest = undefined;
+    this.showPassModal = false;
     this.guestAccessPhone = '';
     this.guestAccessEmail = '';
     this.guestAccessSingleInput = '';
@@ -1999,8 +2028,19 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   get guestQrUrl(): string {
-    const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || '';
-    return value ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(value)}` : '';
+    const value = this.verifiedGuest?.checkInCode || this.verifiedGuest?.qrCode || (this.verifiedGuest as any)?.invitationToken || this.verifiedGuest?.id || '';
+    return value ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(value)}` : '';
+  }
+
+  get eventDateFormatted(): string {
+    if (!this.event?.date) return '';
+    try {
+      const d = new Date(this.event.date);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return '';
+    }
   }
 
   get publicQrUrl(): string {
