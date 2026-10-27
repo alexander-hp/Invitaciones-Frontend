@@ -85,6 +85,7 @@ export interface InvitationLocation {
   mapUrl?: string;
   wazeUrl?: string;
   notes?: string;
+  imageUrl?: string;
   lat?: number;
   lon?: number;
   phone?: string;

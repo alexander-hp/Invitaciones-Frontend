@@ -240,7 +240,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   giftCopyMessage = '';
   galleryIndex = 0;
   chapterIndex = 0;
-  countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: false };
+  @Input() countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: false };
   private galleryTimer?: ReturnType<typeof setInterval>;
   private countdownTimer?: ReturnType<typeof setInterval>;
 
@@ -475,7 +475,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const configured = this.invitation?.content?.locations || [];
     const locations: InvitationLocation[] = configured.length ? configured : (this.event?.venue?.name || this.event?.venue?.address || this.event?.venue?.mapUrl ? [{
       type: 'principal', name: this.event?.venue?.name || 'Lugar del evento', address: this.event?.venue?.address || '', mapUrl: this.event?.venue?.mapUrl || ''
-    }] : []);
+    }] : [
+      { type: 'ceremonia', name: 'Ceremonia', address: 'Ubicación principal del evento', notes: 'Consulta indicaciones y horario.' },
+      { type: 'recepcion', name: 'Recepción', address: 'Salón de celebración', notes: 'Acceso disponible para invitados.' }
+    ]);
     const limit = Number(this.pluginSetting(section, 'locationLimit', 0));
     return limit > 0 ? locations.slice(0, limit) : locations;
   }
@@ -661,6 +664,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   shouldRenderCountdownLayer(layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
+    if (layer.type === 'image' || layer.type === 'shape') return true;
     const binding = String(layer.binding || '');
     if (binding === 'countdown.expired') return this.countdown.isOver;
     if (binding.startsWith('countdown.')) return !this.countdown.isOver;
@@ -673,6 +677,11 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (layer.binding === 'countdown.hours') return String(this.countdown.hours).padStart(2, '0');
     if (layer.binding === 'countdown.minutes') return String(this.countdown.minutes).padStart(2, '0');
     if (layer.binding === 'countdown.seconds') return String(this.countdown.seconds).padStart(2, '0');
+    if (layer.binding === 'countdown.expired') {
+      const countdownSection = this.sections.find((s) => s.type === 'countdown');
+      const text = countdownSection ? String(this.pluginSetting(countdownSection, 'expiredText', 'El gran día llegó')) : 'El gran día llegó';
+      return text || layer.text || 'El gran día llegó';
+    }
     return this.resolveLayerText(layer);
   }
 
@@ -690,43 +699,64 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (binding.startsWith('display.locations.')) return true;
     const parsed = this.locationLayerParts(binding);
     const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
-    if (!parsed || !location) return false;
+    if (!parsed) return true;
+    if (!location) {
+      if (layer.type === 'shape') return true;
+      if (layer.type === 'image') return Boolean(layer.url);
+      if (layer.type === 'button') return Boolean(layer.text || layer.url);
+      return Boolean(layer.text);
+    }
     if (parsed.key === 'card') return true;
-    if (parsed.key === 'details') return Boolean(location.parking || location.transport || location.accessibility || location.schedule?.length);
-    if (parsed.key === 'map') return Boolean(location.mapUrl);
-    if (parsed.key === 'waze') return Boolean(location.wazeUrl);
-    if (parsed.key === 'phone') return Boolean(location.phone);
-    if (parsed.key === 'website') return Boolean(location.websiteUrl);
-    return Boolean(this.locationLayerText(section, layer));
+    if (parsed.key === 'image') return Boolean(location.imageUrl || layer.url);
+    if (parsed.key === 'details') return Boolean(location.parking || location.transport || location.accessibility || location.schedule?.length || layer.text);
+    if (parsed.key === 'map') return Boolean(this.locationLayerHref(section, layer) || layer.text || layer.url);
+    if (parsed.key === 'waze') return Boolean(this.locationLayerHref(section, layer) || layer.text || layer.url);
+    if (parsed.key === 'phone') return Boolean(location.phone || layer.url || layer.text);
+    if (parsed.key === 'website') return Boolean(location.websiteUrl || layer.url || layer.text);
+    return Boolean(this.locationLayerText(section, layer) || layer.text);
   }
 
   locationLayerText(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
     const parsed = this.locationLayerParts(String(layer.binding || ''));
     const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
-    if (!parsed || !location) return '';
-    if (parsed.key === 'name') return location.name || location.type || `Ubicación ${parsed.index + 1}`;
-    if (parsed.key === 'address') return location.address || '';
-    if (parsed.key === 'notes') return location.notes || '';
+    if (!parsed || !location) return layer.text || '';
+    if (parsed.key === 'name') return location.name || location.type || layer.text || `Ubicación ${parsed.index + 1}`;
+    if (parsed.key === 'address') return location.address || layer.text || '';
+    if (parsed.key === 'notes') return location.notes || layer.text || '';
     if (parsed.key === 'details') {
-      return [
+      const details = [
         location.parking ? `Estacionamiento: ${location.parking}` : '',
         location.transport ? `Transporte: ${location.transport}` : '',
         location.accessibility ? `Accesibilidad: ${location.accessibility}` : '',
         ...(location.schedule || [])
       ].filter(Boolean).join('\n');
+      return details || layer.text || '';
     }
     return layer.text || '';
+  }
+
+  locationLayerImageUrl(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
+    const parsed = this.locationLayerParts(String(layer.binding || ''));
+    const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
+    return location?.imageUrl || layer.url || '';
   }
 
   locationLayerHref(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
     const parsed = this.locationLayerParts(String(layer.binding || ''));
     const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
-    if (!parsed || !location) return '';
-    if (parsed.key === 'map') return location.mapUrl || '';
-    if (parsed.key === 'waze') return location.wazeUrl || '';
-    if (parsed.key === 'phone') return location.phone ? `tel:${location.phone}` : '';
-    if (parsed.key === 'website') return location.websiteUrl || '';
-    return '';
+    if (!parsed || !location) return layer.url || '';
+    const query = [location.name, location.address].filter(Boolean).join(', ');
+    if (parsed.key === 'map') {
+      if (location.mapUrl) return location.mapUrl;
+      return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : (layer.url || 'https://maps.google.com');
+    }
+    if (parsed.key === 'waze') {
+      if (location.wazeUrl) return location.wazeUrl;
+      return query ? `https://waze.com/ul?q=${encodeURIComponent(query)}` : (layer.url || 'https://waze.com');
+    }
+    if (parsed.key === 'phone') return location.phone ? `tel:${location.phone}` : (layer.url || '');
+    if (parsed.key === 'website') return location.websiteUrl || layer.url || '';
+    return layer.url || '';
   }
 
   private locationLayerParts(binding: string): { index: number; key: string } | null {
@@ -750,53 +780,58 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (gift) {
       if (this.pluginSetting(section, 'showRegistry', true) === false) return false;
       const item = this.invitation?.content?.giftRegistry?.[gift.index];
-      if (!item) return false;
+      if (!item) {
+        if (gift.key === 'card') return true;
+        if (gift.key === 'image') return Boolean(layer.url);
+        if (gift.key === 'open') return Boolean(layer.url || layer.text);
+        return Boolean(this.giftLayerText(layer) || layer.text);
+      }
       if (gift.key === 'card') return true;
-      if (gift.key === 'image') return Boolean(item.imageUrl);
-      if (gift.key === 'open') return Boolean(item.url);
-      return Boolean(this.giftLayerText(layer));
+      if (gift.key === 'image') return Boolean(item.imageUrl || layer.url);
+      if (gift.key === 'open') return Boolean(item.url || layer.url || layer.text);
+      return Boolean(this.giftLayerText(layer) || layer.text);
     }
     if (!binding.startsWith('envelope.') && binding !== 'display.gifts.envelopeTitle') return false;
-    if (this.pluginSetting(section, 'showEnvelope', true) === false || !this.hasDigitalEnvelopeData()) return false;
+    if (this.pluginSetting(section, 'showEnvelope', true) === false) return false;
     const envelope = this.invitation?.content?.digitalEnvelope;
     if (binding === 'envelope.card' || binding === 'display.gifts.envelopeTitle') return true;
-    if (binding === 'envelope.qr') return Boolean(envelope?.qrImageUrl);
-    if (binding === 'envelope.copyAccount') return Boolean(envelope?.account);
-    if (binding === 'envelope.copyClabe') return Boolean(envelope?.clabe);
+    if (binding === 'envelope.qr') return Boolean(envelope?.qrImageUrl || layer.url);
+    if (binding === 'envelope.copyAccount') return Boolean(envelope?.account || layer.text);
+    if (binding === 'envelope.copyClabe') return Boolean(envelope?.clabe || layer.text);
     if (binding === 'envelope.feedback') return Boolean(this.giftCopyMessage);
-    return Boolean(this.giftLayerText(layer));
+    return Boolean(this.giftLayerText(layer) || layer.text);
   }
 
   giftLayerText(layer: VisualInvitationLayer): string {
     const parsed = this.giftLayerParts(String(layer.binding || ''));
     if (parsed) {
       const gift = this.invitation?.content?.giftRegistry?.[parsed.index];
-      if (!gift) return '';
-      if (parsed.key === 'title') return gift.title || gift.store || `Mesa ${parsed.index + 1}`;
-      if (parsed.key === 'store') return gift.store || '';
-      if (parsed.key === 'note') return gift.note || '';
+      if (!gift) return layer.text || '';
+      if (parsed.key === 'title') return gift.title || gift.store || layer.text || `Mesa ${parsed.index + 1}`;
+      if (parsed.key === 'store') return gift.store || layer.text || '';
+      if (parsed.key === 'note') return gift.note || layer.text || '';
       return layer.text || '';
     }
     const envelope = this.invitation?.content?.digitalEnvelope;
-    if (layer.binding === 'envelope.bank') return envelope?.bank || '';
-    if (layer.binding === 'envelope.holder') return envelope?.holder || '';
-    if (layer.binding === 'envelope.account') return envelope?.account ? `Cuenta: ${envelope.account}` : '';
-    if (layer.binding === 'envelope.clabe') return envelope?.clabe ? `CLABE: ${envelope.clabe}` : '';
-    if (layer.binding === 'envelope.note') return envelope?.note || '';
+    if (layer.binding === 'envelope.bank') return envelope?.bank || layer.text || '';
+    if (layer.binding === 'envelope.holder') return envelope?.holder || layer.text || '';
+    if (layer.binding === 'envelope.account') return envelope?.account ? `Cuenta: ${envelope.account}` : (layer.text || '');
+    if (layer.binding === 'envelope.clabe') return envelope?.clabe ? `CLABE: ${envelope.clabe}` : (layer.text || '');
+    if (layer.binding === 'envelope.note') return envelope?.note || layer.text || '';
     if (layer.binding === 'envelope.feedback') return this.giftCopyMessage;
     return layer.text || '';
   }
 
   giftLayerImageUrl(layer: VisualInvitationLayer): string {
     const parsed = this.giftLayerParts(String(layer.binding || ''));
-    if (parsed?.key === 'image') return this.invitation?.content?.giftRegistry?.[parsed.index]?.imageUrl || '';
-    if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || '';
-    return '';
+    if (parsed?.key === 'image') return this.invitation?.content?.giftRegistry?.[parsed.index]?.imageUrl || layer.url || '';
+    if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
+    return layer.url || '';
   }
 
   giftLayerHref(layer: VisualInvitationLayer): string {
     const parsed = this.giftLayerParts(String(layer.binding || ''));
-    return parsed?.key === 'open' ? this.invitation?.content?.giftRegistry?.[parsed.index]?.url || '' : '';
+    return parsed?.key === 'open' ? this.invitation?.content?.giftRegistry?.[parsed.index]?.url || layer.url || '' : layer.url || '';
   }
 
   copyGiftLayer(layer: VisualInvitationLayer): void {
@@ -828,27 +863,33 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (binding.startsWith('display.itinerary.')) return true;
     const parsed = this.itineraryLayerParts(binding);
     const item = parsed ? this.invitation?.content?.itinerary?.[parsed.index] : undefined;
-    if (!parsed || !item) return false;
+    if (!parsed) return true;
+    if (!item) {
+      if (layer.type === 'shape') return true;
+      if (layer.type === 'image') return Boolean(layer.url);
+      if (layer.type === 'button') return Boolean(layer.text || layer.url);
+      return Boolean(layer.text);
+    }
     if (parsed.key === 'card') return true;
     if (parsed.key === 'description' && this.pluginSetting(section, 'showDescription', true) === false) return false;
-    if (parsed.key === 'location') return Boolean(item.locationUrl);
-    return Boolean(this.itineraryLayerText(layer));
+    if (parsed.key === 'location') return Boolean(item.locationUrl || layer.url || layer.text);
+    return Boolean(this.itineraryLayerText(layer) || layer.text);
   }
 
   itineraryLayerText(layer: VisualInvitationLayer): string {
     const parsed = this.itineraryLayerParts(String(layer.binding || ''));
     const item = parsed ? this.invitation?.content?.itinerary?.[parsed.index] : undefined;
-    if (!parsed || !item) return '';
-    if (parsed.key === 'icon') return item.icon || '';
-    if (parsed.key === 'time') return item.time || '';
-    if (parsed.key === 'title') return item.title || '';
-    if (parsed.key === 'description') return item.description || '';
+    if (!parsed || !item) return layer.text || '';
+    if (parsed.key === 'icon') return item.icon || layer.text || '';
+    if (parsed.key === 'time') return item.time || layer.text || '';
+    if (parsed.key === 'title') return item.title || layer.text || '';
+    if (parsed.key === 'description') return item.description || layer.text || '';
     return layer.text || '';
   }
 
   itineraryLayerHref(layer: VisualInvitationLayer): string {
     const parsed = this.itineraryLayerParts(String(layer.binding || ''));
-    return parsed?.key === 'location' ? this.invitation?.content?.itinerary?.[parsed.index]?.locationUrl || '' : '';
+    return parsed?.key === 'location' ? this.invitation?.content?.itinerary?.[parsed.index]?.locationUrl || layer.url || '' : layer.url || '';
   }
 
   private itineraryLayerParts(binding: string): { index: number; key: string } | null {
@@ -868,30 +909,35 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (layer.hidden) return false;
     const binding = String(layer.binding || '');
     if (binding.startsWith('display.dressCode.')) return true;
-    if (binding === 'dress.image') return this.pluginSetting(section, 'showImage', true) !== false && Boolean(this.invitation?.content?.dressCodeImageUrl);
-    if (binding === 'dress.code') return Boolean(this.invitation?.content?.dressCode);
-    if (binding === 'dress.description') return this.pluginSetting(section, 'showDescription', true) !== false && Boolean(this.invitation?.content?.dressCodeDescription);
+    if (binding === 'dress.image') return this.pluginSetting(section, 'showImage', true) !== false && Boolean(this.invitation?.content?.dressCodeImageUrl || layer.url);
+    if (binding === 'dress.code') return Boolean(this.invitation?.content?.dressCode || layer.text);
+    if (binding === 'dress.description') return this.pluginSetting(section, 'showDescription', true) !== false && Boolean(this.invitation?.content?.dressCodeDescription || layer.text);
     const parsed = this.dressCodeOptionLayerParts(binding);
     const option = parsed ? this.invitation?.content?.dressCodeOptions?.[parsed.index] : undefined;
-    if (!parsed || !option) return false;
+    if (!parsed) return true;
+    if (!option) {
+      if (layer.type === 'shape') return true;
+      if (layer.type === 'image') return Boolean(layer.url);
+      return Boolean(layer.text);
+    }
     if (parsed.key === 'card') return true;
-    if (parsed.key === 'color') return Boolean(option.color);
-    return Boolean(this.dressCodeLayerText(layer));
+    if (parsed.key === 'color') return Boolean(option.color || layer.style?.backgroundColor);
+    return Boolean(this.dressCodeLayerText(layer) || layer.text);
   }
 
   dressCodeLayerText(layer: VisualInvitationLayer): string {
-    if (layer.binding === 'dress.code') return this.invitation?.content?.dressCode || '';
-    if (layer.binding === 'dress.description') return this.invitation?.content?.dressCodeDescription || '';
+    if (layer.binding === 'dress.code') return this.invitation?.content?.dressCode || layer.text || '';
+    if (layer.binding === 'dress.description') return this.invitation?.content?.dressCodeDescription || layer.text || '';
     const parsed = this.dressCodeOptionLayerParts(String(layer.binding || ''));
     const option = parsed ? this.invitation?.content?.dressCodeOptions?.[parsed.index] : undefined;
-    if (!parsed || !option) return '';
-    if (parsed.key === 'title') return option.title || '';
-    if (parsed.key === 'description') return option.description || '';
+    if (!parsed || !option) return layer.text || '';
+    if (parsed.key === 'title') return option.title || layer.text || '';
+    if (parsed.key === 'description') return option.description || layer.text || '';
     return layer.text || '';
   }
 
   dressCodeLayerImageUrl(layer: VisualInvitationLayer): string {
-    return layer.binding === 'dress.image' ? this.invitation?.content?.dressCodeImageUrl || '' : '';
+    return layer.binding === 'dress.image' ? this.invitation?.content?.dressCodeImageUrl || layer.url || '' : layer.url || '';
   }
 
   dressCodeLayerStyle(layer: VisualInvitationLayer): Record<string, string | number | null | undefined> {
@@ -920,46 +966,56 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (binding.startsWith('display.lodging.')) return true;
     const parsed = this.lodgingLayerParts(binding);
     const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
-    if (!parsed || !hotel) return false;
+    if (!parsed) return true;
+    if (!hotel) {
+      if (layer.type === 'shape') return true;
+      if (layer.type === 'image') return Boolean(layer.url);
+      if (layer.type === 'button') return Boolean(layer.text || layer.url);
+      return Boolean(layer.text);
+    }
     if (parsed.key === 'card') return true;
-    if (parsed.key === 'image') return Boolean(hotel.imageUrl);
-    if (parsed.key === 'price') return this.pluginSetting(section, 'showPrice', true) !== false && Boolean(hotel.priceLabel);
-    if (parsed.key === 'agreement' || parsed.key === 'discount') return this.pluginSetting(section, 'showDiscount', true) !== false && Boolean(this.lodgingLayerText(layer));
-    if (parsed.key === 'services') return this.pluginSetting(section, 'showServices', true) !== false && Boolean(hotel.services?.length);
-    if (parsed.key === 'reserve') return Boolean(hotel.url);
-    if (parsed.key === 'map') return this.pluginSetting(section, 'showMap', true) !== false && Boolean(hotel.mapUrl);
-    if (parsed.key === 'phone') return this.pluginSetting(section, 'showPhone', true) !== false && Boolean(hotel.phone);
-    return Boolean(this.lodgingLayerText(layer));
+    if (parsed.key === 'image') return Boolean(hotel.imageUrl || layer.url);
+    if (parsed.key === 'price') return this.pluginSetting(section, 'showPrice', true) !== false && Boolean(hotel.priceLabel || layer.text);
+    if (parsed.key === 'agreement' || parsed.key === 'discount') return this.pluginSetting(section, 'showDiscount', true) !== false && Boolean(this.lodgingLayerText(layer) || layer.text);
+    if (parsed.key === 'services') return this.pluginSetting(section, 'showServices', true) !== false && Boolean(hotel.services?.length || layer.text);
+    if (parsed.key === 'reserve') return Boolean(hotel.url || layer.url || layer.text);
+    if (parsed.key === 'map') return this.pluginSetting(section, 'showMap', true) !== false && Boolean(hotel.mapUrl || layer.url || layer.text);
+    if (parsed.key === 'phone') return this.pluginSetting(section, 'showPhone', true) !== false && Boolean(hotel.phone || layer.url || layer.text);
+    return Boolean(this.lodgingLayerText(layer) || layer.text);
   }
 
   lodgingLayerText(layer: VisualInvitationLayer): string {
     const parsed = this.lodgingLayerParts(String(layer.binding || ''));
     const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
-    if (!parsed || !hotel) return '';
-    if (parsed.key === 'name') return hotel.name || '';
-    if (parsed.key === 'description') return hotel.description || '';
-    if (parsed.key === 'address') return hotel.address || '';
-    if (parsed.key === 'price') return hotel.priceLabel || '';
-    if (parsed.key === 'agreement') return hotel.agreementLabel || '';
-    if (parsed.key === 'discount') return [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ');
-    if (parsed.key === 'services') return (hotel.services || []).join(' · ');
-    if (parsed.key === 'notes') return hotel.notes || '';
+    if (!parsed || !hotel) return layer.text || '';
+    if (parsed.key === 'name') return hotel.name || layer.text || '';
+    if (parsed.key === 'description') return hotel.description || layer.text || '';
+    if (parsed.key === 'address') return hotel.address || layer.text || '';
+    if (parsed.key === 'price') return hotel.priceLabel || layer.text || '';
+    if (parsed.key === 'agreement') return hotel.agreementLabel || layer.text || '';
+    if (parsed.key === 'discount') return [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ') || layer.text || '';
+    if (parsed.key === 'services') return (hotel.services || []).join(' · ') || layer.text || '';
+    if (parsed.key === 'notes') return hotel.notes || layer.text || '';
     return layer.text || '';
   }
 
   lodgingLayerImageUrl(layer: VisualInvitationLayer): string {
     const parsed = this.lodgingLayerParts(String(layer.binding || ''));
-    return parsed?.key === 'image' ? this.invitation?.content?.lodging?.[parsed.index]?.imageUrl || '' : '';
+    return parsed?.key === 'image' ? (this.invitation?.content?.lodging?.[parsed.index]?.imageUrl || layer.url || '') : (layer.url || '');
   }
 
   lodgingLayerHref(layer: VisualInvitationLayer): string {
     const parsed = this.lodgingLayerParts(String(layer.binding || ''));
     const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
-    if (!parsed || !hotel) return '';
-    if (parsed.key === 'reserve') return hotel.url || '';
-    if (parsed.key === 'map') return hotel.mapUrl || '';
-    if (parsed.key === 'phone') return hotel.phone ? `tel:${hotel.phone}` : '';
-    return '';
+    if (!parsed || !hotel) return layer.url || '';
+    if (parsed.key === 'reserve') return hotel.url || layer.url || '';
+    if (parsed.key === 'map') {
+      if (hotel.mapUrl) return hotel.mapUrl;
+      const query = [hotel.name, hotel.address].filter(Boolean).join(', ');
+      return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : (layer.url || '');
+    }
+    if (parsed.key === 'phone') return hotel.phone ? `tel:${hotel.phone}` : (layer.url || '');
+    return layer.url || '';
   }
 
   private lodgingLayerParts(binding: string): { index: number; key: string } | null {
@@ -981,37 +1037,43 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (binding.startsWith('display.gallery.')) return true;
     const carousel = this.galleryDisplayModeFor(section) === 'carousel';
     if (binding.startsWith('gallery.carousel.')) {
-      if (!carousel || !this.galleryItems.length) return false;
+      if (!carousel) return false;
       if (binding === 'gallery.carousel.previous' || binding === 'gallery.carousel.next') return this.galleryItems.length > 1;
-      if (binding === 'gallery.carousel.counter' || binding === 'gallery.carousel.image') return true;
-      return this.galleryCaptionsFor(section) && Boolean(this.galleryLayerText(layer));
+      if (binding === 'gallery.carousel.counter') return true;
+      if (binding === 'gallery.carousel.image') return Boolean(this.galleryItems.length || layer.url);
+      return Boolean(this.galleryLayerText(layer) || layer.text);
     }
     if (carousel) return false;
     const parsed = this.galleryItemLayerParts(binding);
     const item = parsed ? this.invitation?.content?.galleryItems?.[parsed.index] : undefined;
-    if (!parsed || !item?.url) return false;
+    if (!parsed) return true;
+    if (!item?.url) {
+      if (parsed.key === 'card') return true;
+      if (parsed.key === 'image') return Boolean(layer.url);
+      return Boolean(layer.text);
+    }
     if (parsed.key === 'card' || parsed.key === 'image') return true;
-    return this.galleryCaptionsFor(section) && Boolean(this.galleryLayerText(layer));
+    return Boolean(this.galleryLayerText(layer) || layer.text);
   }
 
   galleryLayerText(layer: VisualInvitationLayer): string {
     const binding = String(layer.binding || '');
-    if (binding === 'gallery.carousel.counter') return `${this.galleryIndex + 1} / ${this.galleryItems.length}`;
+    if (binding === 'gallery.carousel.counter') return `${this.galleryIndex + 1} / ${Math.max(1, this.galleryItems.length)}`;
     const carouselMatch = binding.match(/^gallery\.carousel\.(title|description|dedication)$/);
-    if (carouselMatch) return this.galleryItems[this.galleryIndex]?.[carouselMatch[1] as 'title' | 'description' | 'dedication'] || '';
+    if (carouselMatch) return this.galleryItems[this.galleryIndex]?.[carouselMatch[1] as 'title' | 'description' | 'dedication'] || layer.text || '';
     const parsed = this.galleryItemLayerParts(binding);
     const item = parsed ? this.invitation?.content?.galleryItems?.[parsed.index] : undefined;
-    if (!parsed || !item) return '';
-    if (parsed.key === 'title') return item.title || '';
-    if (parsed.key === 'description') return item.description || '';
-    if (parsed.key === 'dedication') return item.dedication || '';
+    if (!parsed || !item) return layer.text || '';
+    if (parsed.key === 'title') return item.title || layer.text || '';
+    if (parsed.key === 'description') return item.description || layer.text || '';
+    if (parsed.key === 'dedication') return item.dedication || layer.text || '';
     return layer.text || '';
   }
 
   galleryLayerImageUrl(layer: VisualInvitationLayer): string {
-    if (layer.binding === 'gallery.carousel.image') return this.galleryItems[this.galleryIndex]?.url || '';
+    if (layer.binding === 'gallery.carousel.image') return this.galleryItems[this.galleryIndex]?.url || layer.url || '';
     const parsed = this.galleryItemLayerParts(String(layer.binding || ''));
-    return parsed?.key === 'image' ? this.invitation?.content?.galleryItems?.[parsed.index]?.url || '' : '';
+    return parsed?.key === 'image' ? this.invitation?.content?.galleryItems?.[parsed.index]?.url || layer.url || '' : layer.url || '';
   }
 
   galleryNativeImageStyle(layer: VisualInvitationLayer): Record<string, string> {
@@ -1234,6 +1296,16 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       top: `${sectionOffset + sectionHeight * layout.y / 100}px`,
       height: `${sectionHeight * layout.height / 100}px`
     };
+    if (layer.binding === 'countdown.expired' && this.countdown.isOver) {
+      const plaque = section.layers.find((l) => l.binding === 'display.countdown.plaque' || l.binding === 'display.countdown.frame');
+      if (plaque) {
+        const pLayout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && plaque.layouts?.[this.device]
+          ? plaque.layouts[this.device]!
+          : plaque;
+        const centerY = pLayout.y + (pLayout.height - layout.height) / 2;
+        result['top'] = `${sectionOffset + sectionHeight * centerY / 100}px`;
+      }
+    }
     this.cachedContinuousLayerStyles.set(layer, {
       section,
       styleRef: layer.style,
@@ -1297,6 +1369,17 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       animationDuration: `${Number(layer.animation?.duration || 1)}s`, animationDelay: `${Number(layer.animation?.delay || 0)}s`,
       animationIterationCount: layer.animation?.repeat ? 'infinite' : '1'
     };
+    if (layer.binding === 'countdown.expired' && this.countdown.isOver) {
+      const countdownSection = this.sections.find((s) => s.type === 'countdown' || s.layers.some((l) => l.binding === 'countdown.expired'));
+      const plaque = countdownSection?.layers.find((l) => l.binding === 'display.countdown.plaque' || l.binding === 'display.countdown.frame');
+      if (plaque) {
+        const pLayout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && plaque.layouts?.[this.device]
+          ? plaque.layouts[this.device]!
+          : plaque;
+        const centerY = pLayout.y + (pLayout.height - layout.height) / 2;
+        result['top'] = `${centerY}%`;
+      }
+    }
     if (!this.exportMode && this.isFloatingAudio(layer)) {
       const size = Math.max(40, Math.min(140, Number(style.audioSize || 64)));
       const offset = Math.max(8, Math.min(80, Number(style.audioOffset || 20)));
@@ -1415,9 +1498,15 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       line: 'inset(42% 0)',
       'line-diamond': 'polygon(0 46%, 45% 46%, 50% 15%, 55% 46%, 100% 46%, 100% 54%, 55% 54%, 50% 85%, 45% 54%, 0 54%)'
     };
+    let shapeBgColor = String(style.backgroundColor || '#d88f7d');
+    const dressOptionMatch = String(layer.binding || '').match(/^dress\.option\.(\d+)\.color$/);
+    if (dressOptionMatch) {
+      const optColor = this.invitation?.content?.dressCodeOptions?.[Number(dressOptionMatch[1])]?.color;
+      if (optColor) shapeBgColor = optColor;
+    }
     const result: Record<string, string> = {
       boxSizing: 'border-box',
-      width: '100%', height: '100%', backgroundColor: String(style.backgroundColor || '#d88f7d'),
+      width: '100%', height: '100%', backgroundColor: shapeBgColor,
       backgroundImage: style.gradientEnabled ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})` : 'none',
       border: `${Number(style.borderWidth || 0)}px ${String(style.borderStyle || 'solid')} ${String(style.borderColor || 'transparent')}`,
       borderRadius: `${Number(style.borderRadius || 0)}px`, boxShadow: String(style.boxShadow || 'none'),
@@ -1525,18 +1614,40 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   private configureCountdownTimer(): void {
     this.clearCountdownTimer();
     this.updateCountdown();
-    if (this.event?.date && !this.countdown.isOver) this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+    if ((this.event?.date || this.isPreview()) && !this.countdown.isOver) {
+      this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+    }
+  }
+
+  private isPreview(): boolean {
+    if (typeof window === 'undefined') return false;
+    const search = window.location?.search || '';
+    return search.includes('preview=true') || search.includes('previewId=') || Boolean(this.invitation?.content?.visualDesignDraft);
   }
 
   private updateCountdown(): void {
-    const target = this.eventTargetDate();
-    if (!target) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; this.cdr?.markForCheck(); return; }
-    const distance = target.getTime() - Date.now();
-    if (Number.isNaN(distance) || distance <= 0) { this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true }; this.cdr?.markForCheck(); return; }
+    let target = this.eventTargetDate();
+    let distance = target ? target.getTime() - Date.now() : 0;
+    const isPrev = this.isPreview();
+    if ((!target || Number.isNaN(distance) || distance <= 0) && isPrev) {
+      distance = 38 * 24 * 60 * 60 * 1000;
+    }
+    if (distance <= 0) {
+      const wasOver = this.countdown.isOver;
+      this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
+      if (!wasOver) this.cachedLayerStyles.clear();
+      this.cdr?.markForCheck();
+      return;
+    }
+    const wasOver = this.countdown.isOver;
     this.countdown = {
-      days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
-      minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
+      days: Math.floor(distance / 86400000),
+      hours: Math.floor(distance / 3600000) % 24,
+      minutes: Math.floor(distance / 60000) % 60,
+      seconds: Math.floor(distance / 1000) % 60,
+      isOver: false
     };
+    if (wasOver) this.cachedLayerStyles.clear();
     this.cdr?.markForCheck();
   }
 

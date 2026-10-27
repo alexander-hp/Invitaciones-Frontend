@@ -600,18 +600,26 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   private startCountdown(): void {
-    if (!this.event?.date) return;
+    if (!this.event?.date && !this.isPreviewMode) return;
     this.updateCountdown();
     this.timerInterval = setInterval(() => this.updateCountdown(), 1000);
   }
 
   private updateCountdown(): void {
-    if (!this.event?.date) return;
-    const target = new Date(this.event.date).getTime();
-    const now = Date.now();
-    const diff = target - now;
+    let diff: number;
+    if (!this.event?.date) {
+      if (!this.isPreviewMode) return;
+      diff = 38 * 24 * 60 * 60 * 1000;
+    } else {
+      const target = new Date(this.event.date).getTime();
+      const now = Date.now();
+      diff = target - now;
+      if ((Number.isNaN(target) || diff <= 0) && this.isPreviewMode) {
+        diff = 38 * 24 * 60 * 60 * 1000;
+      }
+    }
 
-    if (Number.isNaN(target) || diff <= 0) {
+    if (diff <= 0) {
       this.countdown = { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
       this.cdr?.markForCheck();
       return;
