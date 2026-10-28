@@ -1105,3 +1105,15 @@
   min-width: 0;
   flex: 1;
 }
+
+.highlight-layer-focus {
+  outline: 3px solid #e11d48 !important;
+  outline-offset: 3px !important;
+  animation: pulseLayerHighlight 1.5s ease-in-out;
+}
+
+@keyframes pulseLayerHighlight {
+  0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+  50% { box-shadow: 0 0 0 12px rgba(225, 29, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+}

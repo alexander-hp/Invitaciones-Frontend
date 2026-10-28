@@ -30,7 +30,7 @@
 .presentation-continuous .visual-section,
 .presentation-continuous .visual-section-canvas{overflow:visible;isolation:auto}
 .presentation-continuous .visual-section-canvas{container-type:normal}
-.continuous-layer-plane{position:absolute;z-index:2;top:0;left:50%;width:100%;max-width:1180px;transform:translateX(-50%);pointer-events:none}
+.continuous-layer-plane{position:absolute;z-index:2;top:0;left:50%;width:100%;max-width:1180px;transform:translateX(-50%);pointer-events:none;overflow-x:hidden}
 .continuous-layer-plane>.visual-layer{pointer-events:auto}
 .visual-layer[hidden]{display:none!important}
 .visual-invitation.device-tablet .continuous-layer-plane{max-width:768px}

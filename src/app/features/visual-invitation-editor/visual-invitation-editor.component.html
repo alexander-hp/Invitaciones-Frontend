@@ -323,15 +323,21 @@
               <button type="button" (click)="openAlertsDevice = null" title="Cerrar lista">✕</button>
             </div>
             <div class="alerts-dropdown-list">
-              <div *ngFor="let alert of deviceAlerts(preview.key)" class="device-alert-item" [ngClass]="'severity-' + alert.severity">
+              <div *ngFor="let alert of deviceAlerts(preview.key); trackBy: trackAlertById"
+                   class="device-alert-item"
+                   [ngClass]="'severity-' + alert.severity"
+                   (click)="goToResponsiveAlert(alert, $event)"
+                   title="Ir al elemento en el editor para resolverlo">
                 <span class="alert-badge-icon">{{ alert.severity === 'critical' ? '🔴' : alert.severity === 'warning' ? '🟠' : '🔵' }}</span>
                 <div class="alert-text">
                   <strong>{{ alert.title }}</strong>
                   <p>{{ alert.detail }}</p>
                 </div>
-                <button *ngIf="alert.sectionId || alert.layerId" type="button" class="btn-fix-alert" (click)="goToResponsiveAlert(alert)">
-                  Corregir →
-                </button>
+                <div class="alert-actions">
+                  <button type="button" class="btn-go-alert" (click)="goToResponsiveAlert(alert, $event)" title="Ir al elemento en el editor para editarlo">
+                    Ir al elemento →
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -422,68 +428,72 @@
         </article>
       </div>
     </section>
+  </div>
 
-    <!-- MODAL DE DIAGNÓSTICO DE ALERTAS POR DISPOSITIVO -->
-    <div class="responsive-alerts-backdrop" *ngIf="showResponsiveAlertsModal" (click)="closeResponsiveAlertsModal()">
-      <div class="responsive-alerts-dialog" (click)="$event.stopPropagation()">
-        <header class="alerts-dialog-header">
-          <div>
-            <span class="alerts-eyebrow">Diagnóstico de adaptabilidad</span>
-            <h2>Alertas de diseño por dispositivo</h2>
-            <p>Revisa cortes, desbordes o datos pendientes en celular, tablet y escritorio.</p>
-          </div>
-          <button type="button" class="alerts-dialog-close" title="Cerrar alertas" (click)="closeResponsiveAlertsModal()">×</button>
-        </header>
+  <!-- MODAL DE DIAGNÓSTICO DE ALERTAS POR DISPOSITIVO -->
+  <div class="responsive-alerts-backdrop" *ngIf="showResponsiveAlertsModal" (click)="closeResponsiveAlertsModal()">
+    <div class="responsive-alerts-dialog" (click)="$event.stopPropagation()">
+      <header class="alerts-dialog-header">
+        <div>
+          <span class="alerts-eyebrow">Diagnóstico de adaptabilidad</span>
+          <h2>Alertas de diseño por dispositivo</h2>
+          <p>Revisa cortes, desbordes o datos pendientes en celular, tablet y escritorio.</p>
+        </div>
+        <button type="button" class="alerts-dialog-close" title="Cerrar alertas" (click)="$event.stopPropagation(); closeResponsiveAlertsModal()">×</button>
+      </header>
 
-        <div class="alerts-dialog-tabs">
-          <button type="button" [class.active]="selectedAlertsTab === 'all'" (click)="selectedAlertsTab = 'all'">
-            Todas las alertas ({{ totalResponsiveAlertsCount }})
-          </button>
-          <button type="button" [class.active]="selectedAlertsTab === 'mobile'" (click)="selectedAlertsTab = 'mobile'">
-            📱 Celular ({{ deviceAlerts('mobile').length }})
-          </button>
-          <button type="button" [class.active]="selectedAlertsTab === 'tablet'" (click)="selectedAlertsTab = 'tablet'">
-            📟 Tablet ({{ deviceAlerts('tablet').length }})
-          </button>
-          <button type="button" [class.active]="selectedAlertsTab === 'desktop'" (click)="selectedAlertsTab = 'desktop'">
-            💻 Escritorio ({{ deviceAlerts('desktop').length }})
-          </button>
+      <div class="alerts-dialog-tabs">
+        <button type="button" [class.active]="selectedAlertsTab === 'all'" (click)="selectedAlertsTab = 'all'">
+          Todas las alertas ({{ totalResponsiveAlertsCount }})
+        </button>
+        <button type="button" [class.active]="selectedAlertsTab === 'mobile'" (click)="selectedAlertsTab = 'mobile'">
+          📱 Celular ({{ deviceAlerts('mobile').length }})
+        </button>
+        <button type="button" [class.active]="selectedAlertsTab === 'tablet'" (click)="selectedAlertsTab = 'tablet'">
+          📟 Tablet ({{ deviceAlerts('tablet').length }})
+        </button>
+        <button type="button" [class.active]="selectedAlertsTab === 'desktop'" (click)="selectedAlertsTab = 'desktop'">
+          💻 Escritorio ({{ deviceAlerts('desktop').length }})
+        </button>
+      </div>
+
+      <div class="alerts-dialog-body">
+        <div *ngIf="!filteredResponsiveAlerts.length" class="alerts-empty-state">
+          <span class="empty-check">✓</span>
+          <strong>¡Excelente! No hay alertas en esta vista.</strong>
+          <p>Todo el contenido se ajusta adecuadamente a las dimensiones del dispositivo.</p>
         </div>
 
-        <div class="alerts-dialog-body">
-          <div *ngIf="!filteredResponsiveAlerts.length" class="alerts-empty-state">
-            <span class="empty-check">✓</span>
-            <strong>¡Excelente! No hay alertas en esta vista.</strong>
-            <p>Todo el contenido se ajusta adecuadamente a las dimensiones del dispositivo.</p>
-          </div>
-
-          <div *ngIf="filteredResponsiveAlerts.length" class="alerts-cards-list">
-            <div *ngFor="let alert of filteredResponsiveAlerts" class="alert-card" [ngClass]="'severity-' + alert.severity">
-              <div class="alert-card-meta">
-                <span class="severity-tag" [ngClass]="'tag-' + alert.severity">
-                  {{ alert.severity === 'critical' ? 'Debes corregir' : alert.severity === 'warning' ? 'Advertencia' : 'Recomendación' }}
-                </span>
-                <span class="device-tag">Dispositivo: {{ alert.device | uppercase }}</span>
-              </div>
-              <div class="alert-card-content">
-                <strong>{{ alert.title }}</strong>
-                <p>{{ alert.detail }}</p>
-              </div>
-              <div class="alert-card-action">
-                <button type="button" class="btn-resolve-alert" (click)="goToResponsiveAlert(alert)">
-                  Ir al elemento en {{ alert.device }} →
-                </button>
-              </div>
+        <div *ngIf="filteredResponsiveAlerts.length" class="alerts-cards-list">
+          <div *ngFor="let alert of filteredResponsiveAlerts; trackBy: trackAlertById"
+               class="alert-card"
+               [ngClass]="'severity-' + alert.severity"
+               (click)="goToResponsiveAlert(alert, $event)"
+               title="Ir al elemento en el editor para resolverlo">
+            <div class="alert-card-meta">
+              <span class="severity-tag" [ngClass]="'tag-' + alert.severity">
+                {{ alert.severity === 'critical' ? 'Debes corregir' : alert.severity === 'warning' ? 'Advertencia' : 'Recomendación' }}
+              </span>
+              <span class="device-tag">Dispositivo: {{ alert.device | uppercase }}</span>
+            </div>
+            <div class="alert-card-content">
+              <strong>{{ alert.title }}</strong>
+              <p>{{ alert.detail }}</p>
+            </div>
+            <div class="alert-card-action">
+              <button type="button" class="btn-resolve-alert" (click)="goToResponsiveAlert(alert, $event)" title="Ir al elemento en el editor">
+                Ir al elemento en {{ alert.device }} →
+              </button>
             </div>
           </div>
         </div>
-
-        <footer class="alerts-dialog-footer">
-          <button type="button" class="btn-back-preview" (click)="closeResponsiveAlertsModal()">
-            Volver a la vista comparativa
-          </button>
-        </footer>
       </div>
+
+      <footer class="alerts-dialog-footer">
+        <button type="button" class="btn-back-preview" (click)="$event.stopPropagation(); closeResponsiveAlertsModal()">
+          Volver a la vista comparativa
+        </button>
+      </footer>
     </div>
   </div>
   <div class="publish-audit-backdrop" *ngIf="showPublishAudit" (click)="closePublishAudit()">

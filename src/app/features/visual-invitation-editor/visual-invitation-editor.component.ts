@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -603,7 +603,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     private router: Router,
     private api: ApiService,
     private designImporter: VisualDesignImporterService,
-    private animatedExporter: VisualInvitationAnimatedExportService
+    private animatedExporter: VisualInvitationAnimatedExportService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -1167,7 +1168,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!device) continue;
       const issues: string[] = [];
       const page = artboard.querySelector<HTMLElement>('.visual-invitation');
-      if (page && page.scrollWidth > page.clientWidth + 3) issues.push('Contenido desbordado horizontalmente');
+      if (page && page.scrollWidth > page.clientWidth + 3) {
+        const alreadyFlagged = this.publishAuditIssues.some(
+          (issue) => issue.title.startsWith('Elemento parcialmente fuera')
+        );
+        if (!alreadyFlagged) {
+          issues.push('Contenido desbordado horizontalmente');
+        }
+      }
       if (page) this.responsivePreviewMeasuredHeight[device] = page.scrollHeight;
       for (const image of Array.from(artboard.querySelectorAll('img'))) {
         if (image.complete && !image.naturalWidth && image.currentSrc) issues.push(`Imagen no disponible: ${image.alt || image.currentSrc}`);
@@ -1625,12 +1633,30 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
 
     (this.responsivePreviewRuntimeIssues[device] || []).forEach((runtimeTitle, index) => {
+      let resolvedLayerId: string | undefined;
+      let resolvedSectionId: string | undefined;
+      if (runtimeTitle.toLowerCase().includes('desbord')) {
+        for (const section of this.design.sections.filter((s) => s.enabled)) {
+          const overflowing = section.layers.find((layer) => {
+            const layout = this.design.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
+            return layout.x < -0.01 || layout.x + layout.width > 100.01;
+          });
+          if (overflowing) {
+            resolvedLayerId = overflowing.id;
+            resolvedSectionId = section.id;
+            break;
+          }
+        }
+      }
+
       list.push({
         id: `runtime-${device}-${index}`,
-        severity: runtimeTitle.toLowerCase().includes('desbord') ? 'critical' : 'warning',
+        severity: runtimeTitle.toLowerCase().includes('desbord') ? 'warning' : 'warning',
         title: runtimeTitle,
         detail: `Detectado durante el renderizado del lienzo en ${this.deviceLabel(device)}.`,
-        device
+        device,
+        sectionId: resolvedSectionId,
+        layerId: resolvedLayerId
       });
     });
 
@@ -1652,17 +1678,111 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.deviceAlerts(this.selectedAlertsTab);
   }
 
-  goToResponsiveAlert(alert: { device: DeviceMode; sectionId?: string; layerId?: string }): void {
-    this.closeResponsivePreview();
+  trackAlertById(index: number, alert: { id: string }): string {
+    return alert?.id || String(index);
+  }
+
+  goToResponsiveAlert(alert: { device: DeviceMode; sectionId?: string; layerId?: string }, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // 1. Cerrar inmediatamente todos los modales y desplegables de previsualización
     this.showResponsiveAlertsModal = false;
-    this.device = alert.device;
-    if (alert.sectionId) this.selectedSectionId = alert.sectionId;
-    if (alert.layerId) this.setLayerSelection([alert.layerId]); else this.clearLayerSelection();
+    this.showResponsivePreview = false;
+    this.openAlertsDevice = null;
+    if (this.responsiveAuditHandle) clearTimeout(this.responsiveAuditHandle);
+    this.cdr.detectChanges();
+
+    const device: DeviceMode = alert?.device || this.device || 'mobile';
+
+    // 2. Localizar sección y capa destino
+    let targetSection: VisualInvitationSection | undefined;
+    let targetLayer: VisualInvitationLayer | undefined;
+
+    if (alert?.layerId) {
+      for (const section of this.design?.sections || []) {
+        const found = section.layers?.find((l) => l.id === alert.layerId);
+        if (found) {
+          targetSection = section;
+          targetLayer = found;
+          break;
+        }
+      }
+    }
+
+    if (!targetLayer) {
+      for (const section of (this.design?.sections || []).filter((s) => s.enabled)) {
+        const overflowing = section.layers?.find((layer) => {
+          const layout = this.design?.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
+          return layout && (layout.x < -0.01 || layout.x + layout.width > 100.01);
+        });
+        if (overflowing) {
+          targetSection = section;
+          targetLayer = overflowing;
+          break;
+        }
+      }
+    }
+
+    if (!targetSection && alert?.sectionId) {
+      targetSection = this.design?.sections?.find((s) => s.id === alert.sectionId);
+    }
+    if (!targetSection) {
+      targetSection = this.design?.sections?.find((s) => s.enabled) || this.design?.sections?.[0];
+    }
+    if (!targetLayer && targetSection?.layers?.length) {
+      targetLayer = targetSection.layers[0];
+    }
+
+    // 3. Ajustar dispositivo, panel y selecciones
+    this.device = device;
+    this.mobilePanel = 'canvas';
+
+    if (targetSection) {
+      this.selectedSectionId = targetSection.id;
+      this.expandedSectionCardId = targetSection.id;
+    }
+    if (targetLayer) {
+      this.setLayerSelection([targetLayer.id]);
+      this.flash(`Elemento "${this.layerLabel(targetLayer)}" seleccionado en modo ${this.deviceLabel(device)}.`);
+    } else {
+      this.clearLayerSelection();
+    }
     this.inspectorView = 'properties';
+    this.toolsCollapsed = false;
+    this.cdr.detectChanges();
+
+    // 4. Scroll centrado suave y resaltado visual con outline pulsante
     setTimeout(() => {
-      const selector = alert.layerId ? `[data-layer-id="${alert.layerId}"]` : (alert.sectionId ? `[data-section-id="${alert.sectionId}"]` : null);
-      if (selector) document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+      this.fitCanvasToViewport();
+      const targetId = targetLayer?.id;
+      const sectionId = targetSection?.id;
+      const targetEl = ((targetId ? document.querySelector(`.canvas-layer[data-layer-id="${targetId}"]`) : null)
+        || (targetId ? document.querySelector(`[data-layer-id="${targetId}"]`) : null)
+        || (sectionId ? document.querySelector(`[data-section-id="${sectionId}"]`) : null)) as HTMLElement | null;
+
+      const stage = this.stageElement || (document.querySelector('.ve-stage') as HTMLElement | null);
+
+      if (targetEl && stage) {
+        const stageRect = stage.getBoundingClientRect();
+        const targetRect = targetEl.getBoundingClientRect();
+        const currentScroll = stage.scrollTop;
+        const targetOffset = targetRect.top - stageRect.top;
+        const targetScroll = currentScroll + targetOffset - (stageRect.height / 2) + (targetRect.height / 2);
+        stage.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+      }
+
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetEl.classList.remove('highlight-layer-focus');
+        void targetEl.offsetWidth;
+        targetEl.classList.add('highlight-layer-focus');
+        setTimeout(() => targetEl.classList.remove('highlight-layer-focus'), 3000);
+      }
+      this.cdr.detectChanges();
+    }, 120);
   }
 
   responsivePreviewLayerStyle(layer: VisualInvitationLayer, device: DeviceMode): Record<string, string> {
