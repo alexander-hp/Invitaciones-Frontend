@@ -379,6 +379,47 @@
   flex-shrink: 0;
 }
 
+/* Guest Simulation Switch */
+.nw-draft-preview-guest-switch {
+  display: flex;
+  align-items: center;
+}
+
+.nw-guest-sim-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e2d5c3;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.nw-guest-sim-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.nw-guest-sim-btn.active {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.28), rgba(212, 175, 55, 0.12));
+  border-color: #d4af37;
+  color: #fce8a6;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25);
+  font-weight: 700;
+}
+
+.nw-guest-sim-btn svg {
+  flex-shrink: 0;
+}
+
 /* Actions */
 .nw-draft-preview-actions {
   display: flex;

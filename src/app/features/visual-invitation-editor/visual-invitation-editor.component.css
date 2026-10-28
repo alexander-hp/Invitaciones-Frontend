@@ -126,11 +126,27 @@
 .canvas-section{position:relative;width:100%;background-size:cover;background-position:center;box-shadow:0 8px 30px rgba(46,37,33,0.14);overflow:hidden}
 .canvas-section.selected{outline:2.5px solid var(--nw-accent, #c09c78);outline-offset:-2.5px;z-index:10}
 .canvas-section.disabled{opacity:.45}
-.section-handle,.section-label,.section-delete{position:absolute;top:8px;z-index:1200;background:var(--nw-surface, #fff);color:var(--nw-text, #2e2621);border:1px solid var(--nw-border, #eadecc);border-radius:8px;box-shadow:0 2px 8px rgba(46,37,33,0.08)}
-.section-handle{left:8px;padding:6px 8px;cursor:grab}
-.section-label{left:46px;padding:6px 12px;font-family:var(--nw-font-display, 'Outfit', sans-serif);font-size:12px;font-weight:600;letter-spacing:0.2px}
-.section-delete{right:8px;border:1px solid var(--nw-border, #eadecc);width:32px;height:32px;font-size:18px;color:var(--nw-danger, #b75959);cursor:pointer;display:grid;place-items:center;transition:all .15s ease}
+.section-top-toolbar{position:absolute;top:8px;left:8px;right:48px;z-index:1200;display:flex;align-items:center;gap:8px;pointer-events:auto;max-width:calc(100% - 56px);flex-wrap:wrap}
+.section-top-toolbar .section-handle,.section-top-toolbar .section-label{position:static;display:inline-flex;align-items:center}
+.section-top-toolbar .section-label{cursor:pointer}
+.section-handle,.section-label,.section-delete{background:var(--nw-surface, #fff);color:var(--nw-text, #2e2621);border:1px solid var(--nw-border, #eadecc);border-radius:8px;box-shadow:0 2px 8px rgba(46,37,33,0.08)}
+.section-handle{padding:6px 8px;cursor:grab}
+.section-label{padding:6px 12px;font-family:var(--nw-font-display, 'Outfit', sans-serif);font-size:12px;font-weight:600;letter-spacing:0.2px}
+.section-delete{position:absolute;top:8px;right:8px;z-index:1200;border:1px solid var(--nw-border, #eadecc);width:32px;height:32px;font-size:18px;color:var(--nw-danger, #b75959);cursor:pointer;display:grid;place-items:center;transition:all .15s ease}
 .section-delete:hover{background:var(--nw-danger-bg, #faf2f2);border-color:var(--nw-danger, #b75959)}
+
+.section-view-mode-switch{display:inline-flex;align-items:center;background:var(--nw-surface, #ffffff);border:1px solid var(--nw-border, #eadecc);border-radius:8px;padding:2px;box-shadow:0 2px 8px rgba(46,37,33,0.08);gap:2px}
+.section-mode-btn{border:none;background:transparent;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--nw-font-display, 'Outfit', sans-serif);color:var(--nw-text-muted, #7c7267);cursor:pointer;transition:all .15s ease;white-space:nowrap}
+.section-mode-btn:hover{color:var(--nw-text, #2e2621);background:rgba(0,0,0,0.05)}
+.section-mode-btn.active{background:var(--nw-accent, #c09c78);color:#ffffff;box-shadow:0 1px 4px rgba(192,156,120,0.35)}
+
+.inspector-view-mode-card{background:rgba(192,156,120,0.08);border:1px solid rgba(192,156,120,0.35);border-radius:10px;padding:10px 12px;margin-bottom:14px}
+.inspector-view-mode-card.compact{margin-top:4px;margin-bottom:12px;padding:8px 10px}
+.inspector-view-mode-card label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--nw-accent, #9e754f);margin-bottom:6px;display:block}
+.inspector-mode-switch-group{display:flex;background:var(--nw-surface, #ffffff);border:1px solid var(--nw-border, #eadecc);border-radius:8px;padding:3px;gap:3px}
+.inspector-mode-switch-group button{flex:1;border:none;background:transparent;padding:6px 8px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--nw-font-display, 'Outfit', sans-serif);color:var(--nw-text-muted, #7c7267);cursor:pointer;transition:all .15s ease;text-align:center}
+.inspector-mode-switch-group button:hover{color:var(--nw-text, #2e2621)}
+.inspector-mode-switch-group button.active{background:var(--nw-accent, #c09c78);color:#ffffff;box-shadow:0 1px 4px rgba(192,156,120,0.3)}
 .functional-placeholder{position:absolute;inset:20% 8% 12%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;border:2px dashed var(--nw-border-2, #c9bfae);background:#ffffffd4;color:var(--nw-text-2, #6e6157);z-index:2;border-radius:14px}
 .functional-placeholder strong{font:600 clamp(20px,4vw,36px) var(--nw-font-display, 'Outfit', Georgia, serif)}
 .functional-placeholder span{font-size:13px}

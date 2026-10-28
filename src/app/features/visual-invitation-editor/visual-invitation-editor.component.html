@@ -1041,8 +1041,24 @@
       <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
         <div cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list" [class.continuous-design]="design.presentationMode !== 'chapters'">
           <section *ngFor="let section of design.sections; trackBy: trackVisualById" cdkDrag class="canvas-section" [attr.data-section-id]="section.id" [class.selected]="section.id === selectedSectionId" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)" (click)="selectSection(section)">
-            <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
-            <div class="section-label">{{ section.title || section.type }}</div>
+            <div class="section-top-toolbar" (click)="$event.stopPropagation()">
+              <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
+              <div class="section-label" (click)="selectSection(section)">{{ section.title || section.type }}</div>
+              <div *ngIf="section.type === 'guestPass' || section.type === 'guestActivity'" class="section-view-mode-switch">
+                <button type="button" class="section-mode-btn"
+                  [class.active]="(pluginSetting(section, 'editorViewMode') || (section.type === 'guestPass' ? 'pass' : 'activity')) !== 'form'"
+                  (click)="setSectionViewMode(section, section.type === 'guestPass' ? 'pass' : 'activity')"
+                  [title]="section.type === 'guestPass' ? 'Ver y editar pase identificado (con datos de ejemplo)' : 'Ver y editar panel de actividad'">
+                  {{ section.type === 'guestPass' ? 'Pase digital' : 'Actividad' }}
+                </button>
+                <button type="button" class="section-mode-btn"
+                  [class.active]="pluginSetting(section, 'editorViewMode') === 'form'"
+                  (click)="setSectionViewMode(section, 'form')"
+                  title="Ver y editar formulario de acceso inicial">
+                  Formulario inicial
+                </button>
+              </div>
+            </div>
             <button class="section-delete" type="button" title="Eliminar sección" (click)="$event.stopPropagation(); removeSection(section)">×</button>
             <div *ngIf="section.type !== 'custom' && section.type !== 'hero' && !hasNativeFunctionalLayers(section) && !section.layers.length" class="functional-preview" [ngClass]="moduleClasses(section)" [ngStyle]="functionalPreviewStyle(section)">
               <ng-container [ngSwitch]="section.type">
@@ -1355,6 +1371,17 @@
             <div class="audio-toggle-grid"><label class="toggle"><input [ngModel]="audioStyle.audioShowIcon !== false" (ngModelChange)="audioStyle.audioShowIcon=$event" type="checkbox"> Mostrar icono</label><label class="toggle"><input [ngModel]="audioStyle.audioShowLabel === true" (ngModelChange)="audioStyle.audioShowLabel=$event" type="checkbox"> Mostrar texto</label></div>
           </ng-container>
         </section>
+        <div *ngIf="selectedSection && (selectedSection.type === 'guestPass' || selectedSection.type === 'guestActivity')" class="inspector-view-mode-card compact">
+          <label>Vista activa de la sección:</label>
+          <div class="inspector-mode-switch-group">
+            <button type="button" [class.active]="(pluginSetting(selectedSection, 'editorViewMode') || (selectedSection.type === 'guestPass' ? 'pass' : 'activity')) !== 'form'" (click)="setSectionViewMode(selectedSection, selectedSection.type === 'guestPass' ? 'pass' : 'activity')">
+              {{ selectedSection.type === 'guestPass' ? 'Pase digital' : 'Actividad' }}
+            </button>
+            <button type="button" [class.active]="pluginSetting(selectedSection, 'editorViewMode') === 'form'" (click)="setSectionViewMode(selectedSection, 'form')">
+              Formulario inicial
+            </button>
+          </div>
+        </div>
         <div class="transform-settings" *ngIf="selectedLayout as layout">
           <div class="ve-help-row"><h3>Posición y tamaño</h3><details class="ve-context-help"><summary title="Ayuda sobre posición y tamaño" aria-label="Ayuda sobre posición y tamaño"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Estos valores son porcentajes del lienzo. Puedes mover elementos fuera del área visible, pero esa parte no aparecerá en la invitación pública. Revisa los tres tamaños antes de publicar.</p></details></div>
           <div class="two-columns">
@@ -1634,12 +1661,17 @@
                   </div>
                 </ng-container>
                 <ng-container *ngSwitchCase="'guestPass'">
-                  <label>Vista en lienzo
-                    <select [ngModel]="pluginSetting(section, 'editorViewMode') || 'pass'" (ngModelChange)="setPluginSetting(section, 'editorViewMode', $event)">
-                      <option value="pass">Pase digital (invitado identificado)</option>
-                      <option value="form">Formulario de acceso inicial</option>
-                    </select>
-                  </label>
+                  <div class="inspector-view-mode-card">
+                    <label>Estado a editar en el lienzo:</label>
+                    <div class="inspector-mode-switch-group">
+                      <button type="button" [class.active]="(pluginSetting(section, 'editorViewMode') || 'pass') !== 'form'" (click)="setSectionViewMode(section, 'pass')">
+                        Pase digital (identificado)
+                      </button>
+                      <button type="button" [class.active]="pluginSetting(section, 'editorViewMode') === 'form'" (click)="setSectionViewMode(section, 'form')">
+                        Formulario inicial
+                      </button>
+                    </div>
+                  </div>
                   <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showGuestName')" (ngModelChange)="setPluginSetting(section, 'showGuestName', $event)" type="checkbox"> Mostrar nombre</label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showGroup')" (ngModelChange)="setPluginSetting(section, 'showGroup', $event)" type="checkbox"> Mostrar grupo</label>
@@ -1649,12 +1681,17 @@
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showQr')" (ngModelChange)="setPluginSetting(section, 'showQr', $event)" type="checkbox"> Mostrar código QR</label>
                 </ng-container>
                 <ng-container *ngSwitchCase="'guestActivity'">
-                  <label>Vista en lienzo
-                    <select [ngModel]="pluginSetting(section, 'editorViewMode') || 'activity'" (ngModelChange)="setPluginSetting(section, 'editorViewMode', $event)">
-                      <option value="activity">Panel de actividad (invitado identificado)</option>
-                      <option value="form">Formulario de acceso inicial</option>
-                    </select>
-                  </label>
+                  <div class="inspector-view-mode-card">
+                    <label>Estado a editar en el lienzo:</label>
+                    <div class="inspector-mode-switch-group">
+                      <button type="button" [class.active]="(pluginSetting(section, 'editorViewMode') || 'activity') !== 'form'" (click)="setSectionViewMode(section, 'activity')">
+                        Panel de actividad (identificado)
+                      </button>
+                      <button type="button" [class.active]="pluginSetting(section, 'editorViewMode') === 'form'" (click)="setSectionViewMode(section, 'form')">
+                        Formulario inicial
+                      </button>
+                    </div>
+                  </div>
                   <label>Botón para identificar<input [ngModel]="pluginSetting(section, 'identifyButtonText')" (ngModelChange)="setPluginSetting(section, 'identifyButtonText', $event)" type="text" maxlength="80"></label>
                   <label>Botón del centro completo<input [ngModel]="pluginSetting(section, 'primaryButtonText')" (ngModelChange)="setPluginSetting(section, 'primaryButtonText', $event)" type="text" maxlength="80"></label>
                   <label class="toggle"><input [ngModel]="pluginSetting(section, 'showRsvp')" (ngModelChange)="setPluginSetting(section, 'showRsvp', $event)" type="checkbox"> Mostrar RSVP</label>

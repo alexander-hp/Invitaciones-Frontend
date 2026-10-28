@@ -4411,6 +4411,66 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.autosaveState = 'Cambios pendientes';
   }
 
+  setSectionViewMode(section: VisualInvitationSection, mode: 'pass' | 'activity' | 'form'): void {
+    this.recordHistory();
+    if (section.type === 'guestPass') {
+      this.ensureGuestPassFormLayers(section);
+    } else if (section.type === 'guestActivity') {
+      this.ensureGuestActivityFormLayers(section);
+    }
+    this.setPluginSetting(section, 'editorViewMode', mode);
+    if (this.selectedSectionId === section.id && this.selectedLayerIds.length > 0) {
+      this.selectedLayerIds = this.selectedLayerIds.filter((id) => {
+        const layer = section.layers.find((l) => l.id === id);
+        return layer && this.shouldRenderEditorLayer(section, layer);
+      });
+      if (this.selectedLayerIds.length === 0) {
+        this.clearLayerSelection();
+      } else {
+        this.selectedLayerId = this.selectedLayerIds[0];
+      }
+    }
+    this.flash(mode === 'form' ? 'Mostrando formulario de acceso inicial' : (section.type === 'guestPass' ? 'Mostrando pase digital identificado' : 'Mostrando panel de actividad'));
+  }
+
+  ensureGuestPassFormLayers(section: VisualInvitationSection): void {
+    const existing = new Set(section.layers.map((l) => l.binding).filter(Boolean));
+    let topZ = Math.max(0, ...section.layers.map((l) => l.zIndex || 0));
+    const additions: VisualInvitationLayer[] = [];
+    for (const definition of this.guestPassLayerDefinitions(section)) {
+      if (!existing.has(definition.binding)) {
+        const layer = this.createGuestPassLayer(definition, ++topZ);
+        if (layer.type === 'field' && ['pass.email', 'pass.phone'].includes(layer.binding || '')) {
+          additions.push(this.separateRsvpFieldLayer(layer, topZ));
+        }
+        additions.push(layer);
+        existing.add(definition.binding);
+      }
+    }
+    if (additions.length > 0) {
+      section.layers.push(...additions);
+    }
+  }
+
+  ensureGuestActivityFormLayers(section: VisualInvitationSection): void {
+    const existing = new Set(section.layers.map((l) => l.binding).filter(Boolean));
+    let topZ = Math.max(0, ...section.layers.map((l) => l.zIndex || 0));
+    const additions: VisualInvitationLayer[] = [];
+    for (const definition of this.guestActivityLayerDefinitions(section)) {
+      if (!existing.has(definition.binding)) {
+        const layer = this.createGuestActivityLayer(definition, ++topZ);
+        if (layer.type === 'field' && ['activity.email', 'activity.phone'].includes(layer.binding || '')) {
+          additions.push(this.separateRsvpFieldLayer(layer, topZ));
+        }
+        additions.push(layer);
+        existing.add(definition.binding);
+      }
+    }
+    if (additions.length > 0) {
+      section.layers.push(...additions);
+    }
+  }
+
   galleryPreviewMode(section: VisualInvitationSection): 'grid' | 'list' | 'carousel' {
     const configured = String(this.pluginSetting(section, 'displayMode'));
     return configured === 'grid' || configured === 'list' || configured === 'carousel'
@@ -5140,8 +5200,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
       const isFormLayer = ['pass.email', 'pass.phone', 'pass.identify'].includes(binding) || binding.startsWith('display.label.pass.');
       const isPassLayer = ['pass.card', 'pass.qr', 'pass.name', 'pass.group', 'pass.table', 'pass.seat', 'pass.companions', 'pass.feedback'].includes(binding);
-      if (isFormMode) return isFormLayer || binding === 'pass.feedback';
-      return isPassLayer;
+      if (isFormMode) return ['pass.email', 'pass.phone', 'pass.identify', 'pass.card', 'pass.feedback'].includes(binding) || binding.startsWith('display.label.pass.');
+      if (binding.startsWith('display.label.pass.') || ['pass.email', 'pass.phone', 'pass.identify'].includes(binding)) return false;
+      if (binding === 'pass.card' || binding === 'pass.feedback') return true;
+      if (binding === 'pass.name') return this.pluginSetting(section, 'showGuestName') !== false;
+      if (binding === 'pass.group') return this.pluginSetting(section, 'showGroup') !== false;
+      if (binding === 'pass.table') return this.pluginSetting(section, 'showTable') !== false;
+      if (binding === 'pass.seat') return this.pluginSetting(section, 'showSeat') !== false;
+      if (binding === 'pass.companions') return this.pluginSetting(section, 'showCompanions') !== false;
+      if (binding === 'pass.qr') return this.pluginSetting(section, 'showQr') !== false;
+      return false;
     }
     if (section.type === 'guestActivity') {
       const binding = String(layer.binding || '');
@@ -5150,10 +5218,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       if (binding.startsWith('display.guestActivity.')) return true;
       const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
-      const isFormLayer = ['activity.email', 'activity.phone', 'activity.identify'].includes(binding) || binding.startsWith('display.label.activity.');
-      const isDashboardLayer = ['activity.greeting', 'activity.rsvp', 'activity.pass', 'activity.album', 'activity.songs', 'activity.dedications', 'activity.manage', 'activity.full'].includes(binding);
-      if (isFormMode) return isFormLayer;
-      return isDashboardLayer;
+      if (isFormMode) return ['activity.email', 'activity.phone', 'activity.identify'].includes(binding) || binding.startsWith('display.label.activity.');
+      if (binding.startsWith('display.label.activity.') || ['activity.email', 'activity.phone', 'activity.identify'].includes(binding)) return false;
+      if (binding === 'activity.greeting' || binding === 'activity.manage' || binding === 'activity.full') return true;
+      if (binding === 'activity.rsvp') return this.pluginSetting(section, 'showRsvp') !== false;
+      if (binding === 'activity.pass') return this.pluginSetting(section, 'showPass') !== false;
+      if (binding === 'activity.album') return this.pluginSetting(section, 'showAlbum') !== false;
+      if (binding === 'activity.songs') return this.pluginSetting(section, 'showSongs') !== false;
+      if (binding === 'activity.dedications') return this.pluginSetting(section, 'showDedications') !== false;
+      return false;
     }
     return true;
   }

@@ -115,6 +115,74 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   customHtmlSafeSrcdoc?: SafeHtml;
   previewDevice: 'mobile' | 'tablet' | 'desktop' = 'mobile';
   previewBarCollapsed = false;
+  isSimulatingGuest = false;
+
+  readonly previewGuestData: GuestAccessResponse['guest'] = {
+    id: 'preview-guest-sample',
+    name: 'Invitado de Ejemplo',
+    email: 'invitado@ejemplo.com',
+    group: 'Familia',
+    relationshipLabel: 'Familia',
+    allowedCompanions: 2,
+    tableName: 'Mesa 5',
+    seatLabel: 'A-12',
+    checkInCode: 'DEMO-PASS-QR',
+    qrCode: 'DEMO-PASS-QR',
+    status: 'pending'
+  };
+
+  readonly previewGuestActivityData: ExternalGuestStatusResponse = {
+    guest: {
+      id: 'preview-guest-sample',
+      name: 'Invitado de Ejemplo',
+      email: 'invitado@ejemplo.com',
+      group: 'Familia',
+      relationshipLabel: 'Familia',
+      allowedCompanions: 2,
+      tableName: 'Mesa 5',
+      seatLabel: 'A-12',
+      checkInCode: 'DEMO-PASS-QR',
+      qrCode: 'DEMO-PASS-QR',
+      status: 'pending'
+    },
+    rsvp: {
+      response: 'confirmed',
+      companions: 2,
+      companionNames: ['Acompañante 1', 'Acompañante 2'],
+      message: '¡Muchas felicidades!'
+    } as any,
+    albumUploads: [
+      { id: 'sample-1', url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80', caption: 'Foto de prueba', status: 'approved' } as any
+    ],
+    songRequests: [
+      { id: 'song-1', title: 'Canción favorita', artist: 'Artista', status: 'approved' } as any
+    ],
+    dedications: [
+      { id: 'ded-1', message: '¡Que sean muy felices en esta nueva etapa!', publicName: 'Invitado de Ejemplo', status: 'approved' } as any
+    ]
+  };
+
+  toggleGuestSimulation(): void {
+    if (this.isSimulatingGuest) {
+      this.isSimulatingGuest = false;
+      this.verifiedGuest = undefined;
+      this.guestActivity = undefined;
+      this.showToast('Vista: Formulario inicial de acceso');
+    } else {
+      this.activateSimulatedGuest();
+      this.showToast('Vista: Pase digital y actividad del invitado');
+    }
+    this.cdr?.markForCheck();
+  }
+
+  activateSimulatedGuest(): void {
+    this.isSimulatingGuest = true;
+    this.verifiedGuest = { ...this.previewGuestData };
+    this.guestActivity = { ...this.previewGuestActivityData };
+    this.rsvp.name = this.previewGuestData.name;
+    this.rsvp.email = this.previewGuestData.email || '';
+    this.cdr?.markForCheck();
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -468,6 +536,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (!this.invitation.accessMode) this.invitation.accessMode = 'open';
     this.event = typeof invitation.event === 'string' ? undefined : (invitation.event as EventModel);
     this.restoreGuestActivitySession(slug);
+    if (this.isPreviewMode && !this.verifiedGuest) {
+      this.activateSimulatedGuest();
+    }
 
     //console.log('🎵 [PublicInvitation] Loaded invitation payload:', invitation);
     //console.log('🎵 [PublicInvitation] content:', invitation?.content);
@@ -1128,6 +1199,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.showToast('Esta es una vista previa demo. Las confirmaciones de asistencia están deshabilitadas.');
       return;
     }
+    if (this.isSimulatingGuest) {
+      this.showToast('Modo prueba: Confirmación simulada con éxito.');
+      this.success = '¡Confirmación recibida (simulación en modo prueba)!';
+      this.cdr?.markForCheck();
+      return;
+    }
     if (this.requiresGuestValidation && !this.verifiedGuest) {
       this.error = 'Abre tu enlace personal antes de confirmar tu asistencia.';
       return;
@@ -1234,6 +1311,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         }
       },
       error: (error) => {
+        if (this.isPreviewMode) {
+          this.checkingGuest = false;
+          this.activateSimulatedGuest();
+          this.showToast('Modo prueba: Simulación de pase activada');
+          this.cdr?.markForCheck();
+          return;
+        }
         this.error = error.error?.message || 'No fue posible validar el pase. Intenta más tarde.';
         this.checkingGuest = false;
         this.cdr?.markForCheck();
@@ -1254,6 +1338,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   resetGuestAccess(): void {
     const wasRestricted = this.requiresGuestValidation;
+    this.isSimulatingGuest = false;
     if (this.invitation) sessionStorage.removeItem(this.guestSessionStorageKey(this.invitation.slug));
     if (this.guestActivityTimer) clearInterval(this.guestActivityTimer);
     this.guestSessionToken = '';

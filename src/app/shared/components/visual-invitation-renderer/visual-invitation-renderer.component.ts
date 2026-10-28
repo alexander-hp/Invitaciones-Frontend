@@ -595,9 +595,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   shouldRenderGuestPassLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
     const binding = String(layer.binding || '');
-    if (binding.startsWith('display.guestPass.') || binding.startsWith('display.label.pass.')) return true;
+    if (binding.startsWith('display.guestPass.')) return true;
     if (binding === 'pass.feedback') return Boolean(this.error);
-    if (!this.verifiedGuest) return ['pass.email', 'pass.phone', 'pass.identify', 'pass.card', 'display.label.pass.email', 'display.label.pass.phone'].includes(binding);
+    if (!this.verifiedGuest) return ['pass.email', 'pass.phone', 'pass.identify', 'pass.card', 'display.label.pass.email', 'display.label.pass.phone'].includes(binding) || binding.startsWith('display.label.pass.');
+    if (binding.startsWith('display.label.pass.') || ['pass.email', 'pass.phone', 'pass.identify'].includes(binding)) return false;
     if (binding === 'pass.card') return true;
     if (binding === 'pass.name') return this.pluginSetting(section, 'showGuestName', true) !== false;
     if (binding === 'pass.group') return this.pluginSetting(section, 'showGroup', true) !== false && Boolean(this.verifiedGuest.group || this.verifiedGuest.relationshipLabel);
@@ -630,8 +631,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   shouldRenderGuestActivityLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
     const binding = String(layer.binding || '');
-    if (binding.startsWith('display.guestActivity.') || binding.startsWith('display.label.activity.')) return true;
-    if (!this.verifiedGuest) return ['activity.email', 'activity.phone', 'activity.identify', 'display.label.activity.email', 'display.label.activity.phone'].includes(binding);
+    if (binding.startsWith('display.guestActivity.')) return true;
+    if (!this.verifiedGuest) return ['activity.email', 'activity.phone', 'activity.identify', 'display.label.activity.email', 'display.label.activity.phone'].includes(binding) || binding.startsWith('display.label.activity.');
+    if (binding.startsWith('display.label.activity.') || ['activity.email', 'activity.phone', 'activity.identify'].includes(binding)) return false;
     if (binding === 'activity.greeting' || binding === 'activity.manage' || binding === 'activity.full') return true;
     if (binding === 'activity.rsvp') return this.pluginSetting(section, 'showRsvp', true) !== false;
     if (binding === 'activity.pass') return this.pluginSetting(section, 'showPass', true) !== false;
