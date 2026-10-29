@@ -1894,14 +1894,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   goToAuditIssue(issue: PublishAuditIssue): void {
     if (issue.device) this.device = issue.device;
-    if (issue.sectionId) this.selectedSectionId = issue.sectionId;
+    if (issue.sectionId) {
+      this.selectedSectionId = issue.sectionId;
+      this.expandedSectionCardId = issue.sectionId;
+    }
     if (issue.layerId) this.setLayerSelection([issue.layerId]); else this.clearLayerSelection();
+    this.mobilePanel = 'canvas';
     this.inspectorView = 'properties';
+    this.toolsCollapsed = false;
     this.showPublishAudit = false;
+    this.cdr.detectChanges();
     setTimeout(() => {
+      this.fitCanvasToViewport();
       const selector = issue.layerId ? `[data-layer-id="${issue.layerId}"]` : `[data-section-id="${issue.sectionId}"]`;
-      document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+      const targetEl = selector ? (document.querySelector(selector) as HTMLElement | null) : null;
+      const stage = this.stageElement || (document.querySelector('.ve-stage') as HTMLElement | null);
+
+      if (targetEl && stage) {
+        const stageRect = stage.getBoundingClientRect();
+        const targetRect = targetEl.getBoundingClientRect();
+        const currentScroll = stage.scrollTop;
+        const targetOffset = targetRect.top - stageRect.top;
+        const targetScroll = currentScroll + targetOffset - (stageRect.height / 2) + (targetRect.height / 2);
+        stage.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+      }
+
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetEl.classList.remove('highlight-layer-focus');
+        void targetEl.offsetWidth;
+        targetEl.classList.add('highlight-layer-focus');
+        setTimeout(() => targetEl.classList.remove('highlight-layer-focus'), 3000);
+      }
+      this.cdr.detectChanges();
+    }, 120);
   }
 
   auditSeverityLabel(severity: AuditSeverity): string {
