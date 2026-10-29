@@ -198,7 +198,7 @@
 .selection-marquee{display:none;position:absolute;z-index:1550;border:1px solid var(--nw-accent, #c09c78);background:rgba(192,156,120,0.15);box-sizing:border-box;pointer-events:none}
 .selection-marquee.visible{display:block}
 .canvas-layer{position:absolute;display:flex;align-items:center;justify-content:center;box-sizing:border-box;white-space:pre-wrap;overflow:visible;cursor:move;touch-action:none;user-select:none}
-.canvas-layer.dragging{cursor:grabbing}
+.canvas-layer.dragging{cursor:grabbing;will-change:transform;z-index:9999 !important}
 .canvas-layer.locked{cursor:default}
 .canvas-layer.selected{outline:2px solid var(--nw-accent, #c09c78);outline-offset:2px}
 .canvas-layer.selected:not(.dragging){box-shadow:0 0 0 1px #fff}

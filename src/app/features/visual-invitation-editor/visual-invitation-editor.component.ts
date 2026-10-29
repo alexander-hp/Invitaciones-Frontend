@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -433,12 +433,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private layerDragState?: {
     layer: VisualInvitationLayer;
     section: VisualInvitationSection;
-    items: Array<{ layer: VisualInvitationLayer; layout: VisualInvitationLayerLayout; x: number; y: number; width: number; height: number }>;
+    items: Array<{ layer: VisualInvitationLayer; layout: VisualInvitationLayerLayout; x: number; y: number; width: number; height: number; domEl?: HTMLElement | null }>;
     canvas: HTMLElement;
     startX: number;
     startY: number;
     bounds: { x: number; y: number; width: number; height: number };
-    moved: boolean;
+    moved: boolean; currentDx?: number; currentDy?: number;
   };
   private pluginPartDragState?: {
     section: VisualInvitationSection;
@@ -450,6 +450,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     y: number;
     moved: boolean;
   };
+  private pointerTrackingActive = false;
+  private pointerRafHandle: number | null = null;
+  private lastPointerEvent: PointerEvent | null = null;
   private stageElement?: HTMLElement;
   private touchPointers = new Map<number, { x: number; y: number; cropFrame?: HTMLElement }>();
   private canvasGesture?: {
@@ -604,10 +607,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private designImporter: VisualDesignImporterService,
     private animatedExporter: VisualInvitationAnimatedExportService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) { }
 
   ngOnInit(): void {
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('dragenter', this.onWindowDragEnterOutside, { passive: false });
+      window.addEventListener('dragover', this.onWindowDragOverOutside, { passive: false });
+      window.addEventListener('dragleave', this.onWindowDragLeaveOutside, { passive: false });
+      window.addEventListener('drop', this.onWindowDropOutside, { passive: false });
+    });
     const id = this.route.snapshot.paramMap.get('id') || '';
     this.api.listInvitations().subscribe({
       next: ({ invitations }) => {
@@ -660,6 +670,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPointerInteraction();
+    window.removeEventListener('dragenter', this.onWindowDragEnterOutside);
+    window.removeEventListener('dragover', this.onWindowDragOverOutside);
+    window.removeEventListener('dragleave', this.onWindowDragLeaveOutside);
+    window.removeEventListener('drop', this.onWindowDropOutside);
     if (this.autosaveHandle) clearInterval(this.autosaveHandle);
     if (this.responsiveAuditHandle) clearTimeout(this.responsiveAuditHandle);
     if (this.touchZoomHideHandle) clearTimeout(this.touchZoomHideHandle);
@@ -1055,28 +1070,129 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (this.mobilePanel === 'canvas') this.fitCanvasToViewport();
   }
 
-  @HostListener('window:dragenter', ['$event'])
-  onWindowDragEnter(event: DragEvent): void {
-    if (this.isExternalFileDrag(event)) {
-      event.preventDefault();
-      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-    }
-  }
+  private readonly onWindowDragEnterOutside = (event: DragEvent) => {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+  };
 
-  @HostListener('window:dragover', ['$event'])
-  onWindowDragOver(event: DragEvent): void {
-    if (this.isExternalFileDrag(event)) {
-      event.preventDefault();
-      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-    }
-  }
+  private readonly onWindowDragOverOutside = (event: DragEvent) => {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
 
-  @HostListener('window:drop', ['$event'])
-  onWindowDrop(event: DragEvent): void {
-    if (this.isExternalFileDrag(event)) {
-      event.preventDefault();
+    const rawTarget = event.target as HTMLElement | null;
+    if (!rawTarget) return;
+
+    // A. Hovering over sidebar photo composition frame button
+    const frameBtn = rawTarget.closest<HTMLElement>('.composite-frame-list button');
+    if (frameBtn) {
+      const frameId = frameBtn.dataset['layerId'] || frameBtn.getAttribute('data-layer-id');
+      if (frameId) {
+        if (this.photoSwapSourceId) {
+          const canSwap = this.selectedCompositeFrames.some((f) => f.id === frameId && !f.locked && !f.binding);
+          const nextTarget = canSwap ? frameId : '';
+          if (this.photoSwapTargetId !== nextTarget) {
+            this.photoSwapTargetId = nextTarget;
+            this.cdr.detectChanges();
+          }
+          return;
+        }
+
+        if (this.fileDropTargetLayerId !== frameId || this.photoSwapTargetId !== frameId) {
+          this.fileDropTargetLayerId = frameId;
+          this.photoSwapTargetId = frameId;
+          this.paletteDropSectionId = '';
+          this.cdr.detectChanges();
+        }
+        return;
+      }
     }
-  }
+
+    // B. Hovering over a canvas layer
+    const layerEl = rawTarget.closest<HTMLElement>('.canvas-layer');
+    if (layerEl) {
+      const layerId = layerEl.dataset['layerId'];
+      const sectionEl = layerEl.closest<HTMLElement>('.layer-surface');
+      const sectionId = sectionEl?.dataset['sectionId'] || this.selectedSectionId;
+      const section = this.design?.sections.find((s) => s.id === sectionId) || this.selectedSection;
+      const layer = section?.layers.find((l) => l.id === layerId);
+
+      if (layer) {
+        if (this.photoSwapSourceId) {
+          const canSwap = this.canSwapCompositePhotos(layer);
+          const nextTarget = canSwap ? layer.id : '';
+          if (this.photoSwapTargetId !== nextTarget) {
+            this.photoSwapTargetId = nextTarget;
+            this.cdr.detectChanges();
+          }
+          return;
+        }
+
+        if (this.isLayerCompatibleDropTarget(layer, event.dataTransfer)) {
+          if (this.fileDropTargetLayerId !== layer.id) {
+            this.fileDropTargetLayerId = layer.id;
+            this.paletteDropSectionId = '';
+            this.cdr.detectChanges();
+          }
+          return;
+        }
+      }
+    }
+
+    // C. Hovering over canvas section surface
+    const surfaceEl = rawTarget.closest<HTMLElement>('.layer-surface');
+    if (surfaceEl) {
+      const sectionId = surfaceEl.dataset['sectionId'] || this.selectedSectionId;
+      let changed = false;
+      if (this.fileDropTargetLayerId !== '') {
+        this.fileDropTargetLayerId = '';
+        changed = true;
+      }
+      if (this.photoSwapTargetId !== '') {
+        this.photoSwapTargetId = '';
+        changed = true;
+      }
+      if (this.paletteDropSectionId !== sectionId) {
+        this.paletteDropSectionId = sectionId;
+        changed = true;
+      }
+      if (changed) {
+        this.cdr.detectChanges();
+      }
+      return;
+    }
+
+    // D. Hovering outside any drop area
+    if (this.fileDropTargetLayerId || this.photoSwapTargetId || this.paletteDropSectionId) {
+      this.fileDropTargetLayerId = '';
+      this.photoSwapTargetId = '';
+      this.paletteDropSectionId = '';
+      this.cdr.detectChanges();
+    }
+  };
+
+  private readonly onWindowDragLeaveOutside = (event: DragEvent) => {
+    if (!event.relatedTarget || event.clientX <= 0 || event.clientY <= 0 || event.clientX >= window.innerWidth || event.clientY >= window.innerHeight) {
+      if (this.fileDropTargetLayerId || this.photoSwapTargetId || this.paletteDropSectionId) {
+        this.fileDropTargetLayerId = '';
+        this.photoSwapTargetId = '';
+        this.paletteDropSectionId = '';
+        this.cdr.detectChanges();
+      }
+    }
+  };
+
+  private readonly onWindowDropOutside = (event: DragEvent) => {
+    const isInsideDropArea = (event.target as HTMLElement)?.closest('.layer-surface, .composite-frame-list');
+    if (!isInsideDropArea) {
+      event.preventDefault();
+      if (this.fileDropTargetLayerId || this.photoSwapTargetId || this.paletteDropSectionId) {
+        this.fileDropTargetLayerId = '';
+        this.photoSwapTargetId = '';
+        this.paletteDropSectionId = '';
+        this.cdr.detectChanges();
+      }
+    }
+  };
 
   setCanvasZoom(value: number | string): void {
     this.canvasZoom = this.bound(Number(value) || 1, .5, 1.5);
@@ -2447,21 +2563,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   dragPhotoSwapOver(event: DragEvent, target: VisualInvitationLayer): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+
     if (this.photoSwapSourceId) {
-      event.preventDefault();
       event.stopPropagation();
-      this.photoSwapTargetId = this.canSwapCompositePhotos(target) ? target.id : '';
-      if (event.dataTransfer) event.dataTransfer.dropEffect = this.photoSwapTargetId ? 'move' : 'none';
+      const newTargetId = this.canSwapCompositePhotos(target) ? target.id : '';
+      if (this.photoSwapTargetId !== newTargetId) {
+        this.photoSwapTargetId = newTargetId;
+        this.cdr.detectChanges();
+      }
       return;
     }
-    const isFileDrag = this.hasDataTransferFiles(event.dataTransfer);
-    const isMediaDrag = this.paletteDragItem?.kind === 'media' && this.paletteDragItem.media.type === 'image';
-    if (isFileDrag || isMediaDrag) {
-      event.preventDefault();
-      event.stopPropagation();
+
+    if (this.photoSwapTargetId !== target.id || this.fileDropTargetLayerId !== target.id) {
       this.photoSwapTargetId = target.id;
       this.fileDropTargetLayerId = target.id;
-      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      this.cdr.detectChanges();
     }
   }
 
@@ -2471,9 +2589,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   dropPhotoSwap(event: DragEvent, target: VisualInvitationLayer): void {
+    event.preventDefault();
+    event.stopPropagation();
     if (this.photoSwapSourceId) {
-      event.preventDefault();
-      event.stopPropagation();
       const source = this.canSwapCompositePhotos(target)
         ? this.selectedSection?.layers.find((layer) => layer.id === this.photoSwapSourceId)
         : undefined;
@@ -2518,10 +2636,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   swapCompositePhotos(source: VisualInvitationLayer, target: VisualInvitationLayer): void {
     if (!source.groupId || source.groupId !== target.groupId || source.id === target.id ||
-        source.type !== 'image' || target.type !== 'image' ||
-        !source.style?.frameEnabled || !target.style?.frameEnabled ||
-        source.locked || target.locked || source.binding || target.binding ||
-        !this.selectedSection?.layers.includes(source) || !this.selectedSection?.layers.includes(target)) return;
+      source.type !== 'image' || target.type !== 'image' ||
+      !source.style?.frameEnabled || !target.style?.frameEnabled ||
+      source.locked || target.locked || source.binding || target.binding ||
+      !this.selectedSection?.layers.includes(source) || !this.selectedSection?.layers.includes(target)) return;
     this.recordHistory();
     const sourceUrl = source.url;
     source.url = target.url;
@@ -2742,6 +2860,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   endPaletteDrag(): void {
     this.paletteDragItem = undefined;
     this.paletteDropSectionId = '';
+    this.fileDropTargetLayerId = '';
+    this.photoSwapTargetId = '';
   }
 
   isExternalFileDrag(event: DragEvent): boolean {
@@ -2753,13 +2873,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   hasDataTransferFiles(dt: DataTransfer | null): boolean {
     if (!dt) return false;
-    const types = Array.from(dt.types || []);
-    return types.includes('Files') || (dt.files && dt.files.length > 0);
+    const types = Array.from(dt.types || []).map((t) => t.toLowerCase());
+    return types.includes('files') || types.includes('downloadurl') || (dt.files && dt.files.length > 0);
   }
 
   hasExternalImageDrag(dt: DataTransfer | null): boolean {
     if (!dt) return false;
-    const types = Array.from(dt.types || []);
+    const types = Array.from(dt.types || []).map((t) => t.toLowerCase());
     return types.includes('text/uri-list') || types.includes('text/html') || types.includes('text/plain');
   }
 
@@ -2880,44 +3000,47 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.dragPaletteOver(event, section);
       return;
     }
-    const isFileDrag = this.hasDataTransferFiles(event.dataTransfer);
-    const isPaletteDrag = !!this.paletteDragItem;
-    const isExternalImage = !isPaletteDrag && this.hasExternalImageDrag(event.dataTransfer);
-    if (!isPaletteDrag && !isFileDrag && !isExternalImage) return;
-
     event.preventDefault();
-    event.stopPropagation();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
 
     if (this.isLayerCompatibleDropTarget(layer, event.dataTransfer)) {
       if (this.fileDropTargetLayerId !== layer.id) {
         this.fileDropTargetLayerId = layer.id;
         this.paletteDropSectionId = '';
-      }
-    } else {
-      if (this.fileDropTargetLayerId === layer.id) {
-        this.fileDropTargetLayerId = '';
+        this.cdr.detectChanges();
       }
     }
   }
 
-  dragLayerTargetOver(event: DragEvent): void {
+  dragLayerTargetOver(event: DragEvent, section: VisualInvitationSection, layer: VisualInvitationLayer): void {
     event.preventDefault();
-    event.stopPropagation();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+
+    if (this.isLayerCompatibleDropTarget(layer, event.dataTransfer)) {
+      if (this.fileDropTargetLayerId !== layer.id) {
+        this.fileDropTargetLayerId = layer.id;
+        this.paletteDropSectionId = '';
+        this.cdr.detectChanges();
+      }
+    }
   }
 
   dragLayerTargetLeave(event: DragEvent, layer: VisualInvitationLayer): void {
     const target = event.currentTarget as HTMLElement;
-    if (event.relatedTarget instanceof Node && target.contains(event.relatedTarget)) return;
+    const related = event.relatedTarget as Node | null;
+    if (related && target.contains(related)) return;
+
     if (this.fileDropTargetLayerId === layer.id) {
       this.fileDropTargetLayerId = '';
+      this.cdr.detectChanges();
     }
   }
 
   dragPaletteOver(event: DragEvent, section: VisualInvitationSection): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+
     if (this.photoSwapSourceId) {
-      event.preventDefault();
       event.stopPropagation();
       const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
       const target = section.layers.find((layer) => layer.id === targetId);
@@ -2926,30 +3049,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const isFileDrag = this.hasDataTransferFiles(event.dataTransfer);
-    const isPaletteDrag = !!this.paletteDragItem;
-    const isExternalImage = !isPaletteDrag && this.hasExternalImageDrag(event.dataTransfer);
-
-    if (!isPaletteDrag && !isFileDrag && !isExternalImage) return;
-
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-
-    const targetElement = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer');
+    let targetElement = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer');
+    if (!targetElement && typeof document !== 'undefined' && typeof document.elementFromPoint === 'function') {
+      targetElement = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('.canvas-layer') || null;
+    }
     const targetId = targetElement?.dataset['layerId'];
-    const targetLayer = section.layers.find((layer) => layer.id === targetId);
+    const targetLayer = targetId ? section.layers.find((layer) => layer.id === targetId) : undefined;
 
-    if (targetLayer && this.isLayerCompatibleDropTarget(targetLayer, event.dataTransfer)) {
+    if (targetLayer && (targetLayer.type === 'image' || targetLayer.type === 'video' || targetLayer.type === 'audio')) {
       if (this.fileDropTargetLayerId !== targetLayer.id) {
         this.fileDropTargetLayerId = targetLayer.id;
         this.paletteDropSectionId = '';
+        this.cdr.detectChanges();
       }
     } else {
       if (this.fileDropTargetLayerId !== '') {
         this.fileDropTargetLayerId = '';
+        this.cdr.detectChanges();
       }
       if (this.paletteDropSectionId !== section.id) {
         this.paletteDropSectionId = section.id;
+        this.cdr.detectChanges();
       }
     }
   }
@@ -2962,10 +3082,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   dropPaletteItem(event: DragEvent, section: VisualInvitationSection): void {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (this.photoSwapSourceId) {
-      event.preventDefault();
-      event.stopPropagation();
-      const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+      const targetId = (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId']
+        || this.fileDropTargetLayerId
+        || (typeof document !== 'undefined' ? document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('.canvas-layer')?.dataset['layerId'] : undefined);
       const target = section.layers.find((layer) => layer.id === targetId);
       if (target && this.selectedSectionId === section.id) this.dropPhotoSwap(event, target);
       this.endPhotoSwapDrag();
@@ -3012,8 +3135,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const msg = item.media.type === 'image'
         ? 'Foto colocada en el marco.'
         : item.media.type === 'video'
-        ? 'Video colocado en el reproductor.'
-        : 'Audio colocado en el reproductor.';
+          ? 'Video colocado en el reproductor.'
+          : 'Audio colocado en el reproductor.';
       this.flash(msg);
       return;
     }
@@ -3063,9 +3186,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   handleDroppedImageUrl(url: string, section: VisualInvitationSection, event: DragEvent, targetLayerId?: string): void {
     event.preventDefault();
     event.stopPropagation();
-    const droppedTargetId = targetLayerId || this.fileDropTargetLayerId || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+    const droppedTargetId = targetLayerId
+      || this.fileDropTargetLayerId
+      || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId']
+      || (typeof document !== 'undefined' ? document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('.canvas-layer')?.dataset['layerId'] : undefined);
     this.fileDropTargetLayerId = '';
     this.paletteDropSectionId = '';
+    this.photoSwapTargetId = '';
     this.selectedSectionId = section.id;
     const targetLayer = section.layers.find((layer) => layer.id === droppedTargetId);
     this.recordHistory();
@@ -3107,9 +3234,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   handleDroppedFiles(files: File[], section: VisualInvitationSection, event: DragEvent, targetLayerId?: string): void {
     event.preventDefault();
     event.stopPropagation();
-    this.paletteDropSectionId = '';
-    const droppedTargetId = targetLayerId || this.fileDropTargetLayerId || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId'];
+    const droppedTargetId = targetLayerId
+      || this.fileDropTargetLayerId
+      || (event.target as HTMLElement).closest<HTMLElement>('.canvas-layer')?.dataset['layerId']
+      || (typeof document !== 'undefined' ? document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('.canvas-layer')?.dataset['layerId'] : undefined);
     this.fileDropTargetLayerId = '';
+    this.paletteDropSectionId = '';
+    this.photoSwapTargetId = '';
 
     const validFiles = files.filter((f) => {
       const info = this.resolveFileType(f);
@@ -3151,7 +3282,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           blobUrls.push(u);
           return u;
         }
-      } catch {}
+      } catch { }
       return '';
     };
 
@@ -3205,7 +3336,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     forkJoin(uploads).subscribe({
       next: (results) => {
         blobUrls.forEach((u) => {
-          try { URL.revokeObjectURL(u); } catch {}
+          try { URL.revokeObjectURL(u); } catch { }
         });
 
         this.design.assets = this.design.assets || [];
@@ -3291,7 +3422,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         blobUrls.forEach((u) => {
-          try { URL.revokeObjectURL(u); } catch {}
+          try { URL.revokeObjectURL(u); } catch { }
         });
         if (targetLayer) targetLayer.url = previousTargetUrl;
         siblingReverts.forEach((s) => s.frame.url = s.url);
@@ -3561,6 +3692,47 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     moveItemInArray(this.design.sections, event.previousIndex, event.currentIndex);
   }
 
+
+  private startPointerInteraction(): void {
+    if (this.pointerTrackingActive) return;
+    this.pointerTrackingActive = true;
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('pointermove', this.onPointerMoveOutside, { passive: false });
+      window.addEventListener('pointerup', this.onPointerUpOutside, { passive: false });
+      window.addEventListener('pointercancel', this.onPointerUpOutside, { passive: false });
+    });
+  }
+
+  private stopPointerInteraction(): void {
+    if (!this.pointerTrackingActive) return;
+    this.pointerTrackingActive = false;
+    window.removeEventListener('pointermove', this.onPointerMoveOutside);
+    window.removeEventListener('pointerup', this.onPointerUpOutside);
+    window.removeEventListener('pointercancel', this.onPointerUpOutside);
+  }
+
+  private readonly onPointerMoveOutside = (event: PointerEvent): void => {
+    this.lastPointerEvent = event;
+    if (this.pointerRafHandle === null) {
+      this.pointerRafHandle = requestAnimationFrame(() => {
+        this.pointerRafHandle = null;
+        if (this.lastPointerEvent) {
+          this.processPointerMoveOutside(this.lastPointerEvent);
+        }
+      });
+    }
+  };
+
+  private readonly onPointerUpOutside = (_event: PointerEvent): void => {
+    if (this.pointerRafHandle !== null) {
+      cancelAnimationFrame(this.pointerRafHandle);
+      this.pointerRafHandle = null;
+    }
+    this.ngZone.run(() => {
+      this.endPointerInteraction();
+    });
+  };
+
   beginLayerDrag(event: PointerEvent, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
     if (layer.locked || this.resizing || this.editingLayerId === layer.id || this.croppingLayerId === layer.id || (event.target as HTMLElement).closest('.resize-handle, .rotate-handle, .layer-toolbar, .inline-text-editor, .crop-toolbar, audio, video, button, input')) return;
     event.preventDefault();
@@ -3575,7 +3747,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.selectedLayerIds.includes(layer.id)) this.applyLayerSelection(section, layer, false);
     const items = this.selectedLayers.filter((item) => !item.locked).map((item) => {
       const layout = this.editableLayout(item);
-      return { layer: item, layout, x: layout.x, y: layout.y, width: layout.width, height: layout.height };
+      const domEl = canvas.querySelector(`[data-layer-id="${item.id}"]`) as HTMLElement | null;
+      return { layer: item, layout, x: layout.x, y: layout.y, width: layout.width, height: layout.height, domEl };
     });
     if (!items.length) return;
     const minX = Math.min(...items.map((item) => item.x));
@@ -3586,8 +3759,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.draggingLayerId = layer.id;
     this.layerDragState = {
       layer, section, items, canvas, startX: event.clientX, startY: event.clientY,
-      bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }, moved: false
+      bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY }, moved: false,
+      currentDx: 0, currentDy: 0
     };
+    this.startPointerInteraction();
   }
 
   beginMarquee(event: PointerEvent, section: VisualInvitationSection): void {
@@ -3607,6 +3782,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.marqueeState = { section, canvas, startX, startY, baseIds, moved: false };
     this.selectionMarquee = { sectionId: section.id, left: startX, top: startY, width: 0, height: 0 };
     this.inspectorView = 'properties';
+    this.startPointerInteraction();
   }
 
   beginResize(event: PointerEvent, layer: VisualInvitationLayer, corner: ResizeCorner): void {
@@ -3624,6 +3800,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       x: layout.x, y: layout.y, width: layout.width, height: layout.height,
       layer
     };
+    this.startPointerInteraction();
   }
 
   beginRotate(event: PointerEvent, layer: VisualInvitationLayer): void {
@@ -3645,6 +3822,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       startAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
       initialRotation: Number(layout.rotation || 0)
     };
+    this.startPointerInteraction();
   }
 
   startInlineEdit(event: MouseEvent, section: VisualInvitationSection, layer: VisualInvitationLayer): void {
@@ -3717,6 +3895,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       positionX: Number(layer.style.objectPositionX ?? 50),
       positionY: Number(layer.style.objectPositionY ?? 50)
     };
+    this.startPointerInteraction();
   }
 
   adjustImageCropZoom(layer: VisualInvitationLayer, delta: number): void {
@@ -3747,9 +3926,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('document:pointermove', ['$event'])
-  onPointerMove(event: PointerEvent): void {
-    if (this.canvasGesture || this.imageCropGesture) {
+    processPointerMoveOutside(event: PointerEvent): void {
+      if(this.canvasGesture || this.imageCropGesture) {
       event.preventDefault();
       return;
     }
@@ -3759,12 +3937,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const distanceY = event.clientY - pluginDrag.startY;
       if (!pluginDrag.moved && Math.hypot(distanceX, distanceY) < 3) return;
       event.preventDefault();
-      if (!pluginDrag.moved) { this.recordHistory(); pluginDrag.moved = true; }
+      if (!pluginDrag.moved) {
+        this.ngZone.run(() => this.recordHistory());
+        pluginDrag.moved = true;
+      }
       const width = Number(pluginDrag.part.width || 20);
       const height = Number(pluginDrag.part.height || 8);
       pluginDrag.part.x = Math.round(this.bound(pluginDrag.x + distanceX / Math.max(1, pluginDrag.canvas.clientWidth) * 100, 0, 100 - width) * 10) / 10;
       pluginDrag.part.y = Math.round(this.bound(pluginDrag.y + distanceY / Math.max(1, pluginDrag.canvas.clientHeight) * 100, 0, 100 - height) * 10) / 10;
       this.autosaveState = 'Cambios pendientes';
+      this.cdr.detectChanges();
       return;
     }
     const crop = this.cropPanState;
@@ -3775,6 +3957,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       crop.layer.style = crop.layer.style || {};
       crop.layer.style.objectPositionX = this.bound(crop.positionX - (event.clientX - crop.startX) / width * 100, 0, 100);
       crop.layer.style.objectPositionY = this.bound(crop.positionY - (event.clientY - crop.startY) / height * 100, 0, 100);
+      this.cdr.detectChanges();
       return;
     }
     const marquee = this.marqueeState;
@@ -3808,6 +3991,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         intersected.some((item) => item.id === layer.id) || (!!layer.groupId && matchedGroups.has(layer.groupId))
       ).map((layer) => layer.id);
       this.setLayerSelection([...marquee.baseIds, ...matched]);
+      this.cdr.detectChanges();
       return;
     }
     const rotation = this.rotationState;
@@ -3817,6 +4001,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       let next = rotation.initialRotation + angle - rotation.startAngle;
       next = event.shiftKey ? Math.round(next / 15) * 15 : Math.round(next);
       rotation.layout.rotation = ((next + 180) % 360 + 360) % 360 - 180;
+      this.cdr.detectChanges();
       return;
     }
     const resize = this.resizeState;
@@ -3854,6 +4039,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 1)));
       resize.layout.width = round(this.bound(nextWidth, 1, 100));
       resize.layout.height = round(this.bound(height, 1, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
+      this.cdr.detectChanges();
       return;
     }
     const drag = this.layerDragState;
@@ -3862,26 +4048,67 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const distanceY = event.clientY - drag.startY;
     if (!drag.moved && Math.hypot(distanceX, distanceY) < 3) return;
     event.preventDefault();
-    if (!drag.moved) { this.recordHistory(); drag.moved = true; }
-    const rawX = this.bound(drag.bounds.x + distanceX / drag.canvas.clientWidth * 100, -100, 200);
+    if (!drag.moved) {
+      this.ngZone.run(() => this.recordHistory());
+      drag.moved = true;
+    }
+    const canvasW = Math.max(1, drag.canvas.clientWidth);
+    const canvasH = Math.max(1, drag.canvas.clientHeight);
+    const rawX = this.bound(drag.bounds.x + distanceX / canvasW * 100, -100, 200);
     const range = this.verticalLayerBounds(drag.section, drag.bounds.height);
-    const rawY = this.bound(drag.bounds.y + distanceY / drag.canvas.clientHeight * 100, range.min, range.max);
+    const rawY = this.bound(drag.bounds.y + distanceY / canvasH * 100, range.min, range.max);
     const ignoredIds = new Set(drag.items.map((item) => item.layer.id));
     const snapped = this.snapRawPosition(drag.layer, drag.section, drag.canvas, rawX, rawY, drag.bounds.width, drag.bounds.height, ignoredIds);
     const dx = snapped.x - drag.bounds.x;
     const dy = snapped.y - drag.bounds.y;
+    drag.currentDx = dx;
+    drag.currentDy = dy;
+
+    // Direct GPU translate3d hardware acceleration on DOM elements
+    const pxDx = (dx / 100) * canvasW;
+    const pxDy = (dy / 100) * canvasH;
     for (const item of drag.items) {
-      item.layout.x = this.bound(item.x + dx, -100, 200);
-      const itemRange = this.verticalLayerBounds(drag.section, item.height);
-      item.layout.y = this.bound(item.y + dy, itemRange.min, itemRange.max);
+      if (!item.domEl) {
+        item.domEl = drag.canvas.querySelector(`[data-layer-id="${item.layer.id}"]`) as HTMLElement | null;
+      }
+      if (item.domEl) {
+        item.domEl.style.transform = `translate3d(${pxDx}px, ${pxDy}px, 0) rotate(${item.layout.rotation || 0}deg)`;
+      }
     }
-    this.guideX = snapped.guideX;
-    this.guideY = snapped.guideY;
+
+    if (this.guideX !== snapped.guideX || this.guideY !== snapped.guideY) {
+      this.guideX = snapped.guideX;
+      this.guideY = snapped.guideY;
+      this.cdr.detectChanges();
+    }
   }
 
-  @HostListener('document:pointerup')
   endPointerInteraction(): void {
-    if (this.layerDragState?.moved) this.suppressNextLayerClickId = this.layerDragState.layer.id;
+    if (this.pointerRafHandle !== null) {
+      cancelAnimationFrame(this.pointerRafHandle);
+      this.pointerRafHandle = null;
+    }
+    this.stopPointerInteraction();
+
+    if (this.layerDragState) {
+      const drag = this.layerDragState;
+      for (const item of drag.items) {
+        if (item.domEl) {
+          item.domEl.style.transform = `rotate(${item.layout.rotation || 0}deg)`;
+        }
+      }
+      if (drag.moved && (drag.currentDx !== undefined || drag.currentDy !== undefined)) {
+        const dx = drag.currentDx || 0;
+        const dy = drag.currentDy || 0;
+        for (const item of drag.items) {
+          item.layout.x = this.bound(item.x + dx, -100, 200);
+          const itemRange = this.verticalLayerBounds(drag.section, item.height);
+          item.layout.y = this.bound(item.y + dy, itemRange.min, itemRange.max);
+        }
+      }
+      if (drag.moved) this.suppressNextLayerClickId = drag.layer.id;
+    }
+
     this.resizeState = undefined;
     this.rotationState = undefined;
     this.marqueeState = undefined;
@@ -3893,6 +4120,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.guideX = null;
     this.guideY = null;
     setTimeout(() => { this.resizing = false; });
+    this.cdr.markForCheck();
   }
 
   toggleLayerHidden(layer: VisualInvitationLayer, event?: MouseEvent): void {
@@ -4533,6 +4761,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       section, part: section.pluginDesign!.parts![key], canvas,
       startX: event.clientX, startY: event.clientY, x: Number(part.x || 0), y: Number(part.y || 0), moved: false
     };
+    this.startPointerInteraction();
   }
 
   uploadPluginPartBackground(fileInput: HTMLInputElement, section: VisualInvitationSection, key: string): void {
@@ -6131,8 +6360,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.addSection(type, labels[type]);
     this.importHistorySteps++;
     const section = this.design.sections[this.design.sections.length - 1];
-    this.importReview.push({ sectionIndex: this.design.sections.length - 1, sectionId: section.id, status: 'connected',
-      title: labels[type], detail: 'Módulo nativo conectado con los datos del evento. Revisa su configuración antes de publicar.' });
+    this.importReview.push({
+      sectionIndex: this.design.sections.length - 1, sectionId: section.id, status: 'connected',
+      title: labels[type], detail: 'Módulo nativo conectado con los datos del evento. Revisa su configuración antes de publicar.'
+    });
     this.importWarnings = this.importWarnings.filter((warning) => !warning.startsWith('Este diseño es solo visual'));
     this.autosaveState = 'Cambios pendientes';
   }
@@ -6590,9 +6821,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           const hasArchPortrait = section.layers.some((l) => l.style?.imageMask === 'arch' || l.name?.includes('Retrato'));
           if (hasOldBanner || hasWhiteFloral || !hasArchPortrait) {
             const coverUrl = this.invitation?.content?.coverImageUrl ||
-                             this.invitation?.content?.galleryItems?.find((item) => item.url)?.url ||
-                             this.invitation?.content?.gallery?.find(Boolean) ||
-                             'assets/templates/xv-burgundy/portrait.jpg';
+              this.invitation?.content?.galleryItems?.find((item) => item.url)?.url ||
+              this.invitation?.content?.gallery?.find(Boolean) ||
+              'assets/templates/xv-burgundy/portrait.jpg';
             const title = this.invitation?.content?.headline ? '{{invitation.headline}}' : '{{event.title}}';
             section.height = 840;
             section.layers = [
