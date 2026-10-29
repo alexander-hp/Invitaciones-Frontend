@@ -1170,7 +1170,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const page = artboard.querySelector<HTMLElement>('.visual-invitation');
       if (page && page.scrollWidth > page.clientWidth + 3) {
         const alreadyFlagged = this.publishAuditIssues.some(
-          (issue) => issue.title.startsWith('Elemento parcialmente fuera')
+          (issue) => issue.device === device && issue.title.startsWith('Elemento parcialmente fuera')
         );
         if (!alreadyFlagged) {
           issues.push('Contenido desbordado horizontalmente');
@@ -8807,10 +8807,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (layer.type === 'image' && layer.url?.trim() && !layer.text?.trim()) {
           add('suggestion', `Imagen sin descripción: ${this.layerLabel(layer)}`, 'Agrega una descripción breve para accesibilidad.', section.id, layer.id);
         }
-        const layouts: Array<{ device: DeviceMode; x: number; y: number; width: number; height: number }> = this.design.responsiveMode === 'independent'
-          ? (['mobile', 'tablet', 'desktop'] as DeviceMode[]).map((device) => ({ device, ...(layer.layouts?.[device] || layer) }))
-          : [{ device: 'mobile', ...layer }];
-        for (const layout of layouts) {
+        const devices: DeviceMode[] = ['mobile', 'tablet', 'desktop'];
+        for (const device of devices) {
+          const layout = this.design.responsiveMode === 'independent' ? (layer.layouts?.[device] || layer) : layer;
           const sectionHeight = visualSectionHeight(section);
           const sectionTop = visualSectionOffset(enabledSections, section);
           const top = sectionTop + sectionHeight * layout.y / 100;
@@ -8820,12 +8819,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
             : top < -.01 || bottom > visualCanvasHeight(enabledSections) + .01;
           const horizontalOverflow = layout.x < -.01 || layout.x + layout.width > 100.01;
           if (horizontalOverflow) {
-            add('suggestion', `Elemento parcialmente fuera del ancho en ${this.deviceLabel(layout.device)}`, 'Se conservará su posición; la parte exterior se recortará en la invitación pública.', section.id, layer.id, layout.device);
+            add('suggestion', `Elemento parcialmente fuera del ancho en ${this.deviceLabel(device)}`, 'Se conservará su posición; la parte exterior se recortará en la invitación pública.', section.id, layer.id, device);
           }
           if (outsideCanvas) {
-            add('critical', `Elemento fuera del área en ${this.deviceLabel(layout.device)}`, 'Muévelo o reduce su tamaño para que no se corte.', section.id, layer.id, layout.device);
+            add('critical', `Elemento fuera del área en ${this.deviceLabel(device)}`, 'Muévelo o reduce su tamaño para que no se corte.', section.id, layer.id, device);
           }
-          if (horizontalOverflow || outsideCanvas) break;
         }
         if (layer.type === 'text' && !section.background?.imageUrl && this.hasLowContrast(String(layer.style?.color || '#000000'), section.background?.color || '#ffffff')) {
           add('suggestion', `Contraste bajo: ${this.layerLabel(layer)}`, 'Cambia el color del texto o del fondo para mejorar la lectura.', section.id, layer.id);
