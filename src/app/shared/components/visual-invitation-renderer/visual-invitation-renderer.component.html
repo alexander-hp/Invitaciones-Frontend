@@ -10,7 +10,6 @@
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
   <section *ngFor="let section of displayedSections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [class.auto-flow]="presentationMode === 'chapters' && !section.layers.length && section.type !== 'hero' && section.type !== 'custom' && !exportMode" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
     <div class="visual-section-canvas">
-    <ng-container *ngIf="presentationMode === 'chapters'" [ngTemplateOutlet]="visualLayersTemplate" [ngTemplateOutletContext]="{ section: section, sectionIndex: sectionIndex, continuous: false }"></ng-container>
 
     <div class="functional-module story-module" *ngIf="section.type === 'story' && !section.layers.length">
       <h2>{{ invitation?.content?.storyTitle || section.title || 'Nuestra historia' }}</h2>
@@ -38,7 +37,7 @@
           <h3>{{ location.name || location.type }}</h3><p>{{ location.address }}</p><p>{{ location.notes }}</p>
           <p *ngIf="location.parking"><strong>Estacionamiento:</strong> {{ location.parking }}</p><p *ngIf="location.transport"><strong>Transporte:</strong> {{ location.transport }}</p><p *ngIf="location.accessibility"><strong>Accesibilidad:</strong> {{ location.accessibility }}</p>
           <div class="location-schedule" *ngIf="location.schedule?.length"><span *ngFor="let line of location.schedule">{{ line }}</span></div>
-          <div class="module-actions"><a *ngIf="location.mapUrl" [href]="location.mapUrl" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mapa') }}</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a><a *ngIf="location.phone" [href]="'tel:' + location.phone">Llamar</a><a *ngIf="location.websiteUrl" [href]="location.websiteUrl" target="_blank" rel="noopener">Sitio web</a></div>
+          <div class="module-actions"><a [href]="location.mapUrl || '#'" [attr.target]="location.mapUrl ? '_blank' : null" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mapa') }}</a><a *ngIf="location.wazeUrl" [href]="location.wazeUrl" target="_blank" rel="noopener">Waze</a><a *ngIf="location.phone" [href]="'tel:' + location.phone">Llamar</a><a *ngIf="location.websiteUrl" [href]="location.websiteUrl" target="_blank" rel="noopener">Sitio web</a></div>
         </article>
       </div>
     </div>
@@ -53,14 +52,14 @@
           </div>
           <div *ngIf="layer.type !== 'shape' && layer.type !== 'image' && !layer.style?.iconName && layer.binding?.startsWith('display.itinerary.')">{{ resolveLayerText(layer) }}</div>
           <div *ngIf="layer.type === 'text' && !layer.style?.iconName && layer.binding?.startsWith('itinerary.')">{{ itineraryLayerText(layer) }}</div>
-          <a *ngIf="layer.binding?.endsWith('.location')" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="itineraryLayerHref(layer)" target="_blank" rel="noopener">{{ layer.text }}</a>
+          <a *ngIf="layer.binding?.endsWith('.location')" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="itineraryLayerHref(layer)" [attr.target]="itineraryLayerHref(layer) !== '#' ? '_blank' : null" rel="noopener">{{ layer.text || itineraryLayerLocationLabel(layer) }}</a>
         </div>
       </ng-container>
     </div>
 
     <div class="functional-module" *ngIf="section.type === 'itinerary' && !hasItineraryCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Programa') }}</small><h2>{{ section.title || 'Itinerario' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>
-      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><span *ngIf="item.icon">{{ item.icon }}</span><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ item.description }}</p><a *ngIf="item.locationUrl" [href]="item.locationUrl" target="_blank" rel="noopener">{{ item.locationLabel || 'Ver ubicación' }}</a></div></article></div>
+      <div class="timeline"><article *ngFor="let item of invitation?.content?.itinerary"><span *ngIf="item.icon">{{ item.icon }}</span><time>{{ item.time }}</time><div><h3>{{ item.title }}</h3><p *ngIf="pluginSetting(section, 'showDescription', true)">{{ item.description }}</p><a [href]="item.locationUrl || '#'" [attr.target]="item.locationUrl ? '_blank' : null" rel="noopener">{{ item.locationLabel || 'Ver ubicación' }}</a></div></article></div>
     </div>
 
     <div *ngIf="hasDressCodeCanvasLayers(section)" class="rsvp-layer-form dress-code-layer-form">
@@ -132,11 +131,11 @@
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Un detalle opcional') }}</small><h2>{{ section.title || 'Mesa de regalos' }}</h2><p class="module-intro">{{ pluginSetting(section, 'introText') || invitation?.content?.giftSettings?.introText }}</p>
       <div class="module-grid">
         <ng-container *ngIf="pluginSetting(section, 'showRegistry', true)"><article *ngFor="let gift of invitation?.content?.giftRegistry">
-          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a *ngIf="gift.url" [href]="gift.url" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mesa') }}</a>
+          <img *ngIf="gift.imageUrl" [src]="gift.imageUrl" [alt]="gift.store || gift.title || 'Mesa de regalos'" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async"><h3>{{ gift.title || gift.store }}</h3><p>{{ gift.note }}</p><a [href]="gift.url || '#'" [attr.target]="gift.url ? '_blank' : null" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Abrir mesa') }}</a>
         </article></ng-container>
         <article *ngIf="pluginSetting(section, 'showEnvelope', true) && invitation?.content?.digitalEnvelope as envelope">
           <h3>Sobre digital</h3><p>{{ envelope.bank }} · {{ envelope.holder }}</p><p *ngIf="envelope.clabe"><strong>CLABE:</strong> {{ envelope.clabe }}</p><p *ngIf="envelope.account"><strong>Cuenta:</strong> {{ envelope.account }}</p><p>{{ envelope.note }}</p>
-          <button *ngIf="envelope.clabe || envelope.account" type="button" (click)="copyGiftValue(envelope.clabe || envelope.account)">{{ pluginSetting(section, 'envelopeButtonText', 'Copiar datos') }}</button>
+          <button type="button" (click)="copyGiftValue(envelope.clabe || envelope.account || '')">{{ pluginSetting(section, 'envelopeButtonText', 'Copiar datos') }}</button>
         </article>
       </div>
       <p class="feedback success" *ngIf="giftCopyMessage">{{ giftCopyMessage }}</p>
@@ -152,7 +151,7 @@
           <div *ngIf="layer.type === 'image' && (layer.binding?.endsWith('.image') || lodgingLayerImageUrl(layer)) && lodgingLayerImageUrl(layer) as imgUrl" class="image-frame" [ngStyle]="imageMaskStyle(layer)">
             <img [src]="imgUrl" [alt]="lodgingLayerText(layer) || 'Hospedaje recomendado'" [ngStyle]="imageStyle(layer)" [attr.loading]="exportMode ? 'eager' : 'lazy'" decoding="async">
           </div>
-          <a *ngIf="layer.type === 'button'" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="lodgingLayerHref(layer)" [attr.target]="layer.binding?.endsWith('.phone') ? null : '_blank'" rel="noopener">{{ layer.text }}</a>
+          <a *ngIf="layer.type === 'button'" class="visual-action-button" [attr.data-button-icon]="layer.style?.buttonIcon || null" [class.button-icon-after]="layer.style?.buttonIconPosition === 'after'" [class.button-glass]="layer.style?.buttonVariant === 'glass'" [href]="lodgingLayerHref(layer)" [attr.target]="layer.binding?.endsWith('.phone') || lodgingLayerHref(layer) === '#' ? null : '_blank'" rel="noopener">{{ layer.text || defaultLodgingButtonLabel(section, layer) }}</a>
         </div>
       </ng-container>
     </div>
@@ -169,7 +168,7 @@
           <p *ngIf="pluginSetting(section, 'showDiscount', true) && hotel.discountDescription">{{ hotel.discountDescription }}</p>
           <div class="lodging-services" *ngIf="pluginSetting(section, 'showServices', true) && hotel.services?.length"><span *ngFor="let service of hotel.services">{{ service }}</span></div>
           <p *ngIf="hotel.notes">{{ hotel.notes }}</p>
-          <div class="module-actions"><a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Reservar') }}</a><a *ngIf="pluginSetting(section, 'showMap', true) && hotel.mapUrl" [href]="hotel.mapUrl" target="_blank" rel="noopener">Mapa</a><a *ngIf="pluginSetting(section, 'showPhone', true) && hotel.phone" [href]="'tel:' + hotel.phone">Llamar</a></div>
+          <div class="module-actions"><a [href]="hotel.url || '#'" [attr.target]="hotel.url ? '_blank' : null" rel="noopener">{{ pluginSetting(section, 'primaryButtonText', 'Reservar') }}</a><a *ngIf="pluginSetting(section, 'showMap', true)" [href]="hotel.mapUrl || '#'" [attr.target]="hotel.mapUrl ? '_blank' : null" rel="noopener">Mapa</a><a *ngIf="pluginSetting(section, 'showPhone', true)" [href]="hotel.phone ? 'tel:' + hotel.phone : '#'">Llamar</a></div>
         </article>
       </div>
     </div>
@@ -393,6 +392,7 @@
         </form>
       </ng-template>
     </div>
+    <ng-container *ngIf="presentationMode === 'chapters'" [ngTemplateOutlet]="visualLayersTemplate" [ngTemplateOutletContext]="{ section: section, sectionIndex: sectionIndex, continuous: false }"></ng-container>
     </div>
   </section>
   <div *ngIf="presentationMode === 'continuous'" class="continuous-layer-plane" [style.height.px]="continuousCanvasHeight">

@@ -711,10 +711,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (parsed.key === 'card') return true;
     if (parsed.key === 'image') return Boolean(location.imageUrl || layer.url);
     if (parsed.key === 'details') return Boolean(location.parking || location.transport || location.accessibility || location.schedule?.length || layer.text);
-    if (parsed.key === 'map') return Boolean(this.locationLayerHref(section, layer) || layer.text || layer.url);
-    if (parsed.key === 'waze') return Boolean(this.locationLayerHref(section, layer) || layer.text || layer.url);
-    if (parsed.key === 'phone') return Boolean(location.phone || layer.url || layer.text);
-    if (parsed.key === 'website') return Boolean(location.websiteUrl || layer.url || layer.text);
+    if (parsed.key === 'map') return true;
+    if (parsed.key === 'waze') return true;
+    if (parsed.key === 'phone') return true;
+    if (parsed.key === 'website') return true;
     return Boolean(this.locationLayerText(section, layer) || layer.text);
   }
 
@@ -746,7 +746,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   locationLayerHref(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
     const parsed = this.locationLayerParts(String(layer.binding || ''));
     const location = parsed ? this.locationsFor(section)[parsed.index] : undefined;
-    if (!parsed || !location) return layer.url || '';
+    if (!parsed || !location) return layer.url || '#';
     const query = [location.name, location.address].filter(Boolean).join(', ');
     if (parsed.key === 'map') {
       if (location.mapUrl) return location.mapUrl;
@@ -756,9 +756,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       if (location.wazeUrl) return location.wazeUrl;
       return query ? `https://waze.com/ul?q=${encodeURIComponent(query)}` : (layer.url || 'https://waze.com');
     }
-    if (parsed.key === 'phone') return location.phone ? `tel:${location.phone}` : (layer.url || '');
-    if (parsed.key === 'website') return location.websiteUrl || layer.url || '';
-    return layer.url || '';
+    if (parsed.key === 'phone') return location.phone ? `tel:${location.phone}` : (layer.url || '#');
+    if (parsed.key === 'website') return location.websiteUrl || layer.url || '#';
+    return layer.url || '#';
   }
 
   private locationLayerParts(binding: string): { index: number; key: string } | null {
@@ -790,7 +790,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       }
       if (gift.key === 'card') return true;
       if (gift.key === 'image') return Boolean(item.imageUrl || layer.url);
-      if (gift.key === 'open') return Boolean(item.url || layer.url || layer.text);
+      if (gift.key === 'open') return true;
       return Boolean(this.giftLayerText(layer) || layer.text);
     }
     if (!binding.startsWith('envelope.') && binding !== 'display.gifts.envelopeTitle') return false;
@@ -798,8 +798,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const envelope = this.invitation?.content?.digitalEnvelope;
     if (binding === 'envelope.card' || binding === 'display.gifts.envelopeTitle') return true;
     if (binding === 'envelope.qr') return Boolean(envelope?.qrImageUrl || layer.url);
-    if (binding === 'envelope.copyAccount') return Boolean(envelope?.account || layer.text);
-    if (binding === 'envelope.copyClabe') return Boolean(envelope?.clabe || layer.text);
+    if (binding === 'envelope.copyAccount' || binding === 'envelope.copyClabe') return true;
     if (binding === 'envelope.feedback') return Boolean(this.giftCopyMessage);
     return Boolean(this.giftLayerText(layer) || layer.text);
   }
@@ -874,7 +873,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     }
     if (parsed.key === 'card') return true;
     if (parsed.key === 'description' && this.pluginSetting(section, 'showDescription', true) === false) return false;
-    if (parsed.key === 'location') return Boolean(item.locationUrl || layer.url || layer.text);
+    if (parsed.key === 'location') return true;
     return Boolean(this.itineraryLayerText(layer) || layer.text);
   }
 
@@ -886,12 +885,19 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (parsed.key === 'time') return item.time || layer.text || '';
     if (parsed.key === 'title') return item.title || layer.text || '';
     if (parsed.key === 'description') return item.description || layer.text || '';
+    if (parsed.key === 'location') return layer.text || item.locationLabel || 'Ver ubicación';
     return layer.text || '';
+  }
+
+  itineraryLayerLocationLabel(layer: VisualInvitationLayer): string {
+    const parsed = this.itineraryLayerParts(String(layer.binding || ''));
+    const item = parsed ? this.invitation?.content?.itinerary?.[parsed.index] : undefined;
+    return item?.locationLabel || 'Ver ubicación';
   }
 
   itineraryLayerHref(layer: VisualInvitationLayer): string {
     const parsed = this.itineraryLayerParts(String(layer.binding || ''));
-    return parsed?.key === 'location' ? this.invitation?.content?.itinerary?.[parsed.index]?.locationUrl || layer.url || '' : layer.url || '';
+    return (parsed?.key === 'location' ? this.invitation?.content?.itinerary?.[parsed.index]?.locationUrl : '') || layer.url || '#';
   }
 
   private itineraryLayerParts(binding: string): { index: number; key: string } | null {
@@ -980,10 +986,19 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (parsed.key === 'price') return this.pluginSetting(section, 'showPrice', true) !== false && Boolean(hotel.priceLabel || layer.text);
     if (parsed.key === 'agreement' || parsed.key === 'discount') return this.pluginSetting(section, 'showDiscount', true) !== false && Boolean(this.lodgingLayerText(layer) || layer.text);
     if (parsed.key === 'services') return this.pluginSetting(section, 'showServices', true) !== false && Boolean(hotel.services?.length || layer.text);
-    if (parsed.key === 'reserve') return Boolean(hotel.url || layer.url || layer.text);
-    if (parsed.key === 'map') return this.pluginSetting(section, 'showMap', true) !== false && Boolean(hotel.mapUrl || layer.url || layer.text);
-    if (parsed.key === 'phone') return this.pluginSetting(section, 'showPhone', true) !== false && Boolean(hotel.phone || layer.url || layer.text);
+    if (parsed.key === 'reserve') return true;
+    if (parsed.key === 'map') return this.pluginSetting(section, 'showMap', true) !== false;
+    if (parsed.key === 'phone') return this.pluginSetting(section, 'showPhone', true) !== false;
     return Boolean(this.lodgingLayerText(layer) || layer.text);
+  }
+
+  defaultLodgingButtonLabel(section: VisualInvitationSection, layer: VisualInvitationLayer): string {
+    const parsed = this.lodgingLayerParts(String(layer.binding || ''));
+    if (!parsed) return 'Acción';
+    if (parsed.key === 'reserve') return String(this.pluginSetting(section, 'primaryButtonText') || 'Reservar');
+    if (parsed.key === 'map') return 'Abrir mapa';
+    if (parsed.key === 'phone') return 'Llamar';
+    return 'Acción';
   }
 
   lodgingLayerText(layer: VisualInvitationLayer): string {
@@ -1009,15 +1024,15 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   lodgingLayerHref(layer: VisualInvitationLayer): string {
     const parsed = this.lodgingLayerParts(String(layer.binding || ''));
     const hotel = parsed ? this.invitation?.content?.lodging?.[parsed.index] : undefined;
-    if (!parsed || !hotel) return layer.url || '';
-    if (parsed.key === 'reserve') return hotel.url || layer.url || '';
+    if (!parsed || !hotel) return layer.url || '#';
+    if (parsed.key === 'reserve') return hotel.url || layer.url || '#';
     if (parsed.key === 'map') {
       if (hotel.mapUrl) return hotel.mapUrl;
       const query = [hotel.name, hotel.address].filter(Boolean).join(', ');
-      return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : (layer.url || '');
+      return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : (layer.url || '#');
     }
-    if (parsed.key === 'phone') return hotel.phone ? `tel:${hotel.phone}` : (layer.url || '');
-    return layer.url || '';
+    if (parsed.key === 'phone') return hotel.phone ? `tel:${hotel.phone}` : (layer.url || '#');
+    return layer.url || '#';
   }
 
   private lodgingLayerParts(binding: string): { index: number; key: string } | null {

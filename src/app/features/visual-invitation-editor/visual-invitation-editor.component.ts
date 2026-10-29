@@ -4749,14 +4749,25 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   editorLayerUnavailableReason(layer: VisualInvitationLayer): string {
     if (layer.type !== 'button') return '';
     const match = String(layer.binding || '').match(/^location\.(\d+)\.(map|waze|phone|website)$/);
-    if (!match) return '';
-    const location = this.locationSourceData()[Number(match[1])];
-    if (!location) return 'Esta ubicación ya no existe y la acción no se publicará.';
-    const value = match[2] === 'map' ? location.mapUrl
-      : match[2] === 'waze' ? location.wazeUrl
-        : match[2] === 'phone' ? location.phone
-          : location.websiteUrl;
-    return value ? '' : 'Falta configurar este dato; el botón no aparecerá en la invitación pública.';
+    if (match) {
+      const location = this.locationSourceData()[Number(match[1])];
+      if (!location) return 'Esta ubicación ya no existe y la acción no se publicará.';
+      const value = match[2] === 'map' ? location.mapUrl
+        : match[2] === 'waze' ? location.wazeUrl
+          : match[2] === 'phone' ? location.phone
+            : location.websiteUrl;
+      return value ? '' : 'Falta configurar este enlace o teléfono en la sección.';
+    }
+    const itineraryMatch = String(layer.binding || '').match(/^itinerary\.(\d+)\.location$/);
+    if (itineraryMatch) {
+      const item = this.itinerarySourceData()[Number(itineraryMatch[1])];
+      const hasUrl = Boolean(item?.locationUrl || layer.url);
+      return hasUrl ? '' : 'Falta configurar el enlace de este botón en el itinerario.';
+    }
+    if (!layer.binding && !layer.url?.trim()) {
+      return 'Falta configurar el enlace de este botón; no tendrá acción para los invitados.';
+    }
+    return '';
   }
 
   setLayerControlStyle(layer: VisualInvitationLayer, key: 'controlVariant' | 'controlShape', value: string): void {
