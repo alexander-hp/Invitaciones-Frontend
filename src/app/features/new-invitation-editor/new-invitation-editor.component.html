@@ -82,13 +82,17 @@
             <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="save()" [disabled]="saving">
               {{ saving ? 'Guardando...' : 'Guardar cambios' }}
             </button>
-            <button type="button" *ngIf="invitation.status !== 'published'" class="nw-btn nw-btn-primary nw-btn-sm"
-              (click)="publish()" [disabled]="publishing">
-              {{ publishing ? 'Publicando...' : 'Publicar' }}
+            <button type="button" class="nw-btn nw-btn-primary nw-btn-sm"
+              (click)="publish()" [disabled]="publishing || saving">
+              {{ publishing ? 'Publicando...' : (invitation.status === 'published' ? 'Publicar cambios' : 'Publicar') }}
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="viewPreview()"
+              *ngIf="invitation.slug" title="Ver cómo se ven tus cambios actuales en borrador">
+              Vista previa ↗
             </button>
             <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="viewPublic()"
-              *ngIf="invitation.slug">
-              {{ invitation.status === 'published' ? 'Ver pública ↗' : 'Vista previa ↗' }}
+              *ngIf="invitation.slug && invitation.status === 'published'" title="Ver la versión publicada oficial que ven tus invitados">
+              Ver pública ↗
             </button>
           </div>
         </div>

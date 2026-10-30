@@ -761,6 +761,14 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.invitation.content) this.invitation.content = {};
     this.hasSelectedDesign = true;
     this.invitation.content.template = key;
+    if (key !== 'visual-builder') {
+      if (this.invitation.content.visualDesign) {
+        this.invitation.content.visualDesign.active = false;
+      }
+      if (this.invitation.content.visualDesignDraft) {
+        this.invitation.content.visualDesignDraft.active = false;
+      }
+    }
     const invId = this.getInvitationId(this.invitation);
     const slug = this.invitation.slug;
     if (invId) {
@@ -792,6 +800,12 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     const tplKey = template.key || templateId || 'envelope-cards';
     this.hasSelectedDesign = true;
     this.invitation.content.template = tplKey;
+    if (this.invitation.content.visualDesign) {
+      this.invitation.content.visualDesign.active = false;
+    }
+    if (this.invitation.content.visualDesignDraft) {
+      this.invitation.content.visualDesignDraft.active = false;
+    }
     const invId = this.getInvitationId(this.invitation);
     if (invId) {
       localStorage.setItem(`inv_tpl_${invId}`, tplKey);
@@ -1253,6 +1267,16 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  viewPreview(): void {
+    if (!this.invitation) return;
+    if (!this.hasSelectedDesign) {
+      this.goToDesignChoice('Selecciona un diseño para poder abrir la vista previa.');
+      return;
+    }
+    const invId = this.getInvitationId(this.invitation);
+    window.open(`/new/i/${this.invitation.slug}?preview=true&previewId=${encodeURIComponent(invId)}&device=mobile`, '_blank');
   }
 
   viewPublic(): void {
@@ -2420,6 +2444,15 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       rawContent.template = activeTemplateKey;
     } else {
       delete rawContent.template;
+    }
+
+    if (activeTemplateKey && activeTemplateKey !== 'visual-builder') {
+      if (rawContent.visualDesign) {
+        rawContent.visualDesign.active = false;
+      }
+      if (rawContent.visualDesignDraft) {
+        rawContent.visualDesignDraft.active = false;
+      }
     }
 
     if (rawContent.storyTitle !== undefined) {

@@ -423,6 +423,13 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     delete this.invitation.content.sourceTemplateKey;
     delete this.invitation.template;
 
+    if (this.invitation.content.visualDesign) {
+      this.invitation.content.visualDesign.active = false;
+    }
+    if (this.invitation.content.visualDesignDraft) {
+      this.invitation.content.visualDesignDraft.active = false;
+    }
+
     this.invitation.content.template = key;
     this.hasSelectedDesign = true;
 
@@ -447,7 +454,9 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
 
     this.selectTemplateKey.emit(key);
     this.saveChanges.emit();
-    this.showSuccess(`Plantilla base "${this.getBuiltinName(key)}" activada.`);
+    const isPub = this.invitation?.status === 'published';
+    const note = isPub ? ' Recuerda hacer clic en "Publicar cambios" para actualizar tu versión pública.' : '';
+    this.showSuccess(`Plantilla base "${this.getBuiltinName(key)}" activada.${note}`);
     this.refreshPreview();
   }
 
@@ -472,6 +481,12 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     this.invitation.content.customPageApproved = sub.status === 'approved';
 
     const targetTpl = sub.sourceTemplateKey || 'custom-html';
+    if (this.invitation.content.visualDesign) {
+      this.invitation.content.visualDesign.active = false;
+    }
+    if (this.invitation.content.visualDesignDraft) {
+      this.invitation.content.visualDesignDraft.active = false;
+    }
     this.invitation.content.template = targetTpl;
     this.hasSelectedDesign = true;
 

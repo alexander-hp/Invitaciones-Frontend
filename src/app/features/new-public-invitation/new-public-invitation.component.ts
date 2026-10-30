@@ -483,7 +483,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.api.getInvitationPreview(slug).subscribe({
         next: ({ invitation }) => {
           this.accessRequired = false;
-          if (invitation.content?.visualDesignDraft) {
+          const draftTpl = (invitation.content as any)?.template;
+          if ((!draftTpl || draftTpl === 'visual-builder') && invitation.content?.visualDesignDraft) {
             invitation.content.visualDesign = {
               ...invitation.content.visualDesignDraft,
               active: true
@@ -527,7 +528,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.lastCustomHtmlInvitationRef = undefined;
     this.lastCustomCssInvitationRef = undefined;
     this.lastAmbientInvitationRef = undefined;
-    if (this.isPreviewMode && this.invitation.content?.visualDesignDraft) {
+    const activeTpl = (this.invitation.content as any)?.template;
+    if (this.isPreviewMode && (!activeTpl || activeTpl === 'visual-builder') && this.invitation.content?.visualDesignDraft) {
       this.invitation.content.visualDesign = {
         ...this.invitation.content.visualDesignDraft,
         active: true
@@ -1710,10 +1712,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return this.detectedSourceTemplate;
     }
 
-    if (this.invitation?.content?.visualDesign?.active) {
+    const invContentTpl = (this.invitation?.content as any)?.template;
+    if (invContentTpl && invContentTpl !== 'visual-builder') {
+      return invContentTpl;
+    }
+
+    if (this.invitation?.content?.visualDesign?.active && (!invContentTpl || invContentTpl === 'visual-builder')) {
       return 'visual-builder';
     }
-    const invContentTpl = (this.invitation?.content as any)?.template;
     if (invContentTpl === 'visual-builder') {
       return 'visual-builder';
     }
