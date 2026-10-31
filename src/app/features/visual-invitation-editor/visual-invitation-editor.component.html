@@ -545,6 +545,7 @@
         <button type="button" title="Archivos" [class.active]="toolCategory === 'assets'" [class.tutorial-focus]="tutorialStep === 3" [attr.aria-pressed]="toolCategory === 'assets'" (click)="toolCategory='assets';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Archivos</span></button>
         <button type="button" title="Funciones" [class.active]="toolCategory === 'functions'" [class.tutorial-focus]="tutorialStep === 4" [attr.aria-pressed]="toolCategory === 'functions'" (click)="toolCategory='functions';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="blocks" [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
         <button type="button" title="Secciones" [class.active]="toolCategory === 'sections'" [attr.aria-pressed]="toolCategory === 'sections'" (click)="toolCategory='sections';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="layers" [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
+        <button type="button" title="Pantalla de Acceso (Lista cerrada)" [class.active]="toolCategory === 'access'" [attr.aria-pressed]="toolCategory === 'access'" (click)="selectAccessCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon><span>Acceso</span></button>
       </nav>
       <div class="ve-tool-content" #toolContent>
       <ng-container *ngIf="toolCategory === 'design'">
@@ -1010,6 +1011,248 @@
         </div>
       </div>
       </ng-container>
+      <ng-container *ngIf="toolCategory === 'access'">
+      <div class="access-tools-header">
+        <div class="access-badge-indicator" [class.is-closed]="invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users'">
+          <lucide-icon name="lock-keyhole" [strokeWidth]="2"></lucide-icon>
+          <span>{{ (invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users') ? 'Lista Cerrada Activa' : 'Modo Público' }}</span>
+        </div>
+        <h2>Pantalla de Acceso</h2>
+        <p class="hint">Diseña la pantalla de bienvenida y validación para tus invitados cuando tu invitación es de lista cerrada.</p>
+        <p *ngIf="invitation?.accessMode !== 'guest_list' && invitation?.accessMode !== 'specific_users'" class="access-mode-warning">
+          ℹ️ Esta pantalla se mostrará a los invitados cuando el acceso de la invitación esté configurado en <strong>Lista cerrada</strong>. Puedes diseñar y probar su aspecto aquí mismo.
+        </p>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN RÁPIDA -->
+      <div class="access-quick-actions">
+        <button type="button" class="btn-access-action" (click)="setEditorCanvasMode('access')" [class.active]="editorCanvasMode === 'access'">
+          <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en el lienzo
+        </button>
+        <button type="button" class="btn-access-action" (click)="syncAccessScreenWithTheme()">
+          <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar del tema
+        </button>
+      </div>
+
+      <!-- PRESETS ESTILOS -->
+      <details class="theme-editor" open>
+        <summary>Estilos y Presets Rápidos</summary>
+        <p class="hint">Aplica combinaciones elegantes pre-diseñadas para listas cerradas.</p>
+        <div class="access-presets-grid">
+          <button *ngFor="let p of accessPresets" type="button" class="access-preset-card" (click)="applyAccessPreset(p.key)">
+            <span class="preset-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
+            <div class="preset-info">
+              <strong>{{ p.name }}</strong>
+              <small>{{ p.description }}</small>
+            </div>
+          </button>
+        </div>
+      </details>
+
+      <!-- FONDO DE LA PANTALLA -->
+      <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+        <summary>Fondo de la pantalla</summary>
+        <div class="access-field-group">
+          <label>Tipo de fondo
+            <select [(ngModel)]="acc.backgroundType" (ngModelChange)="recordHistory()">
+              <option value="gradient">Degradado refinado</option>
+              <option value="image">Imagen de fondo</option>
+              <option value="color">Color sólido</option>
+            </select>
+          </label>
+        </div>
+
+        <div *ngIf="acc.backgroundType === 'color'" class="access-field-group">
+          <label>Color de fondo
+            <input type="color" [(ngModel)]="acc.backgroundColor" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+
+        <div *ngIf="acc.backgroundType === 'gradient'" class="access-field-group">
+          <label>Degradado
+            <select [(ngModel)]="acc.backgroundGradient" (ngModelChange)="recordHistory()">
+              <option value="linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)">Obsidiana Real (Azul Marino Profundo)</option>
+              <option value="linear-gradient(145deg, #0a0d14 0%, #161c29 50%, #06080d 100%)">Noche Oscura VIP (Obsidiana)</option>
+              <option value="linear-gradient(135deg, #2f5348 0%, #1a352d 50%, #0d1e19 100%)">Esmeralda Bosque</option>
+              <option value="linear-gradient(135deg, #42273b 0%, #261623 50%, #170d15 100%)">Vino Tinto & Borgoña</option>
+              <option value="linear-gradient(135deg, #f4e9e2 0%, #faede8 50%, #e8f0eb 100%)">Champagne & Blush Suave</option>
+              <option value="linear-gradient(135deg, #1b2838 0%, #141c24 100%)">Azul Medianoche</option>
+            </select>
+          </label>
+        </div>
+
+        <div *ngIf="acc.backgroundType === 'image'" class="access-field-group">
+          <label>URL de imagen
+            <input type="text" [(ngModel)]="acc.backgroundImageUrl" (ngModelChange)="recordHistory()" placeholder="https://ejemplo.com/portada.jpg">
+          </label>
+          <button *ngIf="invitation?.content?.coverImageUrl" type="button" class="btn-text-action" (click)="useCoverImageForAccessBackground()">
+            🖼 Usar foto de portada del evento
+          </button>
+        </div>
+
+        <div class="access-field-group">
+          <label>Oscurecimiento del fondo (Overlay): {{ acc.backgroundOverlayOpacity || 0 }}%
+            <input type="range" min="0" max="95" step="5" [(ngModel)]="acc.backgroundOverlayOpacity" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label>Desenfoque de fondo: {{ acc.backgroundBlur || 0 }}px
+            <input type="range" min="0" max="25" step="1" [(ngModel)]="acc.backgroundBlur" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+      </details>
+
+      <!-- TARJETA CONTENEDORA -->
+      <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+        <summary>Tarjeta de acceso</summary>
+        <div class="access-field-group">
+          <label>Estilo de tarjeta
+            <select [(ngModel)]="acc.cardStyle" (ngModelChange)="recordHistory()">
+              <option value="glass">Cristal translúcido (Glassmorphism)</option>
+              <option value="solid">Sólida elegante</option>
+              <option value="bordered">Borde de acento fino</option>
+              <option value="minimal">Minimalista (sin tarjeta)</option>
+            </select>
+          </label>
+        </div>
+
+        <div *ngIf="acc.cardStyle !== 'minimal'" class="access-colors-row">
+          <label>Fondo de tarjeta
+            <input type="color" [(ngModel)]="acc.cardBgColor" (ngModelChange)="recordHistory()">
+          </label>
+          <label>Acento / Borde
+            <input type="color" [(ngModel)]="acc.accentColor" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+
+        <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
+          <label>Opacidad de tarjeta: {{ acc.cardOpacity || 0 }}%
+            <input type="range" min="10" max="100" step="5" [(ngModel)]="acc.cardOpacity" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+
+        <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
+          <label>Redondeo de esquinas: {{ acc.cardRadius ?? 18 }}px
+            <input type="range" min="0" max="40" step="2" [(ngModel)]="acc.cardRadius" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+
+        <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
+          <label>Sombra
+            <select [(ngModel)]="acc.cardShadow" (ngModelChange)="recordHistory()">
+              <option value="glow">Resplandor suave de acento</option>
+              <option value="elevated">Sombra elevada y profunda</option>
+              <option value="soft">Sombra sutil</option>
+              <option value="none">Sin sombra</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <!-- TEXTOS E IDENTIDAD -->
+      <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+        <summary>Textos y Cabecera</summary>
+        <div class="access-field-group">
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="acc.showBadge" (ngModelChange)="recordHistory()"> Mostrar insignia superior
+          </label>
+        </div>
+
+        <div *ngIf="acc.showBadge" class="access-field-group">
+          <label>Texto de insignia
+            <input type="text" [(ngModel)]="acc.badgeText" (ngModelChange)="recordHistory()" placeholder="Ej. Acceso Personal, VIP, Exclusivo">
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="acc.showIcon" (ngModelChange)="recordHistory()"> Mostrar ícono
+          </label>
+        </div>
+
+        <div *ngIf="acc.showIcon" class="access-field-group">
+          <label>Ícono
+            <select [(ngModel)]="acc.iconName" (ngModelChange)="recordHistory()">
+              <option value="lock-keyhole">Candado (Seguro / Cerrado)</option>
+              <option value="key-round">Llave (Acceso)</option>
+              <option value="crown">Corona (VIP)</option>
+              <option value="sparkles">Destellos (Magia)</option>
+              <option value="gem">Diamante (Joya)</option>
+              <option value="heart">Corazón (Amor)</option>
+              <option value="ticket-check">Ticket (Pase)</option>
+              <option value="shield-check">Escudo (Verificado)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label>Logo o Monograma opcional (URL)
+            <input type="text" [(ngModel)]="acc.logoUrl" (ngModelChange)="recordHistory()" placeholder="https://ejemplo.com/logo.png">
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label>Título principal
+            <input type="text" [(ngModel)]="acc.title" (ngModelChange)="recordHistory()" placeholder="Acceso a la invitación">
+          </label>
+        </div>
+
+        <app-visual-font-picker label="Tipografía del título" [(value)]="acc.headingFont"></app-visual-font-picker>
+
+        <div class="access-field-group">
+          <label>Mensaje / Subtítulo
+            <textarea [(ngModel)]="acc.subtitle" (ngModelChange)="recordHistory()" rows="3" placeholder="Esta invitación requiere un enlace personal..."></textarea>
+          </label>
+        </div>
+
+        <app-visual-font-picker label="Tipografía de textos" [(value)]="acc.bodyFont"></app-visual-font-picker>
+
+        <div class="access-colors-row">
+          <label>Color de texto / título
+            <input type="color" [(ngModel)]="acc.textColor" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+      </details>
+
+      <!-- FORMULARIO Y BOTÓN -->
+      <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+        <summary>Formulario y Botón</summary>
+        <div class="access-field-group">
+          <label>Etiqueta del campo
+            <input type="text" [(ngModel)]="acc.inputLabel" (ngModelChange)="recordHistory()" placeholder="Correo o teléfono registrado">
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label>Texto placeholder del campo
+            <input type="text" [(ngModel)]="acc.inputPlaceholder" (ngModelChange)="recordHistory()" placeholder="ejemplo@correo.com o tu teléfono">
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label>Texto del botón
+            <input type="text" [(ngModel)]="acc.buttonText" (ngModelChange)="recordHistory()" placeholder="Solicitar enlace">
+          </label>
+        </div>
+
+        <div class="access-colors-row">
+          <label>Fondo de botón
+            <input type="color" [(ngModel)]="acc.buttonBgColor" (ngModelChange)="recordHistory()">
+          </label>
+          <label>Texto de botón
+            <input type="color" [(ngModel)]="acc.buttonTextColor" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+
+        <div class="access-field-group">
+          <label>Redondeo de botón: {{ acc.buttonRadius ?? 10 }}px
+            <input type="range" min="0" max="30" step="2" [(ngModel)]="acc.buttonRadius" (ngModelChange)="recordHistory()">
+          </label>
+        </div>
+      </details>
+      </ng-container>
+
       <div class="save-template-box" *ngIf="toolCategory === 'design'">
         <label>Guardar diseño como plantilla<input [(ngModel)]="templateName" type="text" placeholder="Ej. Bodas elegantes"></label>
         <button type="button" [disabled]="savingTemplate" (click)="saveAsTemplate()">{{ savingTemplate ? 'Guardando...' : 'Guardar en mi cuenta' }}</button>
@@ -1020,6 +1263,16 @@
     <main #editorStage class="ve-stage" [class.touch-gesturing]="touchGestureActive">
       <div class="touch-zoom-indicator" *ngIf="touchZoomVisible">{{ touchGestureLabel }}</div>
       <div class="canvas-toolbar" [class.tutorial-focus]="tutorialStep === 5" aria-label="Controles del lienzo">
+        <div class="canvas-view-mode-tabs" role="tablist" aria-label="Vista del editor">
+          <button type="button" class="view-mode-tab" [class.active]="editorCanvasMode === 'invitation'" (click)="setEditorCanvasMode('invitation')" title="Ver lienzo de la invitación">
+            <lucide-icon name="layers" [strokeWidth]="1.8"></lucide-icon>
+            <span>Invitación</span>
+          </button>
+          <button type="button" class="view-mode-tab" [class.active]="editorCanvasMode === 'access'" (click)="setEditorCanvasMode('access')" title="Ver y diseñar pantalla de acceso (lista cerrada)">
+            <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
+            <span>Pantalla de Acceso</span>
+          </button>
+        </div>
         <button class="canvas-quick-action" type="button" (click)="setMobilePanel('tools')">+ Agregar</button>
         <button class="canvas-quick-action" type="button" *ngIf="!selectedLayerCount" (click)="toolCategory='functions'; setMobilePanel('tools')">Funciones</button>
         <button class="canvas-quick-action" type="button" *ngIf="selectedLayerCount" (click)="openMobileInspector()" [title]="'Editar ' + mobileSelectionLabel">✎ Editar selección</button>
@@ -1049,7 +1302,7 @@
       </div>
       <div class="artboard-viewport" [style.width.px]="artboardWidth * canvasZoom" [style.height.px]="artboardHeight * canvasZoom">
       <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
-        <div cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list" [class.continuous-design]="design.presentationMode !== 'chapters'">
+        <div *ngIf="editorCanvasMode === 'invitation'" cdkDropList [cdkDropListData]="design.sections" (cdkDropListDropped)="dropSection($event)" class="section-list" [class.continuous-design]="design.presentationMode !== 'chapters'">
           <section *ngFor="let section of design.sections; trackBy: trackVisualById" cdkDrag class="canvas-section" [attr.data-section-id]="section.id" [class.selected]="section.id === selectedSectionId" [class.disabled]="!section.enabled" [ngStyle]="sectionStyle(section)" (click)="selectSection(section)">
             <div class="section-top-toolbar" (click)="$event.stopPropagation()">
               <div class="section-handle" cdkDragHandle title="Mover sección">⋮⋮</div>
@@ -1228,6 +1481,71 @@
               </div>
             </div>
           </section>
+        </div>
+        <!-- PANTALLA DE ACCESO EN VIVO (EDITOR) -->
+        <div *ngIf="editorCanvasMode === 'access'" class="artboard-access-screen" [ngStyle]="getAccessScreenStageStyle()">
+          <div class="access-stage-bg" [ngStyle]="getAccessScreenBackgroundStyle()"></div>
+          <div class="access-stage-overlay" [style.background]="getAccessScreenOverlayStyle()"></div>
+          <div class="access-stage-card-wrap">
+            <div class="access-stage-card" [ngClass]="'card-style-' + (design.accessScreen?.cardStyle || 'glass')" [ngStyle]="getAccessScreenCardStyle()">
+              <!-- Badge -->
+              <div *ngIf="design.accessScreen?.showBadge" class="access-stage-badge" [style.color]="design.accessScreen?.accentColor || '#c59b6c'" [style.border-color]="design.accessScreen?.accentColor || '#c59b6c'">
+                <lucide-icon *ngIf="design.accessScreen?.showIcon" [name]="design.accessScreen?.iconName || 'lock-keyhole'" [strokeWidth]="2"></lucide-icon>
+                <span>{{ design.accessScreen?.badgeText || 'Acceso Exclusivo' }}</span>
+              </div>
+              <!-- Logo o Monograma -->
+              <div *ngIf="design.accessScreen?.logoUrl" class="access-stage-logo">
+                <img [src]="design.accessScreen?.logoUrl" alt="Logo de acceso">
+              </div>
+              <div *ngIf="!design.accessScreen?.logoUrl && design.accessScreen?.showIcon && !design.accessScreen?.showBadge" class="access-stage-icon-circle" [style.background]="(design.accessScreen?.accentColor || '#c59b6c') + '22'" [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
+                <lucide-icon [name]="design.accessScreen?.iconName || 'lock-keyhole'" [strokeWidth]="2"></lucide-icon>
+              </div>
+              <!-- Titulo y Subtitulo -->
+              <h2 class="access-stage-title" [style.font-family]="design.accessScreen?.headingFont || 'Playfair Display'" [style.color]="design.accessScreen?.textColor || '#1c2434'">
+                {{ design.accessScreen?.title || 'Acceso a la invitación' }}
+              </h2>
+              <p class="access-stage-subtitle" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'" [style.color]="(design.accessScreen?.textColor || '#1c2434') + 'cc'">
+                {{ design.accessScreen?.subtitle || 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.' }}
+              </p>
+              <!-- Formulario Interactivo de Simulacion -->
+              <form class="access-stage-form" (submit)="$event.preventDefault(); testAccessSimSubmit()">
+                <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'" [style.color]="design.accessScreen?.textColor || '#1c2434'">
+                  {{ design.accessScreen?.inputLabel || 'Correo o teléfono registrado' }}
+                </label>
+                <div class="access-stage-input-wrap">
+                  <input
+                    type="text"
+                    class="access-stage-input"
+                    [(ngModel)]="accessSimInput"
+                    name="simContact"
+                    [placeholder]="design.accessScreen?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono'"
+                    [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                </div>
+                <button
+                  type="button"
+                  class="access-stage-btn"
+                  (click)="testAccessSimSubmit()"
+                  [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
+                  [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"
+                  [style.border-radius.px]="design.accessScreen?.buttonRadius ?? 10"
+                  [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                  <span>{{ accessSimState === 'loading' ? 'Verificando...' : (design.accessScreen?.buttonText || 'Solicitar enlace') }}</span>
+                </button>
+              </form>
+              <!-- Alertas de estado en simulacion -->
+              <div *ngIf="accessSimState === 'success'" class="access-stage-alert success">
+                <span>✓</span> {{ accessSimMessage }}
+                <button type="button" class="alert-reset-btn" (click)="resetAccessSim()">Cerrar</button>
+              </div>
+              <div *ngIf="accessSimState === 'error'" class="access-stage-alert error">
+                <span>⚠</span> {{ accessSimMessage }}
+                <button type="button" class="alert-reset-btn" (click)="resetAccessSim()">Intentar de nuevo</button>
+              </div>
+              <div class="access-stage-sim-hint">
+                <small>💡 Vista previa interactiva · Puedes escribir y hacer clic para probar el diseño.</small>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       </div>

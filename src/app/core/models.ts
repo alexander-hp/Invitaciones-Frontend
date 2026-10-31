@@ -536,6 +536,39 @@ export interface VisualInvitationSection {
   layers: VisualInvitationLayer[];
 }
 
+export interface VisualAccessScreenDesign {
+  enabled?: boolean;
+  title?: string;
+  subtitle?: string;
+  inputLabel?: string;
+  inputPlaceholder?: string;
+  buttonText?: string;
+  badgeText?: string;
+  showBadge?: boolean;
+  showIcon?: boolean;
+  iconName?: string;
+  logoUrl?: string;
+  cardStyle?: 'glass' | 'solid' | 'minimal' | 'bordered';
+  cardBgColor?: string;
+  cardOpacity?: number;
+  cardRadius?: number;
+  cardShadow?: 'none' | 'soft' | 'elevated' | 'glow';
+  backgroundType?: 'color' | 'gradient' | 'image';
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  backgroundImageUrl?: string;
+  backgroundOverlayOpacity?: number;
+  backgroundBlur?: number;
+  primaryColor?: string;
+  textColor?: string;
+  accentColor?: string;
+  buttonBgColor?: string;
+  buttonTextColor?: string;
+  buttonRadius?: number;
+  headingFont?: string;
+  bodyFont?: string;
+}
+
 export interface VisualInvitationDesign {
   version: number;
   active: boolean;
@@ -555,6 +588,7 @@ export interface VisualInvitationDesign {
   };
   assets?: VisualInvitationAsset[];
   sections: VisualInvitationSection[];
+  accessScreen?: VisualAccessScreenDesign;
 }
 
 export interface VisualDesignTemplateModel {
@@ -633,6 +667,7 @@ export interface InvitationContent {
   privateAlbumEnabled?: boolean;
   visualDesign?: VisualInvitationDesign;
   visualDesignDraft?: VisualInvitationDesign;
+  accessScreen?: VisualAccessScreenDesign;
   editedTexts?: Record<string, string>;
   sourceTemplateKey?: string;
   activeCustomTemplateId?: string;

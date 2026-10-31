@@ -145,15 +145,36 @@
   <p class="nw-pub-state-text">Cargando tu invitación especial...</p>
 </div>
 
-<div *ngIf="accessRequired && !invitation" class="nw-pub-state-container access-gate">
-  <h2>Acceso a la invitación</h2>
-  <p>{{ accessMessage }}</p>
-  <form (ngSubmit)="checkGuestAccess()" class="access-gate-form">
-    <label for="guest-access-contact">Correo o teléfono registrado</label>
-    <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput" autocomplete="email" required>
-    <button type="submit" [disabled]="checkingGuest">{{ checkingGuest ? 'Enviando...' : 'Solicitar enlace' }}</button>
-  </form>
-  <p *ngIf="error" role="alert">{{ error }}</p>
+<div *ngIf="accessRequired && !invitation" class="nw-pub-access-gate-viewport" [ngStyle]="getAccessGateBackgroundStyle()">
+  <div class="nw-pub-access-gate-overlay" [style.background]="getAccessGateOverlayStyle()"></div>
+  <div class="nw-pub-access-gate-card-wrap">
+    <div class="nw-pub-access-gate-card" [ngStyle]="getAccessGateCardStyle()">
+      <div *ngIf="accessScreenDesign?.showBadge !== false" class="nw-pub-access-badge" [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.border-color]="accessScreenDesign?.accentColor || '#c59b6c'">
+        <span>{{ accessScreenDesign?.badgeText || 'Acceso Exclusivo' }}</span>
+      </div>
+      <div *ngIf="accessScreenDesign?.logoUrl" class="nw-pub-access-logo">
+        <img [src]="accessScreenDesign?.logoUrl" alt="Logo del evento">
+      </div>
+      <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+        {{ getAccessGateTitle() }}
+      </h2>
+      <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()" [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
+        {{ getAccessGateSubtitle() }}
+      </p>
+      <form (ngSubmit)="checkGuestAccess()" class="nw-pub-access-form">
+        <label for="guest-access-contact" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+          {{ getAccessGateInputLabel() }}
+        </label>
+        <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput" [placeholder]="getAccessGateInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()" autocomplete="email" required class="nw-pub-access-input">
+        <button type="submit" class="nw-pub-access-submit-btn" [disabled]="checkingGuest" [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()">
+          <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
+          <span>{{ checkingGuest ? 'Verificando...' : getAccessGateButtonText() }}</span>
+        </button>
+      </form>
+      <div *ngIf="error" class="nw-pub-access-alert error" role="alert">{{ error }}</div>
+      <div *ngIf="success" class="nw-pub-access-alert success" role="status">{{ success }}</div>
+    </div>
+  </div>
 </div>
 
 <div *ngIf="error && !invitation && !accessRequired" class="nw-pub-state-container error">

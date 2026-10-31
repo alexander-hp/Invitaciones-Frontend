@@ -30,7 +30,7 @@ import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpa
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
-type ToolCategory = 'design' | 'elements' | 'assets' | 'functions' | 'sections';
+type ToolCategory = 'design' | 'elements' | 'assets' | 'functions' | 'sections' | 'access';
 type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
@@ -130,6 +130,117 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   libraryPreviewInvitation?: InvitationModel;
   autosaving = false;
   autosaveState = 'Guardado';
+  editorCanvasMode: 'invitation' | 'access' = 'invitation';
+  accessSimInput = '';
+  accessSimState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  accessSimMessage = '';
+  readonly accessPresets = [
+    {
+      key: 'glass',
+      name: 'Cristal Moderno',
+      description: 'Efecto glassmorphism translúcido con desenfoque de fondo.',
+      icon: 'sparkles',
+      cardStyle: 'glass' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 85,
+      cardRadius: 20,
+      cardShadow: 'glow' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#1c2434',
+      backgroundGradient: 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)',
+      backgroundOverlayOpacity: 65,
+      backgroundBlur: 8,
+      textColor: '#1c2434',
+      accentColor: '#c59b6c',
+      buttonBgColor: '#c59b6c',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 10
+    },
+    {
+      key: 'dark-vip',
+      name: 'Dark VIP',
+      description: 'Fondo obsidiana con acentos dorados y tarjeta oscura lujosa.',
+      icon: 'crown',
+      cardStyle: 'bordered' as const,
+      cardBgColor: '#121824',
+      cardOpacity: 92,
+      cardRadius: 18,
+      cardShadow: 'glow' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#0a0d14',
+      backgroundGradient: 'linear-gradient(145deg, #0a0d14 0%, #161c29 50%, #06080d 100%)',
+      backgroundOverlayOpacity: 75,
+      backgroundBlur: 4,
+      textColor: '#ffffff',
+      accentColor: '#e0a96d',
+      buttonBgColor: '#e0a96d',
+      buttonTextColor: '#0a0d14',
+      buttonRadius: 8
+    },
+    {
+      key: 'gold-ivory',
+      name: 'Oro & Marfil',
+      description: 'Clásico refinado, tonos marfil y champagne con tipografía serif.',
+      icon: 'gem',
+      cardStyle: 'solid' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 96,
+      cardRadius: 16,
+      cardShadow: 'elevated' as const,
+      backgroundType: 'color' as const,
+      backgroundColor: '#f7f4ee',
+      backgroundGradient: '',
+      backgroundOverlayOpacity: 30,
+      backgroundBlur: 0,
+      textColor: '#2c2724',
+      accentColor: '#9d765d',
+      buttonBgColor: '#2f5348',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 8
+    },
+    {
+      key: 'romantic-floral',
+      name: 'Floral Romántico',
+      description: 'Blush y verde salvia con curvas suaves y tipografía caligráfica.',
+      icon: 'flower-2',
+      cardStyle: 'glass' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 90,
+      cardRadius: 24,
+      cardShadow: 'soft' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#fbf7f4',
+      backgroundGradient: 'linear-gradient(135deg, #f4e9e2 0%, #faede8 50%, #e8f0eb 100%)',
+      backgroundOverlayOpacity: 40,
+      backgroundBlur: 6,
+      textColor: '#3d322c',
+      accentColor: '#b47b6a',
+      buttonBgColor: '#8a9a86',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 24
+    },
+    {
+      key: 'minimal',
+      name: 'Minimalista Puro',
+      description: 'Diseño sobrio y limpio sin tarjeta, enfocado en el mensaje.',
+      icon: 'shapes',
+      cardStyle: 'minimal' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 0,
+      cardRadius: 0,
+      cardShadow: 'none' as const,
+      backgroundType: 'color' as const,
+      backgroundColor: '#fafafa',
+      backgroundGradient: '',
+      backgroundOverlayOpacity: 0,
+      backgroundBlur: 0,
+      textColor: '#1a1a1a',
+      accentColor: '#1a1a1a',
+      buttonBgColor: '#1a1a1a',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 6
+    }
+  ];
   message = '';
   error = '';
   locationSearchResults: Record<number, PlaceSearchResult[]> = {};
@@ -636,6 +747,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.theme = this.design.theme || this.inferTheme();
         this.normalizeInvitationContent();
         this.normalizeModuleStyles();
+        if (!this.design.accessScreen && this.invitation.content?.accessScreen) {
+          this.design.accessScreen = this.clone(this.invitation.content.accessScreen);
+        }
+        this.initAccessScreenDesign();
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
         setTimeout(() => this.fitCanvasToViewport());
@@ -958,6 +1073,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   get artboardHeight(): number {
+    if (this.editorCanvasMode === 'access') {
+      return this.device === 'mobile' ? 780 : this.device === 'tablet' ? 920 : 800;
+    }
     const sections = this.design?.sections || [];
     const gap = this.design?.presentationMode === 'chapters' ? 22 : 0;
     return visualCanvasHeight(sections) + Math.max(0, sections.length - 1) * gap;
@@ -6704,6 +6822,227 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     window.open(`/new/i/${this.invitation.slug}`, '_blank');
   }
 
+  initAccessScreenDesign(): void {
+    if (!this.design) return;
+    if (!this.design.accessScreen) {
+      const theme = this.design.theme;
+      this.design.accessScreen = {
+        enabled: true,
+        title: this.invitation?.content?.headline || this.event?.title || 'Acceso a la invitación',
+        subtitle: 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.',
+        inputLabel: 'Correo o teléfono registrado',
+        inputPlaceholder: 'ejemplo@correo.com o tu teléfono',
+        buttonText: 'Solicitar enlace',
+        badgeText: 'Acceso Personal',
+        showBadge: true,
+        showIcon: true,
+        iconName: 'lock-keyhole',
+        logoUrl: this.invitation?.content?.brandLogoUrl || this.invitation?.content?.brandMonogramUrl || '',
+        cardStyle: 'glass',
+        cardBgColor: '#ffffff',
+        cardOpacity: 88,
+        cardRadius: 18,
+        cardShadow: 'glow',
+        backgroundType: this.invitation?.content?.coverImageUrl ? 'image' : 'gradient',
+        backgroundColor: theme?.backgroundColor || '#1c2434',
+        backgroundGradient: 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)',
+        backgroundImageUrl: this.invitation?.content?.coverImageUrl || '',
+        backgroundOverlayOpacity: 65,
+        backgroundBlur: 8,
+        primaryColor: theme?.accentColor || '#c59b6c',
+        textColor: '#1c2434',
+        accentColor: theme?.accentColor || '#c59b6c',
+        buttonBgColor: theme?.buttonBackgroundColor || '#2f5348',
+        buttonTextColor: theme?.buttonTextColor || '#ffffff',
+        buttonRadius: theme?.buttonRadius ?? 10,
+        headingFont: theme?.headingFont || 'Playfair Display',
+        bodyFont: theme?.bodyFont || 'Montserrat'
+      };
+    }
+  }
+
+  selectAccessCategory(): void {
+    this.toolCategory = 'access';
+    this.editorCanvasMode = 'access';
+    this.selectedSectionId = '';
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    this.initAccessScreenDesign();
+  }
+
+  setEditorCanvasMode(mode: 'invitation' | 'access'): void {
+    this.editorCanvasMode = mode;
+    if (mode === 'access') {
+      this.initAccessScreenDesign();
+    }
+  }
+
+  applyAccessPreset(presetKey: string): void {
+    const preset = this.accessPresets.find((p) => p.key === presetKey);
+    if (!preset) return;
+    this.initAccessScreenDesign();
+    const current = this.design.accessScreen!;
+    this.recordHistory();
+    this.design.accessScreen = {
+      ...current,
+      cardStyle: preset.cardStyle,
+      cardBgColor: preset.cardBgColor,
+      cardOpacity: preset.cardOpacity,
+      cardRadius: preset.cardRadius,
+      cardShadow: preset.cardShadow,
+      backgroundType: preset.backgroundType,
+      backgroundColor: preset.backgroundColor,
+      backgroundGradient: preset.backgroundGradient,
+      backgroundOverlayOpacity: preset.backgroundOverlayOpacity,
+      backgroundBlur: preset.backgroundBlur,
+      textColor: preset.textColor,
+      accentColor: preset.accentColor,
+      buttonBgColor: preset.buttonBgColor,
+      buttonTextColor: preset.buttonTextColor,
+      buttonRadius: preset.buttonRadius
+    };
+    this.flash(`Preset "${preset.name}" aplicado a la pantalla de acceso.`);
+  }
+
+  syncAccessScreenWithTheme(): void {
+    if (!this.design?.theme) return;
+    this.initAccessScreenDesign();
+    const t = this.design.theme;
+    this.recordHistory();
+    this.design.accessScreen = {
+      ...this.design.accessScreen,
+      backgroundColor: t.backgroundColor,
+      buttonBgColor: t.buttonBackgroundColor,
+      buttonTextColor: t.buttonTextColor,
+      buttonRadius: t.buttonRadius,
+      accentColor: t.accentColor,
+      headingFont: t.headingFont,
+      bodyFont: t.bodyFont
+    };
+    this.flash('Colores y fuentes sincronizados con el tema.');
+  }
+
+  useCoverImageForAccessBackground(): void {
+    const cover = this.invitation?.content?.coverImageUrl;
+    if (!cover) {
+      this.flash('La invitación no tiene una imagen de portada asignada.');
+      return;
+    }
+    this.initAccessScreenDesign();
+    this.recordHistory();
+    this.design.accessScreen!.backgroundType = 'image';
+    this.design.accessScreen!.backgroundImageUrl = cover;
+    this.flash('Imagen de portada aplicada como fondo de acceso.');
+  }
+
+  testAccessSimSubmit(): void {
+    if (!this.accessSimInput.trim()) {
+      this.accessSimState = 'error';
+      this.accessSimMessage = 'Por favor ingresa un correo o teléfono para continuar.';
+      return;
+    }
+    this.accessSimState = 'loading';
+    setTimeout(() => {
+      this.accessSimState = 'success';
+      this.accessSimMessage = `¡Pase verificado para "${this.accessSimInput.trim()}"! En la invitación real desbloquea el acceso.`;
+    }, 600);
+  }
+
+  resetAccessSim(): void {
+    this.accessSimState = 'idle';
+    this.accessSimMessage = '';
+    this.accessSimInput = '';
+  }
+
+  getAccessScreenBackgroundStyle(): Record<string, string> {
+    const acc = this.design?.accessScreen;
+    if (!acc) return {};
+    if (acc.backgroundType === 'image' && acc.backgroundImageUrl) {
+      return {
+        'background-image': `url("${acc.backgroundImageUrl}")`,
+        'background-size': 'cover',
+        'background-position': 'center center'
+      };
+    }
+    if (acc.backgroundType === 'gradient' && acc.backgroundGradient) {
+      return {
+        'background': acc.backgroundGradient
+      };
+    }
+    return {
+      'background-color': acc.backgroundColor || '#1c2434'
+    };
+  }
+
+  getAccessScreenCardStyle(): Record<string, string> {
+    const acc = this.design?.accessScreen;
+    if (!acc) return {};
+    const radius = acc.cardRadius !== undefined ? acc.cardRadius : 18;
+    const style: Record<string, string> = {
+      'border-radius': `${radius}px`
+    };
+
+    if (acc.cardStyle === 'minimal') {
+      style['background'] = 'transparent';
+      style['box-shadow'] = 'none';
+      style['border'] = 'none';
+      return style;
+    }
+
+    const bgHex = acc.cardBgColor || '#ffffff';
+    const opacity = (acc.cardOpacity ?? 88) / 100;
+    const hex = bgHex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2) || 'ff', 16);
+    const g = parseInt(hex.substring(2, 4) || 'ff', 16);
+    const b = parseInt(hex.substring(4, 6) || 'ff', 16);
+
+    style['background'] = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+    if (acc.cardStyle === 'glass') {
+      style['backdrop-filter'] = `blur(${acc.backgroundBlur || 12}px)`;
+      style['-webkit-backdrop-filter'] = `blur(${acc.backgroundBlur || 12}px)`;
+      style['border'] = `1px solid rgba(255, 255, 255, 0.28)`;
+    } else if (acc.cardStyle === 'bordered') {
+      style['border'] = `1.5px solid ${acc.accentColor || '#c59b6c'}`;
+    } else {
+      style['border'] = '1px solid rgba(0, 0, 0, 0.08)';
+    }
+
+    if (acc.cardShadow === 'soft') {
+      style['box-shadow'] = '0 12px 36px rgba(0, 0, 0, 0.12)';
+    } else if (acc.cardShadow === 'elevated') {
+      style['box-shadow'] = '0 24px 50px -12px rgba(0, 0, 0, 0.28)';
+    } else if (acc.cardShadow === 'glow') {
+      const accHex = (acc.accentColor || '#c59b6c').replace('#', '');
+      const ar = parseInt(accHex.substring(0, 2) || 'c5', 16);
+      const ag = parseInt(accHex.substring(2, 4) || '9b', 16);
+      const ab = parseInt(accHex.substring(4, 6) || '6c', 16);
+      style['box-shadow'] = `0 20px 45px rgba(${ar}, ${ag}, ${ab}, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15) inset`;
+    } else {
+      style['box-shadow'] = 'none';
+    }
+
+    return style;
+  }
+
+  getAccessScreenStageStyle(): Record<string, string> {
+    return {
+      'width': '100%',
+      'min-height': `${this.artboardHeight}px`,
+      'position': 'relative',
+      'overflow': 'hidden',
+      'display': 'flex',
+      'align-items': 'center',
+      'justify-content': 'center'
+    };
+  }
+
+  getAccessScreenOverlayStyle(): string {
+    const acc = this.design?.accessScreen;
+    const opacity = (acc?.backgroundOverlayOpacity ?? 60) / 100;
+    return `rgba(0, 0, 0, ${opacity})`;
+  }
+
   private persistDesign() {
     const id = this.invitation?._id || this.invitation?.id || '';
     this.design.active = true;
@@ -6712,7 +7051,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const rawContent: any = {
       ...this.invitation?.content,
       galleryItems: (this.invitation?.content.galleryItems || []).filter((item) => item.url.trim()),
-      visualDesignDraft: this.design
+      visualDesignDraft: this.design,
+      accessScreen: this.design.accessScreen || this.invitation?.content?.accessScreen
     };
     delete rawContent.id;
     delete rawContent._id;
@@ -9249,7 +9589,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return window.confirm('Esta acción reemplazará el diseño actual. Puedes usar Deshacer inmediatamente después.');
   }
 
-  private recordHistory(): void {
+  recordHistory(): void {
     if (!this.design) return;
     this.undoStack.push(this.editorHistoryState());
     if (this.undoStack.length > 30) this.undoStack.shift();

@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
-import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse } from '../../core/models';
+import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse, VisualAccessScreenDesign } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
 @Component({
@@ -24,6 +24,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   error = '';
   accessRequired = false;
   accessMessage = '';
+  accessGateData?: { slug?: string; eventTitle?: string; accessMode?: string; accessScreen?: VisualAccessScreenDesign; theme?: any; palette?: any; coverImageUrl?: string };
   success = '';
   albumMessage = '';
   dedicationMessage = '';
@@ -510,6 +511,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           this.guestSessionToken = '';
           this.verifiedGuest = undefined;
           this.accessMessage = 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.';
+          this.accessGateData = error?.error?.accessGate;
         } else {
           this.error = error?.error?.message || 'Invitación no encontrada o no publicada';
         }
@@ -1296,8 +1298,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         if (res.guest && res.guestSessionToken) {
           this.verifiedGuest = res.guest;
           this.guestSessionToken = res.guestSessionToken;
-          if (this.invitation) {
-            sessionStorage.setItem(this.guestSessionStorageKey(this.invitation.slug), res.guestSessionToken);
+          sessionStorage.setItem(this.guestSessionStorageKey(slug), res.guestSessionToken);
+          if (!this.invitation) {
+            this.fetchPublishedInvitation(slug, res.guestSessionToken);
           }
           this.rsvp.name = res.guest.name;
           this.rsvp.email = res.guest.email || this.guestAccessEmail || '';
@@ -1372,6 +1375,142 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   openGuestActivity(): void {
     if (!this.invitation) return;
     window.location.assign(`/new/i/${encodeURIComponent(this.invitation.slug)}/my-activity`);
+  }
+
+  get accessScreenDesign(): VisualAccessScreenDesign | undefined {
+    return this.accessGateData?.accessScreen
+      || this.invitation?.content?.visualDesign?.accessScreen
+      || this.invitation?.content?.accessScreen
+      || undefined;
+  }
+
+  getAccessGateBackgroundStyle(): Record<string, string> {
+    const acc = this.accessScreenDesign;
+    if (acc?.backgroundType === 'image' && (acc.backgroundImageUrl || this.accessGateData?.coverImageUrl)) {
+      const url = acc.backgroundImageUrl || this.accessGateData?.coverImageUrl;
+      return {
+        'background-image': `url("${url}")`,
+        'background-size': 'cover',
+        'background-position': 'center center'
+      };
+    }
+    if (acc?.backgroundType === 'gradient' && acc.backgroundGradient) {
+      return {
+        'background': acc.backgroundGradient
+      };
+    }
+    if (acc?.backgroundColor) {
+      return {
+        'background-color': acc.backgroundColor
+      };
+    }
+    return {
+      'background': 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)'
+    };
+  }
+
+  getAccessGateOverlayStyle(): string {
+    const acc = this.accessScreenDesign;
+    const opacity = (acc?.backgroundOverlayOpacity ?? 65) / 100;
+    return `rgba(0, 0, 0, ${opacity})`;
+  }
+
+  getAccessGateCardStyle(): Record<string, string> {
+    const acc = this.accessScreenDesign;
+    const radius = acc?.cardRadius !== undefined ? acc.cardRadius : 18;
+    const style: Record<string, string> = {
+      'border-radius': `${radius}px`
+    };
+
+    if (acc?.cardStyle === 'minimal') {
+      style['background'] = 'transparent';
+      style['box-shadow'] = 'none';
+      style['border'] = 'none';
+      return style;
+    }
+
+    const bgHex = acc?.cardBgColor || '#ffffff';
+    const opacity = (acc?.cardOpacity ?? 88) / 100;
+    const hex = bgHex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2) || 'ff', 16);
+    const g = parseInt(hex.substring(2, 4) || 'ff', 16);
+    const b = parseInt(hex.substring(4, 6) || 'ff', 16);
+
+    style['background'] = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+    if (acc?.cardStyle === 'glass' || !acc?.cardStyle) {
+      style['backdrop-filter'] = `blur(${acc?.backgroundBlur || 12}px)`;
+      style['-webkit-backdrop-filter'] = `blur(${acc?.backgroundBlur || 12}px)`;
+      style['border'] = `1px solid rgba(255, 255, 255, 0.28)`;
+    } else if (acc?.cardStyle === 'bordered') {
+      style['border'] = `1.5px solid ${acc.accentColor || '#c59b6c'}`;
+    } else {
+      style['border'] = '1px solid rgba(0, 0, 0, 0.08)';
+    }
+
+    if (acc?.cardShadow === 'soft') {
+      style['box-shadow'] = '0 12px 36px rgba(0, 0, 0, 0.12)';
+    } else if (acc?.cardShadow === 'elevated') {
+      style['box-shadow'] = '0 24px 50px -12px rgba(0, 0, 0, 0.28)';
+    } else if (acc?.cardShadow === 'glow' || !acc?.cardShadow) {
+      const accHex = (acc?.accentColor || '#c59b6c').replace('#', '');
+      const ar = parseInt(accHex.substring(0, 2) || 'c5', 16);
+      const ag = parseInt(accHex.substring(2, 4) || '9b', 16);
+      const ab = parseInt(accHex.substring(4, 6) || '6c', 16);
+      style['box-shadow'] = `0 20px 45px rgba(${ar}, ${ag}, ${ab}, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15) inset`;
+    } else {
+      style['box-shadow'] = 'none';
+    }
+
+    return style;
+  }
+
+  getAccessGateHeadingFont(): string {
+    return this.accessScreenDesign?.headingFont
+      || this.accessGateData?.theme?.headingFont
+      || 'Playfair Display';
+  }
+
+  getAccessGateBodyFont(): string {
+    return this.accessScreenDesign?.bodyFont
+      || this.accessGateData?.theme?.bodyFont
+      || 'Montserrat';
+  }
+
+  getAccessGateTitle(): string {
+    return this.accessScreenDesign?.title
+      || this.accessGateData?.eventTitle
+      || 'Acceso a la invitación';
+  }
+
+  getAccessGateSubtitle(): string {
+    return this.accessScreenDesign?.subtitle
+      || this.accessMessage
+      || 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.';
+  }
+
+  getAccessGateInputLabel(): string {
+    return this.accessScreenDesign?.inputLabel || 'Correo o teléfono registrado';
+  }
+
+  getAccessGateInputPlaceholder(): string {
+    return this.accessScreenDesign?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono';
+  }
+
+  getAccessGateButtonText(): string {
+    return this.accessScreenDesign?.buttonText || 'Solicitar enlace';
+  }
+
+  getAccessGateButtonStyle(): Record<string, string> {
+    const acc = this.accessScreenDesign;
+    const bg = acc?.buttonBgColor || this.accessGateData?.theme?.buttonBackgroundColor || '#2f5348';
+    const text = acc?.buttonTextColor || this.accessGateData?.theme?.buttonTextColor || '#ffffff';
+    const radius = acc?.buttonRadius ?? this.accessGateData?.theme?.buttonRadius ?? 10;
+    return {
+      'background-color': bg,
+      'color': text,
+      'border-radius': `${radius}px`
+    };
   }
 
   updateGuestActivityRsvp(payload: { response: RsvpResponse; companions: number; companionNames: string[]; message: string; declineConfirmed?: boolean }): void {
