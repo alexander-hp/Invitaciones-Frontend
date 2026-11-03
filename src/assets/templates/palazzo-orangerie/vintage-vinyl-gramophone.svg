@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" width="100%" height="100%">
+  <defs>
+    <radialGradient id="vinylDisc" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a2623"/>
+      <stop offset="45%" stop-color="#151311"/>
+      <stop offset="75%" stop-color="#24201c"/>
+      <stop offset="100%" stop-color="#0b0a09"/>
+    </radialGradient>
+    <linearGradient id="goldLabel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3dc9f"/>
+      <stop offset="50%" stop-color="#c89b42"/>
+      <stop offset="100%" stop-color="#875d16"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Celestial Sunburst Halo -->
+  <g transform="translate(210,210)" stroke="#d4af63" stroke-opacity="0.45" stroke-width="1.2" fill="none">
+    <circle r="192" stroke-dasharray="3 6"/>
+    <circle r="178"/>
+  </g>
+
+  <!-- Vinyl Record & Grooves -->
+  <circle cx="210" cy="210" r="164" fill="url(#vinylDisc)" stroke="#d4af63" stroke-width="2.5"/>
+  <circle cx="210" cy="210" r="144" fill="none" stroke="#d4af63" stroke-opacity="0.22" stroke-width="1"/>
+  <circle cx="210" cy="210" r="126" fill="none" stroke="#d4af63" stroke-opacity="0.18" stroke-width="1"/>
+  <circle cx="210" cy="210" r="108" fill="none" stroke="#d4af63" stroke-opacity="0.25" stroke-width="1"/>
+  <circle cx="210" cy="210" r="90" fill="none" stroke="#d4af63" stroke-opacity="0.2" stroke-width="1"/>
+
+  <!-- Gilded Record Center Label -->
+  <circle cx="210" cy="210" r="64" fill="url(#goldLabel)" stroke="#fbf2dc" stroke-width="1.5"/>
+  <circle cx="210" cy="210" r="54" fill="none" stroke="#182c23" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="210" y="186" text-anchor="middle" font-family="'Cinzel Decorative', Georgia, serif" font-size="10" font-weight="700" fill="#182c23" letter-spacing="2">SOIRÉE MUSICALE</text>
+  <text x="210" y="244" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="8" font-weight="700" fill="#182c23" letter-spacing="3">SIDE A · 33 RPM</text>
+  <circle cx="210" cy="210" r="10" fill="#151311" stroke="#fbf2dc" stroke-width="2"/>
+
+  <!-- Gramophone Tonearm Accent -->
+  <g stroke="url(#goldLabel)" stroke-width="4" fill="none" stroke-linecap="round">
+    <circle cx="348" cy="78" r="16" fill="#182c23" stroke-width="2.5"/>
+    <path d="M348,78 L318,185 L268,218"/>
+    <rect x="254" y="212" width="18" height="12" rx="3" transform="rotate(-32 263 218)" fill="#d4af63" stroke-width="1.5"/>
+  </g>
+</svg>
+

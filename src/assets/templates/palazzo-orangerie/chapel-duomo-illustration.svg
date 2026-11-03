@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="duomoSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f7efe0"/>
+      <stop offset="100%" stop-color="#e3d2b4"/>
+    </linearGradient>
+    <linearGradient id="marbleFacade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fdfaf3"/>
+      <stop offset="100%" stop-color="#e5d5b8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="520" rx="16" fill="url(#duomoSky)"/>
+  <circle cx="400" cy="150" r="95" fill="#ebd197" fill-opacity="0.38"/>
+
+  <!-- Cypresses -->
+  <g fill="#193026">
+    <path d="M165,415 C154,320 158,235 170,170 C182,235 186,320 175,415 Z"/>
+    <path d="M625,415 C614,320 618,235 630,170 C642,235 646,320 635,415 Z"/>
+  </g>
+
+  <!-- Classical Duomo & Dome -->
+  <g stroke="#6c5328" stroke-width="1.5" fill="url(#marbleFacade)">
+    <!-- Dome -->
+    <path d="M310,210 A90,85 0 0,1 490,210 Z" fill="#d9c39e"/>
+    <rect x="386" y="102" width="28" height="26"/>
+    <path d="M400,76 L400,102 M392,86 L408,86" stroke="#8f6b2e" stroke-width="2"/>
+    <!-- Main Nave & Aisles -->
+    <rect x="235" y="255" width="330" height="160"/>
+    <rect x="285" y="205" width="230" height="210"/>
+    <polygon points="275,205 400,145 525,205" fill="#ecdcc0"/>
+
+    <!-- Rose Window -->
+    <circle cx="400" cy="248" r="28" fill="#1b3329" stroke="#b8893a" stroke-width="2"/>
+    <circle cx="400" cy="248" r="18" fill="none" stroke="#ebd197" stroke-width="0.9" stroke-dasharray="3 3"/>
+    <path d="M372,248 L428,248 M400,220 L400,276 M380,228 L420,268 M380,268 L420,228" stroke="#ebd197" stroke-width="0.8"/>
+
+    <!-- Portal Arches -->
+    <path d="M368,415 L368,325 A32,32 0 0,1 432,325 L432,415 Z" fill="#172c23"/>
+    <path d="M258,415 L258,348 A20,20 0 0,1 298,348 L298,415 Z" fill="#233d32"/>
+    <path d="M502,415 L502,348 A20,20 0 0,1 542,348 L542,415 Z" fill="#233d32"/>
+  </g>
+
+  <!-- Piazza Steps -->
+  <rect x="190" y="415" width="420" height="14" fill="#ecdec4" stroke="#6c5328" stroke-width="1.2"/>
+  <rect x="150" y="429" width="500" height="16" fill="#e2d1b2" stroke="#6c5328" stroke-width="1.2"/>
+  <rect x="90" y="445" width="620" height="63" fill="#d8c4a1" stroke="#6c5328" stroke-width="1.2"/>
+
+  <rect x="12" y="12" width="776" height="496" rx="12" fill="none" stroke="#b8893a" stroke-width="1.5"/>
+</svg>
+

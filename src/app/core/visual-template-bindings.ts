@@ -21,7 +21,9 @@ export const VISUAL_TEMPLATE_VARIABLES: VisualTemplateVariable[] = [
   { token: 'event.venue', label: 'Lugar', group: 'Evento', example: 'Salón Jardín' },
   { token: 'event.address', label: 'Dirección', group: 'Evento', example: 'Av. Principal 123' },
   { token: 'invitation.headline', label: 'Título de invitación', group: 'Invitación', example: 'Celebremos juntos' },
-  { token: 'invitation.message', label: 'Mensaje', group: 'Invitación', example: 'Acompáñanos en este día especial' }
+  { token: 'invitation.message', label: 'Mensaje', group: 'Invitación', example: 'Acompáñanos en este día especial' },
+  { token: 'invitation.storyTitle', label: 'Título de historia', group: 'Invitación', example: 'Nuestra historia' },
+  { token: 'invitation.storyBody', label: 'Texto de historia', group: 'Invitación', example: 'Cada capítulo nos trajo hasta este instante.' }
 ];
 
 export function visualTemplateContext(
@@ -43,7 +45,9 @@ export function visualTemplateContext(
     'event.venue': event?.venue?.name || '',
     'event.address': event?.venue?.address || '',
     'invitation.headline': invitation?.content?.headline || '',
-    'invitation.message': invitation?.content?.message || invitation?.content?.subheadline || ''
+    'invitation.message': invitation?.content?.message || invitation?.content?.subheadline || '',
+    'invitation.storyTitle': invitation?.content?.storyTitle || 'Nuestra Crónica',
+    'invitation.storyBody': invitation?.content?.storyBody || invitation?.content?.message || 'Entre miradas cómplices, promesas bajo el cielo y sueños compartidos, descubrimos que el mejor lugar del mundo siempre será donde estemos juntos.'
   };
   if (!useExamples) return values;
   for (const [key, example] of Object.entries(examples)) if (values[key] === '' || values[key] === undefined) values[key] = example;

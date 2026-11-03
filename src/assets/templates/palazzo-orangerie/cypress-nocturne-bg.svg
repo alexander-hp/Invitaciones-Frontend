@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="100%" height="100%" preserveAspectRatio="none">
+  <defs>
+    <radialGradient id="cypressNight" cx="50%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#1d382e"/>
+      <stop offset="52%" stop-color="#13251e"/>
+      <stop offset="100%" stop-color="#0b1612"/>
+    </radialGradient>
+    <linearGradient id="imperialGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9e742b" stop-opacity="0.65"/>
+      <stop offset="50%" stop-color="#ebd197" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#a87c31" stop-opacity="0.65"/>
+    </linearGradient>
+    <pattern id="starDust" width="120" height="120" patternUnits="userSpaceOnUse">
+      <circle cx="22" cy="30" r="0.9" fill="#ebd197" fill-opacity="0.28"/>
+      <circle cx="88" cy="18" r="0.7" fill="#ebd197" fill-opacity="0.2"/>
+      <circle cx="64" cy="76" r="1.1" fill="#ebd197" fill-opacity="0.24"/>
+      <circle cx="105" cy="98" r="0.6" fill="#ebd197" fill-opacity="0.18"/>
+      <circle cx="14" cy="104" r="0.8" fill="#ebd197" fill-opacity="0.22"/>
+    </pattern>
+  </defs>
+
+  <rect width="800" height="1200" fill="url(#cypressNight)"/>
+  <rect width="800" height="1200" fill="url(#starDust)"/>
+
+  <!-- Subtle Classical Arch & Celestial Sunburst Watermark -->
+  <g stroke="url(#imperialGold)" stroke-opacity="0.18" fill="none">
+    <path d="M90,1160 L90,430 A310,310 0 0,1 710,430 L710,1160" stroke-width="1.2"/>
+    <path d="M110,1160 L110,435 A290,290 0 0,1 690,435 L690,1160" stroke-width="0.7" stroke-dasharray="5 6"/>
+    <circle cx="400" cy="430" r="180" stroke-width="0.8"/>
+    <path d="M400,190 L400,670 M160,430 L640,430 M230,260 L570,600 M230,600 L570,260" stroke-width="0.5"/>
+  </g>
+
+  <!-- Gilded Double Border -->
+  <rect x="20" y="20" width="760" height="1160" rx="6" fill="none" stroke="url(#imperialGold)" stroke-width="1.4"/>
+  <rect x="29" y="29" width="742" height="1142" rx="4" fill="none" stroke="url(#imperialGold)" stroke-width="0.65" stroke-opacity="0.65"/>
+
+  <!-- Baroque Corner Medallions -->
+  <g stroke="url(#imperialGold)" fill="none" stroke-width="1.3">
+    <path d="M20,85 C55,85 85,55 85,20"/>
+    <path d="M29,102 C68,96 96,68 102,29" stroke-width="0.8"/>
+    <polygon points="48,48 54,42 60,48 54,54" fill="#d4af63" fill-opacity="0.55"/>
+
+    <path d="M780,85 C745,85 715,55 715,20"/>
+    <path d="M771,102 C732,96 704,68 698,29" stroke-width="0.8"/>
+    <polygon points="752,48 746,42 740,48 746,54" fill="#d4af63" fill-opacity="0.55"/>
+
+    <path d="M20,1115 C55,1115 85,1145 85,1180"/>
+    <path d="M29,1098 C68,1104 96,1132 102,1171" stroke-width="0.8"/>
+    <polygon points="48,1152 54,1146 60,1152 54,1158" fill="#d4af63" fill-opacity="0.55"/>
+
+    <path d="M780,1115 C745,1115 715,1145 715,1180"/>
+    <path d="M771,1098 C732,1104 704,1132 698,1171" stroke-width="0.8"/>
+    <polygon points="752,1152 746,1146 740,1152 746,1158" fill="#d4af63" fill-opacity="0.55"/>
+  </g>
+</svg>
+

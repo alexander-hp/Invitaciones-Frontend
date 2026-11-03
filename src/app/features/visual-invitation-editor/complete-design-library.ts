@@ -1,4 +1,5 @@
 import { EventModel, InvitationContent, VisualInvitationDesign, VisualInvitationLayer, VisualInvitationSection } from '../../core/models';
+import { buildPalazzoOrangerieDesign } from './palazzo-orangerie-design';
 
 export interface CompleteDesignPreset {
   key: string;
@@ -9,6 +10,7 @@ export interface CompleteDesignPreset {
 }
 
 export const COMPLETE_DESIGN_PRESETS: CompleteDesignPreset[] = [
+  { key: 'palazzo-orangerie', name: 'Villa L\u2019Orangerie \u00b7 Atelier', description: 'Exclusiva Argon 4: Fresco italiano, cipreses nocturnos, arcos barrocos en oro viejo, sellos de lacre y 16 cap\u00edtulos editoriales.', category: 'general', colors: ['#152820', '#f6efe2', '#c89b3c'] },
   { key: 'haute-couture', name: 'Alta Costura Imperial', description: 'Est\u00e9tica de lujo editorial, marco arquitect\u00f3nico, oro fino y composici\u00f3n regia.', category: 'boda', colors: ['#fcfaf7', '#181514', '#c59b48'] },
   { key: 'xv-burgundy', name: 'Mis XV Borgo\u00f1a Real', description: 'Terciopelo borgo\u00f1a, encaje victoriano, rosas 3D con perlas y caligraf\u00eda de gala.', category: 'xv', colors: ['#5c0d18', '#faf6f0', '#d4af37'] },
   { key: 'editorial', name: 'Editorial de autor', description: 'Fotograf\u00eda protagonista, tipograf\u00eda amplia y lectura limpia.', category: 'general', colors: ['#f7f5f1', '#202d2a', '#dc705b'] },
@@ -25,6 +27,7 @@ type DesignPalette = {
 };
 
 const PALETTES: Record<string, DesignPalette> = {
+  'palazzo-orangerie': { background: '#f6efe2', foreground: '#152820', accent: '#c89b3c', secondary: '#13221d', muted: '#52635a', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#152820', buttonText: '#f6efe2' },
   'haute-couture': { background: '#fcfaf7', foreground: '#181514', accent: '#c59b48', secondary: '#f4efe6', muted: '#7a7269', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#181514', buttonText: '#ffffff' },
   'xv-burgundy': { background: '#240308', foreground: '#faf6f0', accent: '#d4af37', secondary: '#180104', muted: '#e2d5c3', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#240308' },
   editorial: { background: '#f7f5f1', foreground: '#202d2a', accent: '#dc705b', secondary: '#e9eee9', muted: '#6a706c', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', button: '#202d2a', buttonText: '#ffffff' },
@@ -50,6 +53,9 @@ export function buildCompleteDesign(
   nextId: (prefix: string) => string,
   includeModules = true
 ): VisualInvitationDesign {
+  if (key === 'palazzo-orangerie') {
+    return buildPalazzoOrangerieDesign(content, event, nextId, includeModules);
+  }
   const variant = PALETTES[key] ? key : 'editorial';
   const palette = PALETTES[variant];
   const coverUrl = content.coverImageUrl || content.galleryItems?.find((item) => item.url)?.url || content.gallery?.find(Boolean) || '';

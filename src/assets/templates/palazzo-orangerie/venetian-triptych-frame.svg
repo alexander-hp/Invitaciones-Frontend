@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 260" fill="none">
+  <defs>
+    <linearGradient id="venetianGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9A6E22"/>
+      <stop offset="28%" stop-color="#E7C97F"/>
+      <stop offset="52%" stop-color="#FFF3D1"/>
+      <stop offset="76%" stop-color="#C6943F"/>
+      <stop offset="100%" stop-color="#8A5F1A"/>
+    </linearGradient>
+    <linearGradient id="venetianSoft" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C89B49"/>
+      <stop offset="50%" stop-color="#F8E7BA"/>
+      <stop offset="100%" stop-color="#9B6E24"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Chamfered Gold Molding -->
+  <rect x="4" y="4" width="412" height="252" rx="12" stroke="url(#venetianGold)" stroke-width="2.5"/>
+  <!-- Inner Fine Bevel Line -->
+  <rect x="10" y="10" width="400" height="240" rx="8" stroke="url(#venetianSoft)" stroke-width="1.1" stroke-opacity="0.85"/>
+
+  <!-- Corner Venetian Clasps -->
+  <g stroke="url(#venetianGold)" stroke-width="1.8" fill="#152820">
+    <!-- Top Left -->
+    <path d="M4 26 L18 26 L26 18 L26 4" fill="none"/>
+    <circle cx="14" cy="14" r="4.2"/>
+    <circle cx="14" cy="14" r="1.8" fill="url(#venetianSoft)" stroke="none"/>
+    <!-- Top Right -->
+    <path d="M416 26 L402 26 L394 18 L394 4" fill="none"/>
+    <circle cx="406" cy="14" r="4.2"/>
+    <circle cx="406" cy="14" r="1.8" fill="url(#venetianSoft)" stroke="none"/>
+    <!-- Bottom Left -->
+    <path d="M4 234 L18 234 L26 242 L26 256" fill="none"/>
+    <circle cx="14" cy="246" r="4.2"/>
+    <circle cx="14" cy="246" r="1.8" fill="url(#venetianSoft)" stroke="none"/>
+    <!-- Bottom Right -->
+    <path d="M416 234 L402 234 L394 242 L394 256" fill="none"/>
+    <circle cx="406" cy="246" r="4.2"/>
+    <circle cx="406" cy="246" r="1.8" fill="url(#venetianSoft)" stroke="none"/>
+  </g>
+
+  <!-- Top & Bottom Center Medallions -->
+  <g transform="translate(210, 7)">
+    <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#152820" stroke="url(#venetianGold)" stroke-width="1.4"/>
+    <polygon points="0,-3 3,0 0,3 -3,0" fill="url(#venetianSoft)"/>
+    <circle cx="-10" cy="0" r="1.4" fill="url(#venetianSoft)"/>
+    <circle cx="10" cy="0" r="1.4" fill="url(#venetianSoft)"/>
+  </g>
+  <g transform="translate(210, 253)">
+    <rect x="-18" y="-4" width="36" height="8" rx="4" fill="#152820" stroke="url(#venetianGold)" stroke-width="1.4"/>
+    <polygon points="0,-3 3,0 0,3 -3,0" fill="url(#venetianSoft)"/>
+    <circle cx="-10" cy="0" r="1.4" fill="url(#venetianSoft)"/>
+    <circle cx="10" cy="0" r="1.4" fill="url(#venetianSoft)"/>
+  </g>
+</svg>
+

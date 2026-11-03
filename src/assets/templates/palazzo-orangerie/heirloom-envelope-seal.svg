@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vellumPaper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdfaf3"/>
+      <stop offset="100%" stop-color="#e8d8bc"/>
+    </linearGradient>
+    <linearGradient id="emeraldLiner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e382e"/>
+      <stop offset="100%" stop-color="#0f1f19"/>
+    </linearGradient>
+    <radialGradient id="sealGold" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#f5df9e"/>
+      <stop offset="55%" stop-color="#c89b42"/>
+      <stop offset="100%" stop-color="#7c5614"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Soft Drop Shadow -->
+  <rect x="52" y="88" width="416" height="278" rx="12" fill="#0d1914" fill-opacity="0.18"/>
+
+  <!-- Envelope Body -->
+  <rect x="44" y="76" width="432" height="280" rx="10" fill="url(#vellumPaper)" stroke="#b8893a" stroke-width="2"/>
+
+  <!-- Open Top Flap with Emerald & Gold Botanical Liner -->
+  <polygon points="44,76 260,218 476,76" fill="url(#emeraldLiner)" stroke="#b8893a" stroke-width="2"/>
+  <polygon points="64,82 260,206 456,82" fill="none" stroke="#ebd197" stroke-width="0.9" stroke-dasharray="4 4"/>
+
+  <!-- Card Protruding from Envelope -->
+  <rect x="92" y="42" width="336" height="175" rx="6" fill="#fbf8f1" stroke="#c89d4c" stroke-width="1.5"/>
+  <rect x="102" y="52" width="316" height="155" rx="4" fill="none" stroke="#c89d4c" stroke-width="0.7"/>
+  <text x="260" y="96" text-anchor="middle" font-family="'Cinzel Decorative', Georgia, serif" font-size="16" font-weight="700" fill="#182c23" letter-spacing="3">L’ORANGERIE</text>
+  <path d="M180,110 L340,110" stroke="#c89d4c" stroke-width="1"/>
+  <text x="260" y="134" text-anchor="middle" font-family="'Great Vibes', cursive, Georgia" font-size="24" fill="#9c7025">Un Detalle del Corazón</text>
+
+  <!-- Lower Envelope Flaps -->
+  <polygon points="44,76 260,224 44,356" fill="#f5ecdc" stroke="#c89d4c" stroke-width="1.2"/>
+  <polygon points="476,76 260,224 476,356" fill="#efe2cb" stroke="#c89d4c" stroke-width="1.2"/>
+  <polygon points="44,356 260,208 476,356" fill="url(#vellumPaper)" stroke="#b8893a" stroke-width="1.6"/>
+
+  <!-- Central Wax Seal -->
+  <circle cx="260" cy="222" r="38" fill="url(#sealGold)" stroke="#fbf2dc" stroke-width="1.5"/>
+  <circle cx="260" cy="222" r="30" fill="none" stroke="#6c490f" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="260" y="229" text-anchor="middle" font-family="'Cinzel Decorative', Georgia, serif" font-size="18" font-weight="700" fill="#fbf2dc">✦</text>
+</svg>
+

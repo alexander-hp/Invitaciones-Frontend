@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 180" width="100%" height="100%">
+  <defs>
+    <linearGradient id="crestGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9e742b"/>
+      <stop offset="50%" stop-color="#f2da9d"/>
+      <stop offset="100%" stop-color="#9b6f26"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Perforated Royal Opera Ticket Border -->
+  <path d="M24,18 L656,18 A14,14 0 0,0 670,32 L670,148 A14,14 0 0,0 656,162 L24,162 A14,14 0 0,0 10,148 L10,32 A14,14 0 0,0 24,18 Z" fill="none" stroke="url(#crestGold)" stroke-width="2"/>
+  <path d="M32,26 L648,26 L648,154 L32,154 Z" fill="none" stroke="url(#crestGold)" stroke-width="0.8" stroke-dasharray="4 4"/>
+
+  <!-- Ticket Stub Perforation Line -->
+  <line x1="230" y1="18" x2="230" y2="162" stroke="url(#crestGold)" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <circle cx="230" cy="18" r="8" fill="#13221d" stroke="url(#crestGold)" stroke-width="1.5"/>
+  <circle cx="230" cy="162" r="8" fill="#13221d" stroke="url(#crestGold)" stroke-width="1.5"/>
+
+  <!-- Crown / Key Crest -->
+  <g transform="translate(610,54)" stroke="url(#crestGold)" stroke-width="1.4" fill="none">
+    <circle cx="0" cy="0" r="18"/>
+    <polygon points="0,-10 3,-3 10,0 3,3 0,10 -3,3 -10,0 -3,-3" fill="url(#crestGold)"/>
+  </g>
+</svg>
+

@@ -553,7 +553,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   }
 
   songCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('song.') || String(layer.binding || '').startsWith('display.songs.'));
+    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('song.') || String(layer.binding || '').startsWith('display.songs.') || String(layer.binding || '').startsWith('display.label.song.'));
   }
 
   hasSongCanvasLayers(section: VisualInvitationSection): boolean {
@@ -563,14 +563,14 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   shouldRenderSongLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
     if (layer.binding === 'song.feedback') return Boolean(this.songRequestMessage);
-    if (layer.binding === 'song.sourceUrl') return this.pluginSetting(section, 'showSourceUrl', true) !== false;
-    if (layer.binding === 'song.artist') return this.pluginSetting(section, 'showArtist', true) !== false;
-    if (layer.binding === 'song.dedication') return this.pluginSetting(section, 'showDedication', true) !== false;
+    if (layer.binding === 'song.sourceUrl' || layer.binding === 'display.label.song.sourceUrl') return this.pluginSetting(section, 'showSourceUrl', true) !== false;
+    if (layer.binding === 'song.artist' || layer.binding === 'display.label.song.artist') return this.pluginSetting(section, 'showArtist', true) !== false;
+    if (layer.binding === 'song.dedication' || layer.binding === 'display.label.song.dedication') return this.pluginSetting(section, 'showDedication', true) !== false;
     return true;
   }
 
   albumCanvasLayers(section: VisualInvitationSection): VisualInvitationLayer[] {
-    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('album.') || String(layer.binding || '').startsWith('display.album.'));
+    return uniqueVisibleControls(section.layers).filter((layer) => String(layer.binding || '').startsWith('album.') || String(layer.binding || '').startsWith('display.album.') || String(layer.binding || '').startsWith('display.label.album.'));
   }
 
   hasAlbumCanvasLayers(section: VisualInvitationSection): boolean {
@@ -666,6 +666,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   shouldRenderCountdownLayer(layer: VisualInvitationLayer): boolean {
     if (layer.hidden) return false;
+    if (String(layer.binding || '').startsWith('display.countdown.card')) return !this.countdown.isOver;
     if (layer.type === 'image' || layer.type === 'shape') return true;
     const binding = String(layer.binding || '');
     if (binding === 'countdown.expired') return this.countdown.isOver;

@@ -24,6 +24,7 @@ import { VISUAL_ICON_CATALOG, VisualIconOption } from '../../shared/components/v
 import { isSingleInstanceControl, visibleControlDuplicates } from '../../shared/components/visual-invitation-renderer/visual-functional-controls';
 import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from '../../shared/components/visual-invitation-renderer/visual-canvas-geometry';
 import { buildCompleteDesign, COMPLETE_DESIGN_PRESETS, CompleteDesignPreset } from './complete-design-library';
+import { buildPalazzoOrangerieDesign, isPalazzoOrangerieDesign, PALAZZO_ORANGERIE_THEME } from './palazzo-orangerie-design';
 import { createVisualDesignAiPrompt, createVisualDesignExchange } from './visual-design-exchange';
 import { buttonPresetStyle, VISUAL_BUTTON_PRESETS, VisualButtonPreset } from './visual-button-presets';
 import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpacing, reflowPhotoCompositionLayouts, withPhotoCompositionSpacing } from './photo-composition-presets';
@@ -613,6 +614,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   readonly builtInPresets = COMPLETE_DESIGN_PRESETS;
 
   readonly themePresets: Array<{ key: string; label: string; theme: VisualTheme }> = [
+    { key: 'palazzo-orangerie', label: 'Villa L’Orangerie · Atelier', theme: { ...PALAZZO_ORANGERIE_THEME } },
     { key: 'haute-couture', label: 'Alta Costura', theme: { backgroundColor: '#fcfaf7', textColor: '#181514', accentColor: '#c59b48', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#181514', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 30 } },
     { key: 'xv-burgundy', label: 'Mis XV Borgoña Real', theme: { backgroundColor: '#5c0d18', textColor: '#faf6f0', accentColor: '#d4af37', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#d4af37', buttonTextColor: '#480a13', buttonStyle: 'solid', buttonRadius: 30 } },
     { key: 'editorial', label: 'Editorial', theme: { backgroundColor: '#f6f1eb', textColor: '#24211f', accentColor: '#b57c62', headingFont: "'Playfair Display', serif", bodyFont: 'Montserrat, sans-serif', buttonBackgroundColor: '#24211f', buttonTextColor: '#ffffff', buttonStyle: 'solid', buttonRadius: 4 } },
@@ -2373,6 +2375,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addSection(type: string, title: string): void {
+    if (this.isPalazzoOrangerie() && type !== 'custom') {
+      this.recordHistory();
+      const built = buildPalazzoOrangerieDesign(this.invitation?.content || {}, this.event, (prefix) => this.uid(prefix), true);
+      const match = built.sections.find((s) => s.type === type);
+      if (match) {
+        this.design.sections.push(match);
+        this.selectedSectionId = match.id;
+        this.setLayerSelection(match.layers[0] ? [match.layers[0].id] : []);
+        return;
+      }
+    }
     this.recordHistory();
     const isXv = this.isXvBurgundy();
     const isHaute = this.isHauteCouture();
@@ -5237,7 +5250,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
     const target = this.event?.date ? new Date(this.event.date) : new Date(Date.now() + 38 * 24 * 60 * 60 * 1000);
     const distance = target.getTime() - Date.now();
-    if (Number.isNaN(distance) || distance <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, isOver: true };
+    if (Number.isNaN(distance) || distance <= 0) return { days: 38, hours: 14, minutes: 32, seconds: 19, isOver: false };
     return {
       days: Math.floor(distance / 86400000), hours: Math.floor(distance / 3600000) % 24,
       minutes: Math.floor(distance / 60000) % 60, seconds: Math.floor(distance / 1000) % 60, isOver: false
@@ -5689,6 +5702,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   shouldRenderEditorLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (section.type === 'countdown' && layer.binding === 'countdown.expired') return this.countdownPreview.isOver;
+    if (section.type === 'countdown' && String(layer.binding || '').startsWith('display.countdown.card')) return !this.countdownPreview.isOver;
     if (section.type === 'gallery') {
       const binding = String(layer.binding || '');
       if (!binding.startsWith('gallery.')) return true;
@@ -6010,7 +6025,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   openDesignLibrary(key?: string): void {
     this.libraryCategory = 'all';
-    this.selectCompleteDesign(key || this.recommendedCompleteDesignKey());
+    this.selectCompleteDesign(key || this.builtInPresets[0]?.key || this.recommendedCompleteDesignKey());
     this.showDesignLibrary = true;
   }
 
@@ -6064,7 +6079,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private recommendedCompleteDesignKey(): string {
     const type = this.event?.type;
-    return this.builtInPresets.find((preset) => preset.category === type)?.key || 'editorial';
+    return this.builtInPresets.find((preset) => preset.category === type)?.key || 'palazzo-orangerie';
   }
 
   startBlankDesign(): void {
@@ -7149,6 +7164,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     for (const section of this.design.sections) {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
+      if (this.isPalazzoOrangerie()) {
+        const needsFrameUpgrade = section.layers?.some((l) => l.type === 'image' && l.style?.objectFit === 'cover' && l.style?.preserveAspectRatio !== false);
+        if ((!section.layers?.length || needsFrameUpgrade) && section.type !== 'custom') {
+          const built = buildPalazzoOrangerieDesign(this.invitation?.content || {}, this.event, (prefix) => this.uid(prefix), true);
+          const match = built.sections.find((s) => s.type === section.type);
+          if (match) {
+            section.height = match.height;
+            section.background = match.background;
+            section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(match.pluginSettings || {}), ...(section.pluginSettings || {}) };
+            section.layers = match.layers;
+          }
+        }
+        if (this.isConfigurablePlugin(section.type)) {
+          section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}) };
+        }
+        if (section.type === 'rsvp') {
+          this.ensureRsvpPluginDesign(section);
+        }
+        continue;
+      }
       if (isXv) {
         if (section.type === 'hero') {
           section.background = {
@@ -8038,6 +8073,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
     }
     return layer;
+  }
+
+  isPalazzoOrangerie(): boolean {
+    return isPalazzoOrangerieDesign(this.design, this.invitation?.content?.template || this.invitation?.template);
   }
 
   isHauteCouture(): boolean {

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 760" width="100%" height="100%">
+  <defs>
+    <linearGradient id="archGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9c7025"/>
+      <stop offset="28%" stop-color="#e8cf96"/>
+      <stop offset="52%" stop-color="#c69b49"/>
+      <stop offset="78%" stop-color="#f4e2b8"/>
+      <stop offset="100%" stop-color="#8f631d"/>
+    </linearGradient>
+    <linearGradient id="oliveLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#29483b"/>
+      <stop offset="100%" stop-color="#172c23"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Classical Archway -->
+  <path d="M46,728 L46,304 A254,254 0 0,1 554,304 L554,728 Z" fill="none" stroke="url(#archGold)" stroke-width="3.2"/>
+  <path d="M58,716 L58,306 A242,242 0 0,1 542,306 L542,716 Z" fill="none" stroke="url(#archGold)" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <path d="M36,738 L564,738" stroke="url(#archGold)" stroke-width="2"/>
+
+  <!-- Column Capitals & Bases -->
+  <rect x="36" y="296" width="28" height="10" rx="2" fill="url(#archGold)"/>
+  <rect x="536" y="296" width="28" height="10" rx="2" fill="url(#archGold)"/>
+  <rect x="34" y="724" width="32" height="12" rx="2" fill="url(#archGold)"/>
+  <rect x="534" y="724" width="32" height="12" rx="2" fill="url(#archGold)"/>
+
+  <!-- Apex Baroque Keystone Cartouche -->
+  <g transform="translate(300,48)">
+    <path d="M0,-28 L22,0 L0,28 L-22,0 Z" fill="#172c23" stroke="url(#archGold)" stroke-width="2.5"/>
+    <circle cx="0" cy="0" r="8" fill="url(#archGold)"/>
+    <!-- Olive Boughs Left & Right -->
+    <g stroke="url(#archGold)" stroke-width="1.5" fill="url(#oliveLeaf)">
+      <path d="M-24,2 C-65,-8 -110,12 -152,42" fill="none"/>
+      <ellipse cx="-52" cy="-2" rx="14" ry="5" transform="rotate(-18 -52 -2)"/>
+      <ellipse cx="-82" cy="8" rx="15" ry="5" transform="rotate(-28 -82 8)"/>
+      <ellipse cx="-114" cy="22" rx="14" ry="5" transform="rotate(-35 -114 22)"/>
+      <ellipse cx="-65" cy="12" rx="13" ry="4.5" transform="rotate(14 -65 12)"/>
+      <ellipse cx="-98" cy="26" rx="13" ry="4.5" transform="rotate(8 -98 26)"/>
+
+      <path d="M24,2 C65,-8 110,12 152,42" fill="none"/>
+      <ellipse cx="52" cy="-2" rx="14" ry="5" transform="rotate(18 52 -2)"/>
+      <ellipse cx="82" cy="8" rx="15" ry="5" transform="rotate(28 82 8)"/>
+      <ellipse cx="114" cy="22" rx="14" ry="5" transform="rotate(35 114 22)"/>
+      <ellipse cx="65" cy="12" rx="13" ry="4.5" transform="rotate(-14 65 12)"/>
+      <ellipse cx="98" cy="26" rx="13" ry="4.5" transform="rotate(-8 98 26)"/>
+    </g>
+  </g>
+
+  <!-- Spandrel Corner Rosettes -->
+  <g transform="translate(88,104)" stroke="url(#archGold)" fill="none" stroke-width="1.3">
+    <circle cx="0" cy="0" r="16"/>
+    <circle cx="0" cy="0" r="5" fill="url(#archGold)"/>
+    <path d="M-22,0 L22,0 M0,-22 L0,22"/>
+  </g>
+  <g transform="translate(512,104)" stroke="url(#archGold)" fill="none" stroke-width="1.3">
+    <circle cx="0" cy="0" r="16"/>
+    <circle cx="0" cy="0" r="5" fill="url(#archGold)"/>
+    <path d="M-22,0 L22,0 M0,-22 L0,22"/>
+  </g>
+</svg>
+

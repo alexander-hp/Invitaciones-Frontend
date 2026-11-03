@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
+  <defs>
+    <linearGradient id="cameoGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9A6D20"/>
+      <stop offset="25%" stop-color="#E8CA82"/>
+      <stop offset="50%" stop-color="#FFF5D6"/>
+      <stop offset="75%" stop-color="#C8963E"/>
+      <stop offset="100%" stop-color="#895E18"/>
+    </linearGradient>
+    <filter id="cameoShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0A1410" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#cameoShadow)">
+    <!-- Outer Sculpted Gold Ring -->
+    <circle cx="110" cy="110" r="98" stroke="url(#cameoGold)" stroke-width="4.5"/>
+    <!-- Pearl Beaded Ring -->
+    <circle cx="110" cy="110" r="92" stroke="#FFF4D2" stroke-width="2" stroke-dasharray="2.5 5"/>
+    <!-- Inner Bevel Fillet -->
+    <circle cx="110" cy="110" r="87" stroke="url(#cameoGold)" stroke-width="1.6"/>
+
+    <!-- Top Royal Ribbon & Starburst Crest -->
+    <g transform="translate(110, 12)">
+      <path d="M-28 6 C-18 -4, -8 -4, 0 2 C8 -4, 18 -4, 28 6" stroke="url(#cameoGold)" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="8" fill="#152820" stroke="url(#cameoGold)" stroke-width="2.2"/>
+      <polygon points="0,-5 2,-1.5 5.5,0 2,1.5 0,5 -2,1.5 -5.5,0 -2,-1.5" fill="#FFF3D1"/>
+    </g>
+
+    <!-- Bottom Botanical Garland Clasp -->
+    <g transform="translate(110, 208)">
+      <path d="M-32 -6 C-18 4, 18 4, 32 -6" stroke="url(#cameoGold)" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="6.5" fill="#152820" stroke="url(#cameoGold)" stroke-width="2"/>
+      <circle cx="0" cy="0" r="2.6" fill="#FFF3D1"/>
+      <circle cx="-14" cy="-2" r="2.2" fill="url(#cameoGold)"/>
+      <circle cx="14" cy="-2" r="2.2" fill="url(#cameoGold)"/>
+    </g>
+  </g>
+</svg>
+

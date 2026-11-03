@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="skyWash" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f6ecda"/>
+      <stop offset="65%" stop-color="#ede0c8"/>
+      <stop offset="100%" stop-color="#dfd0b4"/>
+    </linearGradient>
+    <linearGradient id="villaStone" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbf6ec"/>
+      <stop offset="100%" stop-color="#e5d4b7"/>
+    </linearGradient>
+    <linearGradient id="cypressTone" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#28473a"/>
+      <stop offset="100%" stop-color="#12241c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="520" rx="16" fill="url(#skyWash)"/>
+
+  <!-- Golden Tuscan Sun & Halo -->
+  <circle cx="400" cy="135" r="78" fill="#ebd197" fill-opacity="0.45"/>
+  <circle cx="400" cy="135" r="54" fill="#dfba69" fill-opacity="0.35"/>
+
+  <!-- Distant Tuscan Hills -->
+  <path d="M0,360 Q180,290 360,340 T800,335 L800,520 L0,520 Z" fill="#d5c3a3" fill-opacity="0.55"/>
+  <path d="M0,385 Q260,330 520,370 T800,365 L800,520 L0,520 Z" fill="#c7b28f" fill-opacity="0.6"/>
+
+  <!-- Italian Cypresses -->
+  <g fill="url(#cypressTone)">
+    <path d="M118,385 C106,300 112,210 124,148 C136,210 142,300 130,385 Z"/>
+    <path d="M154,392 C145,325 149,250 158,195 C167,250 171,325 162,392 Z"/>
+    <path d="M670,385 C658,300 664,210 676,148 C688,210 694,300 682,385 Z"/>
+    <path d="M636,392 C627,325 631,250 640,195 C649,250 653,325 644,392 Z"/>
+  </g>
+
+  <!-- Grand Palazzo L'Orangerie Facade -->
+  <g stroke="#6c5328" stroke-width="1.5" fill="url(#villaStone)">
+    <!-- Side Wings -->
+    <rect x="175" y="245" width="120" height="145"/>
+    <rect x="505" y="245" width="120" height="145"/>
+    <!-- Central Belvedere Corps -->
+    <rect x="275" y="195" width="250" height="195"/>
+    <!-- Classical Pediment Roof -->
+    <polygon points="262,195 400,132 538,195" fill="#e8d7ba"/>
+    <polygon points="282,190 400,142 518,190" fill="none" stroke="#9e7836" stroke-width="1"/>
+    <!-- Roof Balustrade & Urns -->
+    <line x1="170" y1="245" x2="275" y2="245" stroke-width="2.5"/>
+    <line x1="525" y1="245" x2="630" y2="245" stroke-width="2.5"/>
+
+    <!-- Ground Loggia Arches -->
+    <g fill="#1b3329">
+      <path d="M302,390 L302,312 A24,24 0 0,1 350,312 L350,390 Z"/>
+      <path d="M372,390 L372,304 A28,28 0 0,1 428,304 L428,390 Z"/>
+      <path d="M450,390 L450,312 A24,24 0 0,1 498,312 L498,390 Z"/>
+      <!-- Wing Windows -->
+      <path d="M205,355 L205,305 A16,16 0 0,1 237,305 L237,355 Z"/>
+      <path d="M563,355 L563,305 A16,16 0 0,1 595,305 L595,355 Z"/>
+    </g>
+
+    <!-- Piano Nobile Windows -->
+    <g fill="#2b483c" stroke="#6c5328" stroke-width="1.2">
+      <rect x="314" y="222" width="24" height="42" rx="12"/>
+      <rect x="386" y="218" width="28" height="46" rx="14"/>
+      <rect x="462" y="222" width="24" height="42" rx="12"/>
+    </g>
+  </g>
+
+  <!-- Terrace Parterre & Reflecting Pool -->
+  <path d="M70,390 L730,390 L780,505 L20,505 Z" fill="#e6d7be" stroke="#8f6d34" stroke-width="1.2"/>
+  <ellipse cx="400" cy="448" rx="165" ry="34" fill="#234236" stroke="#b8893a" stroke-width="2"/>
+  <ellipse cx="400" cy="448" rx="152" ry="27" fill="none" stroke="#ebd197" stroke-width="0.8" stroke-dasharray="6 4"/>
+  <!-- Fountain Jet -->
+  <path d="M400,448 L400,398 M400,404 C382,408 372,425 368,446 M400,404 C418,408 428,425 432,446" stroke="#fbf6ec" stroke-width="1.8" fill="none"/>
+
+  <!-- Inner Gold Frame -->
+  <rect x="12" y="12" width="776" height="496" rx="12" fill="none" stroke="#b8893a" stroke-width="1.5"/>
+</svg>
+
