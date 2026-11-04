@@ -1361,7 +1361,10 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const style = layer.style || {};
     const shape = layer.type === 'shape';
     const isIcon = layer.type === 'text' && Boolean(style.iconName);
-    const maskedImage = layer.type === 'image' && !!style.imageMask && style.imageMask !== 'none';
+    const mask = layer.type === 'image' ? (style.imageMask || 'none') : 'none';
+    const polygonMask = ['diamond', 'hexagon', 'octagon', 'shield', 'clover', 'heart', 'ticket'].includes(mask);
+    const hasPasspartout = layer.type === 'image' && Number(style.padding || 0) > 0;
+    const maskedImage = polygonMask && !hasPasspartout;
     const responsiveScale = this.sharedStyleScale();
     const layout = this.invitation?.content?.visualDesign?.responsiveMode === 'independent' && layer.layouts?.[this.device]
       ? layer.layouts[this.device]!
@@ -1374,7 +1377,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
       fontWeight: String(style.fontWeight || 400), fontStyle: String(style.fontStyle || 'normal'), textAlign: String(style.textAlign || 'center'),
       lineHeight: isIcon ? '1' : String(style.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(style.letterSpacing || 0, responsiveScale)}px`, textTransform: String(style.textTransform || 'none'),
       textDecoration: String(style.textDecoration || 'none'), textShadow: String(style.textShadow || 'none'),
-      borderRadius: shape ? '0' : `${this.scaledLayerPixels(style.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
+      borderRadius: shape ? '0' : this.resolveLayerOuterBorderRadius(layer, mask, this.scaledLayerPixels(style.borderRadius || 0, responsiveScale)), borderColor: shape ? 'transparent' : String(style.borderColor || 'transparent'),
       borderStyle: !shape && !maskedImage && Number(style.borderWidth || 0) > 0 ? String(style.borderStyle || 'solid') : 'none', borderWidth: shape || maskedImage ? '0' : `${this.scaledLayerPixels(style.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && style.gradientEnabled
         ? `linear-gradient(${Number(style.gradientAngle || 0)}deg,${String(style.gradientStart || '#ffffff')},${String(style.gradientEnd || '#000000')})`
@@ -1450,9 +1453,9 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const style = layer.style || {};
     const scale = Number(style.imageScale || 1);
     const result: Record<string, string> = {
-      objectFit: style.preserveAspectRatio !== false ? 'contain' : (style.objectFit || 'cover'),
+      objectFit: style.objectFit ? (style.objectFit === 'contain' || (style.preserveAspectRatio === true && (!style.imageMask || style.imageMask === 'none')) ? 'contain' : 'cover') : (style.preserveAspectRatio !== false ? 'contain' : 'cover'),
       objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
-      clipPath: style.imageMask && style.imageMask !== 'none' && Number(style.borderWidth || 0) > 0 ? this.imageMaskStyle(layer)['clipPath'] : 'none',
+      clipPath: ['diamond', 'hexagon', 'octagon', 'shield', 'clover', 'heart', 'ticket'].includes(String(style.imageMask || 'none')) && Number(style.borderWidth || 0) > 0 ? this.imageMaskStyle(layer)['clipPath'] : 'none',
       borderRadius: style.imageMask === 'rounded' ? '12%' : '0',
       transform: `scale(${scale * (style.flipX ? -1 : 1)},${scale * (style.flipY ? -1 : 1)}) rotate(${Number(style.imageRotation || 0)}deg)`,
       filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
@@ -1467,20 +1470,54 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     if (cached && cached.styleRef === layer.style && cached.device === this.device) return cached.result;
     const mask = layer.style?.imageMask || 'none';
     const masks: Record<string, string> = {
-      none: 'none', circle: 'circle(50% at 50% 50%)', rounded: 'inset(0 round 12%)',
-      arch: 'inset(0 round 50% 50% 10% 10%)', diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
+      none: 'none', circle: 'circle(50% at 50% 50%)', oval: 'ellipse(48% 50% at 50% 50%)', rounded: 'inset(0 round 12%)',
+      arch: 'inset(0 round 999px 999px 12px 12px)', window: 'inset(0 round 999px 999px 4px 4px)', dome: 'inset(0 round 999px 999px 24% 24%)',
+      diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
       hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',
+
+      octagon: 'polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%)',
+      shield: 'polygon(0 0,100% 0,100% 62%,50% 100%,0 62%)',
+      clover: 'polygon(50% 0,65% 8%,80% 0,92% 12%,92% 28%,100% 40%,98% 56%,92% 70%,92% 86%,80% 98%,65% 90%,50% 100%,35% 90%,20% 98%,8% 86%,8% 70%,2% 56%,0 40%,8% 28%,8% 12%,20% 0,35% 8%)',
+      heart: 'polygon(50% 90%,35% 75%,18% 58%,8% 40%,8% 24%,18% 10%,32% 8%,44% 15%,50% 26%,56% 15%,68% 8%,82% 10%,92% 24%,92% 40%,82% 58%,65% 75%)',
+
+
       ticket: 'polygon(0 0,100% 0,100% 38%,92% 50%,100% 62%,100% 100%,0 100%,0 62%,8% 50%,0 38%)'
     };
-    const framed = mask !== 'none' && Number(layer.style?.borderWidth || 0) > 0;
+    const style = layer.style || {};
+    const polygonMask = ['diamond', 'hexagon', 'octagon', 'shield', 'clover', 'heart', 'ticket'].includes(mask);
+    const hasPasspartout = Number(style.padding || 0) > 0;
+    const framed = polygonMask && !hasPasspartout && Number(style.borderWidth || 0) > 0;
+    const innerFilet = hasPasspartout && Number(style.borderWidth || 0) > 0 && !polygonMask;
     const result: Record<string, string> = {
-      clipPath: masks[mask] || 'none', borderRadius: mask === 'rounded' ? '12%' : '0',
+      clipPath: masks[mask] || 'none',
+      borderRadius: this.resolveImageInnerBorderRadius(mask, this.scaledLayerPixels(Number(style.borderRadius || 0), this.sharedStyleScale())),
+      overflow: 'hidden',
+      border: innerFilet ? `1px solid ${String(style.borderColor || 'rgba(200,157,76,0.55)')}` : 'none',
       boxSizing: 'border-box',
       padding: framed ? `${this.scaledLayerPixels(Number(layer.style?.borderWidth || 0), this.sharedStyleScale())}px` : '0',
       backgroundColor: framed ? String(layer.style?.borderColor || '#ffffff') : 'transparent'
     };
     this.cachedImageMaskStyles.set(layer, { styleRef: layer.style, device: this.device, result });
     return result;
+  }
+
+  private resolveLayerOuterBorderRadius(layer: VisualInvitationLayer, mask: string, scaledRadius: number): string {
+    if (layer.type !== 'image') return `${scaledRadius}px`;
+    if (mask === 'circle' || mask === 'oval') return '50%';
+    if (mask === 'arch') return '999px 999px 16px 16px';
+    if (mask === 'window') return '999px 999px 6px 6px';
+    if (mask === 'dome') return '999px 999px 26% 26%';
+    if (mask === 'rounded') return scaledRadius > 0 ? `${scaledRadius}px` : '14%';
+    return `${scaledRadius}px`;
+  }
+
+  private resolveImageInnerBorderRadius(mask: string, scaledRadius: number): string {
+    if (mask === 'circle' || mask === 'oval') return '50%';
+    if (mask === 'arch') return '999px 999px 12px 12px';
+    if (mask === 'window') return '999px 999px 4px 4px';
+    if (mask === 'dome') return '999px 999px 24% 24%';
+    if (mask === 'rounded') return '12%';
+    return `${Math.max(0, scaledRadius - 2)}px`;
   }
 
   shapeContentStyle(layer: VisualInvitationLayer): Record<string, string> {

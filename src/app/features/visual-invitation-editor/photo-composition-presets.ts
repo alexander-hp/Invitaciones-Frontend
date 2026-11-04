@@ -44,6 +44,38 @@ export const PHOTO_COMPOSITION_PRESETS: PhotoCompositionPreset[] = [
     { x: 66, y: 35, width: 34, height: 30, mask: 'rounded' },
     { x: 66, y: 70, width: 34, height: 30, mask: 'rounded' }
   ] },
+  { key: 'arch-triptych', name: 'Tríptico Imperial', aspectRatio: 1.75, slots: [
+    { x: 0, y: 12, width: 28, height: 88, mask: 'arch' },
+    { x: 32, y: 0, width: 36, height: 100, mask: 'arch' },
+    { x: 72, y: 12, width: 28, height: 88, mask: 'arch' }
+  ] },
+  { key: 'arch-cameo', name: 'Arco y Camafeo', aspectRatio: 1.5, slots: [
+    { x: 0, y: 0, width: 54, height: 100, mask: 'arch' },
+    { x: 58, y: 0, width: 42, height: 48, mask: 'circle' },
+    { x: 58, y: 52, width: 42, height: 48, mask: 'rounded' }
+  ] },
+  { key: 'cameo-duo', name: 'Dúo de Camafeos', aspectRatio: 1.55, slots: [
+    { x: 0, y: 5, width: 47, height: 90, mask: 'oval' },
+    { x: 53, y: 5, width: 47, height: 90, mask: 'oval' }
+  ] },
+  { key: 'royal-mosaic', name: 'Mosaico Real', aspectRatio: 1.5, slots: [
+    { x: 0, y: 0, width: 48, height: 60, mask: 'arch' },
+    { x: 52, y: 0, width: 48, height: 36, mask: 'rounded' },
+    { x: 0, y: 64, width: 48, height: 36, mask: 'rounded' },
+    { x: 52, y: 40, width: 48, height: 60, mask: 'arch' }
+  ] },
+  { key: 'salon-five', name: 'Salón de 5 Fotos', aspectRatio: 1.7, slots: [
+    { x: 0, y: 0, width: 29, height: 48, mask: 'rounded' },
+    { x: 0, y: 52, width: 29, height: 48, mask: 'rounded' },
+    { x: 33, y: 0, width: 34, height: 100, mask: 'arch' },
+    { x: 71, y: 0, width: 29, height: 48, mask: 'rounded' },
+    { x: 71, y: 52, width: 29, height: 48, mask: 'rounded' }
+  ] },
+  { key: 'diamond-trio', name: 'Trío Geométrico', aspectRatio: 1.8, slots: [
+    { x: 0, y: 10, width: 30, height: 80, mask: 'octagon' },
+    { x: 34, y: 0, width: 32, height: 100, mask: 'diamond' },
+    { x: 70, y: 10, width: 30, height: 80, mask: 'octagon' }
+  ] },
   { key: 'filmstrip', name: 'Tira de fotos', aspectRatio: 2.2, slots: [
     { x: 0, y: 0, width: 31, height: 100, mask: 'rounded' },
     { x: 34.5, y: 0, width: 31, height: 100, mask: 'rounded' },

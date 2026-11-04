@@ -234,6 +234,16 @@
 .crop-toolbar button{height:27px;min-width:27px;padding:0 8px;border:0;border-radius:6px;background:#ffffff18;color:#fff;font:700 12px/1 var(--nw-font);cursor:pointer}
 .crop-toolbar button:last-child{background:var(--nw-accent, #c09c78)}
 .crop-hint{margin:-4px 0 12px;color:var(--nw-text-3, #9e9083);font-size:11px;line-height:1.4}
+.frame-preset-catalog,.ornamental-overlay-catalog{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.frame-preset-catalog button,.ornamental-overlay-catalog button{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--nw-border, #eadecc);border-radius:11px;background:#fff;text-align:left;cursor:pointer;transition:all .16s ease;min-width:0}
+.frame-preset-catalog button:hover,.ornamental-overlay-catalog button:hover{border-color:var(--nw-accent, #c09c78);background:#fdfbf8;transform:translateY(-1px);box-shadow:0 6px 14px rgba(46,38,33,.07)}
+.frame-preset-catalog button.active{border-color:var(--nw-accent, #c09c78);background:var(--nw-accent-glow-strong, rgba(192,156,120,0.14));box-shadow:0 0 0 1px var(--nw-accent, #c09c78)}
+.frame-preset-swatch{width:28px;height:34px;border-radius:14px 14px 4px 4px;display:flex;align-items:center;justify-content:center;padding:3px;box-sizing:border-box;flex-shrink:0;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+.frame-preset-inner{display:block;width:100%;height:100%;border-radius:10px 10px 2px 2px;background:linear-gradient(145deg,#d8c4a8,#9b7b56);border:1px solid rgba(200,157,76,.5)}
+.ornamental-overlay-catalog button img{width:30px;height:38px;object-fit:contain;flex-shrink:0;border-radius:4px;background:#f7f2ea;padding:2px}
+.frame-preset-catalog button div,.ornamental-overlay-catalog button div{display:grid;gap:2px;min-width:0}
+.frame-preset-catalog button strong,.ornamental-overlay-catalog button strong{font-size:11.5px;font-weight:700;color:var(--nw-text, #2e2621);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frame-preset-catalog button small,.ornamental-overlay-catalog button small{font-size:10px;color:var(--nw-text-3, #9e9083);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ve-inspector label{display:grid;gap:6px;font-size:12px;font-weight:600;color:var(--nw-text-2, #6e6157);margin-bottom:14px}
 .ve-inspector input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),
 .ve-inspector textarea,

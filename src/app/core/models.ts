@@ -376,7 +376,7 @@ export interface VisualInvitationLayerStyle {
   textShadow?: string;
   borderColor?: string;
   borderWidth?: number;
-  borderStyle?: 'solid' | 'dashed' | 'dotted';
+  borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double';
   boxShadow?: string;
   padding?: number;
   backdropFilter?: string;
@@ -384,7 +384,8 @@ export interface VisualInvitationLayerStyle {
   gradientStart?: string;
   gradientEnd?: string;
   gradientAngle?: number;
-  imageMask?: 'none' | 'circle' | 'rounded' | 'arch' | 'diamond' | 'hexagon' | 'ticket';
+  imageMask?: 'none' | 'circle' | 'oval' | 'rounded' | 'arch' | 'window' | 'dome' | 'diamond' | 'hexagon' | 'octagon' | 'shield' | 'clover' | 'heart' | 'ticket';
+  framePreset?: string;
   frameEnabled?: boolean;
   shapeKind?:
     | 'rectangle' | 'rounded' | 'pill' | 'circle' | 'ellipse' | 'arch' | 'arch-inverted' | 'window'

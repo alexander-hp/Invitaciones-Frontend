@@ -67,7 +67,18 @@ export function buildCompleteDesign(
     hero.layers.push(layer(nextId('layer'), type, text, x, y, width, height, style, extras));
   };
   const image = (x: number, y: number, width: number, height: number, mask: NonNullable<VisualInvitationLayer['style']>['imageMask'] = 'none') => {
-    if (coverUrl) add('image', '', x, y, width, height, { objectFit: 'cover', preserveAspectRatio: true, imageMask: mask, borderRadius: 0 }, { url: coverUrl, name: 'Imagen de portada' });
+    if (coverUrl) {
+      const heroFrameByVariant: Record<string, VisualInvitationLayer['style']> = {
+        'haute-couture': { padding: 8, backgroundColor: '#faf5eb', borderWidth: 2, borderStyle: 'solid', borderColor: '#b89448', borderRadius: 120, boxShadow: '0 18px 42px rgba(24,20,17,0.18)', framePreset: 'museum-ivory' },
+        editorial: { padding: 9, backgroundColor: '#ffffff', borderWidth: 1.5, borderStyle: 'solid', borderColor: '#d9cfc5', borderRadius: 12, boxShadow: '0 16px 38px rgba(32,29,27,0.14)', framePreset: 'polaroid' },
+        romantic: { padding: 7, backgroundColor: '#fffaf8', borderWidth: 2, borderStyle: 'solid', borderColor: '#d6a39a', borderRadius: 120, boxShadow: '0 16px 36px rgba(143,79,69,0.16)', framePreset: 'museum-ivory' },
+        night: { padding: 7, backgroundColor: '#252a2e', borderWidth: 2, borderStyle: 'solid', borderColor: '#d3a86b', borderRadius: 14, boxShadow: '0 20px 44px rgba(0,0,0,0.45)', framePreset: 'imperial-emerald' },
+        birthday: { padding: 8, backgroundColor: '#ffffff', borderWidth: 2, borderStyle: 'solid', borderColor: '#d89b3c', borderRadius: 18, boxShadow: '0 16px 36px rgba(182,73,45,0.16)', framePreset: 'museum-ivory' },
+        baptism: { padding: 8, backgroundColor: '#ffffff', borderWidth: 4, borderStyle: 'double', borderColor: '#7b95a8', borderRadius: 120, boxShadow: '0 16px 36px rgba(47,58,68,0.14)', framePreset: 'double-gold' },
+        celebration: { padding: 8, backgroundColor: '#fffdf9', borderWidth: 2, borderStyle: 'solid', borderColor: '#b55239', borderRadius: 14, boxShadow: '0 16px 36px rgba(37,33,31,0.15)', framePreset: 'museum-ivory' }
+      };
+      add('image', '', x, y, width, height, { objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, imageMask: mask, borderRadius: 14, ...(heroFrameByVariant[variant] || {}) }, { url: coverUrl, name: 'Imagen de portada' });
+    }
   };
   const rule = (x: number, y: number, width: number) => add('shape', '', x, y, width, .4, { backgroundColor: palette.accent, shapeKind: 'rectangle' }, { name: 'Linea decorativa' });
 
@@ -82,7 +93,7 @@ export function buildCompleteDesign(
     hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/templates/xv-burgundy/velvet-bg.jpg', overlay: 0.2 };
     add('text', 'MIS XV AÑOS', 10, 5, 80, 4, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 700, letterSpacing: 4 }, { name: 'Rótulo real' });
     const portraitUrl = coverUrl || 'assets/templates/xv-burgundy/portrait.jpg';
-    add('image', '', 18, 11, 64, 44, { objectFit: 'cover', imageMask: 'arch', borderRadius: 18, borderWidth: 2.5, borderColor: '#d4af37', borderStyle: 'solid', boxShadow: '0 16px 42px rgba(0,0,0,0.6), 0 0 24px rgba(212,175,55,0.35)' }, { url: portraitUrl, name: 'Retrato de la quinceañera' });
+    add('image', '', 18, 11, 64, 44, { objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, imageMask: 'arch', padding: 8, backgroundColor: '#2a050b', borderRadius: 120, borderWidth: 2.5, borderColor: '#d4af37', borderStyle: 'solid', framePreset: 'velvet-burgundy', boxShadow: '0 18px 44px rgba(0,0,0,0.62), 0 0 24px rgba(212,175,55,0.35)' }, { url: portraitUrl, name: 'Retrato de la quinceañera' });
     add('text', 'Mis Quince', 10, 58, 80, 7, { ...titleStyle, fontSize: 46, color: palette.accent, fontWeight: 400 }, { name: 'Mis Quince' });
     add('text', title, 6, 65, 88, 8, { ...titleStyle, fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 32, color: '#faf6f0', fontWeight: 700, letterSpacing: 1.5 }, { name: 'Nombre de la quinceañera' });
     rule(28, 74, 44);
@@ -143,7 +154,7 @@ export function buildCompleteDesign(
   if (variant === 'xv-burgundy') {
     intro.background = { ...(intro.background || {}), color: '#180104', imageUrl: '' };
     intro.layers = [
-      layer(nextId('layer'), 'image', '', 6, 4, 88, 92, { objectFit: 'cover', borderRadius: 18, boxShadow: '0 20px 50px rgba(0,0,0,0.6)' }, { url: 'assets/templates/xv-burgundy/welcome-card.jpg', name: 'Tarjeta de bienvenida' }),
+      layer(nextId('layer'), 'image', '', 6, 4, 88, 92, { objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, borderRadius: 18, borderWidth: 1.5, borderStyle: 'solid', borderColor: 'rgba(212,175,55,0.45)', boxShadow: '0 20px 50px rgba(0,0,0,0.6)' }, { url: 'assets/templates/xv-burgundy/welcome-card.jpg', name: 'Tarjeta de bienvenida' }),
       layer(nextId('layer'), 'text', 'MIS QUINCE AÑOS', 16, 19, 68, 5, { ...bodyStyle, color: '#8c1d2e', fontSize: 11, fontWeight: 800, letterSpacing: 3 }, { name: 'Encabezado' }),
       layer(nextId('layer'), 'text', 'Te invito a celebrar conmigo', 12, 25, 76, 8, { ...titleStyle, fontFamily: "'Cinzel Decorative', 'Playfair Display', serif", fontSize: 26, color: '#5c0d18', fontWeight: 700 }, { name: 'Título' }),
       layer(nextId('layer'), 'text', content.message || content.subheadline ? '{{invitation.message}}' : introFallback, 15, 34, 70, 26, { ...titleStyle, fontFamily: "'Great Vibes', cursive", fontSize: 22, color: '#3a0810', lineHeight: 1.45, textAlign: 'center' }, { name: 'Mensaje de bienvenida' })

@@ -630,7 +630,21 @@
           <span>{{ shape.label }}</span>
         </button>
       </div>
-      <h2>Marcos de foto</h2>
+      <h2>Acabados y paspartú</h2>
+      <div class="frame-preset-catalog">
+        <button *ngFor="let preset of imageFramePresets" type="button" [title]="'Agregar marco con acabado ' + preset.label" (click)="selectedLayer?.type === 'image' ? applyImageFramePreset(selectedLayer!, preset.key) : addStyledFrame(preset.key, 'arch')">
+          <span class="frame-preset-swatch" [style.background]="preset.previewBg" [style.border]="preset.previewBorder"><i class="frame-preset-inner"></i></span>
+          <div><strong>{{ preset.label }}</strong><small>{{ preset.subtitle }}</small></div>
+        </button>
+      </div>
+      <h2>Molduras de lujo (SVG)</h2>
+      <div class="ornamental-overlay-catalog">
+        <button *ngFor="let ov of ornamentalFrameOverlays" type="button" [title]="'Aplicar ' + ov.label" (click)="applyOrnamentalOverlayToLayer(selectedLayer, ov.key)">
+          <img [src]="ov.url" [alt]="ov.label" loading="lazy">
+          <div><strong>{{ ov.label }}</strong><small>{{ ov.subtitle }}</small></div>
+        </button>
+      </div>
+      <h2>Formas de recorte de foto</h2>
       <div class="frame-catalog">
         <button *ngFor="let mask of imageMasks" type="button" draggable="true" [title]="'Agregar marco ' + mask.label" (dragstart)="beginPaletteDrag($event, {kind:'frame', mask:mask.key})" (dragend)="endPaletteDrag()" (click)="addFrame(mask.key)">
           <span class="frame-catalog-sample" [ngStyle]="framePreviewStyle(mask.key)"></span><span>{{ mask.label === 'Original' ? 'Rectangular' : mask.label }}</span>
@@ -1751,7 +1765,7 @@
             <div class="inspector-heading"><h3>Apariencia</h3><button type="button" (click)="resetLayerAppearance(layer)">Restablecer</button></div>
             <div class="two-columns">
               <label>Grosor borde<input [(ngModel)]="style.borderWidth" type="number" min="0" max="20" step="1"></label>
-              <label>Tipo de borde<select [(ngModel)]="style.borderStyle"><option value="solid">Sólido</option><option value="dashed">Guiones</option><option value="dotted">Puntos</option></select></label>
+              <label>Tipo de borde<select [(ngModel)]="style.borderStyle"><option value="solid">Sólido</option><option value="double">Doble filete</option><option value="dashed">Guiones</option><option value="dotted">Puntos</option></select></label>
               <label>Color borde<input [(ngModel)]="style.borderColor" type="color"></label>
               <label>Redondeado<input [(ngModel)]="style.borderRadius" type="number" min="0" max="200" step="1"></label>
             </div>
@@ -1771,10 +1785,32 @@
               <button *ngFor="let mask of imageMasks" type="button" [class.active]="(style.imageMask || 'none') === mask.key" [title]="mask.label" (click)="setImageMask(layer, mask.key)"><b>{{ mask.icon }}</b><span>{{ mask.label }}</span></button>
             </div>
             <div class="two-columns">
-              <label>Grosor del marco<input [ngModel]="style.borderWidth || 0" (ngModelChange)="style.borderWidth=+$event" type="number" min="0" max="20"></label>
-              <label>Color del marco<input [ngModel]="style.borderColor || '#ffffff'" (ngModelChange)="style.borderColor=$event" type="color"></label>
+              <label *ngIf="false">Grosor legacy</label>
+              <label *ngIf="false">Color legacy</label>
             </div>
-            <div class="ve-help-row"><label>Foto dentro del marco<select [ngModel]="style.preserveAspectRatio === false ? (style.objectFit || 'cover') : 'contain'" (ngModelChange)="setImageFit(layer, $event)"><option value="cover">Llenar marco con recorte</option><option value="contain">Mostrar completa</option></select></label><details class="ve-context-help"><summary title="Ayuda sobre encuadre" aria-label="Ayuda sobre encuadre"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Llenar ocupa todo el marco y puede recortar bordes, sin estirar la foto. Mostrar completa conserva toda la imagen y puede dejar espacio vacío alrededor.</p></details></div>
+            <label>Acabado de marco y paspartú</label>
+            <div class="frame-preset-catalog inspector-frame-presets">
+              <button *ngFor="let preset of imageFramePresets" type="button" [class.active]="isImageFramePresetApplied(layer, preset.key)" [title]="preset.subtitle" (click)="applyImageFramePreset(layer, preset.key)">
+                <span class="frame-preset-swatch" [style.background]="preset.previewBg" [style.border]="preset.previewBorder"><i class="frame-preset-inner"></i></span>
+                <div><strong>{{ preset.label }}</strong><small>{{ preset.subtitle }}</small></div>
+              </button>
+            </div>
+            <label>Molduras ornamentales (superposición SVG)</label>
+            <div class="ornamental-overlay-catalog inspector-ornamental-catalog">
+              <button *ngFor="let ov of ornamentalFrameOverlays" type="button" [title]="'Aplicar ' + ov.label" (click)="applyOrnamentalOverlayToLayer(layer, ov.key)">
+                <img [src]="ov.url" [alt]="ov.label" loading="lazy">
+                <div><strong>{{ ov.label }}</strong><small>{{ ov.subtitle }}</small></div>
+              </button>
+            </div>
+            <div class="two-columns">
+              <label>Grosor borde<input [ngModel]="style.borderWidth || 0" (ngModelChange)="style.borderWidth=+$event; style.borderStyle = style.borderStyle || 'solid'" type="number" min="0" max="20"></label>
+              <label>Estilo borde<select [ngModel]="style.borderStyle || 'solid'" (ngModelChange)="style.borderStyle=$event"><option value="solid">Sólido</option><option value="double">Doble filete</option><option value="dashed">Costura / Guion</option><option value="dotted">Perlado / Puntos</option></select></label>
+              <label>Color del borde<input [ngModel]="style.borderColor || '#c89d4c'" (ngModelChange)="style.borderColor=$event" type="color"></label>
+              <label>Margen paspartú<input [ngModel]="style.padding || 0" (ngModelChange)="style.padding=+$event; style.backgroundColor = style.backgroundColor && style.backgroundColor !== 'transparent' ? style.backgroundColor : '#faf5eb'" type="number" min="0" max="28"></label>
+              <label *ngIf="(style.padding || 0) > 0">Fondo paspartú<input [ngModel]="style.backgroundColor && style.backgroundColor !== 'transparent' ? style.backgroundColor : '#faf5eb'" (ngModelChange)="style.backgroundColor=$event" type="color"></label>
+              <label>Redondeado ext.<input [ngModel]="style.borderRadius || 0" (ngModelChange)="style.borderRadius=+$event" type="number" min="0" max="200"></label>
+            </div>
+            <div class="ve-help-row"><label>Foto dentro del marco<select [ngModel]="style.objectFit ? (style.objectFit === 'contain' || (style.preserveAspectRatio === true && (!style.imageMask || style.imageMask === 'none')) ? 'contain' : 'cover') : (style.preserveAspectRatio !== false ? 'contain' : 'cover')" (ngModelChange)="setImageFit(layer, $event)"><option value="cover">Llenar marco con recorte</option><option value="contain">Mostrar completa</option></select></label><details class="ve-context-help"><summary title="Ayuda sobre encuadre" aria-label="Ayuda sobre encuadre"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary><p>Llenar ocupa todo el marco y puede recortar bordes, sin estirar la foto. Mostrar completa conserva toda la imagen y puede dejar espacio vacío alrededor.</p></details></div>
             <label>Posición horizontal<input [(ngModel)]="style.objectPositionX" type="range" min="0" max="100"></label>
             <label>Posición vertical<input [(ngModel)]="style.objectPositionY" type="range" min="0" max="100"></label>
             <label>Zoom de imagen<input [ngModel]="style.imageScale ?? 1" (ngModelChange)="style.imageScale=$event" type="range" min="0.5" max="3" step="0.05"><span>{{ style.imageScale || 1 }}×</span></label>
@@ -1890,6 +1926,25 @@
               <input type="range" min="0" max="40" step="1" [disabled]="!canReflowSelectedComposition" [ngModel]="selectedPhotoCompositionSpacing" (ngModelChange)="setPhotoCompositionSpacing($event)" (change)="finishPhotoCompositionSpacing()">
               <span>{{ selectedPhotoCompositionSpacing }} px</span>
             </label>
+          </div>
+          <div *ngIf="selectedCompositeFrames.length" class="photo-composition-options">
+            <h3>Forma para toda la composición</h3>
+            <div class="mask-catalog">
+              <button *ngFor="let mask of imageMasks" type="button" [title]="'Aplicar ' + mask.label + ' a todas las fotos'" (click)="applyCompositionMask(mask.key)"><b>{{ mask.icon }}</b><span>{{ mask.label }}</span></button>
+            </div>
+            <h3>Acabado de marco para la composición</h3>
+            <div class="frame-preset-catalog inspector-frame-presets">
+              <button *ngFor="let preset of imageFramePresets" type="button" [title]="'Aplicar ' + preset.label + ' a todas las fotos'" (click)="applyCompositionFramePreset(preset.key)">
+                <span class="frame-preset-swatch" [style.background]="preset.previewBg" [style.border]="preset.previewBorder"><i class="frame-preset-inner"></i></span>
+                <div><strong>{{ preset.label }}</strong><small>{{ preset.subtitle }}</small></div>
+              </button>
+            </div>
+            <div class="two-columns">
+              <label>Borde grueso<input type="number" min="0" max="20" [ngModel]="selectedCompositeFrames[0]?.style?.borderWidth || 0" (ngModelChange)="setCompositionBorderWidth(+$event)"></label>
+              <label>Color borde<input type="color" [ngModel]="selectedCompositeFrames[0]?.style?.borderColor || '#c89d4c'" (ngModelChange)="setCompositionBorderColor($event)"></label>
+              <label>Paspartú (px)<input type="number" min="0" max="24" [ngModel]="selectedCompositeFrames[0]?.style?.padding || 0" (ngModelChange)="setCompositionPasspartoutPadding(+$event)"></label>
+              <label>Fondo paspartú<input type="color" [ngModel]="selectedCompositeFrames[0]?.style?.backgroundColor && selectedCompositeFrames[0]?.style?.backgroundColor !== 'transparent' ? selectedCompositeFrames[0]?.style?.backgroundColor : '#faf5eb'" (ngModelChange)="setCompositionPasspartoutColor($event)"></label>
+            </div>
           </div>
           <h3>Alinear</h3>
           <div class="alignment-actions">

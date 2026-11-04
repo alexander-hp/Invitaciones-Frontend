@@ -421,7 +421,106 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { binding: 'countdown.expired', label: 'Mensaje al finalizar', icon: '★' }
   ];
   readonly imageMasks: Array<{ key: ImageMask; label: string; icon: string }> = [
-    { key: 'none', label: 'Original', icon: '▭' }, { key: 'circle', label: 'Círculo', icon: '●' },
+    { key: 'none', label: 'Original', icon: '▭' },
+    { key: 'rounded', label: 'Redondeado', icon: '▢' },
+    { key: 'arch', label: 'Arco', icon: '∩' },
+    { key: 'window', label: 'Ventana', icon: '☖' },
+    { key: 'dome', label: 'Cúpula', icon: '⌓' },
+    { key: 'circle', label: 'Círculo', icon: '●' },
+    { key: 'oval', label: 'Camafeo', icon: '⬭' },
+    { key: 'diamond', label: 'Rombo', icon: '◆' },
+    { key: 'hexagon', label: 'Hexágono', icon: '⬢' },
+    { key: 'octagon', label: 'Octágono', icon: '⯃' },
+    { key: 'shield', label: 'Escudo', icon: '🛡' },
+    { key: 'clover', label: 'Sello flor', icon: '✿' },
+    { key: 'heart', label: 'Corazón', icon: '♥' },
+    { key: 'ticket', label: ' Boleto', icon: '◫' }
+  ];
+  readonly imageFramePresets: Array<{
+    key: string;
+    label: string;
+    subtitle: string;
+    previewBg: string;
+    previewBorder: string;
+    style: Partial<VisualInvitationLayerStyle>;
+  }> = [
+    {
+      key: 'none', label: 'Sin marco', subtitle: 'Limpio a sangre',
+      previewBg: 'transparent', previewBorder: '1px solid #d5cbc4',
+      style: { framePreset: 'none', padding: 0, backgroundColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', boxShadow: 'none' }
+    },
+    {
+      key: 'museum-ivory', label: 'Paspartú Museo', subtitle: 'Marfil y oro fino',
+      previewBg: '#faf5eb', previewBorder: '2px solid #c89d4c',
+      style: { framePreset: 'museum-ivory', padding: 8, backgroundColor: '#faf5eb', borderWidth: 2, borderStyle: 'solid', borderColor: '#c89d4c', borderRadius: 16, boxShadow: '0 16px 38px rgba(20, 36, 29, 0.22)' }
+    },
+    {
+      key: 'imperial-emerald', label: 'Galería Esmeralda', subtitle: 'Verde imperial y oro',
+      previewBg: '#152820', previewBorder: '2px solid #d4af63',
+      style: { framePreset: 'imperial-emerald', padding: 8, backgroundColor: '#152820', borderWidth: 2, borderStyle: 'solid', borderColor: '#d4af63', borderRadius: 16, boxShadow: '0 18px 42px rgba(10, 20, 16, 0.38)' }
+    },
+    {
+      key: 'double-gold', label: 'Doble Filete Oro', subtitle: 'Borde doble clásico',
+      previewBg: '#fffdf9', previewBorder: '4px double #c89d4c',
+      style: { framePreset: 'double-gold', padding: 6, backgroundColor: '#fffdf9', borderWidth: 5, borderStyle: 'double', borderColor: '#c89d4c', borderRadius: 14, boxShadow: '0 14px 32px rgba(197, 155, 72, 0.24)' }
+    },
+    {
+      key: 'velvet-burgundy', label: 'Terciopelo Real', subtitle: 'Borgoña y resplandor',
+      previewBg: '#2a050b', previewBorder: '2px solid #d4af37',
+      style: { framePreset: 'velvet-burgundy', padding: 8, backgroundColor: '#2a050b', borderWidth: 2, borderStyle: 'solid', borderColor: '#d4af37', borderRadius: 18, boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), 0 0 20px rgba(212, 175, 55, 0.28)' }
+    },
+    {
+      key: 'polaroid', label: 'Polaroid Atelier', subtitle: 'Marco blanco editorial',
+      previewBg: '#ffffff', previewBorder: '1px solid #dfd7ce',
+      style: { framePreset: 'polaroid', padding: 10, backgroundColor: '#ffffff', borderWidth: 1, borderStyle: 'solid', borderColor: '#dfd7ce', borderRadius: 8, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.18)' }
+    },
+    {
+      key: 'postage-stamp', label: 'Sello Filatélico', subtitle: 'Costura punteada',
+      previewBg: '#faf6ee', previewBorder: '2px dashed #b89768',
+      style: { framePreset: 'postage-stamp', padding: 7, backgroundColor: '#faf6ee', borderWidth: 2.5, borderStyle: 'dashed', borderColor: '#b89768', borderRadius: 10, boxShadow: '0 12px 26px rgba(0, 0, 0, 0.16)' }
+    },
+    {
+      key: 'glass-glow', label: 'Cristal & Luz', subtitle: 'Translúcido luminoso',
+      previewBg: 'rgba(255,255,255,0.45)', previewBorder: '1.5px solid #ffffff',
+      style: { framePreset: 'glass-glow', padding: 7, backgroundColor: 'rgba(255, 255, 255, 0.28)', borderWidth: 1.5, borderStyle: 'solid', borderColor: '#ffffff', borderRadius: 18, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.22), 0 0 18px rgba(255, 255, 255, 0.45)' }
+    },
+    {
+      key: 'gold-rim', label: 'Bisel Dorado', subtitle: 'Filo metálico directo',
+      previewBg: 'transparent', previewBorder: '2.5px solid #c89d4c',
+      style: { framePreset: 'gold-rim', padding: 0, backgroundColor: 'transparent', borderWidth: 2.5, borderStyle: 'solid', borderColor: '#c89d4c', borderRadius: 14, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.24)' }
+    },
+    {
+      key: 'floating-shadow', label: 'Sombra Galería', subtitle: 'Elevación profunda',
+      previewBg: 'transparent', previewBorder: '1px solid rgba(0,0,0,0.08)',
+      style: { framePreset: 'floating-shadow', padding: 0, backgroundColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', borderRadius: 16, boxShadow: '0 22px 48px rgba(0, 0, 0, 0.34)' }
+    }
+  ];
+  readonly ornamentalFrameOverlays: Array<{
+    key: string;
+    label: string;
+    subtitle: string;
+    url: string;
+    suggestedMask: ImageMask;
+    suggestedPreset: string;
+  }> = [
+    {
+      key: 'gilded-gallery', label: 'Moldura Florentina', subtitle: 'Arco con esquineros en oro',
+      url: 'assets/templates/palazzo-orangerie/gilded-gallery-frame.svg', suggestedMask: 'arch', suggestedPreset: 'museum-ivory'
+    },
+    {
+      key: 'venetian-triptych', label: 'Marco Veneciano', subtitle: 'Doble bisel y rosetones',
+      url: 'assets/templates/palazzo-orangerie/venetian-triptych-frame.svg', suggestedMask: 'rounded', suggestedPreset: 'museum-ivory'
+    },
+    {
+      key: 'baroque-arch', label: 'Arco Barroco Imperial', subtitle: 'Columnas y cresta real',
+      url: 'assets/templates/palazzo-orangerie/baroque-arch-frame.svg', suggestedMask: 'arch', suggestedPreset: 'imperial-emerald'
+    },
+    {
+      key: 'renaissance-cameo', label: 'Camafeo Renacentista', subtitle: 'Medallón perlado con lazo',
+      url: 'assets/templates/palazzo-orangerie/renaissance-oval-cameo.svg', suggestedMask: 'oval', suggestedPreset: 'museum-ivory'
+    }
+  ];
+  private readonly _legacyMasksRemoved: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
     { key: 'diamond', label: 'Rombo', icon: '◆' }, { key: 'hexagon', label: 'Hexágono', icon: '⬢' },
     { key: 'ticket', label: 'Recorte', icon: '◫' }
@@ -2576,8 +2675,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     layer.zIndex = Math.max(0, ...section.layers.map((item) => item.zIndex || 0)) + 1;
     layer.style = {
       ...layer.style, imageMask: mask, frameEnabled: true, objectFit: 'cover', preserveAspectRatio: false,
-      borderWidth: 5, borderStyle: 'solid', borderColor: this.design.theme?.accentColor || '#9d765d',
-      backgroundColor: '#e9e3dc', objectPositionX: 50, objectPositionY: 50
+
+      borderWidth: 2, borderStyle: 'solid', borderColor: this.design.theme?.accentColor || '#c89d4c', padding: 7, borderRadius: 16, framePreset: 'museum-ivory', boxShadow: '0 16px 38px rgba(20, 36, 29, 0.2)', backgroundColor: '#faf5eb', objectPositionX: 50, objectPositionY: 50
+
+
     };
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
@@ -2604,8 +2705,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       };
       layer.style = {
         ...layer.style, frameEnabled: true, imageMask: slot.mask, objectFit: 'cover', preserveAspectRatio: false,
-        borderWidth: 3, borderStyle: 'solid', borderColor: this.design.theme?.accentColor || '#9d765d',
-        backgroundColor: '#e9e3dc', objectPositionX: 50, objectPositionY: 50
+
+        framePreset: 'none', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', padding: 0, borderRadius: 0, boxShadow: 'none', backgroundColor: 'transparent', objectPositionX: 50, objectPositionY: 50
+
+  
       };
       return layer;
     });
@@ -4412,7 +4515,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const s = layer.style || {};
     const shape = layer.type === 'shape';
     const isIcon = this.isIconLayer(layer);
-    const maskedImage = layer.type === 'image' && !!s.imageMask && s.imageMask !== 'none';
+    const mask = layer.type === 'image' ? (s.imageMask || 'none') : 'none';
+    const polygonMask = ['diamond', 'hexagon', 'octagon', 'shield', 'clover', 'heart', 'ticket'].includes(mask);
+    const hasPasspartout = layer.type === 'image' && Number(s.padding || 0) > 0;
+    const maskedImage = polygonMask && !hasPasspartout;
     const responsiveScale = this.sharedStyleScale(this.device);
     const layout = this.layoutFor(layer);
     return {
@@ -4423,7 +4529,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       fontWeight: String(s.fontWeight || 400), fontStyle: String(s.fontStyle || 'normal'), textAlign: String(s.textAlign || 'center'),
       lineHeight: isIcon ? '1' : String(s.lineHeight || 1.2), letterSpacing: `${this.scaledLayerPixels(s.letterSpacing || 0, responsiveScale)}px`, textTransform: String(s.textTransform || 'none'),
       textDecoration: String(s.textDecoration || 'none'), textShadow: String(s.textShadow || 'none'),
-      borderRadius: shape ? '0' : `${this.scaledLayerPixels(s.borderRadius || 0, responsiveScale)}px`, borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
+      borderRadius: shape ? '0' : this.resolveLayerOuterBorderRadius(layer, mask, this.scaledLayerPixels(s.borderRadius || 0, responsiveScale)), borderColor: shape ? 'transparent' : String(s.borderColor || 'transparent'),
       borderStyle: !shape && !maskedImage && Number(s.borderWidth || 0) > 0 ? String(s.borderStyle || 'solid') : 'none', borderWidth: shape || maskedImage ? '0' : `${this.scaledLayerPixels(s.borderWidth || 0, responsiveScale)}px`,
       backgroundImage: !shape && s.gradientEnabled
         ? `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`
@@ -4549,9 +4655,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const scaleX = scale * (style.flipX ? -1 : 1);
     const scaleY = scale * (style.flipY ? -1 : 1);
     return {
-      objectFit: style.preserveAspectRatio !== false ? 'contain' : (style.objectFit || 'cover'),
+      objectFit: style.objectFit ? (style.objectFit === 'contain' || (style.preserveAspectRatio === true && (!style.imageMask || style.imageMask === 'none')) ? 'contain' : 'cover') : (style.preserveAspectRatio !== false ? 'contain' : 'cover'),
       objectPosition: `${style.objectPositionX ?? 50}% ${style.objectPositionY ?? 50}%`,
-      clipPath: style.imageMask && style.imageMask !== 'none' && Number(style.borderWidth || 0) > 0 ? this.maskClipPath(style.imageMask) : 'none',
+      clipPath: ['diamond', 'hexagon', 'octagon', 'shield', 'clover', 'heart', 'ticket'].includes(String(style.imageMask || 'none')) && Number(style.borderWidth || 0) > 0 ? this.maskClipPath(style.imageMask!) : 'none',
       borderRadius: style.imageMask === 'rounded' ? '12%' : '0',
       transform: `scale(${scaleX},${scaleY}) rotate(${Number(style.imageRotation || 0)}deg)`,
       filter: `brightness(${Number(style.brightness ?? 100)}%) contrast(${Number(style.contrast ?? 100)}%) saturate(${Number(style.saturation ?? 100)}%) blur(${Number(style.blur || 0)}px)`
@@ -4560,9 +4666,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   imageMaskStyle(layer: VisualInvitationLayer): Record<string, string> {
     const mask = layer.style?.imageMask || 'none';
-    const framed = mask !== 'none' && Number(layer.style?.borderWidth || 0) > 0;
+    const style = layer.style || {};
+    const polygonMask = ['diamond', 'hexagon', 'octagon', 'shield', 'clover', 'heart', 'ticket'].includes(mask);
+    const hasPasspartout = Number(style.padding || 0) > 0;
+    const framed = polygonMask && !hasPasspartout && Number(style.borderWidth || 0) > 0;
+    const innerFilet = hasPasspartout && Number(style.borderWidth || 0) > 0 && !polygonMask;
     return {
-      clipPath: this.maskClipPath(mask), borderRadius: mask === 'rounded' ? '12%' : '0',
+      clipPath: this.maskClipPath(mask),
+      borderRadius: this.resolveImageInnerBorderRadius(mask, this.scaledLayerPixels(Number(style.borderRadius || 0), this.sharedStyleScale(this.device))),
+      overflow: 'hidden',
+      border: innerFilet ? `1px solid ${String(style.borderColor || 'rgba(200,157,76,0.55)')}` : 'none',
       boxSizing: 'border-box',
       padding: framed ? `${this.scaledLayerPixels(Number(layer.style?.borderWidth || 0), this.sharedStyleScale(this.device))}px` : '0',
       backgroundColor: framed ? String(layer.style?.borderColor || '#ffffff') : 'transparent'
@@ -4583,6 +4696,187 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if ((layer.style.imageMask || 'none') === mask) return;
     this.recordHistory();
     layer.style.imageMask = mask;
+    if (mask !== 'none' && layer.style.objectFit !== 'contain') {
+      layer.style.preserveAspectRatio = false;
+      layer.style.objectFit = 'cover';
+      layer.style.frameEnabled = true;
+    }
+  }
+
+  applyImageFramePreset(layer: VisualInvitationLayer, presetKey: string): void {
+    const preset = this.imageFramePresets.find((item) => item.key === presetKey);
+    if (!preset) return;
+    this.recordHistory();
+    layer.style = {
+      ...(layer.style || {}),
+      ...preset.style,
+      frameEnabled: true,
+      preserveAspectRatio: layer.style?.objectFit === 'contain' ? true : false,
+      objectFit: layer.style?.objectFit === 'contain' ? 'contain' : 'cover'
+    };
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  isImageFramePresetApplied(layer: VisualInvitationLayer, presetKey: string): boolean {
+    const style = layer.style || {};
+    if (style.framePreset) return style.framePreset === presetKey;
+    if (presetKey === 'none') return !style.borderWidth && !style.padding;
+    return false;
+  }
+
+  addStyledFrame(presetKey: string, mask: ImageMask = 'arch'): void {
+    this.addFrame(mask);
+    if (this.selectedLayer) {
+      this.applyImageFramePreset(this.selectedLayer, presetKey);
+    }
+  }
+
+  applyOrnamentalOverlayToLayer(layer?: VisualInvitationLayer, overlayKey?: string): void {
+    const section = this.selectedSection;
+    const overlay = this.ornamentalFrameOverlays.find((item) => item.key === overlayKey);
+    if (!section || !overlay) return;
+    this.recordHistory();
+    let target = layer && layer.type === 'image' ? layer : undefined;
+    if (!target) {
+      this.addFrame(overlay.suggestedMask);
+      target = this.selectedLayer;
+    }
+    if (!target) return;
+    target.style = {
+      ...(target.style || {}),
+      imageMask: overlay.suggestedMask,
+      preserveAspectRatio: false,
+      objectFit: 'cover',
+      frameEnabled: true
+    };
+    this.applyImageFramePreset(target, overlay.suggestedPreset);
+    const layout = this.layoutFor(target);
+    const padX = Math.max(1.5, Math.round(layout.width * 0.04 * 10) / 10);
+    const padY = Math.max(1.2, Math.round(layout.height * 0.035 * 10) / 10);
+    const existingBinding = `ornament.frame.${target.id}`;
+    let ornament = section.layers.find((item) => item.binding === existingBinding);
+    if (!ornament) {
+      ornament = this.newLayer(
+        'image',
+        '',
+        this.bound(layout.x - padX, 0, 96),
+        this.bound(layout.y - padY, 0, 96),
+        this.bound(layout.width + padX * 2, 6, 100),
+        this.bound(layout.height + padY * 2, 6, 100)
+      );
+      ornament.binding = existingBinding;
+      section.layers.push(ornament);
+    } else {
+      const oLayout = this.layoutFor(ornament);
+      oLayout.x = this.bound(layout.x - padX, 0, 96);
+      oLayout.y = this.bound(layout.y - padY, 0, 96);
+      oLayout.width = this.bound(layout.width + padX * 2, 6, 100);
+      oLayout.height = this.bound(layout.height + padY * 2, 6, 100);
+    }
+    ornament.name = overlay.label;
+    ornament.url = overlay.url;
+    ornament.zIndex = (target.zIndex || 1) + 1;
+    ornament.style = {
+      ...(ornament.style || {}),
+      objectFit: 'contain',
+      preserveAspectRatio: true,
+      imageMask: 'none',
+      padding: 0,
+      borderWidth: 0,
+      backgroundColor: 'transparent',
+      opacity: 0.96
+    };
+    this.setLayerSelection([target.id]);
+    this.autosaveState = 'Cambios pendientes';
+    this.flash(`${overlay.label} aplicada sobre la foto.`);
+  }
+
+  applyCompositionMask(mask: ImageMask): void {
+    const frames = this.selectedCompositeFrames;
+    if (!frames.length) return;
+    this.recordHistory();
+    frames.forEach((frame) => {
+      frame.style = {
+        ...(frame.style || {}),
+        imageMask: mask,
+        preserveAspectRatio: false,
+        objectFit: 'cover',
+        frameEnabled: true
+      };
+    });
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  applyCompositionFramePreset(presetKey: string): void {
+    const frames = this.selectedCompositeFrames;
+    const preset = this.imageFramePresets.find((item) => item.key === presetKey);
+    if (!frames.length || !preset) return;
+    this.recordHistory();
+    frames.forEach((frame) => {
+      frame.style = {
+        ...(frame.style || {}),
+        ...preset.style,
+        frameEnabled: true,
+        preserveAspectRatio: false,
+        objectFit: 'cover'
+      };
+    });
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  setCompositionBorderWidth(width: number): void {
+    const frames = this.selectedCompositeFrames;
+    if (!frames.length) return;
+    frames.forEach((frame) => {
+      frame.style = { ...(frame.style || {}), borderWidth: Math.max(0, Number(width || 0)), borderStyle: frame.style?.borderStyle || 'solid' };
+    });
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  setCompositionBorderColor(color: string): void {
+    const frames = this.selectedCompositeFrames;
+    if (!frames.length) return;
+    frames.forEach((frame) => {
+      frame.style = { ...(frame.style || {}), borderColor: color };
+    });
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  setCompositionPasspartoutPadding(padding: number): void {
+    const frames = this.selectedCompositeFrames;
+    if (!frames.length) return;
+    frames.forEach((frame) => {
+      frame.style = { ...(frame.style || {}), padding: Math.max(0, Number(padding || 0)), backgroundColor: frame.style?.backgroundColor && frame.style?.backgroundColor !== 'transparent' ? frame.style.backgroundColor : '#faf5eb' };
+    });
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  setCompositionPasspartoutColor(color: string): void {
+    const frames = this.selectedCompositeFrames;
+    if (!frames.length) return;
+    frames.forEach((frame) => {
+      frame.style = { ...(frame.style || {}), backgroundColor: color };
+    });
+    this.autosaveState = 'Cambios pendientes';
+  }
+
+  private resolveLayerOuterBorderRadius(layer: VisualInvitationLayer, mask: string, scaledRadius: number): string {
+    if (layer.type !== 'image') return `${scaledRadius}px`;
+    if (mask === 'circle' || mask === 'oval') return '50%';
+    if (mask === 'arch') return '999px 999px 16px 16px';
+    if (mask === 'window') return '999px 999px 6px 6px';
+    if (mask === 'dome') return '999px 999px 26% 26%';
+    if (mask === 'rounded') return scaledRadius > 0 ? `${scaledRadius}px` : '14%';
+    return `${scaledRadius}px`;
+  }
+
+  private resolveImageInnerBorderRadius(mask: string, scaledRadius: number): string {
+    if (mask === 'circle' || mask === 'oval') return '50%';
+    if (mask === 'arch') return '999px 999px 12px 12px';
+    if (mask === 'window') return '999px 999px 4px 4px';
+    if (mask === 'dome') return '999px 999px 24% 24%';
+    if (mask === 'rounded') return '12%';
+    return `${Math.max(0, scaledRadius - 2)}px`;
   }
 
   shapeContentStyle(layer: VisualInvitationLayer): Record<string, string> {
@@ -4610,12 +4904,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private maskClipPath(mask: ImageMask): string {
     const masks: Record<ImageMask, string> = {
-      none: 'none', circle: 'circle(50% at 50% 50%)', rounded: 'inset(0 round 12%)',
+      none: 'none', circle: 'circle(50% at 50% 50%)', oval: 'ellipse(48% 50% at 50% 50%)', rounded: 'inset(0 round 12%)',
+      arch: 'inset(0 round 999px 999px 12px 12px)', window: 'inset(0 round 999px 999px 4px 4px)', dome: 'inset(0 round 999px 999px 24% 24%)',
+      diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
+      hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',
+      octagon: 'polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%)',
+      shield: 'polygon(0 0,100% 0,100% 62%,50% 100%,0 62%)',
+      clover: 'polygon(50% 0,65% 8%,80% 0,92% 12%,92% 28%,100% 40%,98% 56%,92% 70%,92% 86%,80% 98%,65% 90%,50% 100%,35% 90%,20% 98%,8% 86%,8% 70%,2% 56%,0 40%,8% 28%,8% 12%,20% 0,35% 8%)',
+      heart: 'polygon(50% 90%,35% 75%,18% 58%,8% 40%,8% 24%,18% 10%,32% 8%,44% 15%,50% 26%,56% 15%,68% 8%,82% 10%,92% 24%,92% 40%,82% 58%,65% 75%)',
+      ticket: 'polygon(0 0,100% 0,100% 38%,92% 50%,100% 62%,100% 100%,0 100%,0 62%,8% 50%,0 38%)'
+    };
+    return masks[mask] || 'none';
+  }
+
+  private _legacyMaskClipPathRemoved(): void {
+    const _unused = {
       arch: 'inset(0 round 50% 50% 10% 10%)', diamond: 'polygon(50% 0,100% 50%,50% 100%,0 50%)',
       hexagon: 'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',
       ticket: 'polygon(0 0,100% 0,100% 38%,92% 50%,100% 62%,100% 100%,0 100%,0 62%,8% 50%,0 38%)'
     };
-    return masks[mask];
+    void _unused;
   }
 
   shapeClipPath(kind?: string): string {
@@ -8234,7 +8542,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const layer = this.newLayer(definition.type, definition.label, definition.x, definition.y, definition.width, definition.height, definition.fontSize);
     layer.binding = definition.binding; layer.url = definition.url; layer.zIndex = zIndex;
     if (definition.type === 'image') {
-      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 12, borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 6px 16px rgba(0,0,0,0.2)' };
+      layer.style = { ...(layer.style || {}), objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, padding: 6, backgroundColor: '#faf5eb', borderRadius: 14, borderColor: '#d4af37', borderWidth: 1.5, borderStyle: 'solid', framePreset: 'museum-ivory', boxShadow: '0 10px 24px rgba(0,0,0,0.2)' };
     }
     if (definition.type === 'button') {
       this.applyThemeToLayer(layer, this.design.theme || this.themePresets[0].theme);
@@ -8914,7 +9222,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
     }
     if (definition.type === 'image') {
-      layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: isXv ? 12 : 8, borderColor: isXv ? 'rgba(212, 175, 55, 0.5)' : undefined, borderWidth: isXv ? 1.5 : 0 };
+      layer.style = { ...(layer.style || {}), objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, padding: isXv ? 6 : 5, backgroundColor: isXv ? '#2a050b' : '#faf5eb', borderRadius: isXv ? 14 : 12, borderColor: isXv ? 'rgba(212, 175, 55, 0.55)' : '#c89d4c', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 10px 24px rgba(0,0,0,0.16)' };
     }
     if (definition.type === 'shape') {
       if (isXv) {
@@ -9049,11 +9357,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     if (definition.type === 'image') {
       if (isHaute) {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 12, borderColor: '#e8dcce', borderWidth: 1, borderStyle: 'solid' };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, padding: 6, backgroundColor: '#faf5eb', borderRadius: 14, borderColor: '#c89d4c', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 12px 28px rgba(24,20,17,0.14)' };
       } else if (isXv) {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 14, borderColor: 'rgba(212, 175, 55, 0.45)', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)' };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, padding: 6, backgroundColor: '#2a050b', borderRadius: 14, borderColor: 'rgba(212, 175, 55, 0.55)', borderWidth: 1.5, borderStyle: 'solid', boxShadow: '0 10px 24px rgba(0, 0, 0, 0.45)' };
       } else {
-        layer.style = { ...(layer.style || {}), objectFit: 'cover', borderRadius: 4 };
+        layer.style = { ...(layer.style || {}), objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, padding: 5, backgroundColor: '#ffffff', borderRadius: 10, borderColor: '#dfd7ce', borderWidth: 1, borderStyle: 'solid', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' };
       }
     }
     if (definition.type === 'shape') {
