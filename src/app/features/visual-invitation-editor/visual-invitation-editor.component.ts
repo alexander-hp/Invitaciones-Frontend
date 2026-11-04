@@ -24,7 +24,7 @@ import { VISUAL_ICON_CATALOG, VisualIconOption } from '../../shared/components/v
 import { isSingleInstanceControl, visibleControlDuplicates } from '../../shared/components/visual-invitation-renderer/visual-functional-controls';
 import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from '../../shared/components/visual-invitation-renderer/visual-canvas-geometry';
 import { buildCompleteDesign, COMPLETE_DESIGN_PRESETS, CompleteDesignPreset } from './complete-design-library';
-import { buildPalazzoOrangerieDesign, isPalazzoOrangerieDesign, PALAZZO_ORANGERIE_THEME } from './palazzo-orangerie-design';
+import { buildPalazzoOrangerieDesign, isPalazzoOrangerieDesign, PALAZZO_ORANGERIE_THEME, resolveGiftStoreLogo } from './palazzo-orangerie-design';
 import { createVisualDesignAiPrompt, createVisualDesignExchange } from './visual-design-exchange';
 import { buttonPresetStyle, VISUAL_BUTTON_PRESETS, VisualButtonPreset } from './visual-button-presets';
 import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpacing, reflowPhotoCompositionLayouts, withPhotoCompositionSpacing } from './photo-composition-presets';
@@ -5346,7 +5346,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const lodgingImageMatch = String(layer.binding || '').match(/^lodging\.(\d+)\.image$/);
     if (lodgingImageMatch) return this.invitation?.content?.lodging?.[Number(lodgingImageMatch[1])]?.imageUrl || layer.url || '';
     const giftMatch = String(layer.binding || '').match(/^gift\.(\d+)\.image$/);
-    if (giftMatch) return this.invitation?.content?.giftRegistry?.[Number(giftMatch[1])]?.imageUrl || layer.url || '';
+    if (giftMatch) return resolveGiftStoreLogo(this.invitation?.content?.giftRegistry?.[Number(giftMatch[1])], layer.url || '');
     if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
     return layer.url || '';
   }
@@ -7473,14 +7473,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     for (const section of this.design.sections) {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
       if (this.isPalazzoOrangerie()) {
-        const needsFrameUpgrade = section.layers?.some((l) => l.type === 'image' && l.style?.objectFit === 'cover' && l.style?.preserveAspectRatio !== false);
-        if ((!section.layers?.length || needsFrameUpgrade) && section.type !== 'custom') {
+        const needsFrameUpgrade = section.layers?.some((l) => l.type === 'image' && l.style?.objectFit === 'cover' && l.style?.preserveAspectRatio !== false) || section.pluginSettings?.['palazzoLayoutVersion'] !== 3;
+        if (!section.layers?.length || needsFrameUpgrade) {
           const built = buildPalazzoOrangerieDesign(this.invitation?.content || {}, this.event, (prefix) => this.uid(prefix), true);
-          const match = built.sections.find((s) => s.type === section.type);
+          const match = built.sections.find((s) => section.type === 'custom' ? (s.type === 'custom' && s.title === section.title) : s.type === section.type);
           if (match) {
             section.height = match.height;
             section.background = match.background;
-            section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(match.pluginSettings || {}), ...(section.pluginSettings || {}) };
+            section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}), ...(match.pluginSettings || {}), palazzoLayoutVersion: 3 };
+            if (match.pluginDesign) section.pluginDesign = match.pluginDesign;
             section.layers = match.layers;
           }
         }

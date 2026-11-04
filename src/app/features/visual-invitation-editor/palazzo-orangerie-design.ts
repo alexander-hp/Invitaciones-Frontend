@@ -44,6 +44,31 @@ export function isPalazzoOrangerieDesign(design?: VisualInvitationDesign | null,
   return false;
 }
 
+export function resolveGiftStoreLogo(gift?: Partial<GiftRegistryItem> | null, fallbackUrl?: string): string {
+  const rawUrl = String(gift?.imageUrl || '').trim();
+  const isLocalOrUploaded =
+    rawUrl.startsWith('assets/') ||
+    rawUrl.startsWith('/assets/') ||
+    rawUrl.includes('/uploads/') ||
+    rawUrl.startsWith('data:image/png') ||
+    rawUrl.startsWith('data:image/jpeg') ||
+    rawUrl.startsWith('data:image/webp');
+  if (isLocalOrUploaded) {
+    return rawUrl;
+  }
+  const key = `${gift?.store || ''} ${gift?.title || ''}`.toLowerCase();
+  if (key.includes('liverpool')) return 'assets/giftTable/liverpool-logo.jpg';
+  if (key.includes('palacio')) return 'assets/giftTable/palacio-logo.png';
+  if (key.includes('sears')) return 'assets/giftTable/sears_logo.jpg';
+  if (key.includes('uniko') || key.includes('efectivo')) return 'assets/giftTable/logo_uniko.webp';
+  if (key.includes('amazon')) return 'assets/giftTable/logo-amazon.png';
+  if (key.includes('mercado')) return 'assets/giftTable/mercado-libre-logo.png';
+  if (rawUrl && !rawUrl.includes('clearbit.com') && !rawUrl.startsWith('data:image/svg')) {
+    return rawUrl;
+  }
+  return fallbackUrl || `${ASSET_DIR}/gift-crest-badge.svg`;
+}
+
 export function buildPalazzoOrangerieDesign(
   content: InvitationContent,
   event: EventModel | undefined,
@@ -131,7 +156,7 @@ export function buildPalazzoOrangerieDesign(
     darkSurface = false,
     extras: Partial<VisualInvitationLayerStyle> = {}
   ) => {
-    const labelHeight = Math.min(4.2, Math.max(2.8, height * 0.28));
+    const labelHeight = Math.min(4.8, Math.max(3.4, height * 0.32));
     const inputY = Math.min(96, y + labelHeight + 0.8);
     const inputHeight = Math.max(4.5, height - labelHeight - 0.8);
 
@@ -144,9 +169,9 @@ export function buildPalazzoOrangerieDesign(
       labelHeight,
       {
         fontFamily: bodyFont,
-        fontSize: 10.5,
+        fontSize: 10,
         fontWeight: 700,
-        letterSpacing: 1.5,
+        letterSpacing: 0.5,
         color: darkSurface ? '#ebd197' : '#7c5b24',
         textAlign: 'left',
         backgroundColor: 'transparent',
@@ -469,14 +494,14 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'text',
       'CAPÍTULO I · EL PRELUDIO',
-      12, 5.5, 76, 4,
+      12, 6.2, 76, 4,
       { fontFamily: bodyFont, fontSize: 10.5, fontWeight: 700, letterSpacing: 3, color: '#ebd197', textAlign: 'center' },
       { name: 'Capítulo I' }
     ),
     makeLayer(
       'shape',
       '',
-      9.5, 15.5, 83, 73,
+      9.5, 16.5, 83, 72,
       {
         backgroundColor: 'transparent',
         borderColor: 'rgba(235, 209, 151, 0.42)',
@@ -489,7 +514,7 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'shape',
       '',
-      7.5, 13.5, 83, 73,
+      7.5, 14.5, 83, 72,
       {
         backgroundColor: '#f9f4ea',
         borderColor: '#c89d4c',
@@ -503,14 +528,14 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'image',
       '',
-      42, 8.2, 16, 11.5,
+      43.5, 10.8, 13, 9.2,
       { objectFit: 'contain' },
       { url: `${ASSET_DIR}/wax-seal-monogram.svg`, name: 'Lacre de bienvenida' }
     ),
     makeLayer(
       'text',
       'Hay instantes que se vuelven eternos',
-      13, 21.5, 72, 10,
+      13, 22.8, 72, 9.5,
       {
         fontFamily: headingFont,
         fontSize: 21,
@@ -866,7 +891,7 @@ export function buildPalazzoOrangerieDesign(
       makeLayer(
         'text',
         '{{invitation.storyBody}}',
-        12, 62.5, 76, 25,
+        12, 62.5, 76, 22.5,
         {
           fontFamily: editorialSerif,
           fontSize: 17,
@@ -880,7 +905,7 @@ export function buildPalazzoOrangerieDesign(
       makeLayer(
         'image',
         '',
-        79, 83.5, 13, 10,
+        81.5, 85.2, 10.5, 8.2,
         { objectFit: 'contain' },
         { url: `${ASSET_DIR}/wax-seal-monogram.svg`, name: 'Lacre de la historia' }
       )
@@ -1305,7 +1330,7 @@ export function buildPalazzoOrangerieDesign(
         ];
 
     const rows = Math.max(1, Math.ceil(dressOptions.length / 2));
-    const totalHeight = Math.max(780, 520 + rows * 155);
+    const totalHeight = Math.max(840, 540 + rows * 165);
     const pct = (px: number) => Number(((px / totalHeight) * 100).toFixed(2));
 
     const dressSec = makeSection(
@@ -1760,7 +1785,8 @@ export function buildPalazzoOrangerieDesign(
         ];
 
     const rows = Math.max(1, Math.ceil(gifts.length / 2));
-    const totalHeight = Math.max(920, 210 + rows * 285 + 340);
+    const envTop = 215 + rows * 285;
+    const totalHeight = Math.max(960, envTop + 340);
     const pct = (px: number) => Number(((px / totalHeight) * 100).toFixed(2));
 
     const giftSec = makeSection(
@@ -1809,8 +1835,9 @@ export function buildPalazzoOrangerieDesign(
       const cardW = isSingleGift ? 80 : 43;
       const innerLeft = left + 3;
       const innerW = cardW - 6;
-      const topPx = 185 + Math.floor(idx / 2) * 280;
+      const topPx = 195 + Math.floor(idx / 2) * 285;
       const prefix = `gift.${idx}`;
+      const logoUrl = resolveGiftStoreLogo(gift);
 
       giftSec.layers.push(
         makeLayer(
@@ -1840,7 +1867,7 @@ export function buildPalazzoOrangerieDesign(
             borderRadius: 12,
             padding: 6
           },
-          { binding: `${prefix}.image`, url: gift.imageUrl || 'assets/giftTable/palacio-logo.png', name: `Logo mesa ${idx + 1}` }
+          { binding: `${prefix}.image`, url: logoUrl, name: `Logo mesa ${idx + 1}` }
         ),
         makeLayer(
           'text',
@@ -1885,7 +1912,6 @@ export function buildPalazzoOrangerieDesign(
     });
 
     // Digital Envelope Card
-    const envTop = 200 + rows * 280;
     const envelope = content.digitalEnvelope || {};
     giftSec.layers.push(
       makeLayer(
@@ -2262,13 +2288,13 @@ export function buildPalazzoOrangerieDesign(
   }
 
   // =========================================================================
-  // 11. GUEST PASS — PASE IMPERIAL DE ACCESO & MESA (640px)
+  // 11. GUEST PASS — PASE IMPERIAL DE ACCESO & MESA (700px)
   // =========================================================================
   const passSec = makeSection(
     'guestPass',
     'Tu Pase Real & Mesa',
     '#13221d',
-    640,
+    700,
     `${ASSET_DIR}/cypress-nocturne-bg.svg`
   );
   passSec.pluginSettings = {
@@ -2287,28 +2313,28 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'text',
       'CAPÍTULO X · ACCESO PERSONALIZADO',
-      12, 5, 76, 4.5,
+      12, 9.5, 76, 4,
       { fontFamily: bodyFont, fontSize: 10.5, fontWeight: 700, letterSpacing: 3, color: '#ebd197', textAlign: 'center' },
       { binding: 'display.guestPass.eyebrow', name: 'Eyebrow pase' }
     ),
     makeLayer(
       'text',
       'Tu Pase Real & Mesa',
-      8, 10.5, 84, 8,
+      8, 14.5, 84, 7.2,
       { fontFamily: headingFont, fontSize: 28, fontWeight: 700, color: '#faf6ed', textAlign: 'center', letterSpacing: 1.2 },
       { binding: 'display.guestPass.title', name: 'Título pase' }
     ),
     makeLayer(
       'text',
       'Presenta este pase digital en la recepción para conocer tu mesa asignada.',
-      12, 19, 76, 6,
+      12, 22.5, 76, 5.5,
       { fontFamily: editorialSerif, fontSize: 17, fontWeight: 500, color: '#d9ceb8', textAlign: 'center' },
       { binding: 'display.guestPass.intro', name: 'Intro pase' }
     ),
     makeLayer(
       'shape',
       '',
-      7, 27, 86, 56,
+      7, 30, 86, 60,
       {
         backgroundColor: '#faf5eb',
         borderColor: '#d4af63',
@@ -2322,14 +2348,14 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'image',
       '',
-      8, 28.5, 84, 53,
+      8, 31.5, 84, 57,
       { objectFit: 'contain' },
       { binding: 'display.guestPass.crest', url: `${ASSET_DIR}/vip-boarding-crest.svg`, name: 'Filigrana de boleto real' }
     ),
     makeLayer(
       'field',
       'Código QR',
-      12, 34, 28, 36,
+      12, 37, 28, 35,
       {
         backgroundColor: '#ffffff',
         borderColor: '#c89d4c',
@@ -2345,53 +2371,53 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'text',
       'Invitado de Honor',
-      45, 34, 42, 7.5,
-      { fontFamily: headingFont, fontSize: 21, fontWeight: 700, color: '#152820', textAlign: 'left' },
+      45, 36.5, 42, 7,
+      { fontFamily: headingFont, fontSize: 20, fontWeight: 700, color: '#152820', textAlign: 'left' },
       { binding: 'pass.name', name: 'Nombre del invitado' }
     ),
     makeLayer(
       'text',
       'FAMILIA & AMIGOS DE HONOR',
-      45, 42.5, 42, 4.5,
-      { fontFamily: bodyFont, fontSize: 10.5, fontWeight: 700, letterSpacing: 1.8, color: '#8f651e', textAlign: 'left' },
+      45, 44.5, 42, 4.2,
+      { fontFamily: bodyFont, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: '#8f651e', textAlign: 'left' },
       { binding: 'pass.group', name: 'Grupo del invitado' }
     ),
     makeLayer(
       'text',
       'Mesa Imperial 05',
-      45, 48.5, 42, 7,
-      { fontFamily: headingFont, fontSize: 18, fontWeight: 700, color: '#152820', textAlign: 'left' },
+      45, 50, 42, 6.5,
+      { fontFamily: headingFont, fontSize: 17.5, fontWeight: 700, color: '#152820', textAlign: 'left' },
       { binding: 'pass.table', name: 'Mesa asignada' }
     ),
     makeLayer(
       'text',
       'Lugar A-12',
-      45, 57, 20, 5.5,
+      45, 57.5, 42, 4.8,
       { fontFamily: bodyFont, fontSize: 11.5, fontWeight: 600, color: '#424e48', textAlign: 'left' },
       { binding: 'pass.seat', name: 'Asiento asignado' }
     ),
     makeLayer(
       'text',
       '2 pases reservados',
-      66, 57, 22, 5.5,
+      45, 63, 42, 4.8,
       { fontFamily: bodyFont, fontSize: 11.5, fontWeight: 700, color: '#8f651e', textAlign: 'left' },
       { binding: 'pass.companions', name: 'Acompañantes permitidos' }
     ),
     makeLayer(
       'text',
       'Estado de verificación del pase',
-      14, 74, 72, 5,
+      14, 78, 72, 4.8,
       { fontFamily: bodyFont, fontSize: 11, fontWeight: 600, color: '#9d2626', textAlign: 'center' },
       { binding: 'pass.feedback', name: 'Mensaje de validación' }
     )
   );
-  makeSeparatedFieldWithLabel(passSec.layers, 'pass.email', 'Correo electrónico registrado', 'invitado@ejemplo.com', 14, 33, 72, 13.5, false);
-  makeSeparatedFieldWithLabel(passSec.layers, 'pass.phone', 'Teléfono móvil registrado', 'Número a 10 dígitos', 14, 48.5, 72, 13.5, false);
+  makeSeparatedFieldWithLabel(passSec.layers, 'pass.email', 'Correo electrónico registrado', 'invitado@ejemplo.com', 14, 36, 72, 13.5, false);
+  makeSeparatedFieldWithLabel(passSec.layers, 'pass.phone', 'Teléfono móvil registrado', 'Número a 10 dígitos', 14, 51.5, 72, 13.5, false);
   passSec.layers.push(
     makeLayer(
       'button',
       'REVELAR MI PASE PERSONAL',
-      20, 65, 60, 8.5,
+      20, 68, 60, 8,
       {
         backgroundColor: '#152820',
         color: '#f4e2b8',
@@ -2411,14 +2437,14 @@ export function buildPalazzoOrangerieDesign(
   sections.push(passSec);
 
   // =========================================================================
-  // 12. RSVP — CONFIRMACIÓN DE ASISTENCIA (880px)
+  // 12. RSVP — CONFIRMACIÓN DE ASISTENCIA (920px)
   // =========================================================================
   if (settings.rsvp !== false) {
     const rsvpSec = makeSection(
       'rsvp',
       'Confirma tu Asistencia',
       '#f8f3e8',
-      880,
+      920,
       `${ASSET_DIR}/fresco-parchment-bg.svg`
     );
     rsvpSec.pluginSettings = {
@@ -2447,17 +2473,17 @@ export function buildPalazzoOrangerieDesign(
     });
     rsvpSec.pluginDesign = {
       layout: 'free',
-      minHeight: 720,
+      minHeight: 740,
       parts: {
-        eyebrow: rsvpPartBase(12, 4.5, 76, 4, { fontSize: 10.5, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, color: '#8f651e' }),
-        title: rsvpPartBase(8, 9.5, 84, 7.5, { fontFamily: headingFont, fontSize: 28, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, color: '#152820' }),
-        intro: rsvpPartBase(12, 17.5, 76, 5, { fontFamily: editorialSerif, fontSize: 17, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, color: '#3b4741' }),
-        name: rsvpPartBase(11, 29, 37, 12),
-        contact: rsvpPartBase(52, 29, 37, 12),
-        response: rsvpPartBase(11, 43.5, 48, 12, { variant: 'cards' }),
-        companions: rsvpPartBase(62, 43.5, 27, 12),
-        dietary: rsvpPartBase(11, 58, 37, 14),
-        message: rsvpPartBase(52, 58, 37, 14),
+        eyebrow: rsvpPartBase(12, 5.2, 76, 4, { fontSize: 10.5, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, color: '#8f651e' }),
+        title: rsvpPartBase(8, 10, 84, 7.2, { fontFamily: headingFont, fontSize: 28, fontWeight: 700, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, color: '#152820' }),
+        intro: rsvpPartBase(12, 17.8, 76, 5, { fontFamily: editorialSerif, fontSize: 17, textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, color: '#3b4741' }),
+        name: rsvpPartBase(11, 29, 37, 12.5),
+        contact: rsvpPartBase(52, 29, 37, 12.5),
+        response: rsvpPartBase(11, 43.5, 53, 12.5, { variant: 'cards' }),
+        companions: rsvpPartBase(66, 43.5, 23, 12.5),
+        dietary: rsvpPartBase(11, 58.5, 37, 14),
+        message: rsvpPartBase(52, 58.5, 37, 14),
         submit: rsvpPartBase(20, 76, 60, 7.5, { textAlign: 'center', fontWeight: 700, backgroundColor: '#152820', color: '#f4e2b8', borderColor: '#d4af63', borderWidth: 1.5, borderRadius: 30 }),
         feedback: rsvpPartBase(15, 85.5, 70, 4.5, { textAlign: 'center', backgroundColor: 'transparent', borderWidth: 0, fontSize: 12, color: '#152820' })
       }
@@ -2467,28 +2493,28 @@ export function buildPalazzoOrangerieDesign(
       makeLayer(
         'text',
         'CAPÍTULO XI · RÉPONDEZ S’IL VOUS PLAÎT',
-        12, 4.5, 76, 4,
+        12, 5.2, 76, 4,
         { fontFamily: bodyFont, fontSize: 10.5, fontWeight: 700, letterSpacing: 3, color: '#8f651e', textAlign: 'center' },
         { binding: 'display.rsvp.eyebrow', name: 'Eyebrow RSVP' }
       ),
       makeLayer(
         'text',
         'Confirma tu Asistencia',
-        8, 9.2, 84, 7.5,
+        8, 10, 84, 7.2,
         { fontFamily: headingFont, fontSize: 28, fontWeight: 700, color: '#152820', textAlign: 'center', letterSpacing: 1.2 },
         { binding: 'display.rsvp.title', name: 'Título RSVP' }
       ),
       makeLayer(
         'text',
         'Por favor confírmanos tu asistencia para preparar cada detalle en tu honor.',
-        12, 17, 76, 5,
+        12, 17.8, 76, 5,
         { fontFamily: editorialSerif, fontSize: 17, fontWeight: 500, color: '#3b4741', textAlign: 'center' },
         { binding: 'display.rsvp.intro', name: 'Intro RSVP' }
       ),
       makeLayer(
         'shape',
         '',
-        6, 24, 88, 68,
+        6, 24.5, 88, 68,
         {
           backgroundColor: '#ffffff',
           borderColor: '#c89d4c',
@@ -2502,26 +2528,26 @@ export function buildPalazzoOrangerieDesign(
       makeLayer(
         'image',
         '',
-        43, 19.8, 14, 8.5,
+        44, 20.8, 12, 7.5,
         { objectFit: 'contain' },
         { binding: 'display.rsvp.seal', url: `${ASSET_DIR}/wax-seal-monogram.svg`, name: 'Sello de lacre RSVP' }
       )
     );
 
-    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.name', 'Nombre completo del invitado', 'Tu nombre y apellido', 11, 29, 37, 12, false);
-    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.email', 'Correo electrónico o teléfono', 'contacto@ejemplo.com', 52, 29, 37, 12, false);
+    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.name', 'Nombre completo del invitado', 'Tu nombre y apellido', 11, 29, 37, 12.5, false);
+    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.email', 'Correo electrónico o teléfono', 'contacto@ejemplo.com', 52, 29, 37, 12.5, false);
     makeSeparatedFieldWithLabel(
       rsvpSec.layers,
       'rsvp.response',
       '¿Nos acompañarás en la celebración?',
       'Selecciona tu respuesta',
-      11, 43.5, 48, 12,
+      11, 43.5, 53, 12.5,
       false,
-      { controlVariant: 'cards', textAlign: 'center', fontWeight: 700, fontSize: 11.5 }
+      { controlVariant: 'cards', textAlign: 'center', fontWeight: 700, fontSize: 11, padding: 6 }
     );
-    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.companions', 'Acompañantes', '0', 62, 43.5, 27, 12, false);
-    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.dietaryRestrictions', 'Alergias o menú especial', 'Vegetariano, sin gluten...', 11, 58, 37, 14, false);
-    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.message', 'Mensaje para los anfitriones', 'Escribe tus buenos deseos...', 52, 58, 37, 14, false);
+    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.companions', 'Acompañantes', '0', 66, 43.5, 23, 12.5, false);
+    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.dietaryRestrictions', 'Alergias o menú especial', 'Vegetariano, sin gluten...', 11, 58.5, 37, 14, false);
+    makeSeparatedFieldWithLabel(rsvpSec.layers, 'rsvp.message', 'Mensaje para los anfitriones', 'Escribe tus buenos deseos...', 52, 58.5, 37, 14, false);
 
     rsvpSec.layers.push(
       makeLayer(
@@ -2882,7 +2908,7 @@ export function buildPalazzoOrangerieDesign(
     'guestActivity',
     'Concierge Personal · Mi Actividad',
     '#13221d',
-    660,
+    720,
     `${ASSET_DIR}/cypress-nocturne-bg.svg`
   );
   actSec.pluginSettings = {
@@ -2901,35 +2927,35 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'text',
       'CAPÍTULO XV · CONCIERGE DEL INVITADO',
-      12, 4.5, 76, 4,
+      12, 9.5, 76, 4,
       { fontFamily: bodyFont, fontSize: 10.5, fontWeight: 700, letterSpacing: 3, color: '#ebd197', textAlign: 'center' },
       { binding: 'display.guestActivity.eyebrow', name: 'Eyebrow actividad' }
     ),
     makeLayer(
       'text',
       'Mi Pase & Actividad',
-      8, 9.5, 84, 7.5,
+      8, 14.2, 84, 7,
       { fontFamily: headingFont, fontSize: 28, fontWeight: 700, color: '#faf6ed', textAlign: 'center', letterSpacing: 1.2 },
       { binding: 'display.guestActivity.title', name: 'Título actividad' }
     ),
     makeLayer(
       'text',
       'Consulta en un solo lugar tu confirmación, mesa, fotografías y canciones enviadas.',
-      12, 18, 76, 5.5,
+      12, 22, 76, 5.2,
       { fontFamily: editorialSerif, fontSize: 17, fontWeight: 500, color: '#d9ceb8', textAlign: 'center' },
       { binding: 'display.guestActivity.intro', name: 'Intro actividad' }
     ),
     makeLayer(
       'text',
       'Bienvenido, Invitado de Honor',
-      10, 25.5, 80, 5,
+      10, 28.5, 80, 4.8,
       { fontFamily: headingFont, fontSize: 17, fontWeight: 700, color: '#ebd197', textAlign: 'center' },
       { binding: 'activity.greeting', name: 'Saludo al invitado' }
     ),
     makeLayer(
       'field',
       'Estado RSVP',
-      8, 32.5, 40, 15,
+      8, 34.5, 40, 14.5,
       {
         backgroundColor: '#f9f4ea',
         borderColor: '#d4af63',
@@ -2946,7 +2972,7 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'field',
       'Mesa y Pase',
-      52, 32.5, 40, 15,
+      52, 34.5, 40, 14.5,
       {
         backgroundColor: '#f9f4ea',
         borderColor: '#d4af63',
@@ -2963,7 +2989,7 @@ export function buildPalazzoOrangerieDesign(
     makeLayer(
       'field',
       'Fotografías',
-      8, 50, 26, 14,
+      7.5, 51, 27, 13.5,
       {
         backgroundColor: 'rgba(26, 49, 40, 0.92)',
         borderColor: '#d4af63',
@@ -2971,15 +2997,16 @@ export function buildPalazzoOrangerieDesign(
         borderStyle: 'solid',
         borderRadius: 14,
         color: '#faf6ed',
+        fontSize: 11.5,
         textAlign: 'center',
-        padding: 8
+        padding: 6
       },
       { binding: 'activity.album', name: 'Contador Fotos' }
     ),
     makeLayer(
       'field',
       'Canciones',
-      37, 50, 26, 14,
+      36.5, 51, 27, 13.5,
       {
         backgroundColor: 'rgba(26, 49, 40, 0.92)',
         borderColor: '#d4af63',
@@ -2987,15 +3014,16 @@ export function buildPalazzoOrangerieDesign(
         borderStyle: 'solid',
         borderRadius: 14,
         color: '#faf6ed',
+        fontSize: 11.5,
         textAlign: 'center',
-        padding: 8
+        padding: 6
       },
       { binding: 'activity.songs', name: 'Contador Canciones' }
     ),
     makeLayer(
       'field',
       'Dedicatorias',
-      66, 50, 26, 14,
+      65.5, 51, 27, 13.5,
       {
         backgroundColor: 'rgba(26, 49, 40, 0.92)',
         borderColor: '#d4af63',
@@ -3003,8 +3031,9 @@ export function buildPalazzoOrangerieDesign(
         borderStyle: 'solid',
         borderRadius: 14,
         color: '#faf6ed',
+        fontSize: 11.5,
         textAlign: 'center',
-        padding: 8
+        padding: 6
       },
       { binding: 'activity.dedications', name: 'Contador Dedicatorias' }
     ),
@@ -3045,13 +3074,13 @@ export function buildPalazzoOrangerieDesign(
       { binding: 'activity.full', name: 'Abrir centro completo' }
     )
   );
-  makeSeparatedFieldWithLabel(actSec.layers, 'activity.email', 'Correo electrónico registrado', 'invitado@ejemplo.com', 14, 29, 72, 13, true);
-  makeSeparatedFieldWithLabel(actSec.layers, 'activity.phone', 'Teléfono móvil registrado', 'Número a 10 dígitos', 14, 44, 72, 13, true);
+  makeSeparatedFieldWithLabel(actSec.layers, 'activity.email', 'Correo electrónico registrado', 'invitado@ejemplo.com', 14, 32, 72, 13, true);
+  makeSeparatedFieldWithLabel(actSec.layers, 'activity.phone', 'Teléfono móvil registrado', 'Número a 10 dígitos', 14, 47, 72, 13, true);
   actSec.layers.push(
     makeLayer(
       'button',
       'CONSULTAR MI ACTIVIDAD',
-      20, 60, 60, 8,
+      20, 63, 60, 8,
       {
         backgroundColor: '#d4af63',
         color: '#13221d',
@@ -3082,6 +3111,13 @@ export function buildPalazzoOrangerieDesign(
     )
   );
   sections.push(actSec);
+
+  sections.forEach((sec) => {
+    sec.pluginSettings = {
+      ...(sec.pluginSettings || {}),
+      palazzoLayoutVersion: 3
+    };
+  });
 
   return {
     version: 1,

@@ -7,6 +7,7 @@ import { resolveVisualTemplateText, visualTemplateContext } from '../../../core/
 import { resolveVisualMediaSource } from './visual-media-source';
 import { uniqueVisibleControls } from './visual-functional-controls';
 import { visualCanvasHeight, visualSectionHeight, visualSectionOffset } from './visual-canvas-geometry';
+import { resolveGiftStoreLogo } from '../../../features/visual-invitation-editor/palazzo-orangerie-design';
 
 @Component({
   selector: 'app-visual-invitation-renderer',
@@ -790,7 +791,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
         return Boolean(this.giftLayerText(layer) || layer.text);
       }
       if (gift.key === 'card') return true;
-      if (gift.key === 'image') return Boolean(item.imageUrl || layer.url);
+      if (gift.key === 'image') return Boolean(resolveGiftStoreLogo(item, layer.url || ''));
       if (gift.key === 'open') return true;
       return Boolean(this.giftLayerText(layer) || layer.text);
     }
@@ -826,7 +827,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   giftLayerImageUrl(layer: VisualInvitationLayer): string {
     const parsed = this.giftLayerParts(String(layer.binding || ''));
-    if (parsed?.key === 'image') return this.invitation?.content?.giftRegistry?.[parsed.index]?.imageUrl || layer.url || '';
+    if (parsed?.key === 'image') return resolveGiftStoreLogo(this.invitation?.content?.giftRegistry?.[parsed.index], layer.url || '');
     if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
     return layer.url || '';
   }
