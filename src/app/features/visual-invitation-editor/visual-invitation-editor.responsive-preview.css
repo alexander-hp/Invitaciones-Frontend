@@ -432,8 +432,9 @@
 .device-frame-desktop .responsive-preview-viewport {
   background: #ffffff;
   border-radius: 0;
-  overflow-x: hidden !important;
+  overflow-x: auto;
   overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .desktop-laptop-base {
@@ -462,8 +463,9 @@
 
 .responsive-preview-viewport {
   max-width: 100%;
-  overflow-x: hidden !important;
+  overflow-x: auto;
   overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
   margin: 0 auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(37, 33, 31, 0.25) transparent;
@@ -565,23 +567,87 @@
 
 /* Mobile responsive fallback for modal dialog */
 @media (max-width: 900px) {
+  .responsive-preview-backdrop {
+    padding: 0 !important;
+  }
+  .responsive-preview-dialog {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+  }
   .responsive-preview-dialog > header {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+    gap: 8px 12px !important;
+    padding: 12px 14px !important;
+  }
+  .responsive-preview-dialog > header > div:first-child {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  .responsive-preview-dialog > header > div:first-child h1 {
+    font-size: 18px !important;
+    margin: 2px 0 !important;
+  }
+  .responsive-preview-close {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
   }
   .responsive-preview-header-actions {
-    width: 100%;
-    justify-content: space-between;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    overflow: visible !important;
   }
   .responsive-view-switcher {
-    overflow-x: auto;
-    max-width: calc(100vw - 80px);
+    flex: 1 1 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    max-width: none !important;
+    padding: 3px !important;
+    border-radius: 9999px !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .responsive-view-switcher::-webkit-scrollbar {
+    display: none !important;
+  }
+  .responsive-view-switcher button {
+    flex: 0 0 auto !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    border-radius: 9999px !important;
+    min-height: 32px !important;
+  }
+  .btn-header-view-alerts {
+    flex: 0 0 auto !important;
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+    white-space: nowrap !important;
   }
   .responsive-preview-grid:not(.single-view) > article.device-article-mobile,
   .responsive-preview-grid:not(.single-view) > article.device-article-tablet,
   .responsive-preview-grid:not(.single-view) > article.device-article-desktop {
     width: 100%;
     max-width: 100%;
+  }
+  .responsive-preview-viewport {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .responsive-preview-stage {
+    margin-left: 0 !important;
   }
 }
 

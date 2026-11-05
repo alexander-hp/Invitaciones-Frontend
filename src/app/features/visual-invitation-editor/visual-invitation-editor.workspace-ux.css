@@ -77,9 +77,11 @@
 .topbar-menu lucide-icon { width: 17px; height: 17px; color: var(--nw-accent, #c09c78); }
 .topbar-menu .mobile-preview-command { display: none; }
 
-.mobile-sheet-header,
-.mobile-drawer-backdrop {
-  display: none !important;
+@media (min-width: 701px) {
+  .mobile-sheet-header,
+  .mobile-drawer-backdrop {
+    display: none !important;
+  }
 }
 
 .ve-workspace { grid-template-columns: 360px minmax(0, 1fr) 300px; }
@@ -674,7 +676,7 @@
     right: 8px;
     bottom: 66px;
     z-index: 2450;
-    display: block;
+    display: block !important;
     border: 1px solid var(--nw-border, #eadecc);
     border-radius: 14px;
     background: #fff;
@@ -752,7 +754,7 @@
     right: 0;
     bottom: 0;
     z-index: 2500;
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(4, 1fr);
     height: 58px;
     padding-bottom: env(safe-area-inset-bottom);
@@ -795,20 +797,186 @@
     color: #fff;
     font: 9px var(--nw-font);
   }
-  .design-import-dialog { height: 100%; max-height: none; border-radius: 0; }
-  .design-import-dialog > header { padding: 14px 16px; }
-  .design-import-dialog > header h1 { font-size: 18px; }
-  .design-import-options { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 6px 12px; overflow: visible; }
-  .design-import-options button { min-height: 38px; padding: 6px 4px; white-space: normal; text-align: center; }
-  .design-import-body { padding: 14px 16px; }
-  .design-import-body.ai-mode { grid-template-columns: minmax(0, 1fr); }
+  /* Mobile Design Importer (Crear con otra IA o importar) */
+  .design-import-backdrop {
+    padding: 0 !important;
+  }
+  .design-import-dialog {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  .design-import-dialog > header {
+    padding: 14px 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .design-import-dialog > header h1 {
+    font-size: 18px !important;
+    margin: 2px 0 !important;
+  }
+  .design-import-options {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding: 8px 14px !important;
+    background: var(--nw-surface-2, #faf8f5) !important;
+    border-bottom: 1px solid var(--nw-border, #eadecc) !important;
+    flex-shrink: 0 !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .design-import-options::-webkit-scrollbar {
+    display: none !important;
+  }
+  .design-import-options button {
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    padding: 7px 14px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+  .design-import-body,
+  .design-import-body.ai-mode {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 14px 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .design-import-body.ai-mode > *,
   .design-import-body.ai-mode .ai-exchange,
   .design-import-body.ai-mode > label,
   .design-import-body.ai-mode > .import-help,
   .design-import-body.ai-mode > fieldset,
-  .design-import-body.ai-mode > :not(.ai-exchange):not(label):not(.import-help):not(fieldset) { grid-column: 1; grid-row: auto; }
-  .design-import-body.ai-mode > label textarea { min-height: 200px; }
-  .design-import-body .import-strategy { grid-template-columns: 1fr; }
+  .design-import-body.ai-mode > :not(.ai-exchange) {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .design-import-body.ai-mode > label textarea {
+    min-height: 180px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+  .design-import-body .import-strategy {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+  }
+  .design-import-dialog > footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    gap: 10px !important;
+    padding: 12px 16px !important;
+    background: #faf8f5 !important;
+    border-top: 1px solid var(--nw-border, #eadecc) !important;
+    flex-shrink: 0 !important;
+  }
+  .design-import-dialog > footer button {
+    flex: 1 1 0 !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    border-radius: 9999px !important;
+    text-align: center !important;
+  }
+
+  /* Mobile Functional Test (Probar funciones) */
+  .functional-test-backdrop {
+    padding: 0 !important;
+  }
+  .functional-test-dialog {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  .functional-test-dialog > header {
+    padding: 14px 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .functional-test-dialog > header h1 {
+    font-size: 18px !important;
+    margin: 2px 0 !important;
+  }
+  .functional-test-dialog > nav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding: 8px 14px !important;
+    background: var(--nw-surface-2, #faf8f5) !important;
+    border-bottom: 1px solid var(--nw-border, #eadecc) !important;
+    flex-shrink: 0 !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .functional-test-dialog > nav::-webkit-scrollbar {
+    display: none !important;
+  }
+  .functional-test-dialog > nav button {
+    flex: 0 0 auto !important;
+    padding: 7px 14px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+    white-space: nowrap !important;
+  }
+  .functional-test-toolbar {
+    padding: 8px 14px !important;
+    flex-shrink: 0 !important;
+  }
+  .functional-test-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    padding: 14px 16px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .functional-test-form {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .functional-test-form input,
+  .functional-test-form select,
+  .functional-test-form textarea {
+    font-size: 15px !important;
+    min-height: 42px !important;
+  }
+  .functional-test-dialog > footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    gap: 10px !important;
+    padding: 12px 16px !important;
+    background: #faf8f5 !important;
+    border-top: 1px solid var(--nw-border, #eadecc) !important;
+    flex-shrink: 0 !important;
+  }
+  .functional-test-dialog > footer button {
+    flex: 1 1 0 !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    border-radius: 9999px !important;
+    text-align: center !important;
+  }
 }
 
 /* Sidebar Mode Switcher (Invitación / Pantalla de Acceso) */
@@ -842,3 +1010,5 @@
   color: var(--nw-text, #2e2621);
   box-shadow: 0 2px 6px rgba(46, 37, 33, 0.08);
 }
+
+

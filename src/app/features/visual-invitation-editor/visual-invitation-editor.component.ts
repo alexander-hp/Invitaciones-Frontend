@@ -1102,6 +1102,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (openFunctionsMenu) {
       this.toolCategory = 'functions';
       this.toolsCollapsed = false;
+    } else {
+      this.maybeCloseMobileTools();
     }
     setTimeout(() => {
       const el = document.querySelector(`[data-section-id="${section.id}"]`);
@@ -1242,6 +1244,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   closeMobilePanel(): void {
     this.mobilePanel = 'canvas';
     setTimeout(() => this.fitCanvasToViewport());
+  }
+
+  maybeCloseMobileTools(): void {
+    if (this.mobilePanel === 'tools') {
+      this.closeMobilePanel();
+    }
   }
 
   alignLayerHorizontalCenter(): void {
@@ -1944,11 +1952,22 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   responsivePreviewScale(device: DeviceMode): number {
+    const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 768;
     if (this.responsivePreviewView === 'all') {
+      if (isMobileScreen) {
+        if (device === 'mobile') return 0.70;
+        if (device === 'tablet') return 0.40;
+        if (device === 'desktop') return 0.28;
+      }
       if (device === 'mobile') return 0.62;
       if (device === 'tablet') return 0.46;
       if (device === 'desktop') return 0.41;
       return 0.5;
+    }
+    if (isMobileScreen) {
+      if (device === 'mobile') return 0.88;
+      if (device === 'tablet') return 0.42;
+      if (device === 'desktop') return 0.29;
     }
     if (device === 'mobile') return 0.95;
     if (device === 'tablet') return 0.85;
@@ -1959,9 +1978,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   responsivePreviewViewportStyle(preview: { key: DeviceMode; width: number }): Record<string, string> {
     const scale = this.responsivePreviewScale(preview.key);
     const viewportWidth = Math.round(preview.width * scale);
-    const viewportHeight = this.responsivePreviewView === 'all' ? 520 : 640;
+    const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 768;
+    const viewportHeight = isMobileScreen ? 440 : (this.responsivePreviewView === 'all' ? 520 : 640);
     return {
-      width: `${viewportWidth}px`,
+      width: isMobileScreen ? `${Math.min(viewportWidth, window.innerWidth - 36)}px` : `${viewportWidth}px`,
+      maxWidth: '100%',
       height: `${viewportHeight}px`
     };
   }
@@ -2192,6 +2213,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     this.applyThemeValues(sections);
     this.flash(scope === 'section' ? 'Estilo aplicado a esta sección.' : 'Estilo aplicado a toda la invitación.');
+    this.maybeCloseMobileTools();
   }
 
   beginPropertyEdit(event: FocusEvent): void {
@@ -2519,6 +2541,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.sections.push(match);
         this.selectedSectionId = match.id;
         this.setLayerSelection(match.layers[0] ? [match.layers[0].id] : []);
+        this.maybeCloseMobileTools();
         return;
       }
     }
@@ -2590,6 +2613,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design.sections.push(section);
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
+    this.maybeCloseMobileTools();
   }
 
   addLayer(type: VisualLayerType): void {
@@ -2618,6 +2642,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
+    this.maybeCloseMobileTools();
   }
 
   addMainMusicControl(): void {
@@ -2720,6 +2745,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
     this.inspectorView = 'properties';
+    this.maybeCloseMobileTools();
   }
 
   addPhotoComposition(key: string): void {
@@ -2754,6 +2780,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.inspectorView = 'properties';
     this.autosaveState = 'Cambios pendientes';
     this.flash(`${preset.name} agregado. Selecciona una foto en Propiedades para editarla.`);
+    this.maybeCloseMobileTools();
   }
 
   applyPhotoCompositionPreset(key: string): void {
@@ -2965,6 +2992,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
     this.inspectorView = 'properties';
+    this.maybeCloseMobileTools();
   }
 
   setLayerIcon(layer: VisualInvitationLayer, icon: VisualIconOption): void {
@@ -3020,6 +3048,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
     this.inspectorView = 'properties';
+    this.maybeCloseMobileTools();
   }
 
   addComponent(key: string): void {
@@ -3105,6 +3134,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection(layers.map((layer) => layer.id));
     this.inspectorView = 'properties';
     this.flash('Bloque agregado. Puedes moverlo y personalizarlo.');
+    this.maybeCloseMobileTools();
   }
 
   resolveLayerText(layer: VisualInvitationLayer): string {
@@ -4197,7 +4227,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-    processPointerMoveOutside(event: PointerEvent): void {
+  onPointerMove(event: PointerEvent): void {
+    this.processPointerMoveOutside(event);
+  }
+
+  processPointerMoveOutside(event: PointerEvent): void {
       if(this.canvasGesture || this.imageCropGesture) {
       event.preventDefault();
       return;
@@ -4517,12 +4551,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       this.adaptAudioLayerToProvider(layer);
     }
+    this.maybeCloseMobileTools();
   }
 
   setSectionBackground(media: DesignMedia): void {
     if (media.type !== 'image' || !this.selectedSection) return;
     this.recordHistory();
     this.selectedSection.background = { ...(this.selectedSection.background || {}), imageUrl: media.url };
+    this.maybeCloseMobileTools();
   }
 
   layerLabel(layer: VisualInvitationLayer): string {
@@ -4839,6 +4875,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection([target.id]);
     this.autosaveState = 'Cambios pendientes';
     this.flash(`${overlay.label} aplicada sobre la foto.`);
+    this.maybeCloseMobileTools();
   }
 
   applyCompositionMask(mask: ImageMask): void {
@@ -5588,6 +5625,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.setLayerSelection(additions.map((item) => item.id), layer.id);
     this.inspectorView = 'properties';
     this.flash(`${label} agregado al lienzo.`);
+    this.maybeCloseMobileTools();
   }
 
   restoreMissingRsvpControls(section: VisualInvitationSection): void {
@@ -5603,6 +5641,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       else section.layers.push(layer);
     }
     this.flash(`${missing.length} elemento(s) RSVP restaurado(s).`);
+    this.maybeCloseMobileTools();
   }
 
   get countdownPreview(): { days: number; hours: number; minutes: number; seconds: number; isOver: boolean } {
@@ -6431,6 +6470,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.showOnboarding = false;
     this.closeDesignLibrary();
     this.autosaveState = 'Cambios pendientes';
+    this.maybeCloseMobileTools();
     if (wasOnboarding) setTimeout(() => this.save(), 0);
     if (wasOnboarding) this.maybeStartTutorial();
   }
@@ -7013,6 +7053,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.normalizeModuleStyles();
     this.selectedSectionId = this.design.sections[0]?.id || '';
     this.clearLayerSelection();
+    this.maybeCloseMobileTools();
   }
 
   saveAsTemplate(): void {

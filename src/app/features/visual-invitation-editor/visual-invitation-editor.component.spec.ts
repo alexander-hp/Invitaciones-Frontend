@@ -17,7 +17,7 @@ describe('VisualInvitationEditorComponent persistence', () => {
         of({ uploadUrl: `https://upload.example.com/${payload.fileName}`, publicUrl: `https://cdn.example.com/${payload.fileName}` })),
       uploadAsset: jasmine.createSpy().and.returnValue(of({}))
     };
-    component = new VisualInvitationEditorComponent({} as any, {} as any, api as any, {} as any, {} as any);
+    component = new VisualInvitationEditorComponent({} as any, {} as any, api as any, {} as any, {} as any, {} as any, {} as any);
     component.design = {
       version: 1, active: true, mode: 'easy', sections: [
         { id: 'hero', type: 'hero', title: 'Original', enabled: true, layout: 'canvas', height: 600, layers: [] }
@@ -73,10 +73,12 @@ describe('VisualInvitationEditorComponent persistence', () => {
   it('keeps edits made while a save request is in flight pending', () => {
     component.save();
     component.design.sections[0].title = 'Cambio posterior';
-    responses.next({ invitation: {
-      ...component.invitation!,
-      content: { ...component.invitation!.content, visualDesignDraft: { ...component.design, sections: [{ ...component.design.sections[0], title: 'Original' }] } }
-    } });
+    responses.next({
+      invitation: {
+        ...component.invitation!,
+        content: { ...component.invitation!.content, visualDesignDraft: { ...component.design, sections: [{ ...component.design.sections[0], title: 'Original' }] } }
+      }
+    });
 
     expect(component.design.sections[0].title).toBe('Cambio posterior');
     expect(component.hasUnsavedChanges).toBeTrue();
@@ -86,10 +88,12 @@ describe('VisualInvitationEditorComponent persistence', () => {
   it('marks the exact submitted design saved when no new edit occurred', () => {
     component.design.sections[0].title = 'Guardado';
     component.save();
-    responses.next({ invitation: {
-      ...component.invitation!,
-      content: { ...component.invitation!.content, visualDesignDraft: component.design }
-    } });
+    responses.next({
+      invitation: {
+        ...component.invitation!,
+        content: { ...component.invitation!.content, visualDesignDraft: component.design }
+      }
+    });
 
     expect(component.hasUnsavedChanges).toBeFalse();
     expect(component.autosaveState).toBe('Guardado');
@@ -148,8 +152,12 @@ describe('VisualInvitationEditorComponent persistence', () => {
   it('adds native modules to an imported design and discards the full import together', async () => {
     (component as any).designImporter = new VisualDesignImporterService();
     component.importSource = 'json';
-    component.importJsonSource = JSON.stringify({ sections: [{ id: 'imported', type: 'custom', enabled: true, layout: 'canvas', height: 640,
-      layers: [{ id: 'headline', type: 'text', text: 'Fiesta', x: 10, y: 20, width: 80, height: 10 }] }] });
+    component.importJsonSource = JSON.stringify({
+      sections: [{
+        id: 'imported', type: 'custom', enabled: true, layout: 'canvas', height: 640,
+        layers: [{ id: 'headline', type: 'text', text: 'Fiesta', x: 10, y: 20, width: 80, height: 10 }]
+      }]
+    });
     await component.importDesign();
     component.addImportedModule('rsvp');
     expect(component.design.sections.some((section) => section.type === 'rsvp')).toBeTrue();
@@ -164,10 +172,12 @@ describe('VisualInvitationEditorComponent persistence', () => {
     expect(component.hasUnsavedChanges).toBeTrue();
     component.save();
     expect(api.updateInvitation.calls.mostRecent().args[1].content.visualDesignDraft.presentationMode).toBe('chapters');
-    responses.next({ invitation: {
-      ...component.invitation!,
-      content: { ...component.invitation!.content, visualDesignDraft: component.design }
-    } });
+    responses.next({
+      invitation: {
+        ...component.invitation!,
+        content: { ...component.invitation!.content, visualDesignDraft: component.design }
+      }
+    });
     expect(component.hasUnsavedChanges).toBeFalse();
   });
 
@@ -191,8 +201,10 @@ describe('VisualInvitationEditorComponent persistence', () => {
   });
 
   it('clears a previous button preset when switching from gradient to minimal', () => {
-    const layer = { id: 'cta', type: 'button' as const, text: 'Abrir', x: 20, y: 20, width: 50, height: 10,
-      style: { gradientEnabled: false, textDecoration: 'none' as const } };
+    const layer = {
+      id: 'cta', type: 'button' as const, text: 'Abrir', x: 20, y: 20, width: 50, height: 10,
+      style: { gradientEnabled: false, textDecoration: 'none' as const }
+    };
     component.design.sections[0].layers.push(layer);
     component.applyButtonPreset(layer, component.buttonPresets.find((item) => item.key === 'aurora')!);
     expect(layer.style.gradientEnabled).toBeTrue();
@@ -219,8 +231,10 @@ describe('VisualInvitationEditorComponent persistence', () => {
     surface.appendChild(target);
     spyOn(surface, 'getBoundingClientRect').and.returnValue({ left: 0, top: 0, width: 400, height: 600 } as DOMRect);
     (component as any).paletteDragItem = { kind: 'media', media: { type: 'image', url: 'https://example.com/photo.jpg', label: 'Foto' } };
-    component.dropPaletteItem({ target, currentTarget: surface, clientX: 100, clientY: 100,
-      preventDefault: () => {}, stopPropagation: () => {} } as unknown as DragEvent, component.design.sections[0]);
+    component.dropPaletteItem({
+      target, currentTarget: surface, clientX: 100, clientY: 100,
+      preventDefault: () => { }, stopPropagation: () => { }
+    } as unknown as DragEvent, component.design.sections[0]);
 
     expect(component.design.sections[0].layers.length).toBe(1);
     expect(frame.url).toBe('https://example.com/photo.jpg');
@@ -288,7 +302,7 @@ describe('VisualInvitationEditorComponent persistence', () => {
     surface.appendChild(target);
     const event = { target, currentTarget: surface, preventDefault: jasmine.createSpy(), stopPropagation: jasmine.createSpy() } as unknown as DragEvent;
 
-    component.beginPhotoSwapDrag({ dataTransfer: { setData: () => {} } } as unknown as DragEvent, first);
+    component.beginPhotoSwapDrag({ dataTransfer: { setData: () => { } } } as unknown as DragEvent, first);
     component.dragPaletteOver(event, component.design.sections[0]);
     expect(component.photoSwapTargetId).toBe(second.id);
     component.dropPaletteItem(event, component.design.sections[0]);
@@ -456,7 +470,7 @@ describe('VisualInvitationEditorComponent persistence', () => {
       bounds: { x: 10, y: 85, width: 40, height: 20 }, moved: true
     };
 
-    component.onPointerMove({ clientX: 0, clientY: 240, preventDefault: () => {} } as unknown as PointerEvent);
+    component.onPointerMove({ clientX: 0, clientY: 240, preventDefault: () => { } } as unknown as PointerEvent);
 
     expect(layer.y).toBe(125);
   });
@@ -588,8 +602,10 @@ describe('VisualInvitationEditorComponent persistence', () => {
   it('lets a reviewed contrast or decorative overflow warning be restored, and revisits it after edits', () => {
     const section = component.design.sections[0];
     section.background = { color: '#ffffff' };
-    section.layers = [{ id: 'decoration', type: 'text', text: 'Decoración', x: -10, y: 20, width: 35, height: 12,
-      style: { color: '#fefefe' } }];
+    section.layers = [{
+      id: 'decoration', type: 'text', text: 'Decoración', x: -10, y: 20, width: 35, height: 12,
+      style: { color: '#fefefe' }
+    }];
     component.design.sections.push({ id: 'rsvp', type: 'rsvp', enabled: true, layout: 'canvas', height: 820, layers: [] });
     component.event = { date: '2026-10-01', venue: { name: 'Jardín' } } as any;
     const key = 'visual-editor-audit:invitation-1';
