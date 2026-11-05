@@ -1,19 +1,25 @@
 import {
-  ArrowLeft, Baby, Bell, Blocks, Cake, CalendarDays, CalendarHeart, Camera, Car, Check, ChevronDown, Church, CircleCheckBig,
-  CircleHelp, CircleUserRound, Clock, Crown, Facebook, Flower2, Gem, Gift, GraduationCap, Heart,
-  HeartHandshake, Hotel, House, Image, Images, Instagram, KeyRound, Layers, Link, LockKeyhole,
-  Download, Ellipsis, ExternalLink, Eye, FlaskConical, Mail, MapPin, MapPinned, MessageCircle, MicVocal, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen, PanelsTopLeft, PartyPopper,
-  Phone, Play, QrCode, Redo2, Search, Send, Share2, ShieldCheck, Sparkles, Star, TicketCheck, Type, Undo2, Upload,
-  Shapes, UserRound, Users, Utensils, Wine, X, Youtube
+  AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, ArrowDown, ArrowLeft, ArrowUp, Baby, Bell, Blocks, Cake,
+  CalendarDays, CalendarHeart, Camera, Car, Check, ChevronDown, Church, CircleCheckBig, CircleHelp, CirclePlus,
+  CircleUserRound, Clock, CloudUpload, Copy, Crop, Crown, Download, Ellipsis, ExternalLink, Eye, Facebook,
+  FlaskConical, Flower2, Gem, Gift, GraduationCap, GripVertical, Heart, HeartHandshake, Hotel, House, Image,
+  Images, Instagram, KeyRound, Layers, Link, Lock, LockKeyhole, LockOpen, Mail, MapPin, MapPinned,
+  MessageCircle, MicVocal, Monitor, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen,
+  PanelsTopLeft, PartyPopper, Phone, Play, QrCode, Redo2, Save, Search, Send, Shapes, Share2, ShieldCheck,
+  SlidersHorizontal, Smartphone, Sparkles, Star, Tablet, TicketCheck, Trash2, Type, Undo2, Upload,
+  UserRound, Users, Utensils, Wine, X, Youtube
 } from 'lucide-angular';
 
 export const VISUAL_LUCIDE_ICONS = {
-  ArrowLeft, Baby, Bell, Blocks, Cake, CalendarDays, CalendarHeart, Camera, Car, Check, ChevronDown, Church, CircleCheckBig,
-  CircleHelp, CircleUserRound, Clock, Crown, Facebook, Flower2, Gem, Gift, GraduationCap, Heart,
-  HeartHandshake, Hotel, House, Image, Images, Instagram, KeyRound, Layers, Link, LockKeyhole,
-  Download, Ellipsis, ExternalLink, Eye, FlaskConical, Mail, MapPin, MapPinned, MessageCircle, MicVocal, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen, PanelsTopLeft, PartyPopper,
-  Phone, Play, QrCode, Redo2, Search, Send, Share2, ShieldCheck, Sparkles, Star, TicketCheck, Type, Undo2, Upload,
-  Shapes, UserRound, Users, Utensils, Wine, X, Youtube
+  AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, ArrowDown, ArrowLeft, ArrowUp, Baby, Bell, Blocks, Cake,
+  CalendarDays, CalendarHeart, Camera, Car, Check, ChevronDown, Church, CircleCheckBig, CircleHelp, CirclePlus,
+  CircleUserRound, Clock, CloudUpload, Copy, Crop, Crown, Download, Ellipsis, ExternalLink, Eye, Facebook,
+  FlaskConical, Flower2, Gem, Gift, GraduationCap, GripVertical, Heart, HeartHandshake, Hotel, House, Image,
+  Images, Instagram, KeyRound, Layers, Link, Lock, LockKeyhole, LockOpen, Mail, MapPin, MapPinned,
+  MessageCircle, MicVocal, Monitor, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen,
+  PanelsTopLeft, PartyPopper, Phone, Play, QrCode, Redo2, Save, Search, Send, Shapes, Share2, ShieldCheck,
+  SlidersHorizontal, Smartphone, Sparkles, Star, Tablet, TicketCheck, Trash2, Type, Undo2, Upload,
+  UserRound, Users, Utensils, Wine, X, Youtube
 };
 
 export interface VisualIconOption {

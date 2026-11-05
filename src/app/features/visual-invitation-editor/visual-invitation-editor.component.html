@@ -19,14 +19,25 @@
       <button class="icon-button" type="button" title="Deshacer (Ctrl+Z)" (click)="undo()"><lucide-icon name="undo-2" [strokeWidth]="1.8"></lucide-icon></button>
       <button class="icon-button" type="button" title="Rehacer (Ctrl+Y)" (click)="redo()"><lucide-icon name="redo-2" [strokeWidth]="1.8"></lucide-icon></button>
     </div>
-    <div class="segmented" [class.tutorial-focus]="tutorialStep === 7" aria-label="Vista por dispositivo">
-      <button type="button" [class.active]="device === 'mobile'" (click)="setDevice('mobile')">Celular</button>
-      <button type="button" [class.active]="device === 'tablet'" (click)="setDevice('tablet')">Tablet</button>
-      <button type="button" [class.active]="device === 'desktop'" (click)="setDevice('desktop')">Escritorio</button>
+    <div class="ve-topbar-spacer"></div>
+    <div class="segmented device-segmented" [class.tutorial-focus]="tutorialStep === 7" aria-label="Vista por dispositivo">
+      <button type="button" [class.active]="device === 'mobile'" (click)="setDevice('mobile')" title="Vista Celular">
+        <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
+        <span class="device-label">Celular</span>
+      </button>
+      <button type="button" [class.active]="device === 'tablet'" (click)="setDevice('tablet')" title="Vista Tablet">
+        <lucide-icon name="tablet" [strokeWidth]="1.8"></lucide-icon>
+        <span class="device-label">Tablet</span>
+      </button>
+      <button type="button" [class.active]="device === 'desktop'" (click)="setDevice('desktop')" title="Vista Escritorio">
+        <lucide-icon name="monitor" [strokeWidth]="1.8"></lucide-icon>
+        <span class="device-label">Escritorio</span>
+      </button>
     </div>
     <details class="topbar-more" [class.tutorial-focus]="tutorialStep === 8" #moreMenu>
       <summary aria-label="Más herramientas"><lucide-icon name="ellipsis" [strokeWidth]="1.8"></lucide-icon><span>Más</span></summary>
       <div class="topbar-menu">
+        <button type="button" (click)="moreMenu.open=false;save()"><lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Guardar diseño</button>
         <button type="button" (click)="moreMenu.open=false;openTutorial()"><lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon> Guía del editor</button>
         <button type="button" (click)="moreMenu.open=false;openDesignImporter()"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Crear con IA o importar</button>
         <button type="button" (click)="moreMenu.open=false;openResponsivePreview()"><lucide-icon name="panels-top-left" [strokeWidth]="1.8"></lucide-icon> Comparar dispositivos</button>
@@ -37,8 +48,14 @@
       </div>
     </details>
     <button class="secondary preview-command" type="button" (click)="openDraftPreview()"><lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon><span>Vista previa borrador</span> ↗</button>
-    <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Guardando...' : 'Guardar diseño' }}</button>
-    <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing" (click)="openPublishAudit()">{{ publishing ? 'Publicando...' : (invitation?.status === 'published' ? 'Publicar cambios' : 'Publicar') }}</button>
+    <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving" (click)="save()" title="Guardar">
+      <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon>
+      <span>{{ saving ? 'Guardando...' : 'Guardar' }}</span>
+    </button>
+    <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing" (click)="openPublishAudit()" title="Publicar">
+      <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
+      <span>{{ publishing ? 'Publicando...' : 'Publicar' }}</span>
+    </button>
   </header>
 
   <div class="ve-notice draft-info" *ngIf="invitation?.status === 'published'">
@@ -537,6 +554,7 @@
     </section>
   </div>
   <div class="ve-workspace" [class.tools-collapsed]="toolsCollapsed" [class.mobile-tools-open]="mobilePanel === 'tools'" [class.mobile-canvas-open]="mobilePanel === 'canvas'" [class.mobile-inspector-open]="mobilePanel === 'inspector'">
+    <div class="mobile-drawer-backdrop" *ngIf="isMobileScreen && mobilePanel !== 'canvas'" (click)="closeMobilePanel()"></div>
     <aside class="ve-tools">
       <nav class="tool-category-nav" aria-label="Biblioteca del editor">
         <button type="button" class="tool-collapse-toggle" [attr.aria-label]="toolsCollapsed ? 'Expandir biblioteca' : 'Contraer biblioteca'" [title]="toolsCollapsed ? 'Expandir biblioteca' : 'Contraer biblioteca'" [attr.aria-expanded]="!toolsCollapsed" (click)="toolsCollapsed=!toolsCollapsed"><lucide-icon [name]="toolsCollapsed ? 'panel-left-open' : 'panel-left-close'" [strokeWidth]="1.8"></lucide-icon></button>
@@ -2297,25 +2315,63 @@
       <p class="uploading" *ngIf="uploading">Subiendo archivo...</p>
     </aside>
   </div>
-  <section class="mobile-selection-bar" *ngIf="mobilePanel === 'canvas' && selectedLayerCount" aria-label="Acciones del elemento seleccionado">
+  <section class="mobile-selection-bar" *ngIf="isMobileScreen && mobilePanel === 'canvas' && selectedLayerCount" aria-label="Acciones del elemento seleccionado">
     <header>
       <strong>{{ mobileSelectionLabel }}</strong>
-      <button type="button" title="Cerrar acciones" aria-label="Cerrar acciones" (click)="clearMobileSelection()">×</button>
+      <button type="button" class="btn-close-selection" title="Cerrar acciones" aria-label="Cerrar acciones" (click)="clearMobileSelection()">×</button>
     </header>
-    <div>
-      <button type="button" title="Editar propiedades" (click)="openMobileInspector()"><b>✎</b><span>Editar</span></button>
-      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" [hidden]="layer.type !== 'image' || !boundImageUrl(layer) || layer.locked" type="button" [title]="croppingLayerId === layer.id ? 'Terminar encuadre' : 'Encuadrar imagen'" (click)="croppingLayerId === layer.id ? finishImageCrop() : startMobileImageCrop(layer)"><b>{{ croppingLayerId === layer.id ? '✓' : '⌗' }}</b><span>{{ croppingLayerId === layer.id ? 'Listo' : 'Encuadrar' }}</span></button>
-      <button type="button" title="Duplicar" (click)="duplicateLayer()"><b>⧉</b><span>Duplicar</span></button>
-      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer)"><b>{{ layer.locked ? '▣' : '▢' }}</b><span>{{ layer.locked ? 'Desbloquear' : 'Bloquear' }}</span></button>
-      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Enviar atrás" (click)="shiftLayer(layer, -1)"><b>↓</b><span>Atrás</span></button>
-      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Traer adelante" (click)="shiftLayer(layer, 1)"><b>↑</b><span>Adelante</span></button>
-      <button class="danger" type="button" title="Eliminar" (click)="removeLayer()"><b>⌫</b><span>Eliminar</span></button>
+    <div class="mobile-selection-actions">
+      <button type="button" title="Editar propiedades" (click)="openMobileInspector()">
+        <lucide-icon name="sliders-horizontal" [strokeWidth]="1.8"></lucide-icon>
+        <span>Editar</span>
+      </button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" [hidden]="layer.type !== 'image' || !boundImageUrl(layer) || layer.locked" type="button" [title]="croppingLayerId === layer.id ? 'Terminar encuadre' : 'Encuadrar imagen'" (click)="croppingLayerId === layer.id ? finishImageCrop() : startMobileImageCrop(layer)">
+        <lucide-icon [name]="croppingLayerId === layer.id ? 'check' : 'crop'" [strokeWidth]="1.8"></lucide-icon>
+        <span>{{ croppingLayerId === layer.id ? 'Listo' : 'Encuadre' }}</span>
+      </button>
+      <button type="button" title="Centrar horizontal" (click)="alignLayerHorizontalCenter()">
+        <lucide-icon name="align-horizontal-justify-center" [strokeWidth]="1.8"></lucide-icon>
+        <span>Centrar</span>
+      </button>
+      <button type="button" title="Duplicar" (click)="duplicateLayer()">
+        <lucide-icon name="copy" [strokeWidth]="1.8"></lucide-icon>
+        <span>Duplicar</span>
+      </button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'" (click)="toggleLayerLocked(layer)">
+        <lucide-icon [name]="layer.locked ? 'lock' : 'lock-open'" [strokeWidth]="1.8"></lucide-icon>
+        <span>{{ layer.locked ? 'Desbloq.' : 'Bloquear' }}</span>
+      </button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Enviar atrás" (click)="shiftLayer(layer, -1)">
+        <lucide-icon name="arrow-down" [strokeWidth]="1.8"></lucide-icon>
+        <span>Atrás</span>
+      </button>
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer" type="button" title="Traer adelante" (click)="shiftLayer(layer, 1)">
+        <lucide-icon name="arrow-up" [strokeWidth]="1.8"></lucide-icon>
+        <span>Adelante</span>
+      </button>
+      <button class="danger" type="button" title="Eliminar" (click)="removeLayer()">
+        <lucide-icon name="trash-2" [strokeWidth]="1.8"></lucide-icon>
+        <span>Eliminar</span>
+      </button>
     </div>
   </section>
-  <nav class="mobile-editor-nav" aria-label="Editor móvil">
-    <button type="button" [class.active]="mobilePanel === 'tools'" (click)="setMobilePanel('tools')"><b>+</b><span>Agregar</span></button>
-    <button type="button" [class.active]="mobilePanel === 'canvas'" (click)="setMobilePanel('canvas')"><b>▱</b><span>Lienzo</span></button>
-    <button type="button" [class.active]="mobilePanel === 'inspector'" (click)="setMobilePanel('inspector')"><b>≡</b><span>Editar</span><i *ngIf="selectedLayerCount">{{ selectedLayerCount }}</i></button>
-    <button type="button" (click)="openExportDialog()"><b>↓</b><span>Descargar</span></button>
+  <nav class="mobile-editor-nav" *ngIf="isMobileScreen" aria-label="Editor móvil">
+    <button type="button" [class.active]="mobilePanel === 'tools'" (click)="setMobilePanel('tools')">
+      <lucide-icon name="circle-plus" [strokeWidth]="1.8"></lucide-icon>
+      <span>Agregar</span>
+    </button>
+    <button type="button" [class.active]="mobilePanel === 'canvas'" (click)="setMobilePanel('canvas')">
+      <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
+      <span>Lienzo</span>
+    </button>
+    <button type="button" [class.active]="mobilePanel === 'inspector'" (click)="setMobilePanel('inspector')">
+      <lucide-icon name="sliders-horizontal" [strokeWidth]="1.8"></lucide-icon>
+      <span>Editar</span>
+      <i *ngIf="selectedLayerCount">{{ selectedLayerCount }}</i>
+    </button>
+    <button type="button" (click)="openExportDialog()">
+      <lucide-icon name="download" [strokeWidth]="1.8"></lucide-icon>
+      <span>Descargar</span>
+    </button>
   </nav>
 </div>

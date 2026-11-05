@@ -1599,9 +1599,11 @@ export function buildPalazzoOrangerieDesign(
     ];
 
     rawGallery.forEach((item, idx) => {
+      const isOddCount = rawGallery.length % 2 === 1;
+      const isLastOdd = isOddCount && (idx === rawGallery.length - 1);
       const isLeft = idx % 2 === 0;
-      const left = isLeft ? 6 : 52;
-      const staggerOffset = isLeft ? 0 : 22;
+      const left = isLastOdd ? 29 : (isLeft ? 6 : 52);
+      const staggerOffset = isLastOdd ? 0 : (isLeft ? 0 : 22);
       const topPx = 186 + Math.floor(idx / 2) * 310 + staggerOffset;
       const prefix = `gallery.item.${idx}`;
       const imgUrl = item.url || fallbackUrls[idx % fallbackUrls.length];
@@ -2054,8 +2056,8 @@ export function buildPalazzoOrangerieDesign(
           }
         ];
 
-    const cardH = 380;
-    const totalHeight = Math.max(660, 210 + hotels.length * (cardH + 30));
+    const cardH = 430;
+    const totalHeight = Math.max(680, 210 + hotels.length * (cardH + 28));
     const pct = (px: number) => Number(((px / totalHeight) * 100).toFixed(2));
 
     const lodgSec = makeSection(
@@ -2122,7 +2124,7 @@ export function buildPalazzoOrangerieDesign(
         makeLayer(
           'shape',
           '',
-          9.8, pct(topPx + 16), 30.4, pct(160),
+          9.8, pct(topPx + 16), 30.4, pct(150),
           {
             backgroundColor: '#152820',
             borderColor: '#c89d4c',
@@ -2136,7 +2138,7 @@ export function buildPalazzoOrangerieDesign(
         makeLayer(
           'image',
           hotel.name || `Hotel ${idx + 1}`,
-          11, pct(topPx + 22), 28, pct(148),
+          11, pct(topPx + 22), 28, pct(138),
           {
             preserveAspectRatio: false,
             frameEnabled: true,
@@ -2157,7 +2159,7 @@ export function buildPalazzoOrangerieDesign(
         makeLayer(
           'image',
           '',
-          10.2, pct(topPx + 18), 29.6, pct(156),
+          10.2, pct(topPx + 18), 29.6, pct(146),
           { preserveAspectRatio: true, objectFit: 'contain' },
           {
             binding: `display.lodging.filigree.${idx}`,
@@ -2169,94 +2171,101 @@ export function buildPalazzoOrangerieDesign(
         makeLayer(
           'text',
           '★★★★★ · HOTEL RECOMENDADO',
-          43, pct(topPx + 20), 46, pct(20),
+          44, pct(topPx + 20), 45, pct(18),
           { fontFamily: bodyFont, fontSize: 9, fontWeight: 700, letterSpacing: 2, color: '#8f651e', textAlign: 'left' },
           { binding: `display.lodging.stars.${idx}`, name: `Categoría hotel ${idx + 1}` }
         ),
         makeLayer(
           'text',
           hotel.name || `Grand Hotel ${idx + 1}`,
-          43, pct(topPx + 42), 46, pct(38),
-          { fontFamily: headingFont, fontSize: 20, fontWeight: 700, color: '#152820', textAlign: 'left' },
+          44, pct(topPx + 40), 45, pct(38),
+          { fontFamily: headingFont, fontSize: 19, fontWeight: 700, color: '#152820', textAlign: 'left', lineHeight: 1.15 },
           { binding: `${prefix}.name`, name: `Nombre hotel ${idx + 1}` }
         ),
         makeLayer(
           'text',
           hotel.description || 'Estancia de lujo a pocos minutos de la celebración.',
-          43, pct(topPx + 82), 46, pct(42),
+          44, pct(topPx + 80), 45, pct(42),
           { fontFamily: bodyFont, fontSize: 12, fontWeight: 400, color: '#424e48', textAlign: 'left', lineHeight: 1.35 },
           { binding: `${prefix}.description`, name: `Descripción hotel ${idx + 1}` }
         ),
         makeLayer(
           'text',
           hotel.address || 'Avenida Principal · Zona Hotelera',
-          43, pct(topPx + 126), 46, pct(32),
+          44, pct(topPx + 124), 45, pct(32),
           { fontFamily: bodyFont, fontSize: 11, fontWeight: 600, color: '#7c5b24', textAlign: 'left' },
           { binding: `${prefix}.address`, name: `Dirección hotel ${idx + 1}` }
         ),
+        // Fila 1 de Badges (2 badges con ancho amplio para legibilidad en móvil)
         makeLayer(
           'text',
           hotel.priceLabel || 'Tarifa preferencial disponible',
-          11, pct(topPx + 186), 25, pct(30),
+          10, pct(topPx + 176), 39, pct(32),
           { fontFamily: bodyFont, fontSize: 11, fontWeight: 700, color: '#152820', backgroundColor: '#f6efe2', borderRadius: 8, padding: 6, textAlign: 'center' },
           { binding: `${prefix}.price`, name: `Tarifa hotel ${idx + 1}` }
         ),
         makeLayer(
           'text',
           hotel.agreementLabel || 'Convenio Especial',
-          38, pct(topPx + 186), 24, pct(30),
+          51, pct(topPx + 176), 39, pct(32),
           { fontFamily: bodyFont, fontSize: 11, fontWeight: 700, color: '#8f651e', backgroundColor: '#f6efe2', borderRadius: 8, padding: 6, textAlign: 'center' },
           { binding: `${prefix}.agreement`, name: `Convenio hotel ${idx + 1}` }
         ),
+        // Fila 2 de Badges (Código promocional destacado)
         makeLayer(
           'text',
           [hotel.discountCode, hotel.discountDescription].filter(Boolean).join(' · ') || 'Código: ORANGERIE',
-          64, pct(topPx + 186), 25, pct(30),
-          { fontFamily: bodyFont, fontSize: 10.5, fontWeight: 700, color: '#152820', backgroundColor: '#ebd197', borderRadius: 8, padding: 6, textAlign: 'center' },
+          15, pct(topPx + 214), 70, pct(30),
+          { fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#152820', backgroundColor: '#ebd197', borderRadius: 8, padding: 6, textAlign: 'center' },
           { binding: `${prefix}.discount`, name: `Código descuento ${idx + 1}` }
         ),
+        // Servicios y Notas
         makeLayer(
           'text',
           (hotel.services || []).join('  ·  ') || 'Desayuno incluido  ·  Valet Parking  ·  Transportación',
-          11, pct(topPx + 226), 78, pct(30),
+          10, pct(topPx + 252), 80, pct(26),
           { fontFamily: bodyFont, fontSize: 11.5, fontWeight: 500, color: '#424e48', textAlign: 'center' },
           { binding: `${prefix}.services`, name: `Servicios hotel ${idx + 1}` }
         ),
         makeLayer(
           'text',
           hotel.notes || 'Reserva mencionando el convenio del evento.',
-          11, pct(topPx + 260), 78, pct(28),
-          { fontFamily: editorialSerif, fontSize: 14, fontStyle: 'italic', color: '#8f651e', textAlign: 'center' },
+          10, pct(topPx + 280), 80, pct(26),
+          { fontFamily: editorialSerif, fontSize: 13.5, fontStyle: 'italic', color: '#8f651e', textAlign: 'center' },
           { binding: `${prefix}.notes`, name: `Notas hotel ${idx + 1}` }
         ),
+        // Botón Primario: RESERVAR ESTANCIA (Ancho completo, fácil de pulsar con el pulgar)
         makeLayer(
           'button',
           'RESERVAR ESTANCIA',
-          11, pct(topPx + 306), 30, pct(44),
+          10, pct(topPx + 316), 80, pct(46),
           {
             backgroundColor: '#152820',
             color: '#f4e2b8',
             fontFamily: bodyFont,
-            fontSize: 10.5,
+            fontSize: 11.5,
             fontWeight: 700,
-            letterSpacing: 1.2,
+            letterSpacing: 1.5,
             borderRadius: 30,
             borderColor: '#d4af63',
             borderWidth: 1.2,
-            borderStyle: 'solid'
+            borderStyle: 'solid',
+            boxShadow: '0 8px 18px rgba(21, 40, 32, 0.22)'
           },
           { binding: `${prefix}.reserve`, name: `Reservar hotel ${idx + 1}`, url: hotel.url || 'https://maps.google.com' }
         ),
+        // Botones Secundarios: VER MAPA y LLAMAR (Side-by-side abajo con buen tamaño)
         makeLayer(
           'button',
           'VER MAPA',
-          44, pct(topPx + 306), 21, pct(44),
+          10, pct(topPx + 370), 38.5, pct(42),
           {
             backgroundColor: '#faf5eb',
             color: '#152820',
             fontFamily: bodyFont,
             fontSize: 10.5,
             fontWeight: 700,
+            letterSpacing: 1,
             borderRadius: 30,
             borderColor: '#c89d4c',
             borderWidth: 1.2,
@@ -2267,13 +2276,14 @@ export function buildPalazzoOrangerieDesign(
         makeLayer(
           'button',
           'LLAMAR',
-          68, pct(topPx + 306), 21, pct(44),
+          51.5, pct(topPx + 370), 38.5, pct(42),
           {
             backgroundColor: '#faf5eb',
             color: '#152820',
             fontFamily: bodyFont,
             fontSize: 10.5,
             fontWeight: 700,
+            letterSpacing: 1,
             borderRadius: 30,
             borderColor: '#c89d4c',
             borderWidth: 1.2,

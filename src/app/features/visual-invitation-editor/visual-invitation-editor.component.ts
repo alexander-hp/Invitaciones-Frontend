@@ -32,7 +32,7 @@ import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpa
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
 type ToolCategory = 'design' | 'elements' | 'assets' | 'functions' | 'sections' | 'access';
-type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se';
+type ResizeCorner = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
 type MediaFilter = 'all' | DesignMedia['type'];
@@ -274,6 +274,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectionMarquee?: SelectionMarquee;
   croppingLayerId = '';
   mobilePanel: MobileEditorPanel = 'canvas';
+  isMobileScreen = typeof window !== 'undefined' ? window.innerWidth <= 700 : false;
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.isMobileScreen = typeof window !== 'undefined' ? window.innerWidth <= 700 : false;
+  }
   touchZoomVisible = false;
   touchGestureActive = false;
   touchGestureLabel = '';
@@ -1225,8 +1231,39 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   setMobilePanel(panel: MobileEditorPanel): void {
-    this.mobilePanel = panel;
-    if (panel === 'canvas') setTimeout(() => this.fitCanvasToViewport());
+    if (this.mobilePanel === panel && panel !== 'canvas') {
+      this.mobilePanel = 'canvas';
+    } else {
+      this.mobilePanel = panel;
+    }
+    if (this.mobilePanel === 'canvas') setTimeout(() => this.fitCanvasToViewport());
+  }
+
+  closeMobilePanel(): void {
+    this.mobilePanel = 'canvas';
+    setTimeout(() => this.fitCanvasToViewport());
+  }
+
+  alignLayerHorizontalCenter(): void {
+    const layout = this.selectedLayout;
+    if (!layout) return;
+    this.recordHistory();
+    const w = layout.width ?? 50;
+    layout.x = Math.round(((100 - w) / 2) * 10) / 10;
+    if (this.selectedLayer) {
+      this.normalizeLayerTransform(this.selectedLayer, layout);
+    }
+  }
+
+  alignLayerVerticalCenter(): void {
+    const layout = this.selectedLayout;
+    if (!layout) return;
+    this.recordHistory();
+    const h = layout.height ?? 30;
+    layout.y = Math.round(((100 - h) / 2) * 10) / 10;
+    if (this.selectedLayer) {
+      this.normalizeLayerTransform(this.selectedLayer, layout);
+    }
   }
 
   private maybeStartTutorial(): void {
@@ -4244,12 +4281,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const dx = (event.clientX - resize.startX) / resize.canvas.clientWidth * 100;
       const dy = (event.clientY - resize.startY) / resize.canvas.clientHeight * 100;
       const west = resize.corner.includes('w');
+      const east = resize.corner.includes('e');
       const north = resize.corner.includes('n');
+      const south = resize.corner.includes('s');
+      const isDiagonal = (north || south) && (east || west);
+
       let nextX = west ? resize.x + dx : resize.x;
       let nextY = north ? resize.y + dy : resize.y;
-      let nextWidth = west ? resize.width - dx : resize.width + dx;
-      let nextHeight = north ? resize.height - dy : resize.height + dy;
-      if (event.shiftKey && resize.width > 0 && resize.height > 0) {
+      let nextWidth = west ? resize.width - dx : (east ? resize.width + dx : resize.width);
+      let nextHeight = north ? resize.height - dy : (south ? resize.height + dy : resize.height);
+
+      if (event.shiftKey && isDiagonal && resize.width > 0 && resize.height > 0) {
         const canvasW = resize.canvas.clientWidth || 1;
         const canvasH = resize.canvas.clientHeight || 1;
         const aspectPx = (resize.width * canvasW) / (resize.height * canvasH);
@@ -4267,12 +4309,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       const precision = event.pointerType === 'touch' ? 2 : 100;
       const round = (value: number) => Math.round(value * precision) / precision;
-      resize.layout.x = round(this.bound(nextX, -100, resize.x + resize.width - 1));
+      if (west) {
+        resize.layout.x = round(this.bound(nextX, -100, resize.x + resize.width - 1));
+      }
       const height = this.bound(nextHeight, 1, 100);
       const range = this.verticalLayerBounds(resize.section, height);
-      resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 1)));
-      resize.layout.width = round(this.bound(nextWidth, 1, 100));
-      resize.layout.height = round(this.bound(height, 1, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
+      if (north) {
+        resize.layout.y = round(this.bound(nextY, range.min, Math.min(range.max, resize.y + resize.height - 1)));
+      }
+      if (east || west) {
+        resize.layout.width = round(this.bound(nextWidth, 1, 100));
+      }
+      if (north || south) {
+        resize.layout.height = round(this.bound(height, 1, this.design.presentationMode === 'chapters' ? 100 - resize.layout.y : 100));
+      }
       this.cdr.detectChanges();
       return;
     }
@@ -7184,19 +7234,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  selectToolCategory(category: ToolCategory): void {
+    this.toolCategory = category;
+    this.toolsCollapsed = false;
+    if (category === 'access') {
+      this.editorCanvasMode = 'access';
+      this.selectedSectionId = '';
+      this.selectedLayerId = '';
+      this.selectedLayerIds = [];
+      this.initAccessScreenDesign();
+    } else if (this.editorCanvasMode === 'access') {
+      this.editorCanvasMode = 'invitation';
+    }
+  }
+
   selectAccessCategory(): void {
-    this.toolCategory = 'access';
-    this.editorCanvasMode = 'access';
-    this.selectedSectionId = '';
-    this.selectedLayerId = '';
-    this.selectedLayerIds = [];
-    this.initAccessScreenDesign();
+    this.selectToolCategory('access');
   }
 
   setEditorCanvasMode(mode: 'invitation' | 'access'): void {
     this.editorCanvasMode = mode;
     if (mode === 'access') {
+      this.toolCategory = 'access';
+      this.selectedSectionId = '';
+      this.selectedLayerId = '';
+      this.selectedLayerIds = [];
       this.initAccessScreenDesign();
+    } else {
+      if (this.toolCategory === 'access') {
+        this.toolCategory = 'design';
+      }
     }
   }
 
@@ -7473,14 +7540,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     for (const section of this.design.sections) {
       section.background = { color: '#ffffff', overlay: 0, ...(section.background || {}) };
       if (this.isPalazzoOrangerie()) {
-        const needsFrameUpgrade = section.layers?.some((l) => l.type === 'image' && l.style?.objectFit === 'cover' && l.style?.preserveAspectRatio !== false) || section.pluginSettings?.['palazzoLayoutVersion'] !== 3;
+        const needsFrameUpgrade = section.layers?.some((l) => l.type === 'image' && l.style?.objectFit === 'cover' && l.style?.preserveAspectRatio !== false) || section.pluginSettings?.['palazzoLayoutVersion'] !== 4;
         if (!section.layers?.length || needsFrameUpgrade) {
           const built = buildPalazzoOrangerieDesign(this.invitation?.content || {}, this.event, (prefix) => this.uid(prefix), true);
           const match = built.sections.find((s) => section.type === 'custom' ? (s.type === 'custom' && s.title === section.title) : s.type === section.type);
           if (match) {
             section.height = match.height;
             section.background = match.background;
-            section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}), ...(match.pluginSettings || {}), palazzoLayoutVersion: 3 };
+            section.pluginSettings = { ...this.defaultPluginSettings(section.type), ...(section.pluginSettings || {}), ...(match.pluginSettings || {}), palazzoLayoutVersion: 4 };
             if (match.pluginDesign) section.pluginDesign = match.pluginDesign;
             section.layers = match.layers;
           }
