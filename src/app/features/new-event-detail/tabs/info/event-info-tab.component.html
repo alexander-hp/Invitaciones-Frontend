@@ -28,8 +28,8 @@
   </div>
 
   <!-- 1. Invitaciones -->
-  <div *ngIf="isOwner() && event.mode !== 'external_dashboard'" data-event-section="invitations" class="nw-card" [class.is-collapsed]="collapsedCards['invitations']"
-    style="margin-top:20px; padding: 20px 20px 24px;">
+  <div *ngIf="isOwner() && event.mode !== 'external_dashboard'" data-event-section="invitations" class="nw-card nw-invitations-card" [class.is-collapsed]="collapsedCards['invitations']"
+    style="margin-top:20px;">
     <div class="nw-card-header"
       style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom: 16px; cursor:pointer;"
       (click)="toggleCard('invitations')">
@@ -64,54 +64,46 @@
         <span>Usa “Crear invitación” para empezar el diseño.</span>
       </div>
       <div style="display:grid; gap:10px;" *ngIf="invitations.length > 0">
-        <div *ngFor="let inv of invitations"
-          style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 16px; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); box-shadow: var(--nw-shadow-sm);">
-          <div>
-            <strong style="font-size: 14.5px; color: var(--nw-text);">{{ inv.content?.headline || inv.slug }}</strong>
-            <span *ngIf="inv.status === 'published'" style="color:var(--nw-text-3); font-size:13px; margin-left:8px;">/new/i/{{ inv.slug }}</span>
-            <span class="nw-pill"
-              style="margin-left:12px; font-size: 10.5px; font-weight: 800; text-transform: uppercase;"
-              [class.success]="inv.status === 'published'" [class.warning]="inv.status === 'draft'">
-              {{ inv.status === 'published' ? 'Publicado' : 'Borrador' }}
-            </span>
+        <div *ngFor="let inv of invitations" class="nw-invitation-item-card">
+          <div class="nw-invitation-meta">
+            <div class="nw-invitation-title-row">
+              <strong class="nw-invitation-title">{{ inv.content?.headline || inv.slug }}</strong>
+              <span class="nw-pill"
+                [class.success]="inv.status === 'published'" [class.warning]="inv.status === 'draft'">
+                {{ inv.status === 'published' ? 'Publicado' : 'Borrador' }}
+              </span>
+            </div>
+            <div *ngIf="inv.status === 'published'" class="nw-invitation-slug">/new/i/{{ inv.slug }}</div>
           </div>
-          <div style="display:flex; gap:8px;">
+          <div class="nw-invitation-item-actions">
             <!-- Copiar Link -->
-            <button *ngIf="inv.status === 'published'" type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyInvitationLink(inv.slug)"
-              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
+            <button *ngIf="inv.status === 'published'" type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyInvitationLink(inv.slug)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
               <span>Copiar link</span>
             </button>
             <!-- Ver -->
-            <a *ngIf="inv.status === 'published'" [routerLink]="['/new/i', inv.slug]" target="_blank" class="nw-btn nw-btn-ghost nw-btn-sm"
-              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
+            <a *ngIf="inv.status === 'published'" [routerLink]="['/new/i', inv.slug]" target="_blank" class="nw-btn nw-btn-ghost nw-btn-sm">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
               <span>Ver pública</span>
             </a>
             <!-- Editar -->
-            <a [routerLink]="['/new/invitations', inv._id || inv.id, 'editor']" class="nw-btn nw-btn-ghost nw-btn-sm"
-              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
+            <a [routerLink]="['/new/invitations', inv._id || inv.id, 'editor']" class="nw-btn nw-btn-ghost nw-btn-sm">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
-              <span>{{ inv.status === 'published' ? 'Editar' : 'Continuar edición' }}</span>
+              <span>{{ inv.status === 'published' ? 'Editar' : 'Continuar' }}</span>
             </a>
             <!-- Eliminar -->
-            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="deleteInvitation(inv)"
-              [disabled]="saving" title="Eliminar invitación"
-              style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; height: 34px; color: #ef4444;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm nw-btn-delete" (click)="deleteInvitation(inv)"
+              [disabled]="saving" title="Eliminar invitación">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 <line x1="10" y1="11" x2="10" y2="17"></line>

@@ -43,7 +43,7 @@
 .events-search-close { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; margin-left: 5px; border: 1px solid var(--nw-border); border-radius: 6px; background: var(--nw-surface); color: var(--nw-text-2); cursor: pointer; }
 .events-search-close:hover { border-color: var(--nw-accent); color: var(--nw-text); }
 .nw-events-filters { margin-bottom: 16px; }
-.nw-events-filters .nw-select { min-width: 150px; width: auto; }
+.nw-events-filters .nw-select { min-width: 150px; width: auto; height: 42px; min-height: 42px; box-sizing: border-box; }
 
 .events-list-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 8px 0 14px; }
 .events-list-heading h2 { margin: 0; font-size: 18px; color: var(--nw-text); }
@@ -54,7 +54,7 @@
 .nw-event-card:focus-visible { outline: 3px solid var(--nw-accent); outline-offset: 2px; }
 .nw-event-card:hover { transform: translateY(-2px); }
 .nw-event-card .card-banner { height: 94px; }
-.nw-event-card .card-cover-main-img { object-fit: contain; }
+.nw-event-card .card-cover-main-img { object-fit: cover; }
 .nw-event-card .card-stats { flex-wrap: wrap; }
 .events-card-action {
   display: flex;
@@ -97,7 +97,25 @@
   .events-list-heading p { display: none; }
   .events-search-trigger { max-width: none; }
   .events-search { max-width: none; flex-basis: 100%; }
-  .nw-events-filters .nw-select { flex: 1 1 145px; min-width: 0; }
+  .nw-events-filters { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 8px !important; align-items: center !important; }
+  .events-search-trigger { width: 100% !important; max-width: 100% !important; height: 42px !important; min-height: 42px !important; }
+  .events-search { width: 100% !important; max-width: 100% !important; flex: 1 1 100% !important; }
+  .nw-events-filters .nw-select {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 120px !important;
+    width: auto !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    line-height: 38px !important;
+    padding: 0 10px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+  .nw-events-filters .nw-select:nth-of-type(3) {
+    flex: 1 1 100% !important;
+  }
   .events-create-modal { padding: 18px; }
   .events-mode-choice { grid-template-columns: 1fr; }
   .events-create-modal .nw-modal-actions { position: sticky; bottom: -18px; background: var(--nw-surface); }

@@ -1912,16 +1912,10 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 1fr;
   }
 
-  .nw-events-filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  .nw-events-filters { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
 
   .nw-events-filters .nw-input,
-  .nw-events-filters .nw-select {
-    width: 100%;
-    max-width: 100%;
-  }
+  .nw-events-filters .nw-select { height: 40px; min-height: 40px; max-height: 40px; box-sizing: border-box; }
 
   /* Plan & limits */
   .nw-limits-grid {
@@ -3548,10 +3542,42 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .event-detail-tabs .nw-tab { flex: 0 0 25%; justify-content: center; }
 }
 
+@media (max-width: 1024px) {
+  .event-location-bar {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1;
+    margin: 8px 0 16px;
+    padding: 8px 12px;
+    border: 1px solid var(--nw-border);
+    border-radius: var(--nw-radius-md);
+    background: var(--nw-surface);
+    box-shadow: var(--nw-shadow-sm);
+  }
+  .event-location-context { display: none; }
+  [data-event-section] { scroll-margin-top: 60px; }
+}
+
 @media (max-width: 700px) {
   .event-finder-result-meta { font-size: 10px; }
-  .event-location-bar { top: 54px; padding: 6px; }
-  .event-location-context { display: none; }
+  .event-location-bar {
+    padding: 6px 10px;
+    margin: 6px 0 14px;
+    border-radius: var(--nw-radius-sm);
+  }
+  .event-location-search {
+    padding: 0 9px;
+    font-size: 12px;
+    min-height: 32px;
+    gap: 5px;
+  }
+  .event-location-back {
+    width: 32px;
+    min-height: 32px;
+  }
+  .event-location-copy strong {
+    font-size: 13px;
+  }
   .event-guide-backdrop { align-items: flex-end; padding: 0; }
   .event-guide-dialog { width: 100%; max-height: 92dvh; border-radius: 8px 8px 0 0; }
   .event-guide-header { padding: 17px 16px 13px; }
@@ -3564,12 +3590,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .event-guide-content { padding: 18px 16px 24px; }
   .event-guide-content h3 { font-size: 21px; }
   .event-search-dialog { padding: 14px; max-height: 82vh; }
-  [data-event-section] { scroll-margin-top: 106px; }
-}
-
-@media (min-width: 701px) and (max-width: 1024px) {
-  .event-location-bar { top: 54px; }
-  [data-event-section] { scroll-margin-top: 106px; }
+  [data-event-section] { scroll-margin-top: 60px; }
 }
 
 @media (max-width: 640px) {
@@ -3618,3 +3639,95 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 
 
+
+/* Responsive Invitation Cards in Event Info Tab */
+.nw-invitation-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--nw-surface-2);
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius-sm);
+  box-shadow: var(--nw-shadow-sm);
+  box-sizing: border-box;
+  width: 100%;
+}
+.nw-invitation-meta {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 100%;
+}
+.nw-invitation-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nw-invitation-title {
+  font-size: 14.5px;
+  color: var(--nw-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.nw-invitation-slug {
+  color: var(--nw-text-3);
+  font-size: 12px;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.nw-invitation-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nw-invitation-item-actions .nw-btn {
+  height: 34px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.nw-invitations-card {
+  padding: 20px 20px 24px;
+}
+
+@media (max-width: 768px) {
+  .nw-invitations-card {
+    padding: 16px 14px;
+  }
+  .nw-invitation-item-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    gap: 12px;
+    min-height: auto !important;
+    height: auto !important;
+  }
+  .nw-invitation-meta {
+    flex: 0 0 auto !important;
+    width: 100%;
+    min-height: auto !important;
+  }
+  .nw-invitation-item-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 0 !important;
+  }
+  .nw-invitation-item-actions .nw-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12px;
+    justify-content: center;
+  }
+}

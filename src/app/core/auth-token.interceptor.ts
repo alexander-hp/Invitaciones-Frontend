@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { normalizeMediaUrlsDeep } from './utils/media-url';
 
 const TOKEN_KEY = 'invitaciones_token';
 
@@ -19,6 +20,13 @@ export class AuthTokenInterceptor implements HttpInterceptor {
       : req;
 
     return next.handle(authReq).pipe(
+      map((event: HttpEvent<unknown>) => {
+        if (event instanceof HttpResponse && event.body) {
+          const normalizedBody = normalizeMediaUrlsDeep(event.body);
+          return event.clone({ body: normalizedBody });
+        }
+        return event;
+      }),
       catchError((error: HttpErrorResponse) => {
         const isAuthEntryPoint = ['/auth/login', '/auth/register', '/auth/social'].some((path) => req.url.includes(path));
         const isPublicGuestUrl = ['/public/', '/external/'].some((path) => req.url.includes(path));

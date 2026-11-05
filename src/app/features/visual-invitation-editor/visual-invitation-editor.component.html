@@ -88,8 +88,18 @@
     <button type="button" class="draft-view-btn" (click)="openPublicVersion()"><lucide-icon name="external-link"
         [strokeWidth]="1.8"></lucide-icon><span>Ver pública</span></button>
   </div>
-  <div class="ve-notice error" *ngIf="error">{{ error }}</div>
-  <div class="ve-notice success" *ngIf="message">{{ message }}</div>
+  <div class="ve-toast-container" aria-live="polite">
+    <div class="ve-notice error" *ngIf="error">
+      <span class="ve-toast-icon">⚠️</span>
+      <span class="ve-toast-text">{{ error }}</span>
+      <button type="button" class="ve-toast-close" (click)="error = ''" title="Cerrar">✕</button>
+    </div>
+    <div class="ve-notice success" *ngIf="message">
+      <span class="ve-toast-icon">✓</span>
+      <span class="ve-toast-text">{{ message }}</span>
+      <button type="button" class="ve-toast-close" (click)="message = ''" title="Cerrar">✕</button>
+    </div>
+  </div>
   <section class="ve-tutorial" *ngIf="tutorialStep >= 0" role="region" aria-labelledby="tutorialTitle"
     aria-live="polite">
     <header><span>Guía del editor</span><button type="button" title="Cerrar guía" aria-label="Cerrar guía"
@@ -2110,14 +2120,15 @@
                   </div>
                 </ng-container>
               </div>
-              <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state">
+              <div *ngIf="section.layers.length === 0 && section.type === 'custom'" class="custom-empty-state"
+                (click)="selectSection(section)">
                 <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>
               </div>
               <div class="layer-surface" [attr.data-section-id]="section.id" [class.show-grid]="showGrid"
                 [class.show-safe-margins]="showSafeMargins"
                 [class.palette-drop-target]="paletteDropSectionId === section.id"
                 [class.marquee-active]="selectionMarquee?.sectionId === section.id"
-                (pointerdown)="beginMarquee($event, section)" (click)="$event.stopPropagation()"
+                (pointerdown)="beginMarquee($event, section)" (click)="onLayerSurfaceClick($event, section)"
                 (drop)="dropPaletteItem($event, section)">
                 <div class="palette-drop-message" *ngIf="paletteDropSectionId === section.id">Suelta aquí</div>
                 <div class="selection-marquee" *ngIf="selectionMarquee as marquee"

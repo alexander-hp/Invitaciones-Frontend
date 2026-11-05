@@ -2,6 +2,7 @@ import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { EventModel, EventType } from '../../core/models';
+import { normalizeMediaUrl } from '../../core/utils/media-url';
 
 @Component({ selector: 'app-new-events', templateUrl: './new-events.component.html', styleUrls: ['./new-events.component.css'] })
 export class NewEventsComponent implements OnInit {
@@ -11,6 +12,7 @@ export class NewEventsComponent implements OnInit {
   message = '';
   events: EventModel[] = [];
   coverImageMap: Record<string, string> = {};
+  coverImageErrors: Record<string, boolean> = {};
 
   filterType = '';
   filterStatus = '';
@@ -179,10 +181,16 @@ export class NewEventsComponent implements OnInit {
     });
   }
 
+  onCoverImageError(ev: EventModel): void {
+    const id = String(ev._id || ev.id || '').trim();
+    if (id) this.coverImageErrors[id] = true;
+  }
+
   getCoverImage(ev: EventModel): string {
     const id = String(ev._id || ev.id || '').trim();
-    if (this.coverImageMap[id]) return this.coverImageMap[id];
-    if (ev.externalContent?.coverImageUrl) return ev.externalContent.coverImageUrl;
+    if (this.coverImageErrors[id]) return '';
+    if (this.coverImageMap[id]) return normalizeMediaUrl(this.coverImageMap[id]);
+    if (ev.externalContent?.coverImageUrl) return normalizeMediaUrl(ev.externalContent.coverImageUrl);
     return '';
   }
 

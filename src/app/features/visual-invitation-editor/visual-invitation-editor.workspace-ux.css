@@ -254,7 +254,39 @@
 .design-import-options button:hover { background: rgba(192, 156, 120, 0.08); color: var(--nw-text, #2e2621); }
 .design-import-options button.active { border-bottom-color: var(--nw-accent, #c09c78); color: var(--nw-accent-dark, #8a6747); font-weight: 700; }
 .design-import-options button:focus-visible, .import-strategy button:focus-visible, .tool-collapse-toggle:focus-visible { outline: 2px solid var(--nw-accent, #c09c78); outline-offset: -2px; }
-.design-import-body .import-strategy { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; padding: 10px 0; border: 0; }
+
+  /* Clean AI Exchange Mobile Spacing (ai-exchange-step-clean-mobile) */
+  .ai-exchange {
+    margin-bottom: 8px !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+  .ai-exchange-step {
+    padding: 12px 14px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .ai-exchange-step > b {
+    flex: 0 0 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+  .ai-exchange-step > div {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .ai-exchange-step button {
+    align-self: flex-start !important;
+    min-height: 34px !important;
+    font-size: 11.5px !important;
+  }
+
+  .design-import-body .import-strategy { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; padding: 10px 0; border: 0; }
 .import-strategy legend { padding: 0 4px; color: var(--nw-text, #2e2621); font-size: 12px; font-weight: 700; margin-bottom: 8px; }
 .import-strategy button { display: grid; gap: 3px; min-width: 0; padding: 12px 14px; border: 1px solid var(--nw-border, #eadecc); border-radius: 12px; background: #fff; color: var(--nw-text, #2e2621); text-align: left; cursor: pointer; transition: all 0.15s ease; }
 .import-strategy button:hover { border-color: var(--nw-accent, #c09c78); background: var(--nw-surface-2, #faf8f5); }
@@ -456,7 +488,28 @@
   }
   .topbar-menu .mobile-preview-command { display: flex; }
   .ve-topbar .preview-command { display: none; }
-  .ve-stage { height: calc(100dvh - 54px); }
+  .ve-stage {
+    height: calc(100dvh - 54px);
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+  }
+  .layer-surface {
+    touch-action: pan-y !important;
+  }
+  .canvas-layer {
+    touch-action: pan-y !important;
+  }
+  .canvas-layer.selected,
+  .canvas-layer.dragging {
+    touch-action: none !important;
+  }
+  .resize-handle,
+  .rotate-handle,
+  .rotate-stem {
+    touch-action: none !important;
+  }
   /* Hide floating toolbar on mobile - bottom nav covers actions cleanly */
   .canvas-toolbar { display: none !important; }
   .touch-zoom-indicator { top: 64px; }

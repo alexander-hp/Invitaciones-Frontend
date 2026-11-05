@@ -129,7 +129,7 @@
           <div class="card-banner-bg" *ngIf="!getCoverImage(ev)"></div>
           <div class="card-banner-img-wrap" *ngIf="getCoverImage(ev)">
             <img [src]="getCoverImage(ev)" class="card-cover-blur-bg" alt="">
-            <img [src]="getCoverImage(ev)" class="card-cover-main-img" alt="Portada">
+            <img [src]="getCoverImage(ev)" class="card-cover-main-img" alt="" (error)="onCoverImageError(ev)">
             <div class="card-banner-img-darkener"></div>
           </div>
 

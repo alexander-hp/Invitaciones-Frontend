@@ -12,6 +12,7 @@ import {
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationLayerStyle,
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
 } from '../../core/models';
+import { normalizeMediaUrl } from '../../core/utils/media-url';
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
 import { VisualDesignImporterService, VisualDesignImportReview, VisualDesignImportReviewStatus } from './visual-design-importer.service';
@@ -599,6 +600,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private clipboardSectionId?: string;
   private autosaveHandle?: ReturnType<typeof setInterval>;
   private touchZoomHideHandle?: ReturnType<typeof setTimeout>;
+  private canvasZoomRafHandle: number | null = null;
   private locationSearchTimeouts: Record<number, ReturnType<typeof setTimeout>> = {};
   private lastSavedSnapshot = '';
   private suppressNextLayerClickId = '';
@@ -878,10 +880,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private attachStageGestureListeners(): void {
-    this.stageElement?.addEventListener('pointerdown', this.stagePointerDown, { capture: true, passive: false });
-    this.stageElement?.addEventListener('pointermove', this.stagePointerMove, { capture: true, passive: false });
-    this.stageElement?.addEventListener('pointerup', this.stagePointerEnd, { capture: true, passive: false });
-    this.stageElement?.addEventListener('pointercancel', this.stagePointerEnd, { capture: true, passive: false });
+    this.ngZone.runOutsideAngular(() => {
+      this.stageElement?.addEventListener('pointerdown', this.stagePointerDown, { capture: true, passive: false });
+      this.stageElement?.addEventListener('pointermove', this.stagePointerMove, { capture: true, passive: false });
+      this.stageElement?.addEventListener('pointerup', this.stagePointerEnd, { capture: true, passive: false });
+      this.stageElement?.addEventListener('pointercancel', this.stagePointerEnd, { capture: true, passive: false });
+    });
   }
 
   private detachStageGestureListeners(): void {
@@ -986,17 +990,30 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.canvasZoom = nextZoom;
     this.stageElement.scrollLeft = (this.canvasGesture.startScrollLeft + localStartX) * zoomRatio - localCurrentX;
     this.stageElement.scrollTop = (this.canvasGesture.startScrollTop + localStartY) * zoomRatio - localCurrentY;
-    this.showTouchZoom(`${Math.round(nextZoom * 100)}%`);
+    if (this.canvasZoomRafHandle === null) {
+      this.canvasZoomRafHandle = requestAnimationFrame(() => {
+        this.canvasZoomRafHandle = null;
+        this.showTouchZoom(`${Math.round(nextZoom * 100)}%`);
+        this.cdr.detectChanges();
+      });
+    }
   }
 
   private trackCanvasPointerEnd(event: PointerEvent): void {
     if (event.pointerType !== 'touch') return;
     this.touchPointers.delete(event.pointerId);
     if (this.touchPointers.size >= 2) return;
+    if (this.canvasZoomRafHandle !== null) {
+      cancelAnimationFrame(this.canvasZoomRafHandle);
+      this.canvasZoomRafHandle = null;
+    }
     this.canvasGesture = undefined;
     this.imageCropGesture = undefined;
     this.touchGestureActive = false;
     this.scheduleTouchZoomHide();
+    this.ngZone.run(() => {
+      this.cdr.detectChanges();
+    });
   }
 
   private cancelCanvasInteraction(): void {
@@ -2491,6 +2508,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.selectedSectionId = section.id;
     this.selectedPluginPartKey = '';
     this.clearLayerSelection();
+    this.cdr.detectChanges();
+  }
+
+  onLayerSurfaceClick(event: MouseEvent, section: VisualInvitationSection): void {
+    event.stopPropagation();
+    if (this.selectedSectionId !== section.id) {
+      this.selectSection(section);
+    }
+    if (event.target === event.currentTarget) {
+      if (this.selectedLayerIds.length > 0) {
+        this.clearLayerSelection();
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   selectLayer(section: VisualInvitationSection, layer: VisualInvitationLayer, event: MouseEvent): void {
@@ -2505,6 +2536,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (this.croppingLayerId && this.croppingLayerId !== layer.id) this.croppingLayerId = '';
     this.applyLayerSelection(section, layer, event.shiftKey);
     this.inspectorView = 'properties';
+    this.cdr.detectChanges();
   }
 
   selectLayerFromPanel(layer: VisualInvitationLayer, event: MouseEvent): void {
@@ -2542,6 +2574,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.selectedSectionId = match.id;
         this.setLayerSelection(match.layers[0] ? [match.layers[0].id] : []);
         this.maybeCloseMobileTools();
+        setTimeout(() => {
+          const el = document.querySelector(`[data-section-id="${match.id}"]`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
+        this.cdr.detectChanges();
         return;
       }
     }
@@ -2614,6 +2651,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.selectedSectionId = section.id;
     this.setLayerSelection(section.layers[0] ? [section.layers[0].id] : []);
     this.maybeCloseMobileTools();
+    setTimeout(() => {
+      const el = document.querySelector(`[data-section-id="${section.id}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+    this.cdr.detectChanges();
   }
 
   addLayer(type: VisualLayerType): void {
@@ -3728,7 +3770,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         if (targetLayer) targetLayer.url = previousTargetUrl;
         siblingReverts.forEach((s) => s.frame.url = s.url);
         this.uploading = false;
-        this.error = error?.error?.message || 'No fue posible subir los archivos.';
+        this.flashError(error?.error?.message || 'No fue posible subir los archivos.');
       }
     });
   }
@@ -3764,7 +3806,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.uploading = false;
         fileInput.value = '';
-        this.error = error?.error?.message || 'No fue posible subir uno de los archivos.';
+        this.flashError(error?.error?.message || 'No fue posible subir uno de los archivos.');
       }
     });
   }
@@ -4036,16 +4078,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   beginLayerDrag(event: PointerEvent, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
     if (layer.locked || this.resizing || this.editingLayerId === layer.id || this.croppingLayerId === layer.id || (event.target as HTMLElement).closest('.resize-handle, .rotate-handle, .layer-toolbar, .inline-text-editor, .crop-toolbar, audio, video, button, input')) return;
-    event.preventDefault();
-    event.stopPropagation();
+
+    const isTouch = event.pointerType === 'touch';
+    const isAlreadySelected = this.selectedLayerIds.includes(layer.id);
+
+    if (isTouch) {
+      if (!isAlreadySelected) {
+        // Instant selection on touch: apply selection and detect changes immediately!
+        this.applyLayerSelection(section, layer, event.shiftKey);
+        this.inspectorView = 'properties';
+        this.cdr.detectChanges();
+        // Crucial: Do NOT call event.preventDefault() here!
+        // This preserves native touch scrolling if the user is swiping to scroll.
+        return;
+      }
+      // If already selected, user is deliberately dragging the selected layer.
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.shiftKey) {
+        this.applyLayerSelection(section, layer, true);
+        this.suppressNextLayerClickId = layer.id;
+        return;
+      }
+      if (!isAlreadySelected) {
+        this.applyLayerSelection(section, layer, false);
+      }
+    }
+
     const canvas = (event.currentTarget as HTMLElement).closest('.layer-surface') as HTMLElement;
     if (!canvas) return;
-    if (event.shiftKey) {
-      this.applyLayerSelection(section, layer, true);
-      this.suppressNextLayerClickId = layer.id;
-      return;
-    }
-    if (!this.selectedLayerIds.includes(layer.id)) this.applyLayerSelection(section, layer, false);
     const items = this.selectedLayers.filter((item) => !item.locked).map((item) => {
       const layout = this.editableLayout(item);
       const domEl = canvas.querySelector(`[data-layer-id="${item.id}"]`) as HTMLElement | null;
@@ -4067,7 +4131,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   beginMarquee(event: PointerEvent, section: VisualInvitationSection): void {
-    if (event.button !== 0 || this.paletteDragItem || event.target !== event.currentTarget) return;
+    if (this.selectedSectionId !== section.id) {
+      this.selectSection(section);
+      this.cdr.detectChanges();
+    }
+    if (event.pointerType === 'touch' || event.button !== 0 || this.paletteDragItem || event.target !== event.currentTarget) return;
     event.preventDefault();
     event.stopPropagation();
     const canvas = event.currentTarget as HTMLElement;
@@ -4422,6 +4490,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           item.layout.x = this.bound(item.x + dx, -100, 200);
           const itemRange = this.verticalLayerBounds(drag.section, item.height);
           item.layout.y = this.bound(item.y + dy, itemRange.min, itemRange.max);
+          if (item.layer !== item.layout) {
+            item.layer.x = item.layout.x;
+            item.layer.y = item.layout.y;
+          }
+        }
+
+        // Cross-section layer transfer in continuous mode
+        if (this.design.presentationMode !== 'chapters' && this.design.sections.length > 1) {
+          const primaryItem = drag.items.find((it) => it.layer.id === drag.layer.id) || drag.items[0];
+          const sourceOffset = visualSectionOffset(this.design.sections, drag.section);
+          const sourceHeight = visualSectionHeight(drag.section);
+          const primaryTopPx = sourceOffset + (primaryItem.layout.y / 100) * sourceHeight;
+          const primaryHeightPx = (primaryItem.layout.height / 100) * sourceHeight;
+          const primaryCenterPx = primaryTopPx + primaryHeightPx / 2;
+
+          let accumulated = 0;
+          let targetSection: VisualInvitationSection | null = null;
+          for (const s of this.design.sections) {
+            const sH = visualSectionHeight(s);
+            if (primaryCenterPx >= accumulated && primaryCenterPx < accumulated + sH) {
+              targetSection = s;
+              break;
+            }
+            accumulated += sH;
+          }
+          if (!targetSection) {
+            if (primaryCenterPx >= accumulated && this.design.sections.length > 0) {
+              targetSection = this.design.sections[this.design.sections.length - 1];
+            } else if (this.design.sections.length > 0) {
+              targetSection = this.design.sections[0];
+            }
+          }
+
+          if (targetSection && targetSection.id !== drag.section.id) {
+            for (const item of drag.items) {
+              this.transferLayerBetweenSections(item.layer, drag.section, targetSection);
+            }
+            this.selectedSectionId = targetSection.id;
+            this.expandedSectionCardId = targetSection.id;
+          }
         }
       }
       if (drag.moved) this.suppressNextLayerClickId = drag.layer.id;
@@ -5426,16 +5534,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   boundImageUrl(layer: VisualInvitationLayer): string {
-    if (layer.binding === 'gallery.carousel.image') return this.invitation?.content?.galleryItems?.[0]?.url || layer.url || '';
-    const galleryImageMatch = String(layer.binding || '').match(/^gallery\.item\.(\d+)\.image$/);
-    if (galleryImageMatch) return this.invitation?.content?.galleryItems?.[Number(galleryImageMatch[1])]?.url || layer.url || '';
-    if (layer.binding === 'dress.image') return this.invitation?.content?.dressCodeImageUrl || layer.url || '';
-    const lodgingImageMatch = String(layer.binding || '').match(/^lodging\.(\d+)\.image$/);
-    if (lodgingImageMatch) return this.invitation?.content?.lodging?.[Number(lodgingImageMatch[1])]?.imageUrl || layer.url || '';
-    const giftMatch = String(layer.binding || '').match(/^gift\.(\d+)\.image$/);
-    if (giftMatch) return resolveGiftStoreLogo(this.invitation?.content?.giftRegistry?.[Number(giftMatch[1])], layer.url || '');
-    if (layer.binding === 'envelope.qr') return this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
-    return layer.url || '';
+    let resolved = '';
+    if (layer.binding === 'gallery.carousel.image') resolved = this.invitation?.content?.galleryItems?.[0]?.url || layer.url || '';
+    else if (String(layer.binding || '').match(/^gallery\.item\.(\d+)\.image$/)) {
+      const match = String(layer.binding || '').match(/^gallery\.item\.(\d+)\.image$/)!;
+      resolved = this.invitation?.content?.galleryItems?.[Number(match[1])]?.url || layer.url || '';
+    } else if (layer.binding === 'dress.image') resolved = this.invitation?.content?.dressCodeImageUrl || layer.url || '';
+    else if (String(layer.binding || '').match(/^lodging\.(\d+)\.image$/)) {
+      const match = String(layer.binding || '').match(/^lodging\.(\d+)\.image$/)!;
+      resolved = this.invitation?.content?.lodging?.[Number(match[1])]?.imageUrl || layer.url || '';
+    } else if (String(layer.binding || '').match(/^gift\.(\d+)\.image$/)) {
+      const match = String(layer.binding || '').match(/^gift\.(\d+)\.image$/)!;
+      resolved = resolveGiftStoreLogo(this.invitation?.content?.giftRegistry?.[Number(match[1])], layer.url || '');
+    } else if (layer.binding === 'envelope.qr') resolved = this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
+    else resolved = layer.url || '';
+    return normalizeMediaUrl(resolved);
   }
 
   editorLayerText(layer: VisualInvitationLayer): string {
@@ -6401,7 +6514,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.uploading = false;
         fileInput.value = '';
       },
-      error: () => { this.uploading = false; this.error = 'No fue posible subir el archivo.'; }
+      error: (error) => { this.uploading = false; this.flashError(error?.error?.message || 'No fue posible subir el archivo.'); }
     });
   }
 
@@ -9998,7 +10111,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private startAutosave(): void {
     if (this.autosaveHandle) clearInterval(this.autosaveHandle);
-    this.autosaveHandle = setInterval(() => this.autoSave(), 5000);
+    this.autosaveHandle = setInterval(() => this.autoSave(), 12000);
   }
 
   private autoSave(): void {
@@ -10180,6 +10293,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     setTimeout(() => { if (this.message === message) this.message = ''; }, 2500);
   }
 
+  private errorTimeout: any = null;
+
+  flashError(message: string, duration = 4000): void {
+    let clean = message;
+    if (!clean || clean.includes('/api/media/') || clean.includes('X-Amz-') || clean.includes('Ruta no encontrada') || clean.includes('Http failure')) {
+      clean = 'No fue posible subir el archivo. Inténtalo de nuevo.';
+    }
+    this.error = clean;
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+    this.errorTimeout = setTimeout(() => {
+      if (this.error === clean) this.error = '';
+    }, duration);
+    this.cdr.detectChanges();
+  }
+
   private uid(prefix: string): string {
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   }
@@ -10258,6 +10386,107 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         }
       }
     }
+    this.reconcileOverflowingLayers();
+  }
+
+  private reconcileOverflowingLayers(): void {
+    if (this.design.presentationMode === 'chapters' || !this.design.sections || this.design.sections.length <= 1) return;
+    const sections = [...this.design.sections];
+    for (const sourceSection of sections) {
+      const sourceOffset = visualSectionOffset(this.design.sections, sourceSection);
+      const sourceHeight = visualSectionHeight(sourceSection);
+      const layersToMove: VisualInvitationLayer[] = [];
+
+      for (const layer of sourceSection.layers) {
+        if (layer.locked) continue;
+        const layout = this.layoutFor(layer);
+        const topPx = sourceOffset + (layout.y / 100) * sourceHeight;
+        const heightPx = (layout.height / 100) * sourceHeight;
+        const centerPx = topPx + heightPx / 2;
+
+        if (centerPx < sourceOffset || centerPx >= sourceOffset + sourceHeight) {
+          let accumulated = 0;
+          let targetSection: VisualInvitationSection | null = null;
+          for (const s of this.design.sections) {
+            const sH = visualSectionHeight(s);
+            if (centerPx >= accumulated && centerPx < accumulated + sH) {
+              targetSection = s;
+              break;
+            }
+            accumulated += sH;
+          }
+          if (targetSection && targetSection.id !== sourceSection.id) {
+            layersToMove.push(layer);
+          }
+        }
+      }
+
+      for (const layer of layersToMove) {
+        const layout = this.layoutFor(layer);
+        const topPx = sourceOffset + (layout.y / 100) * sourceHeight;
+        const heightPx = (layout.height / 100) * sourceHeight;
+        const centerPx = topPx + heightPx / 2;
+        let accumulated = 0;
+        let targetSection: VisualInvitationSection | null = null;
+        for (const s of this.design.sections) {
+          const sH = visualSectionHeight(s);
+          if (centerPx >= accumulated && centerPx < accumulated + sH) {
+            targetSection = s;
+            break;
+          }
+          accumulated += sH;
+        }
+        if (targetSection && targetSection.id !== sourceSection.id) {
+          this.transferLayerBetweenSections(layer, sourceSection, targetSection);
+        }
+      }
+    }
+  }
+
+  private transferLayerBetweenSections(
+    layer: VisualInvitationLayer,
+    sourceSection: VisualInvitationSection,
+    targetSection: VisualInvitationSection
+  ): void {
+    if (sourceSection.id === targetSection.id) return;
+    const sourceOffset = visualSectionOffset(this.design.sections, sourceSection);
+    const sourceHeight = visualSectionHeight(sourceSection);
+    const targetOffset = visualSectionOffset(this.design.sections, targetSection);
+    const targetHeight = visualSectionHeight(targetSection);
+
+    // Convert base layer
+    const baseTopPx = sourceOffset + (this.finiteNumber(layer.y, 0) / 100) * sourceHeight;
+    const baseHeightPx = (this.finiteNumber(layer.height, 30) / 100) * sourceHeight;
+    const baseTargetY = ((baseTopPx - targetOffset) / targetHeight) * 100;
+    const baseTargetH = (baseHeightPx / targetHeight) * 100;
+    layer.y = Math.round(this.bound(baseTargetY, 0, Math.max(0, 100 - baseTargetH)) * 10) / 10;
+    layer.height = Math.round(Math.max(1, baseTargetH) * 10) / 10;
+
+    // Convert device layouts if present
+    if (layer.layouts) {
+      for (const d of ['mobile', 'tablet', 'desktop'] as DeviceMode[]) {
+        const dLayout = layer.layouts[d];
+        if (dLayout) {
+          const dTopPx = sourceOffset + (this.finiteNumber(dLayout.y, 0) / 100) * sourceHeight;
+          const dHeightPx = (this.finiteNumber(dLayout.height, 30) / 100) * sourceHeight;
+          const dTargetY = ((dTopPx - targetOffset) / targetHeight) * 100;
+          const dTargetH = (dHeightPx / targetHeight) * 100;
+          dLayout.y = Math.round(this.bound(dTargetY, 0, Math.max(0, 100 - dTargetH)) * 10) / 10;
+          dLayout.height = Math.round(Math.max(1, dTargetH) * 10) / 10;
+        }
+      }
+    }
+
+    // Remove from source section
+    const idx = sourceSection.layers.indexOf(layer);
+    if (idx >= 0) {
+      sourceSection.layers.splice(idx, 1);
+    }
+
+    // Add to target section
+    const maxZ = Math.max(0, ...targetSection.layers.map((l) => l.zIndex || 0));
+    layer.zIndex = maxZ + 1;
+    targetSection.layers.push(layer);
   }
 
   private normalizeStoredLayout(layout: VisualInvitationLayerLayout): void {

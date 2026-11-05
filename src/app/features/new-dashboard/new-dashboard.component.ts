@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { DashboardMetrics, EventModel, EventType } from '../../core/models';
+import { normalizeMediaUrl } from '../../core/utils/media-url';
 
 @Component({ selector: 'app-new-dashboard', templateUrl: './new-dashboard.component.html' })
 export class NewDashboardComponent implements OnInit {
@@ -102,8 +103,8 @@ export class NewDashboardComponent implements OnInit {
 
   getCoverImage(ev: EventModel): string {
     const id = String(ev._id || ev.id || '').trim();
-    if (this.coverImageMap[id]) return this.coverImageMap[id];
-    if (ev.externalContent?.coverImageUrl) return ev.externalContent.coverImageUrl;
+    if (this.coverImageMap[id]) return normalizeMediaUrl(this.coverImageMap[id]);
+    if (ev.externalContent?.coverImageUrl) return normalizeMediaUrl(ev.externalContent.coverImageUrl);
     return '';
   }
 
