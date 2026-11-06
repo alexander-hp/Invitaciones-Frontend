@@ -1,6 +1,8 @@
+import { environment } from '../../../environments/environment';
+
 /**
  * Utility to normalize media URLs (MinIO / S3 / local uploads).
- * Proxies port 9000 media through the Backend (port 4000) so that mobile phones
+ * Proxies port 9000 media through the Backend so that mobile phones
  * and local network clients can load all assets without port 9000 firewall blocks.
  */
 export function normalizeMediaUrl(url: string | null | undefined): string {
@@ -11,13 +13,7 @@ export function normalizeMediaUrl(url: string | null | undefined): string {
   const minioMatch = trimmed.match(/^https?:\/\/[^/]+:9000\/(.+)$/i);
   if (minioMatch) {
     const mediaPath = minioMatch[1];
-    const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname)
-      ? window.location.hostname
-      : 'localhost';
-    const protocol = (typeof window !== 'undefined' && window.location && window.location.protocol)
-      ? window.location.protocol
-      : 'http:';
-    return `${protocol}//${hostname}:4000/api/media/${mediaPath}`;
+    return `${environment.apiUrl}/media/${mediaPath}`;
   }
 
   return trimmed;
@@ -25,24 +21,17 @@ export function normalizeMediaUrl(url: string | null | undefined): string {
 
 /**
  * Deep recursive normalizer for objects / arrays returned by backend APIs.
- * Automatically rewrites all :9000 URLs in API responses to backend proxy port 4000.
+ * Automatically rewrites all :9000 URLs in API responses to backend proxy.
  */
 export function normalizeMediaUrlsDeep<T>(value: T): T {
   if (!value) return value;
-
-  const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname)
-    ? window.location.hostname
-    : 'localhost';
-  const targetProtocol = (typeof window !== 'undefined' && window.location && window.location.protocol)
-    ? window.location.protocol
-    : 'http:';
 
   const regex = /https?:\/\/[^/]+:9000\/([^"'\\)\s]+)/gi;
 
   const process = (item: any): any => {
     if (typeof item === 'string') {
       return item.replace(regex, (_match, path) => {
-        return `${targetProtocol}//${hostname}:4000/api/media/${path}`;
+        return `${environment.apiUrl}/media/${path}`;
       });
     }
     if (Array.isArray(item)) {
