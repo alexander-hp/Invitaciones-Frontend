@@ -15,7 +15,8 @@ export class AuthTokenInterceptor implements HttpInterceptor {
     const token = localStorage.getItem(TOKEN_KEY);
     const isApiRequest = req.url.startsWith(environment.apiUrl);
     const isPublicGuestRequest = /\/(public|external)\//.test(req.url);
-    const authReq = token && isApiRequest && !isPublicGuestRequest && !req.headers.has('Authorization')
+    const isMediaUpload = /\/api\/media\//.test(req.url) || req.url.includes('X-Amz-');
+    const authReq = token && isApiRequest && !isPublicGuestRequest && !isMediaUpload && !req.headers.has('Authorization')
       ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
       : req;
 
