@@ -127,7 +127,49 @@
 .media-drop-badge lucide-icon{width:13px;height:13px;color:var(--nw-accent, #c09c78);flex-shrink:0;pointer-events:none !important}
 .media-drop-badge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none !important}
 .composite-frame-list button.file-drop-target{border-color:var(--nw-accent, #c09c78);background:var(--nw-surface-2, #faf8f5);outline:2px solid var(--nw-accent, #c09c78);outline-offset:-2px}
-.frame-empty{box-sizing:border-box;overflow:hidden}
-.frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:8px;background:var(--nw-surface-2, #f5f1ea);color:var(--nw-text-2, #6e6157);font-size:11px;text-align:center;pointer-events:none}
+.frame-empty{box-sizing:border-box;overflow:hidden;position:relative}
+.frame-empty span{display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:4px;background:var(--nw-surface-2, #f5f1ea);color:var(--nw-text-2, #6e6157);font-size:11px;text-align:center;pointer-events:none}
+.frame-empty-btn{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  width:100%;
+  height:100%;
+  padding:8px 6px;
+  border:1.5px dashed var(--nw-accent, #c09c78);
+  border-radius:inherit;
+  background:var(--nw-surface-2, #f5f1ea);
+  color:var(--nw-text-2, #6e6157);
+  cursor:pointer;
+  box-sizing:border-box;
+  text-decoration:none;
+  transition:all .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.frame-empty-btn:hover,
+.frame-empty-btn:active{
+  background:var(--nw-accent-glow-strong, rgba(192,156,120,0.22));
+  border-color:var(--nw-accent-dark, #8a6747);
+  color:var(--nw-accent-dark, #8a6747);
+}
+.frame-empty-btn .frame-empty-icon{
+  width:22px;
+  height:22px;
+  color:var(--nw-accent, #c09c78);
+  flex-shrink:0;
+}
+.frame-empty-btn span{
+  display:block !important;
+  font-size:11px;
+  font-weight:600;
+  text-align:center;
+  line-height:1.25;
+  pointer-events:none;
+  background:transparent !important;
+  color:inherit !important;
+  padding:0 !important;
+}
 
 

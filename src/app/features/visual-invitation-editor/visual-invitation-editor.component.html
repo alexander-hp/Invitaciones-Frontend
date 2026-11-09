@@ -2184,8 +2184,15 @@
                     (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''"
                       [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                   <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder frame-empty"
-                    [ngStyle]="imageMaskStyle(layer)"><span
-                      [ngStyle]="framePreviewStyle(layer.style?.imageMask || 'none')">Arrastra una foto</span></div>
+                    [ngStyle]="imageMaskStyle(layer)">
+                    <button type="button" class="frame-empty-btn" (click)="onEmptyFrameClick($event, layer, section)"
+                      [title]="isMobileScreen ? 'Toca para abrir la galería y elegir foto' : 'Haz clic o arrastra para elegir foto'">
+                      <lucide-icon name="image" [strokeWidth]="1.8" class="frame-empty-icon"></lucide-icon>
+                      <span [ngStyle]="framePreviewStyle(layer.style?.imageMask || 'none')">
+                        {{ isMobileScreen ? 'Toca para abrir la galería' : 'Arrastra o haz clic para abrir la galería' }}
+                      </span>
+                    </button>
+                  </div>
                   <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
                   <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type"
                     [url]="layer.url || ''" [label]="layer.name || layer.text || ''"
@@ -3829,6 +3836,13 @@
         (click)="clearMobileSelection()">×</button>
     </header>
     <div class="mobile-selection-actions">
+      <button *ngIf="selectedLayerCount === 1 && selectedLayer as layer"
+        [hidden]="layer.type !== 'image' || layer.locked" type="button"
+        [title]="boundImageUrl(layer) ? 'Cambiar foto de la galería' : 'Elegir foto de la galería'"
+        (click)="triggerMobilePhotoUpload(layer)">
+        <lucide-icon name="image" [strokeWidth]="1.8"></lucide-icon>
+        <span>{{ boundImageUrl(layer) ? 'Cambiar' : 'Galería' }}</span>
+      </button>
       <button type="button" title="Editar propiedades" (click)="openMobileInspector()">
         <lucide-icon name="sliders-horizontal" [strokeWidth]="1.8"></lucide-icon>
         <span>Editar</span>
@@ -3888,4 +3902,13 @@
       <span>Descargar</span>
     </button>
   </nav>
+
+  <!-- Input oculto para abrir selector de fotos/galería nativo del móvil -->
+  <input
+    #mobilePhotoPicker
+    id="ve-mobile-photo-input"
+    type="file"
+    accept="image/*"
+    style="display: none;"
+    (change)="onMobilePhotoSelected(mobilePhotoPicker)">
 </div>

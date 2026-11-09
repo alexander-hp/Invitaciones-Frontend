@@ -2685,6 +2685,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     section.layers.push(layer);
     this.setLayerSelection([layer.id]);
     this.maybeCloseMobileTools();
+    if (type === 'image' && this.isMobileScreen) {
+      this.triggerMobilePhotoUpload(layer);
+    }
   }
 
   addMainMusicControl(): void {
@@ -4247,6 +4250,89 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.imageCropGesture = undefined;
     this.touchGestureActive = false;
     this.croppingLayerId = '';
+  }
+
+  mobileTargetLayerForUpload?: VisualInvitationLayer;
+
+  triggerMobilePhotoUpload(layer?: VisualInvitationLayer): void {
+    const target = layer || this.selectedLayer;
+    if (!target) return;
+    this.mobileTargetLayerForUpload = target;
+    const input = document.getElementById('ve-mobile-photo-input') as HTMLInputElement | null;
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  }
+
+  onEmptyFrameClick(event: MouseEvent, layer: VisualInvitationLayer, section: VisualInvitationSection): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.selectLayer(section, layer, event);
+    this.triggerMobilePhotoUpload(layer);
+  }
+
+  onMobilePhotoSelected(input: HTMLInputElement): void {
+    const file = input.files?.[0];
+    if (!file || !this.invitation) return;
+
+    const targetLayer = this.mobileTargetLayerForUpload || this.selectedLayer;
+    if (!targetLayer) return;
+
+    const eventId = typeof this.invitation.event === 'string'
+      ? this.invitation.event
+      : (this.invitation.event._id || this.invitation.event.id);
+
+    const previousUrl = targetLayer.url;
+    const blobUrl = URL.createObjectURL(file);
+    targetLayer.url = blobUrl;
+    targetLayer.name = file.name;
+    if (!targetLayer.style?.objectFit) {
+      targetLayer.style = { ...(targetLayer.style || {}), objectFit: 'cover' };
+    }
+    this.recordHistory();
+    this.cdr.detectChanges();
+
+    this.uploading = true;
+    this.api.createUploadUrl({
+      fileName: file.name,
+      contentType: file.type || 'image/jpeg',
+      folder: 'assets',
+      event: eventId,
+      size: file.size
+    }).pipe(
+      switchMap(({ uploadUrl, publicUrl }) =>
+        this.api.uploadAsset(uploadUrl, file).pipe(map(() => publicUrl))
+      )
+    ).subscribe({
+      next: (publicUrl) => {
+        try { URL.revokeObjectURL(blobUrl); } catch {}
+        targetLayer.url = publicUrl;
+        this.design.assets = this.design.assets || [];
+        if (!this.design.assets.some((a) => a.url === publicUrl)) {
+          this.design.assets.push({
+            id: this.uid('asset'),
+            url: publicUrl,
+            type: 'image',
+            name: file.name,
+            createdAt: new Date().toISOString()
+          });
+        }
+        this.uploading = false;
+        this.autosaveState = 'Cambios pendientes';
+        this.flash('Foto agregada con éxito.');
+        input.value = '';
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        try { URL.revokeObjectURL(blobUrl); } catch {}
+        targetLayer.url = previousUrl;
+        this.uploading = false;
+        input.value = '';
+        this.flashError(err?.error?.message || 'No fue posible subir la foto.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   beginImageCropPan(event: PointerEvent, layer: VisualInvitationLayer): void {
