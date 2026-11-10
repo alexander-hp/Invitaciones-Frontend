@@ -1,4 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
 import {
@@ -159,9 +161,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     const id = (this.event._id || this.event.id)!;
     this.loadingData = true;
 
-    if (this.event?.externalContent?.coverImageUrl) {
-      this.coverImageUrl = this.event.externalContent.coverImageUrl;
-    }
+    this.coverImageUrl = this.event?.externalContent?.coverImageUrl || '';
 
     if (this.isOwner()) this.apiService.listInvitations().subscribe({
       next: res => {
@@ -172,6 +172,8 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
         const invWithCover = this.invitations.find(i => !!i.content?.coverImageUrl);
         if (invWithCover?.content?.coverImageUrl) {
           this.coverImageUrl = invWithCover.content.coverImageUrl;
+        } else if (!this.event?.externalContent?.coverImageUrl) {
+          this.coverImageUrl = '';
         }
       },
       error: () => {}
@@ -853,36 +855,50 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     const targetEventId = (this.event?._id || this.event?.id)!;
     if (!targetEventId) return;
 
-    const extContent = { ...(this.event.externalContent || {}), coverImageUrl: url };
-    this.event.externalContent = extContent;
+    this.uploadingCover = true;
+    const extContent: any = { ...(this.event.externalContent || {}) };
+    extContent.coverImageUrl = url;
 
-    if (this.invitations.length > 0) {
-      const inv = this.invitations[0];
+    const invObservables = (this.invitations || []).map(inv => {
       const invId = (inv._id || inv.id)!;
-      const updatedContent = { ...(inv.content || {}), coverImageUrl: url };
-      delete (updatedContent as any).template;
-      this.apiService.updateInvitation(invId, { content: updatedContent }).subscribe({
-        next: res => {
-          inv.content = res.invitation.content;
-          this.coverImageUrl = url;
-          this.uploadingCover = false;
-          if (input) input.value = '';
-          this.showSuccess(url ? '✨ ¡Foto principal guardada con éxito!' : '🗑️ Foto principal eliminada.');
-          this.eventUpdated.emit();
-        },
-        error: () => {
-          this.updateEventCover(targetEventId, extContent, url, input);
-        }
-      });
-    } else {
-      this.updateEventCover(targetEventId, extContent, url, input);
-    }
-  }
+      const updatedContent = JSON.parse(JSON.stringify(inv.content || {}));
+      updatedContent.coverImageUrl = url;
+      delete updatedContent.template;
+      delete updatedContent._id;
 
-  private updateEventCover(eventId: string, extContent: any, url: string, input?: HTMLInputElement): void {
-    this.apiService.updateEvent(eventId, { externalContent: extContent }).subscribe({
+      return this.apiService.updateInvitation(invId, { content: updatedContent }).pipe(
+        tap(res => {
+          if (res?.invitation?.content) {
+            inv.content = res.invitation.content;
+          } else if (inv.content) {
+            inv.content.coverImageUrl = url;
+          }
+        }),
+        catchError(err => {
+          console.warn('Error al actualizar portada en invitación', invId, err);
+          return of(null);
+        })
+      );
+    });
+
+    const updateEvent$ = this.apiService.updateEvent(targetEventId, { externalContent: extContent }).pipe(
+      catchError(err => {
+        console.warn('Error al actualizar portada en evento', targetEventId, err);
+        return of(null);
+      })
+    );
+
+    forkJoin([updateEvent$, ...invObservables]).subscribe({
       next: () => {
         this.coverImageUrl = url;
+        if (this.event) {
+          this.event.externalContent = extContent;
+        }
+        (this.invitations || []).forEach(inv => {
+          if (inv.content) {
+            inv.content.coverImageUrl = url;
+          }
+        });
         this.uploadingCover = false;
         if (input) input.value = '';
         this.showSuccess(url ? '✨ ¡Foto principal guardada con éxito!' : '🗑️ Foto principal eliminada.');

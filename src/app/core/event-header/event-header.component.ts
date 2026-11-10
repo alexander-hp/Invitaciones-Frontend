@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { EventModel } from '../models';
 
 @Component({
@@ -9,6 +9,12 @@ export class EventHeaderComponent {
   @Input() event?: EventModel;
   @Input() backUrl: string = '/new/events';
   @Input() backLabel: string = 'Eventos';
+  @Input() subtitle: string = '';
+  @Output() summaryClick = new EventEmitter<void>();
+
+  onSummaryClick(): void {
+    this.summaryClick.emit();
+  }
 
   getNormalizedEventType(eventObj?: EventModel | string): string {
     let type = typeof eventObj === 'string' ? eventObj : eventObj?.type;

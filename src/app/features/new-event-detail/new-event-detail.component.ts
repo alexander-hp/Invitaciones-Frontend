@@ -331,6 +331,13 @@ export class NewEventDetailComponent implements OnInit {
     return examples.map(key => this.quickLinks.find(link => link.key === key)).filter((link): link is EventQuickLink => !!link);
   }
 
+  get currentSubtitle(): string {
+    if (this.activeTab === 'info' && !this.selectedSection) {
+      return 'Resumen del evento';
+    }
+    return this.currentLocationLabel;
+  }
+
   get currentLocationLabel(): string {
     if (this.selectedSection) return this.quickLinks.find(link => link.tab === this.activeTab && link.section === this.selectedSection)?.label || 'Información';
     const labels: Partial<Record<Tab, string>> = {
@@ -376,6 +383,18 @@ export class NewEventDetailComponent implements OnInit {
     } else if (event.key === 'Enter' && this.quickSearchResults.length) {
       event.preventDefault();
       this.openQuickLink(this.quickSearchResults[0]);
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      if (this.showQuickSearch) {
+        this.closeQuickSearch();
+      } else {
+        this.openQuickSearch();
+      }
     }
   }
 

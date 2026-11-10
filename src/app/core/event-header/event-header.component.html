@@ -1,7 +1,7 @@
-<div class="nw-page-header" *ngIf="event" style="margin-bottom: 24px;">
-  <div>
-    <!-- Back Link (Stylized Link) -->
-    <p style="margin: 0 0 10px; font-size: 13px;">
+<div class="nw-page-header event-main-header" *ngIf="event" style="margin-bottom: 24px;">
+  <div class="event-main-header-info" style="min-width: 0; flex: 1;">
+    <!-- Back Link & Breadcrumbs -->
+    <div class="event-header-breadcrumbs" style="margin: 0 0 10px; font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       <a [routerLink]="backUrl" style="display: inline-flex; align-items: center; gap: 6px; color: var(--nw-accent-2); text-decoration: none; font-weight: 600; transition: color 0.2s;" class="nw-back-link">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -9,7 +9,21 @@
         </svg>
         <span>{{ backLabel }}</span>
       </a>
-    </p>
+
+      <!-- Breadcrumbs to Resumen and Subsections -->
+      <ng-container *ngIf="subtitle">
+        <span style="color: var(--nw-text-3); font-size: 12px;">/</span>
+        
+        <a *ngIf="subtitle !== 'Resumen del evento'" (click)="onSummaryClick()" style="cursor: pointer; color: var(--nw-text-2); text-decoration: none; font-weight: 600; transition: color 0.2s;" class="nw-back-link" title="Volver al resumen">
+          Resumen del evento
+        </a>
+        <span *ngIf="subtitle !== 'Resumen del evento'" style="color: var(--nw-text-3); font-size: 12px;">/</span>
+
+        <span style="color: var(--nw-accent); font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; background: var(--nw-accent-glow); padding: 3px 9px; border-radius: 6px; border: 1px solid rgba(192, 156, 120, 0.25);">
+          {{ subtitle }}
+        </span>
+      </ng-container>
+    </div>
 
     <!-- Main Title & Event Badge Header -->
     <div style="display: flex; align-items: center; gap: 16px; margin-top: 6px; margin-bottom: 12px; flex-wrap: wrap;">
@@ -92,5 +106,10 @@
         <span>{{ event.hosts?.join(', ') }}</span>
       </span>
     </p>
+  </div>
+
+  <!-- Projected Actions (Guía, Buscar, etc.) -->
+  <div class="event-header-actions" style="margin-top: 10px; margin-bottom: 2px;">
+    <ng-content></ng-content>
   </div>
 </div>

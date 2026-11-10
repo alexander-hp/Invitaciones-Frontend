@@ -131,6 +131,6 @@
 .events-guide-dialog p { margin: 0; color: var(--nw-text-2); font-size: 14px; line-height: 1.5; }
 .events-guide-dots { display: flex; gap: 6px; margin: 24px 0; }
 .events-guide-dots span { width: 28px; height: 4px; background: var(--nw-border); }
-.events-guide-dots span.active { background: #176d52; }
+.events-guide-dots span.active { background: var(--nw-accent); }
 .events-guide-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .events-guide-actions .nw-btn:disabled { opacity: .4; }

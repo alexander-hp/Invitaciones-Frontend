@@ -167,7 +167,27 @@
 
       <!-- Reusable Event Header Widget & Navigation Tabs (Hidden when in Historial de cambios or Guía de usuario) -->
       <ng-container *ngIf="activeTab !== 'logs' && activeTab !== 'guide'">
-        <app-event-header [event]="event"></app-event-header>
+        <app-event-header [event]="event" [subtitle]="currentSubtitle" (summaryClick)="returnToOverview()">
+          <div class="event-header-actions-group">
+            <button #journeyGuideButton *ngIf="guideSteps.length" type="button" class="event-header-btn guide-btn" (click)="openJourneyGuide()" aria-label="Abrir guía paso a paso" title="Abrir guía paso a paso">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 6.5a7 7 0 0 0-8-1.5v13a7 7 0 0 1 8 1.5 7 7 0 0 1 8-1.5V5a7 7 0 0 0-8 1.5Z"/>
+                <path d="M12 6.5v13"/>
+              </svg>
+              <span>Guía</span>
+              <span class="guide-counter-badge" *ngIf="guideProgress?.total">{{ guideProgress.done }}/{{ guideProgress.total }}</span>
+            </button>
+
+            <button #quickSearchButton type="button" class="event-header-btn search-btn" (click)="openQuickSearch()" aria-label="Buscar en todas las secciones" title="Buscar en todas las secciones (Ctrl+K)">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m20 20-4-4"/>
+              </svg>
+              <span class="search-btn-label">Buscar en todas las secciones</span>
+              <kbd class="search-shortcut-kbd">Ctrl K</kbd>
+            </button>
+          </div>
+        </app-event-header>
 
         <!-- Navigation Tabs -->
         <div class="nw-tabs event-detail-tabs">
@@ -253,24 +273,7 @@
 
       </ng-container>
 
-      <div class="event-location-bar" aria-label="Navegación del evento">
-        <div class="event-location-leading">
-          <button *ngIf="activeTab !== 'info' || selectedSection" type="button" class="event-location-back" (click)="returnToOverview()" aria-label="Volver al resumen" title="Volver al resumen">
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          <span class="event-location-copy"><strong>{{ activeTab === 'info' && !selectedSection ? 'Resumen del evento' : currentLocationLabel }}</strong><span class="event-location-context">{{ event.title }}</span></span>
-        </div>
-        <div class="event-location-actions">
-          <button #journeyGuideButton *ngIf="guideSteps.length" type="button" class="event-location-search" (click)="openJourneyGuide()" aria-label="Abrir guía paso a paso" title="Abrir guía paso a paso">
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a7 7 0 0 0-8-1.5v13a7 7 0 0 1 8 1.5 7 7 0 0 1 8-1.5V5a7 7 0 0 0-8 1.5Z"/><path d="M12 6.5v13"/></svg>
-            <span>Guía</span>
-          </button>
-          <button #quickSearchButton type="button" class="event-location-search" (click)="openQuickSearch()" aria-label="Buscar funciones del evento" title="Buscar funciones del evento">
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-            <span>Buscar</span>
-          </button>
-        </div>
-      </div>
+        
 
       <section *ngIf="activeTab === 'info' && preparationSteps.length" class="event-preparation" aria-label="Preparación del evento">
         <div class="event-preparation-heading">
@@ -338,7 +341,7 @@
     <div class="event-guide-layout">
       <nav #guideStepNav class="event-guide-steps" aria-label="Pasos de la guía">
         <button #guideStepButton *ngFor="let item of guideSteps; let index = index" type="button" [class.active]="index === guideIndex" [attr.aria-current]="index === guideIndex ? 'step' : null" (click)="selectGuideStep(index)">
-          <span class="event-guide-number">{{ item.done ? '✓' : index + 1 }}</span>
+          <span class="event-guide-number" [class.is-done]="item.done">{{ item.done ? '✓' : index + 1 }}</span>
           <span class="event-guide-step-copy"><strong>{{ item.title }}</strong><small>{{ item.status }}</small></span>
         </button>
       </nav>
