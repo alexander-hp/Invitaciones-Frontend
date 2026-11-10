@@ -339,13 +339,19 @@ export class NewPublicInvitationEnvelopeCardsComponent implements OnInit {
   }
 
   getStoreLogo(registry: any): string {
-    if (registry.logoUrl) return registry.logoUrl;
-    const store = (registry.store || registry.title || '').toLowerCase();
-    if (store.includes('liverpool')) return 'https://assetspwa.liverpool.com.mx/assets/images/logos/liverpool-logo.svg';
-    if (store.includes('palacio')) return 'https://www.elpalaciodehierro.com/on/demandware.static/Sites-Palacio-Site/-/default/dw9e13b0d2/images/logo.svg';
-    if (store.includes('amazon')) return 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg';
-    if (store.includes('sears')) return 'https://www.sears.com.mx/assets/img/sears-logo.svg';
-    return '';
+    if (!registry) return '';
+    const img = (registry.imageUrl || registry.logoUrl || '').trim();
+    if (img && !img.startsWith('data:image/svg') && !img.includes('assets/giftTable/')) {
+      return img;
+    }
+    const storeLower = (registry.store || registry.title || '').toLowerCase().trim();
+    if (storeLower.includes('liverpool')) return '/assets/giftTable/liverpool-logo.jpg';
+    if (storeLower.includes('palacio')) return '/assets/giftTable/palacio-logo.png';
+    if (storeLower.includes('sears')) return '/assets/giftTable/sears_logo.jpg';
+    if (storeLower.includes('uniko') || storeLower.includes('efectivo')) return '/assets/giftTable/logo_uniko.webp';
+    if (storeLower.includes('amazon')) return '/assets/giftTable/logo-amazon.png';
+    if (storeLower.includes('mercado')) return '/assets/giftTable/mercado-libre-logo.png';
+    return img;
   }
 
   get locationsList(): InvitationLocation[] {

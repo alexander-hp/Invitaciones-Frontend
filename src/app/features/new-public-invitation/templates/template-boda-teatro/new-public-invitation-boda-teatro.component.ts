@@ -316,14 +316,20 @@ export class NewPublicInvitationBodaTeatroComponent implements OnInit, OnChanges
     });
   }
 
-  getStoreLogo(item: any): string | null {
-    const store = (item.store || item.title || '').toLowerCase();
-    if (store.includes('liverpool')) return 'https://assetspwa.liverpool.com.mx/assets/images/logos/liverpool-logo.svg';
-    if (store.includes('amazon')) return 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg';
-    if (store.includes('palacio')) return 'https://upload.wikimedia.org/wikipedia/commons/4/44/El_Palacio_de_Hierro_logo.svg';
-    if (store.includes('sears')) return 'https://upload.wikimedia.org/wikipedia/commons/b/bf/Sears_logo_%282019%29.svg';
-    if (store.includes('mercado')) return 'https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadolibre/logo__large_plus.png';
-    return item.imageUrl || null;
+  getStoreLogo(registry: any): string {
+    if (!registry) return '';
+    const img = (registry.imageUrl || registry.logoUrl || '').trim();
+    if (img && !img.startsWith('data:image/svg') && !img.includes('assets/giftTable/')) {
+      return img;
+    }
+    const storeLower = (registry.store || registry.title || '').toLowerCase().trim();
+    if (storeLower.includes('liverpool')) return '/assets/giftTable/liverpool-logo.jpg';
+    if (storeLower.includes('palacio')) return '/assets/giftTable/palacio-logo.png';
+    if (storeLower.includes('sears')) return '/assets/giftTable/sears_logo.jpg';
+    if (storeLower.includes('uniko') || storeLower.includes('efectivo')) return '/assets/giftTable/logo_uniko.webp';
+    if (storeLower.includes('amazon')) return '/assets/giftTable/logo-amazon.png';
+    if (storeLower.includes('mercado')) return '/assets/giftTable/mercado-libre-logo.png';
+    return img;
   }
 
   getCustomAnswer(question: RsvpCustomQuestion): string | boolean {

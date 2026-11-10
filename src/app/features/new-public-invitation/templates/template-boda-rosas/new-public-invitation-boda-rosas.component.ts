@@ -367,13 +367,19 @@ export class NewPublicInvitationBodaRosasComponent implements OnInit, OnChanges,
     return [];
   }
 
-  getStoreLogo(reg: any): string {
-    if (reg.imageUrl) return reg.imageUrl;
-    const store = (reg.store || '').toLowerCase();
-    if (store.includes('liverpool')) return 'assets/giftTable/liverpool.png';
-    if (store.includes('palacio')) return 'assets/giftTable/palacio.png';
-    if (store.includes('amazon')) return 'assets/giftTable/amazon.png';
-    if (store.includes('sears')) return 'assets/giftTable/sears.png';
-    return '';
+  getStoreLogo(registry: any): string {
+    if (!registry) return '';
+    const img = (registry.imageUrl || registry.logoUrl || '').trim();
+    if (img && !img.startsWith('data:image/svg') && !img.includes('assets/giftTable/')) {
+      return img;
+    }
+    const storeLower = (registry.store || registry.title || '').toLowerCase().trim();
+    if (storeLower.includes('liverpool')) return '/assets/giftTable/liverpool-logo.jpg';
+    if (storeLower.includes('palacio')) return '/assets/giftTable/palacio-logo.png';
+    if (storeLower.includes('sears')) return '/assets/giftTable/sears_logo.jpg';
+    if (storeLower.includes('uniko') || storeLower.includes('efectivo')) return '/assets/giftTable/logo_uniko.webp';
+    if (storeLower.includes('amazon')) return '/assets/giftTable/logo-amazon.png';
+    if (storeLower.includes('mercado')) return '/assets/giftTable/mercado-libre-logo.png';
+    return img;
   }
 }
