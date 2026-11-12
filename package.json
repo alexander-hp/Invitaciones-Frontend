@@ -25,6 +25,7 @@
         "@angular/router": "~13.3.0",
         "@angular/service-worker": "~13.3.0",
         "@capacitor/android": "^6.2.3",
+        "@capacitor/app": "^6.0.3",
         "@capacitor/cli": "^6.2.3",
         "@capacitor/core": "^6.2.3",
         "@types/aos": "^3.0.8",
