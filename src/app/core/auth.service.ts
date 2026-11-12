@@ -11,7 +11,7 @@ export class AuthService {
   private readonly userSubject = new BehaviorSubject<User | null>(null);
   readonly user$ = this.userSubject.asObservable();
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(private api: ApiService, private router: Router) { }
 
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY);
@@ -23,6 +23,10 @@ export class AuthService {
 
   get isAuthenticated(): boolean {
     return Boolean(this.token);
+  }
+
+  get apiUrl(): string {
+    return this.api.apiUrl;
   }
 
   login(payload: { email: string; password: string }): Observable<AuthResponse> {

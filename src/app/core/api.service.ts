@@ -86,7 +86,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly apiUrl = environment.apiUrl;
+  readonly apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

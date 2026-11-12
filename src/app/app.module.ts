@@ -108,6 +108,8 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
 import { ImageDropzoneComponent } from './shared/components/image-dropzone/image-dropzone.component';
 import { VisualInvitationRendererModule } from './shared/components/visual-invitation-renderer/visual-invitation-renderer.module';
 import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -206,7 +208,12 @@ import { GuestActivityComponent } from './features/guest-activity/guest-activity
     NewExternalEmbedComponent,
     NewExternalPortalComponent
   ],
-  imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule, VisualInvitationRendererModule],
+  imports: [BrowserModule, AppRoutingModule, HttpClientModule, FormsModule, ReactiveFormsModule, VisualInvitationRendererModule, ServiceWorkerModule.register('ngsw-worker.js', {
+  enabled: environment.production,
+  // Register the ServiceWorker as soon as the application is stable
+  // or after 30 seconds (whichever comes first).
+  registrationStrategy: 'registerWhenStable:30000'
+})],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true }, { provide: LOCALE_ID, useValue: 'es' }],
   bootstrap: [AppComponent]
 })

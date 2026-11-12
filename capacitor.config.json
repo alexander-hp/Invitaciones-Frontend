@@ -1,0 +1,9 @@
+{
+  "appId": "com.velisse.app",
+  "appName": "Velisse",
+  "webDir": "dist/invitaciones-frontend-angular",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}

@@ -1,6 +1,29 @@
+function resolveDevApiUrl(): string {
+  if (typeof window !== 'undefined') {
+    const customUrl = localStorage.getItem('velisse_api_url');
+    if (customUrl) return customUrl;
+
+    const isNative = Boolean(
+      (window as any).Capacitor?.isNativePlatform?.() ||
+      (window as any).Capacitor?.platform === 'android' ||
+      window.location.protocol === 'capacitor:' ||
+      (window.location.hostname === 'localhost' && !window.location.port)
+    );
+
+    if (isNative) {
+      return 'http://192.168.100.7:4000/api';
+    }
+
+    if (window.location && window.location.hostname && window.location.hostname !== 'localhost') {
+      return `http://${window.location.hostname}:4000/api`;
+    }
+  }
+  return 'http://localhost:4000/api';
+}
+
 export const environment = {
   production: false,
-  apiUrl: typeof window !== 'undefined' && window.location && window.location.hostname
-    ? `http://${window.location.hostname}:4000/api`
-    : 'http://localhost:4000/api'
+  get apiUrl(): string {
+    return resolveDevApiUrl();
+  }
 };

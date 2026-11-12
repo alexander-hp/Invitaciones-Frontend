@@ -54,7 +54,11 @@ export class NewLoginComponent implements OnInit, OnDestroy {
     this.auth.login(this.form).subscribe({
       next: () => this.router.navigate(['/new/dashboard']),
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo iniciar sesión. Verifica tus credenciales.';
+        if (error.status === 0) {
+          this.error = `No se pudo conectar al servidor backend en ${this.auth.apiUrl}. Revisa que tu PC y celular estén en la misma red y que el Firewall permita el puerto 4000.`;
+        } else {
+          this.error = error.error?.message || 'No se pudo iniciar sesión. Verifica tus credenciales.';
+        }
         this.loading = false;
       }
     });

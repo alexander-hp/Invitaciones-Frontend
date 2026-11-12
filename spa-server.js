@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,6 +10,7 @@ const types = {
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.png': 'image/png',
@@ -68,7 +69,7 @@ http.createServer((req, res) => {
   }
 
   send(res, path.join(root, 'index.html'));
-}).listen(port, () => {
+}).listen(port, '0.0.0.0', () => {
   console.log('SPA preview listening on http://localhost:' + port);
   console.log('Proxying /api to ' + apiTarget.origin);
 });

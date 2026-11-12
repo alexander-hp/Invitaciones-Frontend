@@ -18,7 +18,11 @@ export class LoginComponent {
     this.auth.login(this.form).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: (error) => {
-        this.error = error.error?.message || 'No se pudo iniciar sesion.';
+        if (error.status === 0) {
+          this.error = `No se pudo conectar al servidor backend (${this.auth.apiUrl}).`;
+        } else {
+          this.error = error.error?.message || 'No se pudo iniciar sesion.';
+        }
         this.loading = false;
       }
     });

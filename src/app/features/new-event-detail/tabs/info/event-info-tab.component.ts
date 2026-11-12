@@ -3,6 +3,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
+import { normalizeMediaUrl } from '../../../../core/utils/media-url';
 import {
   EventModel, DashboardMetrics, InvitationModel, PlanDefinition,
   EventMemberModel, EventPermission, EventMemberRole, EventAccessLinkModel, EventAccessRole,
@@ -161,7 +162,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
     const id = (this.event._id || this.event.id)!;
     this.loadingData = true;
 
-    this.coverImageUrl = this.event?.externalContent?.coverImageUrl || '';
+    this.coverImageUrl = normalizeMediaUrl(this.event?.externalContent?.coverImageUrl || '');
 
     if (this.isOwner()) this.apiService.listInvitations().subscribe({
       next: res => {
@@ -171,7 +172,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
         });
         const invWithCover = this.invitations.find(i => !!i.content?.coverImageUrl);
         if (invWithCover?.content?.coverImageUrl) {
-          this.coverImageUrl = invWithCover.content.coverImageUrl;
+          this.coverImageUrl = normalizeMediaUrl(invWithCover.content.coverImageUrl);
         } else if (!this.event?.externalContent?.coverImageUrl) {
           this.coverImageUrl = '';
         }
@@ -890,7 +891,7 @@ export class EventInfoTabComponent implements OnInit, OnChanges {
 
     forkJoin([updateEvent$, ...invObservables]).subscribe({
       next: () => {
-        this.coverImageUrl = url;
+        this.coverImageUrl = normalizeMediaUrl(url);
         if (this.event) {
           this.event.externalContent = extContent;
         }

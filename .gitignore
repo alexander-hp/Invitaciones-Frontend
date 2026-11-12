@@ -44,3 +44,10 @@ Thumbs.db
 # Documentation artifacts
 .agents/docs/
 
+# Android / Mobile binaries
+*.apk
+*.aab
+/android/.gradle/
+/android/app/build/
+/android/local.properties
+
