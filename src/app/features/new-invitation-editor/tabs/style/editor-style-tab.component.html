@@ -13,11 +13,11 @@
     <p style="font-size: 13px; color: var(--nw-text-2); margin-bottom: 18px;">
       Personaliza la atmósfera visual de tu invitación. Puedes hacer clic en los recuadros de color para abrir el selector visual, escribir un código hexadecimal o elegir una de las combinaciones recomendadas.
     </p>
-    <p *ngIf="invitation.content.template === 'visual-builder'" style="font-size:13px; color:var(--nw-text-2); margin-bottom:18px;">
+    <p *ngIf="invitation?.content?.template === 'visual-builder'" style="font-size:13px; color:var(--nw-text-2); margin-bottom:18px;">
       En el diseño visual, esta paleta cambia el tema y los elementos que usan sus colores actuales. Los colores personalizados de cada elemento se conservan y puedes cambiarlos en el editor visual.
     </p>
 
-    <div *ngIf="invitation.content.palette as palette">
+    <div *ngIf="palette">
       <!-- Grid de Configuración de Colores con Explicación -->
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-bottom:24px;">
         
@@ -114,13 +114,13 @@
           <!-- Título Principal en Color Principal -->
           <h4 style="margin:4px 0 0 0; font-size:20px; font-weight:700; letter-spacing:-0.02em; transition:color 0.3s ease; font-family:inherit;"
             [style.color]="palette.primary || '#1f2a44'">
-            {{ invitation.content.headline || 'Ana & Carlos' }}
+            {{ invitation?.content?.headline || 'Ana & Carlos' }}
           </h4>
 
           <!-- Subtítulo en Color Principal con opacidad -->
           <p style="margin:0; font-size:13px; max-width:380px; opacity:0.8; transition:color 0.3s ease;"
             [style.color]="palette.primary || '#1f2a44'">
-            {{ invitation.content.subheadline || invitation.content.message || '¡Tenemos el honor de invitarte a celebrar este gran momento con nosotros!' }}
+            {{ invitation?.content?.subheadline || invitation?.content?.message || '¡Tenemos el honor de invitarte a celebrar este gran momento con nosotros!' }}
           </p>
 
           <!-- Línea divisoria en Color de Acento -->

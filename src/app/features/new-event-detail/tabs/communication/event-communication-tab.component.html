@@ -209,7 +209,7 @@
   </details>
 
   <!-- Configuración de envío -->
-  <div id="comms-config-card" class="nw-card" style="margin-bottom:16px;">
+  <div id="comms-config-card" class="nw-card" style="margin-bottom:16px; max-width:100%; box-sizing:border-box; overflow-x:hidden;">
     <div class="nw-card-header">
       <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
@@ -355,30 +355,30 @@
 
       <!-- BLOQUE 1: Ver mensaje (Sólo lectura limpio) -->
       <div *ngIf="previewTabMode === 'view'"
-        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 10px); padding: 14px 16px;">
+        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 10px); padding: 14px 16px; max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
         <div
-          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid var(--nw-border); padding-bottom:6px;">
-          <span style="font-size:12px; font-weight:700; color:var(--nw-text-2);">
-            Mensaje para: <strong style="color:var(--nw-text);">{{ previewGuest?.name || sampleGuest.name }}</strong>
+          style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; border-bottom:1px solid var(--nw-border); padding-bottom:6px;">
+          <span style="font-size:12px; font-weight:700; color:var(--nw-text-2); min-width:0; overflow:hidden; text-overflow:ellipsis; word-break:break-word;">
+            Mensaje para: <strong style="color:var(--nw-text); word-break:break-word;">{{ previewGuest?.name || sampleGuest.name }}</strong>
           </span>
-          <span class="nw-pill" style="font-size:10px;">Modo lectura</span>
+          <span class="nw-pill" style="font-size:10px; flex-shrink:0;">Modo lectura</span>
         </div>
-        <p style="margin:0; font-size:13.5px; line-height:1.6; color:var(--nw-text); white-space:pre-wrap;">{{
+        <p style="margin:0; font-size:13.5px; line-height:1.6; color:var(--nw-text); white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;">{{
           buildMessage(previewGuest || sampleGuest, selectedMessageType) }}</p>
       </div>
 
       <!-- BLOQUE 2: Editar (Estructura de bloques fijos imborrables) -->
       <div *ngIf="previewTabMode === 'edit'"
-        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 10px); padding: 12px; display: grid; gap: 8px;">
+        style="background: var(--nw-surface-2, #f5f1ea); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 10px); padding: 12px; display: grid; gap: 8px; max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
 
         <!-- Bloque Fijo: Saludo con Nombre (Imborrable) -->
         <div
-          style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nw-text); background: var(--nw-surface); padding: 6px 10px; border-radius: 6px; border: 1px dashed var(--nw-border);">
+          style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nw-text); background: var(--nw-surface); padding: 6px 10px; border-radius: 6px; border: 1px dashed var(--nw-border); flex-wrap: wrap;">
           <span style="color: var(--nw-text-3); font-weight: 500;">Saludo fijo:</span>
           <span class="nw-pill accent"
-            style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display:inline-flex; align-items:center; gap:4px;">
+            style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display:inline-flex; align-items:center; gap:4px; max-width: 100%; word-break: break-word;">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
+              stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
@@ -387,7 +387,7 @@
           <span style="font-size: 11px; color: var(--nw-text-3); margin-left: auto;">(Se inserta automáticamente)</span>
         </div>
 
-        <p class="communication-preview-note">Este texto se aplicará a este envío por correo y OpenWA; no cambia la plantilla permanente. El saludo y el enlace individual se agregan automáticamente. Meta solo admite su plantilla aprobada.</p>
+        <p class="communication-preview-note" style="word-break: break-word; overflow-wrap: anywhere;">Este texto se aplicará a este envío por correo y OpenWA; no cambia la plantilla permanente. El saludo y el enlace individual se agregan automáticamente. Meta solo admite su plantilla aprobada.</p>
         <!-- Bloque Editable: Cuerpo del Mensaje -->
         <div>
           <label
@@ -397,17 +397,17 @@
           <textarea class="nw-input" rows="3" [(ngModel)]="customMessageBody" (ngModelChange)="onCustomBodyChange()"
             maxlength="2000"
             placeholder="Escribe el cuerpo de tu mensaje..."
-            style="font-family: inherit; font-size: 13px; line-height: 1.5; resize: vertical; width: 100%; box-sizing: border-box; background: #ffffff;"></textarea>
+            style="font-family: inherit; font-size: 13px; line-height: 1.5; resize: vertical; width: 100%; box-sizing: border-box; background: #ffffff; word-break: break-word;"></textarea>
         </div>
 
         <!-- Bloque Fijo: Link de Invitación (Imborrable) -->
         <div
-          style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nw-text); background: var(--nw-surface); padding: 6px 10px; border-radius: 6px; border: 1px dashed var(--nw-border);">
+          style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--nw-text); background: var(--nw-surface); padding: 6px 10px; border-radius: 6px; border: 1px dashed var(--nw-border); flex-wrap: wrap;">
           <span style="color: var(--nw-text-3); font-weight: 500;">Enlace fijo:</span>
           <span class="nw-pill info"
-            style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+            style="font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; word-break: break-word;">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
+              stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
             </svg>
@@ -508,13 +508,13 @@
 
         <!-- Render Preview WHATSAPP Integrado -->
         <div *ngIf="previewModalKind === 'whatsapp'"
-          style="background:#efeae2; border-radius:14px; padding:18px; border:1px solid #ded5c8;">
-          <div style="background:#075e54; color:#ffffff; padding:10px 14px; border-radius:8px 8px 0 0; font-size:13px;">
+          style="background:#efeae2; border-radius:14px; padding:18px; border:1px solid #ded5c8; max-width:100%; box-sizing:border-box; overflow-x:hidden;">
+          <div style="background:#075e54; color:#ffffff; padding:10px 14px; border-radius:8px 8px 0 0; font-size:13px; word-break:break-word;">
             <strong>{{ previewGuest?.name || sampleGuest.name }}</strong>
           </div>
           <div
-            style="background:#ffffff; border-radius:0 10px 10px 10px; padding:14px; margin-top:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
-            <p style="margin:0; white-space:pre-wrap; font-size:13.5px; line-height:1.5; color:#111;">{{
+            style="background:#ffffff; border-radius:0 10px 10px 10px; padding:14px; margin-top:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); max-width:100%; box-sizing:border-box; overflow-x:hidden;">
+            <p style="margin:0; white-space:pre-wrap; font-size:13.5px; line-height:1.5; color:#111; word-break:break-word; overflow-wrap:anywhere;">{{
               buildMessage(previewGuest || sampleGuest, selectedMessageType) }}</p>
           </div>
         </div>

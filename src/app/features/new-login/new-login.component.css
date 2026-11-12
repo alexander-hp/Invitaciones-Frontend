@@ -488,7 +488,13 @@
   }
 
   .nw-social-row {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .nw-social-btn {
+    height: 44px;
+    border-radius: var(--nw-radius-sm);
   }
 }

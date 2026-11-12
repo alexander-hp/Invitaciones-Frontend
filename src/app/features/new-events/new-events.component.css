@@ -73,6 +73,19 @@
 .events-create-header p { margin: 0; color: var(--nw-text-2); font-size: 13px; }
 .events-icon-button { border: 1px solid var(--nw-border); background: var(--nw-surface); color: var(--nw-text-2); width: 32px; height: 32px; flex: 0 0 32px; cursor: pointer; font-size: 22px; line-height: 1; }
 .events-icon-button:hover { color: var(--nw-text); background: var(--nw-surface-2); }
+.events-mode-selector { margin: 4px 0 6px; }
+.events-mode-label { display: block; font-size: 13px; font-weight: 700; color: var(--nw-text); margin-bottom: 8px; }
+.events-mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.events-mode-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1.5px solid var(--nw-border); border-radius: 10px; background: var(--nw-surface); cursor: pointer; transition: all 0.2s ease; user-select: none; }
+.events-mode-card:hover { border-color: var(--nw-border-2); background: var(--nw-surface-2); transform: translateY(-1px); }
+.events-mode-card.is-active { border-color: var(--nw-accent); background: rgba(192, 156, 120, 0.08); box-shadow: 0 4px 12px rgba(192, 156, 120, 0.12); }
+.events-mode-icon-box { width: 36px; height: 36px; border-radius: 8px; background: var(--nw-surface-2); border: 1px solid var(--nw-border); display: flex; align-items: center; justify-content: center; color: var(--nw-accent); flex-shrink: 0; transition: all 0.2s ease; }
+.events-mode-card.is-active .events-mode-icon-box { background: var(--nw-accent); color: #ffffff; border-color: var(--nw-accent); }
+.events-mode-info { flex: 1; min-width: 0; }
+.events-mode-title-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+.events-mode-title-row strong { font-size: 13.5px; color: var(--nw-text); font-weight: 700; }
+.events-mode-pill { font-size: 10px; font-weight: 800; color: var(--nw-accent); background: rgba(192, 156, 120, 0.15); border: 1px solid rgba(192, 156, 120, 0.3); padding: 1px 6px; border-radius: 12px; white-space: nowrap; }
+.events-mode-info small { display: block; font-size: 11.5px; color: var(--nw-text-3); line-height: 1.35; }
 .events-mode-choice { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .events-mode-choice legend { padding: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--nw-text); }
 .events-mode-choice label { display: flex; gap: 10px; align-items: flex-start; padding: 13px; border: 1px solid var(--nw-border); border-radius: 6px; cursor: pointer; min-width: 0; }
@@ -90,6 +103,8 @@
   .events-header-actions { width: 100%; }
   .events-guide-backdrop { align-items: flex-end; padding: 0; }
   .events-guide-dialog { border-radius: 8px 8px 0 0; }
+  .events-guide-actions { flex-wrap: nowrap !important; gap: 6px !important; }
+  .events-guide-actions .nw-btn { font-size: 11.5px !important; padding: 0 6px !important; height: 35px !important; }
   .events-overview > div { flex: 1; display: block; padding: 10px 8px; margin: 0; text-align: center; }
   .events-overview > div + div { padding-left: 8px; }
   .events-overview strong, .events-overview span { display: block; }
@@ -118,6 +133,8 @@
   }
   .events-create-modal { padding: 18px; }
   .events-mode-choice { grid-template-columns: 1fr; }
+  .events-mode-grid { grid-template-columns: 1fr; gap: 8px; }
+  .events-mode-card { padding: 11px 12px; }
   .events-create-modal .nw-modal-actions { position: sticky; bottom: -18px; background: var(--nw-surface); }
 }
 .events-header-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
@@ -132,5 +149,26 @@
 .events-guide-dots { display: flex; gap: 6px; margin: 24px 0; }
 .events-guide-dots span { width: 28px; height: 4px; background: var(--nw-border); }
 .events-guide-dots span.active { background: var(--nw-accent); }
-.events-guide-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.events-guide-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.events-guide-actions .nw-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 10px;
+  height: 38px;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+}
+.events-guide-actions .nw-btn-primary {
+  flex: 1.2 1 0;
+}
 .events-guide-actions .nw-btn:disabled { opacity: .4; }

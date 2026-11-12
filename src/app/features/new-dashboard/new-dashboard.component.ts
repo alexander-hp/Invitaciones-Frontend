@@ -8,6 +8,7 @@ import { normalizeMediaUrl } from '../../core/utils/media-url';
 export class NewDashboardComponent implements OnInit {
   sidebarOpen = false;
   loading = true;
+  collapsedMetrics = false;
   error = '';
   message = '';
   coverImageMap: Record<string, string> = {};
