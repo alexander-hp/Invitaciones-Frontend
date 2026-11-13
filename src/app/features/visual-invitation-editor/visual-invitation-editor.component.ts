@@ -133,8 +133,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   autosaving = false;
   autosaveState = 'Guardado';
   editorCanvasMode: 'invitation' | 'access' = 'invitation';
+  accessSubTab: 'design' | 'nip' | 'registration' = 'design';
+  accessSimView: 'login' | 'register' = 'login';
   accessSimInput = '';
   accessSimPin = '';
+  accessSimRegName = '';
+  accessSimRegEmail = '';
+  accessSimRegPhone = '';
+  accessSimRegCompanions = 1;
   accessSimState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   accessSimMessage = '';
   readonly accessPresets = [
@@ -7501,7 +7507,15 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         pinMode: 'event',
         eventPin: '',
         pinInputLabel: 'NIP de acceso',
-        pinInputPlaceholder: 'Ingresa tu NIP'
+        pinInputPlaceholder: 'Ingresa tu NIP',
+        allowSelfRegistration: false,
+        selfRegTitle: 'Solicitar Invitación',
+        selfRegSubtitle: 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso.',
+        selfRegButtonText: 'ENVIAR SOLICITUD',
+        selfRegSuccessMessage: '¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo.',
+        selfRegGroup: 'Solicitudes de Acceso',
+        selfRegRequireApproval: true,
+        selfRegMaxGuests: 0
       };
     } else {
       if (this.design.accessScreen.requirePin === undefined) {
@@ -7515,6 +7529,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       }
       if (!this.design.accessScreen.pinInputPlaceholder) {
         this.design.accessScreen.pinInputPlaceholder = 'Ingresa tu NIP';
+      }
+      if (this.design.accessScreen.allowSelfRegistration === undefined) {
+        this.design.accessScreen.allowSelfRegistration = false;
+      }
+      if (!this.design.accessScreen.selfRegTitle) {
+        this.design.accessScreen.selfRegTitle = 'Solicitar Invitación';
+      }
+      if (!this.design.accessScreen.selfRegSubtitle) {
+        this.design.accessScreen.selfRegSubtitle = 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso.';
+      }
+      if (!this.design.accessScreen.selfRegButtonText) {
+        this.design.accessScreen.selfRegButtonText = 'ENVIAR SOLICITUD';
+      }
+      if (!this.design.accessScreen.selfRegSuccessMessage) {
+        this.design.accessScreen.selfRegSuccessMessage = '¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo.';
+      }
+      if (!this.design.accessScreen.selfRegGroup) {
+        this.design.accessScreen.selfRegGroup = 'Solicitudes de Acceso';
+      }
+      if (this.design.accessScreen.selfRegRequireApproval === undefined) {
+        this.design.accessScreen.selfRegRequireApproval = true;
       }
     }
   }
@@ -7534,22 +7569,69 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   selectAccessCategory(): void {
-    this.selectToolCategory('access');
+    this.selectAccessSubTab(this.accessSubTab || 'design');
+  }
+
+  selectAccessSubTab(subTab: 'design' | 'nip' | 'registration'): void {
+    this.toolCategory = 'access';
+    this.accessSubTab = subTab;
+    this.toolsCollapsed = false;
+    this.editorCanvasMode = 'access';
+    this.selectedSectionId = '';
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    this.initAccessScreenDesign();
+    if (subTab === 'registration') {
+      this.accessSimView = 'register';
+    } else {
+      this.accessSimView = 'login';
+    }
+    if (this.editorStage?.nativeElement) {
+      this.editorStage.nativeElement.scrollTop = 0;
+    }
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
+  }
+
+  testAccessSimRegSubmit(): void {
+    if (!this.accessSimRegName.trim()) {
+      this.accessSimState = 'error';
+      this.accessSimMessage = 'Por favor ingresa tu nombre completo.';
+      return;
+    }
+    if (!this.accessSimRegEmail.trim()) {
+      this.accessSimState = 'error';
+      this.accessSimMessage = 'Por favor ingresa tu correo electrónico.';
+      return;
+    }
+    this.accessSimState = 'loading';
+    setTimeout(() => {
+      this.accessSimState = 'success';
+      const msg = this.design?.accessScreen?.selfRegSuccessMessage || '¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo.';
+      this.accessSimMessage = msg;
+    }, 600);
   }
 
   setEditorCanvasMode(mode: 'invitation' | 'access'): void {
     this.editorCanvasMode = mode;
     if (mode === 'access') {
       this.toolCategory = 'access';
+      this.accessSubTab = this.accessSubTab || 'design';
       this.selectedSectionId = '';
       this.selectedLayerId = '';
       this.selectedLayerIds = [];
       this.initAccessScreenDesign();
+      if (this.editorStage?.nativeElement) {
+        this.editorStage.nativeElement.scrollTop = 0;
+      }
+      setTimeout(() => this.fitCanvasToViewport(), 0);
     } else {
       if (this.toolCategory === 'access') {
         this.toolCategory = 'design';
       }
+      setTimeout(() => this.fitCanvasToViewport(), 0);
     }
+    this.cdr?.markForCheck();
   }
 
   applyAccessPreset(presetKey: string): void {

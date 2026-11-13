@@ -573,6 +573,14 @@ export interface VisualAccessScreenDesign {
   eventPin?: string;
   pinInputLabel?: string;
   pinInputPlaceholder?: string;
+  allowSelfRegistration?: boolean;
+  selfRegTitle?: string;
+  selfRegSubtitle?: string;
+  selfRegButtonText?: string;
+  selfRegSuccessMessage?: string;
+  selfRegGroup?: string;
+  selfRegRequireApproval?: boolean;
+  selfRegMaxGuests?: number;
 }
 
 export interface VisualInvitationDesign {

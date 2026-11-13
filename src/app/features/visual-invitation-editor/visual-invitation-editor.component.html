@@ -893,7 +893,7 @@
           [attr.aria-pressed]="toolCategory === 'sections'"
           (click)="toolCategory='sections';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="layers"
             [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
-        <button type="button" title="Pantalla de Acceso (Lista cerrada)" [class.active]="toolCategory === 'access'"
+        <button type="button" title="Pantalla de Acceso" [class.active]="toolCategory === 'access'"
           [attr.aria-pressed]="toolCategory === 'access'"
           (click)="selectAccessCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="lock-keyhole"
             [strokeWidth]="1.8"></lucide-icon><span>Acceso</span></button>
@@ -1509,19 +1509,29 @@
           </div>
         </ng-container>
         <ng-container *ngIf="toolCategory === 'access'">
-          <!-- SWITCHER DE MODO EN EL MENÚ DE ACCESO -->
-          <div class="sidebar-mode-switcher" role="tablist" aria-label="Modo de diseño">
-            <button type="button" class="mode-switch-btn" [class.active]="editorCanvasMode === 'invitation'"
-              (click)="setEditorCanvasMode('invitation')" title="Diseñar las secciones y elementos de la invitación">
-              <lucide-icon name="layers" [strokeWidth]="1.8"></lucide-icon>
-              <span>Invitación</span>
+          <!-- NAVEGACIÓN ELEGANTE DE SUBMENÚS DE ACCESO -->
+          <div class="access-subtabs-nav" role="tablist" aria-label="Secciones de Acceso">
+            <button type="button" class="access-subtab-btn" [class.active]="accessSubTab === 'design'"
+              (click)="selectAccessSubTab('design')" title="Diseño visual y fondos">
+              <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon>
+              <span>Diseño</span>
             </button>
-            <button type="button" class="mode-switch-btn" [class.active]="editorCanvasMode === 'access'"
-              (click)="setEditorCanvasMode('access')" title="Diseñar la pantalla de bienvenida y acceso">
-              <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
-              <span>Pantalla de Acceso</span>
+            <button type="button" class="access-subtab-btn" [class.active]="accessSubTab === 'nip'"
+              (click)="selectAccessSubTab('nip')" title="Seguridad por NIP">
+              <lucide-icon name="key-round" [strokeWidth]="1.8"></lucide-icon>
+              <span>Seguridad NIP</span>
+              <span *ngIf="design.accessScreen?.requirePin" class="subtab-dot" title="NIP activado"></span>
+            </button>
+            <button type="button" class="access-subtab-btn" [class.active]="accessSubTab === 'registration'"
+              (click)="selectAccessSubTab('registration')" title="Auto-registro y solicitudes">
+              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon>
+              <span>Auto-registro</span>
+              <span *ngIf="design.accessScreen?.allowSelfRegistration" class="subtab-dot" title="Auto-registro activado"></span>
             </button>
           </div>
+
+          <!-- SUBMENÚ 1: DISEÑO GENERAL DE PANTALLA DE ACCESO -->
+          <div *ngIf="accessSubTab === 'design'">
 
           <div class="access-tools-header">
             <div class="access-badge-indicator"
@@ -1789,62 +1799,165 @@
               </label>
             </div>
           </details>
+          </div>
 
-          <!-- SEGURIDAD Y NIP DE ACCESO -->
-          <details class="theme-editor" open *ngIf="design.accessScreen as acc">
-            <summary>Seguridad y NIP de Acceso</summary>
-            <div class="access-field-group">
-              <label class="toggle">
-                <input type="checkbox" [(ngModel)]="acc.requirePin" (ngModelChange)="recordHistory()">
-                <strong>Solicitar NIP / Clave de Acceso</strong>
-              </label>
-              <p class="hint">Protege tu invitación para que nadie entre solo sabiendo el teléfono o correo.</p>
+          <!-- SUBMENÚ 2: SEGURIDAD Y NIP DE ACCESO -->
+          <div *ngIf="accessSubTab === 'nip'">
+            <div class="access-tools-header">
+              <div class="access-badge-indicator is-closed">
+                <lucide-icon name="key-round" [strokeWidth]="2"></lucide-icon>
+                <span>Seguridad de Acceso</span>
+              </div>
+              <h2>Seguridad y NIP de Acceso</h2>
+              <p class="hint">Protege tu invitación para que nadie entre solo conociendo el número o correo de un invitado registrado.</p>
             </div>
 
-            <div *ngIf="acc.requirePin">
-              <div class="access-field-group">
-                <label>Modalidad de NIP
-                  <select [(ngModel)]="acc.pinMode" (ngModelChange)="recordHistory()">
-                    <option value="event">NIP único del evento (todos usan la misma clave)</option>
-                    <option value="individual">NIP individual por invitado (código de 4 dígitos para cada uno)</option>
-                  </select>
-                </label>
-              </div>
-
-              <div *ngIf="acc.pinMode === 'event'" class="access-field-group">
-                <label>NIP o Clave del evento
-                  <div style="display: flex; gap: 8px;">
-                    <input type="text" [(ngModel)]="acc.eventPin" (ngModelChange)="recordHistory()"
-                      placeholder="Ej. 1234 o BODA2026" maxlength="20" style="flex: 1;">
-                    <button type="button" class="btn-text-action" (click)="generateRandomEventPin()" title="Generar NIP aleatorio">
-                      🎲 Generar
-                    </button>
-                  </div>
-                </label>
-                <p class="hint">Comparte este NIP con tus invitados para que puedan desbloquear su invitación.</p>
-              </div>
-
-              <div *ngIf="acc.pinMode === 'individual'" class="access-field-group">
-                <p class="hint" style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c;">
-                  ℹ️ Cada invitado en tu lista tendrá un NIP único de 4 dígitos generado automáticamente. Podrás verlo y reiniciarlo en la pestaña de <strong>Invitados</strong>, y se incluirá en sus pases por correo y WhatsApp con la variable <code>{{ '{{nip}}' }}</code>.
-                </p>
-              </div>
-
-              <div class="access-field-group">
-                <label>Etiqueta del campo NIP
-                  <input type="text" [(ngModel)]="acc.pinInputLabel" (ngModelChange)="recordHistory()"
-                    placeholder="NIP de acceso">
-                </label>
-              </div>
-
-              <div class="access-field-group">
-                <label>Placeholder del campo NIP
-                  <input type="text" [(ngModel)]="acc.pinInputPlaceholder" (ngModelChange)="recordHistory()"
-                    placeholder="Ingresa tu NIP">
-                </label>
-              </div>
+            <div class="access-quick-actions">
+              <button type="button" class="btn-access-action" (click)="accessSimView = 'login'; setEditorCanvasMode('access')"
+                [class.active]="editorCanvasMode === 'access' && accessSimView === 'login'">
+                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Probar en el lienzo
+              </button>
             </div>
-          </details>
+
+            <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+              <summary>Configuración de NIP</summary>
+              <div class="access-field-group">
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="acc.requirePin" (ngModelChange)="recordHistory()">
+                  <strong>Solicitar NIP / Clave de Acceso</strong>
+                </label>
+                <p class="hint">Protege tu invitación para que nadie entre solo sabiendo el teléfono o correo.</p>
+              </div>
+
+              <div *ngIf="acc.requirePin">
+                <div class="access-field-group">
+                  <label>Modalidad de NIP
+                    <select [(ngModel)]="acc.pinMode" (ngModelChange)="recordHistory()">
+                      <option value="event">NIP único del evento (todos usan la misma clave)</option>
+                      <option value="individual">NIP individual por invitado (código de 4 dígitos para cada uno)</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div *ngIf="acc.pinMode === 'event'" class="access-field-group">
+                  <label>NIP o Clave del evento
+                    <div style="display: flex; gap: 8px;">
+                      <input type="text" [(ngModel)]="acc.eventPin" (ngModelChange)="recordHistory()"
+                        placeholder="Ej. 1234 o BODA2026" maxlength="20" style="flex: 1;">
+                      <button type="button" class="btn-text-action" (click)="generateRandomEventPin()" title="Generar NIP aleatorio">
+                        🎲 Generar
+                      </button>
+                    </div>
+                  </label>
+                  <p class="hint">Comparte este NIP con tus invitados para que puedan desbloquear su invitación.</p>
+                </div>
+
+                <div *ngIf="acc.pinMode === 'individual'" class="access-field-group">
+                  <p class="hint" style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c;">
+                    ℹ️ Cada invitado en tu lista tendrá un NIP único de 4 dígitos generado automáticamente. Podrás verlo y reiniciarlo en la pestaña de <strong>Invitados</strong>, y se incluirá en sus pases por correo y WhatsApp con la variable <code>{{ '{{nip}}' }}</code>.
+                  </p>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Etiqueta del campo NIP
+                    <input type="text" [(ngModel)]="acc.pinInputLabel" (ngModelChange)="recordHistory()"
+                      placeholder="NIP de acceso">
+                  </label>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Placeholder del campo NIP
+                    <input type="text" [(ngModel)]="acc.pinInputPlaceholder" (ngModelChange)="recordHistory()"
+                      placeholder="Ingresa tu NIP">
+                  </label>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- SUBMENÚ 3: AUTO-REGISTRO Y SOLICITUDES DE ACCESO -->
+          <div *ngIf="accessSubTab === 'registration'">
+            <div class="access-tools-header">
+              <div class="access-badge-indicator" [class.is-closed]="design.accessScreen?.allowSelfRegistration">
+                <lucide-icon name="users" [strokeWidth]="2"></lucide-icon>
+                <span>{{ design.accessScreen?.allowSelfRegistration ? 'Auto-registro Activado' : 'Auto-registro Inactivo' }}</span>
+              </div>
+              <h2>Auto-registro y Solicitudes</h2>
+              <p class="hint">Permite que personas que no están en tu lista cerrada soliciten invitación. Tú decides si aprobarlos enviándoles su NIP y enlace por correo.</p>
+            </div>
+
+            <div class="access-quick-actions">
+              <button type="button" class="btn-access-action" (click)="accessSimView = 'register'; setEditorCanvasMode('access')"
+                [class.active]="editorCanvasMode === 'access' && accessSimView === 'register'">
+                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver formulario en lienzo
+              </button>
+            </div>
+
+            <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+              <summary>Configuración de Auto-registro</summary>
+              <div class="access-field-group">
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="acc.allowSelfRegistration" (ngModelChange)="recordHistory()">
+                  <strong>Permitir auto-registro a invitados no registrados</strong>
+                </label>
+                <p class="hint">Muestra una opción en la pantalla de acceso para que los invitados que no estén en la lista puedan solicitar su pase.</p>
+              </div>
+
+              <div *ngIf="acc.allowSelfRegistration">
+                <div class="access-field-group">
+                  <label>Título del formulario
+                    <input type="text" [(ngModel)]="acc.selfRegTitle" (ngModelChange)="recordHistory()"
+                      placeholder="Solicitar Invitación" maxlength="80">
+                  </label>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Instrucciones / Subtítulo
+                    <textarea rows="2" [(ngModel)]="acc.selfRegSubtitle" (ngModelChange)="recordHistory()"
+                      placeholder="Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso." maxlength="250"></textarea>
+                  </label>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Texto del botón de envío
+                    <input type="text" [(ngModel)]="acc.selfRegButtonText" (ngModelChange)="recordHistory()"
+                      placeholder="ENVIAR SOLICITUD" maxlength="60">
+                  </label>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Grupo asignado en Lista de Invitados
+                    <input type="text" [(ngModel)]="acc.selfRegGroup" (ngModelChange)="recordHistory()"
+                      placeholder="Solicitudes de Acceso" maxlength="60">
+                  </label>
+                </div>
+
+                <div class="access-field-group">
+                  <label class="toggle">
+                    <input type="checkbox" [(ngModel)]="acc.selfRegRequireApproval" (ngModelChange)="recordHistory()">
+                    <strong>Requiere aprobación del anfitrión</strong>
+                  </label>
+                  <p class="hint" style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c; margin-top: 6px;">
+                    ℹ️ <strong>Recomendado:</strong> El invitado se guardará en tu lista con estado <strong>Pendiente</strong> y su NIP individual asignado. Podrás revisar quién es y enviarle su correo o WhatsApp con su NIP y pase con un solo clic.
+                  </p>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Cupo máximo de solicitudes (0 = sin límite especial)
+                    <input type="number" [(ngModel)]="acc.selfRegMaxGuests" (ngModelChange)="recordHistory()"
+                      placeholder="Ej: 30" min="0">
+                  </label>
+                </div>
+
+                <div class="access-field-group">
+                  <label>Mensaje de confirmación al enviar
+                    <textarea rows="2" [(ngModel)]="acc.selfRegSuccessMessage" (ngModelChange)="recordHistory()"
+                      placeholder="¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo." maxlength="250"></textarea>
+                  </label>
+                </div>
+              </div>
+            </details>
+          </div>
         </ng-container>
 
         <div class="save-template-box" *ngIf="toolCategory === 'design'">
@@ -2354,52 +2467,138 @@
                   [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
                   <lucide-icon [name]="design.accessScreen?.iconName || 'lock-keyhole'" [strokeWidth]="2"></lucide-icon>
                 </div>
-                <!-- Titulo y Subtitulo -->
-                <h2 class="access-stage-title"
-                  [style.font-family]="design.accessScreen?.headingFont || 'Playfair Display'"
-                  [style.color]="design.accessScreen?.textColor || '#1c2434'">
-                  {{ design.accessScreen?.title || 'Acceso a la invitación' }}
-                </h2>
-                <p class="access-stage-subtitle" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                  [style.color]="(design.accessScreen?.textColor || '#1c2434') + 'cc'">
-                  {{ design.accessScreen?.subtitle || 'Esta invitación requiere un enlace personal. Solicítalo con tu
-                  correo o teléfono registrado.' }}
-                </p>
-                <!-- Formulario Interactivo de Simulacion -->
-                <form class="access-stage-form" (submit)="$event.preventDefault(); testAccessSimSubmit()">
-                  <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                <!-- VISTA 1: INGRESO DE INVITADOS CON O SIN NIP -->
+                <ng-container *ngIf="accessSimView === 'login'">
+                  <!-- Titulo y Subtitulo -->
+                  <h2 class="access-stage-title"
+                    [style.font-family]="design.accessScreen?.headingFont || 'Playfair Display'"
                     [style.color]="design.accessScreen?.textColor || '#1c2434'">
-                    {{ design.accessScreen?.inputLabel || 'Correo o teléfono registrado' }}
-                  </label>
-                  <div class="access-stage-input-wrap">
-                    <input type="text" class="access-stage-input" [(ngModel)]="accessSimInput" name="simContact"
-                      [placeholder]="design.accessScreen?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono'"
-                      [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                  </div>
-
-                  <!-- Campo NIP si esta activado -->
-                  <ng-container *ngIf="design.accessScreen?.requirePin">
+                    {{ design.accessScreen?.title || 'Acceso a la invitación' }}
+                  </h2>
+                  <p class="access-stage-subtitle" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                    [style.color]="(design.accessScreen?.textColor || '#1c2434') + 'cc'">
+                    {{ design.accessScreen?.subtitle || 'Esta invitación requiere un enlace personal. Solicítalo con tu
+                    correo o teléfono registrado.' }}
+                  </p>
+                  <!-- Formulario Interactivo de Simulacion -->
+                  <form class="access-stage-form" (submit)="$event.preventDefault(); testAccessSimSubmit()">
                     <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
-                      {{ design.accessScreen?.pinInputLabel || 'NIP de acceso' }}
+                      [style.color]="design.accessScreen?.textColor || '#1c2434'">
+                      {{ design.accessScreen?.inputLabel || 'Correo o teléfono registrado' }}
                     </label>
                     <div class="access-stage-input-wrap">
-                      <input type="password" class="access-stage-input" [(ngModel)]="accessSimPin" name="simPin"
-                        [placeholder]="design.accessScreen?.pinInputPlaceholder || 'Ingresa tu NIP'"
-                        maxlength="20"
+                      <input type="text" class="access-stage-input" [(ngModel)]="accessSimInput" name="simContact"
+                        [placeholder]="design.accessScreen?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono'"
                         [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
                     </div>
-                  </ng-container>
 
-                  <button type="button" class="access-stage-btn" (click)="testAccessSimSubmit()"
-                    [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
-                    [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"
-                    [style.border-radius.px]="design.accessScreen?.buttonRadius ?? 10"
-                    [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                    <span>{{ accessSimState === 'loading' ? 'Verificando...' : (design.accessScreen?.buttonText ||
-                      'Solicitar enlace') }}</span>
-                  </button>
-                </form>
+                    <!-- Campo NIP si esta activado -->
+                    <ng-container *ngIf="design.accessScreen?.requirePin">
+                      <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                        [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
+                        {{ design.accessScreen?.pinInputLabel || 'NIP de acceso' }}
+                      </label>
+                      <div class="access-stage-input-wrap">
+                        <input type="password" class="access-stage-input" [(ngModel)]="accessSimPin" name="simPin"
+                          [placeholder]="design.accessScreen?.pinInputPlaceholder || 'Ingresa tu NIP'"
+                          maxlength="20"
+                          [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                      </div>
+                    </ng-container>
+
+                    <button type="button" class="access-stage-btn" (click)="testAccessSimSubmit()"
+                      [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
+                      [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"
+                      [style.border-radius.px]="design.accessScreen?.buttonRadius ?? 10"
+                      [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                      <span>{{ accessSimState === 'loading' ? 'Verificando...' : (design.accessScreen?.buttonText ||
+                        'Solicitar enlace') }}</span>
+                    </button>
+                  </form>
+
+                  <!-- Link de solicitud de autoregistro si está habilitado -->
+                  <div *ngIf="design.accessScreen?.allowSelfRegistration" style="margin-top: 14px; text-align: center;">
+                    <button type="button" class="access-sim-link-btn" (click)="accessSimView = 'register'"
+                      [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
+                      ¿No estás en la lista? Solicitar invitación →
+                    </button>
+                  </div>
+                </ng-container>
+
+                <!-- VISTA 2: AUTO-REGISTRO / SOLICITUD DE ACCESO -->
+                <ng-container *ngIf="accessSimView === 'register'">
+                  <h2 class="access-stage-title"
+                    [style.font-family]="design.accessScreen?.headingFont || 'Playfair Display'"
+                    [style.color]="design.accessScreen?.textColor || '#1c2434'">
+                    {{ design.accessScreen?.selfRegTitle || 'Solicitar Invitación' }}
+                  </h2>
+                  <p class="access-stage-subtitle" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                    [style.color]="(design.accessScreen?.textColor || '#1c2434') + 'cc'">
+                    {{ design.accessScreen?.selfRegSubtitle || 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu pase.' }}
+                  </p>
+
+                  <form class="access-stage-form" (submit)="$event.preventDefault(); testAccessSimRegSubmit()">
+                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                      [style.color]="design.accessScreen?.textColor || '#1c2434'">
+                      Nombre completo *
+                    </label>
+                    <div class="access-stage-input-wrap">
+                      <input type="text" class="access-stage-input" [(ngModel)]="accessSimRegName" name="simRegName"
+                        placeholder="Tu nombre y apellido" required
+                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                    </div>
+
+                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
+                      Correo electrónico *
+                    </label>
+                    <div class="access-stage-input-wrap">
+                      <input type="email" class="access-stage-input" [(ngModel)]="accessSimRegEmail" name="simRegEmail"
+                        placeholder="tu-correo@ejemplo.com" required
+                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                    </div>
+
+                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
+                      Teléfono / WhatsApp (opcional)
+                    </label>
+                    <div class="access-stage-input-wrap">
+                      <input type="tel" class="access-stage-input" [(ngModel)]="accessSimRegPhone" name="simRegPhone"
+                        placeholder="55 0000 0000"
+                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                    </div>
+
+                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
+                      Pases solicitados
+                    </label>
+                    <div class="access-stage-input-wrap">
+                      <select class="access-stage-input" [(ngModel)]="accessSimRegCompanions" name="simRegCompanions"
+                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                        <option [ngValue]="1">1 pase (Solo yo)</option>
+                        <option [ngValue]="2">2 pases (+1 acompañante)</option>
+                        <option [ngValue]="3">3 pases (+2 acompañantes)</option>
+                        <option [ngValue]="4">4 pases (+3 acompañantes)</option>
+                      </select>
+                    </div>
+
+                    <button type="button" class="access-stage-btn" (click)="testAccessSimRegSubmit()"
+                      [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
+                      [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"
+                      [style.border-radius.px]="design.accessScreen?.buttonRadius ?? 10"
+                      [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                      style="margin-top: 14px;">
+                      <span>{{ accessSimState === 'loading' ? 'Enviando solicitud...' : (design.accessScreen?.selfRegButtonText || 'ENVIAR SOLICITUD') }}</span>
+                    </button>
+                  </form>
+
+                  <div style="margin-top: 14px; text-align: center;">
+                    <button type="button" class="access-sim-link-btn" (click)="accessSimView = 'login'"
+                      [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
+                      ← Ya estoy en la lista / Volver
+                    </button>
+                  </div>
+                </ng-container>
                 <!-- Alertas de estado en simulacion -->
                 <div *ngIf="accessSimState === 'success'" class="access-stage-alert success">
                   <span>✓</span> {{ accessSimMessage }}

@@ -25,6 +25,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   accessRequired = false;
   accessMessage = '';
   accessGateData?: { slug?: string; eventTitle?: string; accessMode?: string; accessScreen?: VisualAccessScreenDesign; theme?: any; palette?: any; coverImageUrl?: string };
+  accessGateView: 'login' | 'register' = 'login';
+  selfRegName = '';
+  selfRegEmail = '';
+  selfRegPhone = '';
+  selfRegCompanions = 1;
+  selfRegSubmitting = false;
+  selfRegSubmitted = false;
+  selfRegMessage = '';
   success = '';
   albumMessage = '';
   dedicationMessage = '';
@@ -1334,6 +1342,64 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         }
         this.error = error.error?.message || 'No fue posible validar el pase. Intenta más tarde.';
         this.checkingGuest = false;
+        this.cdr?.markForCheck();
+      }
+    });
+  }
+
+  toggleAccessGateView(view: 'login' | 'register'): void {
+    this.accessGateView = view;
+    this.error = '';
+    this.success = '';
+    this.selfRegSubmitted = false;
+    this.cdr?.markForCheck();
+  }
+
+  submitAccessSelfRegistration(): void {
+    const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
+    if (!this.selfRegName.trim()) {
+      this.error = 'Por favor ingresa tu nombre completo.';
+      return;
+    }
+    if (!this.selfRegEmail.trim()) {
+      this.error = 'Por favor ingresa tu correo electrónico.';
+      return;
+    }
+    this.selfRegSubmitting = true;
+    this.error = '';
+    this.success = '';
+
+    const requireApproval = this.accessScreenDesign?.selfRegRequireApproval !== false;
+    const assignedGroup = this.accessScreenDesign?.selfRegGroup || 'Solicitudes de Acceso';
+    const status = requireApproval ? 'pending' : 'confirmed';
+
+    this.api.selfRegisterGuest(slug, {
+      name: this.selfRegName.trim(),
+      email: this.selfRegEmail.trim(),
+      phone: this.selfRegPhone.trim() || undefined,
+      companions: Math.max(0, this.selfRegCompanions - 1),
+      group: assignedGroup,
+      status
+    }).subscribe({
+      next: (res) => {
+        this.selfRegSubmitting = false;
+        this.selfRegSubmitted = true;
+        const defaultSuccess = '¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo.';
+        this.selfRegMessage = this.accessScreenDesign?.selfRegSuccessMessage || defaultSuccess;
+        this.success = this.selfRegMessage;
+
+        if (!requireApproval && res.guestSessionToken) {
+          this.verifiedGuest = res.guest;
+          this.guestSessionToken = res.guestSessionToken;
+          sessionStorage.setItem(this.guestSessionStorageKey(slug), res.guestSessionToken);
+          this.fetchPublishedInvitation(slug, res.guestSessionToken);
+          this.showPassModal = true;
+        }
+        this.cdr?.markForCheck();
+      },
+      error: (err) => {
+        this.selfRegSubmitting = false;
+        this.error = err.error?.message || 'No fue posible enviar tu solicitud. Intenta más tarde.';
         this.cdr?.markForCheck();
       }
     });
