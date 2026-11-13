@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, Optional, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ApiService } from '../../../core/api.service';
 import {
   DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationGalleryItem, InvitationLocation, InvitationModel, RsvpResponse,
   VisualInvitationLayer, VisualInvitationSection, VisualPluginPartDesign
@@ -18,7 +19,7 @@ import { resolveGiftStoreLogo } from '../../../features/visual-invitation-editor
 export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   @ViewChild('visualInvitationRoot') private visualInvitationRoot?: ElementRef<HTMLElement>;
 
-  constructor(private cdr?: ChangeDetectorRef) {}
+  constructor(private cdr?: ChangeDetectorRef, @Optional() private api?: ApiService) {}
 
   // Render & Style Memoization Caches
   private cachedIsXvBurgundy: boolean | null = null;
@@ -165,6 +166,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
 
   @Output() verifyGuestAccess = new EventEmitter<{ email: string; phone: string }>();
   @Output() submitRsvp = new EventEmitter<any>();
+  @Output() submitSelfRegister = new EventEmitter<any>();
   @Output() uploadPhoto = new EventEmitter<File>();
   @Output() submitDedication = new EventEmitter<{ publicName: string; message: string }>();
   @Output() requestSong = new EventEmitter<{ title: string; artist: string; dedication: string; sourceUrl: string }>();
@@ -236,6 +238,18 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
   guestEmail = '';
   guestPhone = '';
   rsvp = { name: '', email: '', response: 'confirmed', companions: 0, dietaryRestrictions: '', message: '' };
+  selfRegister = {
+    name: '',
+    phone: '',
+    email: '',
+    companions: 0,
+    companionNames: '',
+    notes: ''
+  };
+  selfRegistering = false;
+  selfRegisteredGuest: any = null;
+  selfRegisterMessage = '';
+  selfRegisterError = '';
   dedication = { publicName: '', message: '' };
   song = { title: '', artist: '', dedication: '', sourceUrl: '' };
   giftCopyMessage = '';
@@ -1235,7 +1249,7 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     const moduleStyle = section.moduleStyle || {};
     const overlay = Math.round((background.overlay || 0) * 255).toString(16).padStart(2, '0');
     const height = this.sectionRenderHeight(section);
-    const naturalFlow = this.presentationMode === 'chapters' && !this.exportMode && !section.layers.length && !['hero', 'custom'].includes(section.type);
+    const naturalFlow = ((this.presentationMode === 'chapters' || section.type === 'selfRegister') && !this.exportMode && !section.layers.length && !['hero', 'custom'].includes(section.type));
     const isXv = this.isXvBurgundy();
     const defaultBg = isXv ? '#240308' : '#ffffff';
     const resolvedBgColor = background.color && background.color !== '#fff' && background.color !== '#ffffff' ? background.color : defaultBg;
@@ -1591,7 +1605,82 @@ export class VisualInvitationRendererComponent implements OnChanges, OnDestroy {
     }
   }
 
+  sendSelfRegister(section: VisualInvitationSection): void {
+    if (!this.selfRegister.name || !this.selfRegister.name.trim()) {
+      this.selfRegisterError = 'Por favor ingresa tu nombre completo';
+      this.cdr?.markForCheck();
+      return;
+    }
+
+    const companionsNum = Number(this.selfRegister.companions || 0);
+    const companionList = this.selfRegister.companionNames
+      ? this.selfRegister.companionNames.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const payload = {
+      name: this.selfRegister.name.trim(),
+      phone: this.selfRegister.phone ? this.selfRegister.phone.trim() : undefined,
+      email: this.selfRegister.email ? this.selfRegister.email.trim() : undefined,
+      companions: companionsNum,
+      companionNames: companionList,
+      notes: this.selfRegister.notes ? this.selfRegister.notes.trim() : undefined,
+      group: String(this.pluginSetting(section, 'defaultGroup') || 'Auto-registro'),
+      status: String(this.pluginSetting(section, 'initialRsvp') || 'confirmed')
+    };
+
+    this.selfRegistering = true;
+    this.selfRegisterError = '';
+    this.selfRegisterMessage = '';
+    this.cdr?.markForCheck();
+
+    if (this.api && this.invitation?.slug) {
+      this.api.selfRegisterGuest(this.invitation.slug, payload).subscribe({
+        next: (res) => {
+          this.selfRegistering = false;
+          this.selfRegisteredGuest = res.guest;
+          this.selfRegisterMessage = String(this.pluginSetting(section, 'successMessage') || res.message || '¡Registro exitoso! Ya estás en la lista oficial de invitados.');
+          this.submitSelfRegister.emit(res);
+          this.cdr?.markForCheck();
+        },
+        error: (err) => {
+          this.selfRegistering = false;
+          this.selfRegisterError = err.error?.message || 'No se pudo completar el registro. Intenta de nuevo.';
+          this.cdr?.markForCheck();
+        }
+      });
+    } else {
+      setTimeout(() => {
+        this.selfRegistering = false;
+        this.selfRegisteredGuest = {
+          name: payload.name,
+          group: payload.group,
+          status: payload.status,
+          allowedCompanions: payload.companions
+        };
+        this.selfRegisterMessage = String(this.pluginSetting(section, 'successMessage') || '¡Registro exitoso! Ya estás en la lista oficial de invitados.');
+        this.submitSelfRegister.emit({ ok: true, guest: this.selfRegisteredGuest, message: this.selfRegisterMessage });
+        this.cdr?.markForCheck();
+      }, 400);
+    }
+  }
+
+  resetSelfRegisterForm(): void {
+    this.selfRegister = {
+      name: '',
+      phone: '',
+      email: '',
+      companions: 0,
+      companionNames: '',
+      notes: ''
+    };
+    this.selfRegisteredGuest = null;
+    this.selfRegisterMessage = '';
+    this.selfRegisterError = '';
+    this.cdr?.markForCheck();
+  }
+
   private resetSandboxForms(): void {
+    this.resetSelfRegisterForm();
     this.guestEmail = '';
     this.guestPhone = '';
     this.rsvp = { name: '', email: '', response: 'confirmed', companions: 0, dietaryRestrictions: '', message: '' };

@@ -738,6 +738,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   readonly pluginCatalog = [
     { type: 'rsvp', icon: '✓', label: 'Confirmación RSVP' },
+    { type: 'selfRegister', icon: '✍️', label: 'Auto-registro de Invitados' },
     { type: 'guestPass', icon: '▦', label: 'Mi mesa y pase' },
     { type: 'guestActivity', icon: '◎', label: 'Mi pase y actividad' },
     { type: 'countdown', icon: '◷', label: 'Cuenta regresiva' },
@@ -2612,7 +2613,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       height = xvHeights[type] || 540;
     } else {
       if (type === 'rsvp') height = 820;
-      else if (['dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'itinerary', 'dressCode', 'lodging', 'gallery', 'gifts'].includes(type)) height = 760;
+      else if (['dedications', 'songs', 'album', 'guestPass', 'guestActivity', 'countdown', 'locations', 'itinerary', 'dressCode', 'lodging', 'gallery', 'gifts', 'selfRegister'].includes(type)) height = 760;
       else if (type === 'story') height = 620;
       else height = 540;
     }
@@ -2642,6 +2643,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (type === 'dressCode') this.ensureDressCodeCanvasLayers(section);
     if (type === 'lodging') this.ensureLodgingCanvasLayers(section);
     if (type === 'gallery') this.ensureGalleryCanvasLayers(section);
+    if (type === 'selfRegister') {
+      section.pluginSettings = {
+        eyebrow: '¿Nos acompañas?',
+        introText: 'Ingresa tus datos para registrarte y confirmar tu asistencia en la lista oficial del evento.',
+        buttonText: 'Confirmar mi asistencia',
+        defaultGroup: 'Auto-registro',
+        initialRsvp: 'confirmed',
+        maxGuests: 0,
+        showPhone: true,
+        showEmail: true,
+        showCompanions: true,
+        showMessage: true,
+        successMessage: '¡Registro exitoso! Ya estás en la lista oficial de invitados.'
+      };
+    }
 
     if (isXv) {
       this.refineXvBurgundySectionStyles(section);
@@ -5497,8 +5513,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     });
   }
 
-  pluginSetting(section: VisualInvitationSection, key: string): string | number | boolean {
-    return section.pluginSettings?.[key] ?? this.defaultPluginSettings(section.type)[key] ?? '';
+  pluginSetting(section: VisualInvitationSection, key: string, fallback?: string | number | boolean): string | number | boolean {
+    return section.pluginSettings?.[key] ?? this.defaultPluginSettings(section.type)[key] ?? fallback ?? '';
   }
 
   setPluginSetting(section: VisualInvitationSection, key: string, value: string | number | boolean): void {
@@ -5574,7 +5590,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   isConfigurablePlugin(type: string): boolean {
-    return ['rsvp', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs', 'gallery', 'itinerary', 'dressCode', 'lodging'].includes(type);
+    return ['rsvp', 'selfRegister', 'guestPass', 'guestActivity', 'countdown', 'locations', 'gifts', 'album', 'dedications', 'songs', 'gallery', 'itinerary', 'dressCode', 'lodging'].includes(type);
   }
 
   hasRsvpCanvasLayers(section: VisualInvitationSection): boolean {
@@ -6826,6 +6842,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (!data.passEmail.trim() && !data.passPhone.trim()) return this.functionalTestError('Escribe un correo o teléfono para simular la identificación.');
       this.functionalTestSuccess = true;
       this.functionalTestFeedback = 'Identificación simulada. En la invitación publicada se consultaría el invitado real y se mostraría su pase.';
+    } else if (section.type === 'selfRegister') {
+      if (!data.name.trim()) return this.functionalTestError('Escribe al menos el nombre del invitado para auto-registrarse.');
+      this.functionalTestSuccess = true;
+      this.functionalTestFeedback = `Simulación correcta: ${data.name.trim()} se registrará automáticamente en la lista oficial de invitados${data.companions > 0 ? ` (+${data.companions} acompañantes)` : ''}.`;
     }
   }
 
@@ -6843,6 +6863,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!data.name?.trim()) return this.functionalTestError('Escribe el nombre del invitado antes de enviar.');
     this.functionalTestSuccess = true;
     this.functionalTestFeedback = `RSVP válido: ${data.name.trim()} quedaría como ${data.response}${Number(data.companions || 0) > 0 ? ` con ${Number(data.companions)} acompañante(s)` : ''}.`;
+  }
+
+  simulateVisualSelfRegister(data: { name: string; phone?: string; email?: string; companions?: number }): void {
+    if (!data.name?.trim()) return this.functionalTestError('Escribe el nombre antes de enviar el auto-registro.');
+    this.functionalTestSuccess = true;
+    this.functionalTestFeedback = `¡Registro exitoso simulado! ${data.name.trim()} aparecerá en la lista de invitados del evento.`;
   }
 
   simulateVisualDedication(data: { publicName: string; message: string }): void {
@@ -9903,6 +9929,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   private defaultPluginSettings(type: string): Record<string, string | number | boolean> {
     const common: Record<string, string | number | boolean> = { eyebrow: '', introText: '', primaryButtonText: '' };
     if (type === 'rsvp') return { ...common, eyebrow: 'Confirmación', introText: '', primaryButtonText: 'Enviar confirmación', identifyButtonText: 'Continuar', showDietary: true, showMessage: true };
+    if (type === 'selfRegister') return { ...common, eyebrow: '¿Nos acompañas?', introText: 'Ingresa tus datos para registrarte y confirmar tu asistencia en la lista oficial del evento.', buttonText: 'Confirmar mi asistencia', defaultGroup: 'Auto-registro', initialRsvp: 'confirmed', maxGuests: 0, showPhone: true, showEmail: true, showCompanions: true, showMessage: true, successMessage: '¡Registro exitoso! Ya estás en la lista oficial de invitados.' };
     if (type === 'guestPass') return { ...common, eyebrow: 'Acceso personal', introText: 'Presenta este pase al ingresar.', identifyButtonText: 'Ver mi pase', showGuestName: true, showGroup: true, showTable: true, showSeat: true, showCompanions: true, showQr: true };
     if (type === 'guestActivity') return { ...common, eyebrow: 'Tu espacio', introText: 'Consulta tu confirmación, pase y envíos sin salir de la invitación.', identifyButtonText: 'Ver mi actividad', primaryButtonText: 'Ver toda mi actividad', showRsvp: true, showPass: true, showAlbum: true, showSongs: true, showDedications: true };
     if (type === 'countdown') return { ...common, eyebrow: 'Falta poco', introText: '', expiredText: 'El gran día llegó' };
@@ -10134,7 +10161,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private isFunctionalType(type: string): boolean {
-    return ['story', 'locations', 'itinerary', 'dressCode', 'rsvp', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs', 'lodging'].includes(type);
+    return ['story', 'locations', 'itinerary', 'dressCode', 'rsvp', 'selfRegister', 'guestPass', 'guestActivity', 'countdown', 'gifts', 'gallery', 'album', 'dedications', 'songs', 'lodging'].includes(type);
   }
 
   private hasEnvelopeContent(envelope = this.invitation?.content?.digitalEnvelope): boolean {

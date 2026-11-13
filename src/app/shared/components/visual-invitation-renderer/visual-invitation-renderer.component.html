@@ -8,7 +8,7 @@
   [style.--visual-button-text]="designThemeStyle()['--visual-button-text']"
   [style.--visual-button-border]="designThemeStyle()['--visual-button-border']"
   [style.--visual-button-radius.px]="invitation?.content?.visualDesign?.theme?.buttonRadius">
-  <section *ngFor="let section of displayedSections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [class.auto-flow]="presentationMode === 'chapters' && !section.layers.length && section.type !== 'hero' && section.type !== 'custom' && !exportMode" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
+  <section *ngFor="let section of displayedSections; let sectionIndex = index; trackBy: trackVisualById" class="visual-section" [class.has-module]="section.type !== 'hero'" [class.auto-flow]="(!section.layers.length && section.type === 'selfRegister') || (presentationMode === 'chapters' && !section.layers.length && section.type !== 'hero' && section.type !== 'custom' && !exportMode)" [attr.data-section]="section.type" [ngClass]="moduleClasses(section)" [ngStyle]="sectionStyle(section)">
     <div class="visual-section-canvas">
 
     <div class="functional-module story-module" *ngIf="section.type === 'story' && !section.layers.length">
@@ -245,6 +245,72 @@
         </div>
       </ng-container>
     </form>
+
+    <div class="functional-module form-module self-register-module" *ngIf="section.type === 'selfRegister'">
+      <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', '¿Nos acompañas?') }}</small>
+      <h2>{{ section.title || 'Registro de Invitados' }}</h2>
+      <p class="module-intro" *ngIf="pluginSetting(section, 'introText')">
+        {{ pluginSetting(section, 'introText', 'Ingresa tus datos para registrarte y confirmar tu asistencia en la lista oficial del evento.') }}
+      </p>
+
+      <div *ngIf="selfRegisteredGuest; else selfRegisterFormTemplate" class="guest-pass-card self-registered-card">
+        <div>
+          <h3>{{ selfRegisteredGuest.name }}</h3>
+          <p class="self-reg-group">{{ selfRegisteredGuest.group || 'Auto-registro' }} · Asistencia Confirmada</p>
+          <strong *ngIf="(selfRegisteredGuest.allowedCompanions || 0) > 0">
+            {{ selfRegisteredGuest.allowedCompanions + 1 }} personas (tú + {{ selfRegisteredGuest.allowedCompanions }} acompañante{{ selfRegisteredGuest.allowedCompanions > 1 ? 's' : '' }})
+          </strong>
+          <span *ngIf="!selfRegisteredGuest.allowedCompanions">Pase individual (1 persona)</span>
+          <p class="feedback success" *ngIf="selfRegisterMessage">{{ selfRegisterMessage }}</p>
+        </div>
+        <div class="self-reg-actions">
+          <button type="button" class="btn-secondary-link" (click)="resetSelfRegisterForm()">Registrar a otra persona</button>
+        </div>
+      </div>
+
+      <ng-template #selfRegisterFormTemplate>
+        <form (ngSubmit)="sendSelfRegister(section)" class="self-register-form">
+          <label>Nombre completo *
+            <input [(ngModel)]="selfRegister.name" name="selfRegName" required placeholder="Tu nombre y apellido" autocomplete="name">
+          </label>
+
+          <label *ngIf="pluginSetting(section, 'showPhone', true)">Teléfono / WhatsApp
+            <input [(ngModel)]="selfRegister.phone" name="selfRegPhone" type="tel" placeholder="+52 55 1234 5678" autocomplete="tel">
+          </label>
+
+          <label *ngIf="pluginSetting(section, 'showEmail', true)">Correo electrónico
+            <input [(ngModel)]="selfRegister.email" name="selfRegEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email">
+          </label>
+
+          <label *ngIf="pluginSetting(section, 'showCompanions', true)">Acompañantes adicionales
+            <select [(ngModel)]="selfRegister.companions" name="selfRegCompanions">
+              <option [ngValue]="0">Solo yo (1 persona)</option>
+              <option [ngValue]="1">+1 acompañante (2 personas en total)</option>
+              <option [ngValue]="2">+2 acompañantes (3 personas en total)</option>
+              <option [ngValue]="3">+3 acompañantes (4 personas en total)</option>
+              <option [ngValue]="4">+4 acompañantes (5 personas en total)</option>
+              <option [ngValue]="5">+5 acompañantes (6 personas en total)</option>
+            </select>
+          </label>
+
+          <label *ngIf="pluginSetting(section, 'showCompanions', true) && selfRegister.companions > 0" class="wide-label">
+            Nombres de los acompañantes (opcional)
+            <input [(ngModel)]="selfRegister.companionNames" name="selfRegCompNames" placeholder="Ej: María Pérez, Carlos Ruiz">
+          </label>
+
+          <label *ngIf="pluginSetting(section, 'showMessage', true)" class="wide-label">Mensaje o dedicatoria para los anfitriones
+            <textarea [(ngModel)]="selfRegister.notes" name="selfRegNotes" rows="2" placeholder="Escribe un mensaje opcional..."></textarea>
+          </label>
+
+          <p class="feedback error" *ngIf="selfRegisterError">{{ selfRegisterError }}</p>
+          <p class="feedback success" *ngIf="selfRegisterMessage">{{ selfRegisterMessage }}</p>
+
+          <button type="submit" [disabled]="selfRegistering || !selfRegister.name.trim()">
+            {{ selfRegistering ? 'Registrando...' : (pluginSetting(section, 'buttonText') || 'Confirmar mi asistencia') }}
+          </button>
+        </form>
+      </ng-template>
+    </div>
 
     <div class="functional-module form-module guest-pass-module" *ngIf="section.type === 'guestPass' && !hasGuestPassCanvasLayers(section)">
       <small class="module-eyebrow">{{ pluginSetting(section, 'eyebrow', 'Acceso personal') }}</small><h2>{{ section.title || 'Mi mesa y pase' }}</h2><p class="module-intro" *ngIf="pluginSetting(section, 'introText')">{{ pluginSetting(section, 'introText') }}</p>

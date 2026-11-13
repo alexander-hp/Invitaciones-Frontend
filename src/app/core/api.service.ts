@@ -570,6 +570,22 @@ export class ApiService {
     return this.http.post<{ message: string; guest?: GuestAccessResponse['guest']; guestSessionToken?: string }>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 
+  selfRegisterGuest(slug: string, payload: {
+    name: string;
+    phone?: string;
+    email?: string;
+    companions?: number;
+    companionNames?: string[];
+    notes?: string;
+    group?: string;
+    status?: string;
+  }): Observable<{ ok: boolean; isNew?: boolean; guest: GuestAccessResponse['guest']; guestSessionToken?: string; message: string }> {
+    return this.http.post<{ ok: boolean; isNew?: boolean; guest: GuestAccessResponse['guest']; guestSessionToken?: string; message: string }>(
+      `${this.apiUrl}/invitations/public/${slug}/self-register-guest`,
+      payload
+    );
+  }
+
   getInvitationGuestStatus(slug: string, guestSessionToken: string): Observable<ExternalGuestStatusResponse> {
     return this.http.get<ExternalGuestStatusResponse>(`${this.apiUrl}/invitations/public/${slug}/my-status`, {
       headers: { Authorization: `Bearer ${guestSessionToken}` }

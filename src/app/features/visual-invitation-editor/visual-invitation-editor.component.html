@@ -393,6 +393,11 @@
                   (change)="functionalTestFileChanged(functionalTestFile)"><span>{{ functionalTestData.albumFileName ||
                   'Ningún archivo seleccionado' }}</span></label>
             </ng-container>
+            <ng-container *ngSwitchCase="'selfRegister'">
+              <label>Nombre completo<input [(ngModel)]="functionalTestData.name" placeholder="Tu nombre y apellido"></label>
+              <label>Teléfono<input [(ngModel)]="functionalTestData.contact" placeholder="+52 55 1234 5678"></label>
+              <label>Acompañantes<input [(ngModel)]="functionalTestData.companions" type="number" min="0" max="10"></label>
+            </ng-container>
             <ng-container *ngSwitchCase="'guestPass'">
               <label>Correo<input [(ngModel)]="functionalTestData.passEmail" placeholder="correo@ejemplo.com"></label>
               <label>Teléfono<input [(ngModel)]="functionalTestData.passPhone" placeholder="Número de teléfono"></label>
@@ -419,6 +424,7 @@
                 [dedicationMessage]="functionalTestMessage('dedications')"
                 [songRequestMessage]="functionalTestMessage('songs')"
                 (verifyGuestAccess)="simulateVisualGuestAccess($event)" (submitRsvp)="simulateVisualRsvp($event)"
+                (submitSelfRegister)="simulateVisualSelfRegister($event)"
                 (uploadPhoto)="simulateVisualPhoto($event)" (submitDedication)="simulateVisualDedication($event)"
                 (requestSong)="simulateVisualSong($event)">
               </app-visual-invitation-renderer>
@@ -2029,6 +2035,20 @@
                     </button>
                   </div>
 
+                  <div *ngSwitchCase="'selfRegister'" class="preview-form">
+                    <small>{{ pluginSetting(section, 'eyebrow') || '¿Nos acompañas?' }}</small>
+                    <h2>{{ section.title || 'Registro de Invitados' }}</h2>
+                    <p class="preview-intro">{{ pluginSetting(section, 'introText') || 'Ingresa tus datos para registrarte y confirmar tu asistencia en la lista oficial del evento.' }}</p>
+                    <div class="preview-fields">
+                      <label>Nombre completo<span>Tu nombre y apellido</span></label>
+                      <label *ngIf="pluginSetting(section, 'showPhone', true)">Teléfono / WhatsApp<span>+52 55 1234 5678</span></label>
+                      <label *ngIf="pluginSetting(section, 'showEmail', true)">Correo electrónico<span>correo@ejemplo.com</span></label>
+                      <label *ngIf="pluginSetting(section, 'showCompanions', true)">Acompañantes<span>1 persona (tú)</span></label>
+                      <label *ngIf="pluginSetting(section, 'showMessage', true)">Mensaje<span>Un mensaje para los anfitriones...</span></label>
+                    </div>
+                    <i class="preview-button">{{ pluginSetting(section, 'buttonText') || 'Confirmar mi asistencia' }}</i>
+                  </div>
+
                   <div *ngSwitchCase="'guestPass'" class="preview-form preview-guest-pass">
                     <small>{{ pluginSetting(section, 'eyebrow') || 'Acceso personal' }}</small>
                     <h2>{{ section.title || 'Mi mesa y pase' }}</h2>
@@ -3301,6 +3321,68 @@
                         <label class="toggle"><input [ngModel]="pluginSetting(section, 'showQr')"
                             (ngModelChange)="setPluginSetting(section, 'showQr', $event)" type="checkbox"> Mostrar
                           código QR</label>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'selfRegister'">
+                        <label>Subtítulo / Antetítulo
+                          <input [ngModel]="pluginSetting(section, 'eyebrow')"
+                            (ngModelChange)="setPluginSetting(section, 'eyebrow', $event)" type="text"
+                            placeholder="¿Nos acompañas?" maxlength="80">
+                        </label>
+                        <label>Texto introductorio
+                          <textarea [ngModel]="pluginSetting(section, 'introText')"
+                            (ngModelChange)="setPluginSetting(section, 'introText', $event)" rows="3"
+                            placeholder="Ingresa tus datos para registrarte en la lista oficial del evento." maxlength="250"></textarea>
+                        </label>
+                        <label>Texto del botón
+                          <input [ngModel]="pluginSetting(section, 'buttonText')"
+                            (ngModelChange)="setPluginSetting(section, 'buttonText', $event)" type="text"
+                            placeholder="Confirmar mi asistencia" maxlength="80">
+                        </label>
+                        <label>Grupo asignado en Lista de Invitados
+                          <input [ngModel]="pluginSetting(section, 'defaultGroup')"
+                            (ngModelChange)="setPluginSetting(section, 'defaultGroup', $event)" type="text"
+                            placeholder="Auto-registro" maxlength="60">
+                        </label>
+                        <label>Estado inicial en Lista
+                          <select [ngModel]="pluginSetting(section, 'initialRsvp', 'confirmed')"
+                            (ngModelChange)="setPluginSetting(section, 'initialRsvp', $event)">
+                            <option value="confirmed">Confirmado directamente</option>
+                            <option value="pending">Pendiente por confirmar</option>
+                          </select>
+                        </label>
+                        <label>Cupo máximo de registros (0 = sin límite especial)
+                          <input [ngModel]="pluginSetting(section, 'maxGuests')"
+                            (ngModelChange)="setPluginSetting(section, 'maxGuests', +$event || 0)" type="number" min="0"
+                            placeholder="Ej: 50 (0 = sin límite especial)">
+                          <small style="color: var(--text-secondary, #8c827a); font-size: 11px; margin-top: 4px; display: block;">
+                            Define un cupo para este formulario. Si se deja en 0, aplica el límite general de tu plan.
+                          </small>
+                        </label>
+                        <label class="toggle">
+                          <input [ngModel]="pluginSetting(section, 'showPhone', true)"
+                            (ngModelChange)="setPluginSetting(section, 'showPhone', $event)" type="checkbox">
+                          Solicitar Teléfono / WhatsApp
+                        </label>
+                        <label class="toggle">
+                          <input [ngModel]="pluginSetting(section, 'showEmail', true)"
+                            (ngModelChange)="setPluginSetting(section, 'showEmail', $event)" type="checkbox">
+                          Solicitar Correo electrónico
+                        </label>
+                        <label class="toggle">
+                          <input [ngModel]="pluginSetting(section, 'showCompanions', true)"
+                            (ngModelChange)="setPluginSetting(section, 'showCompanions', $event)" type="checkbox">
+                          Permitir registrar acompañantes
+                        </label>
+                        <label class="toggle">
+                          <input [ngModel]="pluginSetting(section, 'showMessage', true)"
+                            (ngModelChange)="setPluginSetting(section, 'showMessage', $event)" type="checkbox">
+                          Permitir mensaje / notas para anfitriones
+                        </label>
+                        <label>Mensaje de éxito
+                          <input [ngModel]="pluginSetting(section, 'successMessage')"
+                            (ngModelChange)="setPluginSetting(section, 'successMessage', $event)" type="text"
+                            placeholder="¡Registro exitoso! Ya estás en la lista oficial de invitados." maxlength="140">
+                        </label>
                       </ng-container>
                       <ng-container *ngSwitchCase="'guestActivity'">
                         <div class="inspector-view-mode-card">

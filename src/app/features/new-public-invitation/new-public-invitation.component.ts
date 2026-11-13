@@ -1659,6 +1659,18 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.submit();
   }
 
+  onSelfRegistered(res: any): void {
+    if (res?.guest) {
+      this.verifiedGuest = res.guest;
+      if (res.guestSessionToken) {
+        this.guestSessionToken = res.guestSessionToken;
+        if (this.invitation?.slug) {
+          sessionStorage.setItem(this.guestSessionStorageKey(this.invitation.slug), res.guestSessionToken);
+        }
+      }
+    }
+  }
+
   submitDedicationFromData(data: { publicName: string; message: string }): void {
     this.dedication.publicName = data.publicName;
     this.dedication.message = data.message;

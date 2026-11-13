@@ -309,6 +309,7 @@
     [currentPlayingTrackUrl]="currentPlayingTrackUrl"
     (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
     (submitRsvp)="submitVisualRsvp($event)"
+    (submitSelfRegister)="onSelfRegistered($event)"
     (uploadPhoto)="onFileSelectedDirect($event)"
     (submitDedication)="submitDedicationFromData($event)"
     (requestSong)="submitVisualSongRequest($event)"
