@@ -166,6 +166,14 @@
           {{ getAccessGateInputLabel() }}
         </label>
         <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput" [placeholder]="getAccessGateInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()" autocomplete="email" required class="nw-pub-access-input">
+        <div *ngIf="accessScreenDesign?.requirePin" class="nw-pub-access-pin-group" style="margin-top: 12px; margin-bottom: 4px; text-align: left;">
+          <label for="guest-access-pin" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+            {{ getAccessGatePinInputLabel() }}
+          </label>
+          <input id="guest-access-pin" name="pin" type="password" maxlength="20" [(ngModel)]="guestAccessPin"
+            [placeholder]="getAccessGatePinInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()"
+            required class="nw-pub-access-input">
+        </div>
         <button type="submit" class="nw-pub-access-submit-btn" [disabled]="checkingGuest" [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()">
           <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
           <span>{{ checkingGuest ? 'Verificando...' : getAccessGateButtonText() }}</span>

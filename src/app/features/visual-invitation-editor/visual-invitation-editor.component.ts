@@ -134,6 +134,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   autosaveState = 'Guardado';
   editorCanvasMode: 'invitation' | 'access' = 'invitation';
   accessSimInput = '';
+  accessSimPin = '';
   accessSimState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   accessSimMessage = '';
   readonly accessPresets = [
@@ -7495,8 +7496,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         buttonTextColor: theme?.buttonTextColor || '#ffffff',
         buttonRadius: theme?.buttonRadius ?? 10,
         headingFont: theme?.headingFont || 'Playfair Display',
-        bodyFont: theme?.bodyFont || 'Montserrat'
+        bodyFont: theme?.bodyFont || 'Montserrat',
+        requirePin: false,
+        pinMode: 'event',
+        eventPin: '',
+        pinInputLabel: 'NIP de acceso',
+        pinInputPlaceholder: 'Ingresa tu NIP'
       };
+    } else {
+      if (this.design.accessScreen.requirePin === undefined) {
+        this.design.accessScreen.requirePin = false;
+      }
+      if (!this.design.accessScreen.pinMode) {
+        this.design.accessScreen.pinMode = 'event';
+      }
+      if (!this.design.accessScreen.pinInputLabel) {
+        this.design.accessScreen.pinInputLabel = 'NIP de acceso';
+      }
+      if (!this.design.accessScreen.pinInputPlaceholder) {
+        this.design.accessScreen.pinInputPlaceholder = 'Ingresa tu NIP';
+      }
     }
   }
 
@@ -7591,16 +7610,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.flash('Imagen de portada aplicada como fondo de acceso.');
   }
 
+  generateRandomEventPin(): void {
+    const pin = Math.floor(1000 + Math.random() * 9000).toString();
+    if (!this.design.accessScreen) {
+      this.initAccessScreenDesign();
+    }
+    this.recordHistory();
+    this.design.accessScreen!.eventPin = pin;
+    this.flash(`Nuevo NIP de evento generado: ${pin}`);
+  }
+
   testAccessSimSubmit(): void {
     if (!this.accessSimInput.trim()) {
       this.accessSimState = 'error';
       this.accessSimMessage = 'Por favor ingresa un correo o teléfono para continuar.';
       return;
     }
+    const acc = this.design?.accessScreen;
+    if (acc?.requirePin) {
+      if (!this.accessSimPin.trim()) {
+        this.accessSimState = 'error';
+        this.accessSimMessage = 'Por favor ingresa tu NIP de acceso.';
+        return;
+      }
+      if (acc.pinMode === 'event' && acc.eventPin && this.accessSimPin.trim() !== acc.eventPin.trim()) {
+        this.accessSimState = 'error';
+        this.accessSimMessage = 'El NIP ingresado no es correcto. Verifica el código e intenta nuevamente.';
+        return;
+      }
+    }
     this.accessSimState = 'loading';
     setTimeout(() => {
       this.accessSimState = 'success';
-      this.accessSimMessage = `¡Pase verificado para "${this.accessSimInput.trim()}"! En la invitación real desbloquea el acceso.`;
+      const pinNote = acc?.requirePin ? ' (NIP validado con éxito)' : '';
+      this.accessSimMessage = `¡Pase verificado para "${this.accessSimInput.trim()}"${pinNote}! En la invitación real desbloquea el acceso.`;
     }, 600);
   }
 
@@ -7608,6 +7651,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.accessSimState = 'idle';
     this.accessSimMessage = '';
     this.accessSimInput = '';
+    this.accessSimPin = '';
   }
 
   getAccessScreenBackgroundStyle(): Record<string, string> {

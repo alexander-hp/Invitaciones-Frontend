@@ -566,7 +566,7 @@ export class ApiService {
     return this.http.get<{ invitation: InvitationModel }>(`${this.apiUrl}/invitations/preview/${slug}`, { params });
   }
 
-  checkGuestAccess(slug: string, payload: { email?: string; phone?: string }): Observable<{ message: string; guest?: GuestAccessResponse['guest']; guestSessionToken?: string }> {
+  checkGuestAccess(slug: string, payload: { email?: string; phone?: string; pin?: string }): Observable<{ message: string; guest?: GuestAccessResponse['guest']; guestSessionToken?: string }> {
     return this.http.post<{ message: string; guest?: GuestAccessResponse['guest']; guestSessionToken?: string }>(`${this.apiUrl}/invitations/public/${slug}/guest-access`, payload);
   }
 

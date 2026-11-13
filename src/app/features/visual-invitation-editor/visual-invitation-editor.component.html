@@ -1789,6 +1789,62 @@
               </label>
             </div>
           </details>
+
+          <!-- SEGURIDAD Y NIP DE ACCESO -->
+          <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+            <summary>Seguridad y NIP de Acceso</summary>
+            <div class="access-field-group">
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="acc.requirePin" (ngModelChange)="recordHistory()">
+                <strong>Solicitar NIP / Clave de Acceso</strong>
+              </label>
+              <p class="hint">Protege tu invitación para que nadie entre solo sabiendo el teléfono o correo.</p>
+            </div>
+
+            <div *ngIf="acc.requirePin">
+              <div class="access-field-group">
+                <label>Modalidad de NIP
+                  <select [(ngModel)]="acc.pinMode" (ngModelChange)="recordHistory()">
+                    <option value="event">NIP único del evento (todos usan la misma clave)</option>
+                    <option value="individual">NIP individual por invitado (código de 4 dígitos para cada uno)</option>
+                  </select>
+                </label>
+              </div>
+
+              <div *ngIf="acc.pinMode === 'event'" class="access-field-group">
+                <label>NIP o Clave del evento
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" [(ngModel)]="acc.eventPin" (ngModelChange)="recordHistory()"
+                      placeholder="Ej. 1234 o BODA2026" maxlength="20" style="flex: 1;">
+                    <button type="button" class="btn-text-action" (click)="generateRandomEventPin()" title="Generar NIP aleatorio">
+                      🎲 Generar
+                    </button>
+                  </div>
+                </label>
+                <p class="hint">Comparte este NIP con tus invitados para que puedan desbloquear su invitación.</p>
+              </div>
+
+              <div *ngIf="acc.pinMode === 'individual'" class="access-field-group">
+                <p class="hint" style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c;">
+                  ℹ️ Cada invitado en tu lista tendrá un NIP único de 4 dígitos generado automáticamente. Podrás verlo y reiniciarlo en la pestaña de <strong>Invitados</strong>, y se incluirá en sus pases por correo y WhatsApp con la variable <code>{{ '{{nip}}' }}</code>.
+                </p>
+              </div>
+
+              <div class="access-field-group">
+                <label>Etiqueta del campo NIP
+                  <input type="text" [(ngModel)]="acc.pinInputLabel" (ngModelChange)="recordHistory()"
+                    placeholder="NIP de acceso">
+                </label>
+              </div>
+
+              <div class="access-field-group">
+                <label>Placeholder del campo NIP
+                  <input type="text" [(ngModel)]="acc.pinInputPlaceholder" (ngModelChange)="recordHistory()"
+                    placeholder="Ingresa tu NIP">
+                </label>
+              </div>
+            </div>
+          </details>
         </ng-container>
 
         <div class="save-template-box" *ngIf="toolCategory === 'design'">
@@ -2320,6 +2376,21 @@
                       [placeholder]="design.accessScreen?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono'"
                       [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
                   </div>
+
+                  <!-- Campo NIP si esta activado -->
+                  <ng-container *ngIf="design.accessScreen?.requirePin">
+                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
+                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
+                      {{ design.accessScreen?.pinInputLabel || 'NIP de acceso' }}
+                    </label>
+                    <div class="access-stage-input-wrap">
+                      <input type="password" class="access-stage-input" [(ngModel)]="accessSimPin" name="simPin"
+                        [placeholder]="design.accessScreen?.pinInputPlaceholder || 'Ingresa tu NIP'"
+                        maxlength="20"
+                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
+                    </div>
+                  </ng-container>
+
                   <button type="button" class="access-stage-btn" (click)="testAccessSimSubmit()"
                     [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
                     [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"

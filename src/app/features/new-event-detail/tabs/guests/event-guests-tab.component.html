@@ -280,6 +280,7 @@
           <th style="padding: 12px 14px;">Mesa</th>
           <th style="padding: 12px 14px;">RSVP</th>
           <th style="padding: 12px 14px;">Pases</th>
+          <th style="padding: 12px 14px; text-align:center;">NIP</th>
           <th style="padding: 12px 14px;">Contacto</th>
           <th style="padding: 12px 14px; text-align:right;">Acciones</th>
         </tr>
@@ -306,6 +307,12 @@
             </span>
           </td>
           <td style="white-space:nowrap; padding: 12px 14px;">{{ (g.allowedCompanions || 0) + 1 }} personas</td>
+          <td style="white-space:nowrap; padding: 12px 14px; text-align:center;">
+            <span *ngIf="g.accessPin" style="font-family:monospace; font-weight:700; font-size:12px; letter-spacing:1.5px; background:rgba(197, 155, 108, 0.12); color:var(--nw-accent, #c09c78); padding:3px 7px; border-radius:6px; border:1px solid rgba(197, 155, 108, 0.3);">
+              🔑 {{ g.accessPin }}
+            </span>
+            <span *ngIf="!g.accessPin" style="color:var(--nw-text-3); font-size:12px;">—</span>
+          </td>
 
           <!-- Contacto Dividido en 2 Líneas (Teléfono arriba, Email abajo) -->
           <td style="font-size:12.5px; color:var(--nw-text-2); padding: 10px 14px; white-space:nowrap;">
@@ -549,6 +556,28 @@
                 </label>
               </div>
 
+            </div>
+
+            <!-- NIP de Acceso Personal -->
+            <div
+              style="margin-top: 4px; padding: 12px 14px; background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 10px); border: 1px solid var(--nw-border, #eadecc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <span
+                  style="font-weight: 600; font-size: 13.5px; color: var(--nw-text, #2e2621); display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 15px;">🔑</span>
+                  NIP de Acceso Personal
+                </span>
+                <p style="margin: 2px 0 0; font-size: 12px; color: var(--nw-text-2, #6e6157);">
+                  Código de 4 dígitos para ingresar a la invitación cuando la seguridad NIP esté activa.
+                </p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input class="nw-input" type="text" maxlength="8" [(ngModel)]="guestForm.accessPin"
+                  style="width: 86px; height: 38px; text-align: center; font-family: monospace; font-size: 16px; font-weight: bold; letter-spacing: 2px;">
+                <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="regenerateGuestFormPin()" title="Generar nuevo NIP aleatorio">
+                  ↺ Reiniciar NIP
+                </button>
+              </div>
             </div>
 
             <!-- Check-in Manual -->

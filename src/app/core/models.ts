@@ -568,6 +568,11 @@ export interface VisualAccessScreenDesign {
   buttonRadius?: number;
   headingFont?: string;
   bodyFont?: string;
+  requirePin?: boolean;
+  pinMode?: 'event' | 'individual';
+  eventPin?: string;
+  pinInputLabel?: string;
+  pinInputPlaceholder?: string;
 }
 
 export interface VisualInvitationDesign {
@@ -890,6 +895,7 @@ export interface GuestModel {
   lastLinkCopiedAt?: string;
   qrCode?: string;
   checkInCode?: string;
+  accessPin?: string;
   checkedIn?: boolean;
   checkedInAt?: string;
   status: GuestStatus;
@@ -969,6 +975,7 @@ export interface GuestPayload {
   seatLabel?: string;
   companions?: GuestCompanion[];
   allowedCompanions?: number;
+  accessPin?: string;
   checkedIn?: boolean;
   checkedInAt?: string;
 }
@@ -1018,6 +1025,7 @@ export interface GuestAccessResponse {
     allowedCompanions: number;
     status: GuestStatus;
     checkInCode?: string;
+    accessPin?: string;
     qrCode?: string;
     tableName?: string;
     seatLabel?: string;

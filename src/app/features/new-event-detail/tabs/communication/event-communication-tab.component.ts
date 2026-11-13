@@ -514,7 +514,17 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   }
 
   get sampleGuest(): GuestModel {
-    return this.activeRecipients[0] || this.guests[0] || { name: 'Invitado(a)', phone: '+523312345678', email: 'invitado@ejemplo.com', allowedCompanions: 1, status: 'pending', event: '' };
+    return this.activeRecipients[0] || this.guests[0] || { name: 'Invitado(a)', phone: '+523312345678', email: 'invitado@ejemplo.com', allowedCompanions: 1, status: 'pending', event: '', accessPin: '4821' };
+  }
+
+  insertVariable(varName: string): void {
+    const token = varName.startsWith('{{') ? varName : `{{${varName}}}`;
+    if (!this.isMessageEdited) {
+      this.isMessageEdited = true;
+      this.customMessageBody = this.getBodyTemplateForType(this.selectedMessageType);
+    }
+    this.customMessageBody = `${this.customMessageBody.trim()} ${token}`;
+    this.onCustomBodyChange();
   }
 
   onMessageTypeChange(): void {
@@ -1128,8 +1138,20 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     const links = this.event?.mode === 'external_dashboard'
       ? [this.event.externalSiteUrl ? `Página del evento: ${this.event.externalSiteUrl}` : '', link ? `RSVP, pase y álbum: ${link}` : '']
       : [link];
-    const body = this.isMessageEdited ? this.customMessageBody.trim() : this.getBodyTemplateForType(type);
-    return [`Hola ${g.name},`, body, ...links.filter(Boolean)].filter(Boolean).join('\n\n');
+    let body = this.isMessageEdited ? this.customMessageBody.trim() : this.getBodyTemplateForType(type);
+    const activePin = g.accessPin || '';
+    body = body
+      .replace(/\{\{\s*nombre\s*\}\}/gi, g.name || '')
+      .replace(/\{\{\s*mesa\s*\}\}/gi, g.tableName || '')
+      .replace(/\{\{\s*asiento\s*\}\}/gi, g.seatLabel || '')
+      .replace(/\{\{\s*pases\s*\}\}/gi, `${(g.allowedCompanions || 0) + 1}`)
+      .replace(/\{\{\s*(nip|pin)\s*\}\}/gi, activePin);
+
+    const pinLine = activePin ? `🔑 Tu NIP de acceso: ${activePin}` : '';
+    const hasPinInBody = activePin && (body.includes(activePin) || /\{\{\s*(nip|pin)\s*\}\}/i.test(this.customMessageBody));
+    const appendPin = activePin && !hasPinInBody;
+
+    return [`Hola ${g.name},`, body, appendPin ? pinLine : '', ...links.filter(Boolean)].filter(Boolean).join('\n\n');
   }
 
   getEmailPreviewBody(type: GuestMessageType): string {

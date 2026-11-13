@@ -148,6 +148,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     tableName: '',
     seatLabel: '',
     allowedCompanions: 0,
+    accessPin: '',
     checkedIn: false
   };
 
@@ -489,6 +490,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
         tableName: guest.tableName || '',
         seatLabel: guest.seatLabel || '',
         allowedCompanions: guest.allowedCompanions || 0,
+        accessPin: guest.accessPin || this.generateRandomGuestPin(),
         checkedIn: Boolean(guest.checkedIn || guest.checkedInAt)
       };
 
@@ -512,6 +514,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       this.guestForm = {
         name: '', email: '', phone: '', phoneCountryCode: '+52', phoneLocal: '', group: '', groupSelect: '', rolesText: '', roleSelect: '', tagsText: '',
         relationshipLabel: '', relationshipSelect: '', visibilityGroup: '', visibilitySelect: '', tableName: '', seatLabel: '', allowedCompanions: 0,
+        accessPin: this.generateRandomGuestPin(),
         checkedIn: false
       };
       this.companionNames = '';
@@ -524,6 +527,14 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       const input = document.getElementById('guestNameInput') as HTMLInputElement;
       if (input) input.focus();
     }, 100);
+  }
+
+  generateRandomGuestPin(): string {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  regenerateGuestFormPin(): void {
+    this.guestForm.accessPin = this.generateRandomGuestPin();
   }
 
   onPhoneInput(): void {
@@ -576,6 +587,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
       tableName: this.guestForm.tableName || undefined,
       seatLabel: this.guestForm.seatLabel || undefined,
       allowedCompanions: Number(this.guestForm.allowedCompanions || 0),
+      accessPin: (this.guestForm.accessPin || '').trim() || undefined,
       companions: companionsArray,
       checkedIn: this.guestForm.checkedIn
     };

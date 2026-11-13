@@ -388,6 +388,16 @@
         </div>
 
         <p class="communication-preview-note" style="word-break: break-word; overflow-wrap: anywhere;">Este texto se aplicará a este envío por correo y OpenWA; no cambia la plantilla permanente. El saludo y el enlace individual se agregan automáticamente. Meta solo admite su plantilla aprobada.</p>
+        
+        <!-- Variables dinámicas disponibles -->
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px; margin-bottom:2px;">
+          <span style="font-size:11.5px; color:var(--nw-text-3); font-weight:500;">Variables:</span>
+          <button type="button" class="nw-pill" style="cursor:pointer; font-size:11px; padding:2px 8px; border:1px solid var(--nw-border);" (click)="insertVariable('nip')" title="Inserta el NIP de acceso individual del invitado">🔑 {{ '{{nip}}' }}</button>
+          <button type="button" class="nw-pill" style="cursor:pointer; font-size:11px; padding:2px 8px; border:1px solid var(--nw-border);" (click)="insertVariable('mesa')" title="Inserta la mesa asignada">🪑 {{ '{{mesa}}' }}</button>
+          <button type="button" class="nw-pill" style="cursor:pointer; font-size:11px; padding:2px 8px; border:1px solid var(--nw-border);" (click)="insertVariable('pases')" title="Inserta el número de pases">👥 {{ '{{pases}}' }}</button>
+          <button type="button" class="nw-pill" style="cursor:pointer; font-size:11px; padding:2px 8px; border:1px solid var(--nw-border);" (click)="insertVariable('nombre')" title="Inserta el nombre del invitado">👤 {{ '{{nombre}}' }}</button>
+        </div>
+
         <!-- Bloque Editable: Cuerpo del Mensaje -->
         <div>
           <label
@@ -494,6 +504,7 @@
                     getEventLocationText() }}</div>
                   <div *ngIf="previewGuest?.tableName || sampleGuest.tableName"><strong style="color:#1e1b18;">🪑
                       Mesa:</strong> {{ previewGuest?.tableName || sampleGuest.tableName }}</div>
+                  <div *ngIf="previewGuest?.accessPin || sampleGuest.accessPin"><strong style="color:#1e1b18;">🔑 NIP:</strong> <span style="font-family:monospace; font-weight:bold; letter-spacing:1px; background:#f4ede4; padding:2px 8px; border-radius:4px; border:1px solid #d8cbbe;">{{ previewGuest?.accessPin || sampleGuest.accessPin }}</span></div>
                 </div>
                 <div style="text-align:center; margin:20px 0 12px;">
                   <button type="button"
@@ -1273,6 +1284,7 @@
                   getEventLocationText() }}</div>
                 <div *ngIf="previewGuest?.tableName"><strong style="color:#1e1b18;">🪑 Mesa:</strong> {{
                   previewGuest?.tableName }}</div>
+                <div *ngIf="previewGuest?.accessPin"><strong style="color:#1e1b18;">🔑 NIP:</strong> <span style="font-family:monospace; font-weight:bold; letter-spacing:1px; background:#f4ede4; padding:2px 8px; border-radius:4px; border:1px solid #d8cbbe;">{{ previewGuest?.accessPin }}</span></div>
               </div>
 
               <!-- CTA Button -->

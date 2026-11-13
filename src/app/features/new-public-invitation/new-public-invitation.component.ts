@@ -71,6 +71,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   guestAccessEmail = '';
   guestAccessPhone = '';
   guestAccessSingleInput = '';
+  guestAccessPin = '';
   isOpeningVipEnvelope = false;
   selectedAlbumFile?: File;
   declineConfirmed = false;
@@ -1288,11 +1289,19 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       }
     }
     if (!this.guestAccessEmail && !this.guestAccessPhone) return;
+    if (this.accessScreenDesign?.requirePin && !this.guestAccessPin.trim()) {
+      this.error = 'Por favor ingresa tu NIP de acceso.';
+      return;
+    }
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     this.checkingGuest = true;
     this.error = '';
     this.success = '';
-    this.api.checkGuestAccess(slug, { email: this.guestAccessEmail || undefined, phone: this.guestAccessPhone || undefined }).subscribe({
+    this.api.checkGuestAccess(slug, {
+      email: this.guestAccessEmail || undefined,
+      phone: this.guestAccessPhone || undefined,
+      pin: this.guestAccessPin.trim() || undefined
+    }).subscribe({
       next: (res) => {
         this.checkingGuest = false;
         if (res.guest && res.guestSessionToken) {
@@ -1353,6 +1362,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.guestAccessPhone = '';
     this.guestAccessEmail = '';
     this.guestAccessSingleInput = '';
+    this.guestAccessPin = '';
     this.isOpeningVipEnvelope = false;
     this.guestSubmittedSongsCount = 0;
     this.success = '';
@@ -1495,6 +1505,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   getAccessGateInputPlaceholder(): string {
     return this.accessScreenDesign?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono';
+  }
+
+  getAccessGatePinInputLabel(): string {
+    return this.accessScreenDesign?.pinInputLabel || 'NIP de acceso';
+  }
+
+  getAccessGatePinInputPlaceholder(): string {
+    return this.accessScreenDesign?.pinInputPlaceholder || 'Ingresa tu NIP';
   }
 
   getAccessGateButtonText(): string {
