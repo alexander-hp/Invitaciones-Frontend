@@ -875,23 +875,23 @@
             [name]="toolsCollapsed ? 'panel-left-open' : 'panel-left-close'" [strokeWidth]="1.8"></lucide-icon></button>
         <button type="button" title="Diseño" [class.active]="toolCategory === 'design'"
           [class.tutorial-focus]="tutorialStep === 1" [attr.aria-pressed]="toolCategory === 'design'"
-          (click)="toolCategory='design';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="palette"
+          (click)="selectToolCategory('design');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="palette"
             [strokeWidth]="1.8"></lucide-icon><span>Diseño</span></button>
         <button type="button" title="Elementos" [class.active]="toolCategory === 'elements'"
           [class.tutorial-focus]="tutorialStep === 2" [attr.aria-pressed]="toolCategory === 'elements'"
-          (click)="toolCategory='elements';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="shapes"
+          (click)="selectToolCategory('elements');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="shapes"
             [strokeWidth]="1.8"></lucide-icon><span>Elementos</span></button>
         <button type="button" title="Archivos" [class.active]="toolCategory === 'assets'"
           [class.tutorial-focus]="tutorialStep === 3" [attr.aria-pressed]="toolCategory === 'assets'"
-          (click)="toolCategory='assets';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images"
+          (click)="selectToolCategory('assets');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images"
             [strokeWidth]="1.8"></lucide-icon><span>Archivos</span></button>
         <button type="button" title="Funciones" [class.active]="toolCategory === 'functions'"
           [class.tutorial-focus]="tutorialStep === 4" [attr.aria-pressed]="toolCategory === 'functions'"
-          (click)="toolCategory='functions';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="blocks"
+          (click)="selectToolCategory('functions');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="blocks"
             [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
         <button type="button" title="Secciones" [class.active]="toolCategory === 'sections'"
           [attr.aria-pressed]="toolCategory === 'sections'"
-          (click)="toolCategory='sections';toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="layers"
+          (click)="selectToolCategory('sections');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="layers"
             [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
         <button type="button" title="Pantalla de Acceso" [class.active]="toolCategory === 'access'"
           [attr.aria-pressed]="toolCategory === 'access'"
@@ -1509,6 +1509,15 @@
           </div>
         </ng-container>
         <ng-container *ngIf="toolCategory === 'access'">
+          <!-- BOTÓN DESTACADO PARA VOLVER A LA INVITACIÓN -->
+          <div class="access-drawer-header-actions">
+            <button type="button" class="access-drawer-return-btn" (click)="setEditorCanvasMode('invitation')"
+              title="Salir de la pantalla de acceso y volver a diseñar las secciones de la invitación">
+              <lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon>
+              <span>← Volver a la Invitación</span>
+            </button>
+          </div>
+
           <!-- NAVEGACIÓN ELEGANTE DE SUBMENÚS DE ACCESO -->
           <div class="access-subtabs-nav" role="tablist" aria-label="Secciones de Acceso">
             <button type="button" class="access-subtab-btn" [class.active]="accessSubTab === 'design'"
@@ -1527,6 +1536,20 @@
               <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon>
               <span>Auto-registro</span>
               <span *ngIf="design.accessScreen?.allowSelfRegistration" class="subtab-dot" title="Auto-registro activado"></span>
+            </button>
+          </div>
+
+          <!-- SELECTOR DE VISTA DEL LIENZO -->
+          <div class="access-drawer-view-toggle">
+            <button type="button" class="access-view-toggle-btn" [class.active]="accessSimView === 'login'"
+              (click)="setAccessSimView('login')" title="Diseñar vista de ingreso con NIP">
+              <lucide-icon name="key-round" [strokeWidth]="1.8"></lucide-icon>
+              <span>Ingreso / NIP</span>
+            </button>
+            <button type="button" class="access-view-toggle-btn" [class.active]="accessSimView === 'register'"
+              (click)="setAccessSimView('register')" title="Diseñar formulario de auto-registro">
+              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon>
+              <span>Auto-registro</span>
             </button>
           </div>
 
@@ -1558,6 +1581,10 @@
             </button>
             <button type="button" class="btn-access-action" (click)="syncAccessScreenWithTheme()">
               <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar del tema
+            </button>
+            <button type="button" class="btn-access-action" (click)="resetAccessScreenLayers()"
+              title="Restablecer elementos y capas iniciales">
+              <lucide-icon name="refresh-cw" [strokeWidth]="1.8"></lucide-icon> Restablecer
             </button>
           </div>
 
@@ -2016,6 +2043,7 @@
           </div>
         </details>
       </div>
+
       <div class="artboard-viewport" [style.width.px]="artboardWidth * canvasZoom"
         [style.height.px]="artboardHeight * canvasZoom">
         <div class="artboard-shell" [style.width.px]="artboardWidth" [style.transform]="'scale(' + canvasZoom + ')'">
@@ -2313,307 +2341,156 @@
                 (click)="selectSection(section)">
                 <strong>Sección vacía</strong><span>Agrega texto, imágenes, video, audio, botones o formas.</span>
               </div>
-              <div class="layer-surface" [attr.data-section-id]="section.id" [class.show-grid]="showGrid"
-                [class.show-safe-margins]="showSafeMargins"
-                [class.palette-drop-target]="paletteDropSectionId === section.id"
-                [class.marquee-active]="selectionMarquee?.sectionId === section.id"
-                (pointerdown)="beginMarquee($event, section)" (click)="onLayerSurfaceClick($event, section)"
-                (drop)="dropPaletteItem($event, section)">
-                <div class="palette-drop-message" *ngIf="paletteDropSectionId === section.id">Suelta aquí</div>
-                <div class="selection-marquee" *ngIf="selectionMarquee as marquee"
-                  [class.visible]="marquee.sectionId === section.id" [style.left.%]="marquee.left"
-                  [style.top.%]="marquee.top" [style.width.%]="marquee.width" [style.height.%]="marquee.height"></div>
-                <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical"
-                  [style.left.%]="guideX"></div>
-                <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal"
-                  [style.top.%]="guideY"></div>
-                <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer"
-                  [attr.data-layer-id]="layer.id"
-                  [attr.data-button-icon]="layer.type === 'button' ? (layer.style?.buttonIcon || null) : null"
-                  [attr.title]="editorLayerUnavailableReason(layer) || null"
-                  [attr.data-unavailable]="editorLayerUnavailableReason(layer) ? 'true' : null"
-                  [class.button-icon-after]="layer.type === 'button' && layer.style?.buttonIconPosition === 'after'"
-                  [class.button-glass]="layer.type === 'button' && layer.style?.buttonVariant === 'glass'"
-                  [class.selected]="isLayerSelected(layer)" [class.photo-swap-target]="photoSwapTargetId === layer.id"
-                  [class.file-drop-target]="fileDropTargetLayerId === layer.id" [class.layer-hidden]="layer.hidden"
-                  [class.data-unavailable]="!!editorLayerUnavailableReason(layer)"
-                  [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)"
-                  [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked"
-                  [class.inline-editing]="editingLayerId === layer.id"
-                  [class.control-cloud]="layer.style?.controlShape === 'cloud'"
-                  [class.control-notebook]="layer.style?.controlShape === 'notebook'"
-                  [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)"
-                  (drop)="dropPaletteItem($event, section)" (pointerdown)="beginLayerDrag($event, layer, section)"
-                  (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
-                  <lucide-icon *ngIf="isIconLayer(layer)" class="canvas-icon-layer" [name]="layer.style?.iconName"
-                    [strokeWidth]="layer.style?.iconStrokeWidth || 2"
-                    [style.fill]="layer.style?.iconFilled ? 'currentColor' : 'none'"></lucide-icon>
-                  <div
-                    *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId !== layer.id">
-                    {{ editorLayerText(layer) }}</div>
-                  <div
-                    *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId === layer.id"
-                    class="inline-text-editor" contenteditable="true" spellcheck="true"
-                    [attr.data-inline-editor]="layer.id" [textContent]="layer.text"
-                    (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)"
-                    (blur)="finishInlineEdit($event, layer)"></div>
-                  <div *ngIf="layer.type === 'field'" class="functional-field-preview"
-                    [class.control-cards]="layer.style?.controlVariant === 'cards'"
-                    [class.control-cloud]="layer.style?.controlShape === 'cloud'"
-                    [class.control-notebook]="layer.style?.controlShape === 'notebook'">
-                    <span *ngIf="layer.binding !== 'rsvp.response' || layer.style?.controlVariant !== 'cards'">{{
-                      rsvpFieldPreview(layer) }}</span>
-                    <div *ngIf="layer.binding === 'rsvp.response' && layer.style?.controlVariant === 'cards'"
-                      class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
-                    <small>{{ layer.binding }}</small>
-                  </div>
-                  <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame"
-                    [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id"
-                    (dblclick)="startImageCrop($event, section, layer)"
-                    (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''"
-                      [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
-                  <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder frame-empty"
-                    [ngStyle]="imageMaskStyle(layer)">
-                    <button type="button" class="frame-empty-btn" (click)="onEmptyFrameClick($event, layer, section)"
-                      [title]="isMobileScreen ? 'Toca para abrir la galería y elegir foto' : 'Haz clic o arrastra para elegir foto'">
-                      <lucide-icon name="image" [strokeWidth]="1.8" class="frame-empty-icon"></lucide-icon>
-                      <span [ngStyle]="framePreviewStyle(layer.style?.imageMask || 'none')">
-                        {{ isMobileScreen ? 'Toca para abrir la galería' : 'Arrastra o haz clic para abrir la galería' }}
-                      </span>
-                    </button>
-                  </div>
-                  <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
-                  <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type"
-                    [url]="layer.url || ''" [label]="layer.name || layer.text || ''"
-                    [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true"
-                    [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false"
-                    [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1"
-                    [startSeconds]="layer.style?.audioStartSeconds || 0" [endSeconds]="layer.style?.audioEndSeconds"
-                    [showIcon]="layer.style?.audioShowIcon !== false"
-                    [showLabel]="layer.style?.audioShowLabel !== false"
-                    [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
-                  <div *ngIf="(layer.type === 'video' || layer.type === 'audio') && !isMediaPreviewActive(layer)"
-                    class="media-editor-interaction" role="button" aria-label="Seleccionar y mover elemento multimedia"
-                    title="Arrastra para mover. Usa Probar reproducción para controlar el contenido."></div>
-                  <!-- Indicador visual cuando se arrastra archivo/medio sobre la capa -->
-                  <div
-                    *ngIf="fileDropTargetLayerId === layer.id && (layer.type === 'image' || layer.type === 'video' || layer.type === 'audio')"
-                    class="media-drop-indicator" aria-hidden="true">
-                    <div class="media-drop-badge">
-                      <lucide-icon [name]="layer.type === 'video' ? 'play' : layer.type === 'audio' ? 'music' : 'image'"
-                        [strokeWidth]="2.2"></lucide-icon>
-                      <span>Soltar {{ layer.type === 'video' ? 'video' : layer.type === 'audio' ? 'audio' : 'foto' }}
-                        aquí</span>
-                    </div>
-                  </div>
-                  <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
-                    <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id"
-                      (pointerdown)="$event.stopPropagation()">
-                      <span>Arrastra para encuadrar</span>
-                      <button type="button" title="Alejar imagen" (click)="adjustImageCropZoom(layer, -.1)">−</button>
-                      <button type="button" title="Acercar imagen" (click)="adjustImageCropZoom(layer, .1)">+</button>
-                      <button type="button" title="Terminar encuadre" (click)="finishImageCrop()">Listo</button>
-                    </div>
-                    <div class="layer-toolbar" (pointerdown)="$event.stopPropagation()">
-                      <button *ngIf="layer.type === 'video' || layer.type === 'audio'" type="button"
-                        [title]="isMediaPreviewActive(layer) ? 'Volver a mover' : 'Probar reproducción'"
-                        (click)="toggleMediaPreview(layer, $event)">{{ isMediaPreviewActive(layer) ? '↔' : '▶'
-                        }}</button>
-                      <button *ngIf="layer.type === 'image' && boundImageUrl(layer) && !layer.locked" type="button"
-                        title="Encuadrar imagen" (click)="startImageCrop($event, section, layer)">⌗</button>
-                      <button type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button>
-                      <button type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'"
-                        (click)="toggleLayerLocked(layer, $event)">{{ layer.locked ? '▣' : '▢' }}</button>
-                      <button type="button" title="Eliminar" (click)="removeLayer()">⌫</button>
-                    </div>
-                    <ng-container *ngIf="!layer.locked && editingLayerId !== layer.id">
-                      <span class="rotate-stem"></span>
-                      <button class="rotate-handle" type="button" title="Girar; mantén Shift para saltos de 15°"
-                        (pointerdown)="beginRotate($event, layer)"></button>
-                      <span class="resize-handle nw" (pointerdown)="beginResize($event, layer, 'nw')"></span>
-                      <span class="resize-handle ne" (pointerdown)="beginResize($event, layer, 'ne')"></span>
-                      <span class="resize-handle sw" (pointerdown)="beginResize($event, layer, 'sw')"></span>
-                      <span class="resize-handle se" (pointerdown)="beginResize($event, layer, 'se')"></span>
-                    </ng-container>
-                  </ng-container>
-                </div>
-              </div>
+              <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: section }"></ng-container>
             </section>
           </div>
-          <!-- PANTALLA DE ACCESO EN VIVO (EDITOR) -->
-          <div *ngIf="editorCanvasMode === 'access'" class="artboard-access-screen"
-            [ngStyle]="getAccessScreenStageStyle()">
-            <div class="access-stage-bg" [ngStyle]="getAccessScreenBackgroundStyle()"></div>
-            <div class="access-stage-overlay" [style.background]="getAccessScreenOverlayStyle()"></div>
-            <div class="access-stage-card-wrap">
-              <div class="access-stage-card" [ngClass]="'card-style-' + (design.accessScreen?.cardStyle || 'glass')"
-                [ngStyle]="getAccessScreenCardStyle()">
-                <!-- Badge -->
-                <div *ngIf="design.accessScreen?.showBadge" class="access-stage-badge"
-                  [style.color]="design.accessScreen?.accentColor || '#c59b6c'"
-                  [style.border-color]="design.accessScreen?.accentColor || '#c59b6c'">
-                  <lucide-icon *ngIf="design.accessScreen?.showIcon"
-                    [name]="design.accessScreen?.iconName || 'lock-keyhole'" [strokeWidth]="2"></lucide-icon>
-                  <span>{{ design.accessScreen?.badgeText || 'Acceso Exclusivo' }}</span>
-                </div>
-                <!-- Logo o Monograma -->
-                <div *ngIf="design.accessScreen?.logoUrl" class="access-stage-logo">
-                  <img [src]="design.accessScreen?.logoUrl" alt="Logo de acceso">
-                </div>
-                <div
-                  *ngIf="!design.accessScreen?.logoUrl && design.accessScreen?.showIcon && !design.accessScreen?.showBadge"
-                  class="access-stage-icon-circle"
-                  [style.background]="(design.accessScreen?.accentColor || '#c59b6c') + '22'"
-                  [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
-                  <lucide-icon [name]="design.accessScreen?.iconName || 'lock-keyhole'" [strokeWidth]="2"></lucide-icon>
-                </div>
-                <!-- VISTA 1: INGRESO DE INVITADOS CON O SIN NIP -->
-                <ng-container *ngIf="accessSimView === 'login'">
-                  <!-- Titulo y Subtitulo -->
-                  <h2 class="access-stage-title"
-                    [style.font-family]="design.accessScreen?.headingFont || 'Playfair Display'"
-                    [style.color]="design.accessScreen?.textColor || '#1c2434'">
-                    {{ design.accessScreen?.title || 'Acceso a la invitación' }}
-                  </h2>
-                  <p class="access-stage-subtitle" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                    [style.color]="(design.accessScreen?.textColor || '#1c2434') + 'cc'">
-                    {{ design.accessScreen?.subtitle || 'Esta invitación requiere un enlace personal. Solicítalo con tu
-                    correo o teléfono registrado.' }}
-                  </p>
-                  <!-- Formulario Interactivo de Simulacion -->
-                  <form class="access-stage-form" (submit)="$event.preventDefault(); testAccessSimSubmit()">
-                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      [style.color]="design.accessScreen?.textColor || '#1c2434'">
-                      {{ design.accessScreen?.inputLabel || 'Correo o teléfono registrado' }}
-                    </label>
-                    <div class="access-stage-input-wrap">
-                      <input type="text" class="access-stage-input" [(ngModel)]="accessSimInput" name="simContact"
-                        [placeholder]="design.accessScreen?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono'"
-                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                    </div>
 
-                    <!-- Campo NIP si esta activado -->
-                    <ng-container *ngIf="design.accessScreen?.requirePin">
-                      <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                        [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
-                        {{ design.accessScreen?.pinInputLabel || 'NIP de acceso' }}
-                      </label>
-                      <div class="access-stage-input-wrap">
-                        <input type="password" class="access-stage-input" [(ngModel)]="accessSimPin" name="simPin"
-                          [placeholder]="design.accessScreen?.pinInputPlaceholder || 'Ingresa tu NIP'"
-                          maxlength="20"
-                          [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                      </div>
-                    </ng-container>
-
-                    <button type="button" class="access-stage-btn" (click)="testAccessSimSubmit()"
-                      [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
-                      [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"
-                      [style.border-radius.px]="design.accessScreen?.buttonRadius ?? 10"
-                      [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                      <span>{{ accessSimState === 'loading' ? 'Verificando...' : (design.accessScreen?.buttonText ||
-                        'Solicitar enlace') }}</span>
-                    </button>
-                  </form>
-
-                  <!-- Link de solicitud de autoregistro si está habilitado -->
-                  <div *ngIf="design.accessScreen?.allowSelfRegistration" style="margin-top: 14px; text-align: center;">
-                    <button type="button" class="access-sim-link-btn" (click)="accessSimView = 'register'"
-                      [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
-                      ¿No estás en la lista? Solicitar invitación →
-                    </button>
-                  </div>
-                </ng-container>
-
-                <!-- VISTA 2: AUTO-REGISTRO / SOLICITUD DE ACCESO -->
-                <ng-container *ngIf="accessSimView === 'register'">
-                  <h2 class="access-stage-title"
-                    [style.font-family]="design.accessScreen?.headingFont || 'Playfair Display'"
-                    [style.color]="design.accessScreen?.textColor || '#1c2434'">
-                    {{ design.accessScreen?.selfRegTitle || 'Solicitar Invitación' }}
-                  </h2>
-                  <p class="access-stage-subtitle" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                    [style.color]="(design.accessScreen?.textColor || '#1c2434') + 'cc'">
-                    {{ design.accessScreen?.selfRegSubtitle || 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu pase.' }}
-                  </p>
-
-                  <form class="access-stage-form" (submit)="$event.preventDefault(); testAccessSimRegSubmit()">
-                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      [style.color]="design.accessScreen?.textColor || '#1c2434'">
-                      Nombre completo *
-                    </label>
-                    <div class="access-stage-input-wrap">
-                      <input type="text" class="access-stage-input" [(ngModel)]="accessSimRegName" name="simRegName"
-                        placeholder="Tu nombre y apellido" required
-                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                    </div>
-
-                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
-                      Correo electrónico *
-                    </label>
-                    <div class="access-stage-input-wrap">
-                      <input type="email" class="access-stage-input" [(ngModel)]="accessSimRegEmail" name="simRegEmail"
-                        placeholder="tu-correo@ejemplo.com" required
-                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                    </div>
-
-                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
-                      Teléfono / WhatsApp (opcional)
-                    </label>
-                    <div class="access-stage-input-wrap">
-                      <input type="tel" class="access-stage-input" [(ngModel)]="accessSimRegPhone" name="simRegPhone"
-                        placeholder="55 0000 0000"
-                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                    </div>
-
-                    <label class="access-stage-label" [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      [style.color]="design.accessScreen?.textColor || '#1c2434'" style="margin-top: 10px;">
-                      Pases solicitados
-                    </label>
-                    <div class="access-stage-input-wrap">
-                      <select class="access-stage-input" [(ngModel)]="accessSimRegCompanions" name="simRegCompanions"
-                        [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'">
-                        <option [ngValue]="1">1 pase (Solo yo)</option>
-                        <option [ngValue]="2">2 pases (+1 acompañante)</option>
-                        <option [ngValue]="3">3 pases (+2 acompañantes)</option>
-                        <option [ngValue]="4">4 pases (+3 acompañantes)</option>
-                      </select>
-                    </div>
-
-                    <button type="button" class="access-stage-btn" (click)="testAccessSimRegSubmit()"
-                      [style.background]="design.accessScreen?.buttonBgColor || '#2f5348'"
-                      [style.color]="design.accessScreen?.buttonTextColor || '#ffffff'"
-                      [style.border-radius.px]="design.accessScreen?.buttonRadius ?? 10"
-                      [style.font-family]="design.accessScreen?.bodyFont || 'Montserrat'"
-                      style="margin-top: 14px;">
-                      <span>{{ accessSimState === 'loading' ? 'Enviando solicitud...' : (design.accessScreen?.selfRegButtonText || 'ENVIAR SOLICITUD') }}</span>
-                    </button>
-                  </form>
-
-                  <div style="margin-top: 14px; text-align: center;">
-                    <button type="button" class="access-sim-link-btn" (click)="accessSimView = 'login'"
-                      [style.color]="design.accessScreen?.accentColor || '#c59b6c'">
-                      ← Ya estoy en la lista / Volver
-                    </button>
-                  </div>
-                </ng-container>
-                <!-- Alertas de estado en simulacion -->
-                <div *ngIf="accessSimState === 'success'" class="access-stage-alert success">
-                  <span>✓</span> {{ accessSimMessage }}
-                  <button type="button" class="alert-reset-btn" (click)="resetAccessSim()">Cerrar</button>
-                </div>
-                <div *ngIf="accessSimState === 'error'" class="access-stage-alert error">
-                  <span>⚠</span> {{ accessSimMessage }}
-                  <button type="button" class="alert-reset-btn" (click)="resetAccessSim()">Intentar de nuevo</button>
-                </div>
-                <div class="access-stage-sim-hint">
-                  <small>💡 Vista previa interactiva · Puedes escribir y hacer clic para probar el diseño.</small>
+          <!-- PANTALLA DE ACCESO EN VIVO (EDITOR CON CAPAS EDITABLES) -->
+          <div *ngIf="editorCanvasMode === 'access'" class="section-list access-screen-section-list">
+            <section class="canvas-section selected access-canvas-section"
+              [attr.data-section-id]="accessSectionProxy.id"
+              [ngStyle]="accessScreenSectionStyle()"
+              (click)="selectSection(accessSectionProxy)">
+              <div class="access-stage-bg" [ngStyle]="getAccessScreenBackgroundStyle()"></div>
+              <div class="access-stage-overlay" [style.background]="getAccessScreenOverlayStyle()"></div>
+              <div class="section-top-toolbar" (click)="$event.stopPropagation()">
+                <div class="section-label" (click)="selectSection(accessSectionProxy)">
+                  Pantalla de Acceso · {{ accessSimView === 'register' ? 'Auto-registro' : 'Ingreso con NIP' }}
                 </div>
               </div>
-            </div>
+              <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: accessSectionProxy }"></ng-container>
+            </section>
           </div>
+
+          <!-- TEMPLATE COMPARTIDO DE SUPERFICIE DE CAPAS (MOTOR VISUAL UNIFICADO) -->
+          <ng-template #layerSurfaceTemplate let-section="section">
+            <div class="layer-surface" [attr.data-section-id]="section.id" [class.show-grid]="showGrid"
+              [class.show-safe-margins]="showSafeMargins"
+              [class.palette-drop-target]="paletteDropSectionId === section.id"
+              [class.marquee-active]="selectionMarquee?.sectionId === section.id"
+              (pointerdown)="beginMarquee($event, section)" (click)="onLayerSurfaceClick($event, section)"
+              (drop)="dropPaletteItem($event, section)">
+              <div class="palette-drop-message" *ngIf="paletteDropSectionId === section.id">Suelta aquí</div>
+              <div class="selection-marquee" *ngIf="selectionMarquee as marquee"
+                [class.visible]="marquee.sectionId === section.id" [style.left.%]="marquee.left"
+                [style.top.%]="marquee.top" [style.width.%]="marquee.width" [style.height.%]="marquee.height"></div>
+              <div *ngIf="section.id === selectedSectionId && guideX !== null" class="alignment-guide vertical"
+                [style.left.%]="guideX"></div>
+              <div *ngIf="section.id === selectedSectionId && guideY !== null" class="alignment-guide horizontal"
+                [style.top.%]="guideY"></div>
+              <div *ngFor="let layer of section.layers; trackBy: trackVisualById" class="canvas-layer"
+                [attr.data-layer-id]="layer.id"
+                [attr.data-button-icon]="layer.type === 'button' ? (layer.style?.buttonIcon || null) : null"
+                [attr.title]="editorLayerUnavailableReason(layer) || null"
+                [attr.data-unavailable]="editorLayerUnavailableReason(layer) ? 'true' : null"
+                [class.button-icon-after]="layer.type === 'button' && layer.style?.buttonIconPosition === 'after'"
+                [class.button-glass]="layer.type === 'button' && layer.style?.buttonVariant === 'glass'"
+                [class.selected]="isLayerSelected(layer)" [class.photo-swap-target]="photoSwapTargetId === layer.id"
+                [class.file-drop-target]="fileDropTargetLayerId === layer.id" [class.layer-hidden]="layer.hidden"
+                [class.data-unavailable]="!!editorLayerUnavailableReason(layer)"
+                [class.gallery-mode-hidden]="!shouldRenderEditorLayer(section, layer)"
+                [class.dragging]="isLayerSelected(layer) && !!draggingLayerId" [class.locked]="layer.locked"
+                [class.inline-editing]="editingLayerId === layer.id"
+                [class.control-cloud]="layer.style?.controlShape === 'cloud'"
+                [class.control-notebook]="layer.style?.controlShape === 'notebook'"
+                [ngClass]="editorAnimationClasses(layer)" [ngStyle]="layerStyle(layer)"
+                (drop)="dropPaletteItem($event, section)" (pointerdown)="beginLayerDrag($event, layer, section)"
+                (click)="selectLayer(section, layer, $event)" (dblclick)="startInlineEdit($event, section, layer)">
+                <lucide-icon *ngIf="isIconLayer(layer)" class="canvas-icon-layer" [name]="layer.style?.iconName"
+                  [strokeWidth]="layer.style?.iconStrokeWidth || 2"
+                  [style.fill]="layer.style?.iconFilled ? 'currentColor' : 'none'"></lucide-icon>
+                <div
+                  *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId !== layer.id">
+                  {{ editorLayerText(layer) }}</div>
+                <div
+                  *ngIf="(layer.type === 'button' || (layer.type === 'text' && !isIconLayer(layer))) && editingLayerId === layer.id"
+                  class="inline-text-editor" contenteditable="true" spellcheck="true"
+                  [attr.data-inline-editor]="layer.id" [textContent]="layer.text"
+                  (pointerdown)="$event.stopPropagation()" (keydown)="handleInlineKeydown($event, layer)"
+                  (blur)="finishInlineEdit($event, layer)"></div>
+                <div *ngIf="layer.type === 'field'" class="functional-field-preview"
+                  [class.control-cards]="layer.style?.controlVariant === 'cards'"
+                  [class.control-cloud]="layer.style?.controlShape === 'cloud'"
+                  [class.control-notebook]="layer.style?.controlShape === 'notebook'">
+                  <strong *ngIf="layer.text && layer.style?.showLabel !== false">{{ layer.text }}</strong>
+                  <span *ngIf="layer.binding !== 'rsvp.response' || layer.style?.controlVariant !== 'cards'">{{
+                    rsvpFieldPreview(layer) }}</span>
+                  <div *ngIf="layer.binding === 'rsvp.response' && layer.style?.controlVariant === 'cards'"
+                    class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
+                  <small>{{ layer.binding }}</small>
+                </div>
+                <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame"
+                  [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id"
+                  (dblclick)="startImageCrop($event, section, layer)"
+                  (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''"
+                    [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
+                <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder frame-empty"
+                  [ngStyle]="imageMaskStyle(layer)">
+                  <button type="button" class="frame-empty-btn" (click)="onEmptyFrameClick($event, layer, section)"
+                    [title]="isMobileScreen ? 'Toca para abrir la galería y elegir foto' : 'Haz clic o arrastra para elegir foto'">
+                    <lucide-icon name="image" [strokeWidth]="1.8" class="frame-empty-icon"></lucide-icon>
+                    <span [ngStyle]="framePreviewStyle(layer.style?.imageMask || 'none')">
+                      {{ isMobileScreen ? 'Toca para abrir la galería' : 'Arrastra o haz clic para abrir la galería' }}
+                    </span>
+                  </button>
+                </div>
+                <div *ngIf="layer.type === 'shape'" class="shape-content" [ngStyle]="shapeContentStyle(layer)"></div>
+                <app-visual-media-player *ngIf="layer.type === 'video' || layer.type === 'audio'" [type]="layer.type"
+                  [url]="layer.url || ''" [label]="layer.name || layer.text || ''"
+                  [preserveAspectRatio]="layer.style?.preserveAspectRatio !== false" [showPlaceholder]="true"
+                  [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false"
+                  [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1"
+                  [startSeconds]="layer.style?.audioStartSeconds || 0" [endSeconds]="layer.style?.audioEndSeconds"
+                  [showIcon]="layer.style?.audioShowIcon !== false"
+                  [showLabel]="layer.style?.audioShowLabel !== false"
+                  [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
+                <div *ngIf="(layer.type === 'video' || layer.type === 'audio') && !isMediaPreviewActive(layer)"
+                  class="media-editor-interaction" role="button" aria-label="Seleccionar y mover elemento multimedia"
+                  title="Arrastra para mover. Usa Probar reproducción para controlar el contenido."></div>
+                <!-- Indicador visual cuando se arrastra archivo/medio sobre la capa -->
+                <div
+                  *ngIf="fileDropTargetLayerId === layer.id && (layer.type === 'image' || layer.type === 'video' || layer.type === 'audio')"
+                  class="media-drop-indicator" aria-hidden="true">
+                  <div class="media-drop-badge">
+                    <lucide-icon [name]="layer.type === 'video' ? 'play' : layer.type === 'audio' ? 'music' : 'image'"
+                      [strokeWidth]="2.2"></lucide-icon>
+                    <span>Soltar {{ layer.type === 'video' ? 'video' : layer.type === 'audio' ? 'audio' : 'foto' }}
+                      aquí</span>
+                  </div>
+                </div>
+                <ng-container *ngIf="selectedLayerCount === 1 && layer.id === selectedLayerId">
+                  <div class="crop-toolbar" *ngIf="croppingLayerId === layer.id"
+                    (pointerdown)="$event.stopPropagation()">
+                    <span>Arrastra para encuadrar</span>
+                    <button type="button" title="Alejar imagen" (click)="adjustImageCropZoom(layer, -.1)">−</button>
+                    <button type="button" title="Acercar imagen" (click)="adjustImageCropZoom(layer, .1)">+</button>
+                    <button type="button" title="Terminar encuadre" (click)="finishImageCrop()">Listo</button>
+                  </div>
+                  <div class="layer-toolbar" (pointerdown)="$event.stopPropagation()">
+                    <button *ngIf="layer.type === 'video' || layer.type === 'audio'" type="button"
+                      [title]="isMediaPreviewActive(layer) ? 'Volver a mover' : 'Probar reproducción'"
+                      (click)="toggleMediaPreview(layer, $event)">{{ isMediaPreviewActive(layer) ? '↔' : '▶'
+                      }}</button>
+                    <button *ngIf="layer.type === 'image' && boundImageUrl(layer) && !layer.locked" type="button"
+                      title="Encuadrar imagen" (click)="startImageCrop($event, section, layer)">⌗</button>
+                    <button type="button" title="Duplicar" (click)="duplicateLayer()">⧉</button>
+                    <button type="button" [title]="layer.locked ? 'Desbloquear' : 'Bloquear'"
+                      (click)="toggleLayerLocked(layer, $event)">{{ layer.locked ? '▣' : '▢' }}</button>
+                    <button type="button" title="Eliminar" (click)="removeLayer()">⌫</button>
+                  </div>
+                  <ng-container *ngIf="!layer.locked && editingLayerId !== layer.id">
+                    <span class="rotate-stem"></span>
+                    <button class="rotate-handle" type="button" title="Girar; mantén Shift para saltos de 15°"
+                      (pointerdown)="beginRotate($event, layer)"></button>
+                    <span class="resize-handle nw" (pointerdown)="beginResize($event, layer, 'nw')"></span>
+                    <span class="resize-handle ne" (pointerdown)="beginResize($event, layer, 'ne')"></span>
+                    <span class="resize-handle sw" (pointerdown)="beginResize($event, layer, 'sw')"></span>
+                    <span class="resize-handle se" (pointerdown)="beginResize($event, layer, 'se')"></span>
+                  </ng-container>
+                </ng-container>
+              </div>
+            </div>
+          </ng-template>
         </div>
       </div>
     </main>

@@ -581,6 +581,8 @@ export interface VisualAccessScreenDesign {
   selfRegGroup?: string;
   selfRegRequireApproval?: boolean;
   selfRegMaxGuests?: number;
+  layers?: VisualInvitationLayer[];
+  height?: number;
 }
 
 export interface VisualInvitationDesign {

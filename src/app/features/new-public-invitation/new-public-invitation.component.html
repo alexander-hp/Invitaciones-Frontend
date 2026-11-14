@@ -1,9 +1,12 @@
 <!-- Hidden YouTube Iframe Audio Player -->
-<div id="nw-pub-yt-player" style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;"></div>
+<div id="nw-pub-yt-player"
+  style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;"></div>
 
-<aside *ngIf="spotifyPlayerVisible && currentPlayingTrackUrl" class="nw-pub-spotify-player" aria-label="Reproductor de Spotify">
+<aside *ngIf="spotifyPlayerVisible && currentPlayingTrackUrl" class="nw-pub-spotify-player"
+  aria-label="Reproductor de Spotify">
   <button type="button" class="nw-pub-spotify-close" (click)="toggleMusic()" aria-label="Cerrar reproductor">×</button>
-  <app-visual-media-player type="audio" [url]="currentPlayingTrackUrl" label="Música del evento" presentation="native"></app-visual-media-player>
+  <app-visual-media-player type="audio" [url]="currentPlayingTrackUrl" label="Música del evento"
+    presentation="native"></app-visual-media-player>
 </aside>
 
 <button *ngIf="showVisualMusicFallback()" type="button" class="nw-pub-audio-btn nw-pub-visual-music-fallback"
@@ -16,7 +19,8 @@
 
 <!-- Feedback Toast Notification -->
 <div *ngIf="toastMessage" class="nw-pub-toast-notification" role="alert">
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toast-svg-icon">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" class="toast-svg-icon">
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
     <polyline points="22 4 12 14.01 9 11.01"></polyline>
   </svg>
@@ -27,7 +31,8 @@
 <div *ngIf="activeLightboxImage" class="nw-pub-lightbox-overlay" (click)="closeLightbox()">
   <div class="nw-pub-lightbox-modal" (click)="$event.stopPropagation()">
     <button class="nw-pub-lightbox-close" (click)="closeLightbox()" aria-label="Cerrar vista previa">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
@@ -40,7 +45,8 @@
 <div *ngIf="showPassModal && verifiedGuest && invitation" class="nw-pub-pass-overlay" (click)="closePassModal()">
   <div class="nw-pub-pass-ticket-modal" (click)="$event.stopPropagation()">
     <button class="nw-pub-pass-close-btn" (click)="closePassModal()" aria-label="Cerrar pase">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>
         <line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
@@ -48,15 +54,20 @@
 
     <div class="nw-pub-pass-ticket-card">
       <!-- HEADER -->
-      <div class="nw-pass-card-header" [style.backgroundImage]="invitation.content.coverImageUrl ? 'url(' + invitation.content.coverImageUrl + ')' : null">
+      <div class="nw-pass-card-header"
+        [style.backgroundImage]="invitation.content.coverImageUrl ? 'url(' + invitation.content.coverImageUrl + ')' : null">
         <div class="nw-pass-card-header-overlay"></div>
         <div class="nw-pass-card-header-content">
           <span class="nw-pass-badge-pill">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+              </path>
+            </svg>
             PASE CONFIRMADO
           </span>
           <img *ngIf="invitation.content.passLogoUrl || invitation.content.brandLogoUrl"
-            [src]="invitation.content.passLogoUrl || invitation.content.brandLogoUrl" alt="Logo" class="nw-pass-brand-logo">
+            [src]="invitation.content.passLogoUrl || invitation.content.brandLogoUrl" alt="Logo"
+            class="nw-pass-brand-logo">
           <div *ngIf="invitation.content.subheadline || invitation.content.storyTitle" class="nw-pass-subheadline">
             {{ invitation.content.subheadline || invitation.content.storyTitle || 'NUESTRA HISTORIA' }}
           </div>
@@ -67,7 +78,12 @@
       <!-- BODY -->
       <div class="nw-pass-card-body">
         <div *ngIf="eventDateFormatted" class="nw-pass-date-bar">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
           <span>{{ eventDateFormatted }}</span>
         </div>
 
@@ -89,21 +105,26 @@
               <span class="nw-pass-icon">📍</span>
               <div>
                 <span>Mesa: <strong>{{ verifiedGuest.tableName || 'Mesa 1' }}</strong></span>
-                <span *ngIf="verifiedGuest.seatLabel">&nbsp;· Asiento: <strong>{{ verifiedGuest.seatLabel }}</strong></span>
+                <span *ngIf="verifiedGuest.seatLabel">&nbsp;· Asiento: <strong>{{ verifiedGuest.seatLabel
+                    }}</strong></span>
               </div>
             </div>
 
             <div class="nw-pass-info-row">
               <span class="nw-pass-icon">👥</span>
               <div>
-                <span>Acompañantes: <strong>{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas autorizadas</strong></span>
+                <span>Acompañantes: <strong>{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas
+                    autorizadas</strong></span>
               </div>
             </div>
 
-            <div *ngIf="invitation.content.locations?.[0]?.address || invitation.content.locations?.[0]?.name || event?.venue?.name" class="nw-pass-info-row">
+            <div
+              *ngIf="invitation.content.locations?.[0]?.address || invitation.content.locations?.[0]?.name || event?.venue?.name"
+              class="nw-pass-info-row">
               <span class="nw-pass-icon">📍</span>
               <div>
-                <strong>{{ invitation.content.locations?.[0]?.address || invitation.content.locations?.[0]?.name || event?.venue?.name }}</strong>
+                <strong>{{ invitation.content.locations?.[0]?.address || invitation.content.locations?.[0]?.name ||
+                  event?.venue?.name }}</strong>
               </div>
             </div>
 
@@ -116,18 +137,28 @@
 
         <div class="nw-pass-perforated-line">
           <span></span>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+            </path>
+          </svg>
           <span></span>
         </div>
 
         <p class="nw-pass-footer-notice">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
           <span>Presenta este pase (digital o impreso) con tu código QR en el acceso.</span>
         </p>
 
         <div class="nw-pass-modal-actions no-print">
           <button type="button" class="nw-pass-btn-download" (click)="downloadGuestPass()">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
             <span>Descargar / Imprimir Pase</span>
           </button>
           <button type="button" class="nw-pass-btn-close" (click)="closePassModal()">
@@ -145,11 +176,123 @@
   <p class="nw-pub-state-text">Cargando tu invitación especial...</p>
 </div>
 
-<div *ngIf="accessRequired && !invitation" class="nw-pub-access-gate-viewport" [ngStyle]="getAccessGateBackgroundStyle()">
+<div *ngIf="accessRequired && !invitation" class="nw-pub-access-gate-viewport"
+  [ngStyle]="getAccessGateBackgroundStyle()">
   <div class="nw-pub-access-gate-overlay" [style.background]="getAccessGateOverlayStyle()"></div>
-  <div class="nw-pub-access-gate-card-wrap">
+
+  <!-- VISTA CON MOTOR DE CAPAS WYSIWYG SI HAY CAPAS DISEÑADAS -->
+  <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface"
+    style="position: relative; width: 100%; max-width: 440px; margin: 40px auto; min-height: 800px; box-sizing: border-box;">
+    <form (ngSubmit)="accessGateView === 'login' ? checkGuestAccess() : submitAccessSelfRegistration()"
+      style="position: relative; width: 100%; height: 800px;">
+      <ng-container *ngFor="let layer of accessScreenDesign?.layers">
+        <ng-container *ngIf="shouldRenderAccessGateLayer(layer)">
+          <!-- FORMA / TARJETA -->
+          <div *ngIf="layer.type === 'shape'" [ngStyle]="accessLayerStyle(layer)"></div>
+
+          <!-- IMAGEN / MONOGRAMA / FOTO -->
+          <div *ngIf="layer.type === 'image' && layer.url" [ngStyle]="accessLayerStyle(layer)" style="overflow: hidden;">
+            <img [src]="layer.url" [alt]="layer.text || ''" style="width: 100%; height: 100%; object-fit: cover; display: block;"
+              [style.border-radius.px]="layer.style?.borderRadius || 0">
+          </div>
+
+          <!-- TEXTOS LIBRES / TITULOS / SUBTITULOS / INSIGNIA -->
+          <div *ngIf="layer.type === 'text' && layer.binding !== 'access.selfRegLink' && layer.binding !== 'selfReg.backLink'"
+            [ngStyle]="accessLayerStyle(layer)" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+            <span>{{ layer.text }}</span>
+          </div>
+
+          <!-- BOTONES / ENLACES DE ACCESO -->
+          <button *ngIf="layer.binding === 'access.selfRegLink'" type="button"
+            (click)="toggleAccessGateView('register')"
+            [ngStyle]="accessLayerStyle(layer)"
+            class="nw-pub-access-link-btn"
+            style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            {{ layer.text }}
+          </button>
+
+          <button *ngIf="layer.binding === 'selfReg.backLink'" type="button"
+            (click)="toggleAccessGateView('login')"
+            [ngStyle]="accessLayerStyle(layer)"
+            class="nw-pub-access-link-btn"
+            style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            {{ layer.text }}
+          </button>
+
+          <button *ngIf="layer.binding === 'access.submit'" type="submit"
+            [disabled]="checkingGuest"
+            [ngStyle]="accessLayerStyle(layer)"
+            class="nw-pub-access-submit-btn"
+            style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
+            <span>{{ checkingGuest ? 'Verificando...' : layer.text }}</span>
+          </button>
+
+          <button *ngIf="layer.binding === 'selfReg.submit'" type="submit"
+            [disabled]="selfRegSubmitting"
+            [ngStyle]="accessLayerStyle(layer)"
+            class="nw-pub-access-submit-btn"
+            style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span *ngIf="selfRegSubmitting" class="nw-pub-btn-spinner"></span>
+            <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : layer.text }}</span>
+          </button>
+
+          <!-- CAMPOS INTERACTIVOS (INPUTS) -->
+          <div *ngIf="layer.type === 'field'" [ngStyle]="accessLayerStyle(layer)"
+            style="display: flex; flex-direction: column; justify-content: center; box-sizing: border-box;">
+            <input *ngIf="layer.binding === 'access.contact'" type="text"
+              [(ngModel)]="guestAccessSingleInput" name="guestContact"
+              [placeholder]="layer.placeholder || 'Correo o teléfono'" required
+              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+
+            <input *ngIf="layer.binding === 'access.pin'" type="password" maxlength="20"
+              [(ngModel)]="guestAccessPin" name="guestPin"
+              [placeholder]="layer.placeholder || 'Ingresa tu NIP'" required
+              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+
+            <input *ngIf="layer.binding === 'selfReg.name'" type="text"
+              [(ngModel)]="selfRegName" name="selfRegName"
+              [placeholder]="layer.placeholder || 'Tu nombre y apellido'" required
+              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+
+            <input *ngIf="layer.binding === 'selfReg.email'" type="email"
+              [(ngModel)]="selfRegEmail" name="selfRegEmail"
+              [placeholder]="layer.placeholder || 'tu-correo@ejemplo.com'" required
+              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+
+            <input *ngIf="layer.binding === 'selfReg.phone'" type="tel"
+              [(ngModel)]="selfRegPhone" name="selfRegPhone"
+              [placeholder]="layer.placeholder || '55 0000 0000'"
+              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+
+            <select *ngIf="layer.binding === 'selfReg.companions'"
+              [(ngModel)]="selfRegCompanions" name="selfRegCompanions"
+              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+              <option [ngValue]="1">1 pase (Solo yo)</option>
+              <option [ngValue]="2">2 pases (+1 acompañante)</option>
+              <option [ngValue]="3">3 pases (+2 acompañantes)</option>
+              <option [ngValue]="4">4 pases (+3 acompañantes)</option>
+            </select>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- Mensajes flotantes de error y éxito -->
+      <div *ngIf="error" class="nw-pub-access-alert error" role="alert" style="position: absolute; bottom: 12px; left: 16px; right: 16px; z-index: 100;">
+        {{ error }}
+      </div>
+      <div *ngIf="success" class="nw-pub-access-alert success" role="status" style="position: absolute; bottom: 12px; left: 16px; right: 16px; z-index: 100;">
+        {{ success }}
+      </div>
+    </form>
+  </div>
+
+  <!-- FALLBACK: TARJETA CLÁSICA SI NO SE HAN DEFINIDO CAPAS PERSONALIZADAS -->
+  <div *ngIf="!hasAccessLayers()" class="nw-pub-access-gate-card-wrap">
     <div class="nw-pub-access-gate-card" [ngStyle]="getAccessGateCardStyle()">
-      <div *ngIf="accessScreenDesign?.showBadge !== false" class="nw-pub-access-badge" [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.border-color]="accessScreenDesign?.accentColor || '#c59b6c'">
+      <div *ngIf="accessScreenDesign?.showBadge !== false" class="nw-pub-access-badge"
+        [style.color]="accessScreenDesign?.accentColor || '#c59b6c'"
+        [style.border-color]="accessScreenDesign?.accentColor || '#c59b6c'">
         <span>{{ accessScreenDesign?.badgeText || 'Acceso Exclusivo' }}</span>
       </div>
       <div *ngIf="accessScreenDesign?.logoUrl" class="nw-pub-access-logo">
@@ -157,26 +300,34 @@
       </div>
       <!-- VISTA 1: VALIDACIÓN NORMAL (CORREO/TELÉFONO + NIP) -->
       <ng-container *ngIf="accessGateView === 'login'">
-        <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+        <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
+          [style.color]="accessScreenDesign?.textColor || '#1c2434'">
           {{ getAccessGateTitle() }}
         </h2>
-        <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()" [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
+        <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
+          [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
           {{ getAccessGateSubtitle() }}
         </p>
         <form (ngSubmit)="checkGuestAccess()" class="nw-pub-access-form">
-          <label for="guest-access-contact" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+          <label for="guest-access-contact" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="accessScreenDesign?.textColor || '#1c2434'">
             {{ getAccessGateInputLabel() }}
           </label>
-          <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput" [placeholder]="getAccessGateInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()" autocomplete="email" required class="nw-pub-access-input">
-          <div *ngIf="accessScreenDesign?.requirePin" class="nw-pub-access-pin-group" style="margin-top: 12px; margin-bottom: 4px; text-align: left;">
-            <label for="guest-access-pin" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+          <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput"
+            [placeholder]="getAccessGateInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()"
+            autocomplete="email" required class="nw-pub-access-input">
+          <div *ngIf="accessScreenDesign?.requirePin" class="nw-pub-access-pin-group"
+            style="margin-top: 12px; margin-bottom: 4px; text-align: left;">
+            <label for="guest-access-pin" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessScreenDesign?.textColor || '#1c2434'">
               {{ getAccessGatePinInputLabel() }}
             </label>
             <input id="guest-access-pin" name="pin" type="password" maxlength="20" [(ngModel)]="guestAccessPin"
-              [placeholder]="getAccessGatePinInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()"
-              required class="nw-pub-access-input">
+              [placeholder]="getAccessGatePinInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()" required
+              class="nw-pub-access-input">
           </div>
-          <button type="submit" class="nw-pub-access-submit-btn" [disabled]="checkingGuest" [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()">
+          <button type="submit" class="nw-pub-access-submit-btn" [disabled]="checkingGuest"
+            [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()">
             <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
             <span>{{ checkingGuest ? 'Verificando...' : getAccessGateButtonText() }}</span>
           </button>
@@ -193,51 +344,62 @@
 
       <!-- VISTA 2: AUTO-REGISTRO / SOLICITUD DE ACCESO -->
       <ng-container *ngIf="accessGateView === 'register'">
-        <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+        <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
+          [style.color]="accessScreenDesign?.textColor || '#1c2434'">
           {{ accessScreenDesign?.selfRegTitle || 'Solicitar Invitación' }}
         </h2>
-        <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()" [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
+        <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
+          [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
           {{ accessScreenDesign?.selfRegSubtitle || 'Ingresa tus datos para solicitar acceso a la lista oficial.' }}
         </p>
 
         <form *ngIf="!selfRegSubmitted" (ngSubmit)="submitAccessSelfRegistration()" class="nw-pub-access-form">
-          <label for="selfreg-name" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'">
+          <label for="selfreg-name" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="accessScreenDesign?.textColor || '#1c2434'">
             Nombre completo *
           </label>
           <input id="selfreg-name" name="name" type="text" [(ngModel)]="selfRegName" placeholder="Tu nombre y apellido"
             [style.font-family]="getAccessGateBodyFont()" required class="nw-pub-access-input">
 
-          <label for="selfreg-email" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
+          <label for="selfreg-email" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
             Correo electrónico *
           </label>
-          <input id="selfreg-email" name="email" type="email" [(ngModel)]="selfRegEmail" placeholder="tu-correo@ejemplo.com"
-            [style.font-family]="getAccessGateBodyFont()" required class="nw-pub-access-input">
+          <input id="selfreg-email" name="email" type="email" [(ngModel)]="selfRegEmail"
+            placeholder="tu-correo@ejemplo.com" [style.font-family]="getAccessGateBodyFont()" required
+            class="nw-pub-access-input">
 
-          <label for="selfreg-phone" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
+          <label for="selfreg-phone" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
             Teléfono / WhatsApp (opcional)
           </label>
           <input id="selfreg-phone" name="phone" type="tel" [(ngModel)]="selfRegPhone" placeholder="55 0000 0000"
             [style.font-family]="getAccessGateBodyFont()" class="nw-pub-access-input">
 
-          <label for="selfreg-companions" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()" [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
+          <label for="selfreg-companions" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
             Pases solicitados
           </label>
-          <select id="selfreg-companions" name="companions" [(ngModel)]="selfRegCompanions" class="nw-pub-access-input nw-pub-access-select"
-            [style.font-family]="getAccessGateBodyFont()">
+          <select id="selfreg-companions" name="companions" [(ngModel)]="selfRegCompanions"
+            class="nw-pub-access-input nw-pub-access-select" [style.font-family]="getAccessGateBodyFont()">
             <option [ngValue]="1">1 pase (Solo yo)</option>
             <option [ngValue]="2">2 pases (+1 acompañante)</option>
             <option [ngValue]="3">3 pases (+2 acompañantes)</option>
             <option [ngValue]="4">4 pases (+3 acompañantes)</option>
           </select>
 
-          <button type="submit" class="nw-pub-access-submit-btn" [disabled]="selfRegSubmitting" [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()" style="margin-top: 14px;">
+          <button type="submit" class="nw-pub-access-submit-btn" [disabled]="selfRegSubmitting"
+            [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()"
+            style="margin-top: 14px;">
             <span *ngIf="selfRegSubmitting" class="nw-pub-btn-spinner"></span>
-            <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : (accessScreenDesign?.selfRegButtonText || 'ENVIAR SOLICITUD') }}</span>
+            <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : (accessScreenDesign?.selfRegButtonText || 'ENVIAR
+              SOLICITUD') }}</span>
           </button>
 
           <div style="margin-top: 16px; text-align: center;">
             <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
-              [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.font-family]="getAccessGateBodyFont()">
+              [style.color]="accessScreenDesign?.accentColor || '#c59b6c'"
+              [style.font-family]="getAccessGateBodyFont()">
               ← Ya estoy en la lista / Volver
             </button>
           </div>
@@ -248,7 +410,8 @@
             ✓ {{ selfRegMessage }}
           </div>
           <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
-            [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.font-family]="getAccessGateBodyFont()" style="margin-top: 14px;">
+            [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.font-family]="getAccessGateBodyFont()"
+            style="margin-top: 14px;">
             ← Volver al inicio de sesión
           </button>
         </div>
@@ -261,7 +424,8 @@
 
 <div *ngIf="error && !invitation && !accessRequired" class="nw-pub-state-container error">
   <div class="nw-pub-state-icon">
-    <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="12" y1="8" x2="12" y2="12"></line>
       <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -275,11 +439,13 @@
 <ng-container *ngIf="invitation">
 
   <!-- BARRA DE CONTROL DE VISTA PREVIA BORRADOR -->
-  <aside *ngIf="showPreviewDeviceToolbar" class="nw-draft-preview-bar" [class.is-collapsed]="previewBarCollapsed" aria-label="Controles de vista previa borrador">
+  <aside *ngIf="showPreviewDeviceToolbar" class="nw-draft-preview-bar" [class.is-collapsed]="previewBarCollapsed"
+    aria-label="Controles de vista previa borrador">
     <div class="nw-draft-preview-bar-inner">
       <div class="nw-draft-preview-brand">
         <span class="nw-draft-preview-badge">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
@@ -291,24 +457,30 @@
 
       <!-- SELECTOR DE DISPOSITIVOS -->
       <div class="nw-draft-preview-device-switch" role="group" aria-label="Simular tamaño de pantalla">
-        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'mobile'" (click)="setPreviewDevice('mobile')" title="Simular Celular (390px)">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'mobile'"
+          (click)="setPreviewDevice('mobile')" title="Simular Celular (390px)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
             <line x1="12" y1="18" x2="12.01" y2="18"></line>
           </svg>
           <span>Celular (390px)</span>
         </button>
 
-        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'tablet'" (click)="setPreviewDevice('tablet')" title="Simular Tablet (768px)">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'tablet'"
+          (click)="setPreviewDevice('tablet')" title="Simular Tablet (768px)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
             <line x1="12" y1="18" x2="12.01" y2="18"></line>
           </svg>
           <span>Tablet (768px)</span>
         </button>
 
-        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'desktop'" (click)="setPreviewDevice('desktop')" title="Pantalla Completa Web">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'desktop'"
+          (click)="setPreviewDevice('desktop')" title="Pantalla Completa Web">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
             <line x1="8" y1="21" x2="16" y2="21"></line>
             <line x1="12" y1="17" x2="12" y2="21"></line>
@@ -319,8 +491,11 @@
 
       <!-- SIMULACIÓN DE ESTADO DEL INVITADO -->
       <div class="nw-draft-preview-guest-switch">
-        <button type="button" class="nw-guest-sim-btn" [class.active]="isSimulatingGuest" (click)="toggleGuestSimulation()" [title]="isSimulatingGuest ? 'Cambiar a formulario inicial sin identificar' : 'Simular vista con pase y actividad'">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" class="nw-guest-sim-btn" [class.active]="isSimulatingGuest"
+          (click)="toggleGuestSimulation()"
+          [title]="isSimulatingGuest ? 'Cambiar a formulario inicial sin identificar' : 'Simular vista con pase y actividad'">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
@@ -329,10 +504,12 @@
       </div>
 
       <div class="nw-draft-preview-actions">
-        <button type="button" class="nw-preview-btn-ghost" (click)="closePreviewWindow()" title="Cerrar vista previa y volver al editor">
+        <button type="button" class="nw-preview-btn-ghost" (click)="closePreviewWindow()"
+          title="Cerrar vista previa y volver al editor">
           ← Volver al editor
         </button>
-        <button type="button" class="nw-preview-btn-toggle" (click)="togglePreviewBar()" [title]="previewBarCollapsed ? 'Mostrar barra' : 'Ocultar barra'">
+        <button type="button" class="nw-preview-btn-toggle" (click)="togglePreviewBar()"
+          [title]="previewBarCollapsed ? 'Mostrar barra' : 'Ocultar barra'">
           {{ previewBarCollapsed ? '▼' : '▲' }}
         </button>
       </div>
@@ -340,16 +517,16 @@
   </aside>
 
   <!-- CONTENEDOR VIEWPORT CON EFECTO DE BORDES Y AMBIENTE LATERAL -->
-  <div class="nw-preview-viewport-wrapper"
-       [class.is-preview-mode]="showPreviewDeviceToolbar"
-       [class.device-mode-mobile]="showPreviewDeviceToolbar && previewDevice === 'mobile'"
-       [class.device-mode-tablet]="showPreviewDeviceToolbar && previewDevice === 'tablet'"
-       [class.device-mode-desktop]="!showPreviewDeviceToolbar || previewDevice === 'desktop'"
-       [style.--preview-ambient-bg]="ambientThemeColor">
+  <div class="nw-preview-viewport-wrapper" [class.is-preview-mode]="showPreviewDeviceToolbar"
+    [class.device-mode-mobile]="showPreviewDeviceToolbar && previewDevice === 'mobile'"
+    [class.device-mode-tablet]="showPreviewDeviceToolbar && previewDevice === 'tablet'"
+    [class.device-mode-desktop]="!showPreviewDeviceToolbar || previewDevice === 'desktop'"
+    [style.--preview-ambient-bg]="ambientThemeColor">
 
     <div class="nw-preview-device-stage">
       <!-- Notch superior en modo celular -->
-      <div *ngIf="showPreviewDeviceToolbar && previewDevice === 'mobile'" class="nw-preview-phone-notch" aria-hidden="true">
+      <div *ngIf="showPreviewDeviceToolbar && previewDevice === 'mobile'" class="nw-preview-phone-notch"
+        aria-hidden="true">
         <div class="nw-preview-phone-speaker"></div>
         <div class="nw-preview-phone-camera"></div>
       </div>
@@ -357,1078 +534,502 @@
       <div class="nw-preview-content-surface">
 
         <!-- PLANTILLA PERSONALIZADA HTML / CSS -->
-        <div *ngIf="isCustomHtmlTemplate()" class="nw-pub-custom-page-container" style="width:100vw; min-height:100vh; position:relative; background:transparent; overflow:hidden;">
+        <div *ngIf="isCustomHtmlTemplate()" class="nw-pub-custom-page-container"
+          style="width:100vw; min-height:100vh; position:relative; background:transparent; overflow:hidden;">
           <iframe *ngIf="customHtmlSafeSrcdoc" [srcdoc]="customHtmlSafeSrcdoc"
             style="width:100vw; height:100vh; border:none; display:block; background:transparent;"
             allow="autoplay; camera; clipboard-write; encrypted-media" allowfullscreen>
           </iframe>
         </div>
 
-        <app-visual-invitation-renderer
-          *ngIf="isVisualBuilderTemplate()"
-          [invitation]="invitation"
-          [event]="event"
-          [countdown]="countdown"
-          [forcedDevice]="showPreviewDeviceToolbar ? previewDevice : undefined"
-    [verifiedGuest]="verifiedGuest"
-    [guestActivity]="guestActivity"
-    [guestActivityLoading]="guestActivityLoading"
-    [activityNotifications]="activityNotifications"
-    [requiresGuestValidation]="requiresGuestValidation"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [albumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [error]="error"
-    [success]="success"
-    [albumMessage]="albumMessage"
-    [dedicationMessage]="dedicationMessage"
-    [songRequestMessage]="songRequestMessage"
-    [isPlayingMusic]="isPlayingMusic"
-    [musicControlReady]="isMusicControlReady()"
-    [currentActiveSection]="currentActiveSection"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitVisualRsvp($event)"
-    (submitSelfRegister)="onSelfRegistered($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (submitDedication)="submitDedicationFromData($event)"
-    (requestSong)="submitVisualSongRequest($event)"
-    (openGuestActivity)="openGuestActivity()"
-    (updateActivityRsvp)="updateGuestActivityRsvp($event)"
-    (removeActivityItem)="removeGuestActivityItem($event)"
-    (updateActivityDedication)="updateGuestActivityDedication($event)"
-    (markActivityNotificationsRead)="markGuestActivityNotificationsRead()"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (openLightbox)="openLightbox($event)">
-  </app-visual-invitation-renderer>
+        <app-visual-invitation-renderer *ngIf="isVisualBuilderTemplate()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [forcedDevice]="showPreviewDeviceToolbar ? previewDevice : undefined"
+          [verifiedGuest]="verifiedGuest" [guestActivity]="guestActivity" [guestActivityLoading]="guestActivityLoading"
+          [activityNotifications]="activityNotifications" [requiresGuestValidation]="requiresGuestValidation"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum"
+          [albumAssets]="allAlbumAssets" [dedications]="dedications" [error]="error" [success]="success"
+          [albumMessage]="albumMessage" [dedicationMessage]="dedicationMessage"
+          [songRequestMessage]="songRequestMessage" [isPlayingMusic]="isPlayingMusic"
+          [musicControlReady]="isMusicControlReady()" [currentActiveSection]="currentActiveSection"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
+          (submitRsvp)="submitVisualRsvp($event)" (submitSelfRegister)="onSelfRegistered($event)"
+          (uploadPhoto)="onFileSelectedDirect($event)" (submitDedication)="submitDedicationFromData($event)"
+          (requestSong)="submitVisualSongRequest($event)" (openGuestActivity)="openGuestActivity()"
+          (updateActivityRsvp)="updateGuestActivityRsvp($event)" (removeActivityItem)="removeGuestActivityItem($event)"
+          (updateActivityDedication)="updateGuestActivityDedication($event)"
+          (markActivityNotificationsRead)="markGuestActivityNotificationsRead()" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)" (openLightbox)="openLightbox($event)">
+        </app-visual-invitation-renderer>
 
-  <!-- PLANTILLA 1: CLÁSICA VERTICAL EDITORIAL -->
-  <app-new-public-invitation-classic-vertical
-    *ngIf="isClassicVerticalTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-classic-vertical>
+        <!-- PLANTILLA 1: CLÁSICA VERTICAL EDITORIAL -->
+        <app-new-public-invitation-classic-vertical *ngIf="isClassicVerticalTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-classic-vertical>
 
-  <!-- PLANTILLA 2: SOBRE INTERACTIVO & CARDS -->
-  <app-new-public-invitation-envelope-cards
-    *ngIf="isEnvelopeCardsTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    (toggleMusic)="toggleMusic()"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-envelope-cards>
+        <!-- PLANTILLA 2: SOBRE INTERACTIVO & CARDS -->
+        <app-new-public-invitation-envelope-cards *ngIf="isEnvelopeCardsTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [sending]="sending" [checkingGuest]="checkingGuest"
+          [uploadingAlbum]="uploadingAlbum" [error]="error" [success]="success" [dedicationMessage]="dedicationMessage"
+          [albumMessage]="albumMessage" [rsvp]="rsvp" [companionNamesText]="companionNamesText"
+          [customAnswers]="customAnswers" [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          (toggleMusic)="toggleMusic()" (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
+          (submitRsvp)="submitRsvp()" (submitDedication)="submitDedicationFromData($event)"
+          (uploadPhoto)="onFileSelectedDirect($event)" (openLightbox)="openLightbox($event)"
+          (searchSong)="searchSongForRequestDirect($event)" (selectSong)="selectSongFromSearch($event)"
+          (requestSong)="submitSongRequest()" (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-envelope-cards>
 
-  <!-- PLANTILLA 3: MODERNA / MINIMALISTA -->
-  <app-new-public-invitation-template3
-    *ngIf="isTemplate3()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    (toggleMusic)="toggleMusic()"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)">
-  </app-new-public-invitation-template3>
+        <!-- PLANTILLA 3: MODERNA / MINIMALISTA -->
+        <app-new-public-invitation-template3 *ngIf="isTemplate3()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [sending]="sending" [checkingGuest]="checkingGuest"
+          [uploadingAlbum]="uploadingAlbum" [error]="error" [success]="success" [dedicationMessage]="dedicationMessage"
+          [albumMessage]="albumMessage" [rsvp]="rsvp" [companionNamesText]="companionNamesText"
+          [customAnswers]="customAnswers" [declineConfirmed]="declineConfirmed" (toggleMusic)="toggleMusic()"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)">
+        </app-new-public-invitation-template3>
 
-  <!-- PLANTILLA BODA MOBILE-FIRST -->
-  <app-new-public-invitation-boda-mobile-first
-    *ngIf="isBodaMobileFirstTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-mobile-first>
+        <!-- PLANTILLA BODA MOBILE-FIRST -->
+        <app-new-public-invitation-boda-mobile-first *ngIf="isBodaMobileFirstTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-mobile-first>
 
-  <!-- PLANTILLA BODA DESKTOP-FIRST -->
-  <app-new-public-invitation-boda-desktop-first
-    *ngIf="isBodaDesktopFirstTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-desktop-first>
+        <!-- PLANTILLA BODA DESKTOP-FIRST -->
+        <app-new-public-invitation-boda-desktop-first *ngIf="isBodaDesktopFirstTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-desktop-first>
 
-  <!-- PLANTILLA BODA CARDS LATERAL -->
-  <app-new-public-invitation-boda-cards-lateral
-    *ngIf="isBodaCardsLateralTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-cards-lateral>
+        <!-- PLANTILLA BODA CARDS LATERAL -->
+        <app-new-public-invitation-boda-cards-lateral *ngIf="isBodaCardsLateralTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-cards-lateral>
 
-  <!-- PLANTILLA BODA CREATIVA PREMIUM -->
-  <app-new-public-invitation-boda-creativa-premium
-    *ngIf="isBodaCreativaPremiumTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-creativa-premium>
+        <!-- PLANTILLA BODA CREATIVA PREMIUM -->
+        <app-new-public-invitation-boda-creativa-premium *ngIf="isBodaCreativaPremiumTemplate()"
+          [invitation]="invitation" [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest"
+          [publicAlbumAssets]="allAlbumAssets" [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-creativa-premium>
 
-  <!-- PLANTILLA TEMÁTICA: BODA -->
-  <app-new-public-invitation-template-boda
-    *ngIf="isTemplateBoda()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-template-boda>
+        <!-- PLANTILLA TEMÁTICA: BODA -->
+        <app-new-public-invitation-template-boda *ngIf="isTemplateBoda()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-template-boda>
 
-  <!-- PLANTILLA TEMÁTICA: XV AÑOS -->
-  <app-new-public-invitation-template-xv
-    *ngIf="isTemplateXv()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-template-xv>
+        <!-- PLANTILLA TEMÁTICA: XV AÑOS -->
+        <app-new-public-invitation-template-xv *ngIf="isTemplateXv()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-template-xv>
 
-  <!-- PLANTILLA TEMÁTICA: GRADUACIÓN -->
-  <app-new-public-invitation-template-graduacion
-    *ngIf="isTemplateGraduacion()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-template-graduacion>
+        <!-- PLANTILLA TEMÁTICA: GRADUACIÓN -->
+        <app-new-public-invitation-template-graduacion *ngIf="isTemplateGraduacion()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-template-graduacion>
 
-  <!-- PLANTILLA TEMÁTICA: CUMPLEAÑOS -->
-  <app-new-public-invitation-template-cumpleanos
-    *ngIf="isTemplateCumpleanos()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-template-cumpleanos>
+        <!-- PLANTILLA TEMÁTICA: CUMPLEAÑOS -->
+        <app-new-public-invitation-template-cumpleanos *ngIf="isTemplateCumpleanos()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-template-cumpleanos>
 
-  <!-- PLANTILLA TEMÁTICA: BAUTIZO -->
-  <app-new-public-invitation-template-bautizo
-    *ngIf="isTemplateBautizo()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-template-bautizo>
+        <!-- PLANTILLA TEMÁTICA: BAUTIZO -->
+        <app-new-public-invitation-template-bautizo *ngIf="isTemplateBautizo()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-template-bautizo>
 
-  <!-- PLANTILLA TEMÁTICA: OTRO / GENERAL -->
-  <app-new-public-invitation-template-otro
-    *ngIf="isTemplateOtro()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-template-otro>
+        <!-- PLANTILLA TEMÁTICA: OTRO / GENERAL -->
+        <app-new-public-invitation-template-otro *ngIf="isTemplateOtro()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-template-otro>
 
-  <!-- PLANTILLA TEMÁTICA: LA MAISON DORÉE (ALTA COSTURA EDITORIAL) -->
-  <app-new-public-invitation-maison-dore
-    *ngIf="isMaisonDoreTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-maison-dore>
+        <!-- PLANTILLA TEMÁTICA: LA MAISON DORÉE (ALTA COSTURA EDITORIAL) -->
+        <app-new-public-invitation-maison-dore *ngIf="isMaisonDoreTemplate()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-maison-dore>
 
-  <!-- PLANTILLA TEMÁTICA: BODA VILLA PERLE -->
-  <app-new-public-invitation-boda-villa-perle
-    *ngIf="isBodaVillaPerleTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-villa-perle>
+        <!-- PLANTILLA TEMÁTICA: BODA VILLA PERLE -->
+        <app-new-public-invitation-boda-villa-perle *ngIf="isBodaVillaPerleTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-villa-perle>
 
-  <!-- PLANTILLA TEMÁTICA: BODA TEATRO -->
-  <app-new-public-invitation-boda-teatro
-    *ngIf="isBodaTeatroTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-teatro>
+        <!-- PLANTILLA TEMÁTICA: BODA TEATRO -->
+        <app-new-public-invitation-boda-teatro *ngIf="isBodaTeatroTemplate()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-teatro>
 
-  <!-- PLANTILLA TEMÁTICA: BODA ELEGANZA -->
-  <app-new-public-invitation-boda-eleganza
-    *ngIf="isBodaEleganzaTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-eleganza>
+        <!-- PLANTILLA TEMÁTICA: BODA ELEGANZA -->
+        <app-new-public-invitation-boda-eleganza *ngIf="isBodaEleganzaTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-eleganza>
 
-  <!-- PLANTILLA TEMÁTICA: BODA ROSAS -->
-  <app-new-public-invitation-boda-rosas
-    *ngIf="isBodaRosasTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-rosas>
+        <!-- PLANTILLA TEMÁTICA: BODA ROSAS -->
+        <app-new-public-invitation-boda-rosas *ngIf="isBodaRosasTemplate()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-rosas>
 
-  <!-- PLANTILLA TEMÁTICA: BODA GIRASOLES -->
-  <app-new-public-invitation-boda-girasoles
-    *ngIf="isBodaGirasolesTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-girasoles>
+        <!-- PLANTILLA TEMÁTICA: BODA GIRASOLES -->
+        <app-new-public-invitation-boda-girasoles *ngIf="isBodaGirasolesTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-girasoles>
 
-  <!-- PLANTILLA TEMÁTICA: BODA NAVY BLUE -->
-  <app-new-public-invitation-boda-navy-blue
-    *ngIf="isBodaNavyBlueTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-boda-navy-blue>
+        <!-- PLANTILLA TEMÁTICA: BODA NAVY BLUE -->
+        <app-new-public-invitation-boda-navy-blue *ngIf="isBodaNavyBlueTemplate()" [invitation]="invitation"
+          [event]="event" [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-boda-navy-blue>
 
-  <!-- PLANTILLA TEMÁTICA: MIS XV BORGOÑA REAL -->
-  <app-new-public-invitation-xv-burgundy
-    *ngIf="isXvBurgundyTemplate()"
-    [invitation]="invitation"
-    [event]="event"
-    [countdown]="countdown"
-    [verifiedGuest]="verifiedGuest"
-    [publicAlbumAssets]="allAlbumAssets"
-    [dedications]="dedications"
-    [isPlayingMusic]="isPlayingMusic"
-    [currentPlayingTrackUrl]="currentPlayingTrackUrl"
-    [currentActiveSection]="currentActiveSection"
-    [sending]="sending"
-    [checkingGuest]="checkingGuest"
-    [uploadingAlbum]="uploadingAlbum"
-    [error]="error"
-    [success]="success"
-    [dedicationMessage]="dedicationMessage"
-    [albumMessage]="albumMessage"
-    [rsvp]="rsvp"
-    [companionNamesText]="companionNamesText"
-    [customAnswers]="customAnswers"
-    [declineConfirmed]="declineConfirmed"
-    [songSearchQuery]="songSearchQuery"
-    [songSearchResults]="songSearchResults"
-    [searchingSongs]="searchingSongs"
-    [songRequest]="songRequest"
-    [songRequestSending]="songRequestSending"
-    [songRequestMessage]="songRequestMessage"
-    [maxSongRequestsAllowed]="maxSongRequestsAllowed"
-    [guestSubmittedSongsCount]="guestSubmittedSongsCount"
-    [requireSongApproval]="requireSongApproval"
-    [allowDedicationsEnabled]="allowDedicationsEnabled"
-    [isOpeningVipEnvelope]="isOpeningVipEnvelope"
-    [guestAccessPhone]="guestAccessPhone"
-    [guestAccessEmail]="guestAccessEmail"
-    (toggleMusic)="toggleMusic()"
-    (toggleSectionMusic)="toggleSectionMusic($event)"
-    (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)"
-    (submitRsvp)="submitRsvp()"
-    (submitDedication)="submitDedicationFromData($event)"
-    (uploadPhoto)="onFileSelectedDirect($event)"
-    (openLightbox)="openLightbox($event)"
-    (searchSong)="searchSongForRequestDirect($event)"
-    (selectSong)="selectSongFromSearch($event)"
-    (requestSong)="submitSongRequest()"
-    (resetGuest)="resetGuestAccess()"
-    (downloadPass)="downloadGuestPass()">
-  </app-new-public-invitation-xv-burgundy>
+        <!-- PLANTILLA TEMÁTICA: MIS XV BORGOÑA REAL -->
+        <app-new-public-invitation-xv-burgundy *ngIf="isXvBurgundyTemplate()" [invitation]="invitation" [event]="event"
+          [countdown]="countdown" [verifiedGuest]="verifiedGuest" [publicAlbumAssets]="allAlbumAssets"
+          [dedications]="dedications" [isPlayingMusic]="isPlayingMusic"
+          [currentPlayingTrackUrl]="currentPlayingTrackUrl" [currentActiveSection]="currentActiveSection"
+          [sending]="sending" [checkingGuest]="checkingGuest" [uploadingAlbum]="uploadingAlbum" [error]="error"
+          [success]="success" [dedicationMessage]="dedicationMessage" [albumMessage]="albumMessage" [rsvp]="rsvp"
+          [companionNamesText]="companionNamesText" [customAnswers]="customAnswers"
+          [declineConfirmed]="declineConfirmed" [songSearchQuery]="songSearchQuery"
+          [songSearchResults]="songSearchResults" [searchingSongs]="searchingSongs" [songRequest]="songRequest"
+          [songRequestSending]="songRequestSending" [songRequestMessage]="songRequestMessage"
+          [maxSongRequestsAllowed]="maxSongRequestsAllowed" [guestSubmittedSongsCount]="guestSubmittedSongsCount"
+          [requireSongApproval]="requireSongApproval" [allowDedicationsEnabled]="allowDedicationsEnabled"
+          [isOpeningVipEnvelope]="isOpeningVipEnvelope" [guestAccessPhone]="guestAccessPhone"
+          [guestAccessEmail]="guestAccessEmail" (toggleMusic)="toggleMusic()"
+          (toggleSectionMusic)="toggleSectionMusic($event)"
+          (verifyGuestAccess)="checkGuestAccessByCredentials($event.email, $event.phone)" (submitRsvp)="submitRsvp()"
+          (submitDedication)="submitDedicationFromData($event)" (uploadPhoto)="onFileSelectedDirect($event)"
+          (openLightbox)="openLightbox($event)" (searchSong)="searchSongForRequestDirect($event)"
+          (selectSong)="selectSongFromSearch($event)" (requestSong)="submitSongRequest()"
+          (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
+        </app-new-public-invitation-xv-burgundy>
 
       </div> <!-- .nw-preview-content-surface -->
     </div> <!-- .nw-preview-device-stage -->

@@ -137,6 +137,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   accessSimView: 'login' | 'register' = 'login';
   accessSimInput = '';
   accessSimPin = '';
+
+  setAccessSimView(view: 'login' | 'register'): void {
+    this.accessSimView = view;
+    this.clearLayerSelection();
+    this.cdr?.markForCheck();
+  }
   accessSimRegName = '';
   accessSimRegEmail = '';
   accessSimRegPhone = '';
@@ -1158,7 +1164,28 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design.sections = sections;
   }
 
+  get accessSectionProxy(): VisualInvitationSection {
+    if (!this.design?.accessScreen) {
+      this.initAccessScreenDesign();
+    }
+    if (!this.design.accessScreen!.layers) {
+      this.design.accessScreen!.layers = [];
+    }
+    return {
+      id: '__access_screen__',
+      type: 'custom',
+      title: 'Pantalla de Acceso',
+      enabled: true,
+      layout: 'canvas',
+      height: this.artboardHeight,
+      layers: this.design.accessScreen!.layers
+    };
+  }
+
   get selectedSection(): VisualInvitationSection | undefined {
+    if (this.editorCanvasMode === 'access') {
+      return this.accessSectionProxy;
+    }
     return this.design?.sections.find((item) => item.id === this.selectedSectionId);
   }
 
@@ -2542,6 +2569,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (event.detail >= 2 && layer.type === 'image') { this.startImageCrop(event, section, layer); return; }
     if (event.detail >= 2 && ['text', 'button'].includes(layer.type)) { this.startInlineEdit(event, section, layer); return; }
     if (this.croppingLayerId && this.croppingLayerId !== layer.id) this.croppingLayerId = '';
+    if (section.id === "__access_screen__") {
+      const binding = String(layer.binding || "");
+      if (binding.startsWith("selfReg.") && this.accessSimView !== "register") {
+        this.accessSimView = "register";
+      } else if (binding.startsWith("access.") && this.accessSimView !== "login") {
+        this.accessSimView = "login";
+      }
+    }
     this.applyLayerSelection(section, layer, event.shiftKey);
     this.inspectorView = 'properties';
     this.cdr.detectChanges();
@@ -2551,7 +2586,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     if (!this.selectedSection) return;
     const binding = String(layer.binding || '');
-    if (this.selectedSection.type === 'guestPass') {
+    if (this.selectedSection.id === "__access_screen__") {
+      if (binding.startsWith("selfReg.") && this.accessSimView !== "register") {
+        this.accessSimView = "register";
+      } else if (binding.startsWith("access.") && this.accessSimView !== "login") {
+        this.accessSimView = "login";
+      }
+    } else if (this.selectedSection.type === 'guestPass') {
       const isFormLayer = ['pass.email', 'pass.phone', 'pass.identify', 'pass.feedback'].includes(binding) || binding.startsWith('display.label.pass.');
       const currentMode = this.pluginSetting(this.selectedSection, 'editorViewMode') || 'pass';
       if (isFormLayer && currentMode !== 'form') {
@@ -6320,54 +6361,6 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return groups;
   }
 
-  shouldRenderEditorLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
-    if (section.type === 'countdown' && layer.binding === 'countdown.expired') return this.countdownPreview.isOver;
-    if (section.type === 'countdown' && String(layer.binding || '').startsWith('display.countdown.card')) return !this.countdownPreview.isOver;
-    if (section.type === 'gallery') {
-      const binding = String(layer.binding || '');
-      if (!binding.startsWith('gallery.')) return true;
-      const carousel = this.galleryPreviewMode(section) === 'carousel';
-      return carousel ? binding.startsWith('gallery.carousel.') : binding.startsWith('gallery.item.');
-    }
-    if (section.type === 'guestPass') {
-      const binding = String(layer.binding || '');
-      if (!binding.startsWith('pass.') && !binding.startsWith('display.guestPass.') && !binding.startsWith('display.label.pass.')) {
-        return true;
-      }
-      if (binding.startsWith('display.guestPass.')) return true;
-      const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
-      const isFormLayer = ['pass.email', 'pass.phone', 'pass.identify'].includes(binding) || binding.startsWith('display.label.pass.');
-      const isPassLayer = ['pass.card', 'pass.qr', 'pass.name', 'pass.group', 'pass.table', 'pass.seat', 'pass.companions', 'pass.feedback'].includes(binding);
-      if (isFormMode) return ['pass.email', 'pass.phone', 'pass.identify', 'pass.card', 'pass.feedback'].includes(binding) || binding.startsWith('display.label.pass.');
-      if (binding.startsWith('display.label.pass.') || ['pass.email', 'pass.phone', 'pass.identify'].includes(binding)) return false;
-      if (binding === 'pass.card' || binding === 'pass.feedback') return true;
-      if (binding === 'pass.name') return this.pluginSetting(section, 'showGuestName') !== false;
-      if (binding === 'pass.group') return this.pluginSetting(section, 'showGroup') !== false;
-      if (binding === 'pass.table') return this.pluginSetting(section, 'showTable') !== false;
-      if (binding === 'pass.seat') return this.pluginSetting(section, 'showSeat') !== false;
-      if (binding === 'pass.companions') return this.pluginSetting(section, 'showCompanions') !== false;
-      if (binding === 'pass.qr') return this.pluginSetting(section, 'showQr') !== false;
-      return false;
-    }
-    if (section.type === 'guestActivity') {
-      const binding = String(layer.binding || '');
-      if (!binding.startsWith('activity.') && !binding.startsWith('display.guestActivity.') && !binding.startsWith('display.label.activity.')) {
-        return true;
-      }
-      if (binding.startsWith('display.guestActivity.')) return true;
-      const isFormMode = this.pluginSetting(section, 'editorViewMode') === 'form';
-      if (isFormMode) return ['activity.email', 'activity.phone', 'activity.identify'].includes(binding) || binding.startsWith('display.label.activity.');
-      if (binding.startsWith('display.label.activity.') || ['activity.email', 'activity.phone', 'activity.identify'].includes(binding)) return false;
-      if (binding === 'activity.greeting' || binding === 'activity.manage' || binding === 'activity.full') return true;
-      if (binding === 'activity.rsvp') return this.pluginSetting(section, 'showRsvp') !== false;
-      if (binding === 'activity.pass') return this.pluginSetting(section, 'showPass') !== false;
-      if (binding === 'activity.album') return this.pluginSetting(section, 'showAlbum') !== false;
-      if (binding === 'activity.songs') return this.pluginSetting(section, 'showSongs') !== false;
-      if (binding === 'activity.dedications') return this.pluginSetting(section, 'showDedications') !== false;
-      return false;
-    }
-    return true;
-  }
 
   beginContentEdit(): void {
     this.recordHistory();
@@ -7468,6 +7461,371 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     window.open(`/new/i/${this.invitation.slug}`, '_blank');
   }
 
+  ensureAccessScreenCanvasLayers(forceReset = false): void {
+    if (!this.design?.accessScreen) return;
+    const acc = this.design.accessScreen;
+    if (acc.layers && acc.layers.length > 0 && !forceReset) {
+      return;
+    }
+    const theme = this.design.theme || this.themePresets[0].theme;
+    const isDark = (acc.cardBgColor || "").toLowerCase() === "#0f172a" || (acc.backgroundColor || "").toLowerCase() === "#1c2434" || (acc.textColor || "").toLowerCase() === "#ffffff";
+    const cardBg = isDark && acc.cardStyle !== "glass"
+      ? "rgba(15, 23, 42, 0.90)"
+      : acc.cardStyle === "glass"
+        ? "rgba(255, 255, 255, 0.12)"
+        : "rgba(255, 255, 255, 0.94)";
+    const cardBorder = isDark && acc.cardStyle !== "glass"
+      ? (acc.accentColor || "#c59b6c") + "55"
+      : acc.cardStyle === "glass"
+        ? "rgba(255, 255, 255, 0.22)"
+        : "#e2e8f0";
+    const cardRadius = acc.cardRadius ?? 18;
+    const cardShadow = acc.cardShadow === "none"
+      ? "none"
+      : acc.cardShadow === "glow"
+        ? `0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px ${(acc.accentColor || "#c59b6c")}33`
+        : "0 20px 45px rgba(0, 0, 0, 0.3)";
+
+    const headingFont = acc.headingFont || theme?.headingFont || "Playfair Display";
+    const bodyFont = acc.bodyFont || theme?.bodyFont || "Montserrat";
+    const textColor = acc.textColor || (isDark ? "#fafafa" : "#1c2434");
+    const accentColor = acc.accentColor || theme?.accentColor || "#c59b6c";
+    const buttonBgColor = acc.buttonBgColor || theme?.buttonBackgroundColor || "#2f5348";
+    const buttonTextColor = acc.buttonTextColor || theme?.buttonTextColor || "#ffffff";
+    const buttonRadius = acc.buttonRadius ?? theme?.buttonRadius ?? 10;
+
+    let z = 0;
+    const layers: VisualInvitationLayer[] = [];
+
+    // 1. Tarjeta contenedora
+    const card = this.newLayer("shape", "Tarjeta de Acceso", 8, 8, 84, 84);
+    card.name = "Tarjeta Contenedora";
+    card.binding = "access.card";
+    card.zIndex = ++z;
+    card.style = {
+      ...(card.style || {}),
+      backgroundColor: cardBg,
+      borderColor: cardBorder,
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: cardRadius,
+      boxShadow: cardShadow
+    };
+    layers.push(card);
+
+    // 2. Badge decorativo
+    const badge = this.newLayer("text", (acc.badgeText || "VILLA L'ORANGERIE - ATELIER").toUpperCase(), 14, 13, 72, 5, 11);
+    badge.name = "Insignia / Badge";
+    badge.binding = "access.badge";
+    badge.zIndex = ++z;
+    badge.style = {
+      ...(badge.style || {}),
+      color: accentColor,
+      fontFamily: bodyFont,
+      fontWeight: 600,
+      letterSpacing: 2,
+      textAlign: "center"
+    };
+    layers.push(badge);
+
+    // 3. Título principal
+    const title = this.newLayer("text", acc.title || "INVITACIÓN PERSONAL DE GALA", 12, 19, 76, 10, 26);
+    title.name = "Título de Acceso";
+    title.binding = "access.title";
+    title.zIndex = ++z;
+    title.style = {
+      ...(title.style || {}),
+      color: textColor,
+      fontFamily: headingFont,
+      fontWeight: 700,
+      textAlign: "center",
+      lineHeight: 1.2
+    };
+    layers.push(title);
+
+    // 4. Subtítulo / Instrucciones
+    const subtitle = this.newLayer("text", acc.subtitle || "Ingresa tu correo o teléfono registrado para abrir tu invitación y pase personal.", 14, 30, 72, 8, 13);
+    subtitle.name = "Subtítulo / Instrucción";
+    subtitle.binding = "access.subtitle";
+    subtitle.zIndex = ++z;
+    subtitle.style = {
+      ...(subtitle.style || {}),
+      color: textColor,
+      opacity: 0.8,
+      fontFamily: bodyFont,
+      fontWeight: 400,
+      textAlign: "center",
+      lineHeight: 1.4
+    };
+    layers.push(subtitle);
+
+    // 5. Campo de Contacto (Correo / Teléfono)
+    const contactField = this.newLayer("field", acc.inputLabel || "Correo o teléfono registrado", 14, 40, 72, 7, 13);
+    contactField.name = "Campo de Contacto";
+    contactField.binding = "access.contact";
+    contactField.placeholder = acc.inputPlaceholder || "invitado@ejemplo.com o 55 0000 0000";
+    contactField.zIndex = ++z;
+    contactField.style = {
+      ...(contactField.style || {}),
+      color: textColor,
+      fontFamily: bodyFont,
+      backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f8fafc",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "#cbd5e1",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 8,
+      textAlign: "left",
+      padding: 10
+    };
+    layers.push(contactField);
+
+    // 6. Campo NIP (Opcional según requirePin)
+    const pinField = this.newLayer("field", acc.pinInputLabel || "NIP de acceso", 14, 49, 72, 7, 13);
+    pinField.name = "Campo NIP";
+    pinField.binding = "access.pin";
+    pinField.placeholder = acc.pinInputPlaceholder || "Ingresa tu NIP";
+    pinField.zIndex = ++z;
+    pinField.style = {
+      ...(pinField.style || {}),
+      color: textColor,
+      fontFamily: bodyFont,
+      backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f8fafc",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "#cbd5e1",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 8,
+      textAlign: "left",
+      padding: 10
+    };
+    layers.push(pinField);
+
+    // 7. Botón Abrir Invitación
+    const submitBtn = this.newLayer("button", acc.buttonText || "ABRIR INVITACIÓN", 14, 58, 72, 7, 14);
+    submitBtn.name = "Botón Ingreso";
+    submitBtn.binding = "access.submit";
+    submitBtn.zIndex = ++z;
+    submitBtn.style = {
+      ...(submitBtn.style || {}),
+      backgroundColor: buttonBgColor,
+      color: buttonTextColor,
+      fontFamily: bodyFont,
+      fontWeight: 700,
+      letterSpacing: 1,
+      borderRadius: buttonRadius,
+      boxShadow: "0 4px 14px rgba(0, 0, 0, 0.25)",
+      textAlign: "center"
+    };
+    layers.push(submitBtn);
+
+    // 8. Enlace a Auto-registro
+    const selfRegLink = this.newLayer("text", "¿No estás en la lista? Solicitar invitación →", 14, 67, 72, 4, 12);
+    selfRegLink.name = "Enlace a Auto-registro";
+    selfRegLink.binding = "access.selfRegLink";
+    selfRegLink.zIndex = ++z;
+    selfRegLink.style = {
+      ...(selfRegLink.style || {}),
+      color: accentColor,
+      fontFamily: bodyFont,
+      fontWeight: 500,
+      textAlign: "center",
+      textDecoration: "underline"
+    };
+    layers.push(selfRegLink);
+
+    // Capas del formulario de Auto-registro
+    // 9. Título de Auto-registro
+    const regTitle = this.newLayer("text", acc.selfRegTitle || "SOLICITAR INVITACIÓN", 12, 16, 76, 9, 24);
+    regTitle.name = "Registro: Título";
+    regTitle.binding = "selfReg.title";
+    regTitle.zIndex = ++z;
+    regTitle.style = {
+      ...(regTitle.style || {}),
+      color: textColor,
+      fontFamily: headingFont,
+      fontWeight: 700,
+      textAlign: "center",
+      lineHeight: 1.2
+    };
+    layers.push(regTitle);
+
+    // 10. Subtítulo de Auto-registro
+    const regSubtitle = this.newLayer("text", acc.selfRegSubtitle || "Ingresa tus datos para solicitar acceso a la lista oficial.", 14, 26, 72, 7, 13);
+    regSubtitle.name = "Registro: Subtítulo";
+    regSubtitle.binding = "selfReg.subtitle";
+    regSubtitle.zIndex = ++z;
+    regSubtitle.style = {
+      ...(regSubtitle.style || {}),
+      color: textColor,
+      opacity: 0.8,
+      fontFamily: bodyFont,
+      fontWeight: 400,
+      textAlign: "center",
+      lineHeight: 1.4
+    };
+    layers.push(regSubtitle);
+
+    // 11. Campo Nombre
+    const regName = this.newLayer("field", "Nombre completo", 14, 35, 72, 6.5, 13);
+    regName.name = "Registro: Nombre";
+    regName.binding = "selfReg.name";
+    regName.placeholder = "Tu nombre y apellido";
+    regName.zIndex = ++z;
+    regName.style = {
+      ...(regName.style || {}),
+      color: textColor,
+      fontFamily: bodyFont,
+      backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f8fafc",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "#cbd5e1",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 8,
+      textAlign: "left",
+      padding: 10
+    };
+    layers.push(regName);
+
+    // 12. Campo Correo
+    const regEmail = this.newLayer("field", "Correo electrónico", 14, 43, 72, 6.5, 13);
+    regEmail.name = "Registro: Correo";
+    regEmail.binding = "selfReg.email";
+    regEmail.placeholder = "tu@correo.com";
+    regEmail.zIndex = ++z;
+    regEmail.style = {
+      ...(regEmail.style || {}),
+      color: textColor,
+      fontFamily: bodyFont,
+      backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f8fafc",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "#cbd5e1",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 8,
+      textAlign: "left",
+      padding: 10
+    };
+    layers.push(regEmail);
+
+    // 13. Campo Teléfono
+    const regPhone = this.newLayer("field", "Teléfono / WhatsApp", 14, 51, 72, 6.5, 13);
+    regPhone.name = "Registro: Teléfono";
+    regPhone.binding = "selfReg.phone";
+    regPhone.placeholder = "10 dígitos (opcional)";
+    regPhone.zIndex = ++z;
+    regPhone.style = {
+      ...(regPhone.style || {}),
+      color: textColor,
+      fontFamily: bodyFont,
+      backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f8fafc",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "#cbd5e1",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 8,
+      textAlign: "left",
+      padding: 10
+    };
+    layers.push(regPhone);
+
+    // 14. Campo Acompañantes
+    const regCompanions = this.newLayer("field", "Acompañantes solicitados", 14, 59, 72, 6.5, 13);
+    regCompanions.name = "Registro: Acompañantes";
+    regCompanions.binding = "selfReg.companions";
+    regCompanions.placeholder = "0";
+    regCompanions.zIndex = ++z;
+    regCompanions.style = {
+      ...(regCompanions.style || {}),
+      color: textColor,
+      fontFamily: bodyFont,
+      backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#f8fafc",
+      borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "#cbd5e1",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 8,
+      textAlign: "left",
+      padding: 10
+    };
+    layers.push(regCompanions);
+
+    // 15. Botón Enviar Solicitud
+    const regSubmit = this.newLayer("button", acc.selfRegButtonText || "ENVIAR SOLICITUD", 14, 67, 72, 7, 14);
+    regSubmit.name = "Registro: Botón Enviar";
+    regSubmit.binding = "selfReg.submit";
+    regSubmit.zIndex = ++z;
+    regSubmit.style = {
+      ...(regSubmit.style || {}),
+      backgroundColor: buttonBgColor,
+      color: buttonTextColor,
+      fontFamily: bodyFont,
+      fontWeight: 700,
+      letterSpacing: 1,
+      borderRadius: buttonRadius,
+      boxShadow: "0 4px 14px rgba(0, 0, 0, 0.25)",
+      textAlign: "center"
+    };
+    layers.push(regSubmit);
+
+    // 16. Enlace Regresar al Ingreso
+    const regBackLink = this.newLayer("text", "← Volver al inicio de sesión", 14, 76, 72, 4, 12);
+    regBackLink.name = "Registro: Enlace Volver";
+    regBackLink.binding = "selfReg.backLink";
+    regBackLink.zIndex = ++z;
+    regBackLink.style = {
+      ...(regBackLink.style || {}),
+      color: accentColor,
+      fontFamily: bodyFont,
+      fontWeight: 500,
+      textAlign: "center",
+      textDecoration: "underline"
+    };
+    layers.push(regBackLink);
+
+    acc.layers = layers;
+  }
+
+  resetAccessScreenLayers(): void {
+    this.recordHistory();
+    this.ensureAccessScreenCanvasLayers(true);
+    this.clearLayerSelection();
+    this.flash("Elementos y capas de la pantalla de acceso restablecidos.");
+    this.cdr?.markForCheck();
+  }
+
+  shouldRenderEditorLayer(section: VisualInvitationSection, layer: VisualInvitationLayer): boolean {
+    if (section.id !== "__access_screen__") {
+      return true;
+    }
+    const binding = String(layer.binding || "");
+    if (this.accessSimView === "login") {
+      if (binding.startsWith("selfReg.")) return false;
+      const acc = this.design?.accessScreen;
+      if (!acc?.requirePin && binding === "access.pin") return false;
+      if (!acc?.allowSelfRegistration && binding === "access.selfRegLink") return false;
+      return true;
+    } else {
+      if (binding.startsWith("access.")) return false;
+      return true;
+    }
+  }
+
+  accessScreenSectionStyle(): Record<string, string> {
+    const acc = this.design?.accessScreen;
+    if (!acc) return { minHeight: `${this.artboardHeight}px` };
+    const styles: Record<string, string> = {
+      minHeight: `${this.artboardHeight}px`,
+      position: "relative"
+    };
+    if (acc.backgroundType === "color" && acc.backgroundColor) {
+      styles["backgroundColor"] = acc.backgroundColor;
+    } else if (acc.backgroundType === "gradient" && acc.backgroundGradient) {
+      styles["background"] = acc.backgroundGradient;
+    } else if (acc.backgroundType === "image" && acc.backgroundImageUrl) {
+      styles["backgroundImage"] = `url("${acc.backgroundImageUrl}")`;
+      styles["backgroundSize"] = "cover";
+      styles["backgroundPosition"] = "center";
+    } else {
+      styles["backgroundColor"] = "#0f172a";
+    }
+    return styles;
+  }
+
   initAccessScreenDesign(): void {
     if (!this.design) return;
     if (!this.design.accessScreen) {
@@ -7552,6 +7910,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.accessScreen.selfRegRequireApproval = true;
       }
     }
+    this.ensureAccessScreenCanvasLayers();
   }
 
   selectToolCategory(category: ToolCategory): void {
@@ -7577,7 +7936,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.accessSubTab = subTab;
     this.toolsCollapsed = false;
     this.editorCanvasMode = 'access';
-    this.selectedSectionId = '';
+    this.selectedSectionId = '__access_screen__';
     this.selectedLayerId = '';
     this.selectedLayerIds = [];
     this.initAccessScreenDesign();
@@ -7617,7 +7976,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (mode === 'access') {
       this.toolCategory = 'access';
       this.accessSubTab = this.accessSubTab || 'design';
-      this.selectedSectionId = '';
+      this.selectedSectionId = '__access_screen__';
       this.selectedLayerId = '';
       this.selectedLayerIds = [];
       this.initAccessScreenDesign();
@@ -7629,6 +7988,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       if (this.toolCategory === 'access') {
         this.toolCategory = 'design';
       }
+      this.selectedSectionId = this.design?.sections[0]?.id || "";
       setTimeout(() => this.fitCanvasToViewport(), 0);
     }
     this.cdr?.markForCheck();
@@ -7658,6 +8018,34 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       buttonTextColor: preset.buttonTextColor,
       buttonRadius: preset.buttonRadius
     };
+        const layers = this.design.accessScreen.layers || [];
+    const cardLayer = layers.find(l => l.binding === "access.card");
+    if (cardLayer) {
+      const isDark = (preset.cardBgColor || "").toLowerCase() === "#0f172a" || (preset.backgroundColor || "").toLowerCase() === "#1c2434" || (preset.textColor || "").toLowerCase() === "#ffffff";
+      cardLayer.style = {
+        ...(cardLayer.style || {}),
+        backgroundColor: isDark && preset.cardStyle !== "glass" ? "rgba(15, 23, 42, 0.90)" : preset.cardStyle === "glass" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.94)",
+        borderRadius: preset.cardRadius,
+        boxShadow: preset.cardShadow === "none" ? "none" : "0 20px 45px rgba(0, 0, 0, 0.3)"
+      };
+    }
+    const btnLayer = layers.find(l => l.binding === "access.submit" || l.binding === "selfReg.submit");
+    if (btnLayer) {
+      btnLayer.style = {
+        ...(btnLayer.style || {}),
+        backgroundColor: preset.buttonBgColor,
+        color: preset.buttonTextColor,
+        borderRadius: preset.buttonRadius
+      };
+    }
+    const badgeLayer = layers.find(l => l.binding === "access.badge");
+    if (badgeLayer) {
+      badgeLayer.style = { ...(badgeLayer.style || {}), color: preset.accentColor };
+    }
+    const titleLayer = layers.find(l => l.binding === "access.title" || l.binding === "selfReg.title");
+    if (titleLayer) {
+      titleLayer.style = { ...(titleLayer.style || {}), color: preset.textColor };
+    }
     this.flash(`Preset "${preset.name}" aplicado a la pantalla de acceso.`);
   }
 

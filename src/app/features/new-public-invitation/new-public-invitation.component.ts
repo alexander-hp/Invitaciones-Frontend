@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
-import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse, VisualAccessScreenDesign } from '../../core/models';
+import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse, VisualAccessScreenDesign, VisualInvitationLayer } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
 @Component({
@@ -1538,6 +1538,59 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       style['box-shadow'] = 'none';
     }
 
+    return style;
+  }
+
+  hasAccessLayers(): boolean {
+    return Boolean(this.accessScreenDesign?.layers && this.accessScreenDesign.layers.length > 0);
+  }
+
+  shouldRenderAccessGateLayer(layer: VisualInvitationLayer): boolean {
+    const binding = String(layer.binding || '');
+    const isRegisterLayer = binding.startsWith('selfReg.');
+    const isLoginLayer = binding.startsWith('access.') && binding !== 'access.card';
+    if (this.accessGateView === 'register') {
+      if (isLoginLayer) return false;
+      return true;
+    } else {
+      if (isRegisterLayer) return false;
+      if (binding === 'access.pin' && !this.accessScreenDesign?.requirePin) return false;
+      if (binding === 'access.selfRegLink' && !this.accessScreenDesign?.allowSelfRegistration) return false;
+      return true;
+    }
+  }
+
+  accessLayerStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const style: Record<string, string> = {
+      position: 'absolute',
+      left: `${layer.x}%`,
+      top: `${layer.y}%`,
+      width: `${layer.width}%`,
+      height: `${layer.height}%`,
+      transform: `rotate(${layer.rotation || 0}deg)`,
+      'z-index': `${layer.zIndex || 1}`
+    };
+    const s = layer.style || {};
+    if (s.color) style['color'] = s.color;
+    if (s.fontFamily) style['fontFamily'] = s.fontFamily;
+    if (s.fontSize) style['fontSize'] = `${s.fontSize}px`;
+    if (s.fontWeight) style['fontWeight'] = `${s.fontWeight}`;
+    if (s.textAlign) style['textAlign'] = s.textAlign;
+    if (s.letterSpacing) style['letterSpacing'] = `${s.letterSpacing}px`;
+    if (s.backgroundColor) style['backgroundColor'] = s.backgroundColor;
+    if (s.borderColor) style['borderColor'] = s.borderColor;
+    if (s.borderWidth) style['borderWidth'] = `${s.borderWidth}px`;
+    if (s.borderStyle) style['borderStyle'] = s.borderStyle;
+    if (s.borderRadius !== undefined) style['borderRadius'] = `${s.borderRadius}px`;
+    if (s.padding) style['padding'] = `${s.padding}px`;
+    if (s.boxShadow) style['boxShadow'] = s.boxShadow;
+    if (s.backdropFilter) {
+      style['backdropFilter'] = s.backdropFilter;
+      style['-webkit-backdrop-filter'] = s.backdropFilter;
+    }
+    if (s.opacity !== undefined && s.opacity < 100) {
+      style['opacity'] = `${s.opacity / 100}`;
+    }
     return style;
   }
 
