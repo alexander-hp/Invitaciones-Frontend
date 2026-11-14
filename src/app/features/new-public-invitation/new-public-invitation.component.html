@@ -181,7 +181,7 @@
   <div class="nw-pub-access-gate-overlay" [style.background]="getAccessGateOverlayStyle()"></div>
 
   <!-- VISTA CON MOTOR DE CAPAS WYSIWYG SI HAY CAPAS DISEÑADAS -->
-  <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface">
+  <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface" [ngStyle]="accessSurfaceDimensionsStyle">
     <form (ngSubmit)="accessGateView === 'login' ? checkGuestAccess() : submitAccessSelfRegistration()"
       class="nw-pub-access-form-stage">
       <ng-container *ngFor="let layer of accessScreenDesign?.layers">

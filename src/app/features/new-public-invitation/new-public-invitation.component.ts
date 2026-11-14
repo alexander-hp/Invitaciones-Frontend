@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
@@ -24,7 +24,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   error = '';
   accessRequired = false;
   accessMessage = '';
-  accessGateData?: { slug?: string; eventTitle?: string; accessMode?: string; accessScreen?: VisualAccessScreenDesign; theme?: any; palette?: any; coverImageUrl?: string };
+  accessGateData?: { slug?: string; eventTitle?: string; accessMode?: string; accessScreen?: VisualAccessScreenDesign; theme?: any; palette?: any; coverImageUrl?: string; responsiveMode?: 'shared' | 'independent' };
   accessGateView: 'login' | 'register' = 'login';
   selfRegName = '';
   selfRegEmail = '';
@@ -1548,7 +1548,42 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     return Boolean(this.accessScreenDesign?.layers && this.accessScreenDesign.layers.length > 0);
   }
 
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.cdr?.markForCheck();
+  }
+
+  get currentDevice(): 'mobile' | 'tablet' | 'desktop' {
+    if (this.showPreviewDeviceToolbar && this.previewDevice) {
+      return this.previewDevice;
+    }
+    if (typeof window === 'undefined') return 'mobile';
+    const width = window.innerWidth;
+    return width <= 600 ? 'mobile' : width <= 1024 ? 'tablet' : 'desktop';
+  }
+
+  get accessSurfaceDimensionsStyle(): Record<string, string> {
+    const dev = this.currentDevice;
+    if (dev === 'desktop') {
+      return {
+        'max-width': '1180px',
+        'height': '800px'
+      };
+    }
+    if (dev === 'tablet') {
+      return {
+        'max-width': '768px',
+        'height': '920px'
+      };
+    }
+    return {
+      'max-width': '390px',
+      'height': '780px'
+    };
+  }
+
   shouldRenderAccessGateLayer(layer: VisualInvitationLayer): boolean {
+    if (layer.hidden) return false;
     const binding = String(layer.binding || '');
     const isRegisterLayer = binding.startsWith('selfReg.');
     const isLoginLayer = binding.startsWith('access.') && binding !== 'access.card';
@@ -1564,36 +1599,58 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   accessLayerStyle(layer: VisualInvitationLayer): Record<string, string> {
+    const dev = this.currentDevice;
+    const isIndependent = this.accessGateData?.responsiveMode === 'independent' ||
+      (this.accessScreenDesign as any)?.responsiveMode === 'independent' ||
+      this.invitation?.content?.visualDesign?.responsiveMode === 'independent';
+
+    const layout = (isIndependent && layer.layouts?.[dev])
+      ? layer.layouts[dev]!
+      : (layer.layouts?.[dev] || layer);
+
+    const responsiveScale = isIndependent ? 1 : (dev === 'mobile' ? 0.68 : dev === 'tablet' ? 0.84 : 1);
+
     const style: Record<string, string> = {
       position: 'absolute',
-      left: `${layer.x}%`,
-      top: `${layer.y}%`,
-      width: `${layer.width}%`,
-      height: `${layer.height}%`,
-      transform: `rotate(${layer.rotation || 0}deg)`,
+      left: `${layout.x}%`,
+      top: `${layout.y}%`,
+      width: `${layout.width}%`,
+      height: `${layout.height}%`,
+      transform: `rotate(${layout.rotation || 0}deg)`,
       'z-index': `${layer.zIndex || 1}`,
       'box-sizing': 'border-box'
     };
     const s = layer.style || {};
     if (s.color) style['color'] = s.color;
     if (s.fontFamily) style['fontFamily'] = s.fontFamily;
-    if (s.fontSize) style['fontSize'] = `${s.fontSize}px`;
+    if (s.fontSize) style['fontSize'] = `${Math.round(Math.max(10, Number(s.fontSize || 16) * responsiveScale) * 100) / 100}px`;
     if (s.fontWeight) style['fontWeight'] = `${s.fontWeight}`;
-    if (s.textAlign) style['textAlign'] = s.textAlign;
-    if (s.letterSpacing) style['letterSpacing'] = `${s.letterSpacing}px`;
+    if (s.textAlign) {
+      style['textAlign'] = s.textAlign;
+      if (s.textAlign === 'left') {
+        style['justifyContent'] = 'flex-start';
+      } else if (s.textAlign === 'right') {
+        style['justifyContent'] = 'flex-end';
+      } else {
+        style['justifyContent'] = 'center';
+      }
+    }
+    if (s.letterSpacing) style['letterSpacing'] = `${Math.round(Number(s.letterSpacing || 0) * responsiveScale * 100) / 100}px`;
     if (s.lineHeight) style['lineHeight'] = `${s.lineHeight}`;
     if (s.textTransform) style['textTransform'] = s.textTransform;
     if (s.textDecoration) style['textDecoration'] = s.textDecoration;
     if (s.backgroundColor) style['backgroundColor'] = s.backgroundColor;
     if (s.borderColor) style['borderColor'] = s.borderColor;
     if (s.borderWidth !== undefined && s.borderWidth !== null) {
-      style['borderWidth'] = `${s.borderWidth}px`;
+      style['borderWidth'] = `${Math.round(Number(s.borderWidth || 0) * responsiveScale * 100) / 100}px`;
       style['borderStyle'] = s.borderStyle || 'solid';
     } else if (s.borderStyle) {
       style['borderStyle'] = s.borderStyle;
     }
-    if (s.borderRadius !== undefined && s.borderRadius !== null) style['borderRadius'] = `${s.borderRadius}px`;
-    if (s.padding) style['padding'] = `${s.padding}px`;
+    if (s.borderRadius !== undefined && s.borderRadius !== null) {
+      style['borderRadius'] = `${Math.round(Number(s.borderRadius || 0) * responsiveScale * 100) / 100}px`;
+    }
+    if (s.padding) style['padding'] = `${Math.round(Number(s.padding || 0) * responsiveScale * 100) / 100}px`;
     if (s.boxShadow) style['boxShadow'] = s.boxShadow;
     if (s.gradientEnabled) {
       style['backgroundImage'] = `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`;

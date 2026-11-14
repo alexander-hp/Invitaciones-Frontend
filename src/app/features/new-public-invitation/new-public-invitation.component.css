@@ -1201,6 +1201,21 @@
   margin: 20px auto;
   box-sizing: border-box;
   flex-shrink: 0;
+  transition: max-width 0.2s ease, height 0.2s ease;
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  .nw-pub-access-layers-surface {
+    max-width: 768px;
+    height: 920px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .nw-pub-access-layers-surface {
+    max-width: 1180px;
+    height: 800px;
+  }
 }
 
 .nw-pub-access-form-stage {
@@ -1222,6 +1237,7 @@
   box-sizing: border-box;
   pointer-events: none;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .nw-pub-access-field-layer {
