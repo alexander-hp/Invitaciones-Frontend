@@ -394,6 +394,7 @@ export interface VisualInvitationLayerStyle {
     | 'line' | 'line-diamond';
   controlVariant?: 'default' | 'cards';
   controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
+  showLabel?: boolean;
   showPlaceholder?: boolean;
   buttonVariant?: 'solid' | 'outline' | 'soft' | 'text' | 'glass';
   buttonIcon?: string;

@@ -1481,14 +1481,17 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       };
     }
     return {
-      'background': 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)'
+      'background': 'radial-gradient(ellipse at 50% 25%, #1e293b 0%, #0f172a 55%, #05080f 100%)'
     };
   }
 
   getAccessGateOverlayStyle(): string {
     const acc = this.accessScreenDesign;
-    const opacity = (acc?.backgroundOverlayOpacity ?? 65) / 100;
-    return `rgba(0, 0, 0, ${opacity})`;
+    if (acc?.backgroundType === 'image') {
+      const opacity = Math.min((acc?.backgroundOverlayOpacity ?? 50) / 100, 0.65);
+      return `rgba(0, 0, 0, ${opacity})`;
+    }
+    return 'transparent';
   }
 
   getAccessGateCardStyle(): Record<string, string> {
@@ -1568,7 +1571,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       width: `${layer.width}%`,
       height: `${layer.height}%`,
       transform: `rotate(${layer.rotation || 0}deg)`,
-      'z-index': `${layer.zIndex || 1}`
+      'z-index': `${layer.zIndex || 1}`,
+      'box-sizing': 'border-box'
     };
     const s = layer.style || {};
     if (s.color) style['color'] = s.color;
@@ -1577,20 +1581,41 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (s.fontWeight) style['fontWeight'] = `${s.fontWeight}`;
     if (s.textAlign) style['textAlign'] = s.textAlign;
     if (s.letterSpacing) style['letterSpacing'] = `${s.letterSpacing}px`;
+    if (s.lineHeight) style['lineHeight'] = `${s.lineHeight}`;
+    if (s.textTransform) style['textTransform'] = s.textTransform;
+    if (s.textDecoration) style['textDecoration'] = s.textDecoration;
     if (s.backgroundColor) style['backgroundColor'] = s.backgroundColor;
     if (s.borderColor) style['borderColor'] = s.borderColor;
-    if (s.borderWidth) style['borderWidth'] = `${s.borderWidth}px`;
-    if (s.borderStyle) style['borderStyle'] = s.borderStyle;
-    if (s.borderRadius !== undefined) style['borderRadius'] = `${s.borderRadius}px`;
+    if (s.borderWidth !== undefined && s.borderWidth !== null) {
+      style['borderWidth'] = `${s.borderWidth}px`;
+      style['borderStyle'] = s.borderStyle || 'solid';
+    } else if (s.borderStyle) {
+      style['borderStyle'] = s.borderStyle;
+    }
+    if (s.borderRadius !== undefined && s.borderRadius !== null) style['borderRadius'] = `${s.borderRadius}px`;
     if (s.padding) style['padding'] = `${s.padding}px`;
     if (s.boxShadow) style['boxShadow'] = s.boxShadow;
+    if (s.gradientEnabled) {
+      style['backgroundImage'] = `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`;
+    } else if (s.backgroundImageUrl) {
+      style['backgroundImage'] = `url("${s.backgroundImageUrl}")`;
+      style['backgroundSize'] = 'cover';
+      style['backgroundPosition'] = 'center';
+    }
     if (s.backdropFilter) {
       style['backdropFilter'] = s.backdropFilter;
       style['-webkit-backdrop-filter'] = s.backdropFilter;
     }
-    if (s.opacity !== undefined && s.opacity < 100) {
-      style['opacity'] = `${s.opacity / 100}`;
+    if (layer.binding === 'access.card' || layer.type === 'shape') {
+      style['pointerEvents'] = 'none';
+      if (!style['backdropFilter']) {
+        style['backdropFilter'] = 'blur(16px)';
+        style['-webkit-backdrop-filter'] = 'blur(16px)';
+      }
     }
+    const rawOpacity = s.opacity !== undefined && s.opacity !== null ? Number(s.opacity) : 1;
+    const finalOpacity = rawOpacity > 1 ? rawOpacity / 100 : rawOpacity;
+    style['opacity'] = `${finalOpacity}`;
     return style;
   }
 

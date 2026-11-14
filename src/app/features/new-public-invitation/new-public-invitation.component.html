@@ -181,14 +181,13 @@
   <div class="nw-pub-access-gate-overlay" [style.background]="getAccessGateOverlayStyle()"></div>
 
   <!-- VISTA CON MOTOR DE CAPAS WYSIWYG SI HAY CAPAS DISEÑADAS -->
-  <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface"
-    style="position: relative; width: 100%; max-width: 440px; margin: 40px auto; min-height: 800px; box-sizing: border-box;">
+  <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface">
     <form (ngSubmit)="accessGateView === 'login' ? checkGuestAccess() : submitAccessSelfRegistration()"
-      style="position: relative; width: 100%; height: 800px;">
+      class="nw-pub-access-form-stage">
       <ng-container *ngFor="let layer of accessScreenDesign?.layers">
         <ng-container *ngIf="shouldRenderAccessGateLayer(layer)">
           <!-- FORMA / TARJETA -->
-          <div *ngIf="layer.type === 'shape'" [ngStyle]="accessLayerStyle(layer)"></div>
+          <div *ngIf="layer.type === 'shape'" [ngStyle]="accessLayerStyle(layer)" class="nw-pub-access-card-layer"></div>
 
           <!-- IMAGEN / MONOGRAMA / FOTO -->
           <div *ngIf="layer.type === 'image' && layer.url" [ngStyle]="accessLayerStyle(layer)" style="overflow: hidden;">
@@ -198,32 +197,30 @@
 
           <!-- TEXTOS LIBRES / TITULOS / SUBTITULOS / INSIGNIA -->
           <div *ngIf="layer.type === 'text' && layer.binding !== 'access.selfRegLink' && layer.binding !== 'selfReg.backLink'"
-            [ngStyle]="accessLayerStyle(layer)" style="display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+            [ngStyle]="accessLayerStyle(layer)" class="nw-pub-access-text-layer">
             <span>{{ layer.text }}</span>
           </div>
 
-          <!-- BOTONES / ENLACES DE ACCESO -->
+          <!-- ENLACES DE NAVEGACIÓN ENTRE VISTAS -->
           <button *ngIf="layer.binding === 'access.selfRegLink'" type="button"
             (click)="toggleAccessGateView('register')"
             [ngStyle]="accessLayerStyle(layer)"
-            class="nw-pub-access-link-btn"
-            style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            class="nw-pub-access-link-btn">
             {{ layer.text }}
           </button>
 
           <button *ngIf="layer.binding === 'selfReg.backLink'" type="button"
             (click)="toggleAccessGateView('login')"
             [ngStyle]="accessLayerStyle(layer)"
-            class="nw-pub-access-link-btn"
-            style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            class="nw-pub-access-link-btn">
             {{ layer.text }}
           </button>
 
+          <!-- BOTONES PRINCIPALES DE ENVÍO -->
           <button *ngIf="layer.binding === 'access.submit'" type="submit"
             [disabled]="checkingGuest"
             [ngStyle]="accessLayerStyle(layer)"
-            class="nw-pub-access-submit-btn"
-            style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            class="nw-pub-access-submit-btn">
             <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
             <span>{{ checkingGuest ? 'Verificando...' : layer.text }}</span>
           </button>
@@ -231,48 +228,52 @@
           <button *ngIf="layer.binding === 'selfReg.submit'" type="submit"
             [disabled]="selfRegSubmitting"
             [ngStyle]="accessLayerStyle(layer)"
-            class="nw-pub-access-submit-btn"
-            style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            class="nw-pub-access-submit-btn">
             <span *ngIf="selfRegSubmitting" class="nw-pub-btn-spinner"></span>
             <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : layer.text }}</span>
           </button>
 
-          <!-- CAMPOS INTERACTIVOS (INPUTS) -->
+          <!-- CAMPOS INTERACTIVOS (INPUTS CON ETIQUETA DORADA) -->
           <div *ngIf="layer.type === 'field'" [ngStyle]="accessLayerStyle(layer)"
-            style="display: flex; flex-direction: column; justify-content: center; box-sizing: border-box;">
-            <input *ngIf="layer.binding === 'access.contact'" type="text"
-              [(ngModel)]="guestAccessSingleInput" name="guestContact"
-              [placeholder]="layer.placeholder || 'Correo o teléfono'" required
-              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+            class="nw-pub-access-field-layer">
+            <label *ngIf="layer.text && layer.style?.showLabel !== false" class="nw-pub-access-field-label">
+              {{ layer.text }}
+            </label>
+            <div class="nw-pub-access-field-input-wrap">
+              <input *ngIf="layer.binding === 'access.contact'" type="text"
+                [(ngModel)]="guestAccessSingleInput" name="guestContact"
+                [placeholder]="layer.placeholder || accessScreenDesign?.inputPlaceholder || 'Correo o teléfono registrado'" required
+                class="nw-pub-access-field-input">
 
-            <input *ngIf="layer.binding === 'access.pin'" type="password" maxlength="20"
-              [(ngModel)]="guestAccessPin" name="guestPin"
-              [placeholder]="layer.placeholder || 'Ingresa tu NIP'" required
-              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+              <input *ngIf="layer.binding === 'access.pin'" type="password" maxlength="20"
+                [(ngModel)]="guestAccessPin" name="guestPin"
+                [placeholder]="layer.placeholder || accessScreenDesign?.pinInputPlaceholder || 'Ingresa tu NIP'" required
+                class="nw-pub-access-field-input">
 
-            <input *ngIf="layer.binding === 'selfReg.name'" type="text"
-              [(ngModel)]="selfRegName" name="selfRegName"
-              [placeholder]="layer.placeholder || 'Tu nombre y apellido'" required
-              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+              <input *ngIf="layer.binding === 'selfReg.name'" type="text"
+                [(ngModel)]="selfRegName" name="selfRegName"
+                [placeholder]="layer.placeholder || 'Tu nombre y apellido'" required
+                class="nw-pub-access-field-input">
 
-            <input *ngIf="layer.binding === 'selfReg.email'" type="email"
-              [(ngModel)]="selfRegEmail" name="selfRegEmail"
-              [placeholder]="layer.placeholder || 'tu-correo@ejemplo.com'" required
-              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+              <input *ngIf="layer.binding === 'selfReg.email'" type="email"
+                [(ngModel)]="selfRegEmail" name="selfRegEmail"
+                [placeholder]="layer.placeholder || 'tu-correo@ejemplo.com'" required
+                class="nw-pub-access-field-input">
 
-            <input *ngIf="layer.binding === 'selfReg.phone'" type="tel"
-              [(ngModel)]="selfRegPhone" name="selfRegPhone"
-              [placeholder]="layer.placeholder || '55 0000 0000'"
-              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
+              <input *ngIf="layer.binding === 'selfReg.phone'" type="tel"
+                [(ngModel)]="selfRegPhone" name="selfRegPhone"
+                [placeholder]="layer.placeholder || '55 0000 0000'"
+                class="nw-pub-access-field-input">
 
-            <select *ngIf="layer.binding === 'selfReg.companions'"
-              [(ngModel)]="selfRegCompanions" name="selfRegCompanions"
-              style="width: 100%; height: 100%; box-sizing: border-box; background: transparent; border: none; outline: none; font: inherit; color: inherit; padding: 0 10px;">
-              <option [ngValue]="1">1 pase (Solo yo)</option>
-              <option [ngValue]="2">2 pases (+1 acompañante)</option>
-              <option [ngValue]="3">3 pases (+2 acompañantes)</option>
-              <option [ngValue]="4">4 pases (+3 acompañantes)</option>
-            </select>
+              <select *ngIf="layer.binding === 'selfReg.companions'"
+                [(ngModel)]="selfRegCompanions" name="selfRegCompanions"
+                class="nw-pub-access-field-input nw-pub-access-field-select">
+                <option [ngValue]="1">1 pase (Solo yo)</option>
+                <option [ngValue]="2">2 pases (+1 acompañante)</option>
+                <option [ngValue]="3">3 pases (+2 acompañantes)</option>
+                <option [ngValue]="4">4 pases (+3 acompañantes)</option>
+              </select>
+            </div>
           </div>
         </ng-container>
       </ng-container>
