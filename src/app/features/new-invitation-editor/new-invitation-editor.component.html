@@ -102,7 +102,7 @@
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'plans'"
             (click)="setActiveTab('plans', true)">Plantillas y plan <span *ngIf="!hasSelectedDesign">Pendiente</span></button>
           <button type="button" class="inv-editor-nav-button" [attr.aria-expanded]="!sectionsNavigatorCollapsed"
-            [class.active]="!sectionsNavigatorCollapsed" (click)="toggleSectionsNavigator()">Secciones <span>{{ activeConfigurableSections.length + 2 }}</span></button>
+            [class.active]="!sectionsNavigatorCollapsed" (click)="toggleSectionsNavigator()">Secciones <span>{{ activeConfigurableSections.length + 3 }}</span></button>
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'all'"
             (click)="setActiveTab('all', true)">Ver todo</button>
           <a class="inv-editor-nav-button" [routerLink]="['/new/invitations', invitation._id || invitation.id, 'visual-editor']">Editor visual ↗</a>
@@ -131,7 +131,7 @@
           <div class="nw-cat-header-stats">
             <span class="nw-pill success" style="font-size: 12px; padding: 4px 12px; font-weight: 700;">
               <span class="nw-dot green" style="margin-right: 4px;"></span>
-              {{ activeConfigurableSections.length + 2 }} / 15 Activas
+              {{ activeConfigurableSections.length + 3 }} / 16 Activas
             </span>
           </div>
         </div>
@@ -160,7 +160,7 @@
                 </span>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="nw-category-count">{{ activeConfigurableSections.length + 2 }} activas</span>
+                <span class="nw-category-count">{{ activeConfigurableSections.length + 3 }} activas</span>
                 <span class="nw-pill"
                   style="font-size: 10px; padding: 2px 8px; background: var(--nw-surface); border: 1px solid var(--nw-border); color: var(--nw-text-2); font-weight: 700;">
                   {{ activeSectionsCollapsed ? 'Mostrar ▼' : 'Ocultar ▲' }}
@@ -231,6 +231,35 @@
                     Sección Activa
                   </span>
                   <span class="nw-sec-action-link">Editar &rarr;</span>
+                </div>
+              </div>
+
+              <!-- Fija 3: Pantalla de Acceso & Auto-registro -->
+              <div class="nw-section-card" [class.is-selected]="activeTab === 'access'" (click)="setActiveTab('access', true)">
+                <div class="nw-sec-card-top">
+                  <div class="nw-sec-icon-box">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="nw-pill warning" style="font-size:10px; padding:2px 8px;">Acceso</span>
+                    <span *ngIf="activeTab === 'access'" class="nw-pill accent"
+                      style="font-size:10px; padding:2px 8px;">Editando</span>
+                  </div>
+                </div>
+                <div class="nw-sec-card-body">
+                  <div class="nw-sec-card-title">Pantalla de Acceso & Auto-registro</div>
+                  <div class="nw-sec-card-desc">Control de lista cerrada, validación con NIP y auto-registro.</div>
+                </div>
+                <div class="nw-sec-card-footer">
+                  <span class="nw-sec-status-text on">
+                    <span class="nw-dot" [class.green]="invitation.accessMode === 'guest_list' || invitation.accessMode === 'specific_users' || accessScreen.allowSelfRegistration" [class.gray]="invitation.accessMode !== 'guest_list' && invitation.accessMode !== 'specific_users' && !accessScreen.allowSelfRegistration"></span>
+                    {{ (invitation.accessMode === 'guest_list' || invitation.accessMode === 'specific_users') ? 'Lista Cerrada' : (accessScreen.allowSelfRegistration ? 'Auto-registro Activo' : 'Acceso Público') }}
+                  </span>
+                  <span class="nw-sec-action-link">Configurar &rarr;</span>
                 </div>
               </div>
 
@@ -603,6 +632,248 @@
         [palettePresets]="palettePresets" (applyPalette)="applyPalette($event)" (paletteChange)="onPaletteChange($event)">
       </app-editor-style-tab>
 
+      <!-- 2.5. Pantalla de Acceso, Seguridad NIP & Auto-registro -->
+      <div class="nw-card" style="margin-bottom:16px;"
+        *ngIf="invitation && (activeTab === 'access' || activeTab === 'all')">
+        <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <h3 style="margin:0;">Pantalla de Acceso & Auto-registro</h3>
+            <span class="nw-pill" [class.success]="invitation.accessMode === 'guest_list' || invitation.accessMode === 'specific_users' || accessScreen.allowSelfRegistration"
+              [class.warning]="invitation.accessMode !== 'guest_list' && invitation.accessMode !== 'specific_users' && !accessScreen.allowSelfRegistration">
+              {{ (invitation.accessMode === 'guest_list' || invitation.accessMode === 'specific_users') ? 'Lista Cerrada' : (accessScreen.allowSelfRegistration ? 'Auto-registro Activo' : 'Pública') }}
+            </span>
+            <span *ngIf="accessScreen.requirePin" class="nw-pill accent" style="font-size:11px;">
+              🔑 NIP Activo ({{ accessScreen.pinMode === 'event' ? 'Evento' : 'Individual' }})
+            </span>
+          </div>
+        </div>
+
+        <div class="nw-card-body" style="padding-top:16px;">
+          <p style="font-size:13px; color:var(--nw-text-3); margin-bottom:18px;">
+            Configura las reglas de ingreso a la invitación: valida a tus invitados registrados mediante correo/teléfono y NIP, o permite que nuevos invitados soliciten su pase mediante auto-registro.
+          </p>
+
+          <!-- SECCIÓN A: MODO DE ACCESO GENERAL -->
+          <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-md); padding:16px; margin-bottom:20px;">
+            <div style="margin-bottom:10px;">
+              <strong style="font-size:14px; color:var(--nw-text); display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Modalidad de Acceso a la Invitación
+              </strong>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+              <label [class.is-selected]="invitation.accessMode === 'public' || invitation.accessMode === 'open'" style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--nw-border); border-radius:8px; cursor:pointer; background:var(--nw-surface);">
+                <input type="radio" name="accessMode" value="public" [checked]="invitation.accessMode === 'public' || invitation.accessMode === 'open'" (change)="invitation.accessMode = 'public'; scheduleAutoSave()">
+                <div>
+                  <strong style="display:block; font-size:13px; color:var(--nw-text);">Pública / Abierta</strong>
+                  <span style="display:block; font-size:11.5px; color:var(--nw-text-3); margin-top:2px;">Cualquiera con el enlace puede ver la invitación y confirmar asistencia libremente.</span>
+                </div>
+              </label>
+
+              <label [class.is-selected]="invitation.accessMode === 'guest_list'" style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--nw-border); border-radius:8px; cursor:pointer; background:var(--nw-surface);">
+                <input type="radio" name="accessMode" value="guest_list" [checked]="invitation.accessMode === 'guest_list'" (change)="invitation.accessMode = 'guest_list'; scheduleAutoSave()">
+                <div>
+                  <strong style="display:block; font-size:13px; color:var(--nw-text);">Lista Cerrada (Recomendado)</strong>
+                  <span style="display:block; font-size:11.5px; color:var(--nw-text-3); margin-top:2px;">Solo los invitados registrados en la lista pueden abrir la invitación identificándose.</span>
+                </div>
+              </label>
+
+              <label [class.is-selected]="invitation.accessMode === 'specific_users'" style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--nw-border); border-radius:8px; cursor:pointer; background:var(--nw-surface);">
+                <input type="radio" name="accessMode" value="specific_users" [checked]="invitation.accessMode === 'specific_users'" (change)="invitation.accessMode = 'specific_users'; scheduleAutoSave()">
+                <div>
+                  <strong style="display:block; font-size:13px; color:var(--nw-text);">Por Rol o Grupo Específico</strong>
+                  <span style="display:block; font-size:11.5px; color:var(--nw-text-3); margin-top:2px;">Acceso restringido a grupos específicos (Familia, VIP, Damas de honor, etc.).</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- SECCIÓN B: SEGURIDAD Y NIP DE ACCESO -->
+          <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-md); padding:16px; margin-bottom:20px;">
+            <div class="nw-toggle-row" style="margin-bottom:0;">
+              <div class="nw-toggle-info">
+                <strong style="font-size:14px; color:var(--nw-text); display:flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="7.5" cy="15.5" r="5.5"></circle>
+                    <path d="m21 2-9.6 9.6"></path>
+                    <path d="m15.5 7.5 3 3"></path>
+                  </svg>
+                  Seguridad con NIP / Clave de Acceso
+                </strong>
+                <span style="font-size:12px; color:var(--nw-text-3);">
+                  Protege tu invitación para que nadie entre solo conociendo el teléfono o correo de un invitado.
+                </span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="accessScreen.requirePin" (ngModelChange)="scheduleAutoSave()">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div *ngIf="accessScreen.requirePin" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--nw-border); display:grid; gap:14px;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px;">
+                <label class="nw-label">Modalidad del NIP
+                  <select class="nw-select" [(ngModel)]="accessScreen.pinMode" (ngModelChange)="scheduleAutoSave()">
+                    <option value="individual">NIP individual por invitado (código único de 4 dígitos generado por invitado)</option>
+                    <option value="event">NIP único del evento (misma clave para todos los invitados)</option>
+                  </select>
+                </label>
+
+                <div *ngIf="accessScreen.pinMode === 'event'">
+                  <label class="nw-label">NIP o Clave del Evento
+                    <div style="display:flex; gap:8px;">
+                      <input type="text" class="nw-input" [(ngModel)]="accessScreen.eventPin" (ngModelChange)="scheduleAutoSave()"
+                        placeholder="Ej. 1234 o BODA2026" maxlength="20" style="flex:1;">
+                      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="generateRandomEventPin()"
+                        title="Generar NIP aleatorio de 4 dígitos" style="white-space:nowrap;">
+                        🎲 Generar
+                      </button>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+                <label class="nw-label">Etiqueta del campo NIP
+                  <input type="text" class="nw-input" [(ngModel)]="accessScreen.pinInputLabel" (ngModelChange)="scheduleAutoSave()"
+                    placeholder="NIP DE ACCESO" maxlength="50">
+                </label>
+                <label class="nw-label">Texto de ayuda (placeholder)
+                  <input type="text" class="nw-input" [(ngModel)]="accessScreen.pinInputPlaceholder" (ngModelChange)="scheduleAutoSave()"
+                    placeholder="Ingresa tu NIP" maxlength="50">
+                </label>
+              </div>
+
+              <div *ngIf="accessScreen.pinMode === 'individual'" style="padding:10px 14px; background:var(--nw-surface); border-left:3px solid var(--nw-accent); border-radius:6px; font-size:12px; color:var(--nw-text-2); line-height:1.5;">
+                <strong style="color:var(--nw-text);">💡 NIP Individual activo:</strong> A cada invitado se le genera automáticamente un NIP único de 4 dígitos. Puedes consultarlo o editarlo en la sección de Invitados, exportarlo a Excel o enviarlo en las plantillas de WhatsApp mediante el marcador <code style="background:var(--nw-surface-2); padding:2px 6px; border-radius:4px;">{{ '{{nip}}' }}</code>.
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN C: AUTO-REGISTRO Y SOLICITUDES DE ACCESO -->
+          <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-md); padding:16px; margin-bottom:20px;">
+            <div class="nw-toggle-row" style="margin-bottom:0;">
+              <div class="nw-toggle-info">
+                <strong style="font-size:14px; color:var(--nw-text); display:flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="22" y1="11" x2="16" y2="11"></line>
+                  </svg>
+                  Auto-registro de Invitados (Solicitar Pase)
+                </strong>
+                <span style="font-size:12px; color:var(--nw-text-3);">
+                  Permite que personas que no están en tu lista cerrada soliciten acceso. Tú decides si aprobarlos o no.
+                </span>
+              </div>
+              <label class="nw-switch">
+                <input type="checkbox" [(ngModel)]="accessScreen.allowSelfRegistration" (ngModelChange)="scheduleAutoSave()">
+                <span class="nw-slider"></span>
+              </label>
+            </div>
+
+            <div *ngIf="accessScreen.allowSelfRegistration" style="margin-top:16px; padding-top:12px; border-top:1px solid var(--nw-border); display:grid; gap:14px;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+                <label class="nw-label">Título del formulario de solicitud
+                  <input type="text" class="nw-input" [(ngModel)]="accessScreen.selfRegTitle" (ngModelChange)="scheduleAutoSave()"
+                    placeholder="Solicitar Invitación" maxlength="80">
+                </label>
+
+                <label class="nw-label">Texto del botón de envío
+                  <input type="text" class="nw-input" [(ngModel)]="accessScreen.selfRegButtonText" (ngModelChange)="scheduleAutoSave()"
+                    placeholder="ENVIAR SOLICITUD" maxlength="60">
+                </label>
+              </div>
+
+              <label class="nw-label">Instrucciones / Subtítulo para el solicitante
+                <textarea rows="2" class="nw-textarea" [(ngModel)]="accessScreen.selfRegSubtitle" (ngModelChange)="scheduleAutoSave()"
+                  placeholder="Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu pase personal." maxlength="250"></textarea>
+              </label>
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
+                <label class="nw-label">Grupo asignado en la lista
+                  <input type="text" class="nw-input" [(ngModel)]="accessScreen.selfRegGroup" (ngModelChange)="scheduleAutoSave()"
+                    placeholder="Solicitudes de Acceso" maxlength="60">
+                </label>
+
+                <label class="nw-label">Máximo de pases por solicitud
+                  <input type="number" class="nw-input" min="1" max="10" [(ngModel)]="accessScreen.selfRegMaxGuests" (ngModelChange)="scheduleAutoSave()">
+                </label>
+              </div>
+
+              <div class="nw-toggle-row">
+                <div class="nw-toggle-info">
+                  <strong>Requiere aprobación del anfitrión</strong>
+                  <span style="font-size:12px; color:var(--nw-text-3);">Si está activo, el invitado queda en estado pendiente de aprobación antes de que pueda ver la invitación.</span>
+                </div>
+                <label class="nw-switch">
+                  <input type="checkbox" [(ngModel)]="accessScreen.selfRegRequireApproval" (ngModelChange)="scheduleAutoSave()">
+                  <span class="nw-slider"></span>
+                </label>
+              </div>
+
+              <label class="nw-label">Mensaje tras enviar solicitud con éxito
+                <input type="text" class="nw-input" [(ngModel)]="accessScreen.selfRegSuccessMessage" (ngModelChange)="scheduleAutoSave()"
+                  placeholder="¡Solicitud enviada con éxito! Te notificaremos cuando sea aprobada." maxlength="150">
+              </label>
+            </div>
+          </div>
+
+          <!-- SECCIÓN D: PERSONALIZACIÓN DE TEXTOS DE PANTALLA DE ACCESO -->
+          <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-md); padding:16px;">
+            <strong style="font-size:14px; color:var(--nw-text); display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              Textos de Bienvenida en Pantalla de Acceso
+            </strong>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+              <label class="nw-label">Título principal
+                <input type="text" class="nw-input" [(ngModel)]="accessScreen.title" (ngModelChange)="scheduleAutoSave()"
+                  placeholder="Invitación Personal" maxlength="80">
+              </label>
+
+              <label class="nw-label">Texto del botón de ingreso
+                <input type="text" class="nw-input" [(ngModel)]="accessScreen.buttonText" (ngModelChange)="scheduleAutoSave()"
+                  placeholder="ABRIR INVITACIÓN" maxlength="60">
+              </label>
+            </div>
+
+            <label class="nw-label" style="margin-top:12px;">Mensaje de instrucciones para el invitado
+              <textarea rows="2" class="nw-textarea" [(ngModel)]="accessScreen.subtitle" (ngModelChange)="scheduleAutoSave()"
+                placeholder="Ingresa tu correo o teléfono registrado para abrir tu invitación y pase personal." maxlength="250"></textarea>
+            </label>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; margin-top:12px;">
+              <label class="nw-label">Etiqueta de Correo / Teléfono
+                <input type="text" class="nw-input" [(ngModel)]="accessScreen.inputLabel" (ngModelChange)="scheduleAutoSave()"
+                  placeholder="CORREO O TELÉFONO REGISTRADO" maxlength="60">
+              </label>
+
+              <label class="nw-label">Texto de ayuda del campo (placeholder)
+                <input type="text" class="nw-input" [(ngModel)]="accessScreen.inputPlaceholder" (ngModelChange)="scheduleAutoSave()"
+                  placeholder="invitado@ejemplo.com o 55 0000 0000" maxlength="60">
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       <!-- 3. Mensaje & Nuestra Historia (story) -->
       <div class="nw-card" style="margin-bottom:16px;"
         *ngIf="invitation && (activeTab === 'story' || activeTab === 'all')">
@@ -920,7 +1191,8 @@
         (addCustomQuestion)="addCustomQuestion()" (removeCustomQuestion)="removeCustomQuestion($event)"
         (addQuestionPreset)="addQuestionPreset($event)" (syncQuestions)="syncCustomQuestionsToPayload()"
         (toggleSectionActive)="toggleSectionActive($event.key, $event.active)"
-        (eventDateTimeChange)="onEventDateTimeChange($event)">
+        (eventDateTimeChange)="onEventDateTimeChange($event)"
+        (openAccessSettings)="setActiveTab('access', true)">
       </app-editor-rsvp-rules-tab>
 
       <!-- 9 & 10. Mesa de Regalos y Sobre Digital -->

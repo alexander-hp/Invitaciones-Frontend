@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
-import { AssetFolder, EventAgendaItem, EventModel, EventPayload, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings, VisualInvitationDesign } from '../../core/models';
+import { AssetFolder, EventAgendaItem, EventModel, EventPayload, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings, VisualInvitationDesign, VisualAccessScreenDesign } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
 import { applyPaletteToVisualDesign, InvitationPaletteColors, paletteFromVisualDesign, validPaletteColor } from './visual-palette';
 
@@ -292,7 +292,8 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
         description: 'Información principal y diseño visual de la invitación',
         items: [
           { key: 'content', title: 'Contenido Principal', description: 'Nombres, fecha, mensaje principal e imagen de portada.', isMandatory: true },
-          { key: 'style', title: 'Estilo y Colores', description: 'Paleta de colores, tipografía y estética visual.', isMandatory: true }
+          { key: 'style', title: 'Estilo y Colores', description: 'Paleta de colores, tipografía y estética visual.', isMandatory: true },
+          { key: 'access', title: 'Pantalla de Acceso & Auto-registro', description: 'Seguridad, validación con NIP y auto-registro de invitados.', isMandatory: false }
         ]
       },
       {
@@ -402,6 +403,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
   readonly allEditorSections: Array<{ key: string; title: string; shortTitle: string; icon: string }> = [
     { key: 'content', title: 'Contenido Principal', shortTitle: 'Contenido', icon: 'content' },
     { key: 'style', title: 'Estilo y Colores', shortTitle: 'Estilo', icon: 'style' },
+    { key: 'access', title: 'Pantalla de Acceso & Auto-registro', shortTitle: 'Acceso y NIP', icon: 'access' },
     { key: 'story', title: 'Nuestra Historia', shortTitle: 'Historia', icon: 'story' },
     { key: 'locations', title: 'Ubicaciones & Cómo Llegar', shortTitle: 'Ubicaciones', icon: 'locations' },
     { key: 'itinerary', title: 'Itinerario del Evento', shortTitle: 'Itinerario', icon: 'itinerary' },
@@ -422,6 +424,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     return this.allEditorSections.filter(sec =>
       sec.key === 'content' ||
       sec.key === 'style' ||
+      sec.key === 'access' ||
       sec.key === 'plans' ||
       this.isSectionActive(sec.key) ||
       this.activeTab === sec.key
@@ -471,11 +474,50 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  get accessScreen(): VisualAccessScreenDesign {
+    if (!this.invitation) {
+      return {} as VisualAccessScreenDesign;
+    }
+    if (!this.invitation.content) {
+      this.invitation.content = {};
+    }
+    if (!this.invitation.content.accessScreen) {
+      this.invitation.content.accessScreen = {
+        enabled: true,
+        title: 'Invitación Personal',
+        subtitle: 'Ingresa tu correo o teléfono registrado para abrir tu invitación y pase personal.',
+        inputLabel: 'Correo o Teléfono registrado',
+        inputPlaceholder: 'invitado@ejemplo.com o 55 0000 0000',
+        buttonText: 'ABRIR INVITACIÓN',
+        requirePin: false,
+        pinMode: 'individual',
+        eventPin: '',
+        pinInputLabel: 'NIP de Acceso',
+        pinInputPlaceholder: 'Ingresa tu NIP',
+        allowSelfRegistration: false,
+        selfRegTitle: 'Solicitar Invitación',
+        selfRegSubtitle: 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu pase personal.',
+        selfRegButtonText: 'ENVIAR SOLICITUD',
+        selfRegGroup: 'Solicitudes de Acceso',
+        selfRegRequireApproval: true,
+        selfRegMaxGuests: 1,
+        selfRegSuccessMessage: '¡Solicitud enviada con éxito! Te notificaremos cuando sea aprobada.'
+      };
+    }
+    return this.invitation.content.accessScreen;
+  }
+
+  generateRandomEventPin(): void {
+    const pin = Math.floor(1000 + Math.random() * 9000).toString();
+    this.accessScreen.eventPin = pin;
+    this.scheduleAutoSave();
+  }
+
   isSectionActive(key: string): boolean {
     if (!this.invitation?.content) return true;
     const settings = this.invitation.content.sectionSettings || {};
 
-    if (key === 'content' || key === 'style') return true;
+    if (key === 'content' || key === 'style' || key === 'access') return true;
     if (key === 'songRequests') {
       if (settings.songRequests !== undefined) {
         return Boolean(settings.songRequests);
@@ -2290,6 +2332,30 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       } else {
         this.invitation.content.itinerary = [];
       }
+    }
+
+    if (!this.invitation.content.accessScreen) {
+      this.invitation.content.accessScreen = {
+        enabled: true,
+        title: 'Invitación Personal',
+        subtitle: 'Ingresa tu correo o teléfono registrado para abrir tu invitación y pase personal.',
+        inputLabel: 'Correo o Teléfono registrado',
+        inputPlaceholder: 'invitado@ejemplo.com o 55 0000 0000',
+        buttonText: 'ABRIR INVITACIÓN',
+        requirePin: false,
+        pinMode: 'individual',
+        eventPin: '',
+        pinInputLabel: 'NIP de Acceso',
+        pinInputPlaceholder: 'Ingresa tu NIP',
+        allowSelfRegistration: false,
+        selfRegTitle: 'Solicitar Invitación',
+        selfRegSubtitle: 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu pase personal.',
+        selfRegButtonText: 'ENVIAR SOLICITUD',
+        selfRegGroup: 'Solicitudes de Acceso',
+        selfRegRequireApproval: true,
+        selfRegMaxGuests: 1,
+        selfRegSuccessMessage: '¡Solicitud enviada con éxito! Te notificaremos cuando sea aprobada.'
+      };
     }
   }
 

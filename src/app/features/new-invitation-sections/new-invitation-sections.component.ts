@@ -87,6 +87,7 @@ export class NewInvitationSectionsComponent implements OnInit {
   };
 
   readonly allSectionsList = [
+    { key: 'access', icon: '🔒', title: 'Pantalla de Acceso & Auto-registro', description: 'Control de lista cerrada, validación con NIP individual y solicitudes de auto-registro.' },
     { key: 'guestAlbum', icon: '📸', title: 'Álbum Interactivo de Invitados', description: 'Permite a los invitados subir sus fotos en tiempo real durante el evento.' },
     { key: 'gallery', icon: '🖼️', title: 'Galería Fotográfica Oficial', description: 'Muestra la galería con fotos del evento o sesión de los novios/festejados.' },
     { key: 'songRequests', icon: '🎵', title: 'Música / Pedir Canciones (DJ)', description: 'Módulo interactivo para que los invitados sugieran canciones al DJ.' },
@@ -103,6 +104,12 @@ export class NewInvitationSectionsComponent implements OnInit {
   ];
 
   isSectionActive(key: string): boolean {
+    if (key === 'access') {
+      return this.invitation?.accessMode === 'guest_list' ||
+        this.invitation?.accessMode === 'specific_users' ||
+        Boolean(this.invitation?.content?.accessScreen?.allowSelfRegistration) ||
+        Boolean(this.invitation?.content?.accessScreen?.requirePin);
+    }
     if (key === 'songRequests') {
       return Boolean(this.songRequestSettings.enabled);
     }
@@ -113,6 +120,19 @@ export class NewInvitationSectionsComponent implements OnInit {
   }
 
   toggleSection(key: string): void {
+    if (key === 'access') {
+      if (this.invitation) {
+        const isCurrentlyClosed = this.invitation.accessMode === 'guest_list' || this.invitation.accessMode === 'specific_users';
+        this.invitation.accessMode = isCurrentlyClosed ? 'public' : 'guest_list';
+        if (!this.invitation.content) this.invitation.content = {};
+        if (!this.invitation.content.accessScreen) {
+          this.invitation.content.accessScreen = { enabled: !isCurrentlyClosed };
+        } else {
+          this.invitation.content.accessScreen.enabled = !isCurrentlyClosed;
+        }
+      }
+      return;
+    }
     if (key === 'songRequests') {
       const nextVal = !this.songRequestSettings.enabled;
       this.songRequestSettings.enabled = nextVal;

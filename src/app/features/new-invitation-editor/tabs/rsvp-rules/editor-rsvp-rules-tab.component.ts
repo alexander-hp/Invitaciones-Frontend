@@ -42,6 +42,7 @@ export class EditorRsvpRulesTabComponent {
   @Output() syncQuestions = new EventEmitter<void>();
   @Output() toggleSectionActive = new EventEmitter<{ key: string; active: boolean }>();
   @Output() eventDateTimeChange = new EventEmitter<{ date: string; time?: string }>();
+  @Output() openAccessSettings = new EventEmitter<void>();
 
   newCustomRole = '';
   newCustomGroup = '';
