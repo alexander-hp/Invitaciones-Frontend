@@ -23,6 +23,7 @@ function resolveDevApiUrl(): string {
 
 export const environment = {
   production: false,
+  googleClientId: 'AQUI_VA_TU_GOOGLE_CLIENT_ID',
   get apiUrl(): string {
     return resolveDevApiUrl();
   }

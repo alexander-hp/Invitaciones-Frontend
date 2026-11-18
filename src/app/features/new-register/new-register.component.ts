@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
+import { GoogleAuthService } from '../../core/google-auth.service';
 import { AccountType, UserRole } from '../../core/models';
 
 @Component({
@@ -8,7 +10,10 @@ import { AccountType, UserRole } from '../../core/models';
   templateUrl: './new-register.component.html',
   styleUrls: ['./new-register.component.css']
 })
-export class NewRegisterComponent implements OnInit, OnDestroy {
+export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('googleBtnContainer') googleBtnContainer?: ElementRef<HTMLDivElement>;
+  private sub?: Subscription;
+
   form = {
     name: 'Demo Organizador',
     email: 'demo@invitaciones.mx',
@@ -49,19 +54,57 @@ export class NewRegisterComponent implements OnInit, OnDestroy {
   currentTestimonialIndex = 0;
   private carouselInterval: any;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private googleAuth: GoogleAuthService
+  ) {}
 
   ngOnInit(): void {
     // Rotar testimonios automáticamente cada 5 segundos
     this.carouselInterval = setInterval(() => {
       this.nextTestimonial();
     }, 5000);
+
+    this.sub = this.googleAuth.credential$.subscribe((idToken) => {
+      this.handleGoogleSignIn(idToken);
+    });
+  }
+
+  ngAfterViewInit(): void {
+    if (this.googleBtnContainer?.nativeElement) {
+      this.googleAuth.renderHiddenButton(this.googleBtnContainer.nativeElement);
+    }
   }
 
   ngOnDestroy(): void {
     if (this.carouselInterval) {
       clearInterval(this.carouselInterval);
     }
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+  }
+
+  handleGoogleSignIn(idToken: string): void {
+    this.loading = true;
+    this.error = '';
+    const selected = this.accountTypes.find((item) => item.value === this.form.accountType);
+    const role = selected?.role || 'client';
+    const accountType = this.form.accountType || 'client';
+
+    this.auth.socialLogin({
+      provider: 'google',
+      idToken,
+      accountType,
+      role: role as Exclude<UserRole, 'admin'>
+    }).subscribe({
+      next: () => this.router.navigate(['/new/dashboard']),
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error?.message || 'Error al autenticar con Google.';
+      }
+    });
   }
 
   submit(): void {
@@ -104,6 +147,14 @@ export class NewRegisterComponent implements OnInit, OnDestroy {
   socialForm = { email: '', name: '' };
 
   socialLogin(provider: string): void {
+    if (provider === 'Google') {
+      if (!this.googleAuth.isConfigured()) {
+        this.error = 'Registro con Google pendiente de configuración. Se requiere configurar GOOGLE_CLIENT_ID en environment.';
+        return;
+      }
+      this.googleAuth.prompt();
+      return;
+    }
     this.socialProvider = provider;
     this.socialForm = {
       email: `demo.${provider.toLowerCase()}@invitaciones.mx`,
