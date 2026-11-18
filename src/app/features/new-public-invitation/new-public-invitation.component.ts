@@ -1987,7 +1987,82 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     });
   }
 
+  get isCustomPassActive(): boolean {
+    const content = this.invitation?.content;
+    const passType = content?.passType || (content?.useCustomPass ? 'custom' : 'generic');
+    return passType === 'custom' && Boolean(content?.passDesign?.sections?.length);
+  }
+
+  evalPassText(rawText?: string): string {
+    if (!rawText) return '';
+    let text = rawText;
+    const g = this.verifiedGuest || {
+      name: 'Invitado Especial',
+      tableName: 'Asignada en recepción',
+      seatLabel: '',
+      allowedCompanions: 1,
+      checkInCode: 'VIP-001'
+    };
+
+    text = text.replace(/\{\{guest\.name\}\}|\{nombre\}|\{invitado\}/gi, g.name || 'Invitado Especial');
+    text = text.replace(/\{\{guest\.table\}\}|\{mesa\}/gi, g.tableName || 'Asignada en recepción');
+    text = text.replace(/\{\{guest\.seat\}\}|\{asiento\}/gi, g.seatLabel || '');
+    text = text.replace(/\{\{guest\.companions\}\}|\{pases\}|\{lugares\}|\{acompañantes\}/gi, String((g.allowedCompanions || 0) + 1));
+    text = text.replace(/\{\{guest\.checkInCode\}\}|\{codigo\}|\{checkin\}/gi, g.checkInCode || 'VIP-001');
+
+    const evTitle = this.event?.title || this.invitation?.content?.headline || 'Nuestra Celebración';
+    const evDate = this.eventDateFormatted || (this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '');
+    const evVenue = this.invitation?.content?.locations?.[0]?.address || this.invitation?.content?.locations?.[0]?.name || this.event?.venue?.name || '';
+
+    text = text.replace(/\{\{event\.title\}\}|\{evento\}/gi, evTitle);
+    text = text.replace(/\{\{event\.date\}\}|\{fecha\}/gi, evDate);
+    text = text.replace(/\{\{event\.venue\}\}|\{lugar\}|\{direccion\}/gi, evVenue);
+    text = text.replace(/\{\{event\.time\}\}|\{hora\}/gi, (this.event as any)?.time || '');
+
+    return text;
+  }
+
+  evalPassImageUrl(layer: any): string {
+    if (layer.binding === 'pass.qrCode' || layer.binding === 'guest.qrCode' || (layer.text && layer.text.toLowerCase().includes('qr'))) {
+      return this.guestQrUrl || '';
+    }
+    return layer.url || '';
+  }
+
+  getPassSheetWidth(section: any): number {
+    return section?.width || this.invitation?.content?.passDesign?.canvasSize?.width || 420;
+  }
+
+  getPassSheetHeight(section: any): number {
+    return section?.height || this.invitation?.content?.passDesign?.canvasSize?.height || 680;
+  }
+
   downloadGuestPass(): void {
+    if (!this.verifiedGuest || !this.invitation) return;
+
+    const gId = (this.verifiedGuest as any)._id || (this.verifiedGuest as any).id;
+    if (gId) {
+      this.api.downloadGuestPassImage(gId).subscribe({
+        next: (blob: Blob) => {
+          const safeName = (this.verifiedGuest?.name || 'Invitado').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_');
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Pase_${safeName}.png`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => {
+          this.printFallbackPassHtml();
+        }
+      });
+      return;
+    }
+
+    this.printFallbackPassHtml();
+  }
+
+  printFallbackPassHtml(): void {
     if (!this.verifiedGuest || !this.invitation) return;
 
     const passHtml = generateGuestPassHtml({

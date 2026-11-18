@@ -43,7 +43,7 @@
 
 <!-- Digital Pass VIP Modal -->
 <div *ngIf="showPassModal && verifiedGuest && invitation" class="nw-pub-pass-overlay" (click)="closePassModal()">
-  <div class="nw-pub-pass-ticket-modal" (click)="$event.stopPropagation()">
+  <div class="nw-pub-pass-ticket-modal" [style.maxWidth.px]="isCustomPassActive ? (getPassSheetWidth(invitation.content.passDesign?.sections?.[0]) + 40) : 500" (click)="$event.stopPropagation()">
     <button class="nw-pub-pass-close-btn" (click)="closePassModal()" aria-label="Cerrar pase">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"
         stroke-linecap="round" stroke-linejoin="round">
@@ -52,7 +52,70 @@
       </svg>
     </button>
 
-    <div class="nw-pub-pass-ticket-card">
+    <!-- CASO 1: PASE PERSONALIZADO (EDITOR VISUAL) -->
+    <div *ngIf="isCustomPassActive" class="nw-pub-pass-custom-card-wrap" style="display:flex; flex-direction:column; align-items:center;">
+      <div *ngFor="let s of invitation.content.passDesign?.sections; let idx = index"
+           class="nw-pub-pass-custom-sheet"
+           [style.width.px]="getPassSheetWidth(s)"
+           [style.height.px]="getPassSheetHeight(s)"
+           [style.background]="s.background?.color || invitation.content.passDesign?.theme?.backgroundColor || '#0b1426'"
+           style="position: relative; overflow: hidden; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); margin: 0 auto 16px auto; max-width: 100%;">
+        <div *ngFor="let l of s.layers"
+             [style.position]="'absolute'"
+             [style.left.%]="l.x"
+             [style.top.%]="l.y"
+             [style.width.%]="l.width"
+             [style.height.%]="l.height"
+             [style.zIndex]="l.zIndex || 1"
+             [style.borderRadius.px]="l.style?.borderRadius || 0"
+             [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
+             [style.borderColor]="l.style?.borderColor || 'transparent'"
+             [style.borderWidth.px]="l.style?.borderWidth || 0"
+             [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
+             [style.boxShadow]="l.style?.boxShadow || 'none'">
+          <div *ngIf="l.type === 'text'"
+               style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
+               [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+               [style.textAlign]="l.style?.textAlign || 'center'"
+               [style.color]="l.style?.color || '#2E2621'"
+               [style.fontSize.px]="l.style?.fontSize || 14"
+               [style.fontWeight]="l.style?.fontWeight || '400'"
+               [style.fontFamily]="l.style?.fontFamily || 'inherit'"
+               [style.letterSpacing.px]="l.style?.letterSpacing || 0"
+               [style.lineHeight]="l.style?.lineHeight || 1.3">
+            {{ evalPassText(l.text) }}
+          </div>
+          <img *ngIf="l.type === 'image'"
+               [src]="evalPassImageUrl(l)"
+               alt="Elemento"
+               style="width: 100%; height: 100%; display: block;"
+               [style.objectFit]="l.style?.objectFit || 'contain'"
+               [style.borderRadius.px]="l.style?.borderRadius || 0">
+          <div *ngIf="l.type === 'shape'"
+               style="width: 100%; height: 100%;"
+               [style.backgroundColor]="l.style?.backgroundColor || '#000'"
+               [style.borderRadius.px]="l.style?.borderRadius || 0">
+          </div>
+        </div>
+      </div>
+
+      <div class="nw-pass-modal-actions no-print" style="width:100%; max-width:420px; margin-top:10px;">
+        <button type="button" class="nw-pass-btn-download" (click)="downloadGuestPass()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Descargar Pase Personalizado</span>
+        </button>
+        <button type="button" class="nw-pass-btn-close" (click)="closePassModal()">
+          <span>Continuar a la Invitación</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CASO 2: PASE GENÉRICO (ESTÁNDAR) -->
+    <div *ngIf="!isCustomPassActive" class="nw-pub-pass-ticket-card">
       <!-- HEADER -->
       <div class="nw-pass-card-header"
         [style.backgroundImage]="invitation.content.coverImageUrl ? 'url(' + invitation.content.coverImageUrl + ')' : null">

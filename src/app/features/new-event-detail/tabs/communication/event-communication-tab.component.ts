@@ -261,6 +261,45 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     this.saveDeliveryPreferences();
   }
 
+  get passType(): 'generic' | 'custom' {
+    return this.invitation?.content?.passType || (this.invitation?.content?.useCustomPass ? 'custom' : 'generic');
+  }
+
+  get hasCustomPassDesign(): boolean {
+    return Boolean(this.invitation?.content?.passDesign?.sections?.length);
+  }
+
+  setPassType(type: 'generic' | 'custom'): void {
+    if (!this.invitation) return;
+    const invId = this.invitation._id || this.invitation.id;
+    if (!invId) return;
+
+    const currentContent: any = { ...(this.invitation.content || {}) };
+    currentContent.passType = type;
+    currentContent.useCustomPass = (type === 'custom');
+
+    delete currentContent.id;
+    delete currentContent._id;
+
+    this.invitation.content = currentContent;
+
+    this.apiService.updateInvitation(invId, { content: currentContent }).subscribe({
+      next: (res) => {
+        if (res.invitation) {
+          this.invitation = res.invitation;
+        }
+        this.guestMessage = type === 'custom'
+          ? '✓ Modo activo: Pase Personalizado (se usará el diseño del Editor de Pases)'
+          : '✓ Modo activo: Pase Genérico (se usará el formato clásico con código QR)';
+        setTimeout(() => this.guestMessage = '', 4500);
+      },
+      error: (err) => {
+        this.guestError = err?.error?.message || 'No se pudo guardar la preferencia de tipo de pase.';
+        setTimeout(() => this.guestError = '', 4500);
+      }
+    });
+  }
+
   initSpecialGuests(): void {
     const vips = this.getGuestsByRole('vip');
     const family = this.getGuestsByRole('familia');

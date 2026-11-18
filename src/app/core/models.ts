@@ -702,6 +702,8 @@ export interface InvitationContent {
   visualDesignDraft?: VisualInvitationDesign;
   passDesign?: VisualInvitationDesign;
   passDesignDraft?: VisualInvitationDesign;
+  passType?: 'generic' | 'custom';
+  useCustomPass?: boolean;
   accessScreen?: VisualAccessScreenDesign;
   editedTexts?: Record<string, string>;
   sourceTemplateKey?: string;

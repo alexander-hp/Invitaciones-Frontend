@@ -2127,14 +2127,8 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
       delete rawContent._id;
       const content = this.stripMongoMetadata(rawContent);
 
-      const rawRsvp: any = { ...(this.invitation?.rsvpSettings || {}) };
-      delete rawRsvp.id;
-      delete rawRsvp._id;
-      const rsvpSettings = this.stripMongoMetadata(rawRsvp);
-
       const payload: any = {
-        content,
-        rsvpSettings
+        content
       };
 
       const res = await firstValueFrom(this.apiService.updateInvitation(this.invitationId, payload));
@@ -2180,20 +2174,16 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
       const rawContent: any = {
         ...this.invitation?.content,
         passDesignDraft: this.design,
-        passDesign: this.design
+        passDesign: this.design,
+        passType: 'custom',
+        useCustomPass: true
       };
       delete rawContent.id;
       delete rawContent._id;
       const content = this.stripMongoMetadata(rawContent);
 
-      const rawRsvp: any = { ...(this.invitation?.rsvpSettings || {}) };
-      delete rawRsvp.id;
-      delete rawRsvp._id;
-      const rsvpSettings = this.stripMongoMetadata(rawRsvp);
-
       const payload: any = {
-        content,
-        rsvpSettings
+        content
       };
 
       const res = await firstValueFrom(this.apiService.updateInvitation(this.invitationId, payload));

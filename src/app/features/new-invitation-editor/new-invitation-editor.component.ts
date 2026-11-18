@@ -2276,7 +2276,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       songRequests: this.invitation.content.sectionSettings?.songRequests !== false
     };
     if (!this.invitation.content.digitalEnvelope) this.invitation.content.digitalEnvelope = { bank: '', account: '', clabe: '', holder: '', note: '', qrImageUrl: '' };
-    
+
     // Mínimo 2 opciones de código de vestimenta
     if (!Array.isArray(this.invitation.content.dressCodeOptions) || this.invitation.content.dressCodeOptions.length === 0) {
       this.invitation.content.dressCodeOptions = [
@@ -2297,7 +2297,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
         });
       }
     }
-    
+
     // Auto-extraer Ubicación si no existe o está vacía
     if (!this.invitation.content.locations || this.invitation.content.locations.length === 0) {
       const venue = this.event?.venue;
@@ -2391,11 +2391,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
       Number(deadlineMatch[1]), Number(deadlineMatch[2]) - 1, Number(deadlineMatch[3]),
       Number(deadlineMatch[4]), Number(deadlineMatch[5]), 0, 0
     );
-    const now = new Date();
-    now.setSeconds(0, 0);
-    if (deadline.getTime() < now.getTime()) {
-      return 'La fecha límite de respuesta no puede estar en el pasado.';
-    }
+    // Nota: Se permite que la fecha límite esté en el pasado para facilitar pruebas y eventos de testing/históricos.
 
     if (!this.event?.date) return null;
     let eventStartsAt: Date | null = null;

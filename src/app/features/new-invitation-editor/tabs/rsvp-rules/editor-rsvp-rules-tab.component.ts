@@ -165,22 +165,17 @@ export class EditorRsvpRulesTabComponent {
   }
 
   get deadlineMinDate(): string {
-    return this.toLocalDateInput(new Date());
+    return '';
   }
 
   get deadlineMaxDate(): string {
     const eventDate = this.getEventDateTime();
     if (!eventDate) return '';
-    const today = this.toLocalDateInput(new Date());
-    const eventDateStr = this.toLocalDateInput(eventDate);
-    return eventDateStr >= today ? eventDateStr : '';
+    return this.toLocalDateInput(eventDate);
   }
 
   get deadlineMinTime(): string {
-    if (!this.deadlineDate || this.deadlineDate !== this.deadlineMinDate) return '00:00';
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1, 0, 0);
-    return this.toLocalTimeInput(now);
+    return '00:00';
   }
 
   get deadlineMaxTime(): string {
@@ -191,14 +186,13 @@ export class EditorRsvpRulesTabComponent {
 
   get hasAvailableDeadlineRange(): boolean {
     const eventDate = this.getEventDateTime();
-    return Boolean(eventDate && eventDate.getTime() >= this.currentMinute().getTime());
+    return Boolean(eventDate);
   }
 
   get deadlineRangeLabel(): string {
     const eventDate = this.getEventDateTime();
     if (!eventDate) return 'Primero define la fecha del evento arriba.';
-    if (!this.hasAvailableDeadlineRange) return 'La fecha del evento ya ocurrió; modifícala arriba para recibir confirmaciones.';
-    return `Puedes recibir respuestas desde hoy hasta ${this.formatLongDateTime(eventDate)}.`;
+    return `Puedes recibir respuestas hasta ${this.formatLongDateTime(eventDate)}.`;
   }
 
   get deadlineValidationMessage(): string {
@@ -207,9 +201,6 @@ export class EditorRsvpRulesTabComponent {
     const deadline = this.parseDateTime(raw);
     const eventDate = this.getEventDateTime();
     if (!deadline) return 'Selecciona una fecha y hora válidas.';
-    if (deadline.getTime() < this.currentMinute().getTime()) {
-      return 'La fecha límite no puede estar en el pasado.';
-    }
     if (eventDate && deadline.getTime() > eventDate.getTime()) {
       return 'La fecha límite no puede ser posterior al inicio del evento.';
     }
