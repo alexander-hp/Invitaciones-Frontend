@@ -77,6 +77,11 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     loadChildren: () => import('./features/visual-invitation-editor/visual-invitation-editor.module').then((module) => module.VisualInvitationEditorModule)
   },
+  {
+    path: 'new/invitations/:id/pass-editor',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./features/visual-pass-editor/visual-pass-editor.module').then((module) => module.VisualPassEditorModule)
+  },
   { path: 'new/invitations/:id/sections', component: NewInvitationSectionsComponent, canActivate: [AuthGuard] },
   { path: 'new/external-access/:token', component: NewEventAccessComponent },
   { path: 'new/dj/:token', component: NewEventAccessComponent },

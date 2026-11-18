@@ -1,7 +1,7 @@
 import {
   AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, ArrowDown, ArrowLeft, ArrowUp, Baby, Bell, Blocks, Cake,
   CalendarDays, CalendarHeart, Camera, Car, Check, ChevronDown, Church, CircleCheckBig, CircleHelp, CirclePlus,
-  CircleUserRound, Clock, CloudUpload, Copy, Crop, Crown, Download, Ellipsis, ExternalLink, Eye, Facebook,
+  CircleUserRound, Clipboard, ClipboardPaste, Clock, CloudUpload, Copy, Crop, Crown, Download, Ellipsis, ExternalLink, Eye, Facebook,
   FlaskConical, Flower2, Gem, Gift, GraduationCap, GripVertical, Heart, HeartHandshake, Hotel, House, Image,
   Images, Instagram, KeyRound, Layers, Link, Lock, LockKeyhole, LockOpen, Mail, MapPin, MapPinned,
   MessageCircle, MicVocal, Monitor, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen,
@@ -13,7 +13,7 @@ import {
 export const VISUAL_LUCIDE_ICONS = {
   AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, ArrowDown, ArrowLeft, ArrowUp, Baby, Bell, Blocks, Cake,
   CalendarDays, CalendarHeart, Camera, Car, Check, ChevronDown, Church, CircleCheckBig, CircleHelp, CirclePlus,
-  CircleUserRound, Clock, CloudUpload, Copy, Crop, Crown, Download, Ellipsis, ExternalLink, Eye, Facebook,
+  CircleUserRound, Clipboard, ClipboardPaste, Clock, CloudUpload, Copy, Crop, Crown, Download, Ellipsis, ExternalLink, Eye, Facebook,
   FlaskConical, Flower2, Gem, Gift, GraduationCap, GripVertical, Heart, HeartHandshake, Hotel, House, Image,
   Images, Instagram, KeyRound, Layers, Link, Lock, LockKeyhole, LockOpen, Mail, MapPin, MapPinned,
   MessageCircle, MicVocal, Monitor, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen,

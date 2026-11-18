@@ -1,0 +1,972 @@
+<div class="vpe-container" *ngIf="!loading && design">
+  <!-- ════════ TOPBAR (Estilo Kyndra Luxury & Canva) ════════ -->
+  <header class="ve-topbar">
+    <button class="icon-button ve-back-button" type="button" title="Volver a Pases" (click)="goBack()">
+      <lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon>
+    </button>
+
+    <div class="ve-title">
+      <strong>Editor de Pases VIP</strong>
+      <span class="ve-autosave-indicator" [class.is-saving]="autosaveState === 'Cambios pendientes'" [class.is-saved]="autosaveState === 'Al día'">
+        <span class="ve-autosave-dot"></span>
+        <span>{{ event?.title || invitation?.content?.headline || 'Pase oficial' }} · {{ autosaveState }}</span>
+      </span>
+    </div>
+
+    <div class="ve-history">
+      <button class="icon-button" type="button" title="Deshacer (Ctrl+Z)" [disabled]="!canUndo" (click)="undo()">
+        <lucide-icon name="undo-2" [strokeWidth]="1.8"></lucide-icon>
+      </button>
+      <button class="icon-button" type="button" title="Rehacer (Ctrl+Y)" [disabled]="!canRedo" (click)="redo()">
+        <lucide-icon name="redo-2" [strokeWidth]="1.8"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Acciones Principales -->
+    <div class="vpe-topbar-actions">
+      <!-- Botón Exportar / Descargar Estilo Canva -->
+      <details class="vpe-export-menu" #exportMenu>
+        <summary class="secondary vpe-export-btn" title="Descargar pase para imprimir o compartir">
+          <lucide-icon name="download" [strokeWidth]="1.8"></lucide-icon>
+          <span>Descargar</span>
+          <span style="font-size: 10px;">▾</span>
+        </summary>
+        <div class="vpe-menu-popover">
+          <button type="button" (click)="exportMenu.open=false; exportPass('png')" [disabled]="exporting">
+            <b>🖼️ Imagen PNG (Alta Calidad)</b>
+            <small>Ideal para enviar directamente por WhatsApp</small>
+          </button>
+          <button type="button" (click)="exportMenu.open=false; exportPass('pdf')" [disabled]="exporting">
+            <b>🖨️ Imprimir / PDF</b>
+            <small>Listo para imprimir gafetes o acreditaciones físicas</small>
+          </button>
+        </div>
+      </details>
+
+      <button class="secondary preview-command" type="button" (click)="previewModalOpen = true">
+        <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>
+        <span>Vista previa</span>
+      </button>
+
+      <button class="primary" type="button" [disabled]="saving" (click)="saveDraft()">
+        {{ saving ? 'Guardando...' : 'Guardar borrador' }}
+      </button>
+
+      <button class="publish" type="button" [disabled]="publishing" (click)="publishPass()">
+        {{ publishing ? 'Publicando...' : 'Publicar Pase' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- ════════ SUBBAR (Lienzo, Formato, Zoom y Simulación de Invitado) ════════ -->
+  <div class="vpe-subbar">
+    <div class="vpe-subbar-left">
+      <!-- Selector de Formato de la Hoja Activa -->
+      <div class="vpe-control-pill">
+        <span class="vpe-pill-icon">📐</span>
+        <span class="vpe-pill-label">Formato:</span>
+        <select [ngModel]="activeSheetPreset" (ngModelChange)="setCanvasPreset($event)" aria-label="Tamaño del pase">
+          <option *ngFor="let opt of passCanvasPresets" [value]="opt.preset">{{ opt.icon }} {{ opt.label }}</option>
+        </select>
+      </div>
+
+      <!-- Dimensiones personalizadas (de la hoja actual) -->
+      <div *ngIf="activeSheetPreset === 'custom'" class="vpe-custom-dim">
+        <input type="number" min="100" max="2500" [ngModel]="activeSheetWidth" (ngModelChange)="setCustomWidth($event)" title="Ancho de esta hoja en píxeles" placeholder="Ancho">
+        <span class="vpe-dim-sep">×</span>
+        <input type="number" min="100" max="2500" [ngModel]="activeSheetHeight" (ngModelChange)="setCustomHeight($event)" title="Alto de esta hoja en píxeles" placeholder="Alto">
+        <small>px</small>
+        <button type="button" class="vpe-apply-all-btn" (click)="applyActiveSheetSizeToAll()" title="Aplicar este formato a todas las hojas del pase">
+          Aplicar a todas
+        </button>
+      </div>
+
+      <span class="vpe-separator"></span>
+
+      <!-- Zoom -->
+      <div class="vpe-control-pill">
+        <span class="vpe-pill-icon">🔍</span>
+        <select [ngModel]="canvasZoom" (ngModelChange)="setZoom($event)" aria-label="Nivel de zoom">
+          <option *ngFor="let z of zoomOptions" [ngValue]="z">{{ z * 100 }}%</option>
+        </select>
+      </div>
+
+      <button type="button" class="icon-button" [class.active]="showGrid" (click)="showGrid = !showGrid" title="Mostrar u ocultar cuadrícula">
+        ▦
+      </button>
+
+      <span class="vpe-separator"></span>
+
+      <!-- Restaurar plantilla VIP inicial -->
+      <button type="button" class="secondary vpe-reset-pill" (click)="resetToDefaultPassTemplate()" title="Restablecer a plantilla limpia oficial de pase">
+        <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+        <span>Plantilla VIP</span>
+      </button>
+    </div>
+
+    <div class="vpe-subbar-right">
+      <!-- Selector de Invitado de Prueba para simular datos en vivo -->
+      <div class="vpe-control-pill vpe-guest-sim" *ngIf="guests.length > 0">
+        <lucide-icon name="user-round" [strokeWidth]="1.8"></lucide-icon>
+        <span class="vpe-pill-label">Simular con:</span>
+        <select [(ngModel)]="previewGuest" aria-label="Invitado de prueba">
+          <option *ngFor="let g of guests" [ngValue]="g">{{ g.name }} (Mesa: {{ g.tableName || 'Gen' }})</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SHEETS BAR (Hojas del Pase VIP) ════════ -->
+  <div class="vpe-sheets-bar">
+    <div class="vpe-sheets-left">
+      <div class="vpe-sheets-nav">
+        <button *ngFor="let sec of design.sections; let idx = index"
+                type="button"
+                class="vpe-sheet-tab"
+                [class.active]="activeSheetIndex === idx"
+                (click)="selectSheet(idx)">
+          <span class="vpe-sheet-badge">{{ idx + 1 }}</span>
+          <span class="vpe-sheet-name">{{ sec.title || ('Hoja ' + (idx + 1)) }}</span>
+          <span *ngIf="design.sections.length > 1"
+                class="vpe-sheet-tab-close"
+                (click)="deleteSheet(idx, $event)"
+                title="Eliminar {{ sec.title || ('Hoja ' + (idx + 1)) }}">
+            ✕
+          </span>
+        </button>
+
+        <button type="button" class="vpe-add-sheet-btn" (click)="addSheet()" title="Agregar nueva cara u hoja al pase">
+          <span>+ Agregar Hoja</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="vpe-sheets-right">
+      <!-- Modo de visualización: Hoja activa vs Ver ambas -->
+      <div class="segmented">
+        <button type="button" [class.active]="viewMode === 'single'" (click)="setViewMode('single')" title="Ver solo la hoja seleccionada">
+          Hoja activa
+        </button>
+        <button type="button" [class.active]="viewMode === 'all'" (click)="setViewMode('all')" title="Ver frente y reverso juntos">
+          Ver ambas
+        </button>
+      </div>
+
+      <span class="vpe-separator"></span>
+
+      <button type="button" class="secondary vpe-sheet-action" (click)="duplicateSheet(activeSheetIndex)" title="Duplicar hoja actual">
+        <lucide-icon name="layers" [strokeWidth]="1.6"></lucide-icon>
+        <span>Duplicar</span>
+      </button>
+      <button type="button" class="secondary vpe-sheet-action" (click)="promptRenameSheet(activeSheetIndex)" title="Renombrar hoja actual">
+        <lucide-icon name="type" [strokeWidth]="1.6"></lucide-icon>
+        <span>Renombrar</span>
+      </button>
+      <button type="button" class="secondary vpe-sheet-action vpe-danger-action" (click)="deleteSheet(activeSheetIndex)" [disabled]="design.sections.length <= 1" title="Eliminar hoja actual del pase">
+        <lucide-icon name="x" [strokeWidth]="1.8"></lucide-icon>
+        <span>Eliminar hoja</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════ WORKSPACE (Estilo Canva: Rail Lateral + Cajón + Lienzo + Inspector) ════════ -->
+  <div class="ve-workspace" [class.tools-collapsed]="toolsCollapsed">
+    <!-- ── LEFT NAVIGATION RAIL (Estilo Canva) ── -->
+    <nav class="vpe-nav-rail">
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'fields' && !toolsCollapsed"
+              (click)="toolCategory = 'fields'; toolsCollapsed = false"
+              title="Campos del Pase">
+        <lucide-icon name="ticket-check" [strokeWidth]="1.8"></lucide-icon>
+        <span>Pase VIP</span>
+      </button>
+
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'text' && !toolsCollapsed"
+              (click)="toolCategory = 'text'; toolsCollapsed = false"
+              title="Texto y Tipografía">
+        <lucide-icon name="type" [strokeWidth]="1.8"></lucide-icon>
+        <span>Texto</span>
+      </button>
+
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'elements' && !toolsCollapsed"
+              (click)="toolCategory = 'elements'; toolsCollapsed = false"
+              title="Formas, Líneas e Iconos">
+        <lucide-icon name="shapes" [strokeWidth]="1.8"></lucide-icon>
+        <span>Elementos</span>
+      </button>
+
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'images' && !toolsCollapsed"
+              (click)="toolCategory = 'images'; toolsCollapsed = false"
+              title="Fotos y Marcos">
+        <lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon>
+        <span>Fotos</span>
+      </button>
+
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'backgrounds' && !toolsCollapsed"
+              (click)="toolCategory = 'backgrounds'; toolsCollapsed = false"
+              title="Temas y Fondos">
+        <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon>
+        <span>Fondos</span>
+      </button>
+
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'music' && !toolsCollapsed"
+              (click)="toolCategory = 'music'; toolsCollapsed = false"
+              title="Música del Pase">
+        <lucide-icon name="music" [strokeWidth]="1.8"></lucide-icon>
+        <span>Música</span>
+      </button>
+
+      <button type="button"
+              class="vpe-rail-item"
+              [class.active]="toolCategory === 'layers' && !toolsCollapsed"
+              (click)="toolCategory = 'layers'; toolsCollapsed = false"
+              title="Capas del Pase">
+        <lucide-icon name="layers" [strokeWidth]="1.8"></lucide-icon>
+        <span>Capas</span>
+      </button>
+
+      <div class="vpe-rail-footer">
+        <button type="button"
+                class="vpe-rail-collapse"
+                (click)="toolsCollapsed = !toolsCollapsed"
+                [title]="toolsCollapsed ? 'Expandir panel' : 'Contraer panel'">
+          <lucide-icon [name]="toolsCollapsed ? 'panel-left-open' : 'panel-left-close'" [strokeWidth]="1.8"></lucide-icon>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ── LEFT TOOL DRAWER (Contenido de la categoría) ── -->
+    <aside class="ve-tools vpe-drawer" *ngIf="!toolsCollapsed">
+      <!-- CATEGORÍA 1: CAMPOS DEL PASE VIP -->
+      <div *ngIf="toolCategory === 'fields'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Campos Dinámicos</h2>
+          <span class="vpe-badge-tag">VIP</span>
+        </div>
+        <p class="vpe-drawer-desc">Haz clic o arrastra al pase para insertar datos del invitado que se autocompletan.</p>
+
+        <div class="vpe-quick-grid">
+          <button *ngFor="let field of quickPassFields"
+                  type="button"
+                  class="vpe-quick-card"
+                  draggable="true"
+                  (dragstart)="beginPaletteDrag($event, { kind: 'field', field: field })"
+                  (dragend)="endPaletteDrag()"
+                  (click)="addQuickField(field)">
+            <span class="vpe-quick-badge">{{ field.icon }}</span>
+            <div class="vpe-quick-text">
+              <strong>{{ field.label }}</strong>
+              <small>{{ field.sub }}</small>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- CATEGORÍA 2: TEXTO Y COMBINACIONES TIPOGRÁFICAS -->
+      <div *ngIf="toolCategory === 'text'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Añadir Texto</h2>
+        </div>
+        <p class="vpe-drawer-desc">Títulos, subtítulos y combinaciones de lujo estilo Canva.</p>
+
+        <div class="vpe-text-presets-list">
+          <button type="button" class="vpe-text-preset-btn heading" (click)="addHeadingText()">
+            <strong style="font-family: 'Playfair Display', serif; font-size: 20px;">Añadir un título</strong>
+            <small>Fuente Playfair Display · Negrita</small>
+          </button>
+
+          <button type="button" class="vpe-text-preset-btn subheading" (click)="addSubheadingText()">
+            <strong style="font-family: 'Montserrat', sans-serif; font-size: 15px;">Añadir un subtítulo</strong>
+            <small>Fuente Montserrat · Semibold</small>
+          </button>
+
+          <button type="button" class="vpe-text-preset-btn body" (click)="addBodyText()">
+            <strong style="font-family: 'Inter', sans-serif; font-size: 13px;">Añadir texto de párrafo</strong>
+            <small>Texto limpio para indicaciones y horarios</small>
+          </button>
+
+          <button type="button" class="vpe-text-preset-btn cursive" (click)="addCursiveText()">
+            <strong style="font-family: 'Great Vibes', cursive; font-size: 24px; color: #c9a87c;">Familia González</strong>
+            <small>Caligrafía y firma cursiva de gala</small>
+          </button>
+
+          <button type="button" class="vpe-text-preset-btn badge" (click)="addBadgeText()">
+            <strong style="font-size: 12px; letter-spacing: 2px; color: #c9a87c;">★ ACCESO EXCLUSIVO ★</strong>
+            <small>Etiqueta VIP en mayúsculas espaciadas</small>
+          </button>
+        </div>
+      </div>
+
+      <!-- CATEGORÍA 3: ELEMENTOS, FORMAS, LÍNEAS E ICONOS -->
+      <div *ngIf="toolCategory === 'elements'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Formas y Decoración</h2>
+        </div>
+
+        <!-- Filtros de Formas -->
+        <div class="vpe-search-box">
+          <input [(ngModel)]="shapeSearch" type="search" placeholder="Buscar formas, arcos, estrellas...">
+          <select [(ngModel)]="shapeCategory">
+            <option value="all">Todas las formas</option>
+            <option value="basic">Básicas</option>
+            <option value="arch">Arcos y Marcos</option>
+            <option value="banner">Banners y Tickets</option>
+            <option value="decorative">Decorativas</option>
+            <option value="divider">Líneas y Divisores</option>
+          </select>
+        </div>
+
+        <div class="vpe-shapes-grid">
+          <button *ngFor="let s of filteredShapes"
+                  type="button"
+                  class="vpe-shape-tile"
+                  draggable="true"
+                  [title]="s.label"
+                  (dragstart)="beginPaletteDrag($event, { kind: 'shape', shape: s.key })"
+                  (dragend)="endPaletteDrag()"
+                  (click)="addShape(s.key)">
+            <span class="vpe-shape-preview" [style.clip-path]="shapeClipPath(s.key)"></span>
+            <small>{{ s.label }}</small>
+          </button>
+        </div>
+
+        <!-- Catálogo de Iconos Lucide -->
+        <div class="vpe-drawer-header" style="margin-top: 24px;">
+          <h2>Iconos de Acreditación</h2>
+        </div>
+
+        <div class="vpe-search-box">
+          <input [(ngModel)]="iconSearch" type="search" placeholder="Buscar iconos (amor, copa, iglesia...)">
+          <select [(ngModel)]="iconCategory">
+            <option value="all">Todos los iconos</option>
+            <option value="celebracion">Celebración</option>
+            <option value="evento">Evento</option>
+            <option value="comunicacion">Comunicación</option>
+            <option value="servicios">Servicios</option>
+          </select>
+        </div>
+
+        <div class="vpe-icons-grid">
+          <button *ngFor="let ic of filteredIcons.slice(0, 48)"
+                  type="button"
+                  class="vpe-icon-tile"
+                  draggable="true"
+                  [title]="ic.label"
+                  (dragstart)="beginPaletteDrag($event, { kind: 'icon', icon: ic })"
+                  (dragend)="endPaletteDrag()"
+                  (click)="addIcon(ic)">
+            <lucide-icon [name]="ic.name" [strokeWidth]="1.8"></lucide-icon>
+            <small>{{ ic.label }}</small>
+          </button>
+        </div>
+      </div>
+
+      <!-- CATEGORÍA 4: FOTOS Y MARCOS -->
+      <div *ngIf="toolCategory === 'images'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Fotos y Marcos</h2>
+        </div>
+
+        <!-- Acciones de imagen: Subir archivo y Pegar portapapeles -->
+        <div class="vpe-image-actions">
+          <label class="vpe-upload-card" title="Seleccionar foto desde tu computadora">
+            <lucide-icon name="upload" [strokeWidth]="1.8"></lucide-icon>
+            <strong>Subir foto</strong>
+            <small>PNG, JPG o WebP</small>
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+          </label>
+
+          <button type="button" class="vpe-paste-card" (click)="pasteImageFromClipboard()" title="Pegar imagen copiada del portapapeles (Ctrl+V)">
+            <lucide-icon name="clipboard-paste" [strokeWidth]="1.8"></lucide-icon>
+            <strong>Pegar portapapeles</strong>
+            <small><kbd>Ctrl</kbd> + <kbd>V</kbd></small>
+          </button>
+        </div>
+
+        <div class="vpe-clipboard-hint">
+          <lucide-icon name="sparkles" [strokeWidth]="1.6"></lucide-icon>
+          <span>Copia cualquier imagen (Ctrl+C o captura) y presiona <strong>Ctrl+V</strong> en la pantalla para pegarla directo al pase.</span>
+        </div>
+
+        <!-- Marcos de Recorte Estilo Canva -->
+        <h3 class="vpe-subheading">Marcos de Foto</h3>
+        <div class="vpe-frames-grid">
+          <button *ngFor="let mask of imageMasks"
+                  type="button"
+                  class="vpe-frame-tile"
+                  (click)="addImageLayer('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80', mask.key, mask.label)">
+            <span class="vpe-frame-preview" [style.clip-path]="shapeClipPath(mask.key === 'none' ? undefined : mask.key)"></span>
+            <small>{{ mask.label }}</small>
+          </button>
+        </div>
+
+        <!-- Fotos del Evento / Galería -->
+        <h3 class="vpe-subheading" *ngIf="mediaLibrary.length > 0">Fotos del Evento</h3>
+        <div class="vpe-media-gallery" *ngIf="mediaLibrary.length > 0">
+          <button *ngFor="let url of mediaLibrary"
+                  type="button"
+                  class="vpe-media-thumb"
+                  (click)="addImageLayer(url, 'none', 'Foto del Evento')">
+            <img [src]="url" alt="Foto">
+          </button>
+        </div>
+
+        <!-- Buscador Web Pexels / Unsplash -->
+        <h3 class="vpe-subheading">Buscador Web de Fotos</h3>
+        <div class="vpe-search-box">
+          <input [(ngModel)]="webImageQuery" type="search" placeholder="Flores, boda, noche gala..." (keyup.enter)="searchWebImages()">
+          <button type="button" class="secondary" [disabled]="searchingWebImages" (click)="searchWebImages()">
+            {{ searchingWebImages ? '...' : 'Buscar' }}
+          </button>
+        </div>
+
+        <div class="vpe-media-gallery" *ngIf="webImageResults.length > 0">
+          <button *ngFor="let img of webImageResults"
+                  type="button"
+                  class="vpe-media-thumb"
+                  (click)="addWebImage(img)">
+            <img [src]="img.thumbUrl || img.url" [alt]="img.alt">
+          </button>
+        </div>
+      </div>
+
+      <!-- CATEGORÍA 5: FONDOS Y TEMAS DE LUJO -->
+      <div *ngIf="toolCategory === 'backgrounds'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Temas de Lujo para Pases</h2>
+        </div>
+        <p class="vpe-drawer-desc">Aplica paletas armónicas inspiradas en acreditaciones y eventos de gala.</p>
+
+        <div class="vpe-themes-list">
+          <button *ngFor="let th of passThemes"
+                  type="button"
+                  class="vpe-theme-card"
+                  (click)="applyPassTheme(th.key)">
+            <div class="vpe-theme-swatch" [style.background]="th.bg">
+              <span class="swatch-accent" [style.background]="th.accent"></span>
+              <span class="swatch-text" [style.background]="th.textColor"></span>
+            </div>
+            <div class="vpe-theme-info">
+              <strong>{{ th.name }}</strong>
+              <small>{{ th.description }}</small>
+            </div>
+          </button>
+        </div>
+
+        <h3 class="vpe-subheading" style="margin-top: 20px;">Fondo de la Hoja Actual</h3>
+        <div class="vpe-color-picker-wrap" *ngIf="activeSheet">
+          <input type="color" class="vpe-color-preview" [ngModel]="activeSheet.background?.color || '#0b1426'" (ngModelChange)="activeSheet.background = activeSheet.background || {}; activeSheet.background.color = $event; autosaveState = 'Cambios pendientes'">
+          <input type="text" class="vpe-input" [ngModel]="activeSheet.background?.color || '#0b1426'" (ngModelChange)="activeSheet.background = activeSheet.background || {}; activeSheet.background.color = $event; autosaveState = 'Cambios pendientes'">
+        </div>
+      </div>
+
+      <!-- CATEGORÍA 6: MÚSICA Y AUDIO -->
+      <div *ngIf="toolCategory === 'music'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Música del Pase Digital</h2>
+        </div>
+        <p class="vpe-drawer-desc">Si compartes el pase por enlace en WhatsApp, puedes acompañarlo con música ambiente.</p>
+
+        <div class="vpe-music-card" *ngIf="eventMusicUrl">
+          <div class="vpe-music-info">
+            <span class="vpe-music-icon">🎵</span>
+            <div>
+              <strong>Canción Principal del Evento</strong>
+              <small>{{ audioPlaying ? 'Reproduciendo vista previa...' : 'Pausado' }}</small>
+            </div>
+          </div>
+          <button type="button" class="secondary" (click)="togglePlayMusic()">
+            <lucide-icon [name]="audioPlaying ? 'pause' : 'play'" [strokeWidth]="1.8"></lucide-icon>
+            <span>{{ audioPlaying ? 'Pausar' : 'Escuchar' }}</span>
+          </button>
+        </div>
+
+        <button type="button" class="primary" style="width: 100%; margin-top: 14px;" (click)="addMusicButtonLayer()">
+          <span>♪ Añadir botón de música a la tarjeta</span>
+        </button>
+
+        <p *ngIf="!eventMusicUrl" style="color: var(--nw-text-3, #9e9083); font-size: 12px; margin-top: 12px;">
+          💡 Puedes configurar la música principal en los detalles del evento o la invitación para que esté disponible aquí.
+        </p>
+      </div>
+
+      <!-- CATEGORÍA 7: LISTA DE CAPAS -->
+      <div *ngIf="toolCategory === 'layers'" class="vpe-drawer-section">
+        <div class="vpe-drawer-header">
+          <h2>Capas ({{ activeSheet?.title || 'Hoja activa' }})</h2>
+          <span class="vpe-count-pill">{{ activeSheet?.layers?.length || 0 }}</span>
+        </div>
+
+        <div class="vpe-layers-scroll">
+          <div *ngFor="let l of activeSheet?.layers?.slice()?.reverse()"
+               class="vpe-layer-item"
+               [class.selected]="l.id === selectedLayerId"
+               (click)="selectLayer(l, $event)">
+            <div class="vpe-layer-info">
+              <span class="vpe-layer-icon" *ngIf="l.type === 'text'">T</span>
+              <span class="vpe-layer-icon" *ngIf="l.type === 'image'">🖼️</span>
+              <span class="vpe-layer-icon" *ngIf="l.type === 'shape'">▣</span>
+              <span class="vpe-layer-icon" *ngIf="l.type === 'button'">🔘</span>
+              <span class="vpe-layer-label">{{ l.name || l.text || l.type }}</span>
+            </div>
+            <div class="vpe-layer-actions">
+              <button type="button" class="vpe-layer-btn" (click)="toggleLockLayer(l); $event.stopPropagation()" [title]="l.locked ? 'Desbloquear' : 'Bloquear'">
+                <lucide-icon [name]="l.locked ? 'lock-keyhole' : 'key-round'" [strokeWidth]="1.6"></lucide-icon>
+              </button>
+              <button type="button" class="vpe-layer-btn" (click)="moveLayerZIndex(l.id, 'up'); $event.stopPropagation()" title="Subir nivel">▲</button>
+              <button type="button" class="vpe-layer-btn" (click)="moveLayerZIndex(l.id, 'down'); $event.stopPropagation()" title="Bajar nivel">▼</button>
+              <button type="button" class="vpe-layer-btn" (click)="duplicateLayer(l.id); $event.stopPropagation()" title="Duplicar">⧉</button>
+              <button type="button" class="vpe-layer-btn vpe-layer-del" (click)="deleteLayer(l.id); $event.stopPropagation()" title="Eliminar">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── CENTER: Canvas Viewport ── -->
+    <main class="vpe-viewport" (click)="deselectAll()">
+      <!-- Canva Floating Toolbar for Selected Layer -->
+      <div class="vpe-floating-toolbar" *ngIf="selectedLayer" (click)="$event.stopPropagation()">
+        <!-- Alineaciones rápidas -->
+        <div class="vpe-toolbar-group">
+          <button type="button" class="vpe-tool-action" (click)="alignSelectedLayer('left')" title="Alinear a la izquierda">⇠</button>
+          <button type="button" class="vpe-tool-action" (click)="alignSelectedLayer('center')" title="Centrar horizontalmente">↔</button>
+          <button type="button" class="vpe-tool-action" (click)="alignSelectedLayer('right')" title="Alinear a la derecha">⇢</button>
+          <button type="button" class="vpe-tool-action" (click)="alignSelectedLayer('top')" title="Alinear arriba">⇡</button>
+          <button type="button" class="vpe-tool-action" (click)="alignSelectedLayer('middle')" title="Centrar verticalmente">↕</button>
+          <button type="button" class="vpe-tool-action" (click)="alignSelectedLayer('bottom')" title="Alinear abajo">⇣</button>
+        </div>
+
+        <span class="vpe-toolbar-divider"></span>
+
+        <!-- Posición Z-Index -->
+        <div class="vpe-toolbar-group">
+          <button type="button" class="vpe-tool-action" (click)="bringToFront()" title="Traer al frente">⤒</button>
+          <button type="button" class="vpe-tool-action" (click)="sendToBack()" title="Enviar al fondo">⤓</button>
+        </div>
+
+        <span class="vpe-toolbar-divider"></span>
+
+        <!-- Copiar / Pegar / Bloquear / Duplicar / Eliminar -->
+        <div class="vpe-toolbar-group">
+          <button type="button" class="vpe-tool-action" (click)="copySelectedLayer()" title="Copiar capa (Ctrl+C)">
+            <lucide-icon name="copy" [strokeWidth]="1.8"></lucide-icon>
+          </button>
+          <button type="button" class="vpe-tool-action" *ngIf="clipboardLayer" (click)="pasteLayer()" title="Pegar capa (Ctrl+V)">
+            <lucide-icon name="clipboard-paste" [strokeWidth]="1.8"></lucide-icon>
+          </button>
+          <button type="button" class="vpe-tool-action" [class.active]="selectedLayer.locked" (click)="toggleLockSelectedLayer()" [title]="selectedLayer.locked ? 'Desbloquear capa' : 'Bloquear posición'">
+            <lucide-icon [name]="selectedLayer.locked ? 'lock-keyhole' : 'key-round'" [strokeWidth]="1.8"></lucide-icon>
+          </button>
+          <button type="button" class="vpe-tool-action" (click)="duplicateLayer(selectedLayer.id)" title="Duplicar capa (Ctrl+D)">⧉</button>
+          <button type="button" class="vpe-tool-action vpe-danger" (click)="deleteLayer(selectedLayer.id)" title="Eliminar capa (Supr)">✕</button>
+        </div>
+      </div>
+
+      <div class="vpe-canvas-stage" [style.transform]="'scale(' + canvasZoom + ')'">
+        <ng-container *ngFor="let sheet of (viewMode === 'single' ? [activeSheet] : design.sections); let idx = index">
+          <div *ngIf="sheet" class="vpe-sheet-card-wrap">
+            <!-- Badge de tamaño y título sobre la tarjeta (sin recortes) -->
+            <div class="vpe-sheet-header-badge">
+              <span class="badge-title">{{ sheet.title || ('Hoja ' + (idx + 1)) }}</span>
+              <span class="badge-size">{{ getSheetWidth(sheet) }} × {{ getSheetHeight(sheet) }} px</span>
+            </div>
+
+            <div class="vpe-card-sheet"
+                 [class.active-sheet]="activeSheetIndex === (viewMode === 'single' ? activeSheetIndex : idx)"
+                 [style.width.px]="getSheetWidth(sheet)"
+                 [style.height.px]="getSheetHeight(sheet)"
+                 [style.background]="sheet.background?.color || '#0b1426'"
+                 (dragover)="onCanvasDragOver($event)"
+                 (drop)="onCanvasDrop($event, sheet)"
+                 (click)="selectSheet(viewMode === 'single' ? activeSheetIndex : idx)">
+
+            <!-- Capas de la hoja -->
+            <ng-container *ngFor="let layer of sheet.layers">
+              <div class="vpe-layer"
+                   *ngIf="!layer.hidden"
+                   [class.selected]="layer.id === selectedLayerId"
+                   [class.locked]="layer.locked"
+                   [style.left.%]="layer.x"
+                   [style.top.%]="layer.y"
+                   [style.width.%]="layer.width"
+                   [style.height.%]="layer.height"
+                   [style.zIndex]="layer.zIndex || 1"
+                   [style.borderRadius.px]="layer.style?.borderRadius || 0"
+                   [style.backgroundColor]="layer.style?.backgroundColor || 'transparent'"
+                   [style.borderColor]="layer.style?.borderColor || 'transparent'"
+                   [style.borderWidth.px]="layer.style?.borderWidth || 0"
+                   [style.borderStyle]="layer.style?.borderWidth ? (layer.style?.borderStyle || 'solid') : 'none'"
+                   [style.boxShadow]="layer.style?.boxShadow || 'none'"
+                   [style.clipPath]="layer.style?.clipPath || 'none'"
+                   [style.opacity]="layer.style?.opacity ?? 1"
+                   (mousedown)="startLayerDrag(layer, $event)"
+                   (click)="selectLayer(layer, $event)">
+
+                <!-- Contenido Texto -->
+                <div *ngIf="layer.type === 'text'"
+                     style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box; overflow: hidden;"
+                     [style.justifyContent]="layer.style?.textAlign === 'left' ? 'flex-start' : (layer.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+                     [style.textAlign]="layer.style?.textAlign || 'center'"
+                     [style.color]="layer.style?.color || getDefaultTextColor(sheet)"
+                     [style.fontSize.px]="layer.style?.fontSize || 14"
+                     [style.fontWeight]="layer.style?.fontWeight || '400'"
+                     [style.fontFamily]="layer.style?.fontFamily || 'inherit'"
+                     [style.letterSpacing.px]="layer.style?.letterSpacing || 0"
+                     [style.lineHeight]="layer.style?.lineHeight || 1.3"
+                     [style.whiteSpace]="'pre-wrap'">
+                  {{ evalText(layer.text) }}
+                </div>
+
+                <!-- Contenido Imagen / QR -->
+                <img *ngIf="layer.type === 'image'"
+                     [src]="evalImageUrl(layer)"
+                     alt="Elemento"
+                     style="width: 100%; height: 100%; display: block; pointer-events: none;"
+                     [style.objectFit]="layer.style?.objectFit || 'contain'"
+                     [style.borderRadius.px]="layer.style?.borderRadius || 0">
+
+                <!-- Contenido Botón -->
+                <div *ngIf="layer.type === 'button'"
+                     style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+                     [style.color]="layer.style?.color || getDefaultTextColor(sheet)"
+                     [style.fontSize.px]="layer.style?.fontSize || 12"
+                     [style.fontWeight]="layer.style?.fontWeight || '600'">
+                  {{ layer.text || 'Botón' }}
+                </div>
+
+                <!-- Handles de redimensionamiento para capa seleccionada -->
+                <ng-container *ngIf="layer.id === selectedLayerId && !layer.locked">
+                  <div class="vpe-resize-handle vpe-resize-nw" (mousedown)="startLayerResize(layer, 'nw', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-ne" (mousedown)="startLayerResize(layer, 'ne', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-sw" (mousedown)="startLayerResize(layer, 'sw', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-se" (mousedown)="startLayerResize(layer, 'se', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-n" (mousedown)="startLayerResize(layer, 'n', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-s" (mousedown)="startLayerResize(layer, 's', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-w" (mousedown)="startLayerResize(layer, 'w', $event)"></div>
+                  <div class="vpe-resize-handle vpe-resize-e" (mousedown)="startLayerResize(layer, 'e', $event)"></div>
+                </ng-container>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+    </main>
+
+    <!-- ── RIGHT SIDEBAR: Inspector Panel ── -->
+    <aside class="ve-inspector vpe-inspector-panel">
+      <div class="vpe-inspector-segmented">
+        <button type="button" class="vpe-tab-btn" [class.active]="inspectorTab === 'layer'" (click)="inspectorTab = 'layer'">
+          Elemento
+        </button>
+        <button type="button" class="vpe-tab-btn" [class.active]="inspectorTab === 'sheet'" (click)="inspectorTab = 'sheet'">
+          Fondo de Hoja
+        </button>
+      </div>
+
+      <!-- Tab 1: Inspector de Elemento Seleccionado -->
+      <div *ngIf="inspectorTab === 'layer'" class="vpe-inspector-body">
+        <div *ngIf="!selectedLayer" class="vpe-empty-inspector">
+          <p class="vpe-empty-icon">👆</p>
+          <strong>Selecciona un elemento</strong>
+          <p>Toca cualquier elemento del pase para personalizar su texto, colores, tipografía y estilo.</p>
+        </div>
+
+        <div *ngIf="selectedLayer" class="vpe-form-container">
+          <!-- Nombre y tipo -->
+          <div class="vpe-form-row">
+            <label class="vpe-form-label">Nombre del Elemento</label>
+            <input type="text" class="vpe-input" [(ngModel)]="selectedLayer.name" (ngModelChange)="autosaveState = 'Cambios pendientes'">
+          </div>
+
+          <!-- Si es texto: Contenido y Tipografía -->
+          <ng-container *ngIf="selectedLayer.type === 'text'">
+            <div class="vpe-form-row">
+              <label class="vpe-form-label">Texto / Etiqueta</label>
+              <textarea class="vpe-textarea" [(ngModel)]="selectedLayer.text" (ngModelChange)="autosaveState = 'Cambios pendientes'"></textarea>
+            </div>
+
+            <div class="vpe-form-row">
+              <label class="vpe-form-label">Tipografía</label>
+              <select class="vpe-select" [ngModel]="selectedLayer.style?.fontFamily" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.fontFamily = $event; autosaveState = 'Cambios pendientes'">
+                <optgroup *ngFor="let group of fontGroups" [label]="group.category">
+                  <option *ngFor="let f of group.fonts" [value]="f.value" [style.fontFamily]="f.value">{{ f.label }}</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="vpe-form-row vpe-2col">
+              <div>
+                <label class="vpe-form-label">Tamaño px</label>
+                <input type="number" min="8" max="120" class="vpe-input" [ngModel]="selectedLayer.style?.fontSize" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.fontSize = +$event; autosaveState = 'Cambios pendientes'">
+              </div>
+              <div>
+                <label class="vpe-form-label">Grosor</label>
+                <select class="vpe-select" [ngModel]="selectedLayer.style?.fontWeight" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.fontWeight = $event; autosaveState = 'Cambios pendientes'">
+                  <option value="300">Light (300)</option>
+                  <option value="400">Regular (400)</option>
+                  <option value="600">Semibold (600)</option>
+                  <option value="700">Bold (700)</option>
+                  <option value="800">Extra Bold (800)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="vpe-form-row vpe-2col">
+              <div>
+                <label class="vpe-form-label">Color de Texto</label>
+                <div class="vpe-color-picker-wrap">
+                  <input type="color" class="vpe-color-preview" [ngModel]="selectedLayer.style?.color || getDefaultTextColor(activeSheet)" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.color = $event; autosaveState = 'Cambios pendientes'">
+                  <input type="text" class="vpe-input" style="font-size: 11px;" [ngModel]="selectedLayer.style?.color || getDefaultTextColor(activeSheet)" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.color = $event; autosaveState = 'Cambios pendientes'">
+                </div>
+              </div>
+              <div>
+                <label class="vpe-form-label">Alineación</label>
+                <select class="vpe-select" [ngModel]="selectedLayer.style?.textAlign || 'center'" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.textAlign = $event; autosaveState = 'Cambios pendientes'">
+                  <option value="left">Izquierda</option>
+                  <option value="center">Centro</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Invertir Color / Auto-contraste rápido -->
+            <div class="vpe-form-row" style="margin-top: 2px;">
+              <button type="button" class="secondary" style="font-size: 11px; padding: 4px 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;" (click)="invertSelectedLayerColor()" title="Alternar color del texto entre blanco y negro según el fondo">
+                <span>🌓 Invertir color (Blanco / Negro)</span>
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Si es Imagen / QR -->
+          <ng-container *ngIf="selectedLayer.type === 'image'">
+            <div class="vpe-form-row" *ngIf="selectedLayer.binding !== 'pass.qrCode'">
+              <label class="vpe-form-label">URL de la Imagen</label>
+              <input type="text" class="vpe-input" [(ngModel)]="selectedLayer.url" (ngModelChange)="autosaveState = 'Cambios pendientes'">
+            </div>
+            <div class="vpe-form-row vpe-2col">
+              <div>
+                <label class="vpe-form-label">Ajuste</label>
+                <select class="vpe-select" [ngModel]="selectedLayer.style?.objectFit || 'contain'" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.objectFit = $event; autosaveState = 'Cambios pendientes'">
+                  <option value="contain">Contener</option>
+                  <option value="cover">Cubrir</option>
+                </select>
+              </div>
+              <div>
+                <label class="vpe-form-label">Radio px</label>
+                <input type="number" min="0" max="100" class="vpe-input" [ngModel]="selectedLayer.style?.borderRadius || 0" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.borderRadius = +$event; autosaveState = 'Cambios pendientes'">
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Si es Forma / Contenedor -->
+          <ng-container *ngIf="selectedLayer.type === 'shape'">
+            <div class="vpe-form-row">
+              <label class="vpe-form-label">Color de Fondo</label>
+              <input type="text" class="vpe-input" placeholder="ej. #ffffff o rgba(255,255,255,0.1)" [ngModel]="selectedLayer.style?.backgroundColor" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.backgroundColor = $event; autosaveState = 'Cambios pendientes'">
+            </div>
+
+            <div class="vpe-form-row vpe-2col">
+              <div>
+                <label class="vpe-form-label">Borde px</label>
+                <input type="number" min="0" max="20" class="vpe-input" [ngModel]="selectedLayer.style?.borderWidth || 0" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.borderWidth = +$event; autosaveState = 'Cambios pendientes'">
+              </div>
+              <div>
+                <label class="vpe-form-label">Color Borde</label>
+                <input type="color" class="vpe-color-preview" [ngModel]="selectedLayer.style?.borderColor || '#c9a87c'" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.borderColor = $event; autosaveState = 'Cambios pendientes'">
+              </div>
+            </div>
+
+            <div class="vpe-form-row">
+              <label class="vpe-form-label">Radio de Esquinas px</label>
+              <input type="number" min="0" max="100" class="vpe-input" [ngModel]="selectedLayer.style?.borderRadius || 0" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.borderRadius = +$event; autosaveState = 'Cambios pendientes'">
+            </div>
+          </ng-container>
+
+          <!-- Opacidad & Rotación -->
+          <div class="vpe-form-row vpe-2col">
+            <div>
+              <label class="vpe-form-label">Opacidad</label>
+              <input type="range" min="0" max="1" step="0.05" class="vpe-range" [ngModel]="selectedLayer.style?.opacity ?? 1" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.opacity = +$event; autosaveState = 'Cambios pendientes'">
+            </div>
+            <div>
+              <label class="vpe-form-label">Sombra</label>
+              <select class="vpe-select" [ngModel]="selectedLayer.style?.boxShadow || 'none'" (ngModelChange)="selectedLayer.style = selectedLayer.style || {}; selectedLayer.style.boxShadow = $event; autosaveState = 'Cambios pendientes'">
+                <option value="none">Sin sombra</option>
+                <option value="0 4px 12px rgba(0,0,0,0.15)">Suave</option>
+                <option value="0 8px 24px rgba(0,0,0,0.3)">Media</option>
+                <option value="0 16px 36px rgba(0,0,0,0.45)">Pronunciada</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Posición y dimensiones numéricas -->
+          <div class="vpe-form-row">
+            <label class="vpe-form-label">Geometría (%)</label>
+            <div class="vpe-4col">
+              <div><small class="vpe-geo-tag">X</small><input type="number" class="vpe-input" [(ngModel)]="selectedLayer.x" (ngModelChange)="autosaveState = 'Cambios pendientes'"></div>
+              <div><small class="vpe-geo-tag">Y</small><input type="number" class="vpe-input" [(ngModel)]="selectedLayer.y" (ngModelChange)="autosaveState = 'Cambios pendientes'"></div>
+              <div><small class="vpe-geo-tag">W</small><input type="number" class="vpe-input" [(ngModel)]="selectedLayer.width" (ngModelChange)="autosaveState = 'Cambios pendientes'"></div>
+              <div><small class="vpe-geo-tag">H</small><input type="number" class="vpe-input" [(ngModel)]="selectedLayer.height" (ngModelChange)="autosaveState = 'Cambios pendientes'"></div>
+            </div>
+          </div>
+
+          <div class="vpe-inspector-actions">
+            <button type="button" class="secondary" style="flex:1" (click)="duplicateLayer(selectedLayer.id)">⧉ Duplicar</button>
+            <button type="button" class="secondary vpe-danger-btn" (click)="deleteLayer(selectedLayer.id)">✕ Eliminar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Fondo y Ajustes de Hoja -->
+      <div *ngIf="inspectorTab === 'sheet'" class="vpe-inspector-body">
+        <div class="vpe-form-container">
+          <div class="vpe-form-row">
+            <label class="vpe-form-label">Título de la Hoja</label>
+            <input type="text" class="vpe-input" *ngIf="activeSheet" [(ngModel)]="activeSheet.title" (ngModelChange)="autosaveState = 'Cambios pendientes'">
+          </div>
+
+          <div class="vpe-form-row" *ngIf="activeSheet">
+            <label class="vpe-form-label">Color de Fondo de la Tarjeta</label>
+            <div class="vpe-color-picker-wrap">
+              <input type="color" class="vpe-color-preview" [ngModel]="activeSheet.background?.color || '#0b1426'" (ngModelChange)="setSheetBackgroundColor($event)">
+              <input type="text" class="vpe-input" [ngModel]="activeSheet.background?.color || '#0b1426'" (ngModelChange)="setSheetBackgroundColor($event)">
+            </div>
+          </div>
+
+          <!-- Formato y Dimensiones independientes de esta Hoja -->
+          <div class="vpe-form-row" *ngIf="activeSheet" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--nw-border, #eadecc);">
+            <label class="vpe-form-label">Formato de esta Hoja</label>
+            <select class="vpe-select" [ngModel]="activeSheetPreset" (ngModelChange)="setCanvasPreset($event)">
+              <option *ngFor="let opt of passCanvasPresets" [value]="opt.preset">{{ opt.icon }} {{ opt.label }}</option>
+            </select>
+          </div>
+
+          <div class="vpe-form-row" *ngIf="activeSheet">
+            <label class="vpe-form-label">Dimensiones de esta Hoja (px)</label>
+            <div class="vpe-2col">
+              <div>
+                <span style="font-size: 11px; color: var(--nw-text-3, #9e9083); font-weight: 500;">Ancho</span>
+                <input type="number" min="100" max="2500" class="vpe-input" [ngModel]="activeSheetWidth" (ngModelChange)="setCustomWidth($event)" placeholder="Ancho">
+              </div>
+              <div>
+                <span style="font-size: 11px; color: var(--nw-text-3, #9e9083); font-weight: 500;">Alto</span>
+                <input type="number" min="100" max="2500" class="vpe-input" [ngModel]="activeSheetHeight" (ngModelChange)="setCustomHeight($event)" placeholder="Alto">
+              </div>
+            </div>
+            <button type="button" class="secondary" style="margin-top: 8px; width: 100%; font-size: 12px; padding: 6px 10px;" (click)="applyActiveSheetSizeToAll()" title="Aplicar el tamaño y formato de esta tarjeta a todas las demás hojas">
+              📐 Aplicar este tamaño a todas las hojas
+            </button>
+          </div>
+
+          <!-- Acciones de Hoja en el Inspector -->
+          <div class="vpe-form-row" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--nw-border, #eadecc);">
+            <label class="vpe-form-label">Acciones de Hoja</label>
+            <div class="vpe-2col">
+              <button type="button" class="secondary" (click)="duplicateSheet(activeSheetIndex)" title="Duplicar esta hoja">
+                ⧉ Duplicar
+              </button>
+              <button type="button" class="secondary vpe-danger-btn" [disabled]="design.sections.length <= 1" (click)="deleteSheet(activeSheetIndex)" title="Eliminar esta hoja">
+                ✕ Eliminar
+              </button>
+            </div>
+            <small *ngIf="design.sections.length <= 1" style="color: var(--nw-text-3, #9e9083); font-size: 11px; margin-top: 6px; display: block;">
+              El pase debe contener al menos una cara o tarjeta.
+            </small>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ════════ MODAL VISTA PREVIA COMPLETA ════════ -->
+  <div class="vpe-modal-overlay" *ngIf="previewModalOpen" (click)="previewModalOpen = false">
+    <div class="vpe-modal-content" (click)="$event.stopPropagation()">
+      <div class="vpe-modal-header">
+        <div class="vpe-modal-title">
+          <h3>👁️ Vista Previa del Pase VIP</h3>
+          <p>Visualización del pase con los datos del invitado simulado</p>
+        </div>
+        <button type="button" class="icon-button" (click)="previewModalOpen = false">✕</button>
+      </div>
+      <div class="vpe-modal-body">
+        <div class="vpe-preview-cards-wrap">
+          <div *ngFor="let s of design.sections; let idx = index"
+               [style.width.px]="getSheetWidth(s)"
+               [style.height.px]="getSheetHeight(s)"
+               [style.background]="s.background?.color || '#0b1426'"
+               class="vpe-card-sheet"
+               style="position: relative;">
+            <div class="vpe-sheet-header-badge">
+              <span class="badge-title">{{ s.title || ('Hoja ' + (idx + 1)) }}</span>
+              <span class="badge-size">{{ getSheetWidth(s) }} × {{ getSheetHeight(s) }} px</span>
+            </div>
+            <div *ngFor="let l of s.layers"
+                 [style.position]="'absolute'"
+                 [style.left.%]="l.x"
+                 [style.top.%]="l.y"
+                 [style.width.%]="l.width"
+                 [style.height.%]="l.height"
+                 [style.zIndex]="l.zIndex || 1"
+                 [style.borderRadius.px]="l.style?.borderRadius || 0"
+                 [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
+                 [style.borderColor]="l.style?.borderColor || 'transparent'"
+                 [style.borderWidth.px]="l.style?.borderWidth || 0"
+                 [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
+                 [style.boxShadow]="l.style?.boxShadow || 'none'">
+              <div *ngIf="l.type === 'text'"
+                   style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
+                   [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+                   [style.textAlign]="l.style?.textAlign || 'center'"
+                   [style.color]="l.style?.color || getDefaultTextColor(s)"
+                   [style.fontSize.px]="l.style?.fontSize || 14"
+                   [style.fontWeight]="l.style?.fontWeight || '400'"
+                   [style.fontFamily]="l.style?.fontFamily || 'inherit'"
+                   [style.letterSpacing.px]="l.style?.letterSpacing || 0"
+                   [style.lineHeight]="l.style?.lineHeight || 1.3">
+                {{ evalText(l.text) }}
+              </div>
+              <img *ngIf="l.type === 'image'"
+                   [src]="evalImageUrl(l)"
+                   alt="Elemento"
+                   style="width: 100%; height: 100%; display: block;"
+                   [style.objectFit]="l.style?.objectFit || 'contain'"
+                   [style.borderRadius.px]="l.style?.borderRadius || 0">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vpe-modal-footer">
+        <button type="button" class="secondary" (click)="exportPass('png')">📥 Descargar Imagen</button>
+        <button type="button" class="secondary" (click)="previewModalOpen = false">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Estado de carga -->
+<div *ngIf="loading" class="vpe-loading-screen">
+  <div class="vpe-loading-card">
+    <div class="vpe-loading-spinner"></div>
+    <strong>Preparando Editor de Pases VIP...</strong>
+    <span>Cargando recursos, tipografías y herramientas estilo Canva</span>
+  </div>
+</div>
+
+<!-- Toast flotante de notificaciones y alertas -->
+<div class="vpe-toast" *ngIf="message" [class.is-error]="message.startsWith('⚠️')">
+  <span class="vpe-toast-icon">{{ message.startsWith('⚠️') ? '⚠️' : '✨' }}</span>
+  <span class="vpe-toast-text">{{ message }}</span>
+</div>
