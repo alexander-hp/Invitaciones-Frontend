@@ -60,44 +60,80 @@
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           </svg>
-          Importar / Exportar CSV <span style="font-size: 10px;">▼</span>
+          Importar / Exportar <span style="font-size: 10px;">▼</span>
         </button>
 
         <div *ngIf="showImpExpMenu" (click)="$event.stopPropagation()"
-          style="position: absolute; top: calc(100% + 6px); right: 0; min-width: 190px; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); box-shadow: var(--nw-shadow-lg); z-index: 100; overflow: hidden; padding: 4px 0;">
+          style="position: absolute; top: calc(100% + 6px); right: 0; min-width: 240px; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); box-shadow: var(--nw-shadow-lg); z-index: 100; overflow: hidden; padding: 4px 0;">
 
           <label
             style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 13px; color: var(--nw-text, #2e2621); cursor: pointer; transition: background 0.15s; margin: 0;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-2, #6e6157);">
+              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Importar CSV
-            <input type="file" accept=".csv" (change)="selectImportFile($event); showImpExpMenu = false;"
+            Subir archivo (Excel / CSV)
+            <input type="file" accept=".xlsx, .xls, .csv" (change)="selectImportFile($event); showImpExpMenu = false;"
               style="display:none;">
           </label>
 
-          <button type="button" (click)="downloadTemplate(); showImpExpMenu = false;"
-            style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; font-size: 13px; color: var(--nw-text, #2e2621); background: none; border: none; cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Descargar plantilla CSV
+          <div style="height: 1px; background: var(--nw-border, #eadecc); margin: 4px 0;"></div>
+
+          <button type="button" (click)="downloadExcelTemplate(); showImpExpMenu = false;"
+            style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 9px 14px; font-size: 13px; color: var(--nw-text, #2e2621); background: none; border: none; cursor: pointer;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #16a34a;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Descargar plantilla Excel
+            </span>
+            <span style="font-size: 10px; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 600;">.xlsx</span>
+          </button>
+
+          <button type="button" (click)="downloadCsvTemplate(); showImpExpMenu = false;"
+            style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 7px 14px; font-size: 12px; color: var(--nw-text-2, #6e6157); background: none; border: none; cursor: pointer;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Descargar plantilla simple CSV
+            </span>
+            <span style="font-size: 10px; color: var(--nw-text-3, #9e9083);">.csv</span>
+          </button>
+
+          <div style="height: 1px; background: var(--nw-border, #eadecc); margin: 4px 0;"></div>
+
+          <button type="button" (click)="exportGuestsExcel(); showImpExpMenu = false;" [disabled]="exportingGuests"
+            style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 9px 14px; font-size: 13px; color: var(--nw-text, #2e2621); background: none; border: none; cursor: pointer; transition: background 0.15s;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #16a34a;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Exportar lista a Excel
+            </span>
+            <span style="font-size: 10px; background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 600;">.xlsx</span>
           </button>
 
           <button type="button" (click)="exportGuests(); showImpExpMenu = false;" [disabled]="exportingGuests"
-            style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 14px; font-size: 13px; color: var(--nw-text, #2e2621); background: none; border: none; cursor: pointer; transition: background 0.15s;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-2, #6e6157);">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            Exportar CSV
+            style="display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; padding: 7px 14px; font-size: 12px; color: var(--nw-text-2, #6e6157); background: none; border: none; cursor: pointer; transition: background 0.15s;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-2, #6e6157);">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Exportar lista a CSV
+            </span>
+            <span style="font-size: 10px; color: var(--nw-text-3, #9e9083);">.csv</span>
           </button>
         </div>
       </div>
@@ -221,34 +257,47 @@
             español o inglés:
           </p>
           <div
-            style="font-size: 12px; color: var(--nw-text-2); background: var(--nw-surface-2, #f5f1ea); padding: 12px 14px; border-radius: var(--nw-radius-sm, 8px); margin-bottom: 16px; border: 1px solid var(--nw-border, #eadecc); line-height: 1.5; max-height: 165px; overflow-y: auto;">
-            <strong style="color: var(--nw-text); font-size: 12px; display: block; margin-bottom: 6px;">Nombres de
-              columnas aceptados:</strong>
+            style="font-size: 12px; color: var(--nw-text-2); background: var(--nw-surface-2, #f5f1ea); padding: 12px 14px; border-radius: var(--nw-radius-sm, 8px); margin-bottom: 16px; border: 1px solid var(--nw-border, #eadecc); line-height: 1.5; max-height: 175px; overflow-y: auto;">
+            <strong style="color: var(--nw-text); font-size: 12px; display: block; margin-bottom: 6px;">Columnas de la plantilla:</strong>
             <ul style="margin: 0; padding-left: 16px; list-style-type: disc;">
               <li><strong>nombre</strong> <span
-                  style="color:var(--nw-accent); font-size:11px; font-weight:600;">(requerido)</span>: Nombre completo
-                del invitado.</li>
-              <li><strong>telefono</strong>: WhatsApp con código de país (ej: <code>+525512345678</code>).</li>
-              <li><strong>correo</strong>: Correo electrónico del invitado.</li>
-              <li><strong>grupo</strong>: Categoría o grupo (ej: <code>Familia</code>, <code>Amigos</code>).</li>
-              <li><strong>acompanantes</strong>: Número de pases extra (ej: <code>0</code>, <code>1</code>,
-                <code>2</code>).
-              </li>
-              <li><strong>mesa</strong>: Nombre de la mesa asignada (ej: <code>Mesa 1</code>).</li>
+                  style="color:#b91c1c; font-size:11px; font-weight:700;">(Obligatorio)</span>: Nombre completo del invitado o familia.</li>
+              <li><strong>telefono</strong> <span style="color:#059669; font-size:11px; font-weight:600;">(Opcional)</span>: WhatsApp con código internacional (ej: <code>+525512345678</code>).</li>
+              <li><strong>correo</strong> <span style="color:#059669; font-size:11px; font-weight:600;">(Opcional)</span>: Correo electrónico del invitado.</li>
+              <li><strong>grupo</strong> <span style="color:#059669; font-size:11px; font-weight:600;">(Opcional - menú desplegable)</span>: Ej: <code>Familia Novio</code>, <code>Familia Novia</code>, <code>Amigos</code>.</li>
+              <li><strong>acompanantes</strong> <span style="color:#059669; font-size:11px; font-weight:600;">(Opcional - desplegable)</span>: Pases adicionales (<code>0</code> a <code>10</code>).</li>
+              <li><strong>mesa</strong> <span style="color:#059669; font-size:11px; font-weight:600;">(Opcional - desplegable)</span>: Mesa asignada.</li>
             </ul>
           </div>
         </div>
         <div style="display: flex; gap: 8px; flex-direction: column;">
-          <input #csvInput type="file" accept=".csv" (change)="selectImportFile($event)" style="display:none;">
-          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="downloadTemplate()"
-            style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; font-size: 12px; color: var(--nw-accent);">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          <input #csvInput type="file" accept=".xlsx, .xls, .csv" (change)="selectImportFile($event)" style="display:none;">
+          <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="downloadExcelTemplate()" [disabled]="downloadingTemplate"
+            style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; font-size: 13px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 5 17 10"></polyline>
-              <line x1="12" y1="5" x2="12" y2="17"></line>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Descargar plantilla (.csv)
+            {{ downloadingTemplate ? 'Generando...' : 'Descargar plantilla Excel (.xlsx)' }}
+          </button>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: var(--nw-text-3);">
+            <span>✨ Con desplegables y formato</span>
+            <button type="button" (click)="downloadCsvTemplate()"
+              style="background: none; border: none; color: var(--nw-text-2); text-decoration: underline; cursor: pointer; padding: 0; font-size: 11px;">
+              o descargar CSV
+            </button>
+          </div>
+          <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="csvInput.click()" [disabled]="importing"
+            style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; font-size: 13px; margin-top: 4px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            {{ importing ? 'Importando...' : 'Subir archivo completado' }}
           </button>
         </div>
       </div>

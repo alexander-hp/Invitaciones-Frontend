@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
+import { GuestExcelService } from '../../../../core/guest-excel.service';
 import {
   GuestModel, GuestPayload, EventTableModel, InvitationModel
 } from '../../../../core/models';
@@ -90,15 +91,17 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   companionList: Array<{ name: string }> = [];
 
   unifiedGuestOptions = [
-    'Familia del Novio / Anfitrión',
-    'Familia de la Novia / Anfitriona',
-    'Amigos Cercanos',
-    'Padrinos / Madrinas',
-    'Damas de Honor / Best Men',
-    'Anfitriones / Novios',
-    'Compañeros de Trabajo',
-    'Invitados VIP',
-    'Staff / Proveedores'
+    'Familia Novio',
+    'Familia Novia',
+    'Familiares',
+    'Amigos Novio',
+    'Amigos Novia',
+    'Amigos',
+    'Padrinos',
+    'Damas de Honor',
+    'Trabajo',
+    'VIP',
+    'General'
   ];
 
   roleOptions: Array<{ value: string; label: string }> = [
@@ -160,10 +163,12 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
   checkInCode = '';
   checkInLink = '';
   showScanner = false;
+  downloadingTemplate = false;
 
   constructor(
     private apiService: ApiService,
-    private confirmDialogService: ConfirmDialogService
+    private confirmDialogService: ConfirmDialogService,
+    private guestExcelService: GuestExcelService
   ) {}
 
   ngOnInit(): void {
@@ -701,6 +706,7 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     if (input.files && input.files[0]) {
       this.importFile = input.files[0];
       this.processImport();
+      input.value = '';
     }
   }
 
@@ -725,10 +731,17 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     }
 
     this.apiService.importGuests(this.eventId, fileToUpload).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.importing = false;
         this.importFile = undefined;
-        this.showSuccess(`¡Importación completada! Se procesaron los invitados correctamente.`);
+        const count = res?.created ?? res?.imported ?? 0;
+        if (count > 0) {
+          this.showSuccess(`¡Importación completada! Se agregaron ${count} ${count === 1 ? 'invitado' : 'invitados'} correctamente.`);
+        } else if (res?.skipped > 0) {
+          this.showError(`No se agregaron nuevos invitados: ${res.skipped} contacto(s) ya existían en la lista.`);
+        } else {
+          this.showError('No se encontró ningún invitado para importar en el archivo.');
+        }
         this.loadGuests();
         this.guestsUpdated.emit();
       },
@@ -759,7 +772,39 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     });
   }
 
-  downloadTemplate(): void {
+  async exportGuestsExcel(): Promise<void> {
+    try {
+      this.exportingGuests = true;
+      const blob = await this.guestExcelService.exportGuestsToExcel(this.guests);
+      this.guestExcelService.downloadBlob(blob, `invitados-evento-${this.eventId}.xlsx`);
+      this.showSuccess('Lista de invitados exportada a Excel exitosamente.');
+    } catch (e) {
+      console.error('Error al exportar a Excel:', e);
+      this.showError('Error al exportar la lista de invitados a Excel.');
+    } finally {
+      this.exportingGuests = false;
+    }
+  }
+
+  async downloadExcelTemplate(): Promise<void> {
+    try {
+      this.downloadingTemplate = true;
+      const tableNames = (this.tables || []).map(t => t.name).filter(Boolean);
+      const blob = await this.guestExcelService.generateTemplate({
+        groups: this.availableGroupOptions,
+        tables: tableNames
+      });
+      this.guestExcelService.downloadBlob(blob, 'plantilla_invitados.xlsx');
+      this.showSuccess('Plantilla Excel descargada con listas desplegables y formato profesional.');
+    } catch (e) {
+      console.error('Error al generar plantilla Excel:', e);
+      this.showError('No se pudo generar la plantilla Excel.');
+    } finally {
+      this.downloadingTemplate = false;
+    }
+  }
+
+  downloadCsvTemplate(): void {
     const headers = ['nombre', 'telefono', 'correo', 'grupo', 'acompanantes', 'mesa'];
     const csvContent = "\uFEFF" + headers.join(',') + '\n';
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -771,6 +816,10 @@ export class EventGuestsTabComponent implements OnInit, OnChanges {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  downloadTemplate(): void {
+    this.downloadExcelTemplate();
   }
 
   openScanner(): void { this.showScanner = true; }
