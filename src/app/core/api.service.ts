@@ -94,6 +94,25 @@ export class ApiService {
     return this.http.get<{ templates: VisualDesignTemplateModel[] }>(`${this.apiUrl}/visual-design-templates`);
   }
 
+  listCatalogVisualDesignTemplates(params?: { eventType?: string; search?: string; contentFilter?: string; sort?: string }): Observable<{ templates: VisualDesignTemplateModel[]; total: number; creatorRewardPolicy?: { percent: number; description: string } }> {
+    let httpParams = new HttpParams();
+    if (params?.eventType) httpParams = httpParams.set('eventType', params.eventType);
+    if (params?.search) httpParams = httpParams.set('search', params.search);
+    if (params?.contentFilter) httpParams = httpParams.set('contentFilter', params.contentFilter);
+    if (params?.sort) httpParams = httpParams.set('sort', params.sort);
+    return this.http.get<{ templates: VisualDesignTemplateModel[]; total: number; creatorRewardPolicy?: { percent: number; description: string } }>(
+      `${this.apiUrl}/visual-design-templates/catalog`,
+      { params: httpParams }
+    );
+  }
+
+  useVisualDesignTemplate(id: string): Observable<{ template: VisualDesignTemplateModel; rewardNotice?: string }> {
+    return this.http.post<{ template: VisualDesignTemplateModel; rewardNotice?: string }>(
+      `${this.apiUrl}/visual-design-templates/${id}/use`,
+      {}
+    );
+  }
+
   createVisualDesignTemplate(payload: VisualDesignTemplatePayload): Observable<{ template: VisualDesignTemplateModel }> {
     return this.http.post<{ template: VisualDesignTemplateModel }>(`${this.apiUrl}/visual-design-templates`, payload);
   }

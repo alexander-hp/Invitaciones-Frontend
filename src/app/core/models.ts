@@ -626,21 +626,48 @@ export interface VisualInvitationDesign {
 
 export interface VisualDesignTemplateModel {
   _id: string;
+  owner?: string | any;
+  authorName?: string;
   name: string;
   eventType?: string;
+  category?: string;
   description?: string;
   previewImageUrl?: string;
+  thumbnailUrl?: string;
+  isPublic?: boolean;
+  status?: 'draft' | 'published' | 'featured';
+  authorRewardPercent?: number;
+  includesInvitation?: boolean;
+  includesPass?: boolean;
+  includesAccess?: boolean;
   design: VisualInvitationDesign;
+  passDesign?: any;
+  accessScreen?: VisualAccessScreenDesign | any;
+  tags?: string[];
+  usageCount?: number;
+  likesCount?: number;
+  tier?: 'free' | 'premium';
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface VisualDesignTemplatePayload {
   name: string;
+  authorName?: string;
   eventType?: string;
+  category?: string;
   description?: string;
   previewImageUrl?: string;
+  thumbnailUrl?: string;
+  isPublic?: boolean;
+  authorRewardPercent?: number;
+  includesInvitation?: boolean;
+  includesPass?: boolean;
+  includesAccess?: boolean;
   design: VisualInvitationDesign;
+  passDesign?: any;
+  accessScreen?: VisualAccessScreenDesign | any;
+  tags?: string[];
 }
 
 export interface VisualDesignRevisionModel {

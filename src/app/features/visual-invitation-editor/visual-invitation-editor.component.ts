@@ -8,7 +8,7 @@ import type { jsPDF as JsPdfDocument } from 'jspdf';
 import { ApiService } from '../../core/api.service';
 import {
   DedicationModel, EventModel, GiftRegistryItem, GuestAccessResponse, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
-  VisualDesignTemplateModel, VisualInvitationDesign,
+  VisualAccessScreenDesign, VisualDesignTemplateModel, VisualInvitationDesign,
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationLayerStyle,
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
 } from '../../core/models';
@@ -131,6 +131,35 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   librarySelectedKey = COMPLETE_DESIGN_PRESETS[0].key;
   libraryPreviewDesign?: VisualInvitationDesign;
   libraryPreviewInvitation?: InvitationModel;
+
+  // --- Ecosistema Canva-Style: Catálogo de Plantillas y Publicación Comunitaria ---
+  showPublishTemplateModal = false;
+  publishingTemplate = false;
+  publishTemplateForm = {
+    name: '',
+    eventType: 'boda',
+    authorName: '',
+    description: '',
+    tags: '',
+    includesInvitation: true,
+    includesPass: true,
+    includesAccess: true
+  };
+
+  catalogTemplates: VisualDesignTemplateModel[] = [];
+  loadingCatalogTemplates = false;
+  catalogSearch = '';
+  catalogContentFilter: 'all' | 'full' | 'pass' | 'access' = 'all';
+  catalogTab: 'community' | 'personal' = 'community';
+  catalogSort: 'popular' | 'newest' | 'name' = 'popular';
+  selectedCatalogTemplate?: VisualDesignTemplateModel;
+  catalogPreviewTab: 'invitation' | 'pass' | 'access' = 'invitation';
+  applyingCatalogTemplate = false;
+  catalogApplyOptions = {
+    invitation: true,
+    pass: true,
+    access: true
+  };
   autosaving = false;
   autosaveState = 'Guardado';
   editorCanvasMode: 'invitation' | 'access' | 'pass' = 'invitation';
@@ -142,14 +171,14 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   passPreviewModalOpen = false;
   simulateGuestPass = true;
   quickPassFields = [
-    { type: 'qr', label: 'Código QR', icon: '📱', sub: 'Acceso escaneable', token: 'guest.qrCode' },
-    { type: 'name', label: 'Nombre Invitado', icon: '👤', sub: '{{guest.name}}', token: 'guest.name' },
-    { type: 'table', label: 'Mesa y Asiento', icon: '🍽️', sub: 'Mesa y lugar', token: 'guest.table' },
-    { type: 'companions', label: 'Acompañantes', icon: '👥', sub: 'Lugares válidos', token: 'guest.companions' },
-    { type: 'code', label: 'Folio Check-in', icon: '🏷️', sub: 'Folio único', token: 'guest.checkInCode' },
-    { type: 'title', label: 'Nombre Evento', icon: '✨', sub: 'Título principal', token: 'event.title' },
-    { type: 'date', label: 'Fecha y Hora', icon: '📅', sub: 'Día del evento', token: 'event.date' },
-    { type: 'venue', label: 'Lugar / Salón', icon: '📍', sub: 'Ubicación recepción', token: 'event.venue' }
+    { type: 'qr', label: 'Código QR', lucideIcon: 'qr-code', sub: 'Acceso escaneable', token: 'guest.qrCode' },
+    { type: 'name', label: 'Nombre Invitado', lucideIcon: 'user-round', sub: '{{guest.name}}', token: 'guest.name' },
+    { type: 'table', label: 'Mesa y Asiento', lucideIcon: 'utensils', sub: 'Mesa y lugar', token: 'guest.table' },
+    { type: 'companions', label: 'Acompañantes', lucideIcon: 'users', sub: 'Lugares válidos', token: 'guest.companions' },
+    { type: 'code', label: 'Folio Check-in', lucideIcon: 'ticket', sub: 'Folio único', token: 'guest.checkInCode' },
+    { type: 'title', label: 'Nombre Evento', lucideIcon: 'sparkles', sub: 'Título principal', token: 'event.title' },
+    { type: 'date', label: 'Fecha y Hora', lucideIcon: 'calendar-days', sub: 'Día del evento', token: 'event.date' },
+    { type: 'venue', label: 'Lugar / Salón', lucideIcon: 'map-pin', sub: 'Ubicación recepción', token: 'event.venue' }
   ];
   accessSubTab: 'design' | 'nip' | 'registration' = 'design';
   accessSimView: 'login' | 'register' = 'login';
@@ -6724,6 +6753,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.applyCompleteDesign();
   }
 
+  get displayedCatalogTemplates(): VisualDesignTemplateModel[] {
+    const source = this.catalogTab === 'personal' ? this.personalTemplates : this.catalogTemplates;
+    if (!source || !source.length) return [];
+    return source.filter((tpl) => {
+      if (this.libraryCategory !== 'all' && tpl.eventType !== this.libraryCategory && (tpl as any).category !== this.libraryCategory) {
+        return false;
+      }
+      if (this.catalogContentFilter === 'full' && (!tpl.includesInvitation || !this.hasPassDesign(tpl) || !this.hasAccessScreen(tpl))) {
+        return false;
+      }
+      if (this.catalogContentFilter === 'pass' && !this.hasPassDesign(tpl)) {
+        return false;
+      }
+      if (this.catalogContentFilter === 'access' && !this.hasAccessScreen(tpl)) {
+        return false;
+      }
+      if (this.catalogSearch && this.catalogSearch.trim()) {
+        const q = this.catalogSearch.toLowerCase().trim();
+        const matchName = tpl.name?.toLowerCase().includes(q);
+        const matchDesc = tpl.description?.toLowerCase().includes(q);
+        const matchAuthor = tpl.authorName?.toLowerCase().includes(q);
+        const matchTags = Array.isArray(tpl.tags)
+          ? tpl.tags.some((t) => t.toLowerCase().includes(q))
+          : typeof tpl.tags === 'string' && (tpl.tags as string).toLowerCase().includes(q);
+        if (!matchName && !matchDesc && !matchAuthor && !matchTags) return false;
+      }
+      return true;
+    });
+  }
+
+  hasPassDesign(tpl?: VisualDesignTemplateModel): boolean {
+    if (!tpl) return false;
+    return !!(tpl.includesPass || tpl.passDesign?.sections?.length);
+  }
+
+  hasAccessScreen(tpl?: VisualDesignTemplateModel): boolean {
+    if (!tpl) return false;
+    return !!(tpl.includesAccess || tpl.accessScreen || tpl.design?.accessScreen);
+  }
+
   get filteredCompleteDesigns(): CompleteDesignPreset[] {
     return this.libraryCategory === 'all'
       ? this.builtInPresets
@@ -6735,16 +6804,123 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   openDesignLibrary(key?: string): void {
-    this.libraryCategory = 'all';
-    this.selectCompleteDesign(key || this.builtInPresets[0]?.key || this.recommendedCompleteDesignKey());
     this.showDesignLibrary = true;
+    this.catalogTab = 'community';
+    this.catalogContentFilter = 'all';
+    this.catalogPreviewTab = 'invitation';
+    if (key) this.librarySelectedKey = key;
+    this.loadCatalogTemplates();
+  }
+
+  loadCatalogTemplates(searchTerm?: string): void {
+    this.loadingCatalogTemplates = true;
+    const term = searchTerm !== undefined ? searchTerm : (this.catalogSearch || undefined);
+    this.api.listCatalogVisualDesignTemplates({
+      eventType: this.libraryCategory === 'all' ? undefined : this.libraryCategory,
+      search: term,
+      contentFilter: this.catalogContentFilter === 'all' ? undefined : this.catalogContentFilter,
+      sort: this.catalogSort
+    }).subscribe({
+      next: ({ templates }) => {
+        this.catalogTemplates = templates || [];
+        this.loadingCatalogTemplates = false;
+        if (this.catalogTemplates.length > 0) {
+          const match = this.librarySelectedKey
+            ? this.catalogTemplates.find((t) => t._id === this.librarySelectedKey || (t as any).key === this.librarySelectedKey)
+            : null;
+          this.selectCatalogTemplate(match || this.catalogTemplates[0]);
+        } else if (this.builtInPresets?.length) {
+          this.catalogTemplates = this.builtInPresets.map((p) => this.mapPresetToTemplate(p));
+          this.selectCatalogTemplate(this.catalogTemplates[0]);
+        }
+      },
+      error: () => {
+        this.loadingCatalogTemplates = false;
+        if (this.builtInPresets?.length) {
+          this.catalogTemplates = this.builtInPresets.map((p) => this.mapPresetToTemplate(p));
+          this.selectCatalogTemplate(this.catalogTemplates[0]);
+        }
+      }
+    });
+  }
+
+  getTemplateThumbnail(template?: VisualDesignTemplateModel): string {
+    if (!template) return 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+    if (template.thumbnailUrl) return template.thumbnailUrl;
+    if ((template as any).previewImageUrl) return (template as any).previewImageUrl;
+
+    const id = (template._id || '').toLowerCase();
+    const name = (template.name || '').toLowerCase();
+    const eventType = (template.eventType || (template as any).category || '').toLowerCase();
+
+    if (id.includes('seed-tpl-1') || id.includes('palazzo') || name.includes('orangerie') || name.includes('atelier')) {
+      return 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+    }
+    if (id.includes('seed-tpl-2') || id.includes('xv-burgundy') || name.includes('borgoña') || name.includes('xv')) {
+      return 'assets/templates/xv-burgundy/portrait.jpg';
+    }
+    if (id.includes('seed-tpl-3') || name.includes('celestial') || name.includes('bautizo') || eventType === 'bautizo') {
+      return 'assets/templates/palazzo-orangerie/villa-painting.png';
+    }
+    if (name.includes('alta costura') || id.includes('haute-couture')) {
+      return 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+    }
+
+    // Check design sections for first image background or layer
+    if (template.design?.sections) {
+      for (const section of template.design.sections) {
+        if (section.background?.imageUrl && !section.background.imageUrl.endsWith('.svg')) {
+          return section.background.imageUrl;
+        }
+        if (section.layers) {
+          const imgLayer = section.layers.find((l) => l.type === 'image' && l.url && !l.url.endsWith('.svg'));
+          if (imgLayer?.url) {
+            return imgLayer.url;
+          }
+        }
+      }
+    }
+
+    // Check design assets
+    if (template.design?.assets?.length) {
+      const imgAsset = template.design.assets.find((a) => a.type === 'image' && a.url && !a.url.endsWith('.svg'));
+      if (imgAsset?.url) return imgAsset.url;
+    }
+
+    if (eventType === 'xv') {
+      return 'assets/templates/xv-burgundy/portrait.jpg';
+    }
+    return 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+  }
+
+  private mapPresetToTemplate(preset: CompleteDesignPreset): VisualDesignTemplateModel {
+    let thumbnail = 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+    if (preset.key === 'xv-burgundy' || preset.category === 'xv') {
+      thumbnail = 'assets/templates/xv-burgundy/portrait.jpg';
+    } else if (preset.key === 'baptism' || preset.category === 'bautizo') {
+      thumbnail = 'assets/templates/palazzo-orangerie/villa-painting.png';
+    }
+    return {
+      _id: preset.key,
+      name: preset.name,
+      eventType: preset.category,
+      description: preset.description,
+      thumbnailUrl: thumbnail,
+      authorName: 'Velisse Studio · Oficial',
+      authorRewardPercent: 5,
+      isPublic: true,
+      includesInvitation: true,
+      includesPass: true,
+      includesAccess: true,
+      usageCount: 150,
+      tags: [preset.category, 'oficial', 'elegante'],
+      design: this.buildPreset(preset.key)
+    };
   }
 
   setLibraryCategory(category: string): void {
     this.libraryCategory = category;
-    if (!this.filteredCompleteDesigns.some((preset) => preset.key === this.librarySelectedKey)) {
-      this.selectCompleteDesign(this.filteredCompleteDesigns.find((preset) => preset.category === category)?.key || this.filteredCompleteDesigns[0].key);
-    }
+    this.loadCatalogTemplates();
   }
 
   closeDesignLibrary(): void {
@@ -6753,7 +6929,46 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.libraryPreviewInvitation = undefined;
   }
 
+  selectCatalogTemplate(template: VisualDesignTemplateModel): void {
+    if (!template || !this.invitation) return;
+    this.selectedCatalogTemplate = template;
+    this.librarySelectedKey = template._id;
+
+    this.catalogApplyOptions = {
+      invitation: !!(template.includesInvitation !== false && (template.design?.sections?.length || (template as any).sections?.length)),
+      pass: !!(template.includesPass || template.passDesign?.sections?.length),
+      access: !!(template.includesAccess || template.accessScreen || template.design?.accessScreen)
+    };
+
+    if (this.catalogPreviewTab === 'pass' && !this.catalogApplyOptions.pass) {
+      this.catalogPreviewTab = 'invitation';
+    } else if (this.catalogPreviewTab === 'access' && !this.catalogApplyOptions.access) {
+      this.catalogPreviewTab = 'invitation';
+    }
+
+    if (template.design) {
+      const candidate = this.clone(template.design);
+      const current = this.design;
+      try {
+        this.design = candidate;
+        this.normalizeModuleStyles();
+      } finally {
+        this.design = current;
+      }
+      this.libraryPreviewDesign = candidate;
+      this.libraryPreviewInvitation = {
+        ...this.invitation,
+        content: { ...(this.invitation.content || {}), visualDesign: candidate }
+      };
+    }
+  }
+
   selectCompleteDesign(key: string): void {
+    const fromCatalog = this.catalogTemplates.find((t) => t._id === key || (t as any).key === key);
+    if (fromCatalog) {
+      this.selectCatalogTemplate(fromCatalog);
+      return;
+    }
     if (!this.invitation) return;
     this.librarySelectedKey = key;
     const candidate = this.buildPreset(key);
@@ -6771,7 +6986,86 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
+  applySelectedCatalogTemplate(): void {
+    const template = this.selectedCatalogTemplate;
+    if (!template) {
+      this.applyCompleteDesign();
+      return;
+    }
+
+    const applyInv = this.catalogApplyOptions.invitation && !!template.design;
+    const applyPass = this.catalogApplyOptions.pass && !!template.passDesign;
+    const applyAcc = this.catalogApplyOptions.access && !!(template.accessScreen || template.design?.accessScreen);
+
+    if (!applyInv && !applyPass && !applyAcc) {
+      this.flash('Selecciona al menos una sección (Invitación, Pase VIP o Acceso) para aplicar.');
+      return;
+    }
+
+    if (!this.showOnboarding && !window.confirm(`¿Aplicar los componentes seleccionados de la plantilla "${template.name}"? Los datos de tus invitados y fechas se conservarán intactos.`)) {
+      return;
+    }
+
+    const wasOnboarding = this.showOnboarding;
+    this.recordHistory();
+
+    // 1. Apply Invitation design
+    if (applyInv && template.design) {
+      const assets = this.design?.assets || [];
+      const newDesign = this.regenerateIds(this.clone(template.design));
+      newDesign.active = true;
+      newDesign.assets = assets;
+      if (!applyAcc && this.design?.accessScreen) {
+        newDesign.accessScreen = this.design.accessScreen;
+      }
+      this.design = newDesign;
+      this.selectedSectionId = this.design.sections[0]?.id || '';
+      this.clearLayerSelection();
+    }
+
+    // 2. Apply Pass design
+    if (applyPass && template.passDesign) {
+      this.passDesign = this.regenerateIds(this.clone(template.passDesign));
+      this.activePassSheetIndex = 0;
+    }
+
+    // 3. Apply Access Screen design
+    if (applyAcc) {
+      const acc = template.accessScreen || template.design?.accessScreen;
+      if (acc) {
+        if (!this.design) {
+          this.design = { version: 1, active: true, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: this.clone(this.themePresets[0].theme), assets: [], sections: [] };
+        }
+        this.design.accessScreen = this.clone(acc);
+      }
+    }
+
+    // Register template usage on backend for author reward commission
+    if (template._id && !template._id.startsWith('seed-') && !COMPLETE_DESIGN_PRESETS.some((p) => p.key === template._id)) {
+      this.api.useVisualDesignTemplate(template._id).subscribe({
+        next: (res) => {
+          if (res.rewardNotice) {
+            console.log('[Template Reward Notice]:', res.rewardNotice);
+          }
+        },
+        error: () => {}
+      });
+    }
+
+    this.showOnboarding = false;
+    this.closeDesignLibrary();
+    this.autosaveState = 'Cambios pendientes';
+    this.maybeCloseMobileTools();
+    this.flash(`✓ Plantilla "${template.name}" aplicada correctamente.`);
+    if (wasOnboarding) setTimeout(() => this.save(), 0);
+    if (wasOnboarding) this.maybeStartTutorial();
+  }
+
   applyCompleteDesign(): void {
+    if (this.selectedCatalogTemplate) {
+      this.applySelectedCatalogTemplate();
+      return;
+    }
     if (!this.libraryPreviewDesign || (!this.showOnboarding && !this.confirmReplaceDesign())) return;
     const wasOnboarding = this.showOnboarding;
     this.recordHistory();
@@ -6787,6 +7081,85 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.maybeCloseMobileTools();
     if (wasOnboarding) setTimeout(() => this.save(), 0);
     if (wasOnboarding) this.maybeStartTutorial();
+  }
+
+  openPublishTemplateModal(): void {
+    const currentTitle = this.invitation?.content?.headline || this.event?.title || 'Mi Diseño Especial';
+    const defaultAuthor = (this.invitation as any)?.user?.name || (this.event as any)?.hostName || 'Diseñador Creativo';
+    this.publishTemplateForm = {
+      name: currentTitle,
+      eventType: this.event?.type || 'boda',
+      authorName: defaultAuthor,
+      description: `Diseño integral creado para ${currentTitle} con paleta coordinada y estilo exclusivo.`,
+      tags: `${this.event?.type || 'evento'}, elegante, 2026`,
+      includesInvitation: !!(this.design?.sections?.length),
+      includesPass: !!(this.passDesign?.sections?.length),
+      includesAccess: !!(this.design?.accessScreen)
+    };
+    this.showPublishTemplateModal = true;
+  }
+
+  closePublishTemplateModal(): void {
+    this.showPublishTemplateModal = false;
+  }
+
+  submitPublishTemplate(): void {
+    const f = this.publishTemplateForm;
+    if (!f.name || f.name.trim().length < 3) {
+      this.flash('Escribe un nombre de al menos 3 caracteres para tu plantilla.');
+      return;
+    }
+    if (!f.includesInvitation && !f.includesPass && !f.includesAccess) {
+      this.flash('Selecciona al menos una sección (Invitación, Pase VIP o Acceso) para incluir en la plantilla.');
+      return;
+    }
+
+    this.publishingTemplate = true;
+
+    const payload: any = {
+      name: f.name.trim(),
+      eventType: f.eventType || this.event?.type || 'otro',
+      authorName: f.authorName?.trim() || 'Diseñador Velisse',
+      description: f.description?.trim() || 'Diseño creado por la comunidad',
+      tags: f.tags ? f.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+      thumbnailUrl: this.getTemplateThumbnail({
+        design: this.design,
+        name: f.name,
+        eventType: f.eventType
+      } as any),
+      isPublic: true,
+      includesInvitation: f.includesInvitation,
+      includesPass: f.includesPass,
+      includesAccess: f.includesAccess
+    };
+
+    if (f.includesInvitation && this.design) {
+      payload.design = this.stripMongoMetadata(this.clone(this.design));
+    } else {
+      payload.design = { version: 1, active: true, mode: 'easy', presentationMode: 'continuous', responsiveMode: 'shared', theme: this.clone(this.design.theme), assets: [], sections: [] };
+    }
+
+    if (f.includesPass && this.passDesign) {
+      payload.passDesign = this.stripMongoMetadata(this.clone(this.passDesign));
+    }
+
+    if (f.includesAccess && this.design?.accessScreen) {
+      payload.accessScreen = this.clone(this.design.accessScreen);
+    }
+
+    this.api.createVisualDesignTemplate(payload).subscribe({
+      next: ({ template }) => {
+        this.publishingTemplate = false;
+        this.showPublishTemplateModal = false;
+        this.personalTemplates.unshift(template);
+        this.catalogTemplates.unshift(template);
+        this.flash('¡Felicidades! Tu plantilla ha sido publicada en el catálogo. Ganarás el 5% de comisión cuando otros usuarios la utilicen.');
+      },
+      error: (err) => {
+        this.publishingTemplate = false;
+        this.flash(err?.error?.message || 'No fue posible publicar la plantilla.');
+      }
+    });
   }
 
   private recommendedCompleteDesignKey(): string {
@@ -7374,10 +7747,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design = this.regenerateIds(this.clone(template.design));
     this.design.active = true;
     this.design.theme = this.design.theme || this.inferTheme();
+    if (template.passDesign) {
+      this.passDesign = this.regenerateIds(this.clone(template.passDesign));
+    }
+    if (template.accessScreen) {
+      this.design.accessScreen = this.clone(template.accessScreen);
+    }
     this.normalizeModuleStyles();
     this.selectedSectionId = this.design.sections[0]?.id || '';
     this.clearLayerSelection();
     this.maybeCloseMobileTools();
+    this.flash(`✓ Plantilla "${template.name}" cargada.`);
   }
 
   saveAsTemplate(): void {
@@ -7388,7 +7768,19 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       name,
       eventType: this.event?.type || 'otro',
       description: `Diseño creado desde ${this.invitation?.content?.headline || this.event?.title || 'una invitación'}`,
-      design: this.stripMongoMetadata(this.clone(this.design))
+      authorName: (this.invitation as any)?.user?.name || (this.event as any)?.hostName || 'Mi Cuenta',
+      isPublic: false,
+      includesInvitation: true,
+      includesPass: !!this.passDesign?.sections?.length,
+      includesAccess: !!this.design?.accessScreen,
+      thumbnailUrl: this.getTemplateThumbnail({
+        design: this.design,
+        name,
+        eventType: this.event?.type || 'otro'
+      } as any),
+      design: this.stripMongoMetadata(this.clone(this.design)),
+      passDesign: this.passDesign ? this.stripMongoMetadata(this.clone(this.passDesign)) : undefined,
+      accessScreen: this.design?.accessScreen ? this.clone(this.design.accessScreen) : undefined
     }).subscribe({
       next: ({ template }) => {
         const index = this.personalTemplates.findIndex((item) => item._id === template._id || item.name === template.name);
@@ -8255,8 +8647,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.accessSimPin = '';
   }
 
-  getAccessScreenBackgroundStyle(): Record<string, string> {
-    const acc = this.design?.accessScreen;
+  getAccessScreenBackgroundStyle(customAcc?: VisualAccessScreenDesign): Record<string, string> {
+    const acc = customAcc || this.design?.accessScreen;
     if (!acc) return {};
     if (acc.backgroundType === 'image' && acc.backgroundImageUrl) {
       return {
@@ -8275,8 +8667,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
-  getAccessScreenCardStyle(): Record<string, string> {
-    const acc = this.design?.accessScreen;
+  getAccessScreenCardStyle(customAcc?: VisualAccessScreenDesign): Record<string, string> {
+    const acc = customAcc || this.design?.accessScreen;
     if (!acc) return {};
     const radius = acc.cardRadius !== undefined ? acc.cardRadius : 18;
     const style: Record<string, string> = {
@@ -8338,8 +8730,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     };
   }
 
-  getAccessScreenOverlayStyle(): string {
-    const acc = this.design?.accessScreen;
+  getAccessScreenOverlayStyle(customAcc?: VisualAccessScreenDesign): string {
+    const acc = customAcc || this.design?.accessScreen;
     const opacity = (acc?.backgroundOverlayOpacity ?? 60) / 100;
     return `rgba(0, 0, 0, ${opacity})`;
   }

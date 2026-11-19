@@ -49,6 +49,10 @@
       <div class="topbar-menu">
         <button type="button" (click)="moreMenu.open=false;save()"><lucide-icon name="save"
             [strokeWidth]="1.8"></lucide-icon> Guardar diseño</button>
+        <button type="button" (click)="moreMenu.open=false;openDesignLibrary()"><lucide-icon name="images"
+            [strokeWidth]="1.8"></lucide-icon> Catálogo de plantillas</button>
+        <button type="button" (click)="moreMenu.open=false;openPublishTemplateModal()"><lucide-icon name="sparkles"
+            [strokeWidth]="1.8"></lucide-icon> Publicar como plantilla (+5%)</button>
         <button type="button" (click)="moreMenu.open=false;openTutorial()"><lucide-icon name="circle-help"
             [strokeWidth]="1.8"></lucide-icon> Guía del editor</button>
         <button type="button" (click)="moreMenu.open=false;openDesignImporter()"><lucide-icon name="sparkles"
@@ -67,8 +71,15 @@
             [strokeWidth]="1.8"></lucide-icon> Ver versión pública</button>
       </div>
     </details>
+    <button class="secondary template-catalog-btn" type="button" (click)="openDesignLibrary()" title="Explorar catálogo de plantillas Canva-style">
+      <lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Plantillas</span>
+    </button>
+    <button class="secondary publish-template-btn" type="button" (click)="openPublishTemplateModal()" title="Publicar mi diseño como plantilla comunitaria">
+      <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon><span>Publicar</span>
+      <span class="reward-pill-badge">5%</span>
+    </button>
     <button class="secondary preview-command" type="button" (click)="openDraftPreview()"><lucide-icon name="eye"
-        [strokeWidth]="1.8"></lucide-icon><span>Vista previa borrador</span> ↗</button>
+        [strokeWidth]="1.8"></lucide-icon><span>Vista previa</span> ↗</button>
     <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving"
       (click)="save()" title="Guardar">
       <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon>
@@ -114,52 +125,416 @@
         (click)="changeTutorialStep(1)">{{ tutorialStep === tutorialSteps.length - 1 ? 'Terminar' : 'Siguiente'
         }}</button></footer>
   </section>
+  <!-- ========================================== -->
+  <!-- MODAL: CATÁLOGO DE PLANTILLAS CANVA-STYLE  -->
+  <!-- ========================================== -->
   <div class="design-library-backdrop" *ngIf="showDesignLibrary" (click)="closeDesignLibrary()">
     <section class="design-library-dialog" role="dialog" aria-modal="true" aria-labelledby="designLibraryTitle"
       (click)="$event.stopPropagation()">
       <header class="design-library-heading">
-        <div><span>Biblioteca de diseños</span>
-          <h1 id="designLibraryTitle">Una invitación completa para empezar</h1>
-          <p>El diseño usa los datos y fotos de este evento. Después puedes mover, cambiar o quitar cualquier elemento.
-          </p>
+        <div class="catalog-title-col">
+          <div class="catalog-eyebrow">
+            <span>Catálogo de Plantillas · Canva Style</span>
+            <span class="creator-reward-tag">
+              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Gana el 5% por cada uso
+            </span>
+          </div>
+          <h1 id="designLibraryTitle">Plantillas Completas para tu Celebración</h1>
+          <p>Explora diseños 3 en 1 creados por la comunidad y diseñadores oficiales: Invitación interactiva, Pase VIP y Pantalla de Acceso con validación NIP.</p>
         </div>
-        <button type="button" title="Cerrar biblioteca" aria-label="Cerrar biblioteca"
-          (click)="closeDesignLibrary()">×</button>
+        <div class="catalog-header-actions">
+          <button type="button" class="btn-publish-from-catalog" (click)="closeDesignLibrary(); openPublishTemplateModal()">
+            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Publicar mi diseño (+5%)
+          </button>
+          <button type="button" class="close-catalog-btn" title="Cerrar catálogo" aria-label="Cerrar catálogo"
+            (click)="closeDesignLibrary()">
+            <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
+          </button>
+        </div>
       </header>
-      <div class="design-library-body">
-        <div class="design-library-catalog">
-          <nav class="design-library-filters" aria-label="Filtrar diseños">
-            <button
-              *ngFor="let filter of [{key:'all',label:'Todos'},{key:'boda',label:'Boda'},{key:'xv',label:'XV años'},{key:'graduacion',label:'Graduación'},{key:'cumpleanos',label:'Cumpleaños'},{key:'bautizo',label:'Bautizo'}]"
-              type="button" [class.active]="libraryCategory === filter.key" (click)="setLibraryCategory(filter.key)">{{
-              filter.label }}</button>
-          </nav>
-          <div class="design-library-list">
-            <button *ngFor="let preset of filteredCompleteDesigns" type="button" class="design-library-card"
-              [class.selected]="librarySelectedKey === preset.key" (click)="selectCompleteDesign(preset.key)">
-              <span class="design-library-art" [style.background]="preset.colors[0]">
-                <i [style.background]="preset.colors[1]"></i><b [style.color]="preset.colors[1]">{{ preset.name
-                  }}</b><em [style.background]="preset.colors[2]"></em>
-              </span>
-              <span class="design-library-card-copy"><strong>{{ preset.name }}</strong><small>{{ preset.description
-                  }}</small></span>
+
+      <!-- Barra de herramientas: Búsqueda, Pestañas Comunidad / Mis Plantillas y Filtros -->
+      <div class="catalog-toolbar">
+        <div class="catalog-tabs-and-search">
+          <div class="catalog-source-tabs">
+            <button type="button" [class.active]="catalogTab === 'community'" (click)="catalogTab = 'community'">
+              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon> Comunidad & Diseñadores
+            </button>
+            <button type="button" [class.active]="catalogTab === 'personal'" (click)="catalogTab = 'personal'">
+              <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Mis Plantillas ({{ personalTemplates.length }})
+            </button>
+          </div>
+          <div class="catalog-search-wrap">
+            <input type="text" [(ngModel)]="catalogSearch" (ngModelChange)="loadCatalogTemplates($event)" placeholder="Buscar por tema, estilo o creador (ej. Boda, Oro, Floral, Princesa)..." />
+            <button *ngIf="catalogSearch" type="button" class="btn-clear-search" (click)="catalogSearch = ''; loadCatalogTemplates('')">
+              <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
             </button>
           </div>
         </div>
-        <div class="design-library-preview">
-          <div class="design-library-preview-heading">
-            <div><strong>{{ selectedCompleteDesign.name }}</strong><span>{{ libraryPreviewDesign?.sections?.length || 0
-                }} secciones listas</span></div><span>Vista de celular</span>
-          </div>
-          <div class="design-library-preview-scroll" *ngIf="libraryPreviewInvitation as previewInvitation">
-            <app-visual-invitation-renderer [invitation]="previewInvitation" [event]="event" [forcedDevice]="'mobile'"
-              [requiresGuestValidation]="false"></app-visual-invitation-renderer>
+
+        <div class="catalog-filters-row">
+          <nav class="design-library-filters" aria-label="Filtrar por tipo de evento">
+            <button
+              *ngFor="let filter of [{key:'all',label:'Todas las categorías'},{key:'boda',label:'Boda'},{key:'xv',label:'XV Años'},{key:'bautizo',label:'Bautizo'},{key:'graduacion',label:'Graduación'},{key:'cumpleanos',label:'Cumpleaños'},{key:'otro',label:'Otros'}]"
+              type="button" [class.active]="libraryCategory === filter.key" (click)="setLibraryCategory(filter.key)">{{
+              filter.label }}</button>
+          </nav>
+
+          <div class="catalog-content-chips">
+            <button type="button" [class.active]="catalogContentFilter === 'all'" (click)="catalogContentFilter = 'all'">
+              Todas
+            </button>
+            <button type="button" [class.active]="catalogContentFilter === 'full'" (click)="catalogContentFilter = 'full'">
+              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Completas (3 en 1)
+            </button>
+            <button type="button" [class.active]="catalogContentFilter === 'pass'" (click)="catalogContentFilter = 'pass'">
+              <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Con Pase VIP
+            </button>
+            <button type="button" [class.active]="catalogContentFilter === 'access'" (click)="catalogContentFilter = 'access'">
+              <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Con Acceso
+            </button>
           </div>
         </div>
       </div>
-      <footer><span>Se reemplazará el diseño visual, no los datos del evento. Puedes deshacer el cambio.</span><button
-          type="button" class="secondary" (click)="closeDesignLibrary()">Cancelar</button><button type="button"
-          class="primary" [disabled]="!libraryPreviewDesign" (click)="applyCompleteDesign()">Usar este diseño</button>
+
+      <!-- Cuerpo Principal: Grid de Plantillas a la Izquierda y Vista Previa Interactiva a la Derecha -->
+      <div class="design-library-body">
+        <!-- Lista de Plantillas -->
+        <div class="design-library-catalog">
+          <div *ngIf="loadingCatalogTemplates" class="catalog-loading-state">
+            <lucide-icon name="refresh-cw" class="spin-icon" [strokeWidth]="1.8"></lucide-icon>
+            <span>Buscando en el catálogo de plantillas...</span>
+          </div>
+
+          <div *ngIf="!loadingCatalogTemplates && displayedCatalogTemplates.length === 0" class="catalog-empty-state">
+            <lucide-icon name="images" [strokeWidth]="1.8" style="width: 32px; height: 32px; color: #bcaaa4;"></lucide-icon>
+            <p>No se encontraron plantillas con los filtros seleccionados.</p>
+            <button type="button" class="secondary" (click)="catalogSearch = ''; libraryCategory = 'all'; catalogContentFilter = 'all'; loadCatalogTemplates('')">Restablecer filtros</button>
+          </div>
+
+          <div class="design-library-list" *ngIf="!loadingCatalogTemplates && displayedCatalogTemplates.length > 0">
+            <button *ngFor="let template of displayedCatalogTemplates" type="button" class="design-library-card"
+              [class.selected]="selectedCatalogTemplate?._id === template._id" (click)="selectCatalogTemplate(template)">
+              
+              <div class="template-card-header">
+                <!-- Badges con SVG -->
+                <div class="template-card-badges">
+                  <span class="badge-3in1" *ngIf="template.includesInvitation !== false && hasPassDesign(template) && hasAccessScreen(template)">
+                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> 3 en 1
+                  </span>
+                  <span class="badge-creator-reward" *ngIf="template.authorRewardPercent">
+                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.authorRewardPercent }}% creador
+                  </span>
+                </div>
+
+                <!-- Miniatura Visual Real de la Plantilla -->
+                <div class="template-card-thumb-container">
+                  <img [src]="getTemplateThumbnail(template)" class="template-card-thumb-img" alt="Vista previa de {{ template.name }}" loading="lazy" />
+                  <div class="template-thumb-overlay">
+                    <span class="art-title">{{ template.name }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="design-library-card-copy">
+                <div class="card-author-row">
+                  <span class="author-name">
+                    <lucide-icon name="users" [strokeWidth]="1.8" style="width: 12px; height: 12px; display: inline-block; vertical-align: -1px; margin-right: 3px;"></lucide-icon>
+                    {{ template.authorName || 'Velisse Oficial' }}
+                  </span>
+                  <span class="usage-count" *ngIf="template.usageCount">
+                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.usageCount }} usos
+                  </span>
+                </div>
+                <strong class="template-title">{{ template.name }}</strong>
+                <small class="template-desc">{{ template.description || 'Diseño temático con tipografías y elementos coordinados.' }}</small>
+                
+                <!-- Inclusiones con SVG -->
+                <div class="card-inclusions">
+                  <span class="inc-chip active">
+                    <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon> Invitación
+                  </span>
+                  <span class="inc-chip" [class.active]="hasPassDesign(template)">
+                    <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Pase VIP
+                  </span>
+                  <span class="inc-chip" [class.active]="hasAccessScreen(template)">
+                    <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Acceso
+                  </span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Columna de Vista Previa -->
+        <div class="design-library-preview" *ngIf="selectedCatalogTemplate as activeTpl">
+          <!-- Selector de Pestaña de Preview con SVG -->
+          <div class="preview-mode-nav">
+            <button type="button" [class.active]="catalogPreviewTab === 'invitation'" (click)="catalogPreviewTab = 'invitation'">
+              <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon> Invitación
+            </button>
+            <button type="button" [class.active]="catalogPreviewTab === 'pass'" [disabled]="!hasPassDesign(activeTpl)" (click)="catalogPreviewTab = 'pass'">
+              <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Pase VIP {{ hasPassDesign(activeTpl) ? '' : '(N/A)' }}
+            </button>
+            <button type="button" [class.active]="catalogPreviewTab === 'access'" [disabled]="!hasAccessScreen(activeTpl)" (click)="catalogPreviewTab = 'access'">
+              <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Pantalla de Acceso {{ hasAccessScreen(activeTpl) ? '' : '(N/A)' }}
+            </button>
+          </div>
+
+          <!-- Vista Previa 1: INVITACIÓN DIGITAL -->
+          <div class="catalog-preview-viewport" *ngIf="catalogPreviewTab === 'invitation'">
+            <div class="design-library-preview-scroll" *ngIf="libraryPreviewInvitation as previewInvitation">
+              <app-visual-invitation-renderer [invitation]="previewInvitation" [event]="event" [forcedDevice]="'mobile'"
+                [requiresGuestValidation]="false"></app-visual-invitation-renderer>
+            </div>
+          </div>
+
+          <!-- Vista Previa 2: PASE VIP -->
+          <div class="catalog-preview-viewport" *ngIf="catalogPreviewTab === 'pass'">
+            <div class="catalog-pass-preview-scroll">
+              <div *ngFor="let s of activeTpl.passDesign?.sections; let idx = index"
+                   class="catalog-pass-card"
+                   [style.width.px]="getPassSheetWidth(s)"
+                   [style.height.px]="getPassSheetHeight(s)"
+                   [style.background]="s.background?.color || '#0b1426'">
+                <div *ngFor="let l of s.layers"
+                     [style.position]="'absolute'"
+                     [style.left.%]="l.x"
+                     [style.top.%]="l.y"
+                     [style.width.%]="l.width"
+                     [style.height.%]="l.height"
+                     [style.zIndex]="l.zIndex || 1"
+                     [style.borderRadius.px]="l.style?.borderRadius || 0"
+                     [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
+                     [style.borderColor]="l.style?.borderColor || 'transparent'"
+                     [style.borderWidth.px]="l.style?.borderWidth || 0"
+                     [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
+                     [style.boxShadow]="l.style?.boxShadow || 'none'">
+                  <div *ngIf="l.type === 'text'"
+                       style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
+                       [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+                       [style.textAlign]="l.style?.textAlign || 'center'"
+                       [style.color]="l.style?.color || '#ffffff'"
+                       [style.fontSize.px]="l.style?.fontSize || 14"
+                       [style.fontWeight]="l.style?.fontWeight || '400'"
+                       [style.fontFamily]="l.style?.fontFamily || 'inherit'"
+                       [style.letterSpacing.px]="l.style?.letterSpacing || 0"
+                       [style.lineHeight]="l.style?.lineHeight || 1.3">
+                    {{ evalPassText(l.text) }}
+                  </div>
+                  <img *ngIf="l.type === 'image'"
+                       [src]="layerMediaSource(l)"
+                       alt="Elemento"
+                       style="width: 100%; height: 100%; display: block;"
+                       [style.objectFit]="l.style?.objectFit || 'contain'"
+                       [style.borderRadius.px]="l.style?.borderRadius || 0">
+                  <div *ngIf="l.type === 'shape'"
+                       style="width: 100%; height: 100%;"
+                       [style.backgroundColor]="l.style?.backgroundColor || '#000'"
+                       [style.borderRadius.px]="l.style?.borderRadius || 0">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vista Previa 3: PANTALLA DE ACCESO -->
+          <div class="catalog-preview-viewport" *ngIf="catalogPreviewTab === 'access'">
+            <div class="catalog-access-preview-stage" *ngIf="(activeTpl.accessScreen || activeTpl.design?.accessScreen) as previewAcc"
+                 [ngStyle]="getAccessScreenBackgroundStyle(previewAcc)">
+              <div class="catalog-access-preview-card" [ngStyle]="getAccessScreenCardStyle(previewAcc)">
+                <span class="preview-acc-badge" [style.color]="previewAcc.primaryColor || '#c89b3c'">INVITACIÓN PERSONAL</span>
+                <h3 [style.fontFamily]="previewAcc.headingFont || 'inherit'" [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.title || 'Invitación Personal de Gala' }}</h3>
+                <p [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.subtitle || 'Ingresa tu teléfono o correo registrado para abrir tu invitación y pase.' }}</p>
+                
+                <div class="preview-acc-fake-input">
+                  <span class="fake-placeholder">CORREO O TELÉFONO REGISTRADO</span>
+                </div>
+                <div class="preview-acc-fake-input" *ngIf="previewAcc.requirePin">
+                  <span class="fake-placeholder">NIP DE ACCESO (4 DÍGITOS)</span>
+                </div>
+                
+                <button type="button" class="preview-acc-fake-btn"
+                        [style.backgroundColor]="previewAcc.buttonBgColor || previewAcc.primaryColor || '#c89b3c'"
+                        [style.color]="previewAcc.buttonTextColor || '#152820'">
+                  {{ previewAcc.buttonText || 'ABRIR INVITACIÓN' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Opciones de Aplicación Selectiva Rediseñadas con SVG -->
+          <div class="selective-import-box">
+            <div class="selective-import-header">
+              <strong>¿Qué componentes deseas aplicar a tu evento?</strong>
+              <small>Tus invitados registrados, mesas y fecha no se modificarán.</small>
+            </div>
+            <div class="selective-import-grid">
+              <label class="selective-option-card" [class.selected]="catalogApplyOptions.invitation" [class.disabled]="!activeTpl.design?.sections?.length">
+                <input type="checkbox" [(ngModel)]="catalogApplyOptions.invitation" [disabled]="!activeTpl.design?.sections?.length" />
+                <div class="option-icon-box">
+                  <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
+                </div>
+                <div class="option-texts">
+                  <strong>Invitación Digital</strong>
+                  <small>Estructura y diseño interactivo</small>
+                </div>
+              </label>
+
+              <label class="selective-option-card" [class.selected]="catalogApplyOptions.pass" [class.disabled]="!hasPassDesign(activeTpl)">
+                <input type="checkbox" [(ngModel)]="catalogApplyOptions.pass" [disabled]="!hasPassDesign(activeTpl)" />
+                <div class="option-icon-box">
+                  <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon>
+                </div>
+                <div class="option-texts">
+                  <strong>Pase VIP</strong>
+                  <small>Hojas de pase y código QR</small>
+                </div>
+              </label>
+
+              <label class="selective-option-card" [class.selected]="catalogApplyOptions.access" [class.disabled]="!hasAccessScreen(activeTpl)">
+                <input type="checkbox" [(ngModel)]="catalogApplyOptions.access" [disabled]="!hasAccessScreen(activeTpl)" />
+                <div class="option-icon-box">
+                  <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
+                </div>
+                <div class="option-texts">
+                  <strong>Pantalla de Acceso</strong>
+                  <small>Bienvenida y validación NIP</small>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie del Modal del Catálogo -->
+      <footer>
+        <div class="footer-notice">
+          <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon>
+          <span>Esta plantilla incluye componentes 100% editables. Al aplicarla transformarás el estilo de tu celebración.</span>
+        </div>
+        <button type="button" class="secondary" (click)="closeDesignLibrary()">Cancelar</button>
+        <button type="button" class="primary btn-apply-template" [disabled]="!selectedCatalogTemplate" (click)="applySelectedCatalogTemplate()">
+          <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+          <span>Usar esta plantilla</span>
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PUBLICAR COMO PLANTILLA (CANVA-STYLE + 5% DE COMISIÓN) -->
+  <!-- ============================================================== -->
+  <div class="publish-template-backdrop" *ngIf="showPublishTemplateModal" (click)="closePublishTemplateModal()">
+    <section class="publish-template-dialog" role="dialog" aria-modal="true" aria-labelledby="publishTemplateTitle"
+      (click)="$event.stopPropagation()">
+      <header class="publish-template-heading">
+        <div class="publish-eyebrow">
+          <span>Ecosistema de Creadores Canva-Style</span>
+          <span class="gold-badge">
+            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> 5% Comisión
+          </span>
+        </div>
+        <h1 id="publishTemplateTitle">Publicar mi Diseño como Plantilla</h1>
+        <p>Comparte tu creación en el catálogo de la comunidad. Otros usuarios podrán usarla para sus eventos y tú generarás ingresos automáticamente.</p>
+        <button type="button" class="close-publish-btn" title="Cerrar modal" aria-label="Cerrar modal" (click)="closePublishTemplateModal()">
+          <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </header>
+
+      <div class="publish-template-body">
+        <!-- Banner del Programa de Creadores (5%) con SVG -->
+        <div class="creator-earnings-banner">
+          <div class="banner-icon">
+            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+          </div>
+          <div class="banner-text">
+            <strong>¡Gana el 5% cada vez que alguien use tu diseño!</strong>
+            <p>Por cada usuario que seleccione tu plantilla y active su evento o pase premium, recibirás automáticamente el <strong>5% del costo</strong> acumulado en tu saldo de creador.</p>
+          </div>
+        </div>
+
+        <!-- Formulario de Publicación -->
+        <div class="publish-form-grid">
+          <div class="form-group full-width">
+            <label>Nombre de la Plantilla *</label>
+            <input type="text" [(ngModel)]="publishTemplateForm.name" placeholder="Ej. Boda Jardín Toscana · Gala Nocturna" />
+          </div>
+
+          <div class="form-group">
+            <label>Categoría / Tipo de Evento</label>
+            <select [(ngModel)]="publishTemplateForm.eventType">
+              <option value="boda">Boda</option>
+              <option value="xv">XV Años</option>
+              <option value="bautizo">Bautizo</option>
+              <option value="graduacion">Graduación</option>
+              <option value="cumpleanos">Cumpleaños</option>
+              <option value="otro">Otro / General</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Nombre del Creador / Autor</label>
+            <input type="text" [(ngModel)]="publishTemplateForm.authorName" placeholder="Tu nombre o firma artística" />
+          </div>
+
+          <div class="form-group full-width">
+            <label>Descripción del Estilo</label>
+            <textarea [(ngModel)]="publishTemplateForm.description" rows="2" placeholder="Describe los colores, tipografía, estilo visual e inspiración del diseño..."></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Etiquetas (separadas por comas)</label>
+            <input type="text" [(ngModel)]="publishTemplateForm.tags" placeholder="Ej. floral, oro, minimalista, acuarela, noche" />
+          </div>
+
+          <!-- Selección de Secciones Incluidas con SVG -->
+          <div class="form-group full-width inclusions-group">
+            <label>¿Qué secciones deseas incluir en la plantilla pública?</label>
+            <div class="inclusions-row">
+              <label class="inc-checkbox">
+                <input type="checkbox" [(ngModel)]="publishTemplateForm.includesInvitation" />
+                <div class="inc-checkbox-card">
+                  <span class="inc-icon">
+                    <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
+                  </span>
+                  <strong>Invitación Digital</strong>
+                  <small>{{ design?.sections?.length || 0 }} secciones con capas y elementos</small>
+                </div>
+              </label>
+
+              <label class="inc-checkbox">
+                <input type="checkbox" [(ngModel)]="publishTemplateForm.includesPass" />
+                <div class="inc-checkbox-card">
+                  <span class="inc-icon">
+                    <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon>
+                  </span>
+                  <strong>Pase VIP</strong>
+                  <small>{{ passDesign?.sections?.length || 0 }} hojas (Frente/Reverso) con QR</small>
+                </div>
+              </label>
+
+              <label class="inc-checkbox">
+                <input type="checkbox" [(ngModel)]="publishTemplateForm.includesAccess" />
+                <div class="inc-checkbox-card">
+                  <span class="inc-icon">
+                    <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
+                  </span>
+                  <strong>Pantalla de Acceso</strong>
+                  <small>Bienvenida y validación NIP</small>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="publish-template-footer">
+        <button type="button" class="secondary" [disabled]="publishingTemplate" (click)="closePublishTemplateModal()">Cancelar</button>
+        <button type="button" class="primary btn-publish-confirm" [disabled]="publishingTemplate" (click)="submitPublishTemplate()">
+          <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
+          <span>{{ publishingTemplate ? 'Publicando plantilla...' : 'Publicar en la Comunidad (+5%)' }}</span>
+        </button>
       </footer>
     </section>
   </div>
@@ -923,10 +1298,10 @@
           </div>
         </div>
         <ng-container *ngIf="toolCategory === 'design'">
-          <h2>Diseños completos</h2>
+          <h2>Diseños y Plantillas</h2>
           <button class="open-design-library" type="button" (click)="openDesignLibrary()"><span><lucide-icon
-                name="images" [strokeWidth]="1.8"></lucide-icon></span><strong>Explorar
-              biblioteca</strong><small>Diseños listos y editables</small></button>
+                name="images" [strokeWidth]="1.8"></lucide-icon></span><strong>Catálogo Canva-Style</strong><small>Explorar plantillas 3 en 1</small></button>
+          <button class="open-publish-template" type="button" (click)="openPublishTemplateModal()"><span class="earn-icon"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon></span><div><strong>Publicar como Plantilla</strong><small>Gana el 5% por cada uso en la comunidad</small></div></button>
           <details class="theme-editor" open *ngIf="design.theme as theme">
             <summary>Estilo global</summary>
             <p>Cambia colores, tipografías y botones sin mover el contenido.</p>
@@ -2043,12 +2418,13 @@
           <!-- SUBPESTAÑA 1: FORMATO Y HOJAS -->
           <div *ngIf="passSubTab === 'format'" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 14px;">
             <div style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
-              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: block; margin-bottom: 6px;">
-                📐 Formato de la Hoja
+              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
+                <lucide-icon name="smartphone" [strokeWidth]="1.8" style="width: 13px; height: 13px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+                <span>Formato de la Hoja</span>
               </label>
               <select [ngModel]="activePassSheetPreset" (ngModelChange)="setPassCanvasPreset($event)"
                       style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 13px; font-weight: 600; background: #fff;">
-                <option *ngFor="let opt of passCanvasPresets" [value]="opt.preset">{{ opt.icon }} {{ opt.label }}</option>
+                <option *ngFor="let opt of passCanvasPresets" [value]="opt.preset">{{ opt.label }}</option>
               </select>
             </div>
 
@@ -2065,8 +2441,9 @@
             <!-- Gestión de Hojas -->
             <div style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083);">
-                  📑 Hojas del Pase ({{ passDesign?.sections?.length || 1 }})
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: flex; align-items: center; gap: 5px;">
+                  <lucide-icon name="layers" [strokeWidth]="1.8" style="width: 13px; height: 13px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+                  <span>Hojas del Pase ({{ passDesign?.sections?.length || 1 }})</span>
                 </span>
                 <button type="button" (click)="addPassSheet()"
                         style="padding: 4px 8px; border-radius: 6px; background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 700; border: none; cursor: pointer;">
@@ -2083,9 +2460,13 @@
                   <strong style="font-size: 12px; color: var(--nw-text, #2e2621);">{{ s.title || ('Hoja ' + (sIdx + 1)) }}</strong>
                   <div style="display: flex; gap: 4px;">
                     <button type="button" (click)="$event.stopPropagation(); duplicatePassSheet()" title="Duplicar"
-                            style="padding: 2px 6px; border-radius: 4px; border: 1px solid var(--nw-border); background: #fff; font-size: 10px; cursor: pointer;">📋</button>
+                            style="padding: 4px 6px; border-radius: 4px; border: 1px solid var(--nw-border); background: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                      <lucide-icon name="copy" [strokeWidth]="1.8" style="width: 12px; height: 12px; color: #5c4a3b;"></lucide-icon>
+                    </button>
                     <button *ngIf="(passDesign?.sections?.length || 0) > 1" type="button" (click)="$event.stopPropagation(); deletePassSheet(sIdx)" title="Eliminar"
-                            style="padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; font-size: 10px; cursor: pointer;">🗑️</button>
+                            style="padding: 4px 6px; border-radius: 4px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                      <lucide-icon name="trash-2" [strokeWidth]="1.8" style="width: 12px; height: 12px; color: #dc2626;"></lucide-icon>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -2116,7 +2497,7 @@
                       type="button"
                       (click)="addPassQuickField(field)"
                       style="padding: 10px 8px; border-radius: 10px; border: 1px solid var(--nw-border, #eadecc); background: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-                <span style="font-size: 20px;">{{ field.icon }}</span>
+                <lucide-icon [name]="field.lucideIcon || 'sparkles'" [strokeWidth]="1.8" style="width: 22px; height: 22px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
                 <strong style="font-size: 11.5px; color: var(--nw-text, #2e2621);">{{ field.label }}</strong>
                 <small style="font-size: 9.5px; color: var(--nw-text-3, #9e9083);">{{ field.sub }}</small>
               </button>
@@ -2546,7 +2927,8 @@
               <div class="pass-stage-bg" [ngStyle]="getPassSheetBackgroundStyle(activePassSheet)"></div>
               <div class="section-top-toolbar" (click)="$event.stopPropagation()">
                 <div class="section-label" (click)="selectSection(activePassSheet)">
-                  🎟️ Pase VIP · {{ activePassSheet.title || ('Hoja ' + (activePassSheetIndex + 1)) }}
+                  <lucide-icon name="ticket" [strokeWidth]="1.8" style="width: 14px; height: 14px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></lucide-icon>
+                  <span>Pase VIP · {{ activePassSheet.title || ('Hoja ' + (activePassSheetIndex + 1)) }}</span>
                 </div>
               </div>
               <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: activePassSheet }"></ng-container>
@@ -4336,8 +4718,13 @@
   <div class="ve-modal-overlay" *ngIf="passPreviewModalOpen" (click)="passPreviewModalOpen = false" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
     <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width: 540px; width: 100%; padding: 22px; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e1b18;">👁️ Vista Previa del Pase VIP</h3>
-        <button type="button" class="icon-button" (click)="passPreviewModalOpen = false" style="border: none; background: transparent; font-size: 18px; cursor: pointer;">✕</button>
+        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e1b18; display: flex; align-items: center; gap: 8px;">
+          <lucide-icon name="eye" [strokeWidth]="1.8" style="width: 18px; height: 18px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+          <span>Vista Previa del Pase VIP</span>
+        </h3>
+        <button type="button" class="icon-button" (click)="passPreviewModalOpen = false" style="border: none; background: transparent; cursor: pointer; display: flex; align-items: center;">
+          <lucide-icon name="x" [strokeWidth]="2" style="width: 18px; height: 18px; color: #6e6157;"></lucide-icon>
+        </button>
       </div>
       <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; padding: 10px 0; flex: 1;">
         <div *ngFor="let s of passDesign?.sections; let idx = index"
@@ -4385,7 +4772,10 @@
         </div>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
-        <button type="button" class="primary" (click)="exportPass('png')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #c9a87c; color: #fff; font-weight: 700; cursor: pointer;">📥 Descargar Imagen</button>
+        <button type="button" class="primary" (click)="exportPass('png')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #c9a87c; color: #fff; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <lucide-icon name="download" [strokeWidth]="1.8" style="width: 15px; height: 15px;"></lucide-icon>
+          <span>Descargar Imagen</span>
+        </button>
         <button type="button" class="secondary" (click)="passPreviewModalOpen = false" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer;">Cerrar</button>
       </div>
     </div>
