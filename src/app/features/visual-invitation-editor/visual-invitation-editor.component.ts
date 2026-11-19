@@ -28,11 +28,12 @@ import { buildCompleteDesign, COMPLETE_DESIGN_PRESETS, CompleteDesignPreset } fr
 import { buildPalazzoOrangerieDesign, isPalazzoOrangerieDesign, PALAZZO_ORANGERIE_THEME, resolveGiftStoreLogo } from './palazzo-orangerie-design';
 import { createVisualDesignAiPrompt, createVisualDesignExchange } from './visual-design-exchange';
 import { buttonPresetStyle, VISUAL_BUTTON_PRESETS, VisualButtonPreset } from './visual-button-presets';
+import { PASS_CANVAS_PRESETS, PassCanvasPresetOption, buildDefaultPassDesign, createPassLayer } from './visual-pass-presets';
 import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpacing, reflowPhotoCompositionLayouts, withPhotoCompositionSpacing } from './photo-composition-presets';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
 type MobileEditorPanel = 'tools' | 'canvas' | 'inspector';
-type ToolCategory = 'design' | 'elements' | 'assets' | 'functions' | 'sections' | 'access';
+type ToolCategory = 'design' | 'elements' | 'assets' | 'functions' | 'sections' | 'access' | 'pass';
 type ResizeCorner = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 type InspectorView = 'properties' | 'layers' | 'history';
 type DesignMedia = { id?: string; url: string; type: 'image' | 'video' | 'audio'; label: string; stored?: boolean; attribution?: string; attributionUrl?: string; sourceUrl?: string };
@@ -132,7 +133,24 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   libraryPreviewInvitation?: InvitationModel;
   autosaving = false;
   autosaveState = 'Guardado';
-  editorCanvasMode: 'invitation' | 'access' = 'invitation';
+  editorCanvasMode: 'invitation' | 'access' | 'pass' = 'invitation';
+  passDesign?: VisualInvitationDesign;
+  activePassSheetIndex: number = 0;
+  passCanvasPresets: PassCanvasPresetOption[] = PASS_CANVAS_PRESETS;
+  passSubTab: 'format' | 'fields' | 'templates' | 'background' = 'format';
+  passExporting = false;
+  passPreviewModalOpen = false;
+  simulateGuestPass = true;
+  quickPassFields = [
+    { type: 'qr', label: 'Código QR', icon: '📱', sub: 'Acceso escaneable', token: 'guest.qrCode' },
+    { type: 'name', label: 'Nombre Invitado', icon: '👤', sub: '{{guest.name}}', token: 'guest.name' },
+    { type: 'table', label: 'Mesa y Asiento', icon: '🍽️', sub: 'Mesa y lugar', token: 'guest.table' },
+    { type: 'companions', label: 'Acompañantes', icon: '👥', sub: 'Lugares válidos', token: 'guest.companions' },
+    { type: 'code', label: 'Folio Check-in', icon: '🏷️', sub: 'Folio único', token: 'guest.checkInCode' },
+    { type: 'title', label: 'Nombre Evento', icon: '✨', sub: 'Título principal', token: 'event.title' },
+    { type: 'date', label: 'Fecha y Hora', icon: '📅', sub: 'Día del evento', token: 'event.date' },
+    { type: 'venue', label: 'Lugar / Salón', icon: '📍', sub: 'Ubicación recepción', token: 'event.venue' }
+  ];
   accessSubTab: 'design' | 'nip' | 'registration' = 'design';
   accessSimView: 'login' | 'register' = 'login';
   accessSimInput = '';
@@ -874,6 +892,18 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           this.design.accessScreen = this.clone(this.invitation.content.accessScreen);
         }
         this.initAccessScreenDesign();
+        const passDraft = this.invitation.content?.passDesignDraft || this.invitation.content?.passDesign;
+        if (passDraft?.sections?.length) {
+          this.passDesign = this.clone(passDraft);
+        } else {
+          this.passDesign = buildDefaultPassDesign(this.invitation, this.event, (p) => this.uid(p), () => this.inferTheme());
+        }
+        const queryMode = this.route.snapshot.queryParamMap.get('mode');
+        if (queryMode === 'pass') {
+          setTimeout(() => this.selectPassCategory(), 0);
+        } else if (queryMode === 'access') {
+          setTimeout(() => this.selectAccessCategory(), 0);
+        }
         this.selectedSectionId = this.design.sections[0]?.id || '';
         this.lastSavedSnapshot = this.designSnapshot();
         setTimeout(() => this.fitCanvasToViewport());
@@ -1164,6 +1194,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design.sections = sections;
   }
 
+  private _cachedAccessSectionProxy?: VisualInvitationSection;
+
   get accessSectionProxy(): VisualInvitationSection {
     if (!this.design?.accessScreen) {
       this.initAccessScreenDesign();
@@ -1171,22 +1203,54 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.design.accessScreen!.layers) {
       this.design.accessScreen!.layers = [];
     }
-    return {
-      id: '__access_screen__',
-      type: 'custom',
-      title: 'Pantalla de Acceso',
-      enabled: true,
-      layout: 'canvas',
-      height: this.artboardHeight,
-      layers: this.design.accessScreen!.layers
-    };
+    if (!this._cachedAccessSectionProxy || this._cachedAccessSectionProxy.layers !== this.design.accessScreen!.layers) {
+      this._cachedAccessSectionProxy = {
+        id: '__access_screen__',
+        type: 'custom',
+        title: 'Pantalla de Acceso',
+        enabled: true,
+        layout: 'canvas',
+        height: this.artboardHeight,
+        layers: this.design.accessScreen!.layers
+      };
+    }
+    this._cachedAccessSectionProxy.height = this.artboardHeight;
+    return this._cachedAccessSectionProxy;
   }
 
   get selectedSection(): VisualInvitationSection | undefined {
     if (this.editorCanvasMode === 'access') {
       return this.accessSectionProxy;
     }
-    return this.design?.sections.find((item) => item.id === this.selectedSectionId);
+    if (this.editorCanvasMode === 'pass') {
+      return this.activePassSheet;
+    }
+    const found = this.design?.sections?.find((item) => item.id === this.selectedSectionId);
+    return found || this.design?.sections?.[0];
+  }
+
+  resolveActiveVisibleSection(): VisualInvitationSection | undefined {
+    if (this.editorCanvasMode === 'access') return this.accessSectionProxy;
+    if (this.editorCanvasMode === 'pass') return this.activePassSheet;
+    if (this.design.presentationMode === 'chapters' || (this.design.sections && this.design.sections.length <= 1)) {
+      return this.selectedSection || this.design?.sections?.[0];
+    }
+    const stage = this.editorStage?.nativeElement;
+    if (stage && typeof document !== 'undefined') {
+      const stageRect = stage.getBoundingClientRect();
+      const centerY = stageRect.top + stageRect.height / 2;
+      const centerX = stageRect.left + stageRect.width / 2;
+      const centerEl = document.elementFromPoint(centerX, centerY);
+      const sectionEl = centerEl?.closest('.canvas-section') as HTMLElement | null;
+      if (sectionEl?.dataset['sectionId']) {
+        const found = this.design?.sections?.find((s) => s.id === sectionEl.dataset['sectionId']);
+        if (found) {
+          this.selectedSectionId = found.id;
+          return found;
+        }
+      }
+    }
+    return this.selectedSection || this.design?.sections?.[0];
   }
 
   get selectedLayer(): VisualInvitationLayer | undefined {
@@ -1230,10 +1294,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   get artboardWidth(): number {
+    if (this.editorCanvasMode === 'pass' && this.activePassSheet) {
+      return this.getPassSheetWidth(this.activePassSheet);
+    }
     return this.device === 'mobile' ? 390 : this.device === 'tablet' ? 768 : 1180;
   }
 
   get artboardHeight(): number {
+    if (this.editorCanvasMode === 'pass' && this.activePassSheet) {
+      return this.getPassSheetHeight(this.activePassSheet);
+    }
     if (this.editorCanvasMode === 'access') {
       return this.device === 'mobile' ? 780 : this.device === 'tablet' ? 920 : 800;
     }
@@ -2724,7 +2794,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   addLayer(type: VisualLayerType): void {
     if (type === 'shape') { this.addShape('rectangle'); return; }
-    const section = this.selectedSection;
+    const section = this.resolveActiveVisibleSection();
     if (!section) return;
     this.recordHistory();
     const text = type === 'text' ? 'Escribe aquí' : type === 'button' ? 'Ver detalles' : '';
@@ -2838,7 +2908,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addFrame(mask: ImageMask): void {
-    const section = this.selectedSection;
+    const section = this.resolveActiveVisibleSection();
     if (!section) return;
     this.recordHistory();
     const layer = this.newLayer('image', '', 24, 26, 52, 26);
@@ -2858,7 +2928,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addPhotoComposition(key: string): void {
-    const section = this.selectedSection;
+    const section = this.resolveActiveVisibleSection();
     const preset = this.photoCompositionPresets.find((item) => item.key === key);
     if (!section || !preset) return;
     this.recordHistory();
@@ -3090,7 +3160,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addIcon(icon: VisualIconOption): void {
-    const section = this.selectedSection;
+    const section = this.resolveActiveVisibleSection();
     if (!section) return;
     this.recordHistory();
     const layer = this.newLayer('text', icon.label, 44, 32, 12, 12);
@@ -3146,7 +3216,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addShape(kind: ShapeKind): void {
-    const section = this.selectedSection;
+    const section = this.resolveActiveVisibleSection();
     if (!section) return;
     this.recordHistory();
     const dimensions = this.shapeDimensions(kind);
@@ -3161,7 +3231,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   addComponent(key: string): void {
-    const section = this.selectedSection;
+    const section = this.resolveActiveVisibleSection();
     if (!section) { this.error = 'Selecciona una sección para agregar el bloque.'; return; }
     this.recordHistory();
     const groupId = this.uid('group');
@@ -4646,8 +4716,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
           }
         }
 
-        // Cross-section layer transfer in continuous mode
-        if (this.design.presentationMode !== 'chapters' && this.design.sections.length > 1) {
+        // Cross-section layer transfer in continuous mode (only for main invitation sections)
+        if (
+          this.editorCanvasMode === 'invitation' &&
+          this.design.presentationMode !== 'chapters' &&
+          this.design.sections.length > 1 &&
+          this.design.sections.some((s) => s.id === drag.section.id)
+        ) {
           const primaryItem = drag.items.find((it) => it.layer.id === drag.layer.id) || drag.items[0];
           const sourceOffset = visualSectionOffset(this.design.sections, drag.section);
           const sourceHeight = visualSectionHeight(drag.section);
@@ -4813,9 +4888,17 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   setSectionBackground(media: DesignMedia): void {
-    if (media.type !== 'image' || !this.selectedSection) return;
+    const section = this.resolveActiveVisibleSection();
+    if (media.type !== 'image' || !section) return;
     this.recordHistory();
-    this.selectedSection.background = { ...(this.selectedSection.background || {}), imageUrl: media.url };
+    if (this.editorCanvasMode === 'access' && this.design?.accessScreen) {
+      this.design.accessScreen.backgroundType = 'image';
+      this.design.accessScreen.backgroundImageUrl = media.url;
+    } else if (this.editorCanvasMode === 'pass' && this.activePassSheet) {
+      this.activePassSheet.background = { ...(this.activePassSheet.background || {}), imageUrl: media.url };
+    } else {
+      section.background = { ...(section.background || {}), imageUrl: media.url };
+    }
     this.maybeCloseMobileTools();
   }
 
@@ -4889,7 +4972,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private sharedStyleScale(device: DeviceMode): number {
-    if (this.design.responsiveMode === 'independent') return 1;
+    if (this.editorCanvasMode === 'pass' || this.design.responsiveMode === 'independent') return 1;
     return device === 'mobile' ? .68 : device === 'tablet' ? .84 : 1;
   }
 
@@ -5697,11 +5780,27 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       const match = String(layer.binding || '').match(/^gift\.(\d+)\.image$/)!;
       resolved = resolveGiftStoreLogo(this.invitation?.content?.giftRegistry?.[Number(match[1])], layer.url || '');
     } else if (layer.binding === 'envelope.qr') resolved = this.invitation?.content?.digitalEnvelope?.qrImageUrl || layer.url || '';
+    else if (layer.binding === 'pass.qrCode' || layer.binding === 'guest.qrCode' || layer.binding === 'guest.qr') {
+      const code = (this.previewGuest as any)?.checkInCode || 'VIP-ACCESO-DEMO';
+      resolved = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(code)}`;
+    }
     else resolved = layer.url || '';
     return normalizeMediaUrl(resolved);
   }
 
+  layerMediaSource(layer: any): string {
+    if (!layer) return '';
+    if (layer.binding === 'pass.qrCode' || layer.binding === 'guest.qrCode' || layer.binding === 'guest.qr' || layer.name?.toLowerCase().includes('qr')) {
+      const code = (this.previewGuest as any)?.checkInCode || 'VIP-ACCESO-DEMO';
+      return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(code)}`;
+    }
+    return this.boundImageUrl(layer) || layer.url || '';
+  }
+
   editorLayerText(layer: VisualInvitationLayer): string {
+    if (this.editorCanvasMode === 'pass' && this.simulateGuestPass) {
+      return this.evalPassText(layer.text);
+    }
     const binding = String(layer.binding || '');
     if (binding === 'gallery.carousel.counter') return `1 / ${Math.max(1, this.invitation?.content?.galleryItems?.length || 0)}`;
     const galleryCarouselMatch = binding.match(/^gallery\.carousel\.(title|description|dedication)$/);
@@ -7941,14 +8040,20 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.toolCategory = category;
     this.toolsCollapsed = false;
     if (category === 'access') {
-      this.editorCanvasMode = 'access';
-      this.selectedSectionId = '';
-      this.selectedLayerId = '';
-      this.selectedLayerIds = [];
-      this.initAccessScreenDesign();
-    } else if (this.editorCanvasMode === 'access') {
-      this.editorCanvasMode = 'invitation';
+      this.selectAccessCategory();
+      return;
     }
+    if (category === 'pass') {
+      this.selectPassCategory();
+      return;
+    }
+    if (category === 'sections') {
+      this.setEditorCanvasMode('invitation');
+      return;
+    }
+    // Para 'elements', 'assets', 'functions', 'design':
+    // Conservamos el modo de lienzo actual ('access', 'pass' o 'invitation')
+    // para permitir agregar elementos, formas, fotos o íconos directamente en la pantalla activa.
   }
 
   selectAccessCategory(): void {
@@ -7995,7 +8100,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     }, 600);
   }
 
-  setEditorCanvasMode(mode: 'invitation' | 'access'): void {
+  setEditorCanvasMode(mode: 'invitation' | 'access' | 'pass'): void {
     this.editorCanvasMode = mode;
     if (mode === 'access') {
       this.toolCategory = 'access';
@@ -8008,8 +8113,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.editorStage.nativeElement.scrollTop = 0;
       }
       setTimeout(() => this.fitCanvasToViewport(), 0);
+    } else if (mode === 'pass') {
+      this.selectPassCategory();
     } else {
-      if (this.toolCategory === 'access') {
+      if (this.toolCategory === 'access' || this.toolCategory === 'pass') {
         this.toolCategory = 'design';
       }
       this.selectedSectionId = this.design?.sections[0]?.id || "";
@@ -8246,7 +8353,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       ...this.invitation?.content,
       galleryItems: (this.invitation?.content.galleryItems || []).filter((item) => item.url.trim()),
       visualDesignDraft: this.design,
-      accessScreen: this.design.accessScreen || this.invitation?.content?.accessScreen
+      accessScreen: this.design.accessScreen || this.invitation?.content?.accessScreen,
+      passDesignDraft: this.passDesign || this.invitation?.content?.passDesignDraft,
+      passDesign: this.passDesign || this.invitation?.content?.passDesign
     };
     delete rawContent.id;
     delete rawContent._id;
@@ -10745,12 +10854,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private layoutFor(layer: VisualInvitationLayer): VisualInvitationLayerLayout {
+    if (this.editorCanvasMode === 'pass') return { x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotation: layer.rotation || 0 };
     if (this.design.responsiveMode === 'independent' && layer.layouts?.[this.device]) return layer.layouts[this.device] as VisualInvitationLayerLayout;
     return { x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotation: layer.rotation || 0 };
   }
 
   private editableLayout(layer: VisualInvitationLayer): VisualInvitationLayerLayout {
-    if (this.design.responsiveMode !== 'independent') return layer;
+    if (this.editorCanvasMode === 'pass' || this.design.responsiveMode !== 'independent') return layer;
     layer.layouts = layer.layouts || {};
     if (!layer.layouts[this.device]) layer.layouts[this.device] = this.clone({ x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotation: layer.rotation || 0 });
     return layer.layouts[this.device] as VisualInvitationLayerLayout;
@@ -11161,4 +11271,386 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.error = message;
     this.loading = false;
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MOTOR INTEGRADO DEL EDITOR DE PASES VIP (Visual Pass Engine)
+  // ═══════════════════════════════════════════════════════════════
+
+  get activePassSheet(): VisualInvitationSection | undefined {
+    if (!this.passDesign?.sections?.length) return undefined;
+    return this.passDesign.sections[this.activePassSheetIndex] || this.passDesign.sections[0];
+  }
+
+  get activePassSheetPreset(): string {
+    const sheet = this.activePassSheet;
+    const settings = sheet?.pluginSettings as any;
+    return settings?.sheetPreset || 'phone-story';
+  }
+
+  selectPassCategory(): void {
+    this.toolCategory = 'pass';
+    this.editorCanvasMode = 'pass';
+    this.toolsCollapsed = false;
+    this.initPassDesign();
+    this.selectedSectionId = this.activePassSheet?.id || '';
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    if (this.editorStage?.nativeElement) {
+      this.editorStage.nativeElement.scrollTop = 0;
+    }
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
+  }
+
+  initPassDesign(): void {
+    if (this.passDesign && this.passDesign.sections?.length) return;
+    const passDraft = this.invitation?.content?.passDesignDraft || this.invitation?.content?.passDesign;
+    if (passDraft?.sections?.length) {
+      this.passDesign = this.clone(passDraft);
+    } else {
+      this.passDesign = buildDefaultPassDesign(this.invitation, this.event, (p) => this.uid(p), () => this.inferTheme());
+    }
+    if (this.passDesign.sections?.length) {
+      this.activePassSheetIndex = 0;
+      this.selectedSectionId = this.passDesign.sections[0].id;
+    }
+  }
+
+  selectPassSheet(index: number): void {
+    if (!this.passDesign?.sections?.[index]) return;
+    this.activePassSheetIndex = index;
+    this.selectedSectionId = this.passDesign.sections[index].id;
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
+  }
+
+  addPassSheet(): void {
+    if (!this.passDesign) this.initPassDesign();
+    if (!this.passDesign) return;
+    const nextIdx = (this.passDesign.sections?.length || 0) + 1;
+    const currentPreset = this.passCanvasPresets.find(p => p.preset === this.activePassSheetPreset) || this.passCanvasPresets[0];
+    const newSheet: VisualInvitationSection = {
+      id: this.uid('sheet'),
+      type: 'passSheet',
+      title: `Hoja ${nextIdx} (${nextIdx === 2 ? 'Reverso' : 'Extra'})`,
+      enabled: true,
+      layout: 'canvas',
+      height: currentPreset.height,
+      pluginSettings: {
+        sheetWidth: currentPreset.width,
+        sheetHeight: currentPreset.height,
+        sheetPreset: currentPreset.preset
+      },
+      background: { color: this.passDesign.theme?.backgroundColor || '#0b1426', overlay: 0 },
+      layers: []
+    };
+    this.passDesign.sections.push(newSheet);
+    this.activePassSheetIndex = this.passDesign.sections.length - 1;
+    this.selectedSectionId = newSheet.id;
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.flash('✓ Nueva hoja agregada al pase VIP.');
+  }
+
+  duplicatePassSheet(): void {
+    if (!this.activePassSheet || !this.passDesign) return;
+    const clone = this.clone(this.activePassSheet);
+    clone.id = this.uid('sheet');
+    clone.title = `${this.activePassSheet.title || 'Hoja'} (Copia)`;
+    if (clone.layers) {
+      clone.layers = clone.layers.map((l: any) => ({ ...l, id: this.uid('layer') }));
+    }
+    this.passDesign.sections.push(clone);
+    this.activePassSheetIndex = this.passDesign.sections.length - 1;
+    this.selectedSectionId = clone.id;
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.flash('✓ Hoja duplicada.');
+  }
+
+  deletePassSheet(index: number): void {
+    if (!this.passDesign?.sections || this.passDesign.sections.length <= 1) {
+      this.flash('⚠️ El pase debe tener al menos una hoja.');
+      return;
+    }
+    this.passDesign.sections.splice(index, 1);
+    if (this.activePassSheetIndex >= this.passDesign.sections.length) {
+      this.activePassSheetIndex = this.passDesign.sections.length - 1;
+    }
+    this.selectedSectionId = this.activePassSheet?.id || '';
+    this.selectedLayerId = '';
+    this.selectedLayerIds = [];
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.flash('✓ Hoja eliminada.');
+  }
+
+  setPassCanvasPreset(presetKey: string): void {
+    if (!this.activePassSheet) return;
+    const opt = this.passCanvasPresets.find(p => p.preset === presetKey);
+    if (!opt) return;
+    this.activePassSheet.pluginSettings = {
+      ...(this.activePassSheet.pluginSettings || {}),
+      sheetPreset: opt.preset,
+      sheetWidth: opt.width,
+      sheetHeight: opt.height
+    };
+    this.activePassSheet.height = opt.height;
+    if (this.passDesign) {
+      this.passDesign.canvasSize = { width: opt.width, height: opt.height };
+    }
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
+  }
+
+  setPassCustomWidth(w: number): void {
+    if (!this.activePassSheet || !w) return;
+    const val = Math.max(100, Math.min(2500, Number(w)));
+    this.activePassSheet.pluginSettings = {
+      ...(this.activePassSheet.pluginSettings || {}),
+      sheetWidth: val,
+      sheetPreset: 'custom'
+    };
+    if (this.passDesign) {
+      this.passDesign.canvasSize = { ...(this.passDesign.canvasSize || {}), width: val, height: this.getPassSheetHeight(this.activePassSheet) };
+    }
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
+  }
+
+  setPassCustomHeight(h: number): void {
+    if (!this.activePassSheet || !h) return;
+    const val = Math.max(100, Math.min(2500, Number(h)));
+    this.activePassSheet.pluginSettings = {
+      ...(this.activePassSheet.pluginSettings || {}),
+      sheetHeight: val,
+      sheetPreset: 'custom'
+    };
+    this.activePassSheet.height = val;
+    if (this.passDesign) {
+      this.passDesign.canvasSize = { ...(this.passDesign.canvasSize || {}), width: this.getPassSheetWidth(this.activePassSheet), height: val };
+    }
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
+  }
+
+  addPassQuickField(field: any): void {
+    if (!this.activePassSheet) return;
+    const uid = (p: string) => this.uid(p);
+    const zIndex = (this.activePassSheet.layers?.length || 0) + 1;
+    const theme: any = this.passDesign?.theme || this.design?.theme || {};
+    const accent = theme.accentColor || '#c9a87c';
+    const textColor = theme.textColor || '#ffffff';
+    const atX = 10;
+    const atY = 40;
+
+    let layer: VisualInvitationLayer;
+    switch (field.type) {
+      case 'qr':
+        layer = createPassLayer(uid, 'image', 'Código QR Dinámico', 30, atY, 40, 22, zIndex, {
+          borderRadius: 8
+        }, {
+          binding: 'pass.qrCode',
+          url: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VIP-DEMO'
+        });
+        break;
+      case 'name':
+        layer = createPassLayer(uid, 'text', 'Nombre del Invitado', atX, atY, 80, 6, zIndex, {
+          color: textColor,
+          fontSize: 22,
+          fontWeight: '800',
+          textAlign: 'center'
+        }, { text: '{{guest.name}}' });
+        break;
+      case 'table':
+        layer = createPassLayer(uid, 'text', 'Mesa y Asiento', atX, atY, 80, 5, zIndex, {
+          color: accent,
+          fontSize: 14,
+          fontWeight: '600',
+          textAlign: 'center'
+        }, { text: 'Mesa: {{guest.table}}  ·  Asiento: {{guest.seat}}' });
+        break;
+      case 'companions':
+        layer = createPassLayer(uid, 'text', 'Acompañantes', atX, atY, 80, 4, zIndex, {
+          color: accent,
+          fontSize: 13,
+          fontWeight: '600',
+          textAlign: 'center'
+        }, { text: 'Válido por {{guest.companions}} personas' });
+        break;
+      case 'code':
+        layer = createPassLayer(uid, 'text', 'Folio de Check-in', atX, atY, 60, 4, zIndex, {
+          color: 'rgba(255, 255, 255, 0.65)',
+          fontSize: 11,
+          textAlign: 'center',
+          letterSpacing: 1.5
+        }, { text: 'Folio: #{{guest.checkInCode}}' });
+        break;
+      case 'title':
+        layer = createPassLayer(uid, 'text', 'Título del Evento', atX, atY, 80, 8, zIndex, {
+          color: textColor,
+          fontSize: 24,
+          fontWeight: '700',
+          textAlign: 'center',
+          fontFamily: theme.headingFont || "'Playfair Display', serif"
+        }, { text: '{{event.title}}' });
+        break;
+      case 'date':
+        layer = createPassLayer(uid, 'text', 'Fecha y Hora', atX, atY, 80, 4, zIndex, {
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: 13,
+          textAlign: 'center'
+        }, { text: '{{event.date}} · {{event.time}}' });
+        break;
+      case 'venue':
+        layer = createPassLayer(uid, 'text', 'Lugar del Evento', atX, atY, 80, 5, zIndex, {
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: 13,
+          textAlign: 'center'
+        }, { text: '{{event.venue}}' });
+        break;
+      default:
+        layer = createPassLayer(uid, 'text', field.label || 'Campo', atX, atY, 80, 5, zIndex, {
+          color: textColor,
+          fontSize: 14,
+          textAlign: 'center'
+        }, { text: field.token ? `{{${field.token}}}` : 'Texto' });
+    }
+
+    if (!this.activePassSheet.layers) this.activePassSheet.layers = [];
+    this.activePassSheet.layers.push(layer);
+    this.selectLayer(this.activePassSheet, layer, new MouseEvent("click"));
+    this.flash(`✓ Campo ${field.label} insertado.`);
+  }
+
+  evalPassText(rawText?: string): string {
+    if (!rawText) return '';
+    let text = rawText;
+    const g = this.previewGuest || {
+      name: 'Daniel Díaz',
+      tableName: 'Mesa Presidencial',
+      seatLabel: 'A1',
+      allowedCompanions: 1,
+      checkInCode: 'VIP-7788'
+    };
+
+    text = text.replace(/\{\{guest\.name\}\}|\{nombre\}|\{invitado\}/gi, g.name || 'Invitado VIP');
+    text = text.replace(/\{\{guest\.table\}\}|\{mesa\}/gi, g.tableName || 'Mesa General');
+    text = text.replace(/\{\{guest\.seat\}\}|\{asiento\}/gi, g.seatLabel || '1');
+    text = text.replace(/\{\{guest\.companions\}\}|\{pases\}|\{lugares\}|\{acompañantes\}/gi, String((g.allowedCompanions || 0) + 1));
+    text = text.replace(/\{\{guest\.checkInCode\}\}|\{codigo\}|\{checkin\}|\{folio\}/gi, (g as any).checkInCode || 'VIP-001');
+
+    const evTitle = this.event?.title || this.invitation?.content?.headline || 'Nuestra Celebración';
+    const evDate = this.event?.date ? new Date(this.event.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Próximamente';
+    const evVenue = this.invitation?.content?.locations?.[0]?.address || this.invitation?.content?.locations?.[0]?.name || this.event?.venue?.name || 'Salón Principal';
+
+    text = text.replace(/\{\{event\.title\}\}|\{evento\}/gi, evTitle);
+    text = text.replace(/\{\{event\.date\}\}|\{fecha\}/gi, evDate);
+    text = text.replace(/\{\{event\.venue\}\}|\{lugar\}|\{direccion\}/gi, evVenue);
+    text = text.replace(/\{\{event\.time\}\}|\{hora\}/gi, (this.event as any)?.time || '');
+
+    return text;
+  }
+
+  getPassSheetWidth(sheet?: VisualInvitationSection): number {
+    if (!sheet) return 420;
+    const settings = sheet.pluginSettings as any;
+    if (settings?.sheetWidth) return Number(settings.sheetWidth);
+    if ((sheet as any).width) return (sheet as any).width;
+    return this.passDesign?.canvasSize?.width || 420;
+  }
+
+  getPassSheetHeight(sheet?: VisualInvitationSection): number {
+    if (!sheet) return 660;
+    const settings = sheet.pluginSettings as any;
+    if (settings?.sheetHeight) return Number(settings.sheetHeight);
+    if ((sheet as any).height) return (sheet as any).height;
+    return this.passDesign?.canvasSize?.height || 660;
+  }
+
+  passSheetSectionStyle(sheet?: VisualInvitationSection): Record<string, string> {
+    const s = sheet || this.activePassSheet;
+    const w = this.getPassSheetWidth(s);
+    const h = this.getPassSheetHeight(s);
+    return {
+      width: `${w}px`,
+      minHeight: `${h}px`,
+      height: `${h}px`,
+      position: 'relative',
+      margin: '0 auto',
+      borderRadius: '20px',
+      overflow: 'hidden',
+      boxShadow: '0 16px 50px rgba(0,0,0,0.35)'
+    };
+  }
+
+  getPassSheetBackgroundStyle(sheet?: VisualInvitationSection): Record<string, string> {
+    const s = sheet || this.activePassSheet;
+    const color = s?.background?.color || (s as any)?.style?.backgroundColor || this.passDesign?.theme?.backgroundColor || '#0b1426';
+    const img = s?.background?.imageUrl;
+    const style: Record<string, string> = {
+      backgroundColor: color,
+      position: 'absolute',
+      inset: '0',
+      zIndex: '0'
+    };
+    if (img) {
+      style['backgroundImage'] = `url("${img}")`;
+      style['backgroundSize'] = 'cover';
+      style['backgroundPosition'] = 'center';
+    }
+    return style;
+  }
+
+  async exportPass(format: 'png' | 'pdf' = 'png'): Promise<void> {
+    const cardEl = document.querySelector('.pass-canvas-section') as HTMLElement;
+    if (!cardEl) return;
+    this.passExporting = true;
+    try {
+      const canvas = await html2canvas(cardEl, {
+        scale: 2.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null
+      });
+      if (format === 'png') {
+        const link = document.createElement('a');
+        const guestName = this.previewGuest?.name?.replace(/\s+/g, '_') || 'Invitado';
+        link.download = `Pase-VIP-${guestName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        this.flash('✨ Pase VIP descargado en alta resolución.');
+      } else {
+        const imgData = canvas.toDataURL('image/png');
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>Imprimir Pase VIP - ${this.previewGuest?.name || 'Invitado'}</title>
+                <style>
+                  @page { size: auto; margin: 10mm; }
+                  body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; font-family: sans-serif; }
+                  img { max-width: 100%; max-height: 95vh; object-fit: contain; }
+                </style>
+              </head>
+              <body onload="window.print()">
+                <img src="${imgData}" />
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      this.flash('⚠️ No se pudo exportar el pase.');
+    } finally {
+      this.passExporting = false;
+    }
+  }
+
 }

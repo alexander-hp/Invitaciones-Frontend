@@ -897,8 +897,31 @@
           [attr.aria-pressed]="toolCategory === 'access'"
           (click)="selectAccessCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="lock-keyhole"
             [strokeWidth]="1.8"></lucide-icon><span>Acceso</span></button>
+        <button type="button" title="Pase VIP" [class.active]="toolCategory === 'pass'"
+          [attr.aria-pressed]="toolCategory === 'pass'"
+          (click)="selectPassCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="ticket"
+            [strokeWidth]="1.8"></lucide-icon><span>Pase VIP</span></button>
       </nav>
       <div class="ve-tool-content" #toolContent>
+        <!-- Indicador de lienzo activo cuando se diseñan elementos/archivos en Acceso o Pase VIP -->
+        <div *ngIf="editorCanvasMode !== 'invitation' && toolCategory !== 'access' && toolCategory !== 'pass'"
+             class="ve-canvas-context-banner"
+             style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; margin-bottom: 16px; background: #fdfaf6; border: 1px solid #eadecc; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5a4b41;">
+            <lucide-icon [name]="editorCanvasMode === 'access' ? 'lock-keyhole' : 'ticket'" [strokeWidth]="1.8" style="color: var(--nw-accent, #c9a87c); width: 16px; height: 16px;"></lucide-icon>
+            <span>Editando: <strong style="color: #2e2621;">{{ editorCanvasMode === 'access' ? 'Pantalla de Acceso' : ('Pase VIP · ' + (activePassSheet?.title || 'Hoja ' + (activePassSheetIndex + 1))) }}</strong></span>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" (click)="editorCanvasMode === 'access' ? selectAccessCategory() : selectPassCategory()"
+                    style="padding: 4px 8px; border-radius: 6px; border: 1px solid #eadecc; background: #fff; font-size: 11px; font-weight: 600; color: #5a4b41; cursor: pointer;">
+              Ajustes
+            </button>
+            <button type="button" (click)="setEditorCanvasMode('invitation')"
+                    style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--nw-accent, #c9a87c); background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;">
+              ← Invitación
+            </button>
+          </div>
+        </div>
         <ng-container *ngIf="toolCategory === 'design'">
           <h2>Diseños completos</h2>
           <button class="open-design-library" type="button" (click)="openDesignLibrary()"><span><lucide-icon
@@ -1987,6 +2010,137 @@
           </div>
         </ng-container>
 
+        <!-- ═══════════════ HERRAMIENTAS DE PASE VIP ═══════════════ -->
+        <ng-container *ngIf="toolCategory === 'pass'">
+          <!-- Botón volver -->
+          <div class="access-drawer-header-actions">
+            <button type="button" class="access-drawer-return-btn" (click)="setEditorCanvasMode('invitation')"
+              title="Salir del pase y volver a la invitación interactiva">
+              <lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon>
+              <span>← Volver a la Invitación</span>
+            </button>
+          </div>
+
+          <!-- Subpestañas del Pase -->
+          <div class="access-subtabs-nav" role="tablist" aria-label="Herramientas del Pase VIP">
+            <button type="button" class="access-subtab-btn" [class.active]="passSubTab === 'format'"
+              (click)="passSubTab = 'format'" title="Formato y Hojas">
+              <lucide-icon name="layout-grid" [strokeWidth]="1.8"></lucide-icon>
+              <span>Hojas</span>
+            </button>
+            <button type="button" class="access-subtab-btn" [class.active]="passSubTab === 'fields'"
+              (click)="passSubTab = 'fields'" title="Campos dinámicos del invitado">
+              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+              <span>Campos VIP</span>
+            </button>
+            <button type="button" class="access-subtab-btn" [class.active]="passSubTab === 'background'"
+              (click)="passSubTab = 'background'" title="Fondo y estilo de la hoja">
+              <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon>
+              <span>Fondo</span>
+            </button>
+          </div>
+
+          <!-- SUBPESTAÑA 1: FORMATO Y HOJAS -->
+          <div *ngIf="passSubTab === 'format'" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
+              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: block; margin-bottom: 6px;">
+                📐 Formato de la Hoja
+              </label>
+              <select [ngModel]="activePassSheetPreset" (ngModelChange)="setPassCanvasPreset($event)"
+                      style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 13px; font-weight: 600; background: #fff;">
+                <option *ngFor="let opt of passCanvasPresets" [value]="opt.preset">{{ opt.icon }} {{ opt.label }}</option>
+              </select>
+            </div>
+
+            <!-- Dimensiones personalizadas -->
+            <div *ngIf="activePassSheetPreset === 'custom' && activePassSheet" style="display: flex; gap: 8px; align-items: center;">
+              <input type="number" min="100" max="2500" [ngModel]="getPassSheetWidth(activePassSheet)"
+                     (ngModelChange)="setPassCustomWidth($event)" style="width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--nw-border);" placeholder="Ancho">
+              <span>×</span>
+              <input type="number" min="100" max="2500" [ngModel]="getPassSheetHeight(activePassSheet)"
+                     (ngModelChange)="setPassCustomHeight($event)" style="width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--nw-border);" placeholder="Alto">
+              <small>px</small>
+            </div>
+
+            <!-- Gestión de Hojas -->
+            <div style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083);">
+                  📑 Hojas del Pase ({{ passDesign?.sections?.length || 1 }})
+                </span>
+                <button type="button" (click)="addPassSheet()"
+                        style="padding: 4px 8px; border-radius: 6px; background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 700; border: none; cursor: pointer;">
+                  + Agregar
+                </button>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div *ngFor="let s of passDesign?.sections; let sIdx = index"
+                     (click)="selectPassSheet(sIdx)"
+                     [style.borderColor]="activePassSheetIndex === sIdx ? 'var(--nw-accent, #c9a87c)' : 'var(--nw-border, #eadecc)'"
+                     [style.background]="activePassSheetIndex === sIdx ? '#fff' : 'transparent'"
+                     style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 8px; border: 1.5px solid; cursor: pointer; transition: all 0.15s;">
+                  <strong style="font-size: 12px; color: var(--nw-text, #2e2621);">{{ s.title || ('Hoja ' + (sIdx + 1)) }}</strong>
+                  <div style="display: flex; gap: 4px;">
+                    <button type="button" (click)="$event.stopPropagation(); duplicatePassSheet()" title="Duplicar"
+                            style="padding: 2px 6px; border-radius: 4px; border: 1px solid var(--nw-border); background: #fff; font-size: 10px; cursor: pointer;">📋</button>
+                    <button *ngIf="(passDesign?.sections?.length || 0) > 1" type="button" (click)="$event.stopPropagation(); deletePassSheet(sIdx)" title="Eliminar"
+                            style="padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; font-size: 10px; cursor: pointer;">🗑️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Simulación y Descargas -->
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+              <button type="button" (click)="passPreviewModalOpen = true"
+                      style="width: 100%; padding: 10px; border-radius: 10px; border: 1.5px solid var(--nw-border, #eadecc); background: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>
+                <span>Vista previa completa</span>
+              </button>
+              <button type="button" (click)="exportPass('png')" [disabled]="passExporting"
+                      style="width: 100%; padding: 10px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--nw-accent, #c9a87c) 0%, #a8825e 100%); color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <lucide-icon name="download" [strokeWidth]="1.8"></lucide-icon>
+                <span>{{ passExporting ? 'Exportando...' : 'Descargar Pase PNG' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SUBPESTAÑA 2: CAMPOS DINÁMICOS VIP -->
+          <div *ngIf="passSubTab === 'fields'" style="padding: 12px 14px;">
+            <p style="font-size: 12px; color: var(--nw-text-3, #9e9083); margin: 0 0 12px 0;">
+              Haz clic en cualquier campo para insertarlo en la hoja activa con sus variables vinculadas:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+              <button *ngFor="let field of quickPassFields"
+                      type="button"
+                      (click)="addPassQuickField(field)"
+                      style="padding: 10px 8px; border-radius: 10px; border: 1px solid var(--nw-border, #eadecc); background: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <span style="font-size: 20px;">{{ field.icon }}</span>
+                <strong style="font-size: 11.5px; color: var(--nw-text, #2e2621);">{{ field.label }}</strong>
+                <small style="font-size: 9.5px; color: var(--nw-text-3, #9e9083);">{{ field.sub }}</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- SUBPESTAÑA 3: FONDO DE HOJA -->
+          <div *ngIf="passSubTab === 'background' && activePassSheet" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
+              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: block; margin-bottom: 6px;">
+                Color de Fondo
+              </label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="color" [ngModel]="activePassSheet.background?.color || '#0b1426'"
+                       (ngModelChange)="activePassSheet.background = activePassSheet.background || { overlay: 0 }; activePassSheet.background.color = $event"
+                       style="width: 40px; height: 36px; border: none; border-radius: 8px; cursor: pointer;">
+                <input type="text" [ngModel]="activePassSheet.background?.color || '#0b1426'"
+                       (ngModelChange)="activePassSheet.background = activePassSheet.background || { overlay: 0 }; activePassSheet.background.color = $event"
+                       style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--nw-border); font-family: monospace; font-size: 13px;">
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
         <div class="save-template-box" *ngIf="toolCategory === 'design'">
           <label>Guardar diseño como plantilla<input [(ngModel)]="templateName" type="text"
               placeholder="Ej. Bodas elegantes"></label>
@@ -2359,6 +2513,43 @@
                 </div>
               </div>
               <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: accessSectionProxy }"></ng-container>
+            </section>
+          </div>
+
+          <!-- MODO 3: PASE DIGITAL VIP -->
+          <div *ngIf="editorCanvasMode === 'pass' && activePassSheet" class="section-list pass-sheet-section-list" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <!-- Pestañas de Hojas arriba del lienzo -->
+            <div class="pass-sheets-topbar" (click)="$event.stopPropagation()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 480px; margin-bottom: 12px; padding: 6px 10px; background: rgba(0,0,0,0.04); border-radius: 12px;">
+              <div style="display: flex; gap: 6px; align-items: center; overflow-x: auto;">
+                <button *ngFor="let s of passDesign?.sections; let sIdx = index"
+                        type="button"
+                        (click)="selectPassSheet(sIdx)"
+                        [style.background]="activePassSheetIndex === sIdx ? 'var(--nw-accent, #c9a87c)' : '#fff'"
+                        [style.color]="activePassSheetIndex === sIdx ? '#fff' : 'var(--nw-text, #2e2621)'"
+                        style="padding: 5px 12px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                  {{ s.title || ('Hoja ' + (sIdx + 1)) }}
+                </button>
+                <button type="button" (click)="addPassSheet()" title="Agregar nueva hoja (ej. Reverso)"
+                        style="padding: 5px 10px; border-radius: 8px; border: 1px dashed var(--nw-accent, #c9a87c); background: transparent; color: var(--nw-accent, #c9a87c); font-size: 11px; font-weight: 700; cursor: pointer;">
+                  + Hoja
+                </button>
+              </div>
+              <span style="font-size: 11px; font-weight: 700; color: var(--nw-text-3, #9e9083); background: #fff; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--nw-border, #eadecc);">
+                {{ getPassSheetWidth(activePassSheet) }} × {{ getPassSheetHeight(activePassSheet) }} px
+              </span>
+            </div>
+
+            <section class="canvas-section selected pass-canvas-section"
+              [attr.data-section-id]="activePassSheet.id"
+              [ngStyle]="passSheetSectionStyle(activePassSheet)"
+              (click)="selectSection(activePassSheet)">
+              <div class="pass-stage-bg" [ngStyle]="getPassSheetBackgroundStyle(activePassSheet)"></div>
+              <div class="section-top-toolbar" (click)="$event.stopPropagation()">
+                <div class="section-label" (click)="selectSection(activePassSheet)">
+                  🎟️ Pase VIP · {{ activePassSheet.title || ('Hoja ' + (activePassSheetIndex + 1)) }}
+                </div>
+              </div>
+              <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: activePassSheet }"></ng-container>
             </section>
           </div>
 
@@ -4141,3 +4332,61 @@
     style="display: none;"
     (change)="onMobilePhotoSelected(mobilePhotoPicker)">
 </div>
+  <!-- Modal Vista Previa del Pase VIP -->
+  <div class="ve-modal-overlay" *ngIf="passPreviewModalOpen" (click)="passPreviewModalOpen = false" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width: 540px; width: 100%; padding: 22px; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e1b18;">👁️ Vista Previa del Pase VIP</h3>
+        <button type="button" class="icon-button" (click)="passPreviewModalOpen = false" style="border: none; background: transparent; font-size: 18px; cursor: pointer;">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; padding: 10px 0; flex: 1;">
+        <div *ngFor="let s of passDesign?.sections; let idx = index"
+             [style.width.px]="getPassSheetWidth(s)"
+             [style.height.px]="getPassSheetHeight(s)"
+             [style.background]="s.background?.color || '#0b1426'"
+             style="position: relative; overflow: hidden; border-radius: 18px; box-shadow: 0 12px 36px rgba(0,0,0,0.25); max-width: 100%;">
+          <div *ngFor="let l of s.layers"
+               [style.position]="'absolute'"
+               [style.left.%]="l.x"
+               [style.top.%]="l.y"
+               [style.width.%]="l.width"
+               [style.height.%]="l.height"
+               [style.zIndex]="l.zIndex || 1"
+               [style.borderRadius.px]="l.style?.borderRadius || 0"
+               [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
+               [style.borderColor]="l.style?.borderColor || 'transparent'"
+               [style.borderWidth.px]="l.style?.borderWidth || 0"
+               [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
+               [style.boxShadow]="l.style?.boxShadow || 'none'">
+            <div *ngIf="l.type === 'text'"
+                 style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
+                 [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+                 [style.textAlign]="l.style?.textAlign || 'center'"
+                 [style.color]="l.style?.color || '#ffffff'"
+                 [style.fontSize.px]="l.style?.fontSize || 14"
+                 [style.fontWeight]="l.style?.fontWeight || '400'"
+                 [style.fontFamily]="l.style?.fontFamily || 'inherit'"
+                 [style.letterSpacing.px]="l.style?.letterSpacing || 0"
+                 [style.lineHeight]="l.style?.lineHeight || 1.3">
+              {{ evalPassText(l.text) }}
+            </div>
+            <img *ngIf="l.type === 'image'"
+                 [src]="layerMediaSource(l)"
+                 alt="Elemento"
+                 style="width: 100%; height: 100%; display: block;"
+                 [style.objectFit]="l.style?.objectFit || 'contain'"
+                 [style.borderRadius.px]="l.style?.borderRadius || 0">
+            <div *ngIf="l.type === 'shape'"
+                 style="width: 100%; height: 100%;"
+                 [style.backgroundColor]="l.style?.backgroundColor || '#000'"
+                 [style.borderRadius.px]="l.style?.borderRadius || 0">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
+        <button type="button" class="primary" (click)="exportPass('png')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #c9a87c; color: #fff; font-weight: 700; cursor: pointer;">📥 Descargar Imagen</button>
+        <button type="button" class="secondary" (click)="passPreviewModalOpen = false" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer;">Cerrar</button>
+      </div>
+    </div>
+  </div>

@@ -25,7 +25,7 @@
     <button type="button" (click)="scrollToSection('comms-passes-banner')">Pases especiales</button>
     <button type="button" (click)="scrollToSection('comms-results')">Resultados</button>
     <a *ngIf="invitation?._id || invitation?.id"
-       [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'pass-editor']"
+       [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'visual-editor']" [queryParams]="{ mode: 'pass' }"
        class="comms-jump-pass-btn"
        style="display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:12.5px; text-decoration:none; padding:6px 14px; border-radius:999px; background:linear-gradient(135deg, #c9a87c 0%, #b8925d 100%); color:#0f172a; margin-left:auto; box-shadow:0 2px 8px rgba(0,0,0,0.18);">
       🎨 Diseñar Pase VIP 🎟️
@@ -574,7 +574,7 @@
       </div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <a *ngIf="invitation?._id || invitation?.id"
-          [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'pass-editor']"
+          [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'visual-editor']" [queryParams]="{ mode: 'pass' }"
           class="nw-btn nw-btn-primary"
           style="display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:14px; height:42px; padding:0 22px; text-decoration:none; box-shadow:0 3px 12px rgba(201, 168, 124, 0.35);">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1267,7 +1267,7 @@
         Adjuntar Pase VIP
       </h3>
       <a *ngIf="invitation?._id || invitation?.id"
-        [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'pass-editor']"
+        [routerLink]="['/new/invitations', invitation?._id || invitation?.id, 'visual-editor']" [queryParams]="{ mode: 'pass' }"
         class="nw-btn nw-btn-secondary nw-btn-sm"
         style="display:inline-flex; align-items:center; gap:6px; font-weight:600; text-decoration:none;">
         🎨 Personalizar diseño del pase ↗

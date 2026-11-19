@@ -6,7 +6,7 @@ import {
   Images, Instagram, KeyRound, Layers, Link, Lock, LockKeyhole, LockOpen, Mail, MapPin, MapPinned,
   MessageCircle, MicVocal, Monitor, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen,
   PanelsTopLeft, PartyPopper, Phone, Play, QrCode, Redo2, Save, Search, Send, Shapes, Share2, ShieldCheck,
-  SlidersHorizontal, Smartphone, Sparkles, Star, Tablet, TicketCheck, Trash2, Type, Undo2, Upload,
+  SlidersHorizontal, Smartphone, Sparkles, Star, Tablet, Ticket, TicketCheck, Trash2, Type, Undo2, Upload,
   UserRound, Users, Utensils, Wine, X, Youtube
 } from 'lucide-angular';
 
@@ -18,7 +18,7 @@ export const VISUAL_LUCIDE_ICONS = {
   Images, Instagram, KeyRound, Layers, Link, Lock, LockKeyhole, LockOpen, Mail, MapPin, MapPinned,
   MessageCircle, MicVocal, Monitor, Music, Music2, Navigation, Palette, PanelLeftClose, PanelLeftOpen,
   PanelsTopLeft, PartyPopper, Phone, Play, QrCode, Redo2, Save, Search, Send, Shapes, Share2, ShieldCheck,
-  SlidersHorizontal, Smartphone, Sparkles, Star, Tablet, TicketCheck, Trash2, Type, Undo2, Upload,
+  SlidersHorizontal, Smartphone, Sparkles, Star, Tablet, Ticket, TicketCheck, Trash2, Type, Undo2, Upload,
   UserRound, Users, Utensils, Wine, X, Youtube
 };
 
