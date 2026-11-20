@@ -21,6 +21,10 @@ export class AuthService {
     return this.userSubject.value;
   }
 
+  get isAdmin(): boolean {
+    return this.userSubject.value?.role === 'admin';
+  }
+
   get isAuthenticated(): boolean {
     return Boolean(this.token);
   }

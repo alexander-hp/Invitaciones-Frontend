@@ -389,10 +389,10 @@ export interface VisualInvitationLayerStyle {
   clipPath?: string;
   frameEnabled?: boolean;
   shapeKind?:
-    | 'rectangle' | 'rounded' | 'pill' | 'circle' | 'ellipse' | 'arch' | 'arch-inverted' | 'window'
-    | 'triangle' | 'triangle-down' | 'diamond' | 'pentagon' | 'hexagon' | 'octagon'
-    | 'star' | 'star-4' | 'star-8' | 'heart' | 'shield' | 'ticket' | 'banner' | 'pennant' | 'chevron' | 'clover'
-    | 'line' | 'line-diamond';
+  | 'rectangle' | 'rounded' | 'pill' | 'circle' | 'ellipse' | 'arch' | 'arch-inverted' | 'window'
+  | 'triangle' | 'triangle-down' | 'diamond' | 'pentagon' | 'hexagon' | 'octagon'
+  | 'star' | 'star-4' | 'star-8' | 'heart' | 'shield' | 'ticket' | 'banner' | 'pennant' | 'chevron' | 'clover'
+  | 'line' | 'line-diamond';
   controlVariant?: 'default' | 'cards';
   controlShape?: 'rectangle' | 'pill' | 'cloud' | 'notebook';
   showLabel?: boolean;
@@ -635,7 +635,10 @@ export interface VisualDesignTemplateModel {
   previewImageUrl?: string;
   thumbnailUrl?: string;
   isPublic?: boolean;
-  status?: 'draft' | 'published' | 'featured';
+  status?: 'draft' | 'pending' | 'published' | 'featured' | 'rejected';
+  adminFeedback?: string;
+  reviewedAt?: string;
+  reviewedBy?: any;
   authorRewardPercent?: number;
   includesInvitation?: boolean;
   includesPass?: boolean;

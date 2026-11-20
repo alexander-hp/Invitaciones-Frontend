@@ -69,8 +69,10 @@ const routes: Routes = [
   { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
-  { path: 'new/custom-templates', component: NewCustomTemplatesComponent, canActivate: [AdminGuard] },
-  { path: 'new/admin/templates', redirectTo: 'new/custom-templates' },
+  { path: 'new/template-management', component: NewCustomTemplatesComponent, canActivate: [AdminGuard] },
+  { path: 'new/admin/template-management', redirectTo: 'new/template-management' },
+  { path: 'new/custom-templates', redirectTo: 'new/template-management' },
+  { path: 'new/admin/templates', redirectTo: 'new/template-management' },
   { path: 'new/invitations/:id/editor', component: NewInvitationEditorComponent, canActivate: [AuthGuard] },
   {
     path: 'new/invitations/:id/visual-editor',

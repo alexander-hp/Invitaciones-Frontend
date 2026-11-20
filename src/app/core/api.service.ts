@@ -121,6 +121,33 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.apiUrl}/visual-design-templates/${id}`);
   }
 
+  getTemplateManagementSettings(): Observable<{ settings: { autoApproveTemplates: boolean } }> {
+    return this.http.get<{ settings: { autoApproveTemplates: boolean } }>(`${this.apiUrl}/visual-design-templates/admin/settings`);
+  }
+
+  updateTemplateManagementSettings(payload: { autoApproveTemplates: boolean }): Observable<{ settings: { autoApproveTemplates: boolean }; message: string }> {
+    return this.http.put<{ settings: { autoApproveTemplates: boolean }; message: string }>(`${this.apiUrl}/visual-design-templates/admin/settings`, payload);
+  }
+
+  listAdminVisualTemplates(params?: { status?: string; search?: string; eventType?: string; sort?: string }): Observable<{ templates: VisualDesignTemplateModel[]; counts: { total: number; pending: number; published: number; featured: number; rejected: number; draft: number }; total: number }> {
+    let httpParams = new HttpParams();
+    if (params?.status) httpParams = httpParams.set('status', params.status);
+    if (params?.search) httpParams = httpParams.set('search', params.search);
+    if (params?.eventType) httpParams = httpParams.set('eventType', params.eventType);
+    if (params?.sort) httpParams = httpParams.set('sort', params.sort);
+    return this.http.get<{ templates: VisualDesignTemplateModel[]; counts: { total: number; pending: number; published: number; featured: number; rejected: number; draft: number }; total: number }>(
+      `${this.apiUrl}/visual-design-templates/admin/manage`,
+      { params: httpParams }
+    );
+  }
+
+  updateVisualTemplateModeration(id: string, payload: { status: 'pending' | 'published' | 'featured' | 'rejected' | 'draft'; adminFeedback?: string }): Observable<{ template: VisualDesignTemplateModel; message: string }> {
+    return this.http.patch<{ template: VisualDesignTemplateModel; message: string }>(
+      `${this.apiUrl}/visual-design-templates/admin/${id}/status`,
+      payload
+    );
+  }
+
   listVisualDesignRevisions(invitationId: string): Observable<{ revisions: VisualDesignRevisionModel[] }> {
     return this.http.get<{ revisions: VisualDesignRevisionModel[] }>(`${this.apiUrl}/invitations/${invitationId}/visual-revisions`);
   }

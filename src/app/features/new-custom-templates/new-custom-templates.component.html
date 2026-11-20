@@ -1,104 +1,197 @@
 <div class="nw-page-wrapper">
   <!-- Toast Notification -->
   <div *ngIf="toastMessage" class="nw-toast" [class.error]="toastType === 'error'">
-    <svg *ngIf="toastType === 'success'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    <svg *ngIf="toastType === 'success'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
-    <svg *ngIf="toastType === 'error'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="12"></line>
-      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    <svg *ngIf="toastType === 'error'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
     <span>{{ toastMessage }}</span>
   </div>
 
-  <div class="nw-content-container" style="max-width:1200px; margin:0 auto; padding:28px 20px;">
+  <div class="nw-content-container" style="max-width:1280px; margin:0 auto; padding:28px 20px;">
 
     <!-- HEADER DE PÁGINA -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:18px; margin-bottom:24px;">
       <div>
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
           <span class="nw-pill accent" style="font-weight:700;">Panel de Administración</span>
-          <span class="nw-pill" style="font-weight:600;">HTML / CSS Hosting</span>
+          <span class="nw-pill gold" style="font-weight:700; display:inline-flex; align-items:center; gap:5px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+            </svg>
+            Marketplace & Moderación
+          </span>
         </div>
         <h1 style="margin:0; font-size:26px; font-weight:800; color:var(--nw-text); font-family:var(--nw-font-display);">
-          Gestión de Plantillas y Páginas Personalizadas
+          Centro de Gestión y Moderación de Plantillas
         </h1>
-        <p style="margin:6px 0 0; font-size:14px; color:var(--nw-text-2); max-width:700px;">
-          Revisa el código HTML y CSS subido por los anfitriones, previsualiza el diseño en tiempo real para todos los dispositivos y aprueba la publicación oficial de la invitación.
+        <p style="margin:6px 0 0; font-size:14px; color:var(--nw-text-2); max-width:760px; line-height:1.5;">
+          Supervisa las plantillas comunitarias del editor visual y páginas externas de integración. Modera una por una o activa la publicación automática.
         </p>
       </div>
 
       <div style="display:flex; gap:10px; align-items:center;">
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="loadSubmissions()" [disabled]="loading" style="display:inline-flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="loadData()" [disabled]="loading" style="display:inline-flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spin-icon]="loading">
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+            <polyline points="21 3 21 8 16 8"></polyline>
           </svg>
           <span>{{ loading ? 'Actualizando...' : 'Refrescar' }}</span>
         </button>
       </div>
     </div>
 
-    <!-- MÉTRICAS SUPERIORES -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:24px;">
-      <!-- Total -->
-      <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid var(--nw-accent);">
-        <div style="width:42px; height:42px; border-radius:10px; background:rgba(197, 155, 108, 0.15); display:flex; align-items:center; justify-content:center; color:var(--nw-accent);">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="3" y1="9" x2="21" y2="9"></line>
-            <line x1="9" y1="21" x2="9" y2="9"></line>
+    <!-- BANNER DE CONFIGURACIÓN GLOBAL: APROBACIÓN AUTOMÁTICA -->
+    <div class="nw-card auto-approve-banner" style="margin-bottom:24px; padding:20px 24px; border-left:4px solid var(--nw-accent); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; align-items:center; gap:16px; min-width:280px; flex:1;">
+        <div class="auto-approve-icon-box" [class.active]="autoApproveTemplates">
+          <svg *ngIf="autoApproveTemplates" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <svg *ngIf="!autoApproveTemplates" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="m9 12 2 2 4-4"></path>
           </svg>
         </div>
         <div>
-          <span style="font-size:12px; font-weight:600; color:var(--nw-text-3); text-transform:uppercase; letter-spacing:0.05em;">Total Páginas</span>
-          <div style="font-size:24px; font-weight:800; color:var(--nw-text); line-height:1.2;">{{ counts.total }}</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong style="font-size:15px; color:var(--nw-text);">Modo de Publicación Comunitaria:</strong>
+            <span class="nw-pill" [class.success]="autoApproveTemplates" [class.warning]="!autoApproveTemplates" style="font-weight:700;">
+              {{ autoApproveTemplates ? 'Publicación Automática (Inmediata)' : 'Moderación Manual (Una por una)' }}
+            </span>
+          </div>
+          <p style="margin:4px 0 0; font-size:12.5px; color:var(--nw-text-2); line-height:1.4;">
+            <ng-container *ngIf="autoApproveTemplates">
+              Cualquier usuario que publique su plantilla aparecerá <strong>inmediatamente en el catálogo comunitario</strong> sin requerir aprobación previa.
+            </ng-container>
+            <ng-container *ngIf="!autoApproveTemplates">
+              Las nuevas plantillas quedan en estado <strong>Pendiente de Aprobación</strong> y deben ser verificadas una por una por el administrador antes de ser visibles.
+            </ng-container>
+          </p>
+        </div>
+      </div>
+
+      <!-- Switch Toggle Button -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px; font-weight:700; color:var(--nw-text-3);">
+          {{ autoApproveTemplates ? 'AUTO: ON' : 'AUTO: OFF' }}
+        </span>
+        <button type="button" class="policy-toggle-switch" [class.checked]="autoApproveTemplates"
+                [disabled]="savingSetting"
+                (click)="toggleAutoApprove(!autoApproveTemplates)"
+                [attr.aria-label]="autoApproveTemplates ? 'Desactivar publicación automática' : 'Activar publicación automática'">
+          <span class="switch-handle"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SELECTOR DE ORIGEN DE PLANTILLA -->
+    <div class="template-source-tabs" style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--nw-border); padding-bottom:12px;">
+      <button type="button" class="source-tab-btn" [class.active]="templateSource === 'visual'" (click)="setTemplateSource('visual')">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+        </svg>
+        <div>
+          <strong>Plantillas Comunitarias (3 en 1)</strong>
+          <small>Diseños del editor: Invitación + Pase VIP + Pantalla de Acceso ({{ visualCounts.total }})</small>
+        </div>
+      </button>
+
+      <button type="button" class="source-tab-btn" [class.active]="templateSource === 'custom'" (click)="setTemplateSource('custom')">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <div>
+          <strong>Plantillas de Integración (HTML / CSS)</strong>
+          <small>Páginas externas y hosting de código personalizado ({{ customCounts.total }})</small>
+        </div>
+      </button>
+    </div>
+
+    <!-- MÉTRICAS SUPERIORES -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px; margin-bottom:24px;">
+      <!-- Total -->
+      <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid var(--nw-accent); cursor:pointer;" (click)="activeTab = 'all'">
+        <div style="width:42px; height:42px; border-radius:10px; background:rgba(197, 155, 108, 0.15); display:flex; align-items:center; justify-content:center; color:var(--nw-accent);">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div>
+          <span style="font-size:11.5px; font-weight:600; color:var(--nw-text-3); text-transform:uppercase; letter-spacing:0.05em;">Total</span>
+          <div style="font-size:24px; font-weight:800; color:var(--nw-text); line-height:1.2;">
+            {{ templateSource === 'visual' ? visualCounts.total : customCounts.total }}
+          </div>
         </div>
       </div>
 
       <!-- Pendientes -->
       <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #eab308; cursor:pointer;" (click)="activeTab = 'pending'">
         <div style="width:42px; height:42px; border-radius:10px; background:rgba(234, 179, 8, 0.15); display:flex; align-items:center; justify-content:center; color:#b45309;">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
         </div>
         <div>
-          <span style="font-size:12px; font-weight:600; color:#b45309; text-transform:uppercase; letter-spacing:0.05em;">Pendientes de Revisión</span>
-          <div style="font-size:24px; font-weight:800; color:#b45309; line-height:1.2;">{{ counts.pending }}</div>
+          <span style="font-size:11.5px; font-weight:600; color:#b45309; text-transform:uppercase; letter-spacing:0.05em;">Pendientes</span>
+          <div style="font-size:24px; font-weight:800; color:#b45309; line-height:1.2;">
+            {{ templateSource === 'visual' ? visualCounts.pending : customCounts.pending }}
+          </div>
         </div>
       </div>
 
-      <!-- Aprobadas -->
-      <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #22c55e; cursor:pointer;" (click)="activeTab = 'approved'">
+      <!-- Aprobadas / Publicadas -->
+      <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #22c55e; cursor:pointer;" (click)="activeTab = 'published'">
         <div style="width:42px; height:42px; border-radius:10px; background:rgba(34, 197, 94, 0.15); display:flex; align-items:center; justify-content:center; color:#16a34a;">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
         </div>
         <div>
-          <span style="font-size:12px; font-weight:600; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em;">Aprobadas & Activas</span>
-          <div style="font-size:24px; font-weight:800; color:#16a34a; line-height:1.2;">{{ counts.approved }}</div>
+          <span style="font-size:11.5px; font-weight:600; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em;">Aprobadas & Activas</span>
+          <div style="font-size:24px; font-weight:800; color:#16a34a; line-height:1.2;">
+            {{ templateSource === 'visual' ? visualCounts.published : customCounts.approved }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Destacadas (solo visual) -->
+      <div *ngIf="templateSource === 'visual'" class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #d4af37; cursor:pointer;" (click)="activeTab = 'featured'">
+        <div style="width:42px; height:42px; border-radius:10px; background:rgba(212, 175, 55, 0.15); display:flex; align-items:center; justify-content:center; color:#a17812;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <div>
+          <span style="font-size:11.5px; font-weight:600; color:#a17812; text-transform:uppercase; letter-spacing:0.05em;">Destacadas (Top)</span>
+          <div style="font-size:24px; font-weight:800; color:#a17812; line-height:1.2;">
+            {{ visualCounts.featured }}
+          </div>
         </div>
       </div>
 
       <!-- Rechazadas -->
       <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #ef4444; cursor:pointer;" (click)="activeTab = 'rejected'">
         <div style="width:42px; height:42px; border-radius:10px; background:rgba(239, 68, 68, 0.15); display:flex; align-items:center; justify-content:center; color:#dc2626;">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="15" y1="9" x2="9" y2="15"></line>
             <line x1="9" y1="9" x2="15" y2="15"></line>
           </svg>
         </div>
         <div>
-          <span style="font-size:12px; font-weight:600; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em;">Ajustes Requeridos</span>
-          <div style="font-size:24px; font-weight:800; color:#dc2626; line-height:1.2;">{{ counts.rejected }}</div>
+          <span style="font-size:11.5px; font-weight:600; color:#dc2626; text-transform:uppercase; letter-spacing:0.05em;">Ajustes / Rechazadas</span>
+          <div style="font-size:24px; font-weight:800; color:#dc2626; line-height:1.2;">
+            {{ templateSource === 'visual' ? visualCounts.rejected : customCounts.rejected }}
+          </div>
         </div>
       </div>
     </div>
@@ -110,460 +203,591 @@
         <button type="button" class="nw-btn nw-btn-sm"
           [class.nw-btn-primary]="activeTab === 'all'"
           [class.nw-btn-ghost]="activeTab !== 'all'"
-          (click)="activeTab = 'all'">
-          Todas ({{ counts.total }})
+          (click)="activeTab = 'all'; loadData()">
+          Todas
         </button>
         <button type="button" class="nw-btn nw-btn-sm"
           [class.nw-btn-primary]="activeTab === 'pending'"
           [class.nw-btn-ghost]="activeTab !== 'pending'"
-          (click)="activeTab = 'pending'" style="display:inline-flex; align-items:center; gap:5px;">
+          (click)="activeTab = 'pending'; loadData()" style="display:inline-flex; align-items:center; gap:5px;">
           <span>Pendientes</span>
-          <span *ngIf="counts.pending > 0" class="badge-count">{{ counts.pending }}</span>
+          <span *ngIf="(templateSource === 'visual' ? visualCounts.pending : customCounts.pending) > 0" class="badge-count">
+            {{ templateSource === 'visual' ? visualCounts.pending : customCounts.pending }}
+          </span>
         </button>
         <button type="button" class="nw-btn nw-btn-sm"
-          [class.nw-btn-primary]="activeTab === 'approved'"
-          [class.nw-btn-ghost]="activeTab !== 'approved'"
-          (click)="activeTab = 'approved'">
-          Aprobadas ({{ counts.approved }})
+          [class.nw-btn-primary]="activeTab === 'published'"
+          [class.nw-btn-ghost]="activeTab !== 'published'"
+          (click)="activeTab = 'published'; loadData()">
+          Aprobadas & Activas
+        </button>
+        <button *ngIf="templateSource === 'visual'" type="button" class="nw-btn nw-btn-sm"
+          [class.nw-btn-primary]="activeTab === 'featured'"
+          [class.nw-btn-ghost]="activeTab !== 'featured'"
+          (click)="activeTab = 'featured'; loadData()" style="display:inline-flex; align-items:center; gap:4px;">
+          <span>★ Destacadas ({{ visualCounts.featured }})</span>
         </button>
         <button type="button" class="nw-btn nw-btn-sm"
           [class.nw-btn-primary]="activeTab === 'rejected'"
           [class.nw-btn-ghost]="activeTab !== 'rejected'"
-          (click)="activeTab = 'rejected'">
-          Ajustes Solicitados ({{ counts.rejected }})
+          (click)="activeTab = 'rejected'; loadData()">
+          Ajustes Solicitados
         </button>
       </div>
 
       <!-- Buscador -->
       <div style="position:relative; width:100%; max-width:320px;">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--nw-text-3);">
+             style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--nw-text-3);">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input class="nw-input" [(ngModel)]="searchQuery" placeholder="Buscar por diseño, evento o autor..." style="padding-left:36px; height:38px; font-size:13px;">
+        <input class="nw-input" [(ngModel)]="searchQuery" (ngModelChange)="loadData()"
+               placeholder="Buscar por diseño, autor o categoría..." style="padding-left:36px; height:38px; font-size:13px; width:100%;">
       </div>
     </div>
 
-    <!-- LISTADO DE PLANTILLAS -->
+    <!-- SPINNER DE CARGA -->
     <div *ngIf="loading" style="padding:48px 20px; text-align:center; color:var(--nw-text-2);">
       <div class="nw-spinner" style="margin:0 auto 12px;"></div>
-      <p style="font-size:14px; font-weight:600;">Cargando solicitudes de plantillas...</p>
+      <p style="font-size:14px; font-weight:600;">Cargando plantillas del sistema...</p>
     </div>
 
-    <!-- Estado Vacío -->
-    <div *ngIf="!loading && filteredSubmissions.length === 0" class="nw-card" style="padding:48px 20px; text-align:center;">
-      <div style="width:56px; height:56px; border-radius:50%; background:var(--nw-surface-2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--nw-text-3);">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="12" y1="18" x2="12" y2="12"></line>
-          <line x1="9" y1="15" x2="15" y2="15"></line>
-        </svg>
-      </div>
-      <h3 style="margin:0 0 6px; font-size:17px; font-weight:700; color:var(--nw-text);">No se encontraron solicitudes</h3>
-      <p style="margin:0; font-size:13.5px; color:var(--nw-text-2);">
-        {{ searchQuery ? 'No hay plantillas que coincidan con la búsqueda.' : 'No hay solicitudes registradas en este estado.' }}
-      </p>
-    </div>
-
-    <!-- Grid de Tarjetas de Plantillas -->
-    <div *ngIf="!loading && filteredSubmissions.length > 0" style="display:flex; flex-direction:column; gap:16px;">
-      <div *ngFor="let sub of filteredSubmissions" class="nw-card submission-card" style="padding:22px;">
-        
-        <!-- Header de la Tarjeta -->
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-          <div style="display:flex; align-items:flex-start; gap:12px;">
-            <div style="width:42px; height:42px; border-radius:10px; background:var(--nw-surface-2); display:flex; align-items:center; justify-content:center; color:var(--nw-accent); flex-shrink:0; margin-top:2px;">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-              </svg>
-            </div>
-            <div>
-              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <h3 style="margin:0; font-size:17px; font-weight:800; color:var(--nw-text);">{{ sub.name }}</h3>
-                <span *ngIf="sub.eventType" class="nw-pill" style="font-size:11px; text-transform:uppercase;">{{ sub.eventType }}</span>
-              </div>
-              <p style="margin:3px 0 0; font-size:13px; color:var(--nw-text-2); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span><strong>Evento:</strong> {{ sub.eventTitle }}</span>
-                <span>·</span>
-                <span><strong>Slug:</strong> <code>{{ sub.eventSlug }}</code></span>
-                <span *ngIf="sub.authorName">·</span>
-                <span *ngIf="sub.authorName"><strong>Solicitante:</strong> {{ sub.authorName }}</span>
-                <span>·</span>
-                <span>{{ sub.submittedAt | date:'medium' }}</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Badge de Estado -->
-          <div>
-            <span *ngIf="sub.status === 'pending'" class="nw-pill warning" style="font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;">
-              <span class="pulsing-dot-amber"></span>
-              Pendiente de Aprobación
-            </span>
-            <span *ngIf="sub.status === 'approved'" class="nw-pill success" style="font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              Aprobada & Publicada
-            </span>
-            <span *ngIf="sub.status === 'rejected'" class="nw-pill danger" style="font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-              Ajustes Solicitados
-            </span>
-          </div>
-        </div>
-
-        <!-- Notas / Feedback del Admin -->
-        <div *ngIf="sub.notes" style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:var(--nw-text-2);">
-          <strong>Notas del Anfitrión:</strong> {{ sub.notes }}
-        </div>
-
-        <div *ngIf="sub.adminFeedback && sub.status === 'rejected'" style="background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.3); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:#b91c1c;">
-          <strong>Feedback de Ajustes:</strong> {{ sub.adminFeedback }}
-        </div>
-
-        <!-- Enlace Público si está aprobada -->
-        <div *ngIf="sub.status === 'approved'" style="background:rgba(34, 197, 94, 0.06); border:1px solid rgba(34, 197, 94, 0.3); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-          <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#16a34a; flex-shrink:0;">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-            <span style="font-family:monospace; font-size:13px; color:var(--nw-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ getPublicUrl(sub) }}</span>
-          </div>
-          <div style="display:flex; gap:6px;">
-            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyLink(getPublicUrl(sub))" style="display:inline-flex; align-items:center; gap:4px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-              <span>Copiar Enlace</span>
-            </button>
-            <a [href]="getPublicUrl(sub)" target="_blank" class="nw-btn nw-btn-primary nw-btn-sm" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              <span>Ver en Vivo</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Métricas Técnicas de Código -->
-        <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--nw-text-2); padding-top:8px; border-top:1px solid var(--nw-border); margin-top:8px;">
-          <div><strong>Tamaño HTML:</strong> {{ ((sub.htmlCode?.length || 0) / 1024).toFixed(1) }} KB</div>
-          <div><strong>Tamaño CSS:</strong> {{ ((sub.cssCode?.length || 0) / 1024).toFixed(1) }} KB</div>
-          <div><strong>Puntuación de Código:</strong> <span class="nw-pill" style="font-size:11px; padding:2px 8px; font-weight:700;">{{ sub.score || 90 }} / 100</span></div>
-          
-          <!-- Botones de Acción -->
-          <div style="margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <!-- Previsualizar -->
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="openPreview(sub)" style="display:inline-flex; align-items:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <span>Previsualizar</span>
-            </button>
-
-            <!-- Editar Código -->
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="openEditModal(sub)" style="display:inline-flex; align-items:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
-              <span>Editar</span>
-            </button>
-
-            <!-- Solicitar Ajustes / Rechazar -->
-            <button *ngIf="sub.status !== 'rejected'" class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="openRejectModal(sub)" style="color:var(--nw-danger); display:inline-flex; align-items:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-              <span>Solicitar Ajustes</span>
-            </button>
-
-            <!-- Aprobar y Publicar -->
-            <button *ngIf="sub.status !== 'approved'" class="nw-btn nw-btn-primary nw-btn-sm" type="button" (click)="openApproveModal(sub)" style="display:inline-flex; align-items:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Aprobar y Publicar</span>
-            </button>
-
-            <!-- Eliminar -->
-            <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="deleteSubmission(sub)" style="color:var(--nw-text-3);" title="Eliminar solicitud">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================================= -->
-<!-- MODAL DE PREVISUALIZACIÓN MULTI-DISPOSITIVO Y CÓDIGO -->
-<!-- ========================================================= -->
-<div class="nw-modal-backdrop" *ngIf="showPreviewModal" (click)="showPreviewModal = false">
-  <div class="nw-modal" (click)="$event.stopPropagation()"
-    style="max-width:1050px; width:95vw; height:90vh; display:flex; flex-direction:column; padding:20px;">
-    
-    <!-- Modal Header -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--nw-border); padding-bottom:12px;">
-      <div>
-        <h2 style="margin:0; font-size:18px; font-weight:800; color:var(--nw-text); display:flex; align-items:center; gap:8px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--nw-accent);">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
+    <!-- ======================================================== -->
+    <!-- SECCIÓN A: LISTA DE PLANTILLAS VISUALES COMUNITARIAS     -->
+    <!-- ======================================================== -->
+    <ng-container *ngIf="!loading && templateSource === 'visual'">
+      <!-- Estado Vacío -->
+      <div *ngIf="filteredVisualTemplates.length === 0" class="nw-card" style="padding:48px 20px; text-align:center;">
+        <div style="width:56px; height:56px; border-radius:50%; background:var(--nw-surface-2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--nw-text-3);">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
           </svg>
-          Previsualizador de Plantilla: {{ selectedSubmission?.name }}
-        </h2>
-        <p style="margin:2px 0 0; font-size:12.5px; color:var(--nw-text-2);">
-          Evento: <strong>{{ selectedSubmission?.eventTitle }}</strong> ({{ selectedSubmission?.eventSlug }})
+        </div>
+        <h3 style="margin:0 0 6px; font-size:17px; font-weight:700; color:var(--nw-text);">No se encontraron plantillas visuales</h3>
+        <p style="margin:0; font-size:13.5px; color:var(--nw-text-2);">
+          {{ searchQuery ? 'No hay plantillas que coincidan con la búsqueda.' : 'No hay plantillas registradas en este estado.' }}
         </p>
       </div>
 
-      <!-- Selector de Modos y Viewport -->
-      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <!-- Pestañas de Vista -->
-        <div class="nw-tab-group" style="display:flex; gap:4px;">
-          <button class="nw-btn nw-btn-sm" type="button"
-            [class.nw-btn-primary]="previewActiveTab === 'preview'"
-            [class.nw-btn-ghost]="previewActiveTab !== 'preview'"
-            (click)="previewActiveTab = 'preview'">
-            Vista en Vivo
-          </button>
-          <button class="nw-btn nw-btn-sm" type="button"
-            [class.nw-btn-primary]="previewActiveTab === 'html'"
-            [class.nw-btn-ghost]="previewActiveTab !== 'html'"
-            (click)="previewActiveTab = 'html'">
-            HTML
-          </button>
-          <button class="nw-btn nw-btn-sm" type="button"
-            [class.nw-btn-primary]="previewActiveTab === 'css'"
-            [class.nw-btn-ghost]="previewActiveTab !== 'css'"
-            (click)="previewActiveTab = 'css'">
-            CSS
-          </button>
+      <!-- Lista de Tarjetas de Plantillas Visuales -->
+      <div *ngIf="filteredVisualTemplates.length > 0" style="display:flex; flex-direction:column; gap:16px;">
+        <div *ngFor="let tpl of filteredVisualTemplates" class="nw-card submission-card" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:18px;">
+            
+            <!-- Columna Izquierda: Miniatura e Información -->
+            <div style="display:flex; gap:18px; min-width:320px; flex:1;">
+              <!-- Miniatura Visual Real -->
+              <div class="admin-tpl-thumb-wrap">
+                <img [src]="getTemplateThumbnail(tpl)" alt="Vista previa de {{ tpl.name }}" loading="lazy" class="admin-tpl-thumb-img" />
+                <span class="admin-badge-overlay" *ngIf="tpl.status === 'featured'">
+                  ★ Destacada
+                </span>
+              </div>
+
+              <!-- Metadatos de la Plantilla -->
+              <div style="display:flex; flex-direction:column; gap:5px; flex:1;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--nw-text);">{{ tpl.name }}</h3>
+                  <span class="nw-pill" style="font-size:11px; text-transform:uppercase;">{{ tpl.eventType || 'evento' }}</span>
+                  <span class="nw-pill gold" *ngIf="tpl.authorRewardPercent" style="font-size:10.5px; font-weight:700;">
+                    5% creador
+                  </span>
+                </div>
+
+                <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-2); line-height:1.45;">
+                  {{ tpl.description || 'Sin descripción adicional proporcionada por el autor.' }}
+                </p>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--nw-text-3); margin-top:4px;">
+                  <span><strong>Autor:</strong> {{ tpl.authorName || 'Velisse Oficial' }}</span>
+                  <span>·</span>
+                  <span><strong>Usos:</strong> {{ tpl.usageCount || 0 }}</span>
+                  <span>·</span>
+                  <span><strong>Fecha:</strong> {{ tpl.createdAt | date:'medium' }}</span>
+                </div>
+
+                <!-- Chips de Componentes Incluidos -->
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                  <span class="nw-pill success" style="font-size:10.5px; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect></svg>
+                    Invitación
+                  </span>
+                  <span class="nw-pill" [class.success]="hasPassDesign(tpl)" style="font-size:10.5px; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
+                    {{ hasPassDesign(tpl) ? 'Pase VIP' : 'Sin Pase VIP' }}
+                  </span>
+                  <span class="nw-pill" [class.success]="hasAccessScreen(tpl)" style="font-size:10.5px; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    {{ hasAccessScreen(tpl) ? 'Acceso NIP' : 'Sin Acceso' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna Derecha: Badges de Estado y Acciones Rápidas -->
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:12px;">
+              <!-- Badge de Estado -->
+              <div>
+                <span *ngIf="tpl.status === 'pending'" class="nw-pill warning" style="font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+                  <span class="pulsing-dot-amber"></span> Pendiente de Revisión
+                </span>
+                <span *ngIf="tpl.status === 'published'" class="nw-pill success" style="font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Activa en Catálogo
+                </span>
+                <span *ngIf="tpl.status === 'featured'" class="nw-pill gold" style="font-weight:800; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+                  ★ Destacada Oficial
+                </span>
+                <span *ngIf="tpl.status === 'rejected'" class="nw-pill danger" style="font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+                  ✕ Ajustes Requeridos
+                </span>
+                <span *ngIf="tpl.status === 'draft'" class="nw-pill" style="font-weight:600; font-size:12px;">
+                  Borrador Personal
+                </span>
+              </div>
+
+              <!-- Botones de Acción Una por Una -->
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <!-- Previsualizar -->
+                <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openVisualPreview(tpl)" style="display:inline-flex; align-items:center; gap:5px;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span>Previsualizar</span>
+                </button>
+
+                <!-- Aprobar / Publicar (si no está publicada) -->
+                <button *ngIf="tpl.status === 'pending' || tpl.status === 'rejected'" type="button"
+                        class="nw-btn nw-btn-primary nw-btn-sm" [disabled]="moderatingVisual"
+                        (click)="approveVisualTemplate(tpl)" style="display:inline-flex; align-items:center; gap:5px; background:#16a34a; border-color:#16a34a;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Aprobar</span>
+                </button>
+
+                <!-- Destacar / Quitar Destacado -->
+                <button *ngIf="tpl.status === 'published' || tpl.status === 'featured'" type="button"
+                        class="nw-btn nw-btn-sm" [class.nw-btn-primary]="tpl.status === 'featured'" [class.nw-btn-secondary]="tpl.status !== 'featured'"
+                        [disabled]="moderatingVisual"
+                        (click)="featureVisualTemplate(tpl)"
+                        [title]="tpl.status === 'featured' ? 'Quitar de destacados' : 'Destacar plantilla en el catálogo'">
+                  <span>{{ tpl.status === 'featured' ? '★ Destacada' : '☆ Destacar' }}</span>
+                </button>
+
+                <!-- Rechazar / Retirar -->
+                <button *ngIf="tpl.status !== 'rejected'" type="button"
+                        class="nw-btn nw-btn-danger nw-btn-sm" [disabled]="moderatingVisual"
+                        (click)="openRejectVisualModal(tpl)" style="display:inline-flex; align-items:center; gap:5px;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  <span>Rechazar</span>
+                </button>
+
+                <!-- Eliminar -->
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" [disabled]="moderatingVisual"
+                        (click)="deleteVisualTemplate(tpl)" title="Eliminar plantilla permanentemente" style="color:#dc2626;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback de Ajustes (si está rechazada) -->
+          <div *ngIf="tpl.adminFeedback && tpl.status === 'rejected'" style="margin-top:12px; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.3); border-radius:8px; padding:10px 14px; font-size:12.5px; color:#b91c1c;">
+            <strong>Motivo / Ajustes solicitados al autor:</strong> {{ tpl.adminFeedback }}
+          </div>
         </div>
+      </div>
+    </ng-container>
 
-        <!-- Viewport Selector (solo en vista preview) -->
-        <div *ngIf="previewActiveTab === 'preview'" style="display:flex; gap:4px; margin-left:8px; border-left:1px solid var(--nw-border); padding-left:8px;">
-          <button class="nw-btn nw-btn-sm" type="button"
-            [class.nw-btn-primary]="previewViewport === 'desktop'"
-            [class.nw-btn-ghost]="previewViewport !== 'desktop'"
-            (click)="previewViewport = 'desktop'" title="Escritorio">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-          </button>
-          <button class="nw-btn nw-btn-sm" type="button"
-            [class.nw-btn-primary]="previewViewport === 'tablet'"
-            [class.nw-btn-ghost]="previewViewport !== 'tablet'"
-            (click)="previewViewport = 'tablet'" title="Tablet">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-              <line x1="12" y1="18" x2="12.01" y2="18"></line>
-            </svg>
-          </button>
-          <button class="nw-btn nw-btn-sm" type="button"
-            [class.nw-btn-primary]="previewViewport === 'mobile'"
-            [class.nw-btn-ghost]="previewViewport !== 'mobile'"
-            (click)="previewViewport = 'mobile'" title="Móvil">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-              <line x1="12" y1="18" x2="12.01" y2="18"></line>
-            </svg>
-          </button>
+    <!-- ======================================================== -->
+    <!-- SECCIÓN B: LISTA DE INTEGRACIONES HTML / CSS             -->
+    <!-- ======================================================== -->
+    <ng-container *ngIf="!loading && templateSource === 'custom'">
+      <!-- Estado Vacío -->
+      <div *ngIf="filteredSubmissions.length === 0" class="nw-card" style="padding:48px 20px; text-align:center;">
+        <div style="width:56px; height:56px; border-radius:50%; background:var(--nw-surface-2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--nw-text-3);">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
         </div>
-
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showPreviewModal = false" style="margin-left:8px;">✕</button>
-      </div>
-    </div>
-
-    <!-- Body: Vista Iframe o Visor de Código -->
-    <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
-      
-      <!-- Pestaña 1: Previsualización en Vivo -->
-      <div *ngIf="previewActiveTab === 'preview'" style="flex:1; background:#0f172a; border-radius:var(--nw-radius-sm); overflow:hidden; display:flex; justify-content:center; align-items:center; padding:12px;">
-        <iframe [srcdoc]="getPreviewSafeSrcdoc()"
-          style="background:#ffffff; border:none; transition: width 0.3s ease, height 0.3s ease; border-radius:6px; box-shadow: 0 12px 30px rgba(0,0,0,0.5);"
-          [style.width]="previewViewport === 'mobile' ? '375px' : (previewViewport === 'tablet' ? '768px' : '100%')"
-          [style.height]="previewViewport === 'mobile' ? '667px' : '100%'">
-        </iframe>
+        <h3 style="margin:0 0 6px; font-size:17px; font-weight:700; color:var(--nw-text);">No se encontraron solicitudes de integración</h3>
+        <p style="margin:0; font-size:13.5px; color:var(--nw-text-2);">
+          {{ searchQuery ? 'No hay plantillas que coincidan con la búsqueda.' : 'No hay solicitudes registradas en este estado.' }}
+        </p>
       </div>
 
-      <!-- Pestaña 2: Código HTML -->
-      <div *ngIf="previewActiveTab === 'html'" style="flex:1; overflow:auto; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:14px;">
-        <pre style="margin:0; font-family:monospace; font-size:12.5px; line-height:1.45; white-space:pre-wrap; color:var(--nw-text);">{{ selectedSubmission?.htmlCode }}</pre>
-      </div>
+      <!-- Tarjetas de Plantillas Personalizadas -->
+      <div *ngIf="filteredSubmissions.length > 0" style="display:flex; flex-direction:column; gap:16px;">
+        <div *ngFor="let sub of filteredSubmissions" class="nw-card submission-card" style="padding:22px;">
+          
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              <div style="width:42px; height:42px; border-radius:10px; background:var(--nw-surface-2); display:flex; align-items:center; justify-content:center; color:var(--nw-accent); flex-shrink:0; margin-top:2px;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              </div>
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <h3 style="margin:0; font-size:17px; font-weight:800; color:var(--nw-text);">{{ sub.name }}</h3>
+                  <span *ngIf="sub.eventType" class="nw-pill" style="font-size:11px; text-transform:uppercase;">{{ sub.eventType }}</span>
+                </div>
+                <p style="margin:3px 0 0; font-size:13px; color:var(--nw-text-2); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <span><strong>Evento:</strong> {{ sub.eventTitle }}</span>
+                  <span>·</span>
+                  <span><strong>Slug:</strong> <code>{{ sub.eventSlug }}</code></span>
+                  <span *ngIf="sub.authorName">·</span>
+                  <span *ngIf="sub.authorName"><strong>Solicitante:</strong> {{ sub.authorName }}</span>
+                  <span>·</span>
+                  <span>{{ sub.submittedAt | date:'medium' }}</span>
+                </p>
+              </div>
+            </div>
 
-      <!-- Pestaña 3: Código CSS -->
-      <div *ngIf="previewActiveTab === 'css'" style="flex:1; overflow:auto; background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-sm); padding:14px;">
-        <pre style="margin:0; font-family:monospace; font-size:12.5px; line-height:1.45; white-space:pre-wrap; color:var(--nw-text);">{{ selectedSubmission?.cssCode }}</pre>
-      </div>
-    </div>
+            <!-- Badge de Estado -->
+            <div>
+              <span *ngIf="sub.status === 'pending'" class="nw-pill warning" style="font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;">
+                <span class="pulsing-dot-amber"></span>
+                Pendiente de Aprobación
+              </span>
+              <span *ngIf="sub.status === 'approved'" class="nw-pill success" style="font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Aprobada & Publicada
+              </span>
+              <span *ngIf="sub.status === 'rejected'" class="nw-pill danger" style="font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Ajustes Solicitados
+              </span>
+            </div>
+          </div>
 
-    <!-- Modal Footer -->
-    <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--nw-border); display:flex; justify-content:space-between; align-items:center;">
-      <button class="nw-btn nw-btn-ghost" type="button" (click)="showPreviewModal = false">Cerrar</button>
-      
-      <div style="display:flex; gap:10px;">
-        <button *ngIf="selectedSubmission && selectedSubmission.status !== 'rejected'" class="nw-btn nw-btn-ghost" type="button" (click)="showPreviewModal = false; openRejectModal(selectedSubmission)" style="color:var(--nw-danger);">
-          Solicitar Ajustes
-        </button>
-        <button *ngIf="selectedSubmission && selectedSubmission.status !== 'approved'" class="nw-btn nw-btn-primary" type="button" (click)="showPreviewModal = false; openApproveModal(selectedSubmission)" style="display:inline-flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
+          <!-- Notas del Anfitrión -->
+          <div *ngIf="sub.notes" style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:var(--nw-text-2);">
+            <strong>Notas del Anfitrión:</strong> {{ sub.notes }}
+          </div>
+
+          <div *ngIf="sub.adminFeedback && sub.status === 'rejected'" style="background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.3); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:#b91c1c;">
+            <strong>Feedback de Ajustes:</strong> {{ sub.adminFeedback }}
+          </div>
+
+          <!-- Enlace Público si está aprobada -->
+          <div *ngIf="sub.status === 'approved'" style="background:rgba(34, 197, 94, 0.06); border:1px solid rgba(34, 197, 94, 0.3); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              <span style="font-family:monospace; font-size:13px; color:var(--nw-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ getPublicUrl(sub) }}</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="copyLink(getPublicUrl(sub))" style="display:inline-flex; align-items:center; gap:4px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copiar Enlace</span>
+              </button>
+              <a [href]="getPublicUrl(sub)" target="_blank" class="nw-btn nw-btn-primary nw-btn-sm" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <span>Ver Invitación</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Barra de Acciones para Integraciones -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--nw-border); padding-top:14px;">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="nw-btn nw-btn-secondary nw-btn-sm" (click)="openPreview(sub)" style="display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <span>Previsualizar</span>
+              </button>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openEditModal(sub)" style="display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <span>Editar Código</span>
+              </button>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button *ngIf="sub.status === 'pending' || sub.status === 'rejected'" type="button"
+                      class="nw-btn nw-btn-primary nw-btn-sm" (click)="openApproveModal(sub)"
+                      style="display:inline-flex; align-items:center; gap:5px; background:#16a34a; border-color:#16a34a;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Aprobar y Publicar</span>
+              </button>
+
+              <button *ngIf="sub.status === 'pending' || sub.status === 'approved'" type="button"
+                      class="nw-btn nw-btn-danger nw-btn-sm" (click)="openRejectModal(sub)"
+                      style="display:inline-flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span>Solicitar Ajustes</span>
+              </button>
+
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="deleteSubmission(sub)"
+                      title="Eliminar plantilla" style="color:#dc2626;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PREVISUALIZACIÓN DE PLANTILLA VISUAL (3 EN 1)     -->
+  <!-- ======================================================== -->
+  <div class="ve-modal-overlay" *ngIf="showVisualPreviewModal && selectedVisualTemplate" (click)="showVisualPreviewModal = false">
+    <div class="ve-modal-content visual-preview-dialog" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div>
+          <span class="nw-pill accent" style="font-size:10.5px; font-weight:700;">Previsualización de Moderación</span>
+          <h2 style="margin:4px 0 0; font-size:18px; font-weight:800; color:var(--nw-text);">{{ selectedVisualTemplate.name }}</h2>
+          <p style="margin:2px 0 0; font-size:12px; color:var(--nw-text-2);">
+            Creador: <strong>{{ selectedVisualTemplate.authorName || 'Velisse Oficial' }}</strong> · {{ selectedVisualTemplate.eventType || 'evento' }}
+          </p>
+        </div>
+        <button type="button" class="icon-close-btn" (click)="showVisualPreviewModal = false" aria-label="Cerrar previsualización">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span>Aprobar y Publicar</span>
         </button>
-      </div>
-    </div>
-  </div>
-</div>
+      </header>
 
-<!-- ========================================================= -->
-<!-- MODAL DE APROBACIÓN Y PUBLICACIÓN OFICIAL -->
-<!-- ========================================================= -->
-<div class="nw-modal-backdrop" *ngIf="showApproveModal" (click)="showApproveModal = false">
-  <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width:540px; width:95vw; padding:24px;">
-    
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-      <div style="width:40px; height:40px; border-radius:50%; background:rgba(34,197,94,0.15); display:flex; align-items:center; justify-content:center; color:#16a34a;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <div>
-        <h3 style="margin:0; font-size:18px; font-weight:800;">Aprobar y Publicar Invitación</h3>
-        <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-2);">{{ selectedSubmission?.name }}</p>
-      </div>
-    </div>
-
-    <p style="font-size:13.5px; color:var(--nw-text); line-height:1.5; margin-bottom:14px;">
-      Al aprobar esta plantilla personalizada, se configurará como el diseño visual activo de la invitación del evento <strong>"{{ selectedSubmission?.eventTitle }}"</strong> y se publicará automáticamente en el enlace oficial:
-    </p>
-
-    <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:8px; padding:10px 14px; font-family:monospace; font-size:13px; color:var(--nw-accent); margin-bottom:16px; word-break:break-all;">
-      {{ selectedSubmission ? getPublicUrl(selectedSubmission) : '' }}
-    </div>
-
-    <label class="nw-label" style="font-weight:700; margin-bottom:4px;">
-      Mensaje o Retroalimentación de Aprobación (Opcional)
-    </label>
-    <input class="nw-input" [(ngModel)]="approveFeedback" placeholder="Ej. Página validada y optimizada para publicación." style="margin-bottom:20px;">
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <button class="nw-btn nw-btn-ghost" type="button" (click)="showApproveModal = false">Cancelar</button>
-      <button class="nw-btn nw-btn-primary" type="button" [disabled]="approving" (click)="confirmApprove()" style="display:inline-flex; align-items:center; gap:6px;">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        <span>{{ approving ? 'Publicando...' : 'Confirmar Aprobación y Publicar' }}</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================================= -->
-<!-- MODAL DE RECHAZO / AJUSTES REQUERIDOS -->
-<!-- ========================================================= -->
-<div class="nw-modal-backdrop" *ngIf="showRejectModal" (click)="showRejectModal = false">
-  <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width:540px; width:95vw; padding:24px;">
-    
-    <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-      <div style="width:40px; height:40px; border-radius:50%; background:rgba(239,68,68,0.15); display:flex; align-items:center; justify-content:center; color:#dc2626;">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="15" y1="9" x2="9" y2="15"></line>
-          <line x1="9" y1="9" x2="15" y2="15"></line>
-        </svg>
-      </div>
-      <div>
-        <h3 style="margin:0; font-size:18px; font-weight:800;">Solicitar Ajustes en el Código</h3>
-        <p style="margin:2px 0 0; font-size:13px; color:var(--nw-text-2);">{{ selectedSubmission?.name }}</p>
-      </div>
-    </div>
-
-    <p style="font-size:13.5px; color:var(--nw-text); line-height:1.5; margin-bottom:14px;">
-      Indica al anfitrión o diseñador los cambios requeridos antes de poder publicar la página web:
-    </p>
-
-    <label class="nw-label" style="font-weight:700; margin-bottom:4px;">
-      Motivos o Ajustes Solicitados <span style="color:var(--nw-danger);">*</span>
-    </label>
-    <textarea class="nw-input" rows="4" [(ngModel)]="rejectFeedback"
-      placeholder="Ej. El código contiene estilos que desbordan en pantallas móviles menores a 375px. Por favor agregar max-width: 100% y viewport meta tag."
-      style="margin-bottom:20px; font-size:13px;"></textarea>
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <button class="nw-btn nw-btn-ghost" type="button" (click)="showRejectModal = false">Cancelar</button>
-      <button class="nw-btn nw-btn-primary" type="button" [disabled]="rejecting || !rejectFeedback.trim()" (click)="confirmReject()" style="background:var(--nw-danger); border-color:var(--nw-danger);">
-        <span>{{ rejecting ? 'Guardando...' : 'Enviar Solicitud de Ajustes' }}</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================================= -->
-<!-- MODAL DE EDICIÓN RÁPIDA DE CÓDIGO (ADMIN) -->
-<!-- ========================================================= -->
-<div class="nw-modal-backdrop" *ngIf="showEditModal" (click)="showEditModal = false">
-  <div class="nw-modal" (click)="$event.stopPropagation()" style="max-width:900px; width:95vw; max-height:90vh; display:flex; flex-direction:column; padding:24px;">
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--nw-border); padding-bottom:10px;">
-      <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--nw-text);">
-        Editar Código de Plantilla
-      </h3>
-      <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="showEditModal = false">✕</button>
-    </div>
-
-    <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
-      <div>
-        <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Nombre del Diseño</label>
-        <input class="nw-input" [(ngModel)]="editForm.name">
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-        <div>
-          <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Código HTML</label>
-          <textarea class="nw-input" rows="12" [(ngModel)]="editForm.htmlCode" style="font-family:monospace; font-size:12px; line-height:1.4; white-space:pre;"></textarea>
+      <!-- Selector de Pestañas de Previsualización y Selector de Dispositivo -->
+      <div class="preview-mode-nav-box">
+        <div class="preview-tabs-left">
+          <button type="button" class="preview-mode-nav-btn" [class.active]="visualPreviewTab === 'invitation'" (click)="visualPreviewTab = 'invitation'">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span>Invitación Digital</span>
+          </button>
+          <button type="button" class="preview-mode-nav-btn" [class.active]="visualPreviewTab === 'pass'" [disabled]="!hasPassDesign(selectedVisualTemplate)" (click)="visualPreviewTab = 'pass'">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path></svg>
+            <span>Pase VIP {{ hasPassDesign(selectedVisualTemplate) ? '' : '(N/A)' }}</span>
+          </button>
+          <button type="button" class="preview-mode-nav-btn" [class.active]="visualPreviewTab === 'access'" [disabled]="!hasAccessScreen(selectedVisualTemplate)" (click)="visualPreviewTab = 'access'">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Pantalla de Acceso {{ hasAccessScreen(selectedVisualTemplate) ? '' : '(N/A)' }}</span>
+          </button>
         </div>
-        <div>
-          <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Código CSS</label>
-          <textarea class="nw-input" rows="12" [(ngModel)]="editForm.cssCode" style="font-family:monospace; font-size:12px; line-height:1.4; white-space:pre;"></textarea>
+
+        <!-- Dispositivo (para Invitación) -->
+        <div class="preview-device-toggle" *ngIf="visualPreviewTab === 'invitation'">
+          <button type="button" class="device-pill-btn" [class.active]="previewViewport === 'mobile'" (click)="previewViewport = 'mobile'" title="Vista Móvil">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect></svg>
+            <span>Móvil</span>
+          </button>
+          <button type="button" class="device-pill-btn" [class.active]="previewViewport === 'tablet'" (click)="previewViewport = 'tablet'" title="Vista Tablet">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect></svg>
+            <span>Tablet</span>
+          </button>
+          <button type="button" class="device-pill-btn" [class.active]="previewViewport === 'desktop'" (click)="previewViewport = 'desktop'" title="Vista Pantalla Completa">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            <span>Escritorio</span>
+          </button>
         </div>
       </div>
 
-      <div>
-        <label class="nw-label" style="font-weight:700; margin-bottom:4px;">Notas Internas</label>
-        <input class="nw-input" [(ngModel)]="editForm.notes" placeholder="Notas de edición del administrador">
-      </div>
-    </div>
+      <!-- Viewport de Previsualización -->
+      <div class="modal-preview-viewport">
+        <!-- Vista 1: Invitación Digital -->
+        <div *ngIf="visualPreviewTab === 'invitation'" class="preview-scroll-frame" [class.viewport-mobile]="previewViewport === 'mobile'" [class.viewport-tablet]="previewViewport === 'tablet'" [class.viewport-desktop]="previewViewport === 'desktop'">
+          <div class="preview-device-shell" [class.shell-mobile]="previewViewport === 'mobile'" [class.shell-tablet]="previewViewport === 'tablet'" [class.shell-desktop]="previewViewport === 'desktop'">
+            <app-visual-invitation-renderer
+              *ngIf="visualPreviewInvitation"
+              [invitation]="visualPreviewInvitation"
+              [event]="visualPreviewEvent"
+              [forcedDevice]="previewViewport"
+              [requiresGuestValidation]="false">
+            </app-visual-invitation-renderer>
+          </div>
+        </div>
 
-    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--nw-border); display:flex; justify-content:space-between; align-items:center;">
-      <button class="nw-btn nw-btn-ghost" type="button" (click)="showEditModal = false">Cancelar</button>
-      <button class="nw-btn nw-btn-primary" type="button" [disabled]="savingEdit || !editForm.htmlCode.trim()" (click)="saveEdit()">
-        <span>{{ savingEdit ? 'Guardando...' : 'Guardar Cambios' }}</span>
-      </button>
+        <!-- Vista 2: Pase VIP -->
+        <div *ngIf="visualPreviewTab === 'pass'" class="pass-preview-scroll-frame">
+          <div *ngIf="!hasPassDesign(selectedVisualTemplate)" style="color:#94a3b8; font-size:14px; text-align:center; padding:40px;">
+            Esta plantilla no incluye diseño personalizado de Pase VIP.
+          </div>
+          <div *ngFor="let s of selectedVisualTemplate.passDesign?.sections; let idx = index"
+               class="admin-pass-card"
+               [style.width.px]="getPassSheetWidth(s)"
+               [style.height.px]="getPassSheetHeight(s)"
+               [style.background]="s.background?.color || '#0b1426'">
+            <div *ngFor="let l of s.layers"
+                 [style.position]="'absolute'"
+                 [style.left.%]="l.x"
+                 [style.top.%]="l.y"
+                 [style.width.%]="l.width"
+                 [style.height.%]="l.height"
+                 [style.zIndex]="l.zIndex || 1"
+                 [style.borderRadius.px]="l.style?.borderRadius || 0"
+                 [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
+                 [style.borderColor]="l.style?.borderColor || 'transparent'"
+                 [style.borderWidth.px]="l.style?.borderWidth || 0"
+                 [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
+                 [style.boxShadow]="l.style?.boxShadow || 'none'">
+              <div *ngIf="l.type === 'text'"
+                   style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
+                   [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+                   [style.textAlign]="l.style?.textAlign || 'center'"
+                   [style.color]="l.style?.color || '#ffffff'"
+                   [style.fontSize.px]="l.style?.fontSize || 14"
+                   [style.fontWeight]="l.style?.fontWeight || '400'"
+                   [style.fontFamily]="l.style?.fontFamily || 'inherit'"
+                   [style.letterSpacing.px]="l.style?.letterSpacing || 0"
+                   [style.lineHeight]="l.style?.lineHeight || 1.3">
+                {{ evalPassText(l.text) }}
+              </div>
+              <img *ngIf="l.type === 'image'" [src]="layerMediaSource(l)" alt="Elemento" style="width: 100%; height: 100%; object-fit: contain;">
+              <div *ngIf="l.type === 'shape'" style="width: 100%; height: 100%;" [style.backgroundColor]="l.style?.backgroundColor || '#000'" [style.borderRadius.px]="l.style?.borderRadius || 0"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista 3: Pantalla de Acceso NIP -->
+        <div *ngIf="visualPreviewTab === 'access'" class="access-preview-stage"
+             [ngStyle]="getAccessScreenBackgroundStyle(selectedVisualTemplate.accessScreen || selectedVisualTemplate.design?.accessScreen)">
+          <div *ngIf="!hasAccessScreen(selectedVisualTemplate)" style="color:#94a3b8; font-size:14px; text-align:center; padding:40px;">
+            Esta plantilla no incluye pantalla de acceso personalizada.
+          </div>
+          <div *ngIf="hasAccessScreen(selectedVisualTemplate)" class="access-preview-card" [ngStyle]="getAccessScreenCardStyle(selectedVisualTemplate.accessScreen || selectedVisualTemplate.design?.accessScreen)">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #c89b3c;">INVITACIÓN PERSONAL</span>
+            <h3 style="margin:8px 0 4px; font-size:18px; font-weight:700; color:#fff;">{{ (selectedVisualTemplate.accessScreen || selectedVisualTemplate.design?.accessScreen)?.title || 'Acceso de Gala' }}</h3>
+            <p style="margin:0; font-size:12px; color:#fff; opacity:0.85; line-height:1.4;">{{ (selectedVisualTemplate.accessScreen || selectedVisualTemplate.design?.accessScreen)?.subtitle || 'Ingresa tus datos registrados para abrir tu invitación.' }}</p>
+            <div style="width:100%; padding:10px 12px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.2); border-radius:10px; font-size:11px; color:#ddd; margin:16px 0 12px;">
+              CORREO O TELÉFONO REGISTRADO
+            </div>
+            <button type="button" style="width:100%; padding:11px; border-radius:10px; border:none; background:#c89b3c; color:#152820; font-weight:700; font-size:12px; cursor:pointer;">
+              ABRIR INVITACIÓN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:var(--nw-text-3);">Estado actual: <strong>{{ selectedVisualTemplate.status }}</strong></span>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="nw-btn nw-btn-secondary" (click)="showVisualPreviewModal = false">Cerrar</button>
+          <button *ngIf="selectedVisualTemplate.status !== 'published'" type="button" class="nw-btn nw-btn-primary" (click)="approveVisualTemplate(selectedVisualTemplate); showVisualPreviewModal = false">
+            Aprobar y Publicar
+          </button>
+        </div>
+      </footer>
     </div>
   </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: RECHAZO / AJUSTES DE PLANTILLA VISUAL             -->
+  <!-- ======================================================== -->
+  <div class="ve-modal-overlay" *ngIf="showRejectVisualModal && selectedVisualTemplate" (click)="showRejectVisualModal = false">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width:520px; width:100%;">
+      <header class="modal-header">
+        <div>
+          <h2 style="margin:0; font-size:18px; font-weight:800; color:#dc2626;">Rechazar o Retirar Plantilla</h2>
+          <p style="margin:2px 0 0; font-size:12px; color:var(--nw-text-2);">Indica qué debe corregir el autor para que su plantilla sea aprobada.</p>
+        </div>
+        <button type="button" class="icon-close-btn" (click)="showRejectVisualModal = false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div style="padding:18px 24px;">
+        <p style="margin:0 0 10px; font-size:13px; color:var(--nw-text-2);">
+          Indica los ajustes requeridos para que el creador de <strong>"{{ selectedVisualTemplate.name }}"</strong> pueda corregir el diseño:
+        </p>
+        <textarea class="nw-input" [(ngModel)]="rejectVisualFeedback" rows="4" style="width:100%; padding:10px; font-size:13px; line-height:1.4;"
+                  placeholder="Ej. Por favor revisa la tipografía de la portada o incrementa la legibilidad del texto sobre el fondo..."></textarea>
+      </div>
+      <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="showRejectVisualModal = false">Cancelar</button>
+        <button type="button" class="nw-btn nw-btn-danger" [disabled]="moderatingVisual" (click)="confirmRejectVisual()">
+          Confirmar Rechazo
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PREVISUALIZACIÓN DE CÓDIGO HTML / CSS             -->
+  <!-- ======================================================== -->
+  <div class="ve-modal-overlay" *ngIf="showPreviewModal && selectedSubmission" (click)="showPreviewModal = false">
+    <div class="ve-modal-content preview-html-dialog" (click)="$event.stopPropagation()" style="max-width:980px; width:95%; height:88vh; max-height:860px;">
+      <header class="modal-header">
+        <div>
+          <h2 style="margin:0; font-size:18px; font-weight:800; color:var(--nw-text);">Previsualizar: {{ selectedSubmission.name }}</h2>
+          <small style="color:var(--nw-text-2);">Evento: {{ selectedSubmission.eventTitle }} ({{ selectedSubmission.eventSlug }})</small>
+        </div>
+        <button type="button" class="icon-close-btn" (click)="showPreviewModal = false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div style="flex:1; min-height:480px; display:flex; align-items:center; justify-content:center; background:#eee; padding:16px;">
+        <iframe [srcdoc]="getPreviewSafeSrcdoc()" style="width:100%; height:100%; border:none; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.1);"></iframe>
+      </div>
+      <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="showPreviewModal = false">Cerrar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODALES DE INTEGRACIÓN HTML (APROBAR, RECHAZAR, EDITAR)  -->
+  <!-- ======================================================== -->
+  <div class="ve-modal-overlay" *ngIf="showApproveModal && selectedSubmission" (click)="showApproveModal = false">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width:500px; width:100%;">
+      <header class="modal-header">
+        <h2 style="margin:0; font-size:18px; font-weight:800; color:#16a34a;">Aprobar y Publicar Página</h2>
+        <button type="button" class="icon-close-btn" (click)="showApproveModal = false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div style="padding:18px 24px;">
+        <p style="font-size:13px; color:var(--nw-text-2); margin-top:0;">¿Deseas aprobar la publicación de <strong>"{{ selectedSubmission.name }}"</strong> para el evento <code>{{ selectedSubmission.eventSlug }}</code>?</p>
+        <textarea class="nw-input" [(ngModel)]="approveFeedback" rows="3" style="width:100%; padding:10px; font-size:12.5px;" placeholder="Mensaje de aprobación opcional..."></textarea>
+      </div>
+      <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="showApproveModal = false">Cancelar</button>
+        <button type="button" class="nw-btn nw-btn-primary" [disabled]="approving" (click)="confirmApprove()" style="background:#16a34a; border-color:#16a34a;">Aprobar y Publicar</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="ve-modal-overlay" *ngIf="showRejectModal && selectedSubmission" (click)="showRejectModal = false">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width:500px; width:100%;">
+      <header class="modal-header">
+        <h2 style="margin:0; font-size:18px; font-weight:800; color:#dc2626;">Solicitar Ajustes</h2>
+        <button type="button" class="icon-close-btn" (click)="showRejectModal = false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div style="padding:18px 24px;">
+        <p style="font-size:13px; color:var(--nw-text-2); margin-top:0;">Indica qué correcciones se requieren en el código HTML/CSS:</p>
+        <textarea class="nw-input" [(ngModel)]="rejectFeedback" rows="4" style="width:100%; padding:10px; font-size:12.5px;" placeholder="Motivo o correcciones requeridas..."></textarea>
+      </div>
+      <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="showRejectModal = false">Cancelar</button>
+        <button type="button" class="nw-btn nw-btn-danger" [disabled]="rejecting" (click)="confirmReject()">Rechazar</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="ve-modal-overlay" *ngIf="showEditModal && selectedSubmission" (click)="showEditModal = false">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width:740px; width:100%;">
+      <header class="modal-header">
+        <h2 style="margin:0; font-size:18px; font-weight:800; color:var(--nw-text);">Edición Rápida de Código</h2>
+        <button type="button" class="icon-close-btn" (click)="showEditModal = false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div style="padding:18px 24px; display:flex; flex-direction:column; gap:12px; max-height:68vh; overflow-y:auto;">
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Nombre</label>
+          <input class="nw-input" [(ngModel)]="editForm.name" style="width:100%;">
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Código HTML</label>
+          <textarea class="nw-input" [(ngModel)]="editForm.htmlCode" rows="6" style="width:100%; font-family:monospace; font-size:11.5px;"></textarea>
+        </div>
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">Código CSS</label>
+          <textarea class="nw-input" [(ngModel)]="editForm.cssCode" rows="4" style="width:100%; font-family:monospace; font-size:11.5px;"></textarea>
+        </div>
+      </div>
+      <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="showEditModal = false">Cancelar</button>
+        <button type="button" class="nw-btn nw-btn-primary" [disabled]="savingEdit" (click)="saveEdit()">Guardar Cambios</button>
+      </footer>
+    </div>
+  </div>
+
 </div>
