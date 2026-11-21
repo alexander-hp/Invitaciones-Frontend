@@ -72,7 +72,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-mobile-first',
       name: 'Boda Mobile-First (Story Vertical)',
-      badge: 'Nueva &bull; Móvil',
+      badge: 'Nueva • Móvil',
       description: 'Experiencia inmersiva vertical tipo Story móvil con microinteracciones táctiles, barra FAB flotante inferior (RSVP y mapa directo), animaciones suaves on-scroll (AOS) y destellos de confeti dorado.',
       iconKey: 'envelope',
       features: ['Formato vertical tipo Story', 'Barra FAB flotante fija', 'Efectos on-scroll AOS', 'Confeti dorado de celebración']
@@ -80,7 +80,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-desktop-first',
       name: 'Boda Desktop-First (Revista Editorial)',
-      badge: 'Nueva &bull; Editorial',
+      badge: 'Nueva • Editorial',
       description: 'Diseño estilo revista editorial de alta gama para pantallas anchas y portátiles, con tipografía monumental Cinzel y Cormorant Garamond, composiciones asimétricas y total adaptabilidad responsiva a celulares.',
       iconKey: 'classic',
       features: ['Layout editorial tipo revista', 'Tipografía monumental de gala', 'Dípticos y grids asimétricos', '100% responsiva']
@@ -88,7 +88,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-cards-lateral',
       name: 'Boda Cards Lateral (App Deck Deslizable)',
-      badge: 'Innovación &bull; Swipe',
+      badge: 'Innovación • Swipe',
       description: 'Presentación horizontal tipo App con swipe táctil a pantalla completa, flechas de navegación y paginación de puntos que rompe el esquema tradicional de scroll vertical.',
       iconKey: 'envelope',
       features: ['Deck horizontal deslizable', 'Navegación por Swipe táctil', '16 diapositivas completas', 'Controles interactivos']
@@ -96,7 +96,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-creativa-premium',
       name: 'Boda Creativa Premium (Royal Cinematic)',
-      badge: 'Exclusiva &bull; Súper Lujo',
+      badge: 'Exclusiva • Súper Lujo',
       description: 'Atmósfera cinematográfica nocturna de alta costura con auroras doradas en movimiento, tarjetas esmeriladas en arco de catedral, tipografía de oro líquido y animaciones GSAP de máximo impacto.',
       iconKey: 'modern',
       features: ['Estética Royal Cinematic', 'Arcos de catedral esmerilados', 'Microinteracciones GSAP', 'Efectos de oro líquido']
@@ -104,7 +104,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'maison-dore',
       name: 'La Maison Dorée (Haute Couture & Video Envelope)',
-      badge: 'Video Intro & Súper Lujo',
+      badge: 'Video Intro • Súper Lujo',
       description: 'Experiencia inmersiva con video cinemático del sobre y apertura al tacto, columnas romanas clásicas, cortinas de terciopelo realistas, monograma de oro y estética editorial.',
       iconKey: 'envelope',
       features: ['Video de sobre interactivo', 'Video de apertura cinemática', 'Columnas romanas y cortinas', 'Estética editorial de alta costura']
@@ -160,7 +160,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-villa-perle',
       name: 'Villa Perlè: Apertura de Sobre Animada & Faroles de Ensueño',
-      badge: 'Video Intro &bull; Boda',
+      badge: 'Video Intro • Boda',
       description: 'Inspirada en Villa Perlè con video interactivo de apertura de sobre con lacre, video de fondo con faroles flotantes, marco floral vintage y música otoñal relajante.',
       iconKey: 'envelope',
       features: ['Video de apertura de sobre con lacre', 'Fondo dinámico de faroles flotantes', 'Paleta marfil, verde salvia y oro viejo', 'Reproductor musical con Autumn Wind']
@@ -168,7 +168,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-teatro',
       name: 'Gran Teatro: Apertura de Cortinas Cinemáticas & Noche de Gala',
-      badge: 'Video Intro &bull; Teatro',
+      badge: 'Video Intro • Teatro',
       description: 'Apertura cinemática con video de cortinas rojas de terciopelo abriéndose al escenario, marquesina con luces, divisor de rosas rojas y ambiente dramático de ópera.',
       iconKey: 'classic',
       features: ['Video cinemático de cortinas teatrales', 'Marquesina luminosa dorada', 'Paleta burdeos borgoña, oro y negro carbón', 'Música introductoria sinfónica']
@@ -176,7 +176,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-eleganza',
       name: 'Eleganza Italiana: Lino Toscano, Lago di Como & Cine Clásico',
-      badge: 'Video Intro &bull; Cine',
+      badge: 'Video Intro • Cine',
       description: 'Inspirada en el romance de las villas italianas en el Lago di Como, con póster de película clásica, video cinemático, textura de lino, boceto de la villa y marco ovalado.',
       iconKey: 'modern',
       features: ['Póster y video editorial italiano', 'Textura de lino y boceto de villa', 'Paleta terracota toscana, olivo y lino crema', 'Música clásica Valzer Sentimentale']
@@ -184,7 +184,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'boda-rosas',
       name: 'Romance Floral: Pétalos en Movimiento, Rosé & Caligrafía Pinyon',
-      badge: 'Video Intro &bull; Floral',
+      badge: 'Video Intro • Floral',
       description: 'Romance botánico delicado con video de apertura de rosas, fondo de pétalos flotantes, marco oval floral, torre de champagne para el brindis y tipografía caligráfica Pinyon Script.',
       iconKey: 'envelope',
       features: ['Video móvil floral y pétalos', 'Marco oval y esquinas botánicas', 'Torre de champagne para itinerario', 'Música Ballerina y paleta rosa palo']

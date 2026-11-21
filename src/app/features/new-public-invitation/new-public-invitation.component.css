@@ -269,98 +269,154 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 99995;
-  background: rgba(22, 19, 18, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 1000000;
+  background: rgba(18, 15, 14, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: #faf6f0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nw-draft-preview-bar.is-collapsed {
-  transform: translateY(-82%);
+  transform: translateY(-84%);
 }
 
 .nw-draft-preview-bar-inner {
-  max-width: 1320px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 10px 20px;
+  padding: 8px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 14px;
+  min-height: 52px;
 }
 
-.nw-draft-preview-brand {
+/* ── Grupo Izquierdo: Marca, Título y Modo ── */
+.nw-draft-preview-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
   min-width: 0;
 }
 
 .nw-draft-preview-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 20px;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
   background: linear-gradient(135deg, #d4af37, #f3e5ab);
   color: #3b0910;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
   flex-shrink: 0;
 }
 
 .nw-draft-preview-title {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #fffdfa;
-  max-width: 240px;
+  max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .nw-draft-preview-status-pill {
-  font-size: 11px;
-  color: #cfbeaf;
-  background: rgba(255, 255, 255, 0.08);
+  font-size: 10.5px;
+  color: #a8988a;
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 3px 9px;
+  padding: 2px 8px;
   border-radius: 999px;
   flex-shrink: 0;
 }
 
-/* Device Switcher */
-.nw-draft-preview-device-switch {
+/* ── Grupo Central: Selectores de Sección y Dispositivo ── */
+.nw-draft-preview-center {
   display: flex;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 3px;
-  gap: 3px;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
-.nw-device-btn {
+/* Section Switcher (Invitación / Acceso / Auto-registro) */
+.nw-draft-preview-section-switch {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  border-radius: 9px;
-  border: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.nw-section-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: none;
   background: transparent;
-  color: #c9b5a8;
+  color: #baa799;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
   user-select: none;
+  white-space: nowrap;
+}
+
+.nw-section-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nw-section-btn.active {
+  background: #ffffff;
+  color: #1a1715;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.nw-section-btn svg {
+  flex-shrink: 0;
+}
+
+/* Device Switcher (Celular / Tablet / Web) */
+.nw-draft-preview-device-switch {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.nw-device-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #baa799;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  white-space: nowrap;
 }
 
 .nw-device-btn:hover {
@@ -369,50 +425,52 @@
 }
 
 .nw-device-btn.active {
-  background: #ffffff;
-  color: #1a1715;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
   font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .nw-device-btn svg {
   flex-shrink: 0;
 }
 
-/* Guest Simulation Switch */
-.nw-draft-preview-guest-switch {
+/* ── Grupo Derecho: Simulación Invitado + Salir + Toggle ── */
+.nw-draft-preview-right {
   display: flex;
   align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .nw-guest-sim-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #e2d5c3;
-  font-size: 12px;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #d8c8b6;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   user-select: none;
   white-space: nowrap;
 }
 
 .nw-guest-sim-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  border-color: rgba(212, 175, 55, 0.45);
+  border-color: rgba(212, 175, 55, 0.4);
 }
 
 .nw-guest-sim-btn.active {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.28), rgba(212, 175, 55, 0.12));
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.1));
   border-color: #d4af37;
-  color: #fce8a6;
-  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25);
+  color: #f7e39f;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
   font-weight: 700;
 }
 
@@ -420,46 +478,59 @@
   flex-shrink: 0;
 }
 
+.nw-draft-preview-vdivider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
 /* Actions */
 .nw-draft-preview-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .nw-preview-btn-ghost {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
-  color: #faf6f0;
-  font-size: 12px;
+  color: #f3eee7;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   white-space: nowrap;
 }
 
 .nw-preview-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
   color: #ffffff;
 }
 
+.nw-preview-btn-ghost svg {
+  flex-shrink: 0;
+}
+
 .nw-preview-btn-toggle {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
-  color: #c9b5a8;
+  color: #baa799;
   cursor: pointer;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 10px;
   transition: all 0.18s ease;
 }
 
@@ -509,6 +580,7 @@
 /* Celular Frame */
 .nw-preview-viewport-wrapper.device-mode-mobile .nw-preview-device-stage {
   max-width: 430px;
+  min-height: 844px;
   border-radius: 44px;
   border: 10px solid #1c1917;
   outline: 1px solid rgba(255, 255, 255, 0.16);
@@ -519,11 +591,14 @@
   position: relative;
   overflow: hidden;
   background: #ffffff;
+  transform: translate3d(0, 0, 0);
+  isolation: isolate;
 }
 
 /* Tablet Frame */
 .nw-preview-viewport-wrapper.device-mode-tablet .nw-preview-device-stage {
   max-width: 768px;
+  min-height: 960px;
   border-radius: 28px;
   border: 10px solid #1c1917;
   outline: 1px solid rgba(255, 255, 255, 0.14);
@@ -534,6 +609,8 @@
   position: relative;
   overflow: hidden;
   background: #ffffff;
+  transform: translate3d(0, 0, 0);
+  isolation: isolate;
 }
 
 /* Desktop Full Width */
@@ -584,6 +661,129 @@
 .nw-preview-content-surface {
   width: 100%;
   position: relative;
+}
+
+.nw-preview-viewport-wrapper.device-mode-mobile .nw-preview-content-surface {
+  min-height: 844px;
+}
+
+.nw-preview-viewport-wrapper.device-mode-tablet .nw-preview-content-surface {
+  min-height: 960px;
+}
+
+/* ============================================================
+   CONTAIN OVERLAYS & INTRO SCREENS INSIDE DEVICE STAGE
+   Garantiza que la primera parte de las plantillas (videos de intro,
+   telón de teatro, póster romántico de rosas, sobres VIP)
+   se visualicen exactamente dentro del marco del celular en preview
+   ============================================================ */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-main-wrapper"] {
+  position: relative;
+  min-height: 844px;
+  width: 100%;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-main-wrapper"] {
+  min-height: 960px;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-video-intro-overlay"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-vip-envelope-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-intro-curtain-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-intro-poster-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-intro-video-container"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="envelope-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="intro-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bcl-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bcp-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bdf-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bmf-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .nw-pub-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .girasoles-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .navy-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tboda-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tbaut-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tcum-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tgrad-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .totro-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .txv-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .xv-vip-envelope-screen {
+  position: absolute !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 844px !important;
+  max-width: 100% !important;
+  z-index: 50 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-video-intro-overlay"],
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-vip-envelope-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-intro-curtain-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-intro-poster-screen"] {
+  min-height: 960px !important;
+}
+
+/* Video a pantalla completa ajustado al marco */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) video[class*="-fullscreen-video"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-fullscreen-video,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-fullscreen-video,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-fullscreen-video,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-fullscreen-video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+/* Tarjetas de apertura y telón centradas armónicamente en el celular */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-marquee-badge {
+  max-width: 90% !important;
+  width: 90% !important;
+  padding: 24px 18px !important;
+  margin: 0 auto !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-intro-card,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-intro-card,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-intro-card {
+  max-width: 90% !important;
+  width: 90% !important;
+  padding: 24px 16px !important;
+  margin: 0 auto !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-poster-wrap,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-poster-wrap,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-poster-wrap {
+  max-height: 240px !important;
+  overflow: hidden !important;
+}
+
+/* Botón flotante de audio que no escape del celular en preview */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) aside[class*="-audio-floating"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-audio-floating {
+  position: absolute !important;
+  top: 36px !important;
+  right: 14px !important;
+  z-index: 80 !important;
 }
 
 /* Real mobile devices optimization */

@@ -243,7 +243,7 @@
   <div class="nw-pub-access-gate-viewport"
   [class.nw-in-preview-device]="showPreviewDeviceToolbar"
   [ngStyle]="getAccessGateBackgroundStyle()"
-  [style.--access-accent]="currentAccessPreset.theme.accentColor"
+  [style.--access-accent]="accessAccentColor"
   [style.--access-focus-border]="currentAccessPreset.theme.inputFocusBorderColor"
   [style.--access-input-bg]="currentAccessPreset.theme.inputBgColor"
   [style.--access-input-color]="currentAccessPreset.theme.inputTextColor"
@@ -274,7 +274,7 @@
   <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface" [ngStyle]="accessSurfaceDimensionsStyle">
     <form (ngSubmit)="accessGateView === 'login' ? checkGuestAccess() : submitAccessSelfRegistration()"
       class="nw-pub-access-form-stage">
-      <ng-container *ngFor="let layer of accessScreenDesign?.layers">
+      <ng-container *ngFor="let layer of effectiveAccessDesign?.layers">
         <ng-container *ngIf="shouldRenderAccessGateLayer(layer)">
           <!-- FORMA / TARJETA -->
           <div *ngIf="layer.type === 'shape'" [ngStyle]="accessLayerStyle(layer)" class="nw-pub-access-card-layer"></div>
@@ -332,12 +332,12 @@
             <div class="nw-pub-access-field-input-wrap">
               <input *ngIf="layer.binding === 'access.contact'" type="text"
                 [(ngModel)]="guestAccessSingleInput" name="guestContact"
-                [placeholder]="layer.placeholder || accessScreenDesign?.inputPlaceholder || currentAccessPreset.texts.inputPlaceholder" required
+                [placeholder]="layer.placeholder || getAccessGateInputPlaceholder()" required
                 class="nw-pub-access-field-input">
 
               <input *ngIf="layer.binding === 'access.pin'" type="password" maxlength="20"
                 [(ngModel)]="guestAccessPin" name="guestPin"
-                [placeholder]="layer.placeholder || accessScreenDesign?.pinInputPlaceholder || currentAccessPreset.texts.pinInputPlaceholder" required
+                [placeholder]="layer.placeholder || getAccessGatePinInputPlaceholder()" required
                 class="nw-pub-access-field-input">
 
               <input *ngIf="layer.binding === 'selfReg.name'" type="text"
@@ -387,7 +387,7 @@
 
       <!-- MARCO INTERIOR DE ALTA PAPELERÍA -->
       <div class="nw-pub-access-inner-frame"
-        [style.border-color]="(accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor) + '44'"></div>
+        [style.border-color]="accessBorderColor"></div>
 
       <!-- ARTE DECORATIVO SUPERIOR (SOLAPA DE SOBRE, CORTINAJE, ARCO REAL, GUIRNALDA, ACUARELA) -->
       <div class="nw-pub-access-top-art" [innerHTML]="currentAccessTopArtSafe"></div>
@@ -407,25 +407,25 @@
         </div>
 
         <!-- INSIGNIA / BADGE -->
-        <div *ngIf="accessScreenDesign?.showBadge !== false" class="nw-pub-access-badge"
-          [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"
-          [style.border-color]="(accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor) + '66'">
+        <div *ngIf="accessShowBadge" class="nw-pub-access-badge"
+          [style.color]="accessAccentColor"
+          [style.border-color]="accessBadgeBorderColor">
           <span>{{ getAccessGateBadgeText() }}</span>
         </div>
 
         <!-- LOGO DEL EVENTO SI EXISTE -->
-        <div *ngIf="accessScreenDesign?.logoUrl" class="nw-pub-access-logo">
-          <img [src]="accessScreenDesign?.logoUrl" alt="Logo del evento">
+        <div *ngIf="accessLogoUrl" class="nw-pub-access-logo">
+          <img [src]="accessLogoUrl" alt="Logo del evento">
         </div>
 
         <!-- VISTA 1: VALIDACIÓN NORMAL (CORREO/TELÉFONO + NIP) -->
         <ng-container *ngIf="accessGateView === 'login'">
           <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
-            [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+            [style.color]="accessTextColor">
             {{ getAccessGateTitle() }}
           </h2>
           <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="(accessScreenDesign?.textColor || currentAccessPreset.theme.textColor) + 'cc'">
+            [style.color]="accessSubtitleTextColor">
             {{ getAccessGateSubtitle() }}
           </p>
 
@@ -434,12 +434,12 @@
 
           <form (ngSubmit)="checkGuestAccess()" class="nw-pub-access-form">
             <label for="guest-access-contact" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+              [style.color]="accessTextColor">
               {{ getAccessGateInputLabel() }}
             </label>
             <div class="nw-pub-access-input-wrap">
               <span class="nw-pub-access-input-icon"
-                [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor">
+                [style.color]="accessAccentColor">
                 <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6">
                   <rect x="2.5" y="4.5" width="15" height="11" rx="2"/>
                   <path d="M3 5.5L10 10.5L17 5.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -451,15 +451,15 @@
                 autocomplete="email" required class="nw-pub-access-input nw-has-icon">
             </div>
 
-            <div *ngIf="accessScreenDesign?.requirePin" class="nw-pub-access-pin-group"
+            <div *ngIf="accessRequirePin" class="nw-pub-access-pin-group"
               style="margin-top: 12px; margin-bottom: 4px; text-align: left;">
               <label for="guest-access-pin" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-                [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+                [style.color]="accessTextColor">
                 {{ getAccessGatePinInputLabel() }}
               </label>
               <div class="nw-pub-access-input-wrap">
                 <span class="nw-pub-access-input-icon"
-                  [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor">
+                  [style.color]="accessAccentColor">
                   <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6">
                     <rect x="4" y="9" width="12" height="8" rx="2"/>
                     <path d="M7 9V6.5C7 4.843 8.343 3.5 10 3.5C11.657 3.5 13 4.843 13 6.5V9" stroke-linecap="round"/>
@@ -481,9 +481,9 @@
           </form>
 
           <!-- ENLACE A AUTO-REGISTRO SI ESTÁ HABILITADO -->
-          <div *ngIf="accessScreenDesign?.allowSelfRegistration" style="margin-top: 16px; text-align: center;">
+          <div *ngIf="accessAllowSelfRegistration" style="margin-top: 16px; text-align: center;">
             <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('register')"
-              [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"
+              [style.color]="accessAccentColor"
               [style.font-family]="getAccessGateBodyFont()">
               ¿No estás en la lista? Solicitar invitación / Auto-registro →
             </button>
@@ -493,12 +493,12 @@
         <!-- VISTA 2: AUTO-REGISTRO / SOLICITUD DE ACCESO -->
         <ng-container *ngIf="accessGateView === 'register'">
           <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
-            [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
-            {{ accessScreenDesign?.selfRegTitle || currentAccessPreset.texts.selfRegTitle }}
+            [style.color]="accessTextColor">
+            {{ getAccessGateSelfRegTitle() }}
           </h2>
           <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="(accessScreenDesign?.textColor || currentAccessPreset.theme.textColor) + 'cc'">
-            {{ accessScreenDesign?.selfRegSubtitle || currentAccessPreset.texts.selfRegSubtitle }}
+            [style.color]="accessSubtitleTextColor">
+            {{ getAccessGateSelfRegSubtitle() }}
           </p>
 
           <!-- DIVISOR ORNAMENTAL SVG -->
@@ -506,14 +506,14 @@
 
           <form *ngIf="!selfRegSubmitted" (ngSubmit)="submitAccessSelfRegistration()" class="nw-pub-access-form">
             <label for="selfreg-name" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+              [style.color]="accessTextColor">
               Nombre completo *
             </label>
             <input id="selfreg-name" name="name" type="text" [(ngModel)]="selfRegName" placeholder="Tu nombre y apellido"
               [style.font-family]="getAccessGateBodyFont()" [ngStyle]="getAccessGateInputStyle()" required class="nw-pub-access-input">
 
             <label for="selfreg-email" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor" style="margin-top: 10px;">
+              [style.color]="accessTextColor" style="margin-top: 10px;">
               Correo electrónico *
             </label>
             <input id="selfreg-email" name="email" type="email" [(ngModel)]="selfRegEmail"
@@ -522,14 +522,14 @@
               class="nw-pub-access-input">
 
             <label for="selfreg-phone" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor" style="margin-top: 10px;">
+              [style.color]="accessTextColor" style="margin-top: 10px;">
               Teléfono / WhatsApp (opcional)
             </label>
             <input id="selfreg-phone" name="phone" type="tel" [(ngModel)]="selfRegPhone" placeholder="55 0000 0000"
               [style.font-family]="getAccessGateBodyFont()" [ngStyle]="getAccessGateInputStyle()" class="nw-pub-access-input">
 
             <label for="selfreg-companions" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor" style="margin-top: 10px;">
+              [style.color]="accessTextColor" style="margin-top: 10px;">
               Pases solicitados
             </label>
             <select id="selfreg-companions" name="companions" [(ngModel)]="selfRegCompanions"
@@ -545,12 +545,12 @@
               [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()"
               style="margin-top: 14px;">
               <span *ngIf="selfRegSubmitting" class="nw-pub-btn-spinner"></span>
-              <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : (accessScreenDesign?.selfRegButtonText || currentAccessPreset.texts.selfRegButtonText) }}</span>
+              <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : getAccessGateSelfRegButtonText() }}</span>
             </button>
 
             <div style="margin-top: 16px; text-align: center;">
               <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
-                [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"
+                [style.color]="accessAccentColor"
                 [style.font-family]="getAccessGateBodyFont()">
                 ← Ya estoy en la lista / Volver
               </button>
@@ -562,7 +562,7 @@
               ✓ {{ selfRegMessage }}
             </div>
             <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
-              [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessAccentColor" [style.font-family]="getAccessGateBodyFont()"
               style="margin-top: 14px;">
               ← Volver al inicio de sesión
             </button>
@@ -574,11 +574,11 @@
 
         <!-- SELLO / PIE DE EDICIÓN DE LA PLANTILLA -->
         <div class="nw-pub-access-edition-footer"
-          [style.color]="(accessScreenDesign?.textColor || currentAccessPreset.theme.textColor) + '88'"
+          [style.color]="accessFooterTextColor"
           [style.font-family]="getAccessGateBodyFont()">
-          <span class="nw-edition-dot" [style.background]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"></span>
+          <span class="nw-edition-dot" [style.background]="accessAccentColor"></span>
           <span>{{ currentAccessEnhancement.footerLabel }}</span>
-          <span class="nw-edition-dot" [style.background]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"></span>
+          <span class="nw-edition-dot" [style.background]="accessAccentColor"></span>
         </div>
       </div>
     </div>
@@ -611,117 +611,130 @@
   <aside *ngIf="showPreviewDeviceToolbar" class="nw-draft-preview-bar" [class.is-collapsed]="previewBarCollapsed"
     aria-label="Controles de vista previa borrador">
     <div class="nw-draft-preview-bar-inner">
-      <div class="nw-draft-preview-brand">
+
+      <!-- GRUPO IZQUIERDO: Marca, Título y Modo -->
+      <div class="nw-draft-preview-left">
         <span class="nw-draft-preview-badge">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
-          Vista Previa Borrador
+          <span>Borrador</span>
         </span>
         <span class="nw-draft-preview-title" [title]="invitationDisplayTitle">{{ invitationDisplayTitle }}</span>
         <span class="nw-draft-preview-status-pill">Modo prueba</span>
       </div>
 
-      <!-- SELECTOR DE SECCIÓN / PANTALLA EN VISTA PREVIA -->
-      <div class="nw-draft-preview-section-switch" role="tablist" aria-label="Sección a visualizar">
-        <button type="button" class="nw-section-btn"
-          [class.active]="previewSection === 'invitation'"
-          (click)="setPreviewSection('invitation')"
-          title="Ver invitación digital completa">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
-          <span>Invitación</span>
-        </button>
+      <!-- GRUPO CENTRAL: Selector de Pantalla / Sección + Selector de Dispositivo -->
+      <div class="nw-draft-preview-center">
+        <!-- Selector de Pantalla / Sección -->
+        <div class="nw-draft-preview-section-switch" role="tablist" aria-label="Sección a visualizar">
+          <button type="button" class="nw-section-btn"
+            [class.active]="previewSection === 'invitation'"
+            (click)="setPreviewSection('invitation')"
+            title="Ver invitación digital completa">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <span>Invitación</span>
+          </button>
 
-        <button type="button" class="nw-section-btn"
-          [class.active]="previewSection === 'access'"
-          (click)="setPreviewSection('access')"
-          title="Ver pantalla de acceso y validación NIP">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          <span>Pantalla de Acceso</span>
-        </button>
+          <button type="button" class="nw-section-btn"
+            [class.active]="previewSection === 'access'"
+            (click)="setPreviewSection('access')"
+            title="Ver pantalla de acceso y validación NIP">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Pantalla de Acceso</span>
+          </button>
 
-        <button type="button" class="nw-section-btn"
-          [class.active]="previewSection === 'register'"
-          (click)="setPreviewSection('register')"
-          title="Ver pantalla de auto-registro">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="8.5" cy="7" r="4"></circle>
-            <line x1="20" y1="8" x2="20" y2="14"></line>
-            <line x1="23" y1="11" x2="17" y2="11"></line>
-          </svg>
-          <span>Auto-registro</span>
-        </button>
+          <button type="button" class="nw-section-btn"
+            [class.active]="previewSection === 'register'"
+            (click)="setPreviewSection('register')"
+            title="Ver pantalla de auto-registro">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            <span>Auto-registro</span>
+          </button>
+        </div>
+
+        <!-- Selector de Dispositivos -->
+        <div class="nw-draft-preview-device-switch" role="group" aria-label="Simular tamaño de pantalla">
+          <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'mobile'"
+            (click)="setPreviewDevice('mobile')" title="Simular Celular (390px)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>Celular</span>
+          </button>
+
+          <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'tablet'"
+            (click)="setPreviewDevice('tablet')" title="Simular Tablet (768px)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>Tablet</span>
+          </button>
+
+          <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'desktop'"
+            (click)="setPreviewDevice('desktop')" title="Pantalla Completa Web">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>Web</span>
+          </button>
+        </div>
       </div>
 
-      <!-- SELECTOR DE DISPOSITIVOS -->
-      <div class="nw-draft-preview-device-switch" role="group" aria-label="Simular tamaño de pantalla">
-        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'mobile'"
-          (click)="setPreviewDevice('mobile')" title="Simular Celular (390px)">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
-            <line x1="12" y1="18" x2="12.01" y2="18"></line>
-          </svg>
-          <span>Celular (390px)</span>
-        </button>
-
-        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'tablet'"
-          (click)="setPreviewDevice('tablet')" title="Simular Tablet (768px)">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-            <line x1="12" y1="18" x2="12.01" y2="18"></line>
-          </svg>
-          <span>Tablet (768px)</span>
-        </button>
-
-        <button type="button" class="nw-device-btn" [class.active]="previewDevice === 'desktop'"
-          (click)="setPreviewDevice('desktop')" title="Pantalla Completa Web">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-          <span>Web (100%)</span>
-        </button>
-      </div>
-
-      <!-- SIMULACIÓN DE ESTADO DEL INVITADO -->
-      <div class="nw-draft-preview-guest-switch">
+      <!-- GRUPO DERECHO: Simulación Invitado + Salir + Toggle -->
+      <div class="nw-draft-preview-right">
+        <!-- Simulación de Estado del Invitado -->
         <button type="button" class="nw-guest-sim-btn" [class.active]="isSimulatingGuest"
           (click)="toggleGuestSimulation()"
           [title]="isSimulatingGuest ? 'Cambiar a formulario inicial sin identificar' : 'Simular vista con pase y actividad'">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>{{ isSimulatingGuest ? 'Viendo: Pase identificado' : 'Ver: Con pase de ejemplo' }}</span>
+          <span>{{ isSimulatingGuest ? 'Pase VIP identificado' : 'Probar pase ejemplo' }}</span>
         </button>
+
+        <div class="nw-draft-preview-vdivider" aria-hidden="true"></div>
+
+        <div class="nw-draft-preview-actions">
+          <button type="button" class="nw-preview-btn-ghost" (click)="closePreviewWindow()"
+            title="Cerrar vista previa y volver al editor">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Volver al editor</span>
+          </button>
+          <button type="button" class="nw-preview-btn-toggle" (click)="togglePreviewBar()"
+            [title]="previewBarCollapsed ? 'Mostrar barra' : 'Ocultar barra'">
+            {{ previewBarCollapsed ? '▼' : '▲' }}
+          </button>
+        </div>
       </div>
 
-      <div class="nw-draft-preview-actions">
-        <button type="button" class="nw-preview-btn-ghost" (click)="closePreviewWindow()"
-          title="Cerrar vista previa y volver al editor">
-          ← Volver al editor
-        </button>
-        <button type="button" class="nw-preview-btn-toggle" (click)="togglePreviewBar()"
-          [title]="previewBarCollapsed ? 'Mostrar barra' : 'Ocultar barra'">
-          {{ previewBarCollapsed ? '▼' : '▲' }}
-        </button>
-      </div>
     </div>
   </aside>
 

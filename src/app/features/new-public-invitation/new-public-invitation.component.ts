@@ -394,7 +394,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.cachedAmbientThemeColor = '#5c0d18';
       return '#5c0d18';
     }
-    if (tpl === 'template-boda-navy-blue') {
+    if (tpl === 'boda-navy-blue' || tpl === 'navy-blue' || tpl === 'template-boda-navy-blue') {
       this.cachedAmbientThemeColor = '#0d1b2a';
       return '#0d1b2a';
     }
@@ -402,9 +402,25 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.cachedAmbientThemeColor = '#1c1917';
       return '#1c1917';
     }
-    if (tpl === 'template-boda-rosas') {
-      this.cachedAmbientThemeColor = '#56383d';
-      return '#56383d';
+    if (tpl === 'boda-eleganza' || tpl === 'eleganza' || tpl === 'template-boda-eleganza' || tpl === 'template-eleganza') {
+      this.cachedAmbientThemeColor = '#241e1b';
+      return '#241e1b';
+    }
+    if (tpl === 'boda-rosas' || tpl === 'rosas' || tpl === 'template-boda-rosas' || tpl === 'roses') {
+      this.cachedAmbientThemeColor = '#2b1b22';
+      return '#2b1b22';
+    }
+    if (tpl === 'boda-teatro' || tpl === 'teatro' || tpl === 'template-boda-teatro' || tpl === 'template-teatro') {
+      this.cachedAmbientThemeColor = '#1a0307';
+      return '#1a0307';
+    }
+    if (tpl === 'boda-villa-perle' || tpl === 'villa-perle' || tpl === 'template-boda-villa-perle' || tpl === 'template-villa-perle') {
+      this.cachedAmbientThemeColor = '#1c241e';
+      return '#1c241e';
+    }
+    if (tpl === 'boda-girasoles' || tpl === 'girasoles' || tpl === 'template-boda-girasoles' || tpl === 'elegancia-girasoles') {
+      this.cachedAmbientThemeColor = '#2d2112';
+      return '#2d2112';
     }
     this.cachedAmbientThemeColor = themeBg || '#26221f';
     return this.cachedAmbientThemeColor;
@@ -1497,11 +1513,77 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   get currentAccessTemplateKey(): string {
-    return this.accessGateData?.template
-      || this.accessScreenDesign?.templateKey
-      || this.invitation?.content?.template
-      || (this.invitation as any)?.template
-      || 'envelope-cards';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (queryTpl) {
+      return queryTpl;
+    }
+    if (this.accessGateData?.template) {
+      return this.accessGateData.template;
+    }
+    if (this.invitation) {
+      return this.currentTemplate;
+    }
+    return this.accessScreenDesign?.templateKey || 'envelope-cards';
+  }
+
+  get effectiveAccessDesign(): VisualAccessScreenDesign | undefined {
+    const acc = this.accessScreenDesign;
+    if (!acc) return undefined;
+
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+
+    // When viewing a specific template via URL (?tpl=...) or in clean preview, use that template's preset
+    if (queryTpl || isCleanRequested) {
+      return undefined;
+    }
+
+    // When stored design is from an older schema or belongs to a different template
+    if (isLegacyOrMismatchedAccessScreen(acc, this.currentAccessTemplateKey)) {
+      return undefined;
+    }
+
+    return acc;
+  }
+
+  get accessAccentColor(): string {
+    return this.effectiveAccessDesign?.accentColor || this.currentAccessPreset.theme.accentColor;
+  }
+
+  get accessTextColor(): string {
+    return this.effectiveAccessDesign?.textColor || this.currentAccessPreset.theme.textColor;
+  }
+
+  get accessBorderColor(): string {
+    return (this.effectiveAccessDesign?.accentColor || this.currentAccessPreset.theme.accentColor) + '44';
+  }
+
+  get accessBadgeBorderColor(): string {
+    return (this.effectiveAccessDesign?.accentColor || this.currentAccessPreset.theme.accentColor) + '66';
+  }
+
+  get accessSubtitleTextColor(): string {
+    return (this.effectiveAccessDesign?.textColor || this.currentAccessPreset.theme.textColor) + 'cc';
+  }
+
+  get accessFooterTextColor(): string {
+    return (this.effectiveAccessDesign?.textColor || this.currentAccessPreset.theme.textColor) + '88';
+  }
+
+  get accessShowBadge(): boolean {
+    return this.effectiveAccessDesign?.showBadge !== false;
+  }
+
+  get accessLogoUrl(): string | undefined {
+    return this.effectiveAccessDesign?.logoUrl;
+  }
+
+  get accessRequirePin(): boolean {
+    return Boolean(this.effectiveAccessDesign?.requirePin);
+  }
+
+  get accessAllowSelfRegistration(): boolean {
+    return this.effectiveAccessDesign?.allowSelfRegistration !== false;
   }
 
   get currentAccessPreset(): TemplateAccessScreenPreset {
@@ -1521,7 +1603,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   private ensureOrnamentCache(): void {
     const preset = this.currentAccessPreset;
-    const accent = this.accessScreenDesign?.accentColor || preset.theme.accentColor;
+    const accent = this.accessAccentColor;
     const primary = preset.theme.primaryColor || accent;
     const cacheKey = `${preset.templateId}|${accent}|${primary}`;
     if (this.cachedOrnamentKey === cacheKey) return;
@@ -1557,7 +1639,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   get currentAccessBackdropPatternStyle(): Record<string, string> {
     const preset = this.currentAccessPreset;
     const enh = this.currentAccessEnhancement;
-    const accent = this.accessScreenDesign?.accentColor || preset.theme.accentColor;
+    const accent = this.accessAccentColor;
     return {
       'background-image': getBackdropPatternDataUri(enh.backdropPattern, accent)
     };
@@ -1593,7 +1675,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   getAccessGateBackgroundStyle(): Record<string, string> {
-    const acc = this.accessScreenDesign;
+    const acc = this.effectiveAccessDesign;
     const preset = this.currentAccessPreset;
 
     if (acc?.backgroundType === 'image' && (acc.backgroundImageUrl || this.accessGateData?.coverImageUrl)) {
@@ -1632,7 +1714,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   getAccessGateOverlayStyle(): string {
-    const acc = this.accessScreenDesign;
+    const acc = this.effectiveAccessDesign;
     const preset = this.currentAccessPreset;
     const isImage = acc?.backgroundType === 'image' || (preset.theme.backgroundType === 'image' && !acc?.backgroundGradient);
     if (isImage) {
@@ -1643,7 +1725,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   getAccessGateCardStyle(): Record<string, string> {
-    const acc = this.accessScreenDesign;
+    const acc = this.effectiveAccessDesign;
     const preset = this.currentAccessPreset;
     const theme = preset.theme;
     const radius = acc?.cardRadius !== undefined ? acc.cardRadius : theme.cardRadius;
@@ -1674,7 +1756,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     style['backdrop-filter'] = `blur(${blur}px)`;
     style['-webkit-backdrop-filter'] = `blur(${blur}px)`;
 
-    const border = theme.cardBorder || `1.5px solid ${acc?.accentColor || theme.accentColor}`;
+    const border = theme.cardBorder || `1.5px solid ${this.accessAccentColor}`;
     style['border'] = border;
 
     const shadow = acc?.cardShadow || theme.cardShadow;
@@ -1693,11 +1775,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   hasAccessLayers(): boolean {
-    const acc = this.accessScreenDesign;
+    const acc = this.effectiveAccessDesign;
     if (!acc?.layers || acc.layers.length === 0) return false;
-    if (isLegacyOrMismatchedAccessScreen(acc, this.currentAccessTemplateKey)) {
-      return false;
-    }
     const isVisualBuilder = this.currentAccessTemplateKey === 'visual-builder';
     const hasCustomUserLayers = acc.layers.some(l =>
       Boolean(l.id) && !l.id.startsWith('layer-access-') && !l.id.startsWith('layer-selfreg-')
@@ -1823,61 +1902,74 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   getAccessGateHeadingFont(): string {
-    return this.accessScreenDesign?.headingFont
+    return this.effectiveAccessDesign?.headingFont
       || this.accessGateData?.theme?.headingFont
       || this.currentAccessPreset.theme.headingFont;
   }
 
   getAccessGateBodyFont(): string {
-    return this.accessScreenDesign?.bodyFont
+    return this.effectiveAccessDesign?.bodyFont
       || this.accessGateData?.theme?.bodyFont
       || this.currentAccessPreset.theme.bodyFont;
   }
 
   getAccessGateTitle(): string {
-    return this.accessScreenDesign?.title
-      || this.accessGateData?.eventTitle
+    return this.effectiveAccessDesign?.title
       || this.currentAccessPreset.texts.defaultTitle;
   }
 
   getAccessGateSubtitle(): string {
-    return this.accessScreenDesign?.subtitle
-      || this.accessMessage
+    return this.effectiveAccessDesign?.subtitle
       || this.currentAccessPreset.texts.defaultSubtitle;
   }
 
   getAccessGateBadgeText(): string {
-    return this.accessScreenDesign?.badgeText
+    return this.effectiveAccessDesign?.badgeText
       || this.currentAccessPreset.texts.badgeText;
   }
 
   getAccessGateInputLabel(): string {
-    return this.accessScreenDesign?.inputLabel
+    return this.effectiveAccessDesign?.inputLabel
       || this.currentAccessPreset.texts.inputLabel;
   }
 
   getAccessGateInputPlaceholder(): string {
-    return this.accessScreenDesign?.inputPlaceholder
+    return this.effectiveAccessDesign?.inputPlaceholder
       || this.currentAccessPreset.texts.inputPlaceholder;
   }
 
   getAccessGatePinInputLabel(): string {
-    return this.accessScreenDesign?.pinInputLabel
+    return this.effectiveAccessDesign?.pinInputLabel
       || this.currentAccessPreset.texts.pinInputLabel;
   }
 
   getAccessGatePinInputPlaceholder(): string {
-    return this.accessScreenDesign?.pinInputPlaceholder
+    return this.effectiveAccessDesign?.pinInputPlaceholder
       || this.currentAccessPreset.texts.pinInputPlaceholder;
   }
 
   getAccessGateButtonText(): string {
-    return this.accessScreenDesign?.buttonText
+    return this.effectiveAccessDesign?.buttonText
       || this.currentAccessPreset.texts.buttonText;
   }
 
+  getAccessGateSelfRegTitle(): string {
+    return this.effectiveAccessDesign?.selfRegTitle
+      || this.currentAccessPreset.texts.selfRegTitle;
+  }
+
+  getAccessGateSelfRegSubtitle(): string {
+    return this.effectiveAccessDesign?.selfRegSubtitle
+      || this.currentAccessPreset.texts.selfRegSubtitle;
+  }
+
+  getAccessGateSelfRegButtonText(): string {
+    return this.effectiveAccessDesign?.selfRegButtonText
+      || this.currentAccessPreset.texts.selfRegButtonText;
+  }
+
   getAccessGateButtonStyle(): Record<string, string> {
-    const acc = this.accessScreenDesign;
+    const acc = this.effectiveAccessDesign;
     const theme = this.currentAccessPreset.theme;
     const bg = acc?.buttonBgColor || theme.buttonBgColor;
     const text = acc?.buttonTextColor || theme.buttonTextColor;
@@ -2315,7 +2407,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   private computeCurrentTemplate(): string {
     const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
-    if (queryTpl && (this.isOwnerOrInEditor || this.invitation?.id?.startsWith('preview-'))) {
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    if (queryTpl && (this.isOwnerOrInEditor || this.isPreviewMode || isCleanRequested || this.route.snapshot.queryParamMap.has('previewId') || this.invitation?.id?.startsWith('preview-'))) {
       return queryTpl;
     }
 
@@ -2387,10 +2480,51 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   isCustomHtmlTemplate(): boolean {
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (isCleanRequested) {
+      return false;
+    }
+    if (queryTpl && queryTpl !== 'custom-html' && queryTpl !== 'html-css' && queryTpl !== 'custom') {
+      return false;
+    }
     if (this.isVisualBuilderTemplate()) {
       return false;
     }
     if (this.detectedSourceTemplate) {
+      return false;
+    }
+
+    const t = this.currentTemplate;
+    if (t === 'custom-html' || t === 'html-css' || t === 'custom') {
+      return true;
+    }
+
+    const knownNativeTemplates = [
+      'envelope-cards', 'mobile-cards', 'envelope',
+      'classic-vertical', 'classic', 'editorial',
+      'modern-minimal', 'template-3', 'plantilla-3', 'minimal',
+      'boda-mobile-first', 'boda-mobile', 'wedding-mobile-first',
+      'boda-desktop-first', 'boda-desktop', 'wedding-desktop-first',
+      'boda-cards-lateral', 'cards-lateral', 'boda-cards', 'wedding-cards-lateral',
+      'boda-creativa-premium', 'creativa-premium', 'boda-premium', 'wedding-creativa-premium',
+      'maison-dore', 'la-maison-dore', 'lamaisondore',
+      'template-boda', 'boda',
+      'template-xv', 'xv', 'xv-anos',
+      'template-graduacion', 'graduacion',
+      'template-cumpleanos', 'cumpleanos', 'cumpleaños',
+      'template-bautizo', 'bautizo',
+      'template-otro', 'otro',
+      'boda-villa-perle', 'villa-perle', 'template-villa-perle', 'template-boda-villa-perle',
+      'boda-teatro', 'teatro', 'template-teatro', 'template-boda-teatro',
+      'boda-eleganza', 'eleganza', 'template-eleganza', 'template-boda-eleganza',
+      'boda-rosas', 'rosas', 'rosas-template', 'roses', 'template-boda-rosas',
+      'boda-girasoles', 'girasoles', 'elegancia-girasoles', 'template-boda-girasoles',
+      'boda-navy-blue', 'navy-blue', 'modelo-navy-blue', 'template-boda-navy-blue',
+      'xv-burgundy', 'template-xv-burgundy', 'mis-xv-burgundy', 'burgundy'
+    ];
+
+    if (knownNativeTemplates.includes(t)) {
       return false;
     }
 
@@ -2405,11 +2539,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return false;
     }
 
-    const t = this.currentTemplate;
-    if (t === 'custom-html' || t === 'html-css' || t === 'custom') {
-      return true;
-    }
-
     if (Boolean(this.customHtmlContent?.trim())) {
       return true;
     }
@@ -2418,6 +2547,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   isVisualBuilderTemplate(): boolean {
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (isCleanRequested && queryTpl && queryTpl !== 'visual-builder') {
+      return false;
+    }
     return this.currentTemplate === 'visual-builder' && Boolean(this.invitation?.content?.visualDesign?.active);
   }
 
@@ -2429,6 +2563,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return this.cachedCustomHtml;
     }
     this.lastCustomHtmlInvitationRef = this.invitation;
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (isCleanRequested || (queryTpl && queryTpl !== 'custom-html' && queryTpl !== 'html-css' && queryTpl !== 'custom')) {
+      this.cachedCustomHtml = '';
+      return '';
+    }
     if (this.invitation?.content?.visualDesign?.active || (this.invitation?.content as any)?.template === 'visual-builder') {
       this.cachedCustomHtml = '';
       return '';
@@ -2438,6 +2578,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   private computeCustomHtmlContent(): string {
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (isCleanRequested || (queryTpl && queryTpl !== 'custom-html' && queryTpl !== 'html-css' && queryTpl !== 'custom')) {
+      return '';
+    }
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     if (this.invitation?.content?.customHtml?.trim()) {
       return this.invitation.content.customHtml;
@@ -2478,6 +2623,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return this.cachedCustomCss;
     }
     this.lastCustomCssInvitationRef = this.invitation;
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (isCleanRequested || (queryTpl && queryTpl !== 'custom-html' && queryTpl !== 'html-css' && queryTpl !== 'custom')) {
+      this.cachedCustomCss = '';
+      return '';
+    }
     if (this.invitation?.content?.visualDesign?.active || (this.invitation?.content as any)?.template === 'visual-builder') {
       this.cachedCustomCss = '';
       return '';
@@ -2487,6 +2638,11 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   private computeCustomCssContent(): string {
+    const isCleanRequested = this.route.snapshot.queryParamMap.get('clean') === '1' || this.route.snapshot.queryParamMap.get('clean') === 'true';
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || this.route.snapshot.queryParamMap.get('template');
+    if (isCleanRequested || (queryTpl && queryTpl !== 'custom-html' && queryTpl !== 'html-css' && queryTpl !== 'custom')) {
+      return '';
+    }
     const slug = this.invitation?.slug || this.route.snapshot.paramMap.get('slug') || '';
     if (this.invitation?.content?.customCss !== undefined && this.invitation?.content?.customCss !== null && this.invitation?.content?.customCss !== '') {
       return this.invitation.content.customCss;
@@ -2630,37 +2786,37 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   isBodaVillaPerleTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'boda-villa-perle' || t === 'villa-perle';
+    return t === 'boda-villa-perle' || t === 'villa-perle' || t === 'template-villa-perle' || t === 'template-boda-villa-perle';
   }
 
   isBodaTeatroTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'boda-teatro' || t === 'teatro' || t === 'template-teatro';
+    return t === 'boda-teatro' || t === 'teatro' || t === 'template-teatro' || t === 'template-boda-teatro';
   }
 
   isBodaEleganzaTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'boda-eleganza' || t === 'eleganza' || t === 'template-eleganza';
+    return t === 'boda-eleganza' || t === 'eleganza' || t === 'template-eleganza' || t === 'template-boda-eleganza';
   }
 
   isBodaRosasTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'boda-rosas' || t === 'rosas' || t === 'rosas-template' || t === 'roses';
+    return t === 'boda-rosas' || t === 'rosas' || t === 'rosas-template' || t === 'roses' || t === 'template-boda-rosas';
   }
 
   isBodaGirasolesTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'boda-girasoles' || t === 'girasoles' || t === 'elegancia-girasoles';
+    return t === 'boda-girasoles' || t === 'girasoles' || t === 'elegancia-girasoles' || t === 'template-boda-girasoles';
   }
 
   isBodaNavyBlueTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'boda-navy-blue' || t === 'navy-blue' || t === 'modelo-navy-blue';
+    return t === 'boda-navy-blue' || t === 'navy-blue' || t === 'modelo-navy-blue' || t === 'template-boda-navy-blue';
   }
 
   isXvBurgundyTemplate(): boolean {

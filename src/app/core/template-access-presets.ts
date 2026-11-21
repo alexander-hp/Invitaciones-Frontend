@@ -1796,18 +1796,14 @@ export function isLegacyOrMismatchedAccessScreen(
   currentTemplateKey?: string
 ): boolean {
   if (!acc) return true;
-  // If no templateKey is stored, it might be legacy
-  if (!acc.templateKey) {
-    // If it has old obsidian layers or generic defaults
-    const hasLegacyLayers = acc.layers?.some(l =>
-      l.text?.includes('✦  INVITACIÓN DE GALA  ✦') ||
-      (l.style?.backgroundColor === 'rgba(12, 17, 29, 0.78)')
-    );
-    if (hasLegacyLayers) return true;
-  }
   if (currentTemplateKey) {
     const preset = getTemplateAccessPreset(currentTemplateKey);
-    if (acc.templateKey && acc.templateKey !== preset.templateId && !preset.aliases.includes(acc.templateKey)) {
+    // If no templateKey was stored on acc, it's legacy (unless in visual-builder mode)
+    if (!acc.templateKey) {
+      return currentTemplateKey !== 'visual-builder';
+    }
+    // If stored templateKey does not match the active template ID or any of its aliases
+    if (acc.templateKey !== preset.templateId && !preset.aliases.includes(acc.templateKey)) {
       return true;
     }
   }
