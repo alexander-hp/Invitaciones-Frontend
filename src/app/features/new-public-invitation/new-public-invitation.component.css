@@ -625,12 +625,13 @@
 
 /* Phone Notch / Dynamic Island */
 .nw-preview-phone-notch {
-  position: sticky;
+  position: absolute;
   top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
   width: 116px;
   height: 25px;
-  margin: 0 auto -25px;
   border-radius: 20px;
   background: #000000;
   display: flex;
@@ -672,49 +673,63 @@
 }
 
 /* ============================================================
-   CONTAIN OVERLAYS & INTRO SCREENS INSIDE DEVICE STAGE
-   Garantiza que la primera parte de las plantillas (videos de intro,
-   telón de teatro, póster romántico de rosas, sobres VIP)
-   se visualicen exactamente dentro del marco del celular en preview
+   CONTAIN OVERLAYS, INTRO SCREENS & DECKS INSIDE DEVICE STAGE
+   Garantizar ajuste armónico y centrado milimétrico en marco móvil y tablet
    ============================================================ */
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-main-wrapper"] {
-  position: relative;
-  min-height: 844px;
-  width: 100%;
+
+/* Anulaciones globales AOS para previsualización */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [data-aos],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [data-aos].aos-animate {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+  transition: none !important;
 }
 
-.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-main-wrapper"] {
-  min-height: 960px;
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-main-wrapper"] {
+  position: relative !important;
+  min-height: 844px !important;
+  width: 100% !important;
 }
 
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-video-intro-overlay"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-vip-envelope-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-intro-curtain-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-intro-poster-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="-intro-video-container"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="envelope-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) [class*="intro-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-video-intro-overlay,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-video-intro-overlay,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-video-intro-overlay,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-video-intro-overlay,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bcl-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bcp-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bdf-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .bmf-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .nw-pub-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .girasoles-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .navy-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tboda-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tbaut-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tcum-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .tgrad-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .totro-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .txv-vip-envelope-screen,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .xv-vip-envelope-screen {
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet ::ng-deep [class*="-main-wrapper"] {
+  min-height: 960px !important;
+}
+
+/* Ocultar el contenido largo de la invitación mientras la portada inicial de sobre/video esté activa
+   para evitar que el wrapper mida miles de píxeles y obligue al usuario a hacer scroll para ver la tarjeta */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-video-intro-overlay"] ~ main,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-video-intro-overlay ~ main,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-video-intro-overlay ~ main,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-video-intro-overlay ~ main,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-video-intro-overlay ~ main {
+  display: none !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-video-intro-overlay"] ~ aside,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-video-intro-overlay"] ~ div[class*="-vip-envelope-screen"] {
+  display: none !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-main-wrapper"]:has([class*="-video-intro-overlay"]) {
+  min-height: 844px !important;
+  max-height: 844px !important;
+  height: 844px !important;
+  overflow: hidden !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet ::ng-deep [class*="-main-wrapper"]:has([class*="-video-intro-overlay"]) {
+  min-height: 960px !important;
+  max-height: 960px !important;
+  height: 960px !important;
+}
+
+/* 1. Contenedores de Pantalla Completa Intro (Video / Poster / Telón) */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-video-intro-overlay"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-video-intro-overlay,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-video-intro-overlay {
   position: absolute !important;
   inset: 0 !important;
   top: 0 !important;
@@ -723,26 +738,139 @@
   bottom: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: 844px !important;
-  max-width: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   z-index: 50 !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
 }
 
-.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-video-intro-overlay"],
-.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-vip-envelope-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-intro-curtain-screen"],
-.nw-preview-viewport-wrapper.is-preview-mode.device-mode-tablet [class*="-intro-poster-screen"] {
-  min-height: 960px !important;
+/* 2. Pantallas Interiores Iniciales (Poster del sobre, Monograma de telón, etc.) */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-intro-poster-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-intro-curtain-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-intro-poster-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-intro-poster-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-intro-poster-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-intro-curtain-screen {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 44px 16px 24px !important;
+  box-sizing: border-box !important;
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+  overflow-y: auto !important;
+  z-index: 52 !important;
 }
 
-/* Video a pantalla completa ajustado al marco */
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) video[class*="-fullscreen-video"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-fullscreen-video,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-fullscreen-video,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-fullscreen-video,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-fullscreen-video {
+/* 3. Pantallas de Sobre VIP de Validación Privada */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="-vip-envelope-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep [class*="envelope-screen"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcp-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bdf-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bmf-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .nw-pub-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .girasoles-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .navy-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .tboda-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .tbaut-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .tcum-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .tgrad-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .totro-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .txv-vip-envelope-screen,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .xv-vip-envelope-screen {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 44px 16px 20px !important;
+  box-sizing: border-box !important;
+  z-index: 50 !important;
+  overflow-y: auto !important;
+}
+
+/* 4. Tarjetas de Apertura & Badges de Telón */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-marquee-badge {
+  max-width: 340px !important;
+  width: calc(100% - 24px) !important;
+  padding: 24px 18px !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-intro-card,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-intro-card,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-intro-card {
+  max-width: 340px !important;
+  width: calc(100% - 24px) !important;
+  padding: 24px 18px !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-poster-envelope,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-poster-wrap img,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-poster-wrap img {
+  max-height: 160px !important;
+  width: auto !important;
+  max-width: 80% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-envelope-preview {
+  margin-bottom: 14px !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-wax-seal {
+  width: 56px !important;
+  height: 56px !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-intro-names {
+  font-size: 24px !important;
+  margin: 6px 0 !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-poster-wrap,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-poster-wrap {
+  max-height: 180px !important;
+  overflow: hidden !important;
+  margin-bottom: 12px !important;
+}
+
+/* 5. Video a pantalla completa ajustado al marco */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep video[class*="-fullscreen-video"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-fullscreen-video,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-fullscreen-video,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-fullscreen-video,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-fullscreen-video {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
@@ -750,38 +878,69 @@
   inset: 0 !important;
 }
 
-/* Tarjetas de apertura y telón centradas armónicamente en el celular */
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-marquee-badge {
-  max-width: 90% !important;
-  width: 90% !important;
-  padding: 24px 18px !important;
-  margin: 0 auto !important;
-}
-
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-intro-card,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-intro-card,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-intro-card {
-  max-width: 90% !important;
-  width: 90% !important;
-  padding: 24px 16px !important;
-  margin: 0 auto !important;
-}
-
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-poster-wrap,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-poster-wrap,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-poster-wrap {
-  max-height: 240px !important;
+/* 6. Plantilla Boda Cards Lateral (App Deck) */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-deck-wrapper {
+  position: absolute !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 50 !important;
+  box-sizing: border-box !important;
   overflow: hidden !important;
 }
 
-/* Botón flotante de audio que no escape del celular en preview */
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) aside[class*="-audio-floating"],
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .teatro-audio-floating,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .rosas-audio-floating,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .eleganza-audio-floating,
-.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) .perle-audio-floating {
+.nw-preview-viewport-wrapper.is-preview-mode.device-mode-mobile ::ng-deep .bcl-top-bar {
+  padding-top: 38px !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-card-scroll-wrap {
+  padding: 85px 16px 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-card-inner,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-card-content {
+  width: 100% !important;
+  max-width: 360px !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-title-hero {
+  font-size: 28px !important;
+  line-height: 1.15 !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-cursive-hero {
+  font-size: 24px !important;
+}
+
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-monogram-ring {
+  width: 70px !important;
+  height: 70px !important;
+  margin: 0 auto 10px !important;
+}
+
+/* 7. Botón flotante de audio reposicionado para no chocar con el notch */
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep aside[class*="-audio-floating"],
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .teatro-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .rosas-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .eleganza-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .perle-audio-floating,
+.nw-preview-viewport-wrapper.is-preview-mode:not(.device-mode-desktop) ::ng-deep .bcl-audio-floating {
   position: absolute !important;
-  top: 36px !important;
+  top: 38px !important;
   right: 14px !important;
   z-index: 80 !important;
 }

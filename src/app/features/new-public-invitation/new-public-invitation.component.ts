@@ -193,6 +193,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     } else {
       this.resumeAudio();
     }
+    if (typeof window !== 'undefined') {
+      try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch {}
+    }
     this.cdr?.markForCheck();
   }
 
@@ -438,6 +441,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   setPreviewDevice(device: 'mobile' | 'tablet' | 'desktop'): void {
     this.previewDevice = device;
+    if (typeof window !== 'undefined') {
+      try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch {}
+    }
     this.cdr?.markForCheck();
   }
 

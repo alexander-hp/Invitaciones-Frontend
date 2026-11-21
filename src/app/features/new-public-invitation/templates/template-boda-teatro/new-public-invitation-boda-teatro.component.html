@@ -4,7 +4,7 @@
   <!-- 1. VIDEO INTRO OVERLAY (Apertura de Telón de Teatro) -->
   <div *ngIf="hasVideoIntro && !introFinished" class="teatro-video-intro-overlay" [class.playing]="introStarted">
     <!-- Cortina Cerrada de Terciopelo con Monograma Teatral y Botón de Inicio -->
-    <div *ngIf="!introStarted" class="teatro-intro-curtain-screen" data-aos="zoom-in">
+    <div *ngIf="!introStarted" class="teatro-intro-curtain-screen">
       <div class="teatro-curtain-backdrop" style="background-image: url('assets/boda-teatro/curtain-closed.jpg');"></div>
       <div class="teatro-intro-content">
         <div class="teatro-marquee-badge">
