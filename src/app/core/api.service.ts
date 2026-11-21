@@ -969,7 +969,7 @@ export class ApiService {
           if (resSlug) {
             if (isResTextOverlay) {
               const texts = resSub.editedTexts || sub?.editedTexts || {};
-              const srcTpl = resSub.sourceTemplateKey || sub?.sourceTemplateKey || 'envelope-cards';
+              const srcTpl = resSub.sourceTemplateKey || sub?.sourceTemplateKey || 'classic-vertical';
               localStorage.setItem(`inv_edited_texts_${resSlug}`, JSON.stringify(texts));
               localStorage.setItem(`inv_source_tpl_${resSlug}`, srcTpl);
               localStorage.setItem(`inv_tpl_${resSlug}`, srcTpl);

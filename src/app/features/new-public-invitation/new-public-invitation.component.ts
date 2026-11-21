@@ -2687,8 +2687,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   isEnvelopeCardsTemplate(): boolean {
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
-    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope' || (
-      !this.isClassicVerticalTemplate() &&
+    return t === 'envelope-cards' || t === 'mobile-cards' || t === 'envelope';
+  }
+
+  isClassicVerticalTemplate(): boolean {
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'classic-vertical' || t === 'classic' || t === 'editorial' || (
+      !this.isEnvelopeCardsTemplate() &&
       !this.isTemplate3() &&
       !this.isBodaMobileFirstTemplate() &&
       !this.isBodaDesktopFirstTemplate() &&
@@ -2709,12 +2715,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       !this.isBodaNavyBlueTemplate() &&
       !this.isXvBurgundyTemplate()
     );
-  }
-
-  isClassicVerticalTemplate(): boolean {
-    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
-    const t = this.currentTemplate;
-    return t === 'classic-vertical' || t === 'classic' || t === 'editorial';
   }
 
   isTemplate3(): boolean {

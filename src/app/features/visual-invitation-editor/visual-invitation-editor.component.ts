@@ -356,7 +356,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   importError = '';
   aiExchangeMessage = '';
   aiDesignPrompt = '';
-  importTemplateKey = 'envelope-cards';
+  importTemplateKey = 'classic-vertical';
   importWarnings: string[] = [];
   importSummary = '';
   private importHistorySteps = 0;
@@ -407,9 +407,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     rsvp: 'Confirmación RSVP', dedications: 'Dedicatorias', songs: 'Peticiones al DJ', album: 'Álbum colectivo', guestPass: 'Mesa y pase'
   };
   readonly importableTemplates = [
-    { key: 'envelope-cards', label: 'Sobre interactivo y cards' },
+    // { key: 'envelope-cards', label: 'Sobre interactivo y cards' }, // Deshabilitada temporalmente
     { key: 'classic-vertical', label: 'Clásica editorial vertical' },
-    { key: 'modern-minimal', label: 'Glamour moderno y minimal' },
+    // { key: 'modern-minimal', label: 'Glamour moderno y minimal' }, // Deshabilitada temporalmente
     { key: 'boda-mobile-first', label: 'Boda mobile-first' },
     { key: 'boda-desktop-first', label: 'Boda revista editorial' },
     { key: 'boda-cards-lateral', label: 'Boda cards lateral' },

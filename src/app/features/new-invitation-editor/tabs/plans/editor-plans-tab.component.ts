@@ -45,14 +45,17 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   private errorTimeout?: any;
 
   builtinTemplates = [
+    /*
+    // Deshabilitada temporalmente segun solicitud (no seleccionable en catalogo)
     {
       id: 'envelope-cards',
       name: 'Sobre Interactivo & Cards Deslizables',
-      badge: 'Recomendado Móvil',
-      description: 'Apertura animada de sobrecito digital con sello, verificación opcional de acceso (correo/teléfono), fondo de boda elegante y tarjetas independientes deslizables a izquierda/derecha.',
+      badge: 'Recomendado Movil',
+      description: 'Apertura animada de sobrecito digital con sello, verificacion opcional de acceso (correo/telefono), fondo de boda elegante y tarjetas independientes deslizables a izquierda/derecha.',
       iconKey: 'envelope',
-      features: ['Sobre 3D animado', 'Navegación por Swipe (Tarjetas)', 'Autenticación en sobre', 'Optimizado Celulares']
+      features: ['Sobre 3D animado', 'Navegacion por Swipe (Tarjetas)', 'Autenticacion en sobre', 'Optimizado Celulares']
     },
+    */
     {
       id: 'classic-vertical',
       name: 'Clásica Editorial Vertical',
@@ -61,14 +64,17 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       iconKey: 'classic',
       features: ['Scroll vertical continuo', 'Portada hero amplia', 'Lectura secuencial', 'Excelente en Escritorio']
     },
+    /*
+    // Deshabilitada temporalmente segun solicitud (no seleccionable en catalogo)
     {
       id: 'modern-minimal',
       name: 'Plantilla 3: Glamour Moderno & Minimal',
       badge: 'Plantilla 3',
-      description: 'Diseño vanguardista con estética limpia, tarjetas flotantes glassmorphism, hero interactivo, timeline moderno y animación fluida.',
+      description: 'Diseno vanguardista con estetica limpia, tarjetas flotantes glassmorphism, hero interactivo, timeline moderno y animacion fluida.',
       iconKey: 'modern',
-      features: ['Estilo Glassmorphism', 'Diseño Minimalista & Lujo', 'Hero interactivo', 'Optimizada Móvil & Desktop']
+      features: ['Estilo Glassmorphism', 'Diseno Minimalista & Lujo', 'Hero interactivo', 'Optimizada Movil & Desktop']
     },
+    */
     {
       id: 'boda-mobile-first',
       name: 'Boda Mobile-First (Story Vertical)',
@@ -382,7 +388,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
     const invId = this.invitation?._id || this.invitation?.id;
     const slug = this.invitation?.slug;
     const stored = (invId ? localStorage.getItem(`inv_tpl_${invId}`) : null) || (slug ? localStorage.getItem(`inv_tpl_${slug}`) : null);
-    return this.invitation?.content?.template || stored || 'envelope-cards';
+    return this.invitation?.content?.template || stored || 'classic-vertical';
   }
 
   isBuiltinActive(tplId: string): boolean {
@@ -668,7 +674,7 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
         this.apiService.deleteCustomTemplateSubmission(subId).subscribe({
           next: () => {
             if (this.isCustomSubmissionActive(sub)) {
-              this.setBuiltinTemplate('envelope-cards');
+              this.setBuiltinTemplate('classic-vertical');
             }
             this.loadCustomSubmissions();
             this.showSuccess('Versión personalizada eliminada.');
