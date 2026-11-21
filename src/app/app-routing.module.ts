@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+﻿import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
@@ -93,6 +93,8 @@ const routes: Routes = [
   { path: 'new/e/:portalSlug', component: NewExternalPortalComponent },
   { path: 'new/i/:slug/my-activity', component: GuestActivityComponent },
   { path: 'new/i/:slug', component: NewPublicInvitationComponent },
+  { path: 'new/v/:slug', redirectTo: 'new/i/:slug' },
+  { path: 'v/:slug', redirectTo: 'new/i/:slug' },
   { path: 'new/guia', component: NewUserGuideComponent, canActivate: [AuthGuard] },
   { path: 'new/documentacion', component: DocumentationComponent, canActivate: [AdminGuard] },
   { path: 'new/unauthorized', component: UnauthorizedComponent },

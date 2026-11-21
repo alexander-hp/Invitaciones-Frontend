@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -12,6 +12,7 @@ import {
   VisualDesignRevisionModel, VisualInvitationAsset, VisualInvitationLayer, VisualInvitationLayerLayout, VisualInvitationLayerStyle,
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
 } from '../../core/models';
+import { applyTemplateAccessPreset, getTemplateAccessPreset, isLegacyOrMismatchedAccessScreen } from '../../core/template-access-presets';
 import { normalizeMediaUrl } from '../../core/utils/media-url';
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
@@ -7955,350 +7956,47 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   ensureAccessScreenCanvasLayers(forceReset = false): void {
     if (!this.design?.accessScreen) return;
     const acc = this.design.accessScreen;
+    const currentTemplateKey = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || this.invitation?.template || 'envelope-cards';
 
-    // Detect if existing layers are old/white or have corrupted mojibake
+    // Detect if existing layers are old/white, have corrupted mojibake, or are legacy/mismatched with current template
     const hasMojibake = acc.layers && acc.layers.some(l =>
       (l.text && /[\u00C3\u00A2\u00C2\u2020]/.test(l.text)) ||
       (l.name && /[\u00C3\u00A2\u00C2\u2020]/.test(l.name))
     );
     const isOldFlatWhite = acc.layers && acc.layers.some(l => l.binding === 'access.contact' && (l.style?.backgroundColor === '#f8fafc' || l.style?.backgroundColor === 'transparent'));
     const isMissingCard = acc.layers && !acc.layers.some(l => l.binding === 'access.card');
+    const isMismatched = isLegacyOrMismatchedAccessScreen(acc, currentTemplateKey);
 
-    if (acc.layers && acc.layers.length > 0 && !forceReset && !hasMojibake && !isOldFlatWhite && !isMissingCard) {
+    if (acc.layers && acc.layers.length > 0 && !forceReset && !hasMojibake && !isOldFlatWhite && !isMissingCard && !isMismatched) {
       return;
     }
 
-    // Default luxury obsidian & gold palette
-    acc.backgroundType = acc.backgroundType || 'gradient';
-    acc.backgroundColor = acc.backgroundColor || '#080c14';
-    if (!acc.backgroundGradient || acc.backgroundGradient.includes('#1c2434') || acc.backgroundGradient.includes('undefined')) {
-      acc.backgroundGradient = 'radial-gradient(ellipse at 50% 20%, #172338 0%, #0c121e 55%, #05080f 100%)';
+    const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
+    applyTemplateAccessPreset(acc, currentTemplateKey, evTitle, true);
+  }
+
+  applyCurrentTemplateAccessPreset(): void {
+    if (!this.design) return;
+    this.recordHistory();
+    if (!this.design.accessScreen) {
+      this.design.accessScreen = { enabled: true } as VisualAccessScreenDesign;
     }
-    acc.cardStyle = 'glass';
-    acc.cardBgColor = 'rgba(12, 17, 29, 0.78)';
-    acc.cardRadius = 24;
-    acc.cardShadow = 'glow';
-    acc.accentColor = acc.accentColor || '#dfba47';
-    acc.buttonBgColor = acc.buttonBgColor || '#d4af37';
-    acc.buttonTextColor = '#0e1420';
-    acc.buttonRadius = 30;
-
-    const headingFont = acc.headingFont || 'Playfair Display';
-    const bodyFont = acc.bodyFont || 'Montserrat';
-    const goldAccent = '#dfba47';
-    const goldButton = '#d4af37';
-
-    let z = 0;
-    const layers: VisualInvitationLayer[] = [];
-
-    // 1. Tarjeta contenedora de cristal oscuro con ribete dorado (visible en login y registro)
-    const card = this.newLayer('shape', 'Tarjeta de Acceso', 6, 5, 88, 90);
-    card.name = 'Tarjeta Contenedora';
-    card.binding = 'access.card';
-    card.zIndex = ++z;
-    card.style = {
-      ...(card.style || {}),
-      backgroundColor: 'rgba(12, 17, 29, 0.78)',
-      borderColor: 'rgba(212, 175, 55, 0.35)',
-      borderWidth: 1.5,
-      borderStyle: 'solid',
-      borderRadius: 24,
-      boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(212, 175, 55, 0.12), inset 0 1px 0 rgba(255, 240, 200, 0.15)'
-    };
-    layers.push(card);
-
-    // --- VISTA DE INGRESO CON NIP ---
-    // 2. Badge decorativo
-    const badge = this.newLayer('text', '✦  INVITACIÓN DE GALA  ✦', 18, 10.5, 64, 5, 10.5);
-    badge.name = 'Insignia / Badge';
-    badge.binding = 'access.badge';
-    badge.zIndex = ++z;
-    badge.style = {
-      ...(badge.style || {}),
-      color: goldAccent,
-      fontFamily: bodyFont,
-      fontWeight: 700,
-      letterSpacing: 2.5,
-      textAlign: 'center',
-      backgroundColor: 'rgba(212, 175, 55, 0.08)',
-      borderColor: 'rgba(212, 175, 55, 0.32)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 20
-    };
-    layers.push(badge);
-
-    // 3. Título principal
-    const title = this.newLayer('text', acc.title || 'PASE DE ACCESO', 10, 18.5, 80, 11, 28);
-    title.name = 'Título de Acceso';
-    title.binding = 'access.title';
-    title.zIndex = ++z;
-    title.style = {
-      ...(title.style || {}),
-      color: '#ffffff',
-      fontFamily: headingFont,
-      fontWeight: 700,
-      letterSpacing: 1.5,
-      textAlign: 'center',
-      lineHeight: 1.2
-    };
-    layers.push(title);
-
-    // 4. Subtítulo
-    const subtitle = this.newLayer('text', acc.subtitle || 'Ingresa tu correo o teléfono registrado para abrir tu invitación y pase personal.', 12, 30.5, 76, 7, 12.5);
-    subtitle.name = 'Subtítulo / Instrucción';
-    subtitle.binding = 'access.subtitle';
-    subtitle.zIndex = ++z;
-    subtitle.style = {
-      ...(subtitle.style || {}),
-      color: 'rgba(226, 213, 195, 0.85)',
-      fontFamily: bodyFont,
-      fontWeight: 400,
-      lineHeight: 1.4,
-      textAlign: 'center'
-    };
-    layers.push(subtitle);
-
-    // 5. Campo de Contacto (Input translúcido de lujo)
-    const contactField = this.newLayer('field', acc.inputLabel || 'Correo o teléfono registrado', 12, 40, 76, 8.8, 13);
-    contactField.name = 'Campo de Contacto';
-    contactField.binding = 'access.contact';
-    contactField.placeholder = acc.inputPlaceholder || 'invitado@ejemplo.com o 55 0000 0000';
-    contactField.zIndex = ++z;
-    contactField.style = {
-      ...(contactField.style || {}),
-      color: '#ffffff',
-      fontFamily: bodyFont,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      borderColor: 'rgba(212, 175, 55, 0.28)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 14,
-      textAlign: 'left',
-      padding: 12,
-      boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.35)'
-    };
-    layers.push(contactField);
-
-    // 6. Campo NIP
-    const pinField = this.newLayer('field', acc.pinInputLabel || 'NIP de acceso', 12, 51, 76, 8.8, 13);
-    pinField.name = 'Campo NIP';
-    pinField.binding = 'access.pin';
-    pinField.placeholder = acc.pinInputPlaceholder || 'Ingresa tu NIP de 4 dígitos';
-    pinField.zIndex = ++z;
-    pinField.style = {
-      ...(pinField.style || {}),
-      color: '#ffffff',
-      fontFamily: bodyFont,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      borderColor: 'rgba(212, 175, 55, 0.28)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 14,
-      textAlign: 'left',
-      padding: 12,
-      boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.35)'
-    };
-    layers.push(pinField);
-
-    // 7. Botón Abrir Invitación (Oro radiante)
-    const submitBtn = this.newLayer('button', acc.buttonText || 'ABRIR INVITACIÓN', 12, 62.5, 76, 8.5, 13.5);
-    submitBtn.name = 'Botón Ingreso';
-    submitBtn.binding = 'access.submit';
-    submitBtn.zIndex = ++z;
-    submitBtn.style = {
-      ...(submitBtn.style || {}),
-      backgroundColor: goldButton,
-      color: '#0e1420',
-      fontFamily: bodyFont,
-      fontWeight: 700,
-      letterSpacing: 2,
-      borderRadius: 30,
-      borderColor: 'rgba(255, 245, 180, 0.6)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      boxShadow: '0 8px 25px rgba(212, 175, 55, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-      textAlign: 'center'
-    };
-    layers.push(submitBtn);
-
-    // 8. Enlace a Auto-registro
-    const selfRegLink = this.newLayer('text', '¿No estás en la lista? Solicitar invitación →', 12, 74, 76, 4.5, 12);
-    selfRegLink.name = 'Enlace a Auto-registro';
-    selfRegLink.binding = 'access.selfRegLink';
-    selfRegLink.zIndex = ++z;
-    selfRegLink.style = {
-      ...(selfRegLink.style || {}),
-      color: goldAccent,
-      fontFamily: bodyFont,
-      fontWeight: 600,
-      letterSpacing: 0.5,
-      textAlign: 'center',
-      textDecoration: 'none'
-    };
-    layers.push(selfRegLink);
-
-    // --- VISTA DE AUTO-REGISTRO ---
-    // 9. Título de Auto-registro
-    const regTitle = this.newLayer('text', acc.selfRegTitle || 'SOLICITAR INVITACIÓN', 10, 11, 80, 7.5, 24);
-    regTitle.name = 'Registro: Título';
-    regTitle.binding = 'selfReg.title';
-    regTitle.zIndex = ++z;
-    regTitle.style = {
-      ...(regTitle.style || {}),
-      color: '#ffffff',
-      fontFamily: headingFont,
-      fontWeight: 700,
-      letterSpacing: 1.5,
-      textAlign: 'center',
-      lineHeight: 1.2
-    };
-    layers.push(regTitle);
-
-    // 10. Subtítulo de Auto-registro
-    const regSubtitle = this.newLayer('text', acc.selfRegSubtitle || 'Si no estás en la lista oficial, déjanos tus datos para que los organizadores te envíen tu NIP.', 12, 19.5, 76, 6.5, 11.5);
-    regSubtitle.name = 'Registro: Subtítulo';
-    regSubtitle.binding = 'selfReg.subtitle';
-    regSubtitle.zIndex = ++z;
-    regSubtitle.style = {
-      ...(regSubtitle.style || {}),
-      color: 'rgba(226, 213, 195, 0.82)',
-      fontFamily: bodyFont,
-      fontWeight: 400,
-      lineHeight: 1.35,
-      textAlign: 'center'
-    };
-    layers.push(regSubtitle);
-
-    // 11. Campo Nombre
-    const regName = this.newLayer('field', 'Nombre completo *', 12, 28, 76, 7.2, 12);
-    regName.name = 'Registro: Nombre';
-    regName.binding = 'selfReg.name';
-    regName.placeholder = 'Tu nombre y apellido';
-    regName.zIndex = ++z;
-    regName.style = {
-      ...(regName.style || {}),
-      color: '#ffffff',
-      fontFamily: bodyFont,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      borderColor: 'rgba(212, 175, 55, 0.28)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 12,
-      textAlign: 'left',
-      padding: 10,
-      boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.35)'
-    };
-    layers.push(regName);
-
-    // 12. Campo Correo
-    const regEmail = this.newLayer('field', 'Correo electrónico *', 12, 37, 76, 7.2, 12);
-    regEmail.name = 'Registro: Correo';
-    regEmail.binding = 'selfReg.email';
-    regEmail.placeholder = 'tu-correo@ejemplo.com';
-    regEmail.zIndex = ++z;
-    regEmail.style = {
-      ...(regEmail.style || {}),
-      color: '#ffffff',
-      fontFamily: bodyFont,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      borderColor: 'rgba(212, 175, 55, 0.28)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 12,
-      textAlign: 'left',
-      padding: 10,
-      boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.35)'
-    };
-    layers.push(regEmail);
-
-    // 13. Campo Teléfono
-    const regPhone = this.newLayer('field', 'Teléfono / WhatsApp (opcional)', 12, 46, 76, 7.2, 12);
-    regPhone.name = 'Registro: Teléfono';
-    regPhone.binding = 'selfReg.phone';
-    regPhone.placeholder = '55 0000 0000';
-    regPhone.zIndex = ++z;
-    regPhone.style = {
-      ...(regPhone.style || {}),
-      color: '#ffffff',
-      fontFamily: bodyFont,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      borderColor: 'rgba(212, 175, 55, 0.28)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 12,
-      textAlign: 'left',
-      padding: 10,
-      boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.35)'
-    };
-    layers.push(regPhone);
-
-    // 14. Campo Acompañantes
-    const regCompanions = this.newLayer('field', 'Pases solicitados', 12, 55, 76, 7.2, 12);
-    regCompanions.name = 'Registro: Pases';
-    regCompanions.binding = 'selfReg.companions';
-    regCompanions.placeholder = '1 pase (Solo yo)';
-    regCompanions.zIndex = ++z;
-    regCompanions.style = {
-      ...(regCompanions.style || {}),
-      color: '#ffffff',
-      fontFamily: bodyFont,
-      backgroundColor: 'rgba(255, 255, 255, 0.06)',
-      borderColor: 'rgba(212, 175, 55, 0.28)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      borderRadius: 12,
-      textAlign: 'left',
-      padding: 10,
-      boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.35)'
-    };
-    layers.push(regCompanions);
-
-    // 15. Botón Enviar Solicitud
-    const regSubmit = this.newLayer('button', acc.selfRegButtonText || 'ENVIAR SOLICITUD', 12, 64.5, 76, 8, 13.5);
-    regSubmit.name = 'Registro: Botón Enviar';
-    regSubmit.binding = 'selfReg.submit';
-    regSubmit.zIndex = ++z;
-    regSubmit.style = {
-      ...(regSubmit.style || {}),
-      backgroundColor: goldButton,
-      color: '#0e1420',
-      fontFamily: bodyFont,
-      fontWeight: 700,
-      letterSpacing: 2,
-      borderRadius: 30,
-      borderColor: 'rgba(255, 245, 180, 0.6)',
-      borderWidth: 1,
-      borderStyle: 'solid',
-      boxShadow: '0 8px 25px rgba(212, 175, 55, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
-      textAlign: 'center'
-    };
-    layers.push(regSubmit);
-
-    // 16. Enlace Volver
-    const regBackLink = this.newLayer('text', '← Ya tengo mi NIP / Volver al acceso', 12, 75, 76, 4.5, 12);
-    regBackLink.name = 'Registro: Enlace Volver';
-    regBackLink.binding = 'selfReg.backLink';
-    regBackLink.zIndex = ++z;
-    regBackLink.style = {
-      ...(regBackLink.style || {}),
-      color: goldAccent,
-      fontFamily: bodyFont,
-      fontWeight: 600,
-      letterSpacing: 0.5,
-      textAlign: 'center',
-      textDecoration: 'none'
-    };
-    layers.push(regBackLink);
-
-    acc.layers = layers;
+    const currentTemplateKey = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || this.invitation?.template || 'envelope-cards';
+    const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
+    applyTemplateAccessPreset(this.design.accessScreen, currentTemplateKey, evTitle, false);
+    const preset = getTemplateAccessPreset(currentTemplateKey);
+    this.clearLayerSelection();
+    this.flash('Diseño oficial de "' + preset.name + '" aplicado a la pantalla de acceso.');
+    this.cdr?.markForCheck();
   }
 
   resetAccessScreenLayers(): void {
     this.recordHistory();
     this.ensureAccessScreenCanvasLayers(true);
     this.clearLayerSelection();
-    this.flash("Elementos y capas de la pantalla de acceso restablecidos.");
+    const currentTemplateKey = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || this.invitation?.template || 'envelope-cards';
+    const preset = getTemplateAccessPreset(currentTemplateKey);
+    this.flash('Elementos y capas de la pantalla de acceso restablecidos (' + preset.name + ').');
     this.cdr?.markForCheck();
   }
 
@@ -8343,53 +8041,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   initAccessScreenDesign(): void {
     if (!this.design) return;
+    const currentTemplateKey = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || this.invitation?.template || 'envelope-cards';
+    const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
     if (!this.design.accessScreen) {
-      const theme = this.design.theme;
-      this.design.accessScreen = {
-        enabled: true,
-        title: this.invitation?.content?.headline || this.event?.title || 'Acceso a la invitación',
-        subtitle: 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.',
-        inputLabel: 'Correo o teléfono registrado',
-        inputPlaceholder: 'ejemplo@correo.com o tu teléfono',
-        buttonText: 'Solicitar enlace',
-        badgeText: 'Acceso Personal',
-        showBadge: true,
-        showIcon: true,
-        iconName: 'lock-keyhole',
-        logoUrl: this.invitation?.content?.brandLogoUrl || this.invitation?.content?.brandMonogramUrl || '',
-        cardStyle: 'glass',
-        cardBgColor: '#ffffff',
-        cardOpacity: 88,
-        cardRadius: 18,
-        cardShadow: 'glow',
-        backgroundType: this.invitation?.content?.coverImageUrl ? 'image' : 'gradient',
-        backgroundColor: theme?.backgroundColor || '#1c2434',
-        backgroundGradient: 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)',
-        backgroundImageUrl: this.invitation?.content?.coverImageUrl || '',
-        backgroundOverlayOpacity: 65,
-        backgroundBlur: 8,
-        primaryColor: theme?.accentColor || '#c59b6c',
-        textColor: '#1c2434',
-        accentColor: theme?.accentColor || '#c59b6c',
-        buttonBgColor: theme?.buttonBackgroundColor || '#2f5348',
-        buttonTextColor: theme?.buttonTextColor || '#ffffff',
-        buttonRadius: theme?.buttonRadius ?? 10,
-        headingFont: theme?.headingFont || 'Playfair Display',
-        bodyFont: theme?.bodyFont || 'Montserrat',
-        requirePin: false,
-        pinMode: 'event',
-        eventPin: '',
-        pinInputLabel: 'NIP de acceso',
-        pinInputPlaceholder: 'Ingresa tu NIP',
-        allowSelfRegistration: false,
-        selfRegTitle: 'Solicitar Invitación',
-        selfRegSubtitle: 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso.',
-        selfRegButtonText: 'ENVIAR SOLICITUD',
-        selfRegSuccessMessage: '¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo.',
-        selfRegGroup: 'Solicitudes de Acceso',
-        selfRegRequireApproval: true,
-        selfRegMaxGuests: 0
-      };
+      this.design.accessScreen = { enabled: true } as VisualAccessScreenDesign;
+      applyTemplateAccessPreset(this.design.accessScreen, currentTemplateKey, evTitle, false);
     } else {
       if (this.design.accessScreen.requirePin === undefined) {
         this.design.accessScreen.requirePin = false;
@@ -8407,16 +8063,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.design.accessScreen.allowSelfRegistration = false;
       }
       if (!this.design.accessScreen.selfRegTitle) {
-        this.design.accessScreen.selfRegTitle = 'Solicitar Invitación';
+        this.design.accessScreen.selfRegTitle = 'Solicitar InvitaciÃ³n';
       }
       if (!this.design.accessScreen.selfRegSubtitle) {
-        this.design.accessScreen.selfRegSubtitle = 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso.';
+        this.design.accessScreen.selfRegSubtitle = 'Si no estÃ¡s en la lista, ingresa tus datos. El anfitriÃ³n revisarÃ¡ tu solicitud y te enviarÃ¡ tu NIP de acceso.';
       }
       if (!this.design.accessScreen.selfRegButtonText) {
         this.design.accessScreen.selfRegButtonText = 'ENVIAR SOLICITUD';
       }
       if (!this.design.accessScreen.selfRegSuccessMessage) {
-        this.design.accessScreen.selfRegSuccessMessage = '¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo.';
+        this.design.accessScreen.selfRegSuccessMessage = 'Â¡Solicitud recibida! Los organizadores revisarÃ¡n tu peticiÃ³n y te enviarÃ¡n tu NIP y pase por correo.';
       }
       if (!this.design.accessScreen.selfRegGroup) {
         this.design.accessScreen.selfRegGroup = 'Solicitudes de Acceso';

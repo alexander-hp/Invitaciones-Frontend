@@ -4,6 +4,7 @@ import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { AssetFolder, EventAgendaItem, EventModel, EventPayload, ExternalContent, GuestModel, InvitationLocation, InvitationModel, PaymentPackage, PlaceSearchResult, PlanDefinition, TemplateModel, CustomTemplateSubmission, SongRequestSettings, VisualInvitationDesign, VisualAccessScreenDesign } from '../../core/models';
 import { EditorPlansTabComponent } from './tabs/plans/editor-plans-tab.component';
+import { applyTemplateAccessPreset, getTemplateAccessPreset, isLegacyOrMismatchedAccessScreen } from '../../core/template-access-presets';
 import { applyPaletteToVisualDesign, InvitationPaletteColors, paletteFromVisualDesign, validPaletteColor } from './visual-palette';
 
 @Component({
@@ -481,30 +482,52 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.invitation.content) {
       this.invitation.content = {};
     }
+    const tplKey = this.invitation.content.template || 'envelope-cards';
     if (!this.invitation.content.accessScreen) {
-      this.invitation.content.accessScreen = {
-        enabled: true,
-        title: 'Invitación Personal',
-        subtitle: 'Ingresa tu correo o teléfono registrado para abrir tu invitación y pase personal.',
-        inputLabel: 'Correo o Teléfono registrado',
-        inputPlaceholder: 'invitado@ejemplo.com o 55 0000 0000',
-        buttonText: 'ABRIR INVITACIÓN',
-        requirePin: false,
-        pinMode: 'individual',
-        eventPin: '',
-        pinInputLabel: 'NIP de Acceso',
-        pinInputPlaceholder: 'Ingresa tu NIP',
-        allowSelfRegistration: false,
-        selfRegTitle: 'Solicitar Invitación',
-        selfRegSubtitle: 'Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu pase personal.',
-        selfRegButtonText: 'ENVIAR SOLICITUD',
-        selfRegGroup: 'Solicitudes de Acceso',
-        selfRegRequireApproval: true,
-        selfRegMaxGuests: 1,
-        selfRegSuccessMessage: '¡Solicitud enviada con éxito! Te notificaremos cuando sea aprobada.'
-      };
+      this.invitation.content.accessScreen = { enabled: true } as VisualAccessScreenDesign;
+      applyTemplateAccessPreset(this.invitation.content.accessScreen, tplKey, this.event?.title, false);
+    } else if (isLegacyOrMismatchedAccessScreen(this.invitation.content.accessScreen, tplKey)) {
+      applyTemplateAccessPreset(this.invitation.content.accessScreen, tplKey, this.event?.title, true);
     }
     return this.invitation.content.accessScreen;
+  }
+
+  getActiveTemplateName(): string {
+    const tplKey = this.invitation?.content?.template || 'envelope-cards';
+    const preset = getTemplateAccessPreset(tplKey);
+    return preset.name;
+  }
+
+  applyTemplateAccessScreen(templateKey: string): void {
+    if (!this.invitation) return;
+    if (!this.invitation.content) this.invitation.content = {};
+    if (!this.invitation.content.accessScreen) {
+      this.invitation.content.accessScreen = { enabled: true } as VisualAccessScreenDesign;
+    }
+    applyTemplateAccessPreset(
+      this.invitation.content.accessScreen,
+      templateKey,
+      this.event?.title,
+      true
+    );
+    if (this.invitation.content.visualDesign) {
+      this.invitation.content.visualDesign.accessScreen = {
+        ...this.invitation.content.accessScreen
+      };
+    }
+    if (this.invitation.content.visualDesignDraft) {
+      this.invitation.content.visualDesignDraft.accessScreen = {
+        ...this.invitation.content.accessScreen
+      };
+    }
+    this.scheduleAutoSave();
+  }
+
+  resetAccessScreenToTemplate(): void {
+    const tplKey = this.invitation?.content?.template || 'envelope-cards';
+    this.applyTemplateAccessScreen(tplKey);
+    this.message = `Estilo visual de "${this.getActiveTemplateName()}" aplicado a la pantalla de acceso.`;
+    this.clearMessageAfterDelay();
   }
 
   generateRandomEventPin(): void {
@@ -803,6 +826,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     if (!this.invitation.content) this.invitation.content = {};
     this.hasSelectedDesign = true;
     this.invitation.content.template = key;
+    this.applyTemplateAccessScreen(key);
     if (key !== 'visual-builder') {
       if (this.invitation.content.visualDesign) {
         this.invitation.content.visualDesign.active = false;
@@ -842,6 +866,7 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     const tplKey = template.key || templateId || 'envelope-cards';
     this.hasSelectedDesign = true;
     this.invitation.content.template = tplKey;
+    this.applyTemplateAccessScreen(tplKey);
     if (this.invitation.content.visualDesign) {
       this.invitation.content.visualDesign.active = false;
     }
@@ -1309,6 +1334,16 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  viewAccessPreview(): void {
+    if (!this.invitation) return;
+    if (!this.hasSelectedDesign) {
+      this.goToDesignChoice('Selecciona un diseño para poder abrir la vista previa.');
+      return;
+    }
+    const invId = this.getInvitationId(this.invitation);
+    window.open(`/new/i/${this.invitation.slug}?preview=true&previewId=${encodeURIComponent(invId)}&device=mobile&section=access`, '_blank');
   }
 
   viewPreview(): void {

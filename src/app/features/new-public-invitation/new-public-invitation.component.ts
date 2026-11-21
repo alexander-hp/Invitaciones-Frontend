@@ -5,6 +5,15 @@ import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
+import { getTemplateAccessPreset, TemplateAccessScreenPreset, isLegacyOrMismatchedAccessScreen } from '../../core/template-access-presets';
+import {
+  getBackdropPatternDataUri,
+  getCornerOrnamentSvg,
+  getDividerFlourishSvg,
+  getTemplateVisualEnhancement,
+  getTopHeaderArtworkSvg,
+  TemplateAccessVisualEnhancement
+} from '../../core/template-access-ornaments';
 import { DedicationModel, EventModel, ExternalGuestStatusResponse, GuestAccessResponse, GuestActivityNotification, InvitationLocation, InvitationModel, MusicCueSettings, MusicPlaybackSettings, RsvpCustomQuestion, RsvpResponse, VisualAccessScreenDesign, VisualInvitationLayer } from '../../core/models';
 import { generateGuestPassHtml } from './guest-pass-template';
 
@@ -24,7 +33,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   error = '';
   accessRequired = false;
   accessMessage = '';
-  accessGateData?: { slug?: string; eventTitle?: string; accessMode?: string; accessScreen?: VisualAccessScreenDesign; theme?: any; palette?: any; coverImageUrl?: string; responsiveMode?: 'shared' | 'independent' };
+  accessGateData?: { slug?: string; eventTitle?: string; accessMode?: string; accessScreen?: VisualAccessScreenDesign; theme?: any; palette?: any; coverImageUrl?: string; responsiveMode?: 'shared' | 'independent'; template?: string };
   accessGateView: 'login' | 'register' = 'login';
   selfRegName = '';
   selfRegEmail = '';
@@ -126,6 +135,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   previewDevice: 'mobile' | 'tablet' | 'desktop' = 'mobile';
   previewBarCollapsed = false;
   isSimulatingGuest = false;
+  previewSection: 'invitation' | 'access' | 'register' = 'invitation';
 
   readonly previewGuestData: GuestAccessResponse['guest'] = {
     id: 'preview-guest-sample',
@@ -172,6 +182,20 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     ]
   };
 
+  setPreviewSection(section: 'invitation' | 'access' | 'register'): void {
+    this.previewSection = section;
+    if (section === 'register') {
+      this.accessGateView = 'register';
+      this.pauseAllAudio();
+    } else if (section === 'access') {
+      this.accessGateView = 'login';
+      this.pauseAllAudio();
+    } else {
+      this.resumeAudio();
+    }
+    this.cdr?.markForCheck();
+  }
+
   toggleGuestSimulation(): void {
     if (this.isSimulatingGuest) {
       this.isSimulatingGuest = false;
@@ -208,6 +232,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   private visibilityListener?: () => void;
 
   ngOnInit(): void {
+    const querySection = this.route.snapshot.queryParamMap.get('section') || this.route.snapshot.queryParamMap.get('view');
+    if (querySection === 'access' || querySection === 'login') {
+      this.previewSection = 'access';
+      this.accessGateView = 'login';
+    } else if (querySection === 'register' || querySection === 'selfreg') {
+      this.previewSection = 'register';
+      this.accessGateView = 'register';
+    }
+
     const queryDevice = this.route.snapshot.queryParamMap.get('device');
     if (queryDevice === 'mobile' || queryDevice === 'tablet' || queryDevice === 'desktop') {
       this.previewDevice = queryDevice;
@@ -1349,6 +1382,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   toggleAccessGateView(view: 'login' | 'register'): void {
     this.accessGateView = view;
+    if (this.showPreviewDeviceToolbar) {
+      this.previewSection = view === 'register' ? 'register' : 'access';
+    }
     this.error = '';
     this.success = '';
     this.selfRegSubmitted = false;
@@ -1460,12 +1496,117 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       || undefined;
   }
 
+  get currentAccessTemplateKey(): string {
+    return this.accessGateData?.template
+      || this.accessScreenDesign?.templateKey
+      || this.invitation?.content?.template
+      || (this.invitation as any)?.template
+      || 'envelope-cards';
+  }
+
+  get currentAccessPreset(): TemplateAccessScreenPreset {
+    return getTemplateAccessPreset(this.currentAccessTemplateKey);
+  }
+
+  private cachedCrestKey = '';
+  private cachedCrestSafeHtml: SafeHtml = '';
+  private cachedOrnamentKey = '';
+  private cachedCornerSafeHtml: SafeHtml = '';
+  private cachedDividerSafeHtml: SafeHtml = '';
+  private cachedTopArtSafeHtml: SafeHtml = '';
+
+  get currentAccessEnhancement(): TemplateAccessVisualEnhancement {
+    return getTemplateVisualEnhancement(this.currentAccessPreset.templateId);
+  }
+
+  private ensureOrnamentCache(): void {
+    const preset = this.currentAccessPreset;
+    const accent = this.accessScreenDesign?.accentColor || preset.theme.accentColor;
+    const primary = preset.theme.primaryColor || accent;
+    const cacheKey = `${preset.templateId}|${accent}|${primary}`;
+    if (this.cachedOrnamentKey === cacheKey) return;
+
+    this.cachedOrnamentKey = cacheKey;
+    const enh = this.currentAccessEnhancement;
+    this.cachedCornerSafeHtml = this.sanitizer.bypassSecurityTrustHtml(
+      getCornerOrnamentSvg(enh.cornerStyle, accent)
+    );
+    this.cachedDividerSafeHtml = this.sanitizer.bypassSecurityTrustHtml(
+      getDividerFlourishSvg(enh.dividerStyle, accent)
+    );
+    this.cachedTopArtSafeHtml = this.sanitizer.bypassSecurityTrustHtml(
+      getTopHeaderArtworkSvg(enh.frameVariant, accent, primary)
+    );
+  }
+
+  get currentAccessCornerSafe(): SafeHtml {
+    this.ensureOrnamentCache();
+    return this.cachedCornerSafeHtml;
+  }
+
+  get currentAccessDividerSafe(): SafeHtml {
+    this.ensureOrnamentCache();
+    return this.cachedDividerSafeHtml;
+  }
+
+  get currentAccessTopArtSafe(): SafeHtml {
+    this.ensureOrnamentCache();
+    return this.cachedTopArtSafeHtml;
+  }
+
+  get currentAccessBackdropPatternStyle(): Record<string, string> {
+    const preset = this.currentAccessPreset;
+    const enh = this.currentAccessEnhancement;
+    const accent = this.accessScreenDesign?.accentColor || preset.theme.accentColor;
+    return {
+      'background-image': getBackdropPatternDataUri(enh.backdropPattern, accent)
+    };
+  }
+
+  get currentAccessAmbientOrbStyle(): Record<string, string> {
+    const enh = this.currentAccessEnhancement;
+    return {
+      background: `radial-gradient(circle, ${enh.ambientGlowColor} 0%, transparent 70%)`
+    };
+  }
+
+  get currentAccessSecondaryOrbStyle(): Record<string, string> {
+    const enh = this.currentAccessEnhancement;
+    return {
+      background: `radial-gradient(circle, ${enh.secondaryGlowColor} 0%, transparent 70%)`
+    };
+  }
+
+  get currentAccessCrestSafe(): SafeHtml {
+    const key = this.currentAccessTemplateKey;
+    if (this.cachedCrestKey === key && this.cachedCrestSafeHtml) {
+      return this.cachedCrestSafeHtml;
+    }
+    this.cachedCrestKey = key;
+    const svg = this.currentAccessPreset.decorations.crestSvg;
+    this.cachedCrestSafeHtml = this.sanitizer.bypassSecurityTrustHtml(svg);
+    return this.cachedCrestSafeHtml;
+  }
+
+  get currentAccessSpecialEffect(): string {
+    return this.currentAccessPreset.decorations.specialEffect || 'none';
+  }
+
   getAccessGateBackgroundStyle(): Record<string, string> {
     const acc = this.accessScreenDesign;
+    const preset = this.currentAccessPreset;
+
     if (acc?.backgroundType === 'image' && (acc.backgroundImageUrl || this.accessGateData?.coverImageUrl)) {
       const url = acc.backgroundImageUrl || this.accessGateData?.coverImageUrl;
       return {
         'background-image': `url("${url}")`,
+        'background-size': 'cover',
+        'background-position': 'center center'
+      };
+    }
+    if (preset.theme.backgroundType === 'image' && preset.theme.backgroundImageUrl && !acc?.backgroundGradient) {
+      return {
+        'background-image': `url("${preset.theme.backgroundImageUrl}")`,
         'background-size': 'cover',
         'background-position': 'center center'
       };
@@ -1475,20 +1616,27 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         'background': acc.backgroundGradient
       };
     }
+    if (preset.theme.backgroundGradient) {
+      return {
+        'background': preset.theme.backgroundGradient
+      };
+    }
     if (acc?.backgroundColor) {
       return {
         'background-color': acc.backgroundColor
       };
     }
     return {
-      'background': 'radial-gradient(ellipse at 50% 25%, #1e293b 0%, #0f172a 55%, #05080f 100%)'
+      'background-color': preset.theme.backgroundColor || '#0b111e'
     };
   }
 
   getAccessGateOverlayStyle(): string {
     const acc = this.accessScreenDesign;
-    if (acc?.backgroundType === 'image') {
-      const opacity = Math.min((acc?.backgroundOverlayOpacity ?? 50) / 100, 0.65);
+    const preset = this.currentAccessPreset;
+    const isImage = acc?.backgroundType === 'image' || (preset.theme.backgroundType === 'image' && !acc?.backgroundGradient);
+    if (isImage) {
+      const opacity = Math.min((acc?.backgroundOverlayOpacity ?? preset.theme.backgroundOverlayOpacity ?? 50) / 100, 0.75);
       return `rgba(0, 0, 0, ${opacity})`;
     }
     return 'transparent';
@@ -1496,7 +1644,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   getAccessGateCardStyle(): Record<string, string> {
     const acc = this.accessScreenDesign;
-    const radius = acc?.cardRadius !== undefined ? acc.cardRadius : 18;
+    const preset = this.currentAccessPreset;
+    const theme = preset.theme;
+    const radius = acc?.cardRadius !== undefined ? acc.cardRadius : theme.cardRadius;
     const style: Record<string, string> = {
       'border-radius': `${radius}px`
     };
@@ -1508,35 +1658,33 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       return style;
     }
 
-    const bgHex = acc?.cardBgColor || '#ffffff';
-    const opacity = (acc?.cardOpacity ?? 88) / 100;
-    const hex = bgHex.replace('#', '');
-    const r = parseInt(hex.substring(0, 2) || 'ff', 16);
-    const g = parseInt(hex.substring(2, 4) || 'ff', 16);
-    const b = parseInt(hex.substring(4, 6) || 'ff', 16);
-
-    style['background'] = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-
-    if (acc?.cardStyle === 'glass' || !acc?.cardStyle) {
-      style['backdrop-filter'] = `blur(${acc?.backgroundBlur || 12}px)`;
-      style['-webkit-backdrop-filter'] = `blur(${acc?.backgroundBlur || 12}px)`;
-      style['border'] = `1px solid rgba(255, 255, 255, 0.28)`;
-    } else if (acc?.cardStyle === 'bordered') {
-      style['border'] = `1.5px solid ${acc.accentColor || '#c59b6c'}`;
+    const bgHex = acc?.cardBgColor || theme.cardBgColor;
+    if (bgHex.startsWith('rgba') || bgHex.startsWith('rgb')) {
+      style['background'] = bgHex;
     } else {
-      style['border'] = '1px solid rgba(0, 0, 0, 0.08)';
+      const opacity = (acc?.cardOpacity ?? theme.cardOpacity) / 100;
+      const hex = bgHex.replace('#', '');
+      const r = parseInt(hex.substring(0, 2) || 'ff', 16);
+      const g = parseInt(hex.substring(2, 4) || 'ff', 16);
+      const b = parseInt(hex.substring(4, 6) || 'ff', 16);
+      style['background'] = `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
 
-    if (acc?.cardShadow === 'soft') {
+    const blur = acc?.backgroundBlur || theme.backgroundBlur || 12;
+    style['backdrop-filter'] = `blur(${blur}px)`;
+    style['-webkit-backdrop-filter'] = `blur(${blur}px)`;
+
+    const border = theme.cardBorder || `1.5px solid ${acc?.accentColor || theme.accentColor}`;
+    style['border'] = border;
+
+    const shadow = acc?.cardShadow || theme.cardShadow;
+    if (shadow === 'soft') {
       style['box-shadow'] = '0 12px 36px rgba(0, 0, 0, 0.12)';
-    } else if (acc?.cardShadow === 'elevated') {
+    } else if (shadow === 'elevated') {
       style['box-shadow'] = '0 24px 50px -12px rgba(0, 0, 0, 0.28)';
-    } else if (acc?.cardShadow === 'glow' || !acc?.cardShadow) {
-      const accHex = (acc?.accentColor || '#c59b6c').replace('#', '');
-      const ar = parseInt(accHex.substring(0, 2) || 'c5', 16);
-      const ag = parseInt(accHex.substring(2, 4) || '9b', 16);
-      const ab = parseInt(accHex.substring(4, 6) || '6c', 16);
-      style['box-shadow'] = `0 20px 45px rgba(${ar}, ${ag}, ${ab}, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15) inset`;
+    } else if (shadow === 'glow') {
+      const glowColor = theme.cardBorderGlow || 'rgba(197, 155, 108, 0.25)';
+      style['box-shadow'] = `0 24px 60px rgba(0, 0, 0, 0.55), 0 0 35px ${glowColor}, inset 0 1px 0 rgba(255, 255, 255, 0.15)`;
     } else {
       style['box-shadow'] = 'none';
     }
@@ -1545,7 +1693,16 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   hasAccessLayers(): boolean {
-    return Boolean(this.accessScreenDesign?.layers && this.accessScreenDesign.layers.length > 0);
+    const acc = this.accessScreenDesign;
+    if (!acc?.layers || acc.layers.length === 0) return false;
+    if (isLegacyOrMismatchedAccessScreen(acc, this.currentAccessTemplateKey)) {
+      return false;
+    }
+    const isVisualBuilder = this.currentAccessTemplateKey === 'visual-builder';
+    const hasCustomUserLayers = acc.layers.some(l =>
+      Boolean(l.id) && !l.id.startsWith('layer-access-') && !l.id.startsWith('layer-selfreg-')
+    );
+    return isVisualBuilder || hasCustomUserLayers;
   }
 
   @HostListener('window:resize')
@@ -1654,81 +1811,90 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (s.boxShadow) style['boxShadow'] = s.boxShadow;
     if (s.gradientEnabled) {
       style['backgroundImage'] = `linear-gradient(${Number(s.gradientAngle || 0)}deg,${String(s.gradientStart || '#ffffff')},${String(s.gradientEnd || '#000000')})`;
-    } else if (s.backgroundImageUrl) {
-      style['backgroundImage'] = `url("${s.backgroundImageUrl}")`;
-      style['backgroundSize'] = 'cover';
-      style['backgroundPosition'] = 'center';
     }
     if (s.backdropFilter) {
       style['backdropFilter'] = s.backdropFilter;
       style['-webkit-backdrop-filter'] = s.backdropFilter;
     }
-    if (layer.binding === 'access.card' || layer.type === 'shape') {
-      style['pointerEvents'] = 'none';
-      if (!style['backdropFilter']) {
-        style['backdropFilter'] = 'blur(16px)';
-        style['-webkit-backdrop-filter'] = 'blur(16px)';
-      }
+    if (s.opacity !== undefined && s.opacity < 100) {
+      style['opacity'] = `${s.opacity / 100}`;
     }
-    const rawOpacity = s.opacity !== undefined && s.opacity !== null ? Number(s.opacity) : 1;
-    const finalOpacity = rawOpacity > 1 ? rawOpacity / 100 : rawOpacity;
-    style['opacity'] = `${finalOpacity}`;
     return style;
   }
 
   getAccessGateHeadingFont(): string {
     return this.accessScreenDesign?.headingFont
       || this.accessGateData?.theme?.headingFont
-      || 'Playfair Display';
+      || this.currentAccessPreset.theme.headingFont;
   }
 
   getAccessGateBodyFont(): string {
     return this.accessScreenDesign?.bodyFont
       || this.accessGateData?.theme?.bodyFont
-      || 'Montserrat';
+      || this.currentAccessPreset.theme.bodyFont;
   }
 
   getAccessGateTitle(): string {
     return this.accessScreenDesign?.title
       || this.accessGateData?.eventTitle
-      || 'Acceso a la invitación';
+      || this.currentAccessPreset.texts.defaultTitle;
   }
 
   getAccessGateSubtitle(): string {
     return this.accessScreenDesign?.subtitle
       || this.accessMessage
-      || 'Esta invitación requiere un enlace personal. Solicítalo con tu correo o teléfono registrado.';
+      || this.currentAccessPreset.texts.defaultSubtitle;
+  }
+
+  getAccessGateBadgeText(): string {
+    return this.accessScreenDesign?.badgeText
+      || this.currentAccessPreset.texts.badgeText;
   }
 
   getAccessGateInputLabel(): string {
-    return this.accessScreenDesign?.inputLabel || 'Correo o teléfono registrado';
+    return this.accessScreenDesign?.inputLabel
+      || this.currentAccessPreset.texts.inputLabel;
   }
 
   getAccessGateInputPlaceholder(): string {
-    return this.accessScreenDesign?.inputPlaceholder || 'ejemplo@correo.com o tu teléfono';
+    return this.accessScreenDesign?.inputPlaceholder
+      || this.currentAccessPreset.texts.inputPlaceholder;
   }
 
   getAccessGatePinInputLabel(): string {
-    return this.accessScreenDesign?.pinInputLabel || 'NIP de acceso';
+    return this.accessScreenDesign?.pinInputLabel
+      || this.currentAccessPreset.texts.pinInputLabel;
   }
 
   getAccessGatePinInputPlaceholder(): string {
-    return this.accessScreenDesign?.pinInputPlaceholder || 'Ingresa tu NIP';
+    return this.accessScreenDesign?.pinInputPlaceholder
+      || this.currentAccessPreset.texts.pinInputPlaceholder;
   }
 
   getAccessGateButtonText(): string {
-    return this.accessScreenDesign?.buttonText || 'Solicitar enlace';
+    return this.accessScreenDesign?.buttonText
+      || this.currentAccessPreset.texts.buttonText;
   }
 
   getAccessGateButtonStyle(): Record<string, string> {
     const acc = this.accessScreenDesign;
-    const bg = acc?.buttonBgColor || this.accessGateData?.theme?.buttonBackgroundColor || '#2f5348';
-    const text = acc?.buttonTextColor || this.accessGateData?.theme?.buttonTextColor || '#ffffff';
-    const radius = acc?.buttonRadius ?? this.accessGateData?.theme?.buttonRadius ?? 10;
+    const theme = this.currentAccessPreset.theme;
+    const bg = acc?.buttonBgColor || theme.buttonBgColor;
+    const text = acc?.buttonTextColor || theme.buttonTextColor;
+    const radius = acc?.buttonRadius ?? theme.buttonRadius ?? 12;
     return {
       'background-color': bg,
       'color': text,
       'border-radius': `${radius}px`
+    };
+  }
+
+  getAccessGateInputStyle(): Record<string, string> {
+    const theme = this.currentAccessPreset.theme;
+    return {
+      'background-color': theme.inputBgColor,
+      'border-color': theme.inputBorderColor,
+      'color': theme.inputTextColor
     };
   }
 

@@ -1,4 +1,4 @@
-<div class="ve-loading" *ngIf="loading">
+﻿<div class="ve-loading" *ngIf="loading">
   <div class="ve-loading-card">
     <div class="ve-loading-spinner"></div>
     <strong>Preparando editor visual...</strong>
@@ -1976,6 +1976,10 @@
             <button type="button" class="btn-access-action" (click)="setEditorCanvasMode('access')"
               [class.active]="editorCanvasMode === 'access'">
               <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en el lienzo
+            </button>
+            <button type="button" class="btn-access-action" (click)="applyCurrentTemplateAccessPreset()"
+              title="Aplicar diseÃ±o y capas de la plantilla activa">
+              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> De Plantilla
             </button>
             <button type="button" class="btn-access-action" (click)="syncAccessScreenWithTheme()">
               <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar del tema

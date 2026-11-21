@@ -553,6 +553,7 @@ export interface VisualCanvasSize {
 }
 
 export interface VisualAccessScreenDesign {
+  templateKey?: string;
   enabled?: boolean;
   title?: string;
   subtitle?: string;

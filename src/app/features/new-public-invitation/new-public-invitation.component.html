@@ -239,9 +239,36 @@
   <p class="nw-pub-state-text">Cargando tu invitación especial...</p>
 </div>
 
-<div *ngIf="accessRequired && !invitation" class="nw-pub-access-gate-viewport"
-  [ngStyle]="getAccessGateBackgroundStyle()">
+<ng-template #accessGateTpl>
+  <div class="nw-pub-access-gate-viewport"
+  [class.nw-in-preview-device]="showPreviewDeviceToolbar"
+  [ngStyle]="getAccessGateBackgroundStyle()"
+  [style.--access-accent]="currentAccessPreset.theme.accentColor"
+  [style.--access-focus-border]="currentAccessPreset.theme.inputFocusBorderColor"
+  [style.--access-input-bg]="currentAccessPreset.theme.inputBgColor"
+  [style.--access-input-color]="currentAccessPreset.theme.inputTextColor"
+  [style.--access-input-border]="currentAccessPreset.theme.inputBorderColor">
   <div class="nw-pub-access-gate-overlay" [style.background]="getAccessGateOverlayStyle()"></div>
+  <div class="nw-pub-access-pattern-layer" [ngStyle]="currentAccessBackdropPatternStyle"></div>
+  <div class="nw-pub-access-ambient-orb nw-orb-primary" [ngStyle]="currentAccessAmbientOrbStyle"></div>
+  <div class="nw-pub-access-ambient-orb nw-orb-secondary" [ngStyle]="currentAccessSecondaryOrbStyle"></div>
+
+  <!-- ATMOSPHERIC SPECIAL EFFECTS -->
+  <div *ngIf="currentAccessSpecialEffect === 'petals'" class="nw-access-effect-container">
+    <span class="nw-access-petal" *ngFor="let p of [1,2,3,4,5,6,7,8]"></span>
+  </div>
+  <div *ngIf="currentAccessSpecialEffect === 'confetti'" class="nw-access-effect-container">
+    <span class="nw-access-confetti" *ngFor="let c of [1,2,3,4,5,6,7,8,9,10]"></span>
+  </div>
+  <div *ngIf="currentAccessSpecialEffect === 'lanterns'" class="nw-access-effect-container">
+    <span class="nw-access-lantern" *ngFor="let l of [1,2,3,4,5]"></span>
+  </div>
+  <div *ngIf="currentAccessSpecialEffect === 'sparkles'" class="nw-access-effect-container">
+    <span class="nw-access-sparkle" *ngFor="let s of [1,2,3,4,5,6,7,8]"></span>
+  </div>
+  <div *ngIf="currentAccessSpecialEffect === 'starlight'" class="nw-access-effect-container">
+    <span class="nw-access-star" *ngFor="let st of [1,2,3,4,5,6,7,8]"></span>
+  </div>
 
   <!-- VISTA CON MOTOR DE CAPAS WYSIWYG SI HAY CAPAS DISEÑADAS -->
   <div *ngIf="hasAccessLayers()" class="nw-pub-access-layers-surface" [ngStyle]="accessSurfaceDimensionsStyle">
@@ -296,7 +323,7 @@
             <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : layer.text }}</span>
           </button>
 
-          <!-- CAMPOS INTERACTIVOS (INPUTS CON ETIQUETA DORADA) -->
+          <!-- CAMPOS INTERACTIVOS -->
           <div *ngIf="layer.type === 'field'" [ngStyle]="accessLayerStyle(layer)"
             class="nw-pub-access-field-layer">
             <label *ngIf="layer.text && layer.style?.showLabel !== false" class="nw-pub-access-field-label">
@@ -305,12 +332,12 @@
             <div class="nw-pub-access-field-input-wrap">
               <input *ngIf="layer.binding === 'access.contact'" type="text"
                 [(ngModel)]="guestAccessSingleInput" name="guestContact"
-                [placeholder]="layer.placeholder || accessScreenDesign?.inputPlaceholder || 'Correo o teléfono registrado'" required
+                [placeholder]="layer.placeholder || accessScreenDesign?.inputPlaceholder || currentAccessPreset.texts.inputPlaceholder" required
                 class="nw-pub-access-field-input">
 
               <input *ngIf="layer.binding === 'access.pin'" type="password" maxlength="20"
                 [(ngModel)]="guestAccessPin" name="guestPin"
-                [placeholder]="layer.placeholder || accessScreenDesign?.pinInputPlaceholder || 'Ingresa tu NIP'" required
+                [placeholder]="layer.placeholder || accessScreenDesign?.pinInputPlaceholder || currentAccessPreset.texts.pinInputPlaceholder" required
                 class="nw-pub-access-field-input">
 
               <input *ngIf="layer.binding === 'selfReg.name'" type="text"
@@ -351,139 +378,217 @@
     </form>
   </div>
 
-  <!-- FALLBACK: TARJETA CLÁSICA SI NO SE HAN DEFINIDO CAPAS PERSONALIZADAS -->
+  <!-- TARJETA BESPOKE SEGÚN LA PLANTILLA ACTIVA -->
   <div *ngIf="!hasAccessLayers()" class="nw-pub-access-gate-card-wrap">
-    <div class="nw-pub-access-gate-card" [ngStyle]="getAccessGateCardStyle()">
-      <div *ngIf="accessScreenDesign?.showBadge !== false" class="nw-pub-access-badge"
-        [style.color]="accessScreenDesign?.accentColor || '#c59b6c'"
-        [style.border-color]="accessScreenDesign?.accentColor || '#c59b6c'">
-        <span>{{ accessScreenDesign?.badgeText || 'Acceso Exclusivo' }}</span>
-      </div>
-      <div *ngIf="accessScreenDesign?.logoUrl" class="nw-pub-access-logo">
-        <img [src]="accessScreenDesign?.logoUrl" alt="Logo del evento">
-      </div>
-      <!-- VISTA 1: VALIDACIÓN NORMAL (CORREO/TELÉFONO + NIP) -->
-      <ng-container *ngIf="accessGateView === 'login'">
-        <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
-          [style.color]="accessScreenDesign?.textColor || '#1c2434'">
-          {{ getAccessGateTitle() }}
-        </h2>
-        <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
-          [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
-          {{ getAccessGateSubtitle() }}
-        </p>
-        <form (ngSubmit)="checkGuestAccess()" class="nw-pub-access-form">
-          <label for="guest-access-contact" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="accessScreenDesign?.textColor || '#1c2434'">
-            {{ getAccessGateInputLabel() }}
-          </label>
-          <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput"
-            [placeholder]="getAccessGateInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()"
-            autocomplete="email" required class="nw-pub-access-input">
-          <div *ngIf="accessScreenDesign?.requirePin" class="nw-pub-access-pin-group"
-            style="margin-top: 12px; margin-bottom: 4px; text-align: left;">
-            <label for="guest-access-pin" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-              [style.color]="accessScreenDesign?.textColor || '#1c2434'">
-              {{ getAccessGatePinInputLabel() }}
-            </label>
-            <input id="guest-access-pin" name="pin" type="password" maxlength="20" [(ngModel)]="guestAccessPin"
-              [placeholder]="getAccessGatePinInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()" required
-              class="nw-pub-access-input">
-          </div>
-          <button type="submit" class="nw-pub-access-submit-btn" [disabled]="checkingGuest"
-            [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()">
-            <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
-            <span>{{ checkingGuest ? 'Verificando...' : getAccessGateButtonText() }}</span>
-          </button>
-        </form>
+    <div class="nw-pub-access-gate-card"
+      [ngStyle]="getAccessGateCardStyle()"
+      [attr.data-frame]="currentAccessEnhancement.frameVariant"
+      [class.nw-access-dark]="currentAccessEnhancement.isDark">
 
-        <!-- ENLACE A AUTO-REGISTRO SI ESTÁ HABILITADO -->
-        <div *ngIf="accessScreenDesign?.allowSelfRegistration" style="margin-top: 16px; text-align: center;">
-          <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('register')"
-            [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.font-family]="getAccessGateBodyFont()">
-            ¿No estás en la lista? Solicitar invitación / Auto-registro →
-          </button>
+      <!-- MARCO INTERIOR DE ALTA PAPELERÍA -->
+      <div class="nw-pub-access-inner-frame"
+        [style.border-color]="(accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor) + '44'"></div>
+
+      <!-- ARTE DECORATIVO SUPERIOR (SOLAPA DE SOBRE, CORTINAJE, ARCO REAL, GUIRNALDA, ACUARELA) -->
+      <div class="nw-pub-access-top-art" [innerHTML]="currentAccessTopArtSafe"></div>
+
+      <!-- 4 ESQUINEROS ORNAMENTALES SVG BESPOKE -->
+      <div class="nw-access-corner nw-access-corner-tl" [innerHTML]="currentAccessCornerSafe"></div>
+      <div class="nw-access-corner nw-access-corner-tr" [innerHTML]="currentAccessCornerSafe"></div>
+      <div class="nw-access-corner nw-access-corner-bl" [innerHTML]="currentAccessCornerSafe"></div>
+      <div class="nw-access-corner nw-access-corner-br" [innerHTML]="currentAccessCornerSafe"></div>
+
+      <!-- CONTENIDO PRINCIPAL DE LA TARJETA -->
+      <div class="nw-pub-access-card-content">
+        <!-- MEDALLÓN / CREST / EMBLEMA SVG BESPOKE CON HALO LUMÍNICO -->
+        <div class="nw-pub-access-crest-halo"
+          [style.box-shadow]="'0 0 28px ' + currentAccessEnhancement.ambientGlowColor">
+          <div class="nw-pub-access-crest-wrap" [innerHTML]="currentAccessCrestSafe"></div>
         </div>
-      </ng-container>
 
-      <!-- VISTA 2: AUTO-REGISTRO / SOLICITUD DE ACCESO -->
-      <ng-container *ngIf="accessGateView === 'register'">
-        <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
-          [style.color]="accessScreenDesign?.textColor || '#1c2434'">
-          {{ accessScreenDesign?.selfRegTitle || 'Solicitar Invitación' }}
-        </h2>
-        <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
-          [style.color]="(accessScreenDesign?.textColor || '#1c2434') + 'cc'">
-          {{ accessScreenDesign?.selfRegSubtitle || 'Ingresa tus datos para solicitar acceso a la lista oficial.' }}
-        </p>
+        <!-- INSIGNIA / BADGE -->
+        <div *ngIf="accessScreenDesign?.showBadge !== false" class="nw-pub-access-badge"
+          [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"
+          [style.border-color]="(accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor) + '66'">
+          <span>{{ getAccessGateBadgeText() }}</span>
+        </div>
 
-        <form *ngIf="!selfRegSubmitted" (ngSubmit)="submitAccessSelfRegistration()" class="nw-pub-access-form">
-          <label for="selfreg-name" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="accessScreenDesign?.textColor || '#1c2434'">
-            Nombre completo *
-          </label>
-          <input id="selfreg-name" name="name" type="text" [(ngModel)]="selfRegName" placeholder="Tu nombre y apellido"
-            [style.font-family]="getAccessGateBodyFont()" required class="nw-pub-access-input">
+        <!-- LOGO DEL EVENTO SI EXISTE -->
+        <div *ngIf="accessScreenDesign?.logoUrl" class="nw-pub-access-logo">
+          <img [src]="accessScreenDesign?.logoUrl" alt="Logo del evento">
+        </div>
 
-          <label for="selfreg-email" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
-            Correo electrónico *
-          </label>
-          <input id="selfreg-email" name="email" type="email" [(ngModel)]="selfRegEmail"
-            placeholder="tu-correo@ejemplo.com" [style.font-family]="getAccessGateBodyFont()" required
-            class="nw-pub-access-input">
+        <!-- VISTA 1: VALIDACIÓN NORMAL (CORREO/TELÉFONO + NIP) -->
+        <ng-container *ngIf="accessGateView === 'login'">
+          <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
+            [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+            {{ getAccessGateTitle() }}
+          </h2>
+          <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="(accessScreenDesign?.textColor || currentAccessPreset.theme.textColor) + 'cc'">
+            {{ getAccessGateSubtitle() }}
+          </p>
 
-          <label for="selfreg-phone" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
-            Teléfono / WhatsApp (opcional)
-          </label>
-          <input id="selfreg-phone" name="phone" type="tel" [(ngModel)]="selfRegPhone" placeholder="55 0000 0000"
-            [style.font-family]="getAccessGateBodyFont()" class="nw-pub-access-input">
+          <!-- DIVISOR ORNAMENTAL SVG -->
+          <div class="nw-pub-access-divider" [innerHTML]="currentAccessDividerSafe"></div>
 
-          <label for="selfreg-companions" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
-            [style.color]="accessScreenDesign?.textColor || '#1c2434'" style="margin-top: 10px;">
-            Pases solicitados
-          </label>
-          <select id="selfreg-companions" name="companions" [(ngModel)]="selfRegCompanions"
-            class="nw-pub-access-input nw-pub-access-select" [style.font-family]="getAccessGateBodyFont()">
-            <option [ngValue]="1">1 pase (Solo yo)</option>
-            <option [ngValue]="2">2 pases (+1 acompañante)</option>
-            <option [ngValue]="3">3 pases (+2 acompañantes)</option>
-            <option [ngValue]="4">4 pases (+3 acompañantes)</option>
-          </select>
+          <form (ngSubmit)="checkGuestAccess()" class="nw-pub-access-form">
+            <label for="guest-access-contact" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+              {{ getAccessGateInputLabel() }}
+            </label>
+            <div class="nw-pub-access-input-wrap">
+              <span class="nw-pub-access-input-icon"
+                [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor">
+                <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="2.5" y="4.5" width="15" height="11" rx="2"/>
+                  <path d="M3 5.5L10 10.5L17 5.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <input id="guest-access-contact" name="contact" type="text" [(ngModel)]="guestAccessSingleInput"
+                [placeholder]="getAccessGateInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()"
+                [ngStyle]="getAccessGateInputStyle()"
+                autocomplete="email" required class="nw-pub-access-input nw-has-icon">
+            </div>
 
-          <button type="submit" class="nw-pub-access-submit-btn" [disabled]="selfRegSubmitting"
-            [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()"
-            style="margin-top: 14px;">
-            <span *ngIf="selfRegSubmitting" class="nw-pub-btn-spinner"></span>
-            <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : (accessScreenDesign?.selfRegButtonText || 'ENVIAR
-              SOLICITUD') }}</span>
-          </button>
+            <div *ngIf="accessScreenDesign?.requirePin" class="nw-pub-access-pin-group"
+              style="margin-top: 12px; margin-bottom: 4px; text-align: left;">
+              <label for="guest-access-pin" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+                [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+                {{ getAccessGatePinInputLabel() }}
+              </label>
+              <div class="nw-pub-access-input-wrap">
+                <span class="nw-pub-access-input-icon"
+                  [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor">
+                  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <rect x="4" y="9" width="12" height="8" rx="2"/>
+                    <path d="M7 9V6.5C7 4.843 8.343 3.5 10 3.5C11.657 3.5 13 4.843 13 6.5V9" stroke-linecap="round"/>
+                    <circle cx="10" cy="13" r="1.2" fill="currentColor" stroke="none"/>
+                  </svg>
+                </span>
+                <input id="guest-access-pin" name="pin" type="password" maxlength="20" [(ngModel)]="guestAccessPin"
+                  [placeholder]="getAccessGatePinInputPlaceholder()" [style.font-family]="getAccessGateBodyFont()"
+                  [ngStyle]="getAccessGateInputStyle()" required
+                  class="nw-pub-access-input nw-has-icon">
+              </div>
+            </div>
 
-          <div style="margin-top: 16px; text-align: center;">
-            <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
-              [style.color]="accessScreenDesign?.accentColor || '#c59b6c'"
+            <button type="submit" class="nw-pub-access-submit-btn nw-pub-access-btn-sheen" [disabled]="checkingGuest"
+              [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()">
+              <span *ngIf="checkingGuest" class="nw-pub-btn-spinner"></span>
+              <span>{{ checkingGuest ? 'Verificando...' : getAccessGateButtonText() }}</span>
+            </button>
+          </form>
+
+          <!-- ENLACE A AUTO-REGISTRO SI ESTÁ HABILITADO -->
+          <div *ngIf="accessScreenDesign?.allowSelfRegistration" style="margin-top: 16px; text-align: center;">
+            <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('register')"
+              [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"
               [style.font-family]="getAccessGateBodyFont()">
-              ← Ya estoy en la lista / Volver
+              ¿No estás en la lista? Solicitar invitación / Auto-registro →
             </button>
           </div>
-        </form>
+        </ng-container>
 
-        <div *ngIf="selfRegSubmitted" style="margin-top: 16px; text-align: center;">
-          <div class="nw-pub-access-alert success" style="font-size: 13.5px; line-height: 1.5; padding: 14px;">
-            ✓ {{ selfRegMessage }}
+        <!-- VISTA 2: AUTO-REGISTRO / SOLICITUD DE ACCESO -->
+        <ng-container *ngIf="accessGateView === 'register'">
+          <h2 class="nw-pub-access-title" [style.font-family]="getAccessGateHeadingFont()"
+            [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+            {{ accessScreenDesign?.selfRegTitle || currentAccessPreset.texts.selfRegTitle }}
+          </h2>
+          <p class="nw-pub-access-subtitle" [style.font-family]="getAccessGateBodyFont()"
+            [style.color]="(accessScreenDesign?.textColor || currentAccessPreset.theme.textColor) + 'cc'">
+            {{ accessScreenDesign?.selfRegSubtitle || currentAccessPreset.texts.selfRegSubtitle }}
+          </p>
+
+          <!-- DIVISOR ORNAMENTAL SVG -->
+          <div class="nw-pub-access-divider" [innerHTML]="currentAccessDividerSafe"></div>
+
+          <form *ngIf="!selfRegSubmitted" (ngSubmit)="submitAccessSelfRegistration()" class="nw-pub-access-form">
+            <label for="selfreg-name" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor">
+              Nombre completo *
+            </label>
+            <input id="selfreg-name" name="name" type="text" [(ngModel)]="selfRegName" placeholder="Tu nombre y apellido"
+              [style.font-family]="getAccessGateBodyFont()" [ngStyle]="getAccessGateInputStyle()" required class="nw-pub-access-input">
+
+            <label for="selfreg-email" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor" style="margin-top: 10px;">
+              Correo electrónico *
+            </label>
+            <input id="selfreg-email" name="email" type="email" [(ngModel)]="selfRegEmail"
+              placeholder="tu-correo@ejemplo.com" [style.font-family]="getAccessGateBodyFont()"
+              [ngStyle]="getAccessGateInputStyle()" required
+              class="nw-pub-access-input">
+
+            <label for="selfreg-phone" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor" style="margin-top: 10px;">
+              Teléfono / WhatsApp (opcional)
+            </label>
+            <input id="selfreg-phone" name="phone" type="tel" [(ngModel)]="selfRegPhone" placeholder="55 0000 0000"
+              [style.font-family]="getAccessGateBodyFont()" [ngStyle]="getAccessGateInputStyle()" class="nw-pub-access-input">
+
+            <label for="selfreg-companions" class="nw-pub-access-label" [style.font-family]="getAccessGateBodyFont()"
+              [style.color]="accessScreenDesign?.textColor || currentAccessPreset.theme.textColor" style="margin-top: 10px;">
+              Pases solicitados
+            </label>
+            <select id="selfreg-companions" name="companions" [(ngModel)]="selfRegCompanions"
+              class="nw-pub-access-input nw-pub-access-select" [style.font-family]="getAccessGateBodyFont()"
+              [ngStyle]="getAccessGateInputStyle()">
+              <option [ngValue]="1">1 pase (Solo yo)</option>
+              <option [ngValue]="2">2 pases (+1 acompañante)</option>
+              <option [ngValue]="3">3 pases (+2 acompañantes)</option>
+              <option [ngValue]="4">4 pases (+3 acompañantes)</option>
+            </select>
+
+            <button type="submit" class="nw-pub-access-submit-btn nw-pub-access-btn-sheen" [disabled]="selfRegSubmitting"
+              [ngStyle]="getAccessGateButtonStyle()" [style.font-family]="getAccessGateBodyFont()"
+              style="margin-top: 14px;">
+              <span *ngIf="selfRegSubmitting" class="nw-pub-btn-spinner"></span>
+              <span>{{ selfRegSubmitting ? 'Enviando solicitud...' : (accessScreenDesign?.selfRegButtonText || currentAccessPreset.texts.selfRegButtonText) }}</span>
+            </button>
+
+            <div style="margin-top: 16px; text-align: center;">
+              <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
+                [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"
+                [style.font-family]="getAccessGateBodyFont()">
+                ← Ya estoy en la lista / Volver
+              </button>
+            </div>
+          </form>
+
+          <div *ngIf="selfRegSubmitted" style="margin-top: 16px; text-align: center;">
+            <div class="nw-pub-access-alert success" style="font-size: 13.5px; line-height: 1.5; padding: 14px;">
+              ✓ {{ selfRegMessage }}
+            </div>
+            <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
+              [style.color]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor" [style.font-family]="getAccessGateBodyFont()"
+              style="margin-top: 14px;">
+              ← Volver al inicio de sesión
+            </button>
           </div>
-          <button type="button" class="nw-pub-access-link-btn" (click)="toggleAccessGateView('login')"
-            [style.color]="accessScreenDesign?.accentColor || '#c59b6c'" [style.font-family]="getAccessGateBodyFont()"
-            style="margin-top: 14px;">
-            ← Volver al inicio de sesión
-          </button>
+        </ng-container>
+
+        <div *ngIf="error" class="nw-pub-access-alert error" role="alert">{{ error }}</div>
+        <div *ngIf="success" class="nw-pub-access-alert success" role="status">{{ success }}</div>
+
+        <!-- SELLO / PIE DE EDICIÓN DE LA PLANTILLA -->
+        <div class="nw-pub-access-edition-footer"
+          [style.color]="(accessScreenDesign?.textColor || currentAccessPreset.theme.textColor) + '88'"
+          [style.font-family]="getAccessGateBodyFont()">
+          <span class="nw-edition-dot" [style.background]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"></span>
+          <span>{{ currentAccessEnhancement.footerLabel }}</span>
+          <span class="nw-edition-dot" [style.background]="accessScreenDesign?.accentColor || currentAccessPreset.theme.accentColor"></span>
         </div>
-      </ng-container>
-      <div *ngIf="error" class="nw-pub-access-alert error" role="alert">{{ error }}</div>
-      <div *ngIf="success" class="nw-pub-access-alert success" role="status">{{ success }}</div>
+      </div>
     </div>
   </div>
+  </div> <!-- Fin .nw-pub-access-gate-viewport -->
+</ng-template>
+
+<!-- PANTALLA DE ACCESO PARA VISITANTES ANÓNIMOS (INVITACIÓN BLOQUEADA) -->
+<div *ngIf="accessRequired && !invitation && previewSection === 'invitation'">
+  <ng-container *ngTemplateOutlet="accessGateTpl"></ng-container>
 </div>
 
 <div *ngIf="error && !invitation && !accessRequired" class="nw-pub-state-container error">
@@ -517,6 +622,46 @@
         </span>
         <span class="nw-draft-preview-title" [title]="invitationDisplayTitle">{{ invitationDisplayTitle }}</span>
         <span class="nw-draft-preview-status-pill">Modo prueba</span>
+      </div>
+
+      <!-- SELECTOR DE SECCIÓN / PANTALLA EN VISTA PREVIA -->
+      <div class="nw-draft-preview-section-switch" role="tablist" aria-label="Sección a visualizar">
+        <button type="button" class="nw-section-btn"
+          [class.active]="previewSection === 'invitation'"
+          (click)="setPreviewSection('invitation')"
+          title="Ver invitación digital completa">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <span>Invitación</span>
+        </button>
+
+        <button type="button" class="nw-section-btn"
+          [class.active]="previewSection === 'access'"
+          (click)="setPreviewSection('access')"
+          title="Ver pantalla de acceso y validación NIP">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Pantalla de Acceso</span>
+        </button>
+
+        <button type="button" class="nw-section-btn"
+          [class.active]="previewSection === 'register'"
+          (click)="setPreviewSection('register')"
+          title="Ver pantalla de auto-registro">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          <span>Auto-registro</span>
+        </button>
       </div>
 
       <!-- SELECTOR DE DISPOSITIVOS -->
@@ -596,6 +741,14 @@
       </div>
 
       <div class="nw-preview-content-surface">
+
+        <!-- MODO PREVIEW: PANTALLA DE ACCESO O AUTO-REGISTRO -->
+        <div *ngIf="previewSection !== 'invitation'" class="nw-preview-access-screen-wrapper">
+          <ng-container *ngTemplateOutlet="accessGateTpl"></ng-container>
+        </div>
+
+        <!-- MODO PREVIEW: INVITACIÓN COMPLETA -->
+        <ng-container *ngIf="previewSection === 'invitation'">
 
         <!-- PLANTILLA PERSONALIZADA HTML / CSS -->
         <div *ngIf="isCustomHtmlTemplate()" class="nw-pub-custom-page-container"
@@ -1095,6 +1248,7 @@
           (resetGuest)="resetGuestAccess()" (downloadPass)="downloadGuestPass()">
         </app-new-public-invitation-xv-burgundy>
 
+        </ng-container> <!-- Fin *ngIf="previewSection === 'invitation'" -->
       </div> <!-- .nw-preview-content-surface -->
     </div> <!-- .nw-preview-device-stage -->
   </div> <!-- .nw-preview-viewport-wrapper -->

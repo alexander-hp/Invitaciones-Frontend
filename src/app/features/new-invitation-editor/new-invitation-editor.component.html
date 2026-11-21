@@ -654,9 +654,27 @@
         </div>
 
         <div class="nw-card-body" style="padding-top:16px;">
-          <p style="font-size:13px; color:var(--nw-text-3); margin-bottom:18px;">
+          <p style="font-size:13px; color:var(--nw-text-3); margin-bottom:14px;">
             Configura las reglas de ingreso a la invitación: valida a tus invitados registrados mediante correo/teléfono y NIP, o permite que nuevos invitados soliciten su pase mediante auto-registro.
           </p>
+
+          <!-- INDICADOR DE IDENTIDAD VISUAL VINCULADA A LA PLANTILLA -->
+          <div style="background:var(--nw-surface); border:1px solid var(--nw-border); border-left:4px solid var(--nw-accent); border-radius:8px; padding:12px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--nw-text-3); font-weight:600;">Diseño e Identidad Visual de la Pantalla de Acceso</div>
+              <div style="font-size:13.5px; font-weight:700; color:var(--nw-text); display:flex; align-items:center; gap:6px; margin-top:2px;">
+                <span>🎨 Vinculado a:</span>
+                <span style="color:var(--nw-accent);">{{ getActiveTemplateName() }}</span>
+              </div>
+            </div>
+            <button type="button" class="nw-btn nw-btn-secondary nw-btn-xs" (click)="viewAccessPreview()"
+              title="Abrir vista previa directa de la pantalla de acceso" style="margin-right:8px;">
+              👁️ Probar Pantalla de Acceso
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-xs" (click)="resetAccessScreenToTemplate()" title="Restablecer colores, tipografías y adornos de la plantilla">
+              ↺ Restablecer estilo de la plantilla
+            </button>
+          </div>
 
           <!-- SECCIÓN A: MODO DE ACCESO GENERAL -->
           <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:var(--nw-radius-md); padding:16px; margin-bottom:20px;">
