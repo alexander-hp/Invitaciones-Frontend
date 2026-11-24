@@ -199,6 +199,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   accessSimState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   accessSimMessage = '';
   accessPresetCategory: string = 'all';
+  showAccessStylesModal: boolean = false;
   readonly accessPresets = [
     {
       key: 'glass',
@@ -8573,6 +8574,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.cdr?.markForCheck();
   }
 
+  openAccessStylesModal(): void {
+    this.showAccessStylesModal = true;
+    this.cdr?.markForCheck();
+  }
+
+  closeAccessStylesModal(): void {
+    this.showAccessStylesModal = false;
+    this.cdr?.markForCheck();
+  }
+
+  getCurrentAccessPresetName(): string {
+    const currentKey = this.design?.accessScreen?.templateKey;
+    if (!currentKey) return 'Sobre Interactivo & Gala';
+    const found = this.accessPresets.find(p => p.key === currentKey);
+    if (found) return found.name;
+    const tpl = getTemplateAccessPreset(currentKey);
+    return tpl?.name || 'Sobre Interactivo';
+  }
+
+  getCurrentAccessPresetIcon(): string {
+    const currentKey = this.design?.accessScreen?.templateKey;
+    const found = this.accessPresets.find(p => p.key === currentKey);
+    return found?.icon || 'sparkles';
+  }
+
+  selectAccessPresetAndClose(key: string): void {
+    this.applyAccessPreset(key);
+    this.closeAccessStylesModal();
+  }
+
   applyAccessPreset(presetKey: string): void {
     const preset = this.accessPresets.find((p) => p.key === presetKey);
     if (!preset) return;
@@ -8581,6 +8612,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.recordHistory();
     this.design.accessScreen = {
       ...current,
+      templateKey: presetKey,
       cardStyle: preset.cardStyle,
       cardBgColor: preset.cardBgColor,
       cardOpacity: preset.cardOpacity,

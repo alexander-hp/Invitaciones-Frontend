@@ -71,10 +71,12 @@
             [strokeWidth]="1.8"></lucide-icon> Ver versión pública</button>
       </div>
     </details>
-    <button class="secondary template-catalog-btn" type="button" (click)="openDesignLibrary()" title="Explorar catálogo de plantillas Canva-style">
+    <button class="secondary template-catalog-btn" type="button" (click)="openDesignLibrary()"
+      title="Explorar catálogo de plantillas Canva-style">
       <lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Plantillas</span>
     </button>
-    <button class="secondary publish-template-btn" type="button" (click)="openPublishTemplateModal()" title="Publicar mi diseño como plantilla comunitaria">
+    <button class="secondary publish-template-btn" type="button" (click)="openPublishTemplateModal()"
+      title="Publicar mi diseño como plantilla comunitaria">
       <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon><span>Publicar</span>
       <span class="reward-pill-badge">5%</span>
     </button>
@@ -140,10 +142,12 @@
             </span>
           </div>
           <h1 id="designLibraryTitle">Plantillas Completas para tu Celebración</h1>
-          <p>Explora diseños 3 en 1 creados por la comunidad y diseñadores oficiales: Invitación interactiva, Pase VIP y Pantalla de Acceso con validación NIP.</p>
+          <p>Explora diseños 3 en 1 creados por la comunidad y diseñadores oficiales: Invitación interactiva, Pase VIP y
+            Pantalla de Acceso con validación NIP.</p>
         </div>
         <div class="catalog-header-actions">
-          <button type="button" class="btn-publish-from-catalog" (click)="closeDesignLibrary(); openPublishTemplateModal()">
+          <button type="button" class="btn-publish-from-catalog"
+            (click)="closeDesignLibrary(); openPublishTemplateModal()">
             <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Publicar mi diseño (+5%)
           </button>
           <button type="button" class="close-catalog-btn" title="Cerrar catálogo" aria-label="Cerrar catálogo"
@@ -161,12 +165,15 @@
               <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon> Comunidad & Diseñadores
             </button>
             <button type="button" [class.active]="catalogTab === 'personal'" (click)="catalogTab = 'personal'">
-              <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Mis Plantillas ({{ personalTemplates.length }})
+              <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Mis Plantillas ({{ personalTemplates.length
+              }})
             </button>
           </div>
           <div class="catalog-search-wrap">
-            <input type="text" [(ngModel)]="catalogSearch" (ngModelChange)="loadCatalogTemplates($event)" placeholder="Buscar por tema, estilo o creador (ej. Boda, Oro, Floral, Princesa)..." />
-            <button *ngIf="catalogSearch" type="button" class="btn-clear-search" (click)="catalogSearch = ''; loadCatalogTemplates('')">
+            <input type="text" [(ngModel)]="catalogSearch" (ngModelChange)="loadCatalogTemplates($event)"
+              placeholder="Buscar por tema, estilo o creador (ej. Boda, Oro, Floral, Princesa)..." />
+            <button *ngIf="catalogSearch" type="button" class="btn-clear-search"
+              (click)="catalogSearch = ''; loadCatalogTemplates('')">
               <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
             </button>
           </div>
@@ -181,16 +188,20 @@
           </nav>
 
           <div class="catalog-content-chips">
-            <button type="button" [class.active]="catalogContentFilter === 'all'" (click)="catalogContentFilter = 'all'">
+            <button type="button" [class.active]="catalogContentFilter === 'all'"
+              (click)="catalogContentFilter = 'all'">
               Todas
             </button>
-            <button type="button" [class.active]="catalogContentFilter === 'full'" (click)="catalogContentFilter = 'full'">
+            <button type="button" [class.active]="catalogContentFilter === 'full'"
+              (click)="catalogContentFilter = 'full'">
               <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Completas (3 en 1)
             </button>
-            <button type="button" [class.active]="catalogContentFilter === 'pass'" (click)="catalogContentFilter = 'pass'">
+            <button type="button" [class.active]="catalogContentFilter === 'pass'"
+              (click)="catalogContentFilter = 'pass'">
               <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Con Pase VIP
             </button>
-            <button type="button" [class.active]="catalogContentFilter === 'access'" (click)="catalogContentFilter = 'access'">
+            <button type="button" [class.active]="catalogContentFilter === 'access'"
+              (click)="catalogContentFilter = 'access'">
               <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Con Acceso
             </button>
           </div>
@@ -207,29 +218,36 @@
           </div>
 
           <div *ngIf="!loadingCatalogTemplates && displayedCatalogTemplates.length === 0" class="catalog-empty-state">
-            <lucide-icon name="images" [strokeWidth]="1.8" style="width: 32px; height: 32px; color: #bcaaa4;"></lucide-icon>
+            <lucide-icon name="images" [strokeWidth]="1.8"
+              style="width: 32px; height: 32px; color: #bcaaa4;"></lucide-icon>
             <p>No se encontraron plantillas con los filtros seleccionados.</p>
-            <button type="button" class="secondary" (click)="catalogSearch = ''; libraryCategory = 'all'; catalogContentFilter = 'all'; loadCatalogTemplates('')">Restablecer filtros</button>
+            <button type="button" class="secondary"
+              (click)="catalogSearch = ''; libraryCategory = 'all'; catalogContentFilter = 'all'; loadCatalogTemplates('')">Restablecer
+              filtros</button>
           </div>
 
           <div class="design-library-list" *ngIf="!loadingCatalogTemplates && displayedCatalogTemplates.length > 0">
             <button *ngFor="let template of displayedCatalogTemplates" type="button" class="design-library-card"
-              [class.selected]="selectedCatalogTemplate?._id === template._id" (click)="selectCatalogTemplate(template)">
-              
+              [class.selected]="selectedCatalogTemplate?._id === template._id"
+              (click)="selectCatalogTemplate(template)">
+
               <div class="template-card-header">
                 <!-- Badges con SVG -->
                 <div class="template-card-badges">
-                  <span class="badge-3in1" *ngIf="template.includesInvitation !== false && hasPassDesign(template) && hasAccessScreen(template)">
+                  <span class="badge-3in1"
+                    *ngIf="template.includesInvitation !== false && hasPassDesign(template) && hasAccessScreen(template)">
                     <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> 3 en 1
                   </span>
                   <span class="badge-creator-reward" *ngIf="template.authorRewardPercent">
-                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.authorRewardPercent }}% creador
+                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.authorRewardPercent }}%
+                    creador
                   </span>
                 </div>
 
                 <!-- Miniatura Visual Real de la Plantilla -->
                 <div class="template-card-thumb-container">
-                  <img [src]="getTemplateThumbnail(template)" class="template-card-thumb-img" alt="Vista previa de {{ template.name }}" loading="lazy" />
+                  <img [src]="getTemplateThumbnail(template)" class="template-card-thumb-img"
+                    alt="Vista previa de {{ template.name }}" loading="lazy" />
                   <div class="template-thumb-overlay">
                     <span class="art-title">{{ template.name }}</span>
                   </div>
@@ -239,7 +257,8 @@
               <div class="design-library-card-copy">
                 <div class="card-author-row">
                   <span class="author-name">
-                    <lucide-icon name="users" [strokeWidth]="1.8" style="width: 12px; height: 12px; display: inline-block; vertical-align: -1px; margin-right: 3px;"></lucide-icon>
+                    <lucide-icon name="users" [strokeWidth]="1.8"
+                      style="width: 12px; height: 12px; display: inline-block; vertical-align: -1px; margin-right: 3px;"></lucide-icon>
                     {{ template.authorName || 'Velisse Oficial' }}
                   </span>
                   <span class="usage-count" *ngIf="template.usageCount">
@@ -247,8 +266,9 @@
                   </span>
                 </div>
                 <strong class="template-title">{{ template.name }}</strong>
-                <small class="template-desc">{{ template.description || 'Diseño temático con tipografías y elementos coordinados.' }}</small>
-                
+                <small class="template-desc">{{ template.description || 'Diseño temático con tipografías y elementos
+                  coordinados.' }}</small>
+
                 <!-- Inclusiones con SVG -->
                 <div class="card-inclusions">
                   <span class="inc-chip active">
@@ -270,14 +290,19 @@
         <div class="design-library-preview" *ngIf="selectedCatalogTemplate as activeTpl">
           <!-- Selector de Pestaña de Preview con SVG -->
           <div class="preview-mode-nav">
-            <button type="button" [class.active]="catalogPreviewTab === 'invitation'" (click)="catalogPreviewTab = 'invitation'">
+            <button type="button" [class.active]="catalogPreviewTab === 'invitation'"
+              (click)="catalogPreviewTab = 'invitation'">
               <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon> Invitación
             </button>
-            <button type="button" [class.active]="catalogPreviewTab === 'pass'" [disabled]="!hasPassDesign(activeTpl)" (click)="catalogPreviewTab = 'pass'">
-              <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Pase VIP {{ hasPassDesign(activeTpl) ? '' : '(N/A)' }}
+            <button type="button" [class.active]="catalogPreviewTab === 'pass'" [disabled]="!hasPassDesign(activeTpl)"
+              (click)="catalogPreviewTab = 'pass'">
+              <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Pase VIP {{ hasPassDesign(activeTpl) ? '' :
+              '(N/A)' }}
             </button>
-            <button type="button" [class.active]="catalogPreviewTab === 'access'" [disabled]="!hasAccessScreen(activeTpl)" (click)="catalogPreviewTab = 'access'">
-              <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Pantalla de Acceso {{ hasAccessScreen(activeTpl) ? '' : '(N/A)' }}
+            <button type="button" [class.active]="catalogPreviewTab === 'access'"
+              [disabled]="!hasAccessScreen(activeTpl)" (click)="catalogPreviewTab = 'access'">
+              <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Pantalla de Acceso {{
+              hasAccessScreen(activeTpl) ? '' : '(N/A)' }}
             </button>
           </div>
 
@@ -292,34 +317,25 @@
           <!-- Vista Previa 2: PASE VIP -->
           <div class="catalog-preview-viewport" *ngIf="catalogPreviewTab === 'pass'">
             <div class="catalog-pass-preview-scroll">
-              <div *ngFor="let s of activeTpl.passDesign?.sections; let idx = index"
-                   class="catalog-pass-card"
-                   [style.width.px]="getPassSheetWidth(s)"
-                   [style.height.px]="getPassSheetHeight(s)"
-                   [style.background]="s.background?.color || '#0b1426'">
-                <div *ngFor="let l of s.layers"
-                     [style.position]="'absolute'"
-                     [style.left.%]="l.x"
-                     [style.top.%]="l.y"
-                     [style.width.%]="l.width"
-                     [style.height.%]="l.height"
-                     [style.zIndex]="l.zIndex || 1"
-                     [style.borderRadius.px]="l.style?.borderRadius || 0"
-                     [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
-                     [style.borderColor]="l.style?.borderColor || 'transparent'"
-                     [style.borderWidth.px]="l.style?.borderWidth || 0"
-                     [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
-                     [style.boxShadow]="l.style?.boxShadow || 'none'">
+              <div *ngFor="let s of activeTpl.passDesign?.sections; let idx = index" class="catalog-pass-card"
+                [style.width.px]="getPassSheetWidth(s)" [style.height.px]="getPassSheetHeight(s)"
+                [style.background]="s.background?.color || '#0b1426'">
+                <div *ngFor="let l of s.layers" [style.position]="'absolute'" [style.left.%]="l.x" [style.top.%]="l.y"
+                  [style.width.%]="l.width" [style.height.%]="l.height" [style.zIndex]="l.zIndex || 1"
+                  [style.borderRadius.px]="l.style?.borderRadius || 0"
+                  [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
+                  [style.borderColor]="l.style?.borderColor || 'transparent'"
+                  [style.borderWidth.px]="l.style?.borderWidth || 0"
+                  [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
+                  [style.boxShadow]="l.style?.boxShadow || 'none'">
                   <div *ngIf="l.type === 'text'"
-                       style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
-                       [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
-                       [style.textAlign]="l.style?.textAlign || 'center'"
-                       [style.color]="l.style?.color || '#ffffff'"
-                       [style.fontSize.px]="l.style?.fontSize || 14"
-                       [style.fontWeight]="l.style?.fontWeight || '400'"
-                       [style.fontFamily]="l.style?.fontFamily || 'inherit'"
-                       [style.letterSpacing.px]="l.style?.letterSpacing || 0"
-                       [style.lineHeight]="l.style?.lineHeight || 1.3">
+                    style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
+                    [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
+                    [style.textAlign]="l.style?.textAlign || 'center'" [style.color]="l.style?.color || '#ffffff'"
+                    [style.fontSize.px]="l.style?.fontSize || 14" [style.fontWeight]="l.style?.fontWeight || '400'"
+                    [style.fontFamily]="l.style?.fontFamily || 'inherit'"
+                    [style.letterSpacing.px]="l.style?.letterSpacing || 0"
+                    [style.lineHeight]="l.style?.lineHeight || 1.3">
                     {{ evalPassText(l.text) }}
                   </div>
                   <ng-container *ngIf="l.type === 'image'">
@@ -337,10 +353,12 @@
                       </div>
                       <div class="styled-qr-canvas-holder">
                         <img [src]="layerMediaSource(l)" alt="QR" class="styled-qr-img">
-                        <div *ngIf="l.style?.qrCenterLogo && l.style?.qrCenterLogo !== 'none'" class="styled-qr-center-badge"
-                          [style.backgroundColor]="l.style?.qrCenterLogoBg || '#ffffff'">
-                          <span *ngIf="getQrLogoIcon(l.style?.qrCenterLogo) as lQrIcon" class="qr-badge-icon">{{ lQrIcon }}</span>
-                          <span *ngIf="l.style?.qrCenterLogo === 'monogram'" class="qr-badge-monogram">{{ l.style?.qrCenterLogoText || 'VIP' }}</span>
+                        <div *ngIf="l.style?.qrCenterLogo && l.style?.qrCenterLogo !== 'none'"
+                          class="styled-qr-center-badge" [style.backgroundColor]="l.style?.qrCenterLogoBg || '#ffffff'">
+                          <span *ngIf="getQrLogoIcon(l.style?.qrCenterLogo) as lQrIcon" class="qr-badge-icon">{{ lQrIcon
+                            }}</span>
+                          <span *ngIf="l.style?.qrCenterLogo === 'monogram'" class="qr-badge-monogram">{{
+                            l.style?.qrCenterLogoText || 'VIP' }}</span>
                         </div>
                       </div>
                       <div *ngIf="l.style?.qrFrameStyle === 'banner-bottom'" class="styled-qr-banner bottom-banner"
@@ -349,17 +367,14 @@
                         {{ l.style?.qrFrameText || '★ ESCANEAR AL ENTRAR ★' }}
                       </div>
                     </div>
-                    <img *ngIf="!isQrLayer(l)"
-                         [src]="layerMediaSource(l)"
-                         alt="Elemento"
-                         style="width: 100%; height: 100%; display: block;"
-                         [style.objectFit]="l.style?.objectFit || 'contain'"
-                         [style.borderRadius.px]="l.style?.borderRadius || 0">
+                    <img *ngIf="!isQrLayer(l)" [src]="layerMediaSource(l)" alt="Elemento"
+                      style="width: 100%; height: 100%; display: block;"
+                      [style.objectFit]="l.style?.objectFit || 'contain'"
+                      [style.borderRadius.px]="l.style?.borderRadius || 0">
                   </ng-container>
-                  <div *ngIf="l.type === 'shape'"
-                       style="width: 100%; height: 100%;"
-                       [style.backgroundColor]="l.style?.backgroundColor || '#000'"
-                       [style.borderRadius.px]="l.style?.borderRadius || 0">
+                  <div *ngIf="l.type === 'shape'" style="width: 100%; height: 100%;"
+                    [style.backgroundColor]="l.style?.backgroundColor || '#000'"
+                    [style.borderRadius.px]="l.style?.borderRadius || 0">
                   </div>
                 </div>
               </div>
@@ -368,26 +383,31 @@
 
           <!-- Vista Previa 3: PANTALLA DE ACCESO -->
           <div class="catalog-preview-viewport" *ngIf="catalogPreviewTab === 'access'">
-            <div class="catalog-access-preview-stage" *ngIf="(activeTpl.accessScreen || activeTpl.design?.accessScreen) as previewAcc"
-                 [ngStyle]="getAccessScreenBackgroundStyle(previewAcc)">
+            <div class="catalog-access-preview-stage"
+              *ngIf="(activeTpl.accessScreen || activeTpl.design?.accessScreen) as previewAcc"
+              [ngStyle]="getAccessScreenBackgroundStyle(previewAcc)">
               <div *ngIf="previewAcc.backgroundVignette" class="access-vignette-overlay"></div>
               <div *ngIf="previewAcc.backgroundEffect && previewAcc.backgroundEffect !== 'none'"
                 class="access-effect-overlay" [ngClass]="'effect-' + previewAcc.backgroundEffect"></div>
               <div class="catalog-access-preview-card" [ngStyle]="getAccessScreenCardStyle(previewAcc)">
-                <span class="preview-acc-badge" [style.color]="previewAcc.primaryColor || '#c89b3c'">INVITACIÓN PERSONAL</span>
-                <h3 [style.fontFamily]="previewAcc.headingFont || 'inherit'" [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.title || 'Invitación Personal de Gala' }}</h3>
-                <p [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.subtitle || 'Ingresa tu teléfono o correo registrado para abrir tu invitación y pase.' }}</p>
-                
+                <span class="preview-acc-badge" [style.color]="previewAcc.primaryColor || '#c89b3c'">INVITACIÓN
+                  PERSONAL</span>
+                <h3 [style.fontFamily]="previewAcc.headingFont || 'inherit'"
+                  [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.title || 'Invitación Personal de Gala'
+                  }}</h3>
+                <p [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.subtitle || 'Ingresa tu teléfono o
+                  correo registrado para abrir tu invitación y pase.' }}</p>
+
                 <div class="preview-acc-fake-input">
                   <span class="fake-placeholder">CORREO O TELÉFONO REGISTRADO</span>
                 </div>
                 <div class="preview-acc-fake-input" *ngIf="previewAcc.requirePin">
                   <span class="fake-placeholder">NIP DE ACCESO (4 DÍGITOS)</span>
                 </div>
-                
+
                 <button type="button" class="preview-acc-fake-btn"
-                        [style.backgroundColor]="previewAcc.buttonBgColor || previewAcc.primaryColor || '#c89b3c'"
-                        [style.color]="previewAcc.buttonTextColor || '#152820'">
+                  [style.backgroundColor]="previewAcc.buttonBgColor || previewAcc.primaryColor || '#c89b3c'"
+                  [style.color]="previewAcc.buttonTextColor || '#152820'">
                   {{ previewAcc.buttonText || 'ABRIR INVITACIÓN' }}
                 </button>
               </div>
@@ -401,8 +421,10 @@
               <small>Tus invitados registrados, mesas y fecha no se modificarán.</small>
             </div>
             <div class="selective-import-grid">
-              <label class="selective-option-card" [class.selected]="catalogApplyOptions.invitation" [class.disabled]="!activeTpl.design?.sections?.length">
-                <input type="checkbox" [(ngModel)]="catalogApplyOptions.invitation" [disabled]="!activeTpl.design?.sections?.length" />
+              <label class="selective-option-card" [class.selected]="catalogApplyOptions.invitation"
+                [class.disabled]="!activeTpl.design?.sections?.length">
+                <input type="checkbox" [(ngModel)]="catalogApplyOptions.invitation"
+                  [disabled]="!activeTpl.design?.sections?.length" />
                 <div class="option-icon-box">
                   <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
                 </div>
@@ -412,7 +434,8 @@
                 </div>
               </label>
 
-              <label class="selective-option-card" [class.selected]="catalogApplyOptions.pass" [class.disabled]="!hasPassDesign(activeTpl)">
+              <label class="selective-option-card" [class.selected]="catalogApplyOptions.pass"
+                [class.disabled]="!hasPassDesign(activeTpl)">
                 <input type="checkbox" [(ngModel)]="catalogApplyOptions.pass" [disabled]="!hasPassDesign(activeTpl)" />
                 <div class="option-icon-box">
                   <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon>
@@ -423,8 +446,10 @@
                 </div>
               </label>
 
-              <label class="selective-option-card" [class.selected]="catalogApplyOptions.access" [class.disabled]="!hasAccessScreen(activeTpl)">
-                <input type="checkbox" [(ngModel)]="catalogApplyOptions.access" [disabled]="!hasAccessScreen(activeTpl)" />
+              <label class="selective-option-card" [class.selected]="catalogApplyOptions.access"
+                [class.disabled]="!hasAccessScreen(activeTpl)">
+                <input type="checkbox" [(ngModel)]="catalogApplyOptions.access"
+                  [disabled]="!hasAccessScreen(activeTpl)" />
                 <div class="option-icon-box">
                   <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
                 </div>
@@ -442,10 +467,12 @@
       <footer>
         <div class="footer-notice">
           <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon>
-          <span>Esta plantilla incluye componentes 100% editables. Al aplicarla transformarás el estilo de tu celebración.</span>
+          <span>Esta plantilla incluye componentes 100% editables. Al aplicarla transformarás el estilo de tu
+            celebración.</span>
         </div>
         <button type="button" class="secondary" (click)="closeDesignLibrary()">Cancelar</button>
-        <button type="button" class="primary btn-apply-template" [disabled]="!selectedCatalogTemplate" (click)="applySelectedCatalogTemplate()">
+        <button type="button" class="primary btn-apply-template" [disabled]="!selectedCatalogTemplate"
+          (click)="applySelectedCatalogTemplate()">
           <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
           <span>Usar esta plantilla</span>
         </button>
@@ -467,8 +494,10 @@
           </span>
         </div>
         <h1 id="publishTemplateTitle">Publicar mi Diseño como Plantilla</h1>
-        <p>Comparte tu creación en el catálogo de la comunidad. Otros usuarios podrán usarla para sus eventos y tú generarás ingresos automáticamente.</p>
-        <button type="button" class="close-publish-btn" title="Cerrar modal" aria-label="Cerrar modal" (click)="closePublishTemplateModal()">
+        <p>Comparte tu creación en el catálogo de la comunidad. Otros usuarios podrán usarla para sus eventos y tú
+          generarás ingresos automáticamente.</p>
+        <button type="button" class="close-publish-btn" title="Cerrar modal" aria-label="Cerrar modal"
+          (click)="closePublishTemplateModal()">
           <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
         </button>
       </header>
@@ -481,7 +510,8 @@
           </div>
           <div class="banner-text">
             <strong>¡Gana el 5% cada vez que alguien use tu diseño!</strong>
-            <p>Por cada usuario que seleccione tu plantilla y active su evento o pase premium, recibirás automáticamente el <strong>5% del costo</strong> acumulado en tu saldo de creador.</p>
+            <p>Por cada usuario que seleccione tu plantilla y active su evento o pase premium, recibirás automáticamente
+              el <strong>5% del costo</strong> acumulado en tu saldo de creador.</p>
           </div>
         </div>
 
@@ -489,7 +519,8 @@
         <div class="publish-form-grid">
           <div class="form-group full-width">
             <label>Nombre de la Plantilla *</label>
-            <input type="text" [(ngModel)]="publishTemplateForm.name" placeholder="Ej. Boda Jardín Toscana · Gala Nocturna" />
+            <input type="text" [(ngModel)]="publishTemplateForm.name"
+              placeholder="Ej. Boda Jardín Toscana · Gala Nocturna" />
           </div>
 
           <div class="form-group">
@@ -511,12 +542,14 @@
 
           <div class="form-group full-width">
             <label>Descripción del Estilo</label>
-            <textarea [(ngModel)]="publishTemplateForm.description" rows="2" placeholder="Describe los colores, tipografía, estilo visual e inspiración del diseño..."></textarea>
+            <textarea [(ngModel)]="publishTemplateForm.description" rows="2"
+              placeholder="Describe los colores, tipografía, estilo visual e inspiración del diseño..."></textarea>
           </div>
 
           <div class="form-group full-width">
             <label>Etiquetas (separadas por comas)</label>
-            <input type="text" [(ngModel)]="publishTemplateForm.tags" placeholder="Ej. floral, oro, minimalista, acuarela, noche" />
+            <input type="text" [(ngModel)]="publishTemplateForm.tags"
+              placeholder="Ej. floral, oro, minimalista, acuarela, noche" />
           </div>
 
           <!-- Selección de Secciones Incluidas con SVG -->
@@ -561,12 +594,79 @@
       </div>
 
       <footer class="publish-template-footer">
-        <button type="button" class="secondary" [disabled]="publishingTemplate" (click)="closePublishTemplateModal()">Cancelar</button>
-        <button type="button" class="primary btn-publish-confirm" [disabled]="publishingTemplate" (click)="submitPublishTemplate()">
+        <button type="button" class="secondary" [disabled]="publishingTemplate"
+          (click)="closePublishTemplateModal()">Cancelar</button>
+        <button type="button" class="primary btn-publish-confirm" [disabled]="publishingTemplate"
+          (click)="submitPublishTemplate()">
           <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
           <span>{{ publishingTemplate ? 'Publicando plantilla...' : 'Publicar en la Comunidad (+5%)' }}</span>
         </button>
       </footer>
+    </section>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: CATÁLOGO DE ESTILOS Y DISEÑOS PARA PANTALLA DE ACCESO    -->
+  <!-- ============================================================== -->
+  <div class="design-library-backdrop access-styles-backdrop" *ngIf="showAccessStylesModal"
+    (click)="closeAccessStylesModal()">
+    <section class="design-library-dialog access-styles-dialog" role="dialog" aria-modal="true"
+      aria-labelledby="accessStylesTitle" (click)="$event.stopPropagation()">
+      <header class="design-library-heading">
+        <div class="catalog-title-col">
+          <div class="catalog-eyebrow">
+            <span>Pantalla de Acceso · Estilos y Temas</span>
+          </div>
+          <h1 id="accessStylesTitle">Elige un Diseño para tu Pantalla de Acceso</h1>
+          <p>Explora combinaciones de alta papelería, sobres virtuales, pases de gala y atmósferas diseñadas para
+            recibir a tus invitados.</p>
+        </div>
+        <div class="catalog-header-actions">
+          <button type="button" class="btn-publish-from-catalog"
+            (click)="applyCurrentTemplateAccessPreset(); closeAccessStylesModal()">
+            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Usar Estilo de la Plantilla
+          </button>
+          <button type="button" class="close-catalog-btn" title="Cerrar" (click)="closeAccessStylesModal()">
+            <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
+          </button>
+        </div>
+      </header>
+
+      <!-- BARRA DE CATEGORÍAS -->
+      <div class="catalog-toolbar">
+        <div class="access-category-filters" style="margin: 0; padding: 4px 0;">
+          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'all'"
+            (click)="accessPresetCategory = 'all'">Todos ({{ accessPresets.length }})</button>
+          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'wedding'"
+            (click)="accessPresetCategory = 'wedding'">💍 Boda & Gala</button>
+          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'xv'"
+            (click)="accessPresetCategory = 'xv'">👑 XV Años</button>
+          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'baby'"
+            (click)="accessPresetCategory = 'baby'">👶 Bautizo & Baby</button>
+          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'party'"
+            (click)="accessPresetCategory = 'party'">🎵 Fiesta</button>
+          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'minimal'"
+            (click)="accessPresetCategory = 'minimal'">✨ Minimal</button>
+        </div>
+      </div>
+
+      <!-- CUADRÍCULA DE DISEÑOS -->
+      <div class="access-styles-modal-grid">
+        <div *ngFor="let p of getFilteredAccessPresets()" class="access-style-modal-card"
+          [class.is-selected]="p.key === (design.accessScreen?.templateKey || 'envelope-cards')"
+          (click)="selectAccessPresetAndClose(p.key)">
+          <div class="style-modal-card-preview" [style.background]="p.backgroundColor || p.cardBgColor">
+            <span class="style-modal-card-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
+            <span *ngIf="p.key === (design.accessScreen?.templateKey || 'envelope-cards')"
+              class="style-modal-active-badge">✓ Aplicado</span>
+          </div>
+          <div class="style-modal-card-info">
+            <strong>{{ p.name }}</strong>
+            <small>{{ p.description }}</small>
+            <span class="style-modal-card-apply">Aplicar este diseño →</span>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
   <div class="design-import-backdrop" *ngIf="showImportDialog" (click)="closeDesignImporter()">
@@ -800,9 +900,11 @@
                   'Ningún archivo seleccionado' }}</span></label>
             </ng-container>
             <ng-container *ngSwitchCase="'selfRegister'">
-              <label>Nombre completo<input [(ngModel)]="functionalTestData.name" placeholder="Tu nombre y apellido"></label>
+              <label>Nombre completo<input [(ngModel)]="functionalTestData.name"
+                  placeholder="Tu nombre y apellido"></label>
               <label>Teléfono<input [(ngModel)]="functionalTestData.contact" placeholder="+52 55 1234 5678"></label>
-              <label>Acompañantes<input [(ngModel)]="functionalTestData.companions" type="number" min="0" max="10"></label>
+              <label>Acompañantes<input [(ngModel)]="functionalTestData.companions" type="number" min="0"
+                  max="10"></label>
             </ng-container>
             <ng-container *ngSwitchCase="'guestPass'">
               <label>Correo<input [(ngModel)]="functionalTestData.passEmail" placeholder="correo@ejemplo.com"></label>
@@ -815,7 +917,8 @@
           </div>
           <div class="functional-test-feedback" *ngIf="functionalTestFeedback" [class.success]="functionalTestSuccess">
             <strong>{{ functionalTestSuccess ? 'Flujo válido' : 'Falta información' }}</strong><span>{{
-              functionalTestFeedback }}</span></div>
+              functionalTestFeedback }}</span>
+          </div>
         </ng-container>
         <ng-template #exactDesignTest>
           <div class="functional-design-scroll" *ngIf="functionalTestPreviewInvitation as previewInvitation">
@@ -830,9 +933,8 @@
                 [dedicationMessage]="functionalTestMessage('dedications')"
                 [songRequestMessage]="functionalTestMessage('songs')"
                 (verifyGuestAccess)="simulateVisualGuestAccess($event)" (submitRsvp)="simulateVisualRsvp($event)"
-                (submitSelfRegister)="simulateVisualSelfRegister($event)"
-                (uploadPhoto)="simulateVisualPhoto($event)" (submitDedication)="simulateVisualDedication($event)"
-                (requestSong)="simulateVisualSong($event)">
+                (submitSelfRegister)="simulateVisualSelfRegister($event)" (uploadPhoto)="simulateVisualPhoto($event)"
+                (submitDedication)="simulateVisualDedication($event)" (requestSong)="simulateVisualSong($event)">
               </app-visual-invitation-renderer>
             </div>
           </div>
@@ -1281,24 +1383,24 @@
             [name]="toolsCollapsed ? 'panel-left-open' : 'panel-left-close'" [strokeWidth]="1.8"></lucide-icon></button>
         <button type="button" title="Diseño" [class.active]="toolCategory === 'design'"
           [class.tutorial-focus]="tutorialStep === 1" [attr.aria-pressed]="toolCategory === 'design'"
-          (click)="selectToolCategory('design');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="palette"
-            [strokeWidth]="1.8"></lucide-icon><span>Diseño</span></button>
+          (click)="selectToolCategory('design');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
+            name="palette" [strokeWidth]="1.8"></lucide-icon><span>Diseño</span></button>
         <button type="button" title="Elementos" [class.active]="toolCategory === 'elements'"
           [class.tutorial-focus]="tutorialStep === 2" [attr.aria-pressed]="toolCategory === 'elements'"
-          (click)="selectToolCategory('elements');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="shapes"
-            [strokeWidth]="1.8"></lucide-icon><span>Elementos</span></button>
+          (click)="selectToolCategory('elements');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
+            name="shapes" [strokeWidth]="1.8"></lucide-icon><span>Elementos</span></button>
         <button type="button" title="Archivos" [class.active]="toolCategory === 'assets'"
           [class.tutorial-focus]="tutorialStep === 3" [attr.aria-pressed]="toolCategory === 'assets'"
           (click)="selectToolCategory('assets');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images"
             [strokeWidth]="1.8"></lucide-icon><span>Archivos</span></button>
         <button type="button" title="Funciones" [class.active]="toolCategory === 'functions'"
           [class.tutorial-focus]="tutorialStep === 4" [attr.aria-pressed]="toolCategory === 'functions'"
-          (click)="selectToolCategory('functions');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="blocks"
-            [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
+          (click)="selectToolCategory('functions');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
+            name="blocks" [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
         <button type="button" title="Secciones" [class.active]="toolCategory === 'sections'"
           [attr.aria-pressed]="toolCategory === 'sections'"
-          (click)="selectToolCategory('sections');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="layers"
-            [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
+          (click)="selectToolCategory('sections');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
+            name="layers" [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
         <button type="button" title="Pantalla de Acceso" [class.active]="toolCategory === 'access'"
           [attr.aria-pressed]="toolCategory === 'access'"
           (click)="selectAccessCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="lock-keyhole"
@@ -1311,19 +1413,22 @@
       <div class="ve-tool-content" #toolContent>
         <!-- Indicador de lienzo activo cuando se diseñan elementos/archivos en Acceso o Pase VIP -->
         <div *ngIf="editorCanvasMode !== 'invitation' && toolCategory !== 'access' && toolCategory !== 'pass'"
-             class="ve-canvas-context-banner"
-             style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; margin-bottom: 16px; background: #fdfaf6; border: 1px solid #eadecc; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+          class="ve-canvas-context-banner"
+          style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; margin-bottom: 16px; background: #fdfaf6; border: 1px solid #eadecc; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
           <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5a4b41;">
-            <lucide-icon [name]="editorCanvasMode === 'access' ? 'lock-keyhole' : 'ticket'" [strokeWidth]="1.8" style="color: var(--nw-accent, #c9a87c); width: 16px; height: 16px;"></lucide-icon>
-            <span>Editando: <strong style="color: #2e2621;">{{ editorCanvasMode === 'access' ? 'Pantalla de Acceso' : ('Pase VIP · ' + (activePassSheet?.title || 'Hoja ' + (activePassSheetIndex + 1))) }}</strong></span>
+            <lucide-icon [name]="editorCanvasMode === 'access' ? 'lock-keyhole' : 'ticket'" [strokeWidth]="1.8"
+              style="color: var(--nw-accent, #c9a87c); width: 16px; height: 16px;"></lucide-icon>
+            <span>Editando: <strong style="color: #2e2621;">{{ editorCanvasMode === 'access' ? 'Pantalla de Acceso' :
+                ('Pase VIP · ' + (activePassSheet?.title || 'Hoja ' + (activePassSheetIndex + 1))) }}</strong></span>
           </div>
           <div style="display: flex; gap: 6px;">
-            <button type="button" (click)="editorCanvasMode === 'access' ? selectAccessCategory() : selectPassCategory()"
-                    style="padding: 4px 8px; border-radius: 6px; border: 1px solid #eadecc; background: #fff; font-size: 11px; font-weight: 600; color: #5a4b41; cursor: pointer;">
+            <button type="button"
+              (click)="editorCanvasMode === 'access' ? selectAccessCategory() : selectPassCategory()"
+              style="padding: 4px 8px; border-radius: 6px; border: 1px solid #eadecc; background: #fff; font-size: 11px; font-weight: 600; color: #5a4b41; cursor: pointer;">
               Ajustes
             </button>
             <button type="button" (click)="setEditorCanvasMode('invitation')"
-                    style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--nw-accent, #c9a87c); background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;">
+              style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--nw-accent, #c9a87c); background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;">
               ← Invitación
             </button>
           </div>
@@ -1331,8 +1436,12 @@
         <ng-container *ngIf="toolCategory === 'design'">
           <h2>Diseños y Plantillas</h2>
           <button class="open-design-library" type="button" (click)="openDesignLibrary()"><span><lucide-icon
-                name="images" [strokeWidth]="1.8"></lucide-icon></span><strong>Catálogo Canva-Style</strong><small>Explorar plantillas 3 en 1</small></button>
-          <button class="open-publish-template" type="button" (click)="openPublishTemplateModal()"><span class="earn-icon"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon></span><div><strong>Publicar como Plantilla</strong><small>Gana el 5% por cada uso en la comunidad</small></div></button>
+                name="images" [strokeWidth]="1.8"></lucide-icon></span><strong>Catálogo
+              Canva-Style</strong><small>Explorar plantillas 3 en 1</small></button>
+          <button class="open-publish-template" type="button" (click)="openPublishTemplateModal()"><span
+              class="earn-icon"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon></span>
+            <div><strong>Publicar como Plantilla</strong><small>Gana el 5% por cada uso en la comunidad</small></div>
+          </button>
           <details class="theme-editor" open *ngIf="design.theme as theme">
             <summary>Estilo global</summary>
             <p>Cambia colores, tipografías y botones sin mover el contenido.</p>
@@ -1964,7 +2073,8 @@
               (click)="selectAccessSubTab('registration')" title="Auto-registro y solicitudes">
               <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon>
               <span>Auto-registro</span>
-              <span *ngIf="design.accessScreen?.allowSelfRegistration" class="subtab-dot" title="Auto-registro activado"></span>
+              <span *ngIf="design.accessScreen?.allowSelfRegistration" class="subtab-dot"
+                title="Auto-registro activado"></span>
             </button>
           </div>
 
@@ -1985,324 +2095,356 @@
           <!-- SUBMENÚ 1: DISEÑO GENERAL DE PANTALLA DE ACCESO -->
           <div *ngIf="accessSubTab === 'design'">
 
-          <div class="access-tools-header">
-            <div class="access-badge-indicator"
-              [class.is-closed]="invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users'">
-              <lucide-icon name="lock-keyhole" [strokeWidth]="2"></lucide-icon>
-              <span>{{ (invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users') ? 'Lista
-                Cerrada Activa' : 'Modo Público' }}</span>
+            <div class="access-tools-header">
+              <div class="access-badge-indicator"
+                [class.is-closed]="invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users'">
+                <lucide-icon name="lock-keyhole" [strokeWidth]="2"></lucide-icon>
+                <span>{{ (invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users') ?
+                  'Lista
+                  Cerrada Activa' : 'Modo Público' }}</span>
+                <span>{{ (invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users') ?
+                  'Lista Cerrada Activa' : 'Modo Público' }}</span>
+              </div>
+              <h2>Pantalla de Acceso</h2>
+              <p class="hint">Diseña la pantalla de bienvenida y validación para tus invitados cuando tu invitación es
+                de
+                lista cerrada.</p>
+              <p class="hint">Diseña la pantalla de bienvenida y validación para tus invitados cuando tu invitación es
+                de lista cerrada.</p>
+              <p *ngIf="invitation?.accessMode !== 'guest_list' && invitation?.accessMode !== 'specific_users'"
+                class="access-mode-warning">
+                ℹ️ Esta pantalla se mostrará a los invitados cuando el acceso de la invitación esté configurado en
+                <strong>Lista cerrada</strong>. Puedes diseñar y probar su aspecto aquí mismo.
+              </p>
             </div>
-            <h2>Pantalla de Acceso</h2>
-            <p class="hint">Diseña la pantalla de bienvenida y validación para tus invitados cuando tu invitación es de
-              lista cerrada.</p>
-            <p *ngIf="invitation?.accessMode !== 'guest_list' && invitation?.accessMode !== 'specific_users'"
-              class="access-mode-warning">
-              ℹ️ Esta pantalla se mostrará a los invitados cuando el acceso de la invitación esté configurado en
-              <strong>Lista cerrada</strong>. Puedes diseñar y probar su aspecto aquí mismo.
-            </p>
-          </div>
 
-          <!-- BOTONES DE ACCIÓN RÁPIDA -->
-          <div class="access-quick-actions">
-            <button type="button" class="btn-access-action" (click)="setEditorCanvasMode('access')"
-              [class.active]="editorCanvasMode === 'access'">
-              <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en el lienzo
-            </button>
-            <button type="button" class="btn-access-action" (click)="applyCurrentTemplateAccessPreset()"
-              title="Aplicar diseÃ±o y capas de la plantilla activa">
-              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> De Plantilla
-            </button>
-            <button type="button" class="btn-access-action" (click)="syncAccessScreenWithTheme()">
-              <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar del tema
-            </button>
-            <button type="button" class="btn-access-action" (click)="resetAccessScreenLayers()"
-              title="Restablecer elementos y capas iniciales">
-              <lucide-icon name="refresh-cw" [strokeWidth]="1.8"></lucide-icon> Restablecer
-            </button>
-          </div>
-
-          <!-- PRESETS ESTILOS -->
-          <details class="theme-editor" open>
-            <summary>Estilos y Presets Rápidos</summary>
-            <p class="hint">Aplica combinaciones elegantes pre-diseñadas para listas cerradas.</p>
-            <div class="access-category-filters">
-              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'all'" (click)="accessPresetCategory = 'all'">Todos</button>
-              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'wedding'" (click)="accessPresetCategory = 'wedding'">💍 Boda & Gala</button>
-              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'xv'" (click)="accessPresetCategory = 'xv'">👑 XV Años</button>
-              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'baby'" (click)="accessPresetCategory = 'baby'">👶 Bautizo & Baby</button>
-              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'party'" (click)="accessPresetCategory = 'party'">🎵 Fiesta</button>
-              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'minimal'" (click)="accessPresetCategory = 'minimal'">✨ Minimal</button>
-            </div>
-            <div class="access-presets-grid">
-              <button *ngFor="let p of getFilteredAccessPresets()" type="button" class="access-preset-card"
-                (click)="applyAccessPreset(p.key)">
-                <span class="preset-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
-                <div class="preset-info">
-                  <strong>{{ p.name }}</strong>
-                  <small>{{ p.description }}</small>
+            <!-- SELECTOR DE ESTILOS Y TEMAS (BOTÓN DE MENÚ MODAL) -->
+            <div class="access-style-trigger-card">
+              <div class="style-trigger-meta">
+                <span class="style-trigger-icon">
+                  <lucide-icon [name]="getCurrentAccessPresetIcon()" [strokeWidth]="1.8"></lucide-icon>
+                </span>
+                <div class="style-trigger-text">
+                  <span class="style-trigger-tag">Diseño Aplicado</span>
+                  <strong class="style-trigger-title">{{ getCurrentAccessPresetName() }}</strong>
                 </div>
-              </button>
-            </div>
-          </details>
-
-          <!-- FONDO DE LA PANTALLA -->
-          <details class="theme-editor" open *ngIf="design.accessScreen as acc">
-            <summary>Fondo de la pantalla</summary>
-            <div class="access-field-group">
-              <label>Tipo de fondo
-                <select [(ngModel)]="acc.backgroundType" (ngModelChange)="recordHistory()">
-                  <option value="gradient">Degradado refinado</option>
-                  <option value="image">Imagen de fondo</option>
-                  <option value="color">Color sólido</option>
-                </select>
-              </label>
-            </div>
-
-            <div *ngIf="acc.backgroundType === 'color'" class="access-field-group">
-              <label>Color de fondo
-                <input type="color" [(ngModel)]="acc.backgroundColor" (ngModelChange)="recordHistory()">
-              </label>
-            </div>
-
-            <div *ngIf="acc.backgroundType === 'gradient'" class="access-field-group">
-              <label>Degradado
-                <select [(ngModel)]="acc.backgroundGradient" (ngModelChange)="recordHistory()">
-                  <option value="linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)">Obsidiana Real (Azul
-                    Marino Profundo)</option>
-                  <option value="linear-gradient(145deg, #0a0d14 0%, #161c29 50%, #06080d 100%)">Noche Oscura VIP
-                    (Obsidiana)</option>
-                  <option value="linear-gradient(135deg, #2f5348 0%, #1a352d 50%, #0d1e19 100%)">Esmeralda Bosque
-                  </option>
-                  <option value="linear-gradient(135deg, #42273b 0%, #261623 50%, #170d15 100%)">Vino Tinto & Borgoña
-                  </option>
-                  <option value="linear-gradient(135deg, #f4e9e2 0%, #faede8 50%, #e8f0eb 100%)">Champagne & Blush Suave
-                  </option>
-                  <option value="linear-gradient(135deg, #1b2838 0%, #141c24 100%)">Azul Medianoche</option>
-                </select>
-              </label>
-            </div>
-
-            <div *ngIf="acc.backgroundType === 'image'" class="access-field-group">
-              <label>URL de imagen
-                <input type="text" [(ngModel)]="acc.backgroundImageUrl" (ngModelChange)="recordHistory()"
-                  placeholder="https://ejemplo.com/portada.jpg">
-              </label>
-              <button *ngIf="invitation?.content?.coverImageUrl" type="button" class="btn-text-action"
-                (click)="useCoverImageForAccessBackground()">
-                🖼 Usar foto de portada del evento
+              </div>
+              <button type="button" class="btn-open-styles-catalog" (click)="openAccessStylesModal()">
+                <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+                <span>Explorar Estilos y Diseños</span>
               </button>
             </div>
 
-            <div class="access-field-group">
-              <label>Oscurecimiento del fondo (Overlay): {{ acc.backgroundOverlayOpacity || 0 }}%
-                <input type="range" min="0" max="95" step="5" [(ngModel)]="acc.backgroundOverlayOpacity"
-                  (ngModelChange)="recordHistory()">
-              </label>
+            <!-- BOTONES DE ACCIÓN RÁPIDA -->
+            <div class="access-quick-actions">
+              <button type="button" class="btn-access-action" (click)="setEditorCanvasMode('access')"
+                [class.active]="editorCanvasMode === 'access'">
+                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en el lienzo
+              </button>
+              <button type="button" class="btn-access-action" (click)="applyCurrentTemplateAccessPreset()"
+                title="Aplicar diseÃ±o y capas de la plantilla activa">
+                title="Aplicar diseño y capas de la plantilla activa">
+                <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> De Plantilla
+              </button>
+              <button type="button" class="btn-access-action" (click)="syncAccessScreenWithTheme()">
+                <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar del tema
+              </button>
+              <button type="button" class="btn-access-action" (click)="resetAccessScreenLayers()"
+                title="Restablecer elementos y capas iniciales">
+                <lucide-icon name="refresh-cw" [strokeWidth]="1.8"></lucide-icon> Restablecer
+              </button>
             </div>
 
-            <div class="access-field-group">
-              <label>Desenfoque de fondo: {{ acc.backgroundBlur || 0 }}px
-                <input type="range" min="0" max="25" step="1" [(ngModel)]="acc.backgroundBlur"
-                  (ngModelChange)="recordHistory()">
-              </label>
-            </div>
+            <!-- PRESETS ESTILOS -->
+            <details class="theme-editor" open>
+              <summary>Estilos y Presets Rápidos</summary>
+              <p class="hint">Aplica combinaciones elegantes pre-diseñadas para listas cerradas.</p>
+              <div class="access-category-filters">
+                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'all'"
+                  (click)="accessPresetCategory = 'all'">Todos</button>
+                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'wedding'"
+                  (click)="accessPresetCategory = 'wedding'">💍 Boda & Gala</button>
+                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'xv'"
+                  (click)="accessPresetCategory = 'xv'">👑 XV Años</button>
+                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'baby'"
+                  (click)="accessPresetCategory = 'baby'">👶 Bautizo & Baby</button>
+                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'party'"
+                  (click)="accessPresetCategory = 'party'">🎵 Fiesta</button>
+                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'minimal'"
+                  (click)="accessPresetCategory = 'minimal'">✨ Minimal</button>
+              </div>
+              <div class="access-presets-grid">
+                <button *ngFor="let p of getFilteredAccessPresets()" type="button" class="access-preset-card"
+                  (click)="applyAccessPreset(p.key)">
+                  <span class="preset-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
+                  <div class="preset-info">
+                    <strong>{{ p.name }}</strong>
+                    <small>{{ p.description }}</small>
+                  </div>
+                </button>
+              </div>
+            </details>
 
-            <div class="access-field-group">
-              <label>Filtro de ambiente / Lente
-                <select [(ngModel)]="acc.backgroundFilter" (ngModelChange)="recordHistory()">
-                  <option value="none">Normal (Sin filtro)</option>
-                  <option value="golden">✨ Golden Hour (Cálido dorado de gala)</option>
-                  <option value="cinematic">🎬 Blanco y Negro Cinematográfico</option>
-                  <option value="sepia">📜 Romance Vintage (Sepia elegante)</option>
-                  <option value="warm">🌅 Atardecer Cálido (Warm Glow)</option>
-                  <option value="moody">🌙 Noche Mística (Moody Nocturne)</option>
-                  <option value="emerald">🌿 Jardín Botánico Esmeralda</option>
-                  <option value="frost">❄️ Cristal Glaseado Nórdico</option>
-                  <option value="noir">🖤 Noir de Alto Contraste</option>
-                </select>
-              </label>
-            </div>
+            <!-- FONDO DE LA PANTALLA -->
+            <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+              <summary>Fondo de la pantalla</summary>
+              <div class="access-field-group">
+                <label>Tipo de fondo
+                  <select [(ngModel)]="acc.backgroundType" (ngModelChange)="recordHistory()">
+                    <option value="gradient">Degradado refinado</option>
+                    <option value="image">Imagen de fondo</option>
+                    <option value="color">Color sólido</option>
+                  </select>
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label class="toggle">
-                <input type="checkbox" [(ngModel)]="acc.backgroundVignette" (ngModelChange)="recordHistory()">
-                <span>Viñeta cinematográfica (enfoque de luz al centro)</span>
-              </label>
-            </div>
+              <div *ngIf="acc.backgroundType === 'color'" class="access-field-group">
+                <label>Color de fondo
+                  <input type="color" [(ngModel)]="acc.backgroundColor" (ngModelChange)="recordHistory()">
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Efecto de partículas y atmósfera
-                <select [(ngModel)]="acc.backgroundEffect" (ngModelChange)="recordHistory()">
-                  <option value="none">Sin partículas</option>
-                  <option value="sparkles">✨ Destellos Dorados (Sparkles)</option>
-                  <option value="petals">🌸 Pétalos Románticos flotando</option>
-                  <option value="starlight">⭐ Polvo de Estrellas (Starlight)</option>
-                  <option value="bokeh">🟡 Luces Bokeh Festivas</option>
-                  <option value="fireflies">✨ Luciérnagas Mágicas</option>
-                </select>
-              </label>
-            </div>
-          </details>
+              <div *ngIf="acc.backgroundType === 'gradient'" class="access-field-group">
+                <label>Degradado
+                  <select [(ngModel)]="acc.backgroundGradient" (ngModelChange)="recordHistory()">
+                    <option value="linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)">Obsidiana Real (Azul
+                      Marino Profundo)</option>
+                    <option value="linear-gradient(145deg, #0a0d14 0%, #161c29 50%, #06080d 100%)">Noche Oscura VIP
+                      (Obsidiana)</option>
+                    <option value="linear-gradient(135deg, #2f5348 0%, #1a352d 50%, #0d1e19 100%)">Esmeralda Bosque
+                    </option>
+                    <option value="linear-gradient(135deg, #42273b 0%, #261623 50%, #170d15 100%)">Vino Tinto & Borgoña
+                    </option>
+                    <option value="linear-gradient(135deg, #f4e9e2 0%, #faede8 50%, #e8f0eb 100%)">Champagne & Blush
+                      Suave
+                    </option>
+                    <option value="linear-gradient(135deg, #1b2838 0%, #141c24 100%)">Azul Medianoche</option>
+                  </select>
+                </label>
+              </div>
 
-          <!-- TARJETA CONTENEDORA -->
-          <details class="theme-editor" open *ngIf="design.accessScreen as acc">
-            <summary>Tarjeta de acceso</summary>
-            <div class="access-field-group">
-              <label>Estilo de tarjeta
-                <select [(ngModel)]="acc.cardStyle" (ngModelChange)="recordHistory()">
-                  <option value="glass">Cristal translúcido (Glassmorphism)</option>
-                  <option value="solid">Sólida elegante</option>
-                  <option value="bordered">Borde de acento fino</option>
-                  <option value="minimal">Minimalista (sin tarjeta)</option>
-                </select>
-              </label>
-            </div>
+              <div *ngIf="acc.backgroundType === 'image'" class="access-field-group">
+                <label>URL de imagen
+                  <input type="text" [(ngModel)]="acc.backgroundImageUrl" (ngModelChange)="recordHistory()"
+                    placeholder="https://ejemplo.com/portada.jpg">
+                </label>
+                <button *ngIf="invitation?.content?.coverImageUrl" type="button" class="btn-text-action"
+                  (click)="useCoverImageForAccessBackground()">
+                  🖼 Usar foto de portada del evento
+                </button>
+              </div>
 
-            <div *ngIf="acc.cardStyle !== 'minimal'" class="access-colors-row">
-              <label>Fondo de tarjeta
-                <input type="color" [(ngModel)]="acc.cardBgColor" (ngModelChange)="recordHistory()">
-              </label>
-              <label>Acento / Borde
-                <input type="color" [(ngModel)]="acc.accentColor" (ngModelChange)="recordHistory()">
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Oscurecimiento del fondo (Overlay): {{ acc.backgroundOverlayOpacity || 0 }}%
+                  <input type="range" min="0" max="95" step="5" [(ngModel)]="acc.backgroundOverlayOpacity"
+                    (ngModelChange)="recordHistory()">
+                </label>
+              </div>
 
-            <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
-              <label>Opacidad de tarjeta: {{ acc.cardOpacity || 0 }}%
-                <input type="range" min="10" max="100" step="5" [(ngModel)]="acc.cardOpacity"
-                  (ngModelChange)="recordHistory()">
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Desenfoque de fondo: {{ acc.backgroundBlur || 0 }}px
+                  <input type="range" min="0" max="25" step="1" [(ngModel)]="acc.backgroundBlur"
+                    (ngModelChange)="recordHistory()">
+                </label>
+              </div>
 
-            <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
-              <label>Redondeo de esquinas: {{ acc.cardRadius ?? 18 }}px
-                <input type="range" min="0" max="40" step="2" [(ngModel)]="acc.cardRadius"
-                  (ngModelChange)="recordHistory()">
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Filtro de ambiente / Lente
+                  <select [(ngModel)]="acc.backgroundFilter" (ngModelChange)="recordHistory()">
+                    <option value="none">Normal (Sin filtro)</option>
+                    <option value="golden">✨ Golden Hour (Cálido dorado de gala)</option>
+                    <option value="cinematic">🎬 Blanco y Negro Cinematográfico</option>
+                    <option value="sepia">📜 Romance Vintage (Sepia elegante)</option>
+                    <option value="warm">🌅 Atardecer Cálido (Warm Glow)</option>
+                    <option value="moody">🌙 Noche Mística (Moody Nocturne)</option>
+                    <option value="emerald">🌿 Jardín Botánico Esmeralda</option>
+                    <option value="frost">❄️ Cristal Glaseado Nórdico</option>
+                    <option value="noir">🖤 Noir de Alto Contraste</option>
+                  </select>
+                </label>
+              </div>
 
-            <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
-              <label>Sombra
-                <select [(ngModel)]="acc.cardShadow" (ngModelChange)="recordHistory()">
-                  <option value="glow">Resplandor suave de acento</option>
-                  <option value="elevated">Sombra elevada y profunda</option>
-                  <option value="soft">Sombra sutil</option>
-                  <option value="none">Sin sombra</option>
-                </select>
-              </label>
-            </div>
-          </details>
+              <div class="access-field-group">
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="acc.backgroundVignette" (ngModelChange)="recordHistory()">
+                  <span>Viñeta cinematográfica (enfoque de luz al centro)</span>
+                </label>
+              </div>
 
-          <!-- TEXTOS E IDENTIDAD -->
-          <details class="theme-editor" open *ngIf="design.accessScreen as acc">
-            <summary>Textos y Cabecera</summary>
-            <div class="access-field-group">
-              <label class="toggle">
-                <input type="checkbox" [(ngModel)]="acc.showBadge" (ngModelChange)="recordHistory()"> Mostrar insignia
-                superior
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Efecto de partículas y atmósfera
+                  <select [(ngModel)]="acc.backgroundEffect" (ngModelChange)="recordHistory()">
+                    <option value="none">Sin partículas</option>
+                    <option value="sparkles">✨ Destellos Dorados (Sparkles)</option>
+                    <option value="petals">🌸 Pétalos Románticos flotando</option>
+                    <option value="starlight">⭐ Polvo de Estrellas (Starlight)</option>
+                    <option value="bokeh">🟡 Luces Bokeh Festivas</option>
+                    <option value="fireflies">✨ Luciérnagas Mágicas</option>
+                  </select>
+                </label>
+              </div>
+            </details>
 
-            <div *ngIf="acc.showBadge" class="access-field-group">
-              <label>Texto de insignia
-                <input type="text" [(ngModel)]="acc.badgeText" (ngModelChange)="recordHistory()"
-                  placeholder="Ej. Acceso Personal, VIP, Exclusivo">
-              </label>
-            </div>
+            <!-- TARJETA CONTENEDORA -->
+            <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+              <summary>Tarjeta de acceso</summary>
+              <div class="access-field-group">
+                <label>Estilo de tarjeta
+                  <select [(ngModel)]="acc.cardStyle" (ngModelChange)="recordHistory()">
+                    <option value="glass">Cristal translúcido (Glassmorphism)</option>
+                    <option value="solid">Sólida elegante</option>
+                    <option value="bordered">Borde de acento fino</option>
+                    <option value="minimal">Minimalista (sin tarjeta)</option>
+                  </select>
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label class="toggle">
-                <input type="checkbox" [(ngModel)]="acc.showIcon" (ngModelChange)="recordHistory()"> Mostrar ícono
-              </label>
-            </div>
+              <div *ngIf="acc.cardStyle !== 'minimal'" class="access-colors-row">
+                <label>Fondo de tarjeta
+                  <input type="color" [(ngModel)]="acc.cardBgColor" (ngModelChange)="recordHistory()">
+                </label>
+                <label>Acento / Borde
+                  <input type="color" [(ngModel)]="acc.accentColor" (ngModelChange)="recordHistory()">
+                </label>
+              </div>
 
-            <div *ngIf="acc.showIcon" class="access-field-group">
-              <label>Ícono
-                <select [(ngModel)]="acc.iconName" (ngModelChange)="recordHistory()">
-                  <option value="lock-keyhole">Candado (Seguro / Cerrado)</option>
-                  <option value="key-round">Llave (Acceso)</option>
-                  <option value="crown">Corona (VIP)</option>
-                  <option value="sparkles">Destellos (Magia)</option>
-                  <option value="gem">Diamante (Joya)</option>
-                  <option value="heart">Corazón (Amor)</option>
-                  <option value="ticket-check">Ticket (Pase)</option>
-                  <option value="shield-check">Escudo (Verificado)</option>
-                </select>
-              </label>
-            </div>
+              <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
+                <label>Opacidad de tarjeta: {{ acc.cardOpacity || 0 }}%
+                  <input type="range" min="10" max="100" step="5" [(ngModel)]="acc.cardOpacity"
+                    (ngModelChange)="recordHistory()">
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Logo o Monograma opcional (URL)
-                <input type="text" [(ngModel)]="acc.logoUrl" (ngModelChange)="recordHistory()"
-                  placeholder="https://ejemplo.com/logo.png">
-              </label>
-            </div>
+              <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
+                <label>Redondeo de esquinas: {{ acc.cardRadius ?? 18 }}px
+                  <input type="range" min="0" max="40" step="2" [(ngModel)]="acc.cardRadius"
+                    (ngModelChange)="recordHistory()">
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Título principal
-                <input type="text" [(ngModel)]="acc.title" (ngModelChange)="recordHistory()"
-                  placeholder="Acceso a la invitación">
-              </label>
-            </div>
+              <div *ngIf="acc.cardStyle !== 'minimal'" class="access-field-group">
+                <label>Sombra
+                  <select [(ngModel)]="acc.cardShadow" (ngModelChange)="recordHistory()">
+                    <option value="glow">Resplandor suave de acento</option>
+                    <option value="elevated">Sombra elevada y profunda</option>
+                    <option value="soft">Sombra sutil</option>
+                    <option value="none">Sin sombra</option>
+                  </select>
+                </label>
+              </div>
+            </details>
 
-            <app-visual-font-picker label="Tipografía del título" [(value)]="acc.headingFont"></app-visual-font-picker>
+            <!-- TEXTOS E IDENTIDAD -->
+            <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+              <summary>Textos y Cabecera</summary>
+              <div class="access-field-group">
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="acc.showBadge" (ngModelChange)="recordHistory()"> Mostrar insignia
+                  superior
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Mensaje / Subtítulo
-                <textarea [(ngModel)]="acc.subtitle" (ngModelChange)="recordHistory()" rows="3"
-                  placeholder="Esta invitación requiere un enlace personal..."></textarea>
-              </label>
-            </div>
+              <div *ngIf="acc.showBadge" class="access-field-group">
+                <label>Texto de insignia
+                  <input type="text" [(ngModel)]="acc.badgeText" (ngModelChange)="recordHistory()"
+                    placeholder="Ej. Acceso Personal, VIP, Exclusivo">
+                </label>
+              </div>
 
-            <app-visual-font-picker label="Tipografía de textos" [(value)]="acc.bodyFont"></app-visual-font-picker>
+              <div class="access-field-group">
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="acc.showIcon" (ngModelChange)="recordHistory()"> Mostrar ícono
+                </label>
+              </div>
 
-            <div class="access-colors-row">
-              <label>Color de texto / título
-                <input type="color" [(ngModel)]="acc.textColor" (ngModelChange)="recordHistory()">
-              </label>
-            </div>
-          </details>
+              <div *ngIf="acc.showIcon" class="access-field-group">
+                <label>Ícono
+                  <select [(ngModel)]="acc.iconName" (ngModelChange)="recordHistory()">
+                    <option value="lock-keyhole">Candado (Seguro / Cerrado)</option>
+                    <option value="key-round">Llave (Acceso)</option>
+                    <option value="crown">Corona (VIP)</option>
+                    <option value="sparkles">Destellos (Magia)</option>
+                    <option value="gem">Diamante (Joya)</option>
+                    <option value="heart">Corazón (Amor)</option>
+                    <option value="ticket-check">Ticket (Pase)</option>
+                    <option value="shield-check">Escudo (Verificado)</option>
+                  </select>
+                </label>
+              </div>
 
-          <!-- FORMULARIO Y BOTÓN -->
-          <details class="theme-editor" open *ngIf="design.accessScreen as acc">
-            <summary>Formulario y Botón</summary>
-            <div class="access-field-group">
-              <label>Etiqueta del campo
-                <input type="text" [(ngModel)]="acc.inputLabel" (ngModelChange)="recordHistory()"
-                  placeholder="Correo o teléfono registrado">
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Logo o Monograma opcional (URL)
+                  <input type="text" [(ngModel)]="acc.logoUrl" (ngModelChange)="recordHistory()"
+                    placeholder="https://ejemplo.com/logo.png">
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Texto placeholder del campo
-                <input type="text" [(ngModel)]="acc.inputPlaceholder" (ngModelChange)="recordHistory()"
-                  placeholder="ejemplo@correo.com o tu teléfono">
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Título principal
+                  <input type="text" [(ngModel)]="acc.title" (ngModelChange)="recordHistory()"
+                    placeholder="Acceso a la invitación">
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Texto del botón
-                <input type="text" [(ngModel)]="acc.buttonText" (ngModelChange)="recordHistory()"
-                  placeholder="Solicitar enlace">
-              </label>
-            </div>
+              <app-visual-font-picker label="Tipografía del título"
+                [(value)]="acc.headingFont"></app-visual-font-picker>
 
-            <div class="access-colors-row">
-              <label>Fondo de botón
-                <input type="color" [(ngModel)]="acc.buttonBgColor" (ngModelChange)="recordHistory()">
-              </label>
-              <label>Texto de botón
-                <input type="color" [(ngModel)]="acc.buttonTextColor" (ngModelChange)="recordHistory()">
-              </label>
-            </div>
+              <div class="access-field-group">
+                <label>Mensaje / Subtítulo
+                  <textarea [(ngModel)]="acc.subtitle" (ngModelChange)="recordHistory()" rows="3"
+                    placeholder="Esta invitación requiere un enlace personal..."></textarea>
+                </label>
+              </div>
 
-            <div class="access-field-group">
-              <label>Redondeo de botón: {{ acc.buttonRadius ?? 10 }}px
-                <input type="range" min="0" max="30" step="2" [(ngModel)]="acc.buttonRadius"
-                  (ngModelChange)="recordHistory()">
-              </label>
-            </div>
-          </details>
+              <app-visual-font-picker label="Tipografía de textos" [(value)]="acc.bodyFont"></app-visual-font-picker>
+
+              <div class="access-colors-row">
+                <label>Color de texto / título
+                  <input type="color" [(ngModel)]="acc.textColor" (ngModelChange)="recordHistory()">
+                </label>
+              </div>
+            </details>
+
+            <!-- FORMULARIO Y BOTÓN -->
+            <details class="theme-editor" open *ngIf="design.accessScreen as acc">
+              <summary>Formulario y Botón</summary>
+              <div class="access-field-group">
+                <label>Etiqueta del campo
+                  <input type="text" [(ngModel)]="acc.inputLabel" (ngModelChange)="recordHistory()"
+                    placeholder="Correo o teléfono registrado">
+                </label>
+              </div>
+
+              <div class="access-field-group">
+                <label>Texto placeholder del campo
+                  <input type="text" [(ngModel)]="acc.inputPlaceholder" (ngModelChange)="recordHistory()"
+                    placeholder="ejemplo@correo.com o tu teléfono">
+                </label>
+              </div>
+
+              <div class="access-field-group">
+                <label>Texto del botón
+                  <input type="text" [(ngModel)]="acc.buttonText" (ngModelChange)="recordHistory()"
+                    placeholder="Solicitar enlace">
+                </label>
+              </div>
+
+              <div class="access-colors-row">
+                <label>Fondo de botón
+                  <input type="color" [(ngModel)]="acc.buttonBgColor" (ngModelChange)="recordHistory()">
+                </label>
+                <label>Texto de botón
+                  <input type="color" [(ngModel)]="acc.buttonTextColor" (ngModelChange)="recordHistory()">
+                </label>
+              </div>
+
+              <div class="access-field-group">
+                <label>Redondeo de botón: {{ acc.buttonRadius ?? 10 }}px
+                  <input type="range" min="0" max="30" step="2" [(ngModel)]="acc.buttonRadius"
+                    (ngModelChange)="recordHistory()">
+                </label>
+              </div>
+            </details>
           </div>
 
           <!-- SUBMENÚ 2: SEGURIDAD Y NIP DE ACCESO -->
@@ -2313,11 +2455,13 @@
                 <span>Seguridad de Acceso</span>
               </div>
               <h2>Seguridad y NIP de Acceso</h2>
-              <p class="hint">Protege tu invitación para que nadie entre solo conociendo el número o correo de un invitado registrado.</p>
+              <p class="hint">Protege tu invitación para que nadie entre solo conociendo el número o correo de un
+                invitado registrado.</p>
             </div>
 
             <div class="access-quick-actions">
-              <button type="button" class="btn-access-action" (click)="accessSimView = 'login'; setEditorCanvasMode('access')"
+              <button type="button" class="btn-access-action"
+                (click)="accessSimView = 'login'; setEditorCanvasMode('access')"
                 [class.active]="editorCanvasMode === 'access' && accessSimView === 'login'">
                 <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Probar en el lienzo
               </button>
@@ -2338,7 +2482,8 @@
                   <label>Modalidad de NIP
                     <select [(ngModel)]="acc.pinMode" (ngModelChange)="recordHistory()">
                       <option value="event">NIP único del evento (todos usan la misma clave)</option>
-                      <option value="individual">NIP individual por invitado (código de 4 dígitos para cada uno)</option>
+                      <option value="individual">NIP individual por invitado (código de 4 dígitos para cada uno)
+                      </option>
                     </select>
                   </label>
                 </div>
@@ -2348,7 +2493,8 @@
                     <div style="display: flex; gap: 8px;">
                       <input type="text" [(ngModel)]="acc.eventPin" (ngModelChange)="recordHistory()"
                         placeholder="Ej. 1234 o BODA2026" maxlength="20" style="flex: 1;">
-                      <button type="button" class="btn-text-action" (click)="generateRandomEventPin()" title="Generar NIP aleatorio">
+                      <button type="button" class="btn-text-action" (click)="generateRandomEventPin()"
+                        title="Generar NIP aleatorio">
                         🎲 Generar
                       </button>
                     </div>
@@ -2357,8 +2503,11 @@
                 </div>
 
                 <div *ngIf="acc.pinMode === 'individual'" class="access-field-group">
-                  <p class="hint" style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c;">
-                    ℹ️ Cada invitado en tu lista tendrá un NIP único de 4 dígitos generado automáticamente. Podrás verlo y reiniciarlo en la pestaña de <strong>Invitados</strong>, y se incluirá en sus pases por correo y WhatsApp con la variable <code>{{ '{{nip}}' }}</code>.
+                  <p class="hint"
+                    style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c;">
+                    ℹ️ Cada invitado en tu lista tendrá un NIP único de 4 dígitos generado automáticamente. Podrás verlo
+                    y reiniciarlo en la pestaña de <strong>Invitados</strong>, y se incluirá en sus pases por correo y
+                    WhatsApp con la variable <code>{{ '{{nip}}' }}</code>.
                   </p>
                 </div>
 
@@ -2384,14 +2533,17 @@
             <div class="access-tools-header">
               <div class="access-badge-indicator" [class.is-closed]="design.accessScreen?.allowSelfRegistration">
                 <lucide-icon name="users" [strokeWidth]="2"></lucide-icon>
-                <span>{{ design.accessScreen?.allowSelfRegistration ? 'Auto-registro Activado' : 'Auto-registro Inactivo' }}</span>
+                <span>{{ design.accessScreen?.allowSelfRegistration ? 'Auto-registro Activado' : 'Auto-registro
+                  Inactivo' }}</span>
               </div>
               <h2>Auto-registro y Solicitudes</h2>
-              <p class="hint">Permite que personas que no están en tu lista cerrada soliciten invitación. Tú decides si aprobarlos enviándoles su NIP y enlace por correo.</p>
+              <p class="hint">Permite que personas que no están en tu lista cerrada soliciten invitación. Tú decides si
+                aprobarlos enviándoles su NIP y enlace por correo.</p>
             </div>
 
             <div class="access-quick-actions">
-              <button type="button" class="btn-access-action" (click)="accessSimView = 'register'; setEditorCanvasMode('access')"
+              <button type="button" class="btn-access-action"
+                (click)="accessSimView = 'register'; setEditorCanvasMode('access')"
                 [class.active]="editorCanvasMode === 'access' && accessSimView === 'register'">
                 <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver formulario en lienzo
               </button>
@@ -2404,7 +2556,8 @@
                   <input type="checkbox" [(ngModel)]="acc.allowSelfRegistration" (ngModelChange)="recordHistory()">
                   <strong>Permitir auto-registro a invitados no registrados</strong>
                 </label>
-                <p class="hint">Muestra una opción en la pantalla de acceso para que los invitados que no estén en la lista puedan solicitar su pase.</p>
+                <p class="hint">Muestra una opción en la pantalla de acceso para que los invitados que no estén en la
+                  lista puedan solicitar su pase.</p>
               </div>
 
               <div *ngIf="acc.allowSelfRegistration">
@@ -2418,7 +2571,8 @@
                 <div class="access-field-group">
                   <label>Instrucciones / Subtítulo
                     <textarea rows="2" [(ngModel)]="acc.selfRegSubtitle" (ngModelChange)="recordHistory()"
-                      placeholder="Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso." maxlength="250"></textarea>
+                      placeholder="Si no estás en la lista, ingresa tus datos. El anfitrión revisará tu solicitud y te enviará tu NIP de acceso."
+                      maxlength="250"></textarea>
                   </label>
                 </div>
 
@@ -2441,8 +2595,11 @@
                     <input type="checkbox" [(ngModel)]="acc.selfRegRequireApproval" (ngModelChange)="recordHistory()">
                     <strong>Requiere aprobación del anfitrión</strong>
                   </label>
-                  <p class="hint" style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c; margin-top: 6px;">
-                    ℹ️ <strong>Recomendado:</strong> El invitado se guardará en tu lista con estado <strong>Pendiente</strong> y su NIP individual asignado. Podrás revisar quién es y enviarle su correo o WhatsApp con su NIP y pase con un solo clic.
+                  <p class="hint"
+                    style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c; margin-top: 6px;">
+                    ℹ️ <strong>Recomendado:</strong> El invitado se guardará en tu lista con estado
+                    <strong>Pendiente</strong> y su NIP individual asignado. Podrás revisar quién es y enviarle su
+                    correo o WhatsApp con su NIP y pase con un solo clic.
                   </p>
                 </div>
 
@@ -2456,7 +2613,8 @@
                 <div class="access-field-group">
                   <label>Mensaje de confirmación al enviar
                     <textarea rows="2" [(ngModel)]="acc.selfRegSuccessMessage" (ngModelChange)="recordHistory()"
-                      placeholder="¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo." maxlength="250"></textarea>
+                      placeholder="¡Solicitud recibida! Los organizadores revisarán tu petición y te enviarán tu NIP y pase por correo."
+                      maxlength="250"></textarea>
                   </label>
                 </div>
               </div>
@@ -2495,56 +2653,71 @@
           </div>
 
           <!-- SUBPESTAÑA 1: FORMATO Y HOJAS -->
-          <div *ngIf="passSubTab === 'format'" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 14px;">
-            <div style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
-              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
-                <lucide-icon name="smartphone" [strokeWidth]="1.8" style="width: 13px; height: 13px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+          <div *ngIf="passSubTab === 'format'"
+            style="padding: 12px 14px; display: flex; flex-direction: column; gap: 14px;">
+            <div
+              style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
+              <label
+                style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
+                <lucide-icon name="smartphone" [strokeWidth]="1.8"
+                  style="width: 13px; height: 13px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
                 <span>Formato de la Hoja</span>
               </label>
               <select [ngModel]="activePassSheetPreset" (ngModelChange)="setPassCanvasPreset($event)"
-                      style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 13px; font-weight: 600; background: #fff;">
+                style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 13px; font-weight: 600; background: #fff;">
                 <option *ngFor="let opt of passCanvasPresets" [value]="opt.preset">{{ opt.label }}</option>
               </select>
             </div>
 
             <!-- Dimensiones personalizadas -->
-            <div *ngIf="activePassSheetPreset === 'custom' && activePassSheet" style="display: flex; gap: 8px; align-items: center;">
+            <div *ngIf="activePassSheetPreset === 'custom' && activePassSheet"
+              style="display: flex; gap: 8px; align-items: center;">
               <input type="number" min="100" max="2500" [ngModel]="getPassSheetWidth(activePassSheet)"
-                     (ngModelChange)="setPassCustomWidth($event)" style="width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--nw-border);" placeholder="Ancho">
+                (ngModelChange)="setPassCustomWidth($event)"
+                style="width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--nw-border);"
+                placeholder="Ancho">
               <span>×</span>
               <input type="number" min="100" max="2500" [ngModel]="getPassSheetHeight(activePassSheet)"
-                     (ngModelChange)="setPassCustomHeight($event)" style="width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--nw-border);" placeholder="Alto">
+                (ngModelChange)="setPassCustomHeight($event)"
+                style="width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--nw-border);"
+                placeholder="Alto">
               <small>px</small>
             </div>
 
             <!-- Gestión de Hojas -->
-            <div style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
+            <div
+              style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: flex; align-items: center; gap: 5px;">
-                  <lucide-icon name="layers" [strokeWidth]="1.8" style="width: 13px; height: 13px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+                <span
+                  style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: flex; align-items: center; gap: 5px;">
+                  <lucide-icon name="layers" [strokeWidth]="1.8"
+                    style="width: 13px; height: 13px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
                   <span>Hojas del Pase ({{ passDesign?.sections?.length || 1 }})</span>
                 </span>
                 <button type="button" (click)="addPassSheet()"
-                        style="padding: 4px 8px; border-radius: 6px; background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 700; border: none; cursor: pointer;">
+                  style="padding: 4px 8px; border-radius: 6px; background: var(--nw-accent, #c9a87c); color: #fff; font-size: 11px; font-weight: 700; border: none; cursor: pointer;">
                   + Agregar
                 </button>
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 6px;">
-                <div *ngFor="let s of passDesign?.sections; let sIdx = index"
-                     (click)="selectPassSheet(sIdx)"
-                     [style.borderColor]="activePassSheetIndex === sIdx ? 'var(--nw-accent, #c9a87c)' : 'var(--nw-border, #eadecc)'"
-                     [style.background]="activePassSheetIndex === sIdx ? '#fff' : 'transparent'"
-                     style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 8px; border: 1.5px solid; cursor: pointer; transition: all 0.15s;">
-                  <strong style="font-size: 12px; color: var(--nw-text, #2e2621);">{{ s.title || ('Hoja ' + (sIdx + 1)) }}</strong>
+                <div *ngFor="let s of passDesign?.sections; let sIdx = index" (click)="selectPassSheet(sIdx)"
+                  [style.borderColor]="activePassSheetIndex === sIdx ? 'var(--nw-accent, #c9a87c)' : 'var(--nw-border, #eadecc)'"
+                  [style.background]="activePassSheetIndex === sIdx ? '#fff' : 'transparent'"
+                  style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 8px; border: 1.5px solid; cursor: pointer; transition: all 0.15s;">
+                  <strong style="font-size: 12px; color: var(--nw-text, #2e2621);">{{ s.title || ('Hoja ' + (sIdx + 1))
+                    }}</strong>
                   <div style="display: flex; gap: 4px;">
                     <button type="button" (click)="$event.stopPropagation(); duplicatePassSheet()" title="Duplicar"
-                            style="padding: 4px 6px; border-radius: 4px; border: 1px solid var(--nw-border); background: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                      <lucide-icon name="copy" [strokeWidth]="1.8" style="width: 12px; height: 12px; color: #5c4a3b;"></lucide-icon>
+                      style="padding: 4px 6px; border-radius: 4px; border: 1px solid var(--nw-border); background: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                      <lucide-icon name="copy" [strokeWidth]="1.8"
+                        style="width: 12px; height: 12px; color: #5c4a3b;"></lucide-icon>
                     </button>
-                    <button *ngIf="(passDesign?.sections?.length || 0) > 1" type="button" (click)="$event.stopPropagation(); deletePassSheet(sIdx)" title="Eliminar"
-                            style="padding: 4px 6px; border-radius: 4px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                      <lucide-icon name="trash-2" [strokeWidth]="1.8" style="width: 12px; height: 12px; color: #dc2626;"></lucide-icon>
+                    <button *ngIf="(passDesign?.sections?.length || 0) > 1" type="button"
+                      (click)="$event.stopPropagation(); deletePassSheet(sIdx)" title="Eliminar"
+                      style="padding: 4px 6px; border-radius: 4px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                      <lucide-icon name="trash-2" [strokeWidth]="1.8"
+                        style="width: 12px; height: 12px; color: #dc2626;"></lucide-icon>
                     </button>
                   </div>
                 </div>
@@ -2554,12 +2727,12 @@
             <!-- Simulación y Descargas -->
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
               <button type="button" (click)="passPreviewModalOpen = true"
-                      style="width: 100%; padding: 10px; border-radius: 10px; border: 1.5px solid var(--nw-border, #eadecc); background: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                style="width: 100%; padding: 10px; border-radius: 10px; border: 1.5px solid var(--nw-border, #eadecc); background: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                 <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon>
                 <span>Vista previa completa</span>
               </button>
               <button type="button" (click)="exportPass('png')" [disabled]="passExporting"
-                      style="width: 100%; padding: 10px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--nw-accent, #c9a87c) 0%, #a8825e 100%); color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                style="width: 100%; padding: 10px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--nw-accent, #c9a87c) 0%, #a8825e 100%); color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                 <lucide-icon name="download" [strokeWidth]="1.8"></lucide-icon>
                 <span>{{ passExporting ? 'Exportando...' : 'Descargar Pase PNG' }}</span>
               </button>
@@ -2572,11 +2745,10 @@
               Haz clic en cualquier campo para insertarlo en la hoja activa con sus variables vinculadas:
             </p>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-              <button *ngFor="let field of quickPassFields"
-                      type="button"
-                      (click)="addPassQuickField(field)"
-                      style="padding: 10px 8px; border-radius: 10px; border: 1px solid var(--nw-border, #eadecc); background: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-                <lucide-icon [name]="field.lucideIcon || 'sparkles'" [strokeWidth]="1.8" style="width: 22px; height: 22px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+              <button *ngFor="let field of quickPassFields" type="button" (click)="addPassQuickField(field)"
+                style="padding: 10px 8px; border-radius: 10px; border: 1px solid var(--nw-border, #eadecc); background: #fff; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <lucide-icon [name]="field.lucideIcon || 'sparkles'" [strokeWidth]="1.8"
+                  style="width: 22px; height: 22px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
                 <strong style="font-size: 11.5px; color: var(--nw-text, #2e2621);">{{ field.label }}</strong>
                 <small style="font-size: 9.5px; color: var(--nw-text-3, #9e9083);">{{ field.sub }}</small>
               </button>
@@ -2584,18 +2756,21 @@
           </div>
 
           <!-- SUBPESTAÑA 3: FONDO DE HOJA -->
-          <div *ngIf="passSubTab === 'background' && activePassSheet" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
-              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: block; margin-bottom: 6px;">
+          <div *ngIf="passSubTab === 'background' && activePassSheet"
+            style="padding: 12px 14px; display: flex; flex-direction: column; gap: 12px;">
+            <div
+              style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
+              <label
+                style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--nw-text-3, #9e9083); display: block; margin-bottom: 6px;">
                 Color de Fondo
               </label>
               <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="color" [ngModel]="activePassSheet.background?.color || '#0b1426'"
-                       (ngModelChange)="activePassSheet.background = activePassSheet.background || { overlay: 0 }; activePassSheet.background.color = $event"
-                       style="width: 40px; height: 36px; border: none; border-radius: 8px; cursor: pointer;">
+                  (ngModelChange)="activePassSheet.background = activePassSheet.background || { overlay: 0 }; activePassSheet.background.color = $event"
+                  style="width: 40px; height: 36px; border: none; border-radius: 8px; cursor: pointer;">
                 <input type="text" [ngModel]="activePassSheet.background?.color || '#0b1426'"
-                       (ngModelChange)="activePassSheet.background = activePassSheet.background || { overlay: 0 }; activePassSheet.background.color = $event"
-                       style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--nw-border); font-family: monospace; font-size: 13px;">
+                  (ngModelChange)="activePassSheet.background = activePassSheet.background || { overlay: 0 }; activePassSheet.background.color = $event"
+                  style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--nw-border); font-family: monospace; font-size: 13px;">
               </div>
             </div>
           </div>
@@ -2849,15 +3024,21 @@
                   <div *ngSwitchCase="'selfRegister'" class="preview-form">
                     <small>{{ pluginSetting(section, 'eyebrow') || '¿Nos acompañas?' }}</small>
                     <h2>{{ section.title || 'Registro de Invitados' }}</h2>
-                    <p class="preview-intro">{{ pluginSetting(section, 'introText') || 'Ingresa tus datos para registrarte y confirmar tu asistencia en la lista oficial del evento.' }}</p>
+                    <p class="preview-intro">{{ pluginSetting(section, 'introText') || 'Ingresa tus datos para
+                      registrarte y confirmar tu asistencia en la lista oficial del evento.' }}</p>
                     <div class="preview-fields">
                       <label>Nombre completo<span>Tu nombre y apellido</span></label>
-                      <label *ngIf="pluginSetting(section, 'showPhone', true)">Teléfono / WhatsApp<span>+52 55 1234 5678</span></label>
-                      <label *ngIf="pluginSetting(section, 'showEmail', true)">Correo electrónico<span>correo@ejemplo.com</span></label>
-                      <label *ngIf="pluginSetting(section, 'showCompanions', true)">Acompañantes<span>1 persona (tú)</span></label>
-                      <label *ngIf="pluginSetting(section, 'showMessage', true)">Mensaje<span>Un mensaje para los anfitriones...</span></label>
+                      <label *ngIf="pluginSetting(section, 'showPhone', true)">Teléfono / WhatsApp<span>+52 55 1234
+                          5678</span></label>
+                      <label *ngIf="pluginSetting(section, 'showEmail', true)">Correo
+                        electrónico<span>correo@ejemplo.com</span></label>
+                      <label *ngIf="pluginSetting(section, 'showCompanions', true)">Acompañantes<span>1 persona
+                          (tú)</span></label>
+                      <label *ngIf="pluginSetting(section, 'showMessage', true)">Mensaje<span>Un mensaje para los
+                          anfitriones...</span></label>
                     </div>
-                    <i class="preview-button">{{ pluginSetting(section, 'buttonText') || 'Confirmar mi asistencia' }}</i>
+                    <i class="preview-button">{{ pluginSetting(section, 'buttonText') || 'Confirmar mi asistencia'
+                      }}</i>
                   </div>
 
                   <div *ngSwitchCase="'guestPass'" class="preview-form preview-guest-pass">
@@ -2912,7 +3093,8 @@
                     <div class="preview-upload"><b>＋</b><span>{{ pluginSetting(section, 'primaryButtonText') ||
                         'Seleccionar fotografía' }}</span></div>
                     <div *ngIf="pluginSetting(section, 'showGallery')" class="preview-gallery sample compact">
-                      <i>▧</i><i>▧</i><i>▧</i></div>
+                      <i>▧</i><i>▧</i><i>▧</i>
+                    </div>
                   </div>
 
                   <div *ngSwitchCase="'dedications'" class="preview-form">
@@ -2962,8 +3144,7 @@
           <!-- PANTALLA DE ACCESO EN VIVO (EDITOR CON CAPAS EDITABLES) -->
           <div *ngIf="editorCanvasMode === 'access'" class="section-list access-screen-section-list">
             <section class="canvas-section selected access-canvas-section"
-              [attr.data-section-id]="accessSectionProxy.id"
-              [ngStyle]="accessScreenSectionStyle()"
+              [attr.data-section-id]="accessSectionProxy.id" [ngStyle]="accessScreenSectionStyle()"
               (click)="selectSection(accessSectionProxy)">
               <div class="access-stage-bg" [ngStyle]="getAccessScreenBackgroundStyle()"></div>
               <div class="access-stage-overlay" [style.background]="getAccessScreenOverlayStyle()"></div>
@@ -2975,45 +3156,48 @@
                   Pantalla de Acceso · {{ accessSimView === 'register' ? 'Auto-registro' : 'Ingreso con NIP' }}
                 </div>
               </div>
-              <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: accessSectionProxy }"></ng-container>
+              <ng-container
+                *ngTemplateOutlet="layerSurfaceTemplate; context: { section: accessSectionProxy }"></ng-container>
             </section>
           </div>
 
           <!-- MODO 3: PASE DIGITAL VIP -->
-          <div *ngIf="editorCanvasMode === 'pass' && activePassSheet" class="section-list pass-sheet-section-list" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+          <div *ngIf="editorCanvasMode === 'pass' && activePassSheet" class="section-list pass-sheet-section-list"
+            style="display: flex; flex-direction: column; align-items: center; width: 100%;">
             <!-- Pestañas de Hojas arriba del lienzo -->
-            <div class="pass-sheets-topbar" (click)="$event.stopPropagation()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 480px; margin-bottom: 12px; padding: 6px 10px; background: rgba(0,0,0,0.04); border-radius: 12px;">
+            <div class="pass-sheets-topbar" (click)="$event.stopPropagation()"
+              style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 480px; margin-bottom: 12px; padding: 6px 10px; background: rgba(0,0,0,0.04); border-radius: 12px;">
               <div style="display: flex; gap: 6px; align-items: center; overflow-x: auto;">
-                <button *ngFor="let s of passDesign?.sections; let sIdx = index"
-                        type="button"
-                        (click)="selectPassSheet(sIdx)"
-                        [style.background]="activePassSheetIndex === sIdx ? 'var(--nw-accent, #c9a87c)' : '#fff'"
-                        [style.color]="activePassSheetIndex === sIdx ? '#fff' : 'var(--nw-text, #2e2621)'"
-                        style="padding: 5px 12px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                <button *ngFor="let s of passDesign?.sections; let sIdx = index" type="button"
+                  (click)="selectPassSheet(sIdx)"
+                  [style.background]="activePassSheetIndex === sIdx ? 'var(--nw-accent, #c9a87c)' : '#fff'"
+                  [style.color]="activePassSheetIndex === sIdx ? '#fff' : 'var(--nw-text, #2e2621)'"
+                  style="padding: 5px 12px; border-radius: 8px; border: 1px solid var(--nw-border, #eadecc); font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap;">
                   {{ s.title || ('Hoja ' + (sIdx + 1)) }}
                 </button>
                 <button type="button" (click)="addPassSheet()" title="Agregar nueva hoja (ej. Reverso)"
-                        style="padding: 5px 10px; border-radius: 8px; border: 1px dashed var(--nw-accent, #c9a87c); background: transparent; color: var(--nw-accent, #c9a87c); font-size: 11px; font-weight: 700; cursor: pointer;">
+                  style="padding: 5px 10px; border-radius: 8px; border: 1px dashed var(--nw-accent, #c9a87c); background: transparent; color: var(--nw-accent, #c9a87c); font-size: 11px; font-weight: 700; cursor: pointer;">
                   + Hoja
                 </button>
               </div>
-              <span style="font-size: 11px; font-weight: 700; color: var(--nw-text-3, #9e9083); background: #fff; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--nw-border, #eadecc);">
+              <span
+                style="font-size: 11px; font-weight: 700; color: var(--nw-text-3, #9e9083); background: #fff; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--nw-border, #eadecc);">
                 {{ getPassSheetWidth(activePassSheet) }} × {{ getPassSheetHeight(activePassSheet) }} px
               </span>
             </div>
 
-            <section class="canvas-section selected pass-canvas-section"
-              [attr.data-section-id]="activePassSheet.id"
-              [ngStyle]="passSheetSectionStyle(activePassSheet)"
-              (click)="selectSection(activePassSheet)">
+            <section class="canvas-section selected pass-canvas-section" [attr.data-section-id]="activePassSheet.id"
+              [ngStyle]="passSheetSectionStyle(activePassSheet)" (click)="selectSection(activePassSheet)">
               <div class="pass-stage-bg" [ngStyle]="getPassSheetBackgroundStyle(activePassSheet)"></div>
               <div class="section-top-toolbar" (click)="$event.stopPropagation()">
                 <div class="section-label" (click)="selectSection(activePassSheet)">
-                  <lucide-icon name="ticket" [strokeWidth]="1.8" style="width: 14px; height: 14px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></lucide-icon>
+                  <lucide-icon name="ticket" [strokeWidth]="1.8"
+                    style="width: 14px; height: 14px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></lucide-icon>
                   <span>Pase VIP · {{ activePassSheet.title || ('Hoja ' + (activePassSheetIndex + 1)) }}</span>
                 </div>
               </div>
-              <ng-container *ngTemplateOutlet="layerSurfaceTemplate; context: { section: activePassSheet }"></ng-container>
+              <ng-container
+                *ngTemplateOutlet="layerSurfaceTemplate; context: { section: activePassSheet }"></ng-container>
             </section>
           </div>
 
@@ -3117,10 +3301,10 @@
 
                     <!-- Emblema / Logo Central -->
                     <div *ngIf="layer.style?.qrCenterLogo && layer.style?.qrCenterLogo !== 'none'"
-                      class="styled-qr-center-badge"
-                      [style.backgroundColor]="layer.style?.qrCenterLogoBg || '#ffffff'"
+                      class="styled-qr-center-badge" [style.backgroundColor]="layer.style?.qrCenterLogoBg || '#ffffff'"
                       [style.borderColor]="layer.style?.qrBgColor || '#ffffff'">
-                      <span *ngIf="getQrLogoIcon(layer.style?.qrCenterLogo) as qrIcon" class="qr-badge-icon">{{ qrIcon }}</span>
+                      <span *ngIf="getQrLogoIcon(layer.style?.qrCenterLogo) as qrIcon" class="qr-badge-icon">{{ qrIcon
+                        }}</span>
                       <span *ngIf="layer.style?.qrCenterLogo === 'monogram'" class="qr-badge-monogram"
                         [style.color]="layer.style?.qrFrameColor || layer.style?.qrColor || '#1c1917'">
                         {{ layer.style?.qrCenterLogoText || 'VIP' }}
@@ -3139,9 +3323,9 @@
                 </div>
 
                 <!-- IMAGEN NORMAL -->
-                <div *ngIf="layer.type === 'image' && !isQrLayer(layer) && boundImageUrl(layer) as imageUrl" class="image-frame"
-                  [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id"
-                  (dblclick)="startImageCrop($event, section, layer)"
+                <div *ngIf="layer.type === 'image' && !isQrLayer(layer) && boundImageUrl(layer) as imageUrl"
+                  class="image-frame" [ngStyle]="imageMaskStyle(layer)"
+                  [class.crop-active]="croppingLayerId === layer.id" (dblclick)="startImageCrop($event, section, layer)"
                   (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''"
                     [ngStyle]="imageStyle(layer)" loading="lazy" decoding="async"></div>
                 <div *ngIf="layer.type === 'image' && !boundImageUrl(layer)" class="media-placeholder frame-empty"
@@ -3161,8 +3345,7 @@
                   [presentation]="layer.style?.audioPresentation || 'native'" [autoplay]="false"
                   [loop]="!!layer.style?.audioLoop" [volume]="layer.style?.audioVolume ?? 1"
                   [startSeconds]="layer.style?.audioStartSeconds || 0" [endSeconds]="layer.style?.audioEndSeconds"
-                  [showIcon]="layer.style?.audioShowIcon !== false"
-                  [showLabel]="layer.style?.audioShowLabel !== false"
+                  [showIcon]="layer.style?.audioShowIcon !== false" [showLabel]="layer.style?.audioShowLabel !== false"
                   [icon]="layer.style?.audioIcon || 'play'"></app-visual-media-player>
                 <div *ngIf="(layer.type === 'video' || layer.type === 'audio') && !isMediaPreviewActive(layer)"
                   class="media-editor-interaction" role="button" aria-label="Seleccionar y mover elemento multimedia"
@@ -3234,7 +3417,8 @@
             cada dispositivo</label>
           <details class="ve-context-help">
             <summary title="Ayuda sobre diseño por dispositivo" aria-label="Ayuda sobre diseño por dispositivo">
-              <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary>
+              <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon>
+            </summary>
             <p>Actívalo solo si necesitas posiciones distintas en celular, tablet y escritorio. Desde aquí puedes copiar
               una distribución a otra vista. En modo Capítulos, lo que salga de cada sección se recorta.</p>
           </details>
@@ -3344,7 +3528,8 @@
                   </select></label>
                 <details class="ve-context-help">
                   <summary title="Ayuda sobre acciones del botón" aria-label="Ayuda sobre acciones del botón">
-                    <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon></summary>
+                    <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon>
+                  </summary>
                   <p>El texto cambia lo que dice el botón; la acción define qué hace al pulsarlo. Para un sitio externo
                     elige Enlace personalizado y escribe su URL. Para ir a una función, agrégala también a la
                     invitación.</p>
@@ -3439,8 +3624,8 @@
                 <span class="qr-field-title">Estilos Rápidos</span>
                 <div class="qr-preset-chips">
                   <button *ngFor="let p of qrDesignPresets" type="button" class="qr-chip-btn"
-                    [class.active]="layer.style?.qrStylePreset === p.key"
-                    (click)="applyQrPreset(layer, p.key)" [title]="p.desc">
+                    [class.active]="layer.style?.qrStylePreset === p.key" (click)="applyQrPreset(layer, p.key)"
+                    [title]="p.desc">
                     <span class="qr-chip-dot" [style.background]="p.frameColor"></span>
                     <span>{{ p.name }}</span>
                   </button>
@@ -3462,7 +3647,8 @@
               </div>
 
               <!-- Texto del Banner -->
-              <div *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'" class="qr-inspector-group">
+              <div *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'"
+                class="qr-inspector-group">
                 <label>Texto del banner
                   <input type="text" [ngModel]="layer.style?.qrFrameText ?? '★ ESCANEAR AL ENTRAR ★'"
                     (ngModelChange)="setQrStyleProp(layer, 'qrFrameText', $event)"
@@ -3534,7 +3720,9 @@
                   <input type="color" [ngModel]="layer.style?.qrFrameColor || '#b8860b'"
                     (ngModelChange)="setQrStyleProp(layer, 'qrFrameColor', $event)">
                 </label>
-                <label *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'">Texto Banner
+                <label
+                  *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'">Texto
+                  Banner
                   <input type="color" [ngModel]="layer.style?.qrFrameTextColor || '#ffffff'"
                     (ngModelChange)="setQrStyleProp(layer, 'qrFrameTextColor', $event)">
                 </label>
@@ -3552,7 +3740,8 @@
                 (ngModelChange)="onMediaUrlChange(layer, $event)" type="url"
                 [placeholder]="layer.type === 'video' ? 'YouTube, Vimeo o archivo MP4/WebM' : (layer.type === 'audio' ? 'Spotify, YouTube o archivo MP3/WAV' : 'https://...')"></label>
             <aside *ngIf="(layer.type === 'video' || layer.type === 'audio') && layer.url" class="plugin-binding-note">
-              <strong>{{ mediaProviderLabel(layer.url) }}</strong><span>{{ mediaProviderHelp(layer) }}</span></aside>
+              <strong>{{ mediaProviderLabel(layer.url) }}</strong><span>{{ mediaProviderHelp(layer) }}</span>
+            </aside>
             <label
               *ngIf="!isQrLayer(layer) && ((layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio')">Subir
               archivo<input #layerUpload type="file"
@@ -4317,7 +4506,8 @@
                         <label>Texto introductorio
                           <textarea [ngModel]="pluginSetting(section, 'introText')"
                             (ngModelChange)="setPluginSetting(section, 'introText', $event)" rows="3"
-                            placeholder="Ingresa tus datos para registrarte en la lista oficial del evento." maxlength="250"></textarea>
+                            placeholder="Ingresa tus datos para registrarte en la lista oficial del evento."
+                            maxlength="250"></textarea>
                         </label>
                         <label>Texto del botón
                           <input [ngModel]="pluginSetting(section, 'buttonText')"
@@ -4340,7 +4530,8 @@
                           <input [ngModel]="pluginSetting(section, 'maxGuests')"
                             (ngModelChange)="setPluginSetting(section, 'maxGuests', +$event || 0)" type="number" min="0"
                             placeholder="Ej: 50 (0 = sin límite especial)">
-                          <small style="color: var(--text-secondary, #8c827a); font-size: 11px; margin-top: 4px; display: block;">
+                          <small
+                            style="color: var(--text-secondary, #8c827a); font-size: 11px; margin-top: 4px; display: block;">
                             Define un cupo para este formulario. Si se deja en 0, aplica el límite general de tu plan.
                           </small>
                         </label>
@@ -4972,42 +5163,44 @@
   </nav>
 
   <!-- Input oculto para abrir selector de fotos/galería nativo del móvil -->
-  <input
-    #mobilePhotoPicker
-    id="ve-mobile-photo-input"
-    type="file"
-    accept="image/*"
-    style="display: none;"
+  <input #mobilePhotoPicker id="ve-mobile-photo-input" type="file" accept="image/*" style="display: none;"
     (change)="onMobilePhotoSelected(mobilePhotoPicker)">
 </div>
-  <!-- Modal Vista Previa del Pase VIP -->
-  <ng-template [ngIf]="passPreviewModalOpen">
-  <div class="ve-modal-overlay" (click)="closePassPreviewModal()" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
-    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width: 540px; width: 100%; padding: 22px; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
+<!-- Modal Vista Previa del Pase VIP -->
+<ng-template [ngIf]="passPreviewModalOpen">
+  <div class="ve-modal-overlay" (click)="closePassPreviewModal()"
+    style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()"
+      style="max-width: 540px; width: 100%; padding: 22px; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e1b18; display: flex; align-items: center; gap: 8px;">
-          <lucide-icon name="eye" [strokeWidth]="1.8" style="width: 18px; height: 18px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
+        <h3
+          style="margin: 0; font-size: 17px; font-weight: 700; color: #1e1b18; display: flex; align-items: center; gap: 8px;">
+          <lucide-icon name="eye" [strokeWidth]="1.8"
+            style="width: 18px; height: 18px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
           <span>Vista Previa del Pase VIP</span>
         </h3>
-        <button type="button" class="icon-button" (click)="closePassPreviewModal()" style="border: none; background: transparent; cursor: pointer; display: flex; align-items: center;">
+        <button type="button" class="icon-button" (click)="closePassPreviewModal()"
+          style="border: none; background: transparent; cursor: pointer; display: flex; align-items: center;">
           <lucide-icon name="x" [strokeWidth]="2" style="width: 18px; height: 18px; color: #6e6157;"></lucide-icon>
         </button>
       </div>
-      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; padding: 10px 0; flex: 1;">
-        <div *ngFor="let s of passDesign?.sections; let idx = index"
-             [style.width.px]="getPassSheetWidth(s)"
-             [style.height.px]="getPassSheetHeight(s)"
-             [style.background]="s.background?.color || '#0b1426'"
-             style="position: relative; overflow: hidden; border-radius: 18px; box-shadow: 0 12px 36px rgba(0,0,0,0.25); max-width: 100%;">
+      <div
+        style="display: flex; flex-direction: column; align-items: center; gap: 16px; overflow-y: auto; padding: 10px 0; flex: 1;">
+        <div *ngFor="let s of passDesign?.sections; let idx = index" [style.width.px]="getPassSheetWidth(s)"
+          [style.height.px]="getPassSheetHeight(s)" [style.background]="s.background?.color || '#0b1426'"
+          style="position: relative; overflow: hidden; border-radius: 18px; box-shadow: 0 12px 36px rgba(0,0,0,0.25); max-width: 100%;">
           <ng-container *ngTemplateOutlet="layerSurfaceTemplate || null; context: { section: s }"></ng-container>
         </div>
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
-        <button type="button" class="primary" (click)="exportPass('png')" style="padding: 8px 16px; border-radius: 8px; border: none; background: #c9a87c; color: #fff; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+      <div
+        style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
+        <button type="button" class="primary" (click)="exportPass('png')"
+          style="padding: 8px 16px; border-radius: 8px; border: none; background: #c9a87c; color: #fff; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
           <lucide-icon name="download" [strokeWidth]="1.8" style="width: 15px; height: 15px;"></lucide-icon>
           <span>Descargar Imagen</span>
         </button>
-        <button type="button" class="secondary" (click)="closePassPreviewModal()" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer;">Cerrar</button>
+        <button type="button" class="secondary" (click)="closePassPreviewModal()"
+          style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer;">Cerrar</button>
       </div>
     </div>
   </div>
