@@ -2373,11 +2373,16 @@
             <details class="theme-editor" open *ngIf="design.accessScreen as acc">
               <summary>Configuración de NIP</summary>
               <div class="access-field-group">
-                <label class="toggle">
-                  <input type="checkbox" [(ngModel)]="acc.requirePin" (ngModelChange)="recordHistory()">
-                  <strong>Solicitar NIP / Clave de Acceso</strong>
-                </label>
-                <p class="hint">Protege tu invitación para que nadie entre solo sabiendo el teléfono o correo.</p>
+                <div class="access-switch-row">
+                  <div class="access-switch-row-text">
+                    <strong>Solicitar NIP / Clave de Acceso</strong>
+                    <small>Protege tu invitación para que nadie entre solo sabiendo el teléfono o correo.</small>
+                  </div>
+                  <label class="access-switch">
+                    <input type="checkbox" [(ngModel)]="acc.requirePin" (ngModelChange)="recordHistory()">
+                    <span class="access-switch-slider"></span>
+                  </label>
+                </div>
               </div>
 
               <div *ngIf="acc.requirePin">
@@ -2476,12 +2481,16 @@
             <details class="theme-editor" open *ngIf="design.accessScreen as acc">
               <summary>Configuración de Auto-registro</summary>
               <div class="access-field-group">
-                <label class="toggle">
-                  <input type="checkbox" [(ngModel)]="acc.allowSelfRegistration" (ngModelChange)="recordHistory()">
-                  <strong>Permitir auto-registro a invitados no registrados</strong>
-                </label>
-                <p class="hint">Muestra una opción en la pantalla de acceso para que los invitados que no estén en la
-                  lista puedan solicitar su pase.</p>
+                <div class="access-switch-row">
+                  <div class="access-switch-row-text">
+                    <strong>Permitir auto-registro</strong>
+                    <small>Muestra una opción para que invitados fuera de lista soliciten su pase.</small>
+                  </div>
+                  <label class="access-switch">
+                    <input type="checkbox" [(ngModel)]="acc.allowSelfRegistration" (ngModelChange)="recordHistory()">
+                    <span class="access-switch-slider"></span>
+                  </label>
+                </div>
               </div>
 
               <div *ngIf="acc.allowSelfRegistration">
@@ -2515,16 +2524,16 @@
                 </div>
 
                 <div class="access-field-group">
-                  <label class="toggle">
-                    <input type="checkbox" [(ngModel)]="acc.selfRegRequireApproval" (ngModelChange)="recordHistory()">
-                    <strong>Requiere aprobación del anfitrión</strong>
-                  </label>
-                  <p class="hint"
-                    style="background: rgba(197, 155, 108, 0.12); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #c59b6c; margin-top: 6px;">
-                    ℹ️ <strong>Recomendado:</strong> El invitado se guardará en tu lista con estado
-                    <strong>Pendiente</strong> y su NIP individual asignado. Podrás revisar quién es y enviarle su
-                    correo o WhatsApp con su NIP y pase con un solo clic.
-                  </p>
+                  <div class="access-switch-row">
+                    <div class="access-switch-row-text">
+                      <strong>Requiere aprobación del anfitrión</strong>
+                      <small>El invitado queda en estado Pendiente hasta que tú apruebes su acceso.</small>
+                    </div>
+                    <label class="access-switch">
+                      <input type="checkbox" [(ngModel)]="acc.selfRegRequireApproval" (ngModelChange)="recordHistory()">
+                      <span class="access-switch-slider"></span>
+                    </label>
+                  </div>
                 </div>
 
                 <div class="access-field-group">
