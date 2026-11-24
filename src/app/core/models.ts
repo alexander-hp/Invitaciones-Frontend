@@ -649,10 +649,79 @@ export interface VisualDesignTemplateModel {
   accessScreen?: VisualAccessScreenDesign | any;
   tags?: string[];
   usageCount?: number;
+  publishedEventsCount?: number;
+  pendingPayoutsCount?: number;
   likesCount?: number;
   tier?: 'free' | 'premium';
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface VisualTemplateUsageModel {
+  _id: string;
+  template: string | {
+    _id: string;
+    name: string;
+    eventType?: string;
+    thumbnailUrl?: string;
+    previewImageUrl?: string;
+    status?: string;
+    authorRewardPercent?: number;
+  };
+  templateName: string;
+  templateAuthor: string | {
+    _id: string;
+    name?: string;
+    email?: string;
+    avatarUrl?: string;
+  };
+  templateAuthorName: string;
+  event: string | {
+    _id: string;
+    title?: string;
+    type?: string;
+    date?: string;
+    plan?: string;
+    status?: string;
+  };
+  invitation: string | {
+    _id: string;
+    slug?: string;
+    status?: string;
+    publishedAt?: string;
+  };
+  eventOwner: string | {
+    _id: string;
+    name?: string;
+    email?: string;
+  };
+  invitationSlug?: string;
+  eventTitle?: string;
+  eventType?: string;
+  eventDate?: string;
+  eventPlan?: string;
+  eventPaidAmount: number;
+  currency: string;
+  rewardPercent: number;
+  rewardAmount: number;
+  isSelfUse: boolean;
+  payoutStatus: 'pending' | 'paid' | 'not_applicable';
+  payoutNote?: string;
+  paidAt?: string;
+  paidBy?: { _id: string; name?: string; email?: string } | null;
+  publishedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface VisualTemplateUsageSummary {
+  totalPublished: number;
+  pendingCount: number;
+  paidCount: number;
+  notApplicableCount: number;
+  totalPendingRewardAmount: number;
+  totalPaidRewardAmount: number;
+  currency: string;
 }
 
 export interface VisualDesignTemplatePayload {

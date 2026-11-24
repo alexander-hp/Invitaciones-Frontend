@@ -2,7 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
-import { CustomTemplateSubmission, VisualDesignTemplateModel } from '../../core/models';
+import {
+  CustomTemplateSubmission,
+  VisualDesignTemplateModel,
+  VisualTemplateUsageModel,
+  VisualTemplateUsageSummary
+} from '../../core/models';
 
 @Component({
   selector: 'app-new-custom-templates',
@@ -11,7 +16,7 @@ import { CustomTemplateSubmission, VisualDesignTemplateModel } from '../../core/
 })
 export class NewCustomTemplatesComponent implements OnInit {
   // Origen de plantillas
-  templateSource: 'visual' | 'custom' = 'visual';
+  templateSource: 'visual' | 'usages' | 'custom' = 'visual';
 
   // Configuración global de publicación automática
   autoApproveTemplates = true;
@@ -40,6 +45,26 @@ export class NewCustomTemplatesComponent implements OnInit {
   showRejectVisualModal = false;
   rejectVisualFeedback = '';
   moderatingVisual = false;
+
+  // 1.5 Eventos Publicados con Plantillas Comunitarias (Pagos / Refund 5%)
+  templateUsages: VisualTemplateUsageModel[] = [];
+  usageSummary: VisualTemplateUsageSummary = {
+    totalPublished: 0,
+    pendingCount: 0,
+    paidCount: 0,
+    notApplicableCount: 0,
+    totalPendingRewardAmount: 0,
+    totalPaidRewardAmount: 0,
+    currency: 'mxn'
+  };
+  usageFilterTab: 'all' | 'pending' | 'paid' | 'not_applicable' = 'all';
+  usageTemplateFilterId = '';
+  usageTemplateFilterName = '';
+  selectedUsage?: VisualTemplateUsageModel;
+  showPayoutModal = false;
+  payoutModalStatus: 'pending' | 'paid' | 'not_applicable' = 'paid';
+  payoutModalNote = '';
+  savingPayout = false;
 
   // 2. Plantillas de Integración (HTML / CSS Submissions)
   submissions: CustomTemplateSubmission[] = [];
@@ -76,6 +101,7 @@ export class NewCustomTemplatesComponent implements OnInit {
   ngOnInit(): void {
     this.loadSettings();
     this.loadData();
+    this.loadTemplateUsages(true);
   }
 
   loadSettings(): void {
@@ -107,19 +133,166 @@ export class NewCustomTemplatesComponent implements OnInit {
     });
   }
 
-  setTemplateSource(source: 'visual' | 'custom'): void {
+  setTemplateSource(source: 'visual' | 'usages' | 'custom'): void {
     if (this.templateSource === source) return;
     this.templateSource = source;
     this.activeTab = 'all';
+    if (source !== 'usages') {
+      this.usageTemplateFilterId = '';
+      this.usageTemplateFilterName = '';
+    }
     this.loadData();
   }
 
   loadData(): void {
     if (this.templateSource === 'visual') {
       this.loadVisualTemplates();
+    } else if (this.templateSource === 'usages') {
+      this.loadTemplateUsages(false);
     } else {
       this.loadSubmissions();
     }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GESTIÓN: EVENTOS PUBLICADOS Y PAGOS 5% A CREADORES
+  // ══════════════════════════════════════════════════
+  loadTemplateUsages(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+    }
+    this.apiService.listAdminVisualTemplateUsages({
+      payoutStatus: this.usageFilterTab === 'all' ? undefined : this.usageFilterTab,
+      search: !silent && this.searchQuery.trim() ? this.searchQuery.trim() : undefined,
+      templateId: this.usageTemplateFilterId || undefined
+    }).subscribe({
+      next: res => {
+        if (!silent || this.templateSource === 'usages') {
+          this.templateUsages = res.usages || [];
+        }
+        if (res.summary) {
+          this.usageSummary = res.summary;
+        }
+        if (!silent) {
+          this.loading = false;
+        }
+      },
+      error: err => {
+        if (!silent) {
+          this.templateUsages = [];
+          this.loading = false;
+          this.showToast(err?.error?.message || 'Error al cargar eventos publicados con plantillas.', 'error');
+        }
+      }
+    });
+  }
+
+  viewTemplateUsages(tpl: VisualDesignTemplateModel): void {
+    this.templateSource = 'usages';
+    this.usageFilterTab = 'all';
+    this.usageTemplateFilterId = tpl._id;
+    this.usageTemplateFilterName = tpl.name;
+    this.searchQuery = '';
+    this.loadTemplateUsages(false);
+  }
+
+  clearUsageTemplateFilter(): void {
+    this.usageTemplateFilterId = '';
+    this.usageTemplateFilterName = '';
+    this.loadTemplateUsages(false);
+  }
+
+  openPayoutModal(usage: VisualTemplateUsageModel, defaultStatus?: 'pending' | 'paid' | 'not_applicable'): void {
+    this.selectedUsage = usage;
+    this.payoutModalStatus = defaultStatus || (usage.payoutStatus === 'paid' ? 'paid' : 'paid');
+    this.payoutModalNote = usage.payoutNote || '';
+    this.showPayoutModal = true;
+  }
+
+  confirmPayoutUpdate(): void {
+    if (!this.selectedUsage) return;
+    this.savingPayout = true;
+    this.apiService.updateVisualTemplateUsagePayout(this.selectedUsage._id, {
+      payoutStatus: this.payoutModalStatus,
+      payoutNote: this.payoutModalNote.trim()
+    }).subscribe({
+      next: res => {
+        this.savingPayout = false;
+        this.showPayoutModal = false;
+        this.showToast(res.message || 'Estado de pago actualizado.');
+        this.loadTemplateUsages(false);
+      },
+      error: err => {
+        this.savingPayout = false;
+        this.showToast(err?.error?.message || 'Error al actualizar el estado de pago.', 'error');
+      }
+    });
+  }
+
+  formatCurrencyCents(cents?: number, currency = 'mxn'): string {
+    const amount = (Number(cents || 0) / 100);
+    const code = (currency || 'mxn').toUpperCase();
+    return `$${amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${code}`;
+  }
+
+  getPlanLabel(plan?: string): string {
+    switch (plan) {
+      case 'event_12m':
+      case 'event':
+        return 'Evento Individual';
+      case 'external_dashboard_12m':
+        return 'Dashboard Externo';
+      case 'planner_pro_monthly':
+      case 'pro':
+        return 'Planner Pro Mensual';
+      case 'planner_pro_yearly':
+        return 'Planner Pro Anual';
+      default:
+        return 'Free Demo';
+    }
+  }
+
+  getUsageAuthorName(u: VisualTemplateUsageModel): string {
+    if (u.templateAuthor && typeof u.templateAuthor === 'object' && u.templateAuthor.name) {
+      return u.templateAuthor.name;
+    }
+    return u.templateAuthorName || 'Creador de la Comunidad';
+  }
+
+  getUsageAuthorEmail(u: VisualTemplateUsageModel): string {
+    if (u.templateAuthor && typeof u.templateAuthor === 'object') {
+      return u.templateAuthor.email || '';
+    }
+    return '';
+  }
+
+  getUsageHostName(u: VisualTemplateUsageModel): string {
+    if (u.eventOwner && typeof u.eventOwner === 'object' && u.eventOwner.name) {
+      return u.eventOwner.name;
+    }
+    return 'Anfitrión';
+  }
+
+  getUsageHostEmail(u: VisualTemplateUsageModel): string {
+    if (u.eventOwner && typeof u.eventOwner === 'object') {
+      return u.eventOwner.email || '';
+    }
+    return '';
+  }
+
+  getUsagePublicUrl(u: VisualTemplateUsageModel): string {
+    const slug = u.invitationSlug || (typeof u.invitation === 'object' ? u.invitation?.slug : '');
+    if (!slug) return '';
+    return `${window.location.origin}/new/i/${slug}`;
+  }
+
+  copyText(text: string, label = 'Texto'): void {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      this.showToast(`${label} copiado al portapapeles.`);
+    }).catch(() => {
+      this.showToast('No se pudo copiar automáticamente.', 'error');
+    });
   }
 
   // ══════════════════════════════════════════════════

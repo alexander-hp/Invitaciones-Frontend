@@ -1,4 +1,4 @@
-﻿import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -7043,7 +7043,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
     // Register template usage on backend for author reward commission
     if (template._id && !template._id.startsWith('seed-') && !COMPLETE_DESIGN_PRESETS.some((p) => p.key === template._id)) {
-      this.api.useVisualDesignTemplate(template._id).subscribe({
+      this.api.useVisualDesignTemplate(template._id, {
+        invitationId: this.invitation?._id,
+        eventId: this.event?._id
+      }).subscribe({
         next: (res) => {
           if (res.rewardNotice) {
             console.log('[Template Reward Notice]:', res.rewardNotice);

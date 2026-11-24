@@ -74,6 +74,8 @@ import {
   VisualDesignTemplateModel,
   VisualDesignTemplatePayload,
   VisualDesignRevisionModel,
+  VisualTemplateUsageModel,
+  VisualTemplateUsageSummary,
   User,
   WhatsAppBulkResponse,
   WhatsAppMediaInspection,
@@ -106,10 +108,13 @@ export class ApiService {
     );
   }
 
-  useVisualDesignTemplate(id: string): Observable<{ template: VisualDesignTemplateModel; rewardNotice?: string }> {
+  useVisualDesignTemplate(
+    id: string,
+    context?: { invitationId?: string; eventId?: string }
+  ): Observable<{ template: VisualDesignTemplateModel; rewardNotice?: string }> {
     return this.http.post<{ template: VisualDesignTemplateModel; rewardNotice?: string }>(
       `${this.apiUrl}/visual-design-templates/${id}/use`,
-      {}
+      context || {}
     );
   }
 
@@ -144,6 +149,27 @@ export class ApiService {
   updateVisualTemplateModeration(id: string, payload: { status: 'pending' | 'published' | 'featured' | 'rejected' | 'draft'; adminFeedback?: string }): Observable<{ template: VisualDesignTemplateModel; message: string }> {
     return this.http.patch<{ template: VisualDesignTemplateModel; message: string }>(
       `${this.apiUrl}/visual-design-templates/admin/${id}/status`,
+      payload
+    );
+  }
+
+  listAdminVisualTemplateUsages(params?: { payoutStatus?: string; search?: string; templateId?: string }): Observable<{ usages: VisualTemplateUsageModel[]; summary: VisualTemplateUsageSummary; total: number }> {
+    let httpParams = new HttpParams();
+    if (params?.payoutStatus) httpParams = httpParams.set('payoutStatus', params.payoutStatus);
+    if (params?.search) httpParams = httpParams.set('search', params.search);
+    if (params?.templateId) httpParams = httpParams.set('templateId', params.templateId);
+    return this.http.get<{ usages: VisualTemplateUsageModel[]; summary: VisualTemplateUsageSummary; total: number }>(
+      `${this.apiUrl}/visual-design-templates/admin/usages`,
+      { params: httpParams }
+    );
+  }
+
+  updateVisualTemplateUsagePayout(
+    usageId: string,
+    payload: { payoutStatus: 'pending' | 'paid' | 'not_applicable'; payoutNote?: string }
+  ): Observable<{ usage: VisualTemplateUsageModel; message: string }> {
+    return this.http.patch<{ usage: VisualTemplateUsageModel; message: string }>(
+      `${this.apiUrl}/visual-design-templates/admin/usages/${usageId}/payout`,
       payload
     );
   }

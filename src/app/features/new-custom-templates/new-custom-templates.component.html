@@ -89,31 +89,65 @@
     </div>
 
     <!-- SELECTOR DE ORIGEN DE PLANTILLA -->
-    <div class="template-source-tabs" style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--nw-border); padding-bottom:12px;">
-      <button type="button" class="source-tab-btn" [class.active]="templateSource === 'visual'" (click)="setTemplateSource('visual')">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-        </svg>
-        <div>
-          <strong>Plantillas Comunitarias (3 en 1)</strong>
-          <small>Diseños del editor: Invitación + Pase VIP + Pantalla de Acceso ({{ visualCounts.total }})</small>
+    <div class="template-source-nav">
+      <!-- Pestaña 1: Plantillas Comunitarias (3 en 1) -->
+      <button type="button" class="source-nav-card" [class.active]="templateSource === 'visual'" (click)="setTemplateSource('visual')">
+        <div class="source-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+          </svg>
+        </div>
+        <div class="source-nav-content">
+          <div class="source-nav-title-row">
+            <span class="source-nav-title">Plantillas Comunitarias</span>
+            <span class="source-nav-count">{{ visualCounts.total }}</span>
+          </div>
+          <span class="source-nav-desc">Editor 3 en 1: Invitación + Pase VIP + Acceso</span>
         </div>
       </button>
 
-      <button type="button" class="source-tab-btn" [class.active]="templateSource === 'custom'" (click)="setTemplateSource('custom')">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="16 18 22 12 16 6"></polyline>
-          <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
-        <div>
-          <strong>Plantillas de Integración (HTML / CSS)</strong>
-          <small>Páginas externas y hosting de código personalizado ({{ customCounts.total }})</small>
+      <!-- Pestaña 2: Eventos Publicados & Pagos (5%) -->
+      <button type="button" class="source-nav-card" [class.active]="templateSource === 'usages'" (click)="setTemplateSource('usages')">
+        <div class="source-nav-icon icon-gold">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <div class="source-nav-content">
+          <div class="source-nav-title-row">
+            <span class="source-nav-title">Eventos &amp; Pagos (5%)</span>
+            <div class="source-nav-badges">
+              <span *ngIf="usageSummary.pendingCount > 0" class="source-nav-badge-pending">
+                {{ usageSummary.pendingCount }} por pagar
+              </span>
+              <span class="source-nav-count">{{ usageSummary.totalPublished }}</span>
+            </div>
+          </div>
+          <span class="source-nav-desc">Eventos publicados con plantillas y reembolsos</span>
+        </div>
+      </button>
+
+      <!-- Pestaña 3: Plantillas de Integración (HTML / CSS) -->
+      <button type="button" class="source-nav-card" [class.active]="templateSource === 'custom'" (click)="setTemplateSource('custom')">
+        <div class="source-nav-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </div>
+        <div class="source-nav-content">
+          <div class="source-nav-title-row">
+            <span class="source-nav-title">Integración Externa</span>
+            <span class="source-nav-count">{{ customCounts.total }}</span>
+          </div>
+          <span class="source-nav-desc">Páginas HTML / CSS y hosting de código</span>
         </div>
       </button>
     </div>
 
-    <!-- MÉTRICAS SUPERIORES -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px; margin-bottom:24px;">
+    <!-- MÉTRICAS SUPERIORES (Plantillas Visuales y Custom) -->
+    <div *ngIf="templateSource !== 'usages'" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px; margin-bottom:24px;">
       <!-- Total -->
       <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid var(--nw-accent); cursor:pointer;" (click)="activeTab = 'all'">
         <div style="width:42px; height:42px; border-radius:10px; background:rgba(197, 155, 108, 0.15); display:flex; align-items:center; justify-content:center; color:var(--nw-accent);">
@@ -196,8 +230,8 @@
       </div>
     </div>
 
-    <!-- CONTROLES Y FILTROS -->
-    <div class="nw-card" style="padding:14px 18px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+    <!-- CONTROLES Y FILTROS (Plantillas Visuales y Custom) -->
+    <div *ngIf="templateSource !== 'usages'" class="nw-card" style="padding:14px 18px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
       <!-- Pestañas de Estado -->
       <div class="nw-tab-group" style="display:flex; gap:6px; flex-wrap:wrap;">
         <button type="button" class="nw-btn nw-btn-sm"
@@ -306,6 +340,8 @@
                   <span>·</span>
                   <span><strong>Usos:</strong> {{ tpl.usageCount || 0 }}</span>
                   <span>·</span>
+                  <span><strong>Eventos publicados:</strong> {{ tpl.publishedEventsCount || 0 }}</span>
+                  <span>·</span>
                   <span><strong>Fecha:</strong> {{ tpl.createdAt | date:'medium' }}</span>
                 </div>
 
@@ -357,6 +393,13 @@
                   <span>Previsualizar</span>
                 </button>
 
+                <!-- Ver Eventos Publicados con esta Plantilla -->
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="viewTemplateUsages(tpl)" style="display:inline-flex; align-items:center; gap:5px;"
+                        title="Ver eventos publicados que usaron esta plantilla">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>Eventos ({{ tpl.publishedEventsCount || 0 }})</span>
+                </button>
+
                 <!-- Aprobar / Publicar (si no está publicada) -->
                 <button *ngIf="tpl.status === 'pending' || tpl.status === 'rejected'" type="button"
                         class="nw-btn nw-btn-primary nw-btn-sm" [disabled]="moderatingVisual"
@@ -397,6 +440,225 @@
           </div>
         </div>
       </div>
+    </ng-container>
+
+    <!-- ======================================================== -->
+    <!-- SECCIÓN C: EVENTOS PUBLICADOS Y PAGOS 5% A CREADORES     -->
+    <!-- ======================================================== -->
+    <ng-container *ngIf="templateSource === 'usages'">
+      <!-- Métricas de Recompensas 5% -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px;">
+        <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid var(--nw-accent); cursor:pointer;"
+             (click)="usageFilterTab = 'all'; loadTemplateUsages(false)">
+          <div style="width:42px; height:42px; border-radius:10px; background:rgba(197, 155, 108, 0.15); display:flex; align-items:center; justify-content:center; color:var(--nw-accent);">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <div>
+            <span style="font-size:11.5px; font-weight:600; color:var(--nw-text-3); text-transform:uppercase; letter-spacing:0.05em;">Eventos Publicados</span>
+            <div style="font-size:24px; font-weight:800; color:var(--nw-text); line-height:1.2;">{{ usageSummary.totalPublished }}</div>
+          </div>
+        </div>
+
+        <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #eab308; cursor:pointer;"
+             (click)="usageFilterTab = 'pending'; loadTemplateUsages(false)">
+          <div style="width:42px; height:42px; border-radius:10px; background:rgba(234, 179, 8, 0.15); display:flex; align-items:center; justify-content:center; color:#b45309;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div>
+            <span style="font-size:11.5px; font-weight:600; color:#b45309; text-transform:uppercase; letter-spacing:0.05em;">Pendientes de Pago ({{ usageSummary.pendingCount }})</span>
+            <div style="font-size:20px; font-weight:800; color:#b45309; line-height:1.2;">{{ formatCurrencyCents(usageSummary.totalPendingRewardAmount, usageSummary.currency) }}</div>
+          </div>
+        </div>
+
+        <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #22c55e; cursor:pointer;"
+             (click)="usageFilterTab = 'paid'; loadTemplateUsages(false)">
+          <div style="width:42px; height:42px; border-radius:10px; background:rgba(34, 197, 94, 0.15); display:flex; align-items:center; justify-content:center; color:#16a34a;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <div>
+            <span style="font-size:11.5px; font-weight:600; color:#16a34a; text-transform:uppercase; letter-spacing:0.05em;">Pagado a Creadores ({{ usageSummary.paidCount }})</span>
+            <div style="font-size:20px; font-weight:800; color:#16a34a; line-height:1.2;">{{ formatCurrencyCents(usageSummary.totalPaidRewardAmount, usageSummary.currency) }}</div>
+          </div>
+        </div>
+
+        <div class="nw-card" style="padding:18px; display:flex; align-items:center; gap:14px; border-left:4px solid #64748b; cursor:pointer;"
+             (click)="usageFilterTab = 'not_applicable'; loadTemplateUsages(false)">
+          <div style="width:42px; height:42px; border-radius:10px; background:rgba(100, 116, 139, 0.14); display:flex; align-items:center; justify-content:center; color:#475569;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+          </div>
+          <div>
+            <span style="font-size:11.5px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.05em;">Auto-uso / No Aplica</span>
+            <div style="font-size:24px; font-weight:800; color:#475569; line-height:1.2;">{{ usageSummary.notApplicableCount }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros y Buscador de Eventos Publicados -->
+      <div class="nw-card" style="padding:14px 18px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div class="nw-tab-group" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="nw-btn nw-btn-sm"
+            [class.nw-btn-primary]="usageFilterTab === 'all'"
+            [class.nw-btn-ghost]="usageFilterTab !== 'all'"
+            (click)="usageFilterTab = 'all'; loadTemplateUsages(false)">
+            Todos ({{ usageSummary.totalPublished }})
+          </button>
+          <button type="button" class="nw-btn nw-btn-sm"
+            [class.nw-btn-primary]="usageFilterTab === 'pending'"
+            [class.nw-btn-ghost]="usageFilterTab !== 'pending'"
+            (click)="usageFilterTab = 'pending'; loadTemplateUsages(false)" style="display:inline-flex; align-items:center; gap:5px;">
+            <span>Pendientes de Pago</span>
+            <span *ngIf="usageSummary.pendingCount > 0" class="badge-count">{{ usageSummary.pendingCount }}</span>
+          </button>
+          <button type="button" class="nw-btn nw-btn-sm"
+            [class.nw-btn-primary]="usageFilterTab === 'paid'"
+            [class.nw-btn-ghost]="usageFilterTab !== 'paid'"
+            (click)="usageFilterTab = 'paid'; loadTemplateUsages(false)">
+            Pagados ({{ usageSummary.paidCount }})
+          </button>
+          <button type="button" class="nw-btn nw-btn-sm"
+            [class.nw-btn-primary]="usageFilterTab === 'not_applicable'"
+            [class.nw-btn-ghost]="usageFilterTab !== 'not_applicable'"
+            (click)="usageFilterTab = 'not_applicable'; loadTemplateUsages(false)">
+            No Aplica ({{ usageSummary.notApplicableCount }})
+          </button>
+
+          <span *ngIf="usageTemplateFilterId" class="nw-pill accent" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; margin-left:6px;">
+            <span>Plantilla: {{ usageTemplateFilterName }}</span>
+            <button type="button" (click)="clearUsageTemplateFilter()" style="background:none; border:none; color:inherit; cursor:pointer; font-weight:800; padding:0 2px;">✕</button>
+          </span>
+        </div>
+
+        <div style="position:relative; width:100%; max-width:340px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--nw-text-3);">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input class="nw-input" [(ngModel)]="searchQuery" (ngModelChange)="loadTemplateUsages(false)"
+                 placeholder="Buscar por evento, creador, correo o plantilla..." style="padding-left:36px; height:38px; font-size:13px; width:100%;">
+        </div>
+      </div>
+
+      <!-- Lista de Eventos Publicados -->
+      <ng-container *ngIf="!loading">
+        <div *ngIf="templateUsages.length === 0" class="nw-card" style="padding:48px 20px; text-align:center;">
+          <div style="width:56px; height:56px; border-radius:50%; background:var(--nw-surface-2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--nw-text-3);">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+          <h3 style="margin:0 0 6px; font-size:17px; font-weight:700; color:var(--nw-text);">Aún no hay eventos publicados con plantillas comunitarias</h3>
+          <p style="margin:0; font-size:13.5px; color:var(--nw-text-2); max-width:560px; margin-left:auto; margin-right:auto;">
+            Cada vez que un usuario aplique una plantilla comunitaria en el editor visual y publique su invitación, aparecerá automáticamente aquí con los datos del creador beneficiario y el cálculo del 5% de reembolso.
+          </p>
+        </div>
+
+        <div *ngIf="templateUsages.length > 0" style="display:flex; flex-direction:column; gap:14px;">
+          <div *ngFor="let u of templateUsages" class="nw-card submission-card usage-card" style="padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:18px;">
+              <!-- Izquierda: Evento + Plantilla + Beneficiario -->
+              <div style="flex:1; min-width:300px; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <h3 style="margin:0; font-size:17px; font-weight:800; color:var(--nw-text);">{{ u.eventTitle || 'Evento sin título' }}</h3>
+                  <span class="nw-pill" style="font-size:11px; text-transform:uppercase;">{{ u.eventType || 'evento' }}</span>
+                  <span class="nw-pill" [class.success]="u.eventPaidAmount > 0" style="font-size:11px; font-weight:700;">
+                    {{ getPlanLabel(u.eventPlan) }} · {{ u.eventPaidAmount > 0 ? formatCurrencyCents(u.eventPaidAmount, u.currency) : 'Sin pago aún' }}
+                  </span>
+                  <span *ngIf="u.isSelfUse" class="nw-pill" style="font-size:10.5px; background:rgba(100,116,139,0.14); color:#475569;">
+                    Auto-uso del creador
+                  </span>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:12.5px; color:var(--nw-text-2);">
+                  <span><strong>Plantilla usada:</strong> {{ u.templateName }}</span>
+                  <span>·</span>
+                  <span><strong>Publicado:</strong> {{ u.publishedAt | date:'medium' }}</span>
+                  <ng-container *ngIf="u.eventDate">
+                    <span>·</span>
+                    <span><strong>Fecha evento:</strong> {{ u.eventDate | date:'mediumDate' }}</span>
+                  </ng-container>
+                </div>
+
+                <!-- Grid de Personas: Creador (A quién se le paga) vs Anfitrión -->
+                <div class="usage-meta-grid">
+                  <div class="usage-beneficiary-box">
+                    <div style="font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:#a17812; margin-bottom:4px;">
+                      Beneficiario a Pagar ({{ u.rewardPercent || 5 }}%)
+                    </div>
+                    <div style="font-size:14px; font-weight:800; color:var(--nw-text);">{{ getUsageAuthorName(u) }}</div>
+                    <div *ngIf="getUsageAuthorEmail(u)" style="display:flex; align-items:center; gap:6px; margin-top:3px; flex-wrap:wrap;">
+                      <span style="font-size:12.5px; color:var(--nw-text-2); font-family:monospace;">{{ getUsageAuthorEmail(u) }}</span>
+                      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="padding:2px 8px; font-size:11px;"
+                              (click)="copyText(getUsageAuthorEmail(u), 'Correo del creador')">
+                        Copiar correo
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="usage-host-box">
+                    <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--nw-text-3); margin-bottom:4px;">
+                      Anfitrión que Publicó el Evento
+                    </div>
+                    <div style="font-size:13.5px; font-weight:700; color:var(--nw-text);">{{ getUsageHostName(u) }}</div>
+                    <div *ngIf="getUsageHostEmail(u)" style="font-size:12px; color:var(--nw-text-2); margin-top:2px;">{{ getUsageHostEmail(u) }}</div>
+                    <div *ngIf="getUsagePublicUrl(u)" style="display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                      <a [href]="getUsagePublicUrl(u)" target="_blank" style="font-size:11.5px; color:var(--nw-accent); font-weight:700; text-decoration:none;">
+                        Abrir invitación ↗
+                      </a>
+                      <span style="color:var(--nw-border);">|</span>
+                      <button type="button" (click)="copyText(getUsagePublicUrl(u), 'Enlace del evento')"
+                              style="background:none; border:none; padding:0; font-size:11.5px; color:var(--nw-text-2); cursor:pointer; text-decoration:underline;">
+                        Copiar enlace
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="u.payoutNote" style="font-size:12px; color:var(--nw-text-2); background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:8px; padding:8px 12px;">
+                  <strong>Referencia / Nota de pago:</strong> {{ u.payoutNote }}
+                  <span *ngIf="u.paidAt" style="color:var(--nw-text-3);"> · Registrado el {{ u.paidAt | date:'medium' }}</span>
+                </div>
+              </div>
+
+              <!-- Derecha: Monto 5% + Estado + Acción -->
+              <div class="usage-reward-box">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--nw-text-3);">
+                  Reembolso ({{ u.rewardPercent || 5 }}%)
+                </div>
+                <div style="font-size:24px; font-weight:800; line-height:1.15; margin:4px 0 8px;"
+                     [style.color]="u.payoutStatus === 'paid' ? '#16a34a' : (u.payoutStatus === 'pending' ? '#b45309' : '#64748b')">
+                  {{ formatCurrencyCents(u.rewardAmount, u.currency) }}
+                </div>
+
+                <div style="margin-bottom:12px;">
+                  <span *ngIf="u.payoutStatus === 'pending'" class="nw-pill warning" style="font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+                    <span class="pulsing-dot-amber"></span> Pendiente de Pago
+                  </span>
+                  <span *ngIf="u.payoutStatus === 'paid'" class="nw-pill success" style="font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:5px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Pagado
+                  </span>
+                  <span *ngIf="u.payoutStatus === 'not_applicable'" class="nw-pill" style="font-weight:600; font-size:12px;">
+                    No Aplica
+                  </span>
+                </div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                  <button *ngIf="u.payoutStatus !== 'paid'" type="button"
+                          class="nw-btn nw-btn-primary nw-btn-sm"
+                          style="background:#16a34a; border-color:#16a34a;"
+                          (click)="openPayoutModal(u, 'paid')">
+                    Marcar como Pagado
+                  </button>
+                  <button *ngIf="u.payoutStatus === 'paid'" type="button"
+                          class="nw-btn nw-btn-secondary nw-btn-sm"
+                          (click)="openPayoutModal(u, 'paid')">
+                    Editar Referencia
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
     </ng-container>
 
     <!-- ======================================================== -->
@@ -786,6 +1048,55 @@
       <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
         <button type="button" class="nw-btn nw-btn-secondary" (click)="showEditModal = false">Cancelar</button>
         <button type="button" class="nw-btn nw-btn-primary" [disabled]="savingEdit" (click)="saveEdit()">Guardar Cambios</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: REGISTRAR / ACTUALIZAR PAGO 5% A CREADOR          -->
+  <!-- ======================================================== -->
+  <div class="ve-modal-overlay" *ngIf="showPayoutModal && selectedUsage" (click)="showPayoutModal = false">
+    <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width:520px; width:100%;">
+      <header class="modal-header">
+        <div>
+          <span class="nw-pill gold" style="font-size:10.5px; font-weight:700;">Control de Pagos 5%</span>
+          <h2 style="margin:4px 0 0; font-size:18px; font-weight:800; color:var(--nw-text);">Gestionar Reembolso al Creador</h2>
+        </div>
+        <button type="button" class="icon-close-btn" (click)="showPayoutModal = false">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </header>
+      <div style="padding:18px 24px; display:flex; flex-direction:column; gap:14px;">
+        <div style="background:var(--nw-surface-2); border:1px solid var(--nw-border); border-radius:10px; padding:12px 14px; font-size:13px;">
+          <div><strong>Evento:</strong> {{ selectedUsage.eventTitle }}</div>
+          <div><strong>Plantilla:</strong> {{ selectedUsage.templateName }}</div>
+          <div><strong>Creador a pagar:</strong> {{ getUsageAuthorName(selectedUsage) }} <span *ngIf="getUsageAuthorEmail(selectedUsage)">({{ getUsageAuthorEmail(selectedUsage) }})</span></div>
+          <div style="margin-top:6px; font-size:15px; font-weight:800; color:#16a34a;">
+            Monto {{ selectedUsage.rewardPercent || 5 }}%: {{ formatCurrencyCents(selectedUsage.rewardAmount, selectedUsage.currency) }}
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px; color:var(--nw-text);">Estado del pago</label>
+          <select class="nw-input" [(ngModel)]="payoutModalStatus" style="width:100%; height:40px; font-size:13px;">
+            <option value="paid">Pagado (Reembolso / Comisión liquidada)</option>
+            <option value="pending">Pendiente de Pago</option>
+            <option value="not_applicable">No Aplica (Auto-uso / Evento cancelado)</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:6px; color:var(--nw-text);">Referencia de pago o nota (opcional)</label>
+          <textarea class="nw-input" [(ngModel)]="payoutModalNote" rows="3" style="width:100%; padding:10px; font-size:12.5px;"
+                    placeholder="Ej. Transferencia SPEI #123456, Stripe refund re_xxx, o fecha de liquidación..."></textarea>
+        </div>
+      </div>
+      <footer class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="nw-btn nw-btn-secondary" (click)="showPayoutModal = false">Cancelar</button>
+        <button type="button" class="nw-btn nw-btn-primary" [disabled]="savingPayout" (click)="confirmPayoutUpdate()"
+                style="background:#16a34a; border-color:#16a34a;">
+          {{ savingPayout ? 'Guardando...' : 'Guardar Estado' }}
+        </button>
       </footer>
     </div>
   </div>
