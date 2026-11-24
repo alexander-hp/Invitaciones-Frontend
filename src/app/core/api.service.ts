@@ -90,7 +90,7 @@ import {
 export class ApiService {
   readonly apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   listVisualDesignTemplates(): Observable<{ templates: VisualDesignTemplateModel[] }> {
     return this.http.get<{ templates: VisualDesignTemplateModel[] }>(`${this.apiUrl}/visual-design-templates`);
@@ -831,7 +831,7 @@ export class ApiService {
   public saveLocalCustomSubmissions(list: CustomTemplateSubmission[]): void {
     try {
       localStorage.setItem('kyndra_custom_template_submissions', JSON.stringify(list));
-    } catch {}
+    } catch { }
   }
 
   listCustomTemplateSubmissions(status?: string): Observable<{ submissions: CustomTemplateSubmission[] }> {
@@ -1181,18 +1181,20 @@ export class ApiService {
   }> {
     const trimmed = mapUrl.trim();
     if (!trimmed) return {};
-    const response = await this.http.post<{ location: {
-      name?: string;
-      address?: string;
-      type?: string;
-      lat?: number;
-      lon?: number;
-      mapUrl?: string;
-      wazeUrl?: string;
-      phone?: string;
-      websiteUrl?: string;
-      schedule?: string[];
-    } }>(
+    const response = await this.http.post<{
+      location: {
+        name?: string;
+        address?: string;
+        type?: string;
+        lat?: number;
+        lon?: number;
+        mapUrl?: string;
+        wazeUrl?: string;
+        phone?: string;
+        websiteUrl?: string;
+        schedule?: string[];
+      }
+    }>(
       `${this.apiUrl}/locations/inspect-map-url`,
       { url: trimmed }
     ).toPromise();
