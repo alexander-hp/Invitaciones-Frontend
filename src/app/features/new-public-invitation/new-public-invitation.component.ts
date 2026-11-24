@@ -1831,16 +1831,22 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   get accessSurfaceDimensionsStyle(): Record<string, string> {
     const dev = this.currentDevice;
+    const isIndependent = this.accessGateData?.responsiveMode === 'independent' ||
+      (this.accessScreenDesign as any)?.responsiveMode === 'independent' ||
+      this.invitation?.content?.visualDesign?.responsiveMode === 'independent';
+    const hasIndependentDesktopLayout = isIndependent && Boolean(
+      this.effectiveAccessDesign?.layers?.some((l) => Boolean(l.layouts?.desktop))
+    );
     if (dev === 'desktop') {
       return {
-        'max-width': '1180px',
-        'height': '800px'
+        'max-width': hasIndependentDesktopLayout ? '1180px' : '460px',
+        'height': '780px'
       };
     }
     if (dev === 'tablet') {
       return {
-        'max-width': '768px',
-        'height': '920px'
+        'max-width': hasIndependentDesktopLayout ? '768px' : '460px',
+        'height': '780px'
       };
     }
     return {

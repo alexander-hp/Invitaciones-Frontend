@@ -1,4 +1,5 @@
 import { VisualAccessScreenDesign, VisualInvitationLayer } from './models';
+import { ACCESS_SCREEN_TEMPLATES } from './access-screen-templates';
 
 export interface TemplateAccessScreenTheme {
   backgroundType: 'color' | 'gradient' | 'image';
@@ -1803,7 +1804,7 @@ export function isLegacyOrMismatchedAccessScreen(
   if (acc.templateKey) {
     const recognized = TEMPLATE_ACCESS_PRESETS.some(
       p => p.templateId === acc.templateKey || p.aliases.some(a => a.toLowerCase() === acc.templateKey?.toLowerCase())
-    );
+    ) || ACCESS_SCREEN_TEMPLATES.some(t => t.key === acc.templateKey);
     if (recognized) {
       return false;
     }

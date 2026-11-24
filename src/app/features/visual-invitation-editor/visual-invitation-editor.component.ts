@@ -13,6 +13,7 @@ import {
   VisualInvitationSection, VisualLayerType, VisualPluginPartDesign, WebImageSearchResult
 } from '../../core/models';
 import { applyTemplateAccessPreset, getTemplateAccessPreset, isLegacyOrMismatchedAccessScreen } from '../../core/template-access-presets';
+import { ACCESS_SCREEN_TEMPLATES, buildAccessTemplateLayers, buildSelfRegTemplateLayers, getAccessScreenTemplateByKey } from '../../core/access-screen-templates';
 import { normalizeMediaUrl } from '../../core/utils/media-url';
 import { resolveVisualTemplateText, VISUAL_TEMPLATE_VARIABLES, visualTemplateContext } from '../../core/visual-template-bindings';
 import { generateTemplateHtml, TemplateData } from '../new-invitation-editor/modals/visual-template-text-editor-modal/template-html-generator';
@@ -200,258 +201,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   accessSimMessage = '';
   accessPresetCategory: string = 'all';
   showAccessStylesModal: boolean = false;
-  readonly accessPresets = [
-    {
-      key: 'glass',
-      name: 'Cristal Moderno',
-      category: 'minimal',
-      description: 'Efecto glassmorphism translúcido con desenfoque de fondo.',
-      icon: 'sparkles',
-      cardStyle: 'glass' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 85,
-      cardRadius: 20,
-      cardShadow: 'glow' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#1c2434',
-      backgroundGradient: 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)',
-      backgroundOverlayOpacity: 65,
-      backgroundBlur: 8,
-      backgroundFilter: 'none' as const,
-      backgroundVignette: false,
-      backgroundEffect: 'sparkles' as const,
-      textColor: '#1c2434',
-      accentColor: '#c59b6c',
-      buttonBgColor: '#c59b6c',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 10
-    },
-    {
-      key: 'boda-golden',
-      name: 'Boda Golden Gala',
-      category: 'wedding',
-      description: 'Golden hour cálido, destellos dorados y viñeta cinematográfica.',
-      icon: 'sparkles',
-      cardStyle: 'glass' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 92,
-      cardRadius: 22,
-      cardShadow: 'glow' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#1e1b18',
-      backgroundGradient: 'linear-gradient(135deg, #2a2015 0%, #3d2f1f 50%, #1a140d 100%)',
-      backgroundOverlayOpacity: 60,
-      backgroundBlur: 6,
-      backgroundFilter: 'golden' as const,
-      backgroundVignette: true,
-      backgroundEffect: 'sparkles' as const,
-      textColor: '#1e1b18',
-      accentColor: '#d4af37',
-      buttonBgColor: '#b8860b',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 12
-    },
-    {
-      key: 'dark-vip',
-      name: 'Dark VIP Gala',
-      category: 'wedding',
-      description: 'Fondo obsidiana con acentos dorados y tarjeta oscura lujosa.',
-      icon: 'crown',
-      cardStyle: 'bordered' as const,
-      cardBgColor: '#121824',
-      cardOpacity: 92,
-      cardRadius: 18,
-      cardShadow: 'glow' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#0a0d14',
-      backgroundGradient: 'linear-gradient(145deg, #0a0d14 0%, #161c29 50%, #06080d 100%)',
-      backgroundOverlayOpacity: 75,
-      backgroundBlur: 4,
-      backgroundFilter: 'cinematic' as const,
-      backgroundVignette: true,
-      backgroundEffect: 'none' as const,
-      textColor: '#ffffff',
-      accentColor: '#e0a96d',
-      buttonBgColor: '#e0a96d',
-      buttonTextColor: '#0a0d14',
-      buttonRadius: 8
-    },
-    {
-      key: 'gold-ivory',
-      name: 'Oro & Marfil Imperial',
-      category: 'wedding',
-      description: 'Clásico refinado, tonos marfil y champagne con tipografía serif.',
-      icon: 'gem',
-      cardStyle: 'solid' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 96,
-      cardRadius: 16,
-      cardShadow: 'elevated' as const,
-      backgroundType: 'color' as const,
-      backgroundColor: '#f7f4ee',
-      backgroundGradient: '',
-      backgroundOverlayOpacity: 30,
-      backgroundBlur: 0,
-      backgroundFilter: 'vintage' as const,
-      backgroundVignette: false,
-      backgroundEffect: 'none' as const,
-      textColor: '#2c2724',
-      accentColor: '#9d765d',
-      buttonBgColor: '#2f5348',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 8
-    },
-    {
-      key: 'romantic-floral',
-      name: 'Floral & Romance',
-      category: 'wedding',
-      description: 'Pétalos flotantes, blush suave y filtro romance cálido.',
-      icon: 'flower-2',
-      cardStyle: 'glass' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 90,
-      cardRadius: 24,
-      cardShadow: 'soft' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#fbf7f4',
-      backgroundGradient: 'linear-gradient(135deg, #f4e9e2 0%, #faede8 50%, #e8f0eb 100%)',
-      backgroundOverlayOpacity: 40,
-      backgroundBlur: 6,
-      backgroundFilter: 'warm' as const,
-      backgroundVignette: false,
-      backgroundEffect: 'petals' as const,
-      textColor: '#3d322c',
-      accentColor: '#b47b6a',
-      buttonBgColor: '#8a9a86',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 24
-    },
-    {
-      key: 'xv-fantasy',
-      name: 'XV Años Ensueño',
-      category: 'xv',
-      description: 'Noche mística con polvo de estrellas y resplandor violeta suave.',
-      icon: 'crown',
-      cardStyle: 'glass' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 92,
-      cardRadius: 22,
-      cardShadow: 'glow' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#1f132b',
-      backgroundGradient: 'linear-gradient(135deg, #2d1845 0%, #1f132b 50%, #11081a 100%)',
-      backgroundOverlayOpacity: 70,
-      backgroundBlur: 8,
-      backgroundFilter: 'moody' as const,
-      backgroundVignette: true,
-      backgroundEffect: 'starlight' as const,
-      textColor: '#ffffff',
-      accentColor: '#e879f9',
-      buttonBgColor: '#c026d3',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 14
-    },
-    {
-      key: 'baby-cherub',
-      name: 'Bautizo & Baby Pastel',
-      category: 'baby',
-      description: 'Filtro cristal nórdico con luces bokeh suaves y tonos celestes/blancos.',
-      icon: 'baby',
-      cardStyle: 'solid' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 96,
-      cardRadius: 24,
-      cardShadow: 'soft' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#e0f2fe',
-      backgroundGradient: 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #e0f7fa 100%)',
-      backgroundOverlayOpacity: 35,
-      backgroundBlur: 4,
-      backgroundFilter: 'frost' as const,
-      backgroundVignette: false,
-      backgroundEffect: 'bokeh' as const,
-      textColor: '#0369a1',
-      accentColor: '#38bdf8',
-      buttonBgColor: '#0284c7',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 20
-    },
-    {
-      key: 'botanic-emerald',
-      name: 'Jardín Esmeralda',
-      category: 'wedding',
-      description: 'Filtro botánico esmeralda profundo con luciérnagas nocturnas.',
-      icon: 'tree-pine',
-      cardStyle: 'bordered' as const,
-      cardBgColor: '#0a1d17',
-      cardOpacity: 94,
-      cardRadius: 18,
-      cardShadow: 'glow' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#064e3b',
-      backgroundGradient: 'linear-gradient(135deg, #064e3b 0%, #042f2e 50%, #022019 100%)',
-      backgroundOverlayOpacity: 75,
-      backgroundBlur: 6,
-      backgroundFilter: 'emerald' as const,
-      backgroundVignette: true,
-      backgroundEffect: 'fireflies' as const,
-      textColor: '#f0fdf4',
-      accentColor: '#34d399',
-      buttonBgColor: '#059669',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 10
-    },
-    {
-      key: 'party-neon',
-      name: 'Fiesta & Festival',
-      category: 'party',
-      description: 'Filtro atardecer cálido con luces bokeh doradas festivas.',
-      icon: 'music',
-      cardStyle: 'bordered' as const,
-      cardBgColor: '#18181b',
-      cardOpacity: 94,
-      cardRadius: 18,
-      cardShadow: 'glow' as const,
-      backgroundType: 'gradient' as const,
-      backgroundColor: '#18181b',
-      backgroundGradient: 'linear-gradient(135deg, #27272a 0%, #18181b 50%, #09090b 100%)',
-      backgroundOverlayOpacity: 70,
-      backgroundBlur: 4,
-      backgroundFilter: 'warm' as const,
-      backgroundVignette: true,
-      backgroundEffect: 'bokeh' as const,
-      textColor: '#f4f4f5',
-      accentColor: '#f59e0b',
-      buttonBgColor: '#f59e0b',
-      buttonTextColor: '#09090b',
-      buttonRadius: 10
-    },
-    {
-      key: 'minimal',
-      name: 'Minimalista Puro',
-      category: 'minimal',
-      description: 'Diseño sobrio y limpio sin tarjeta, enfocado en el mensaje.',
-      icon: 'shapes',
-      cardStyle: 'minimal' as const,
-      cardBgColor: '#ffffff',
-      cardOpacity: 0,
-      cardRadius: 0,
-      cardShadow: 'none' as const,
-      backgroundType: 'color' as const,
-      backgroundColor: '#fafafa',
-      backgroundGradient: '',
-      backgroundOverlayOpacity: 0,
-      backgroundBlur: 0,
-      backgroundFilter: 'none' as const,
-      backgroundVignette: false,
-      backgroundEffect: 'none' as const,
-      textColor: '#1a1a1a',
-      accentColor: '#1a1a1a',
-      buttonBgColor: '#1a1a1a',
-      buttonTextColor: '#ffffff',
-      buttonRadius: 6
-    }
-  ];
+  readonly accessPresets = ACCESS_SCREEN_TEMPLATES;
 
   readonly qrDesignPresets = [
     {
@@ -597,10 +347,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   ];
 
   getFilteredAccessPresets(): any[] {
-    if (!this.accessPresetCategory || this.accessPresetCategory === 'all') {
-      return this.accessPresets;
-    }
-    return this.accessPresets.filter(p => p.category === this.accessPresetCategory);
+    return this.accessPresets;
   }
 
   getQrLogoIcon(logo?: string): string {
@@ -8369,11 +8116,26 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const isMismatched = isLegacyOrMismatchedAccessScreen(acc, currentTemplateKey);
 
     if (acc.layers && acc.layers.length > 0 && !forceReset && !hasMojibake && !isOldFlatWhite && !isMissingCard && !isMismatched) {
+      const hasSelfReg = acc.layers.some(l => String(l.binding || '').startsWith('selfReg.'));
+      if (!hasSelfReg) {
+        const regLayers = buildSelfRegTemplateLayers(acc.templateKey || 'gala-imperial', acc, acc.layers.length + 1);
+        acc.layers = [...acc.layers, ...regLayers];
+      }
       return;
     }
 
     const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
+    const curated = getAccessScreenTemplateByKey(acc.templateKey);
+    if (curated) {
+      acc.layers = buildAccessTemplateLayers(curated.key, acc, evTitle);
+      return;
+    }
     applyTemplateAccessPreset(acc, currentTemplateKey, evTitle, true);
+    const hasSelfReg = (acc.layers || []).some(l => String(l.binding || '').startsWith('selfReg.'));
+    if (!hasSelfReg) {
+      const regLayers = buildSelfRegTemplateLayers('gala-imperial', acc, (acc.layers?.length || 0) + 1);
+      acc.layers = [...(acc.layers || []), ...regLayers];
+    }
   }
 
   applyCurrentTemplateAccessPreset(): void {
@@ -8385,6 +8147,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     const currentTemplateKey = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || this.invitation?.template || 'envelope-cards';
     const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
     applyTemplateAccessPreset(this.design.accessScreen, currentTemplateKey, evTitle, false);
+    const hasSelfReg = (this.design.accessScreen.layers || []).some(l => String(l.binding || '').startsWith('selfReg.'));
+    if (!hasSelfReg) {
+      const regLayers = buildSelfRegTemplateLayers('gala-imperial', this.design.accessScreen, (this.design.accessScreen.layers?.length || 0) + 1);
+      this.design.accessScreen.layers = [...(this.design.accessScreen.layers || []), ...regLayers];
+    }
     const preset = getTemplateAccessPreset(currentTemplateKey);
     this.clearLayerSelection();
     this.flash('Diseño oficial de "' + preset.name + '" aplicado a la pantalla de acceso.');
@@ -8392,12 +8159,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   resetAccessScreenLayers(): void {
+    this.initAccessScreenDesign();
+    const acc = this.design.accessScreen!;
+    const curated = getAccessScreenTemplateByKey(acc.templateKey);
+    if (curated) {
+      this.applyAccessPreset(curated.key);
+      return;
+    }
     this.recordHistory();
     this.ensureAccessScreenCanvasLayers(true);
     this.clearLayerSelection();
     const currentTemplateKey = this.invitation?.content?.sourceTemplateKey || this.invitation?.content?.template || this.invitation?.template || 'envelope-cards';
     const preset = getTemplateAccessPreset(currentTemplateKey);
     this.flash('Elementos y capas de la pantalla de acceso restablecidos (' + preset.name + ').');
+    this.cdr?.markForCheck();
+  }
+
+  resetSelfRegLayers(): void {
+    this.initAccessScreenDesign();
+    const acc = this.design.accessScreen!;
+    this.recordHistory();
+    const activeKey = getAccessScreenTemplateByKey(acc.templateKey)?.key || 'gala-imperial';
+    const existingLayers = acc.layers || [];
+    const hasCard = existingLayers.some(l => l.binding === 'access.card');
+    if (!hasCard) {
+      const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
+      acc.layers = buildAccessTemplateLayers(activeKey, acc, evTitle);
+    } else {
+      const nonSelfReg = existingLayers.filter(l => !String(l.binding || '').startsWith('selfReg.'));
+      const freshSelfReg = buildSelfRegTemplateLayers(activeKey, acc, nonSelfReg.length + 1);
+      acc.layers = [...nonSelfReg, ...freshSelfReg];
+    }
+    this.accessSimView = 'register';
+    this.clearLayerSelection();
+    this.flash('Formulario de auto-registro restablecido con todos sus campos.');
     this.cdr?.markForCheck();
   }
 
@@ -8605,14 +8400,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   applyAccessPreset(presetKey: string): void {
-    const preset = this.accessPresets.find((p) => p.key === presetKey);
+    const preset = getAccessScreenTemplateByKey(presetKey);
     if (!preset) return;
     this.initAccessScreenDesign();
     const current = this.design.accessScreen!;
     this.recordHistory();
-    this.design.accessScreen = {
+    const evTitle = (typeof this.invitation?.event === 'object' ? this.invitation.event?.title : undefined) || this.event?.title || this.invitation?.content?.headline;
+    const nextAcc: VisualAccessScreenDesign = {
       ...current,
-      templateKey: presetKey,
+      enabled: true,
+      templateKey: preset.key,
       cardStyle: preset.cardStyle,
       cardBgColor: preset.cardBgColor,
       cardOpacity: preset.cardOpacity,
@@ -8623,44 +8420,33 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: preset.backgroundGradient,
       backgroundOverlayOpacity: preset.backgroundOverlayOpacity,
       backgroundBlur: preset.backgroundBlur,
-      backgroundFilter: (preset as any).backgroundFilter || 'none',
-      backgroundVignette: !!(preset as any).backgroundVignette,
-      backgroundEffect: (preset as any).backgroundEffect || 'none',
+      backgroundFilter: preset.backgroundFilter,
+      backgroundVignette: preset.backgroundVignette,
+      backgroundEffect: preset.backgroundEffect,
       textColor: preset.textColor,
       accentColor: preset.accentColor,
       buttonBgColor: preset.buttonBgColor,
       buttonTextColor: preset.buttonTextColor,
-      buttonRadius: preset.buttonRadius
+      buttonRadius: preset.buttonRadius,
+      headingFont: preset.headingFont,
+      bodyFont: preset.bodyFont,
+      badgeText: preset.badgeText,
+      title: preset.defaultTitle,
+      subtitle: preset.defaultSubtitle,
+      inputLabel: preset.inputLabel,
+      inputPlaceholder: preset.inputPlaceholder,
+      pinInputLabel: preset.pinInputLabel,
+      pinInputPlaceholder: preset.pinInputPlaceholder,
+      buttonText: preset.buttonText,
+      selfRegTitle: preset.selfRegTitle,
+      selfRegSubtitle: preset.selfRegSubtitle,
+      selfRegButtonText: preset.selfRegButtonText
     };
-    const layers = this.design.accessScreen.layers || [];
-    const cardLayer = layers.find(l => l.binding === "access.card");
-    if (cardLayer) {
-      const isDark = (preset.cardBgColor || "").toLowerCase() === "#0f172a" || (preset.backgroundColor || "").toLowerCase() === "#1c2434" || (preset.textColor || "").toLowerCase() === "#ffffff";
-      cardLayer.style = {
-        ...(cardLayer.style || {}),
-        backgroundColor: isDark && preset.cardStyle !== "glass" ? "rgba(15, 23, 42, 0.90)" : preset.cardStyle === "glass" ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.94)",
-        borderRadius: preset.cardRadius,
-        boxShadow: preset.cardShadow === "none" ? "none" : "0 20px 45px rgba(0, 0, 0, 0.3)"
-      };
-    }
-    const btnLayer = layers.find(l => l.binding === "access.submit" || l.binding === "selfReg.submit");
-    if (btnLayer) {
-      btnLayer.style = {
-        ...(btnLayer.style || {}),
-        backgroundColor: preset.buttonBgColor,
-        color: preset.buttonTextColor,
-        borderRadius: preset.buttonRadius
-      };
-    }
-    const badgeLayer = layers.find(l => l.binding === "access.badge");
-    if (badgeLayer) {
-      badgeLayer.style = { ...(badgeLayer.style || {}), color: preset.accentColor };
-    }
-    const titleLayer = layers.find(l => l.binding === "access.title" || l.binding === "selfReg.title");
-    if (titleLayer) {
-      titleLayer.style = { ...(titleLayer.style || {}), color: preset.textColor };
-    }
-    this.flash(`Preset "${preset.name}" aplicado a la pantalla de acceso.`);
+    nextAcc.layers = buildAccessTemplateLayers(preset.key, nextAcc, evTitle);
+    this.design.accessScreen = nextAcc;
+    this.clearLayerSelection();
+    this.flash(`Diseño "${preset.name}" aplicado (Acceso y Auto-registro).`);
+    this.cdr?.markForCheck();
   }
 
   syncAccessScreenWithTheme(): void {

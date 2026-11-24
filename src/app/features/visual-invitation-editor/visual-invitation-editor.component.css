@@ -7935,3 +7935,115 @@
   color: var(--nw-accent-dark, #8a6747);
 }
 
+/* ── Cuadrícula 2x2 y vista previa miniatura para los 4 diseños completos ── */
+.access-styles-grid-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 20px 24px 28px;
+}
+
+@media (max-width: 680px) {
+  .access-styles-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.style-modal-mini-stage {
+  height: 170px;
+  padding: 18px 20px;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.style-modal-tag-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+.mini-artboard-card {
+  width: 175px;
+  padding: 12px 14px;
+  border: 1px solid rgba(197, 155, 108, 0.5);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(8px);
+}
+
+.mini-badge {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border: 1px solid;
+  border-radius: 99px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-input {
+  width: 100%;
+  height: 16px;
+  border: 1px solid;
+  border-radius: 5px;
+  opacity: 0.45;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mini-btn {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.style-modal-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(46, 37, 33, 0.08);
+}
+
+.style-includes-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.1);
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+

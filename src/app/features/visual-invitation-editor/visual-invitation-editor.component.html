@@ -615,11 +615,11 @@
       <header class="design-library-heading">
         <div class="catalog-title-col">
           <div class="catalog-eyebrow">
-            <span>Pantalla de Acceso · Estilos y Temas</span>
+            <span>4 Diseños Profesionales · Acceso + Auto-registro</span>
           </div>
-          <h1 id="accessStylesTitle">Elige un Diseño para tu Pantalla de Acceso</h1>
-          <p>Explora combinaciones de alta papelería, sobres virtuales, pases de gala y atmósferas diseñadas para
-            recibir a tus invitados.</p>
+          <h1 id="accessStylesTitle">Plantillas de Pantalla de Acceso y Auto-registro</h1>
+          <p>Cada diseño incluye todas las capas funcionales listas para usar y editar tanto en la vista de ingreso
+            como en el formulario de auto-registro.</p>
         </div>
         <div class="catalog-header-actions">
           <button type="button" class="btn-publish-from-catalog"
@@ -632,38 +632,35 @@
         </div>
       </header>
 
-      <!-- BARRA DE CATEGORÍAS -->
-      <div class="catalog-toolbar">
-        <div class="access-category-filters" style="margin: 0; padding: 4px 0;">
-          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'all'"
-            (click)="accessPresetCategory = 'all'">Todos ({{ accessPresets.length }})</button>
-          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'wedding'"
-            (click)="accessPresetCategory = 'wedding'">💍 Boda & Gala</button>
-          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'xv'"
-            (click)="accessPresetCategory = 'xv'">👑 XV Años</button>
-          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'baby'"
-            (click)="accessPresetCategory = 'baby'">👶 Bautizo & Baby</button>
-          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'party'"
-            (click)="accessPresetCategory = 'party'">🎵 Fiesta</button>
-          <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'minimal'"
-            (click)="accessPresetCategory = 'minimal'">✨ Minimal</button>
-        </div>
-      </div>
-
-      <!-- CUADRÍCULA DE DISEÑOS -->
-      <div class="access-styles-modal-grid">
-        <div *ngFor="let p of getFilteredAccessPresets()" class="access-style-modal-card"
-          [class.is-selected]="p.key === (design.accessScreen?.templateKey || 'envelope-cards')"
+      <!-- CUADRÍCULA 2x2 DE LOS 4 DISEÑOS COMPLETOS -->
+      <div class="access-styles-modal-grid access-styles-grid-4">
+        <div *ngFor="let p of accessPresets" class="access-style-modal-card"
+          [class.is-selected]="p.key === design.accessScreen?.templateKey"
           (click)="selectAccessPresetAndClose(p.key)">
-          <div class="style-modal-card-preview" [style.background]="p.backgroundColor || p.cardBgColor">
-            <span class="style-modal-card-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
-            <span *ngIf="p.key === (design.accessScreen?.templateKey || 'envelope-cards')"
+          <div class="style-modal-card-preview style-modal-mini-stage" [style.background]="p.previewBg">
+            <span class="style-modal-tag-pill">{{ p.tag }}</span>
+            <span *ngIf="p.key === design.accessScreen?.templateKey"
               class="style-modal-active-badge">✓ Aplicado</span>
+            <div class="mini-artboard-card"
+              [style.background]="p.previewCardBg"
+              [style.border-color]="p.previewAccent"
+              [style.border-radius.px]="p.cardRadius > 16 ? 12 : p.cardRadius">
+              <span class="mini-badge" [style.color]="p.previewAccent" [style.border-color]="p.previewAccent">{{ p.badgeText }}</span>
+              <span class="mini-title" [style.color]="p.previewText" [style.font-family]="p.headingFont">{{ p.defaultTitle }}</span>
+              <span class="mini-input" [style.border-color]="p.previewAccent"></span>
+              <span class="mini-btn" [style.background]="p.buttonBgColor" [style.color]="p.buttonTextColor"
+                [style.border-radius.px]="p.buttonRadius > 14 ? 14 : p.buttonRadius">{{ p.buttonText }}</span>
+            </div>
           </div>
           <div class="style-modal-card-info">
-            <strong>{{ p.name }}</strong>
+            <div class="style-modal-title-row">
+              <strong>{{ p.name }}</strong>
+            </div>
             <small>{{ p.description }}</small>
-            <span class="style-modal-card-apply">Aplicar este diseño →</span>
+            <div class="style-modal-card-footer">
+              <span class="style-includes-pill">✓ Acceso + Auto-registro</span>
+              <span class="style-modal-card-apply">Aplicar →</span>
+            </div>
           </div>
         </div>
       </div>
@@ -2541,11 +2538,32 @@
                 aprobarlos enviándoles su NIP y enlace por correo.</p>
             </div>
 
+            <!-- SELECTOR DE PLANTILLA DE AUTO-REGISTRO (BOTÓN DE MENÚ MODAL) -->
+            <div class="access-style-trigger-card">
+              <div class="style-trigger-meta">
+                <span class="style-trigger-icon">
+                  <lucide-icon [name]="getCurrentAccessPresetIcon()" [strokeWidth]="1.8"></lucide-icon>
+                </span>
+                <div class="style-trigger-text">
+                  <span class="style-trigger-tag">Plantilla Activa</span>
+                  <strong class="style-trigger-title">{{ getCurrentAccessPresetName() }}</strong>
+                </div>
+              </div>
+              <button type="button" class="btn-open-styles-catalog" (click)="openAccessStylesModal()">
+                <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+                <span>Cambiar Diseño (4 Plantillas)</span>
+              </button>
+            </div>
+
             <div class="access-quick-actions">
               <button type="button" class="btn-access-action"
                 (click)="accessSimView = 'register'; setEditorCanvasMode('access')"
                 [class.active]="editorCanvasMode === 'access' && accessSimView === 'register'">
-                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver formulario en lienzo
+                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en lienzo
+              </button>
+              <button type="button" class="btn-access-action" (click)="resetSelfRegLayers()"
+                title="Restaurar todos los campos del formulario de auto-registro si los eliminaste">
+                <lucide-icon name="refresh-cw" [strokeWidth]="1.8"></lucide-icon> Restablecer campos
               </button>
             </div>
 
