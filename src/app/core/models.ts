@@ -421,6 +421,18 @@ export interface VisualInvitationLayerStyle {
   audioEndSeconds?: number;
   audioSize?: number;
   audioOffset?: number;
+  qrStylePreset?: string;
+  qrColor?: string;
+  qrBgColor?: string;
+  qrEyeShape?: 'square' | 'rounded' | 'circle' | 'leaf';
+  qrCenterLogo?: 'none' | 'rings' | 'crown' | 'heart' | 'champagne' | 'ticket' | 'baby' | 'music' | 'location' | 'wifi' | 'monogram' | 'custom';
+  qrCenterLogoUrl?: string;
+  qrCenterLogoText?: string;
+  qrCenterLogoBg?: string;
+  qrFrameStyle?: 'none' | 'card-rounded' | 'banner-bottom' | 'banner-top' | 'bubble-bottom' | 'double-border';
+  qrFrameText?: string;
+  qrFrameColor?: string;
+  qrFrameTextColor?: string;
 }
 
 export interface VisualInvitationLayerLayout {
@@ -576,6 +588,9 @@ export interface VisualAccessScreenDesign {
   backgroundImageUrl?: string;
   backgroundOverlayOpacity?: number;
   backgroundBlur?: number;
+  backgroundFilter?: 'none' | 'cinematic' | 'golden' | 'sepia' | 'vintage' | 'moody' | 'emerald' | 'frost' | 'warm' | 'noir';
+  backgroundVignette?: boolean;
+  backgroundEffect?: 'none' | 'sparkles' | 'petals' | 'starlight' | 'bokeh' | 'fireflies';
   primaryColor?: string;
   textColor?: string;
   accentColor?: string;

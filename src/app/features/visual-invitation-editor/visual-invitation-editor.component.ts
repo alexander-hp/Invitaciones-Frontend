@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, TemplateRef, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -85,6 +85,7 @@ type FunctionalTestData = {
   styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css', './visual-invitation-editor.library.css', './visual-invitation-editor.tutorial.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
+  @ViewChild('layerSurfaceTemplate') layerSurfaceTemplate: TemplateRef<any> | null = null;
   readonly buttonPresets = VISUAL_BUTTON_PRESETS;
   readonly buttonPresetStyle = buttonPresetStyle;
   readonly photoCompositionPresets = PHOTO_COMPOSITION_PRESETS;
@@ -197,10 +198,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   accessSimRegCompanions = 1;
   accessSimState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   accessSimMessage = '';
+  accessPresetCategory: string = 'all';
   readonly accessPresets = [
     {
       key: 'glass',
       name: 'Cristal Moderno',
+      category: 'minimal',
       description: 'Efecto glassmorphism translúcido con desenfoque de fondo.',
       icon: 'sparkles',
       cardStyle: 'glass' as const,
@@ -213,6 +216,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: 'linear-gradient(135deg, #1c2434 0%, #2e3d59 50%, #151c28 100%)',
       backgroundOverlayOpacity: 65,
       backgroundBlur: 8,
+      backgroundFilter: 'none' as const,
+      backgroundVignette: false,
+      backgroundEffect: 'sparkles' as const,
       textColor: '#1c2434',
       accentColor: '#c59b6c',
       buttonBgColor: '#c59b6c',
@@ -220,8 +226,34 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       buttonRadius: 10
     },
     {
+      key: 'boda-golden',
+      name: 'Boda Golden Gala',
+      category: 'wedding',
+      description: 'Golden hour cálido, destellos dorados y viñeta cinematográfica.',
+      icon: 'sparkles',
+      cardStyle: 'glass' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 92,
+      cardRadius: 22,
+      cardShadow: 'glow' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#1e1b18',
+      backgroundGradient: 'linear-gradient(135deg, #2a2015 0%, #3d2f1f 50%, #1a140d 100%)',
+      backgroundOverlayOpacity: 60,
+      backgroundBlur: 6,
+      backgroundFilter: 'golden' as const,
+      backgroundVignette: true,
+      backgroundEffect: 'sparkles' as const,
+      textColor: '#1e1b18',
+      accentColor: '#d4af37',
+      buttonBgColor: '#b8860b',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 12
+    },
+    {
       key: 'dark-vip',
-      name: 'Dark VIP',
+      name: 'Dark VIP Gala',
+      category: 'wedding',
       description: 'Fondo obsidiana con acentos dorados y tarjeta oscura lujosa.',
       icon: 'crown',
       cardStyle: 'bordered' as const,
@@ -234,6 +266,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: 'linear-gradient(145deg, #0a0d14 0%, #161c29 50%, #06080d 100%)',
       backgroundOverlayOpacity: 75,
       backgroundBlur: 4,
+      backgroundFilter: 'cinematic' as const,
+      backgroundVignette: true,
+      backgroundEffect: 'none' as const,
       textColor: '#ffffff',
       accentColor: '#e0a96d',
       buttonBgColor: '#e0a96d',
@@ -242,7 +277,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     },
     {
       key: 'gold-ivory',
-      name: 'Oro & Marfil',
+      name: 'Oro & Marfil Imperial',
+      category: 'wedding',
       description: 'Clásico refinado, tonos marfil y champagne con tipografía serif.',
       icon: 'gem',
       cardStyle: 'solid' as const,
@@ -255,6 +291,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: '',
       backgroundOverlayOpacity: 30,
       backgroundBlur: 0,
+      backgroundFilter: 'vintage' as const,
+      backgroundVignette: false,
+      backgroundEffect: 'none' as const,
       textColor: '#2c2724',
       accentColor: '#9d765d',
       buttonBgColor: '#2f5348',
@@ -263,8 +302,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     },
     {
       key: 'romantic-floral',
-      name: 'Floral Romántico',
-      description: 'Blush y verde salvia con curvas suaves y tipografía caligráfica.',
+      name: 'Floral & Romance',
+      category: 'wedding',
+      description: 'Pétalos flotantes, blush suave y filtro romance cálido.',
       icon: 'flower-2',
       cardStyle: 'glass' as const,
       cardBgColor: '#ffffff',
@@ -276,6 +316,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: 'linear-gradient(135deg, #f4e9e2 0%, #faede8 50%, #e8f0eb 100%)',
       backgroundOverlayOpacity: 40,
       backgroundBlur: 6,
+      backgroundFilter: 'warm' as const,
+      backgroundVignette: false,
+      backgroundEffect: 'petals' as const,
       textColor: '#3d322c',
       accentColor: '#b47b6a',
       buttonBgColor: '#8a9a86',
@@ -283,8 +326,109 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       buttonRadius: 24
     },
     {
+      key: 'xv-fantasy',
+      name: 'XV Años Ensueño',
+      category: 'xv',
+      description: 'Noche mística con polvo de estrellas y resplandor violeta suave.',
+      icon: 'crown',
+      cardStyle: 'glass' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 92,
+      cardRadius: 22,
+      cardShadow: 'glow' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#1f132b',
+      backgroundGradient: 'linear-gradient(135deg, #2d1845 0%, #1f132b 50%, #11081a 100%)',
+      backgroundOverlayOpacity: 70,
+      backgroundBlur: 8,
+      backgroundFilter: 'moody' as const,
+      backgroundVignette: true,
+      backgroundEffect: 'starlight' as const,
+      textColor: '#ffffff',
+      accentColor: '#e879f9',
+      buttonBgColor: '#c026d3',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 14
+    },
+    {
+      key: 'baby-cherub',
+      name: 'Bautizo & Baby Pastel',
+      category: 'baby',
+      description: 'Filtro cristal nórdico con luces bokeh suaves y tonos celestes/blancos.',
+      icon: 'baby',
+      cardStyle: 'solid' as const,
+      cardBgColor: '#ffffff',
+      cardOpacity: 96,
+      cardRadius: 24,
+      cardShadow: 'soft' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#e0f2fe',
+      backgroundGradient: 'linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #e0f7fa 100%)',
+      backgroundOverlayOpacity: 35,
+      backgroundBlur: 4,
+      backgroundFilter: 'frost' as const,
+      backgroundVignette: false,
+      backgroundEffect: 'bokeh' as const,
+      textColor: '#0369a1',
+      accentColor: '#38bdf8',
+      buttonBgColor: '#0284c7',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 20
+    },
+    {
+      key: 'botanic-emerald',
+      name: 'Jardín Esmeralda',
+      category: 'wedding',
+      description: 'Filtro botánico esmeralda profundo con luciérnagas nocturnas.',
+      icon: 'tree-pine',
+      cardStyle: 'bordered' as const,
+      cardBgColor: '#0a1d17',
+      cardOpacity: 94,
+      cardRadius: 18,
+      cardShadow: 'glow' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#064e3b',
+      backgroundGradient: 'linear-gradient(135deg, #064e3b 0%, #042f2e 50%, #022019 100%)',
+      backgroundOverlayOpacity: 75,
+      backgroundBlur: 6,
+      backgroundFilter: 'emerald' as const,
+      backgroundVignette: true,
+      backgroundEffect: 'fireflies' as const,
+      textColor: '#f0fdf4',
+      accentColor: '#34d399',
+      buttonBgColor: '#059669',
+      buttonTextColor: '#ffffff',
+      buttonRadius: 10
+    },
+    {
+      key: 'party-neon',
+      name: 'Fiesta & Festival',
+      category: 'party',
+      description: 'Filtro atardecer cálido con luces bokeh doradas festivas.',
+      icon: 'music',
+      cardStyle: 'bordered' as const,
+      cardBgColor: '#18181b',
+      cardOpacity: 94,
+      cardRadius: 18,
+      cardShadow: 'glow' as const,
+      backgroundType: 'gradient' as const,
+      backgroundColor: '#18181b',
+      backgroundGradient: 'linear-gradient(135deg, #27272a 0%, #18181b 50%, #09090b 100%)',
+      backgroundOverlayOpacity: 70,
+      backgroundBlur: 4,
+      backgroundFilter: 'warm' as const,
+      backgroundVignette: true,
+      backgroundEffect: 'bokeh' as const,
+      textColor: '#f4f4f5',
+      accentColor: '#f59e0b',
+      buttonBgColor: '#f59e0b',
+      buttonTextColor: '#09090b',
+      buttonRadius: 10
+    },
+    {
       key: 'minimal',
       name: 'Minimalista Puro',
+      category: 'minimal',
       description: 'Diseño sobrio y limpio sin tarjeta, enfocado en el mensaje.',
       icon: 'shapes',
       cardStyle: 'minimal' as const,
@@ -297,6 +441,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: '',
       backgroundOverlayOpacity: 0,
       backgroundBlur: 0,
+      backgroundFilter: 'none' as const,
+      backgroundVignette: false,
+      backgroundEffect: 'none' as const,
       textColor: '#1a1a1a',
       accentColor: '#1a1a1a',
       buttonBgColor: '#1a1a1a',
@@ -304,6 +451,217 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       buttonRadius: 6
     }
   ];
+
+  readonly qrDesignPresets = [
+    {
+      key: 'gold-vip',
+      name: 'Dorado Imperial VIP',
+      desc: 'Marco con banner dorado y corona real',
+      frameStyle: 'banner-bottom',
+      frameColor: '#b8860b',
+      frameText: '★ ESCANEAR AL ENTRAR ★',
+      frameTextColor: '#ffffff',
+      qrColor: '#1c1917',
+      qrBgColor: '#ffffff',
+      eyeShape: 'leaf',
+      centerLogo: 'crown',
+      centerBg: '#b8860b'
+    },
+    {
+      key: 'wedding-romance',
+      name: 'Boda & Romance',
+      desc: 'Marco vino tinto con anillos de boda',
+      frameStyle: 'banner-bottom',
+      frameColor: '#be185d',
+      frameText: 'VALIDAR ACCESO',
+      frameTextColor: '#ffffff',
+      qrColor: '#831843',
+      qrBgColor: '#ffffff',
+      eyeShape: 'rounded',
+      centerLogo: 'rings',
+      centerBg: '#fdf2f8'
+    },
+    {
+      key: 'gala-noir',
+      name: 'Noche de Gala Noir',
+      desc: 'Marco obsidiana y ticket de acceso VIP',
+      frameStyle: 'banner-bottom',
+      frameColor: '#0f172a',
+      frameText: 'PASE VIP EXCLUSIVO',
+      frameTextColor: '#f8fafc',
+      qrColor: '#0f172a',
+      qrBgColor: '#ffffff',
+      eyeShape: 'circle',
+      centerLogo: 'ticket',
+      centerBg: '#0f172a'
+    },
+    {
+      key: 'emerald-garden',
+      name: 'Jardín Esmeralda',
+      desc: 'Marco verde esmeralda con corazón botánico',
+      frameStyle: 'banner-bottom',
+      frameColor: '#047857',
+      frameText: 'ACCESO AL EVENTO',
+      frameTextColor: '#ffffff',
+      qrColor: '#065f46',
+      qrBgColor: '#ffffff',
+      eyeShape: 'leaf',
+      centerLogo: 'heart',
+      centerBg: '#047857'
+    },
+    {
+      key: 'party-music',
+      name: 'Fiesta & Playlist',
+      desc: 'Marco naranja ámbar con nota musical',
+      frameStyle: 'banner-bottom',
+      frameColor: '#ea580c',
+      frameText: 'DISFRUTA LA FIESTA',
+      frameTextColor: '#ffffff',
+      qrColor: '#c2410c',
+      qrBgColor: '#ffffff',
+      eyeShape: 'rounded',
+      centerLogo: 'music',
+      centerBg: '#ea580c'
+    },
+    {
+      key: 'location-checkin',
+      name: 'Recepción & Mapa',
+      desc: 'Marco azul real con pin de ubicación',
+      frameStyle: 'banner-bottom',
+      frameColor: '#2563eb',
+      frameText: 'CHECK-IN RECEPCIÓN',
+      frameTextColor: '#ffffff',
+      qrColor: '#1d4ed8',
+      qrBgColor: '#ffffff',
+      eyeShape: 'rounded',
+      centerLogo: 'location',
+      centerBg: '#2563eb'
+    },
+    {
+      key: 'baby-sky',
+      name: 'Bautizo & Baby',
+      desc: 'Marco celeste pastel con huella de bebé',
+      frameStyle: 'banner-bottom',
+      frameColor: '#0284c7',
+      frameText: 'BIENVENIDO A MI DÍA',
+      frameTextColor: '#ffffff',
+      qrColor: '#0369a1',
+      qrBgColor: '#ffffff',
+      eyeShape: 'circle',
+      centerLogo: 'baby',
+      centerBg: '#0284c7'
+    },
+    {
+      key: 'card-minimal',
+      name: 'Tarjeta Minimal',
+      desc: 'Marco redondeado moderno y limpio',
+      frameStyle: 'card-rounded',
+      frameColor: '#cbd5e1',
+      frameText: '',
+      frameTextColor: '#334155',
+      qrColor: '#0f172a',
+      qrBgColor: '#ffffff',
+      eyeShape: 'rounded',
+      centerLogo: 'none',
+      centerBg: '#ffffff'
+    },
+    {
+      key: 'luxury-double',
+      name: 'Doble Filete de Oro',
+      desc: 'Borde doble de gala con monograma VIP',
+      frameStyle: 'double-border',
+      frameColor: '#c9a87c',
+      frameText: '',
+      frameTextColor: '#c9a87c',
+      qrColor: '#2e2621',
+      qrBgColor: '#fffdfa',
+      eyeShape: 'leaf',
+      centerLogo: 'monogram',
+      centerBg: '#c9a87c'
+    },
+    {
+      key: 'raw-classic',
+      name: 'QR Clásico Puro',
+      desc: 'Sin marco ni adornos, escaneo estándar',
+      frameStyle: 'none',
+      frameColor: '#000000',
+      frameText: '',
+      frameTextColor: '#ffffff',
+      qrColor: '#000000',
+      qrBgColor: '#ffffff',
+      eyeShape: 'square',
+      centerLogo: 'none',
+      centerBg: '#ffffff'
+    }
+  ];
+
+  getFilteredAccessPresets(): any[] {
+    if (!this.accessPresetCategory || this.accessPresetCategory === 'all') {
+      return this.accessPresets;
+    }
+    return this.accessPresets.filter(p => p.category === this.accessPresetCategory);
+  }
+
+  getQrLogoIcon(logo?: string): string {
+    const map: Record<string, string> = {
+      crown: '👑',
+      rings: '💍',
+      heart: '❤️',
+      champagne: '🥂',
+      ticket: '🎟️',
+      baby: '👶',
+      music: '🎵',
+      location: '📍',
+      wifi: '🛜'
+    };
+    return map[logo || ''] || '';
+  }
+
+  closePassPreviewModal(): void {
+    this.passPreviewModalOpen = false;
+  }
+
+  isQrLayer(layer?: VisualInvitationLayer | null): boolean {
+    if (!layer) return false;
+    const b = String(layer.binding || '');
+    const n = String(layer.name || '').toLowerCase();
+    const u = String(layer.url || '').toLowerCase();
+    return b === 'pass.qr' || b === 'pass.qrCode' || b === 'guest.qr' || b === 'guest.qrCode' || b === 'envelope.qr'
+      || n.includes('qr') || u.includes('create-qr-code') || !!layer.style?.qrFrameStyle || !!layer.style?.qrCenterLogo;
+  }
+
+  cleanQrHex(color?: string, defaultHex = '000000'): string {
+    if (!color) return defaultHex;
+    const clean = color.trim().replace('#', '');
+    return /^[0-9A-Fa-f]{3,8}$/.test(clean) ? clean : defaultHex;
+  }
+
+  setQrStyleProp(layer: VisualInvitationLayer, prop: string, value: any): void {
+    if (!layer) return;
+    if (!layer.style) layer.style = {};
+    (layer.style as any)[prop] = value;
+    this.recordHistory();
+  }
+
+  applyQrPreset(layer: VisualInvitationLayer, presetKey: string): void {
+    const preset = this.qrDesignPresets.find(p => p.key === presetKey);
+    if (!preset || !layer) return;
+    if (!layer.style) layer.style = {};
+    layer.style.qrStylePreset = preset.key;
+    layer.style.qrFrameStyle = preset.frameStyle as any;
+    layer.style.qrFrameColor = preset.frameColor;
+    layer.style.qrFrameText = preset.frameText;
+    layer.style.qrFrameTextColor = preset.frameTextColor;
+    layer.style.qrColor = preset.qrColor;
+    layer.style.qrBgColor = preset.qrBgColor;
+    layer.style.qrEyeShape = preset.eyeShape as any;
+    layer.style.qrCenterLogo = preset.centerLogo as any;
+    layer.style.qrCenterLogoBg = preset.centerBg;
+    if (preset.centerLogo === 'monogram' && !layer.style.qrCenterLogoText) {
+      layer.style.qrCenterLogoText = 'VIP';
+    }
+    this.recordHistory();
+  }
   message = '';
   error = '';
   locationSearchResults: Record<number, PlaceSearchResult[]> = {};
@@ -512,57 +870,57 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     previewBorder: string;
     style: Partial<VisualInvitationLayerStyle>;
   }> = [
-    {
-      key: 'none', label: 'Sin marco', subtitle: 'Limpio a sangre',
-      previewBg: 'transparent', previewBorder: '1px solid #d5cbc4',
-      style: { framePreset: 'none', padding: 0, backgroundColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', boxShadow: 'none' }
-    },
-    {
-      key: 'museum-ivory', label: 'Paspartú Museo', subtitle: 'Marfil y oro fino',
-      previewBg: '#faf5eb', previewBorder: '2px solid #c89d4c',
-      style: { framePreset: 'museum-ivory', padding: 8, backgroundColor: '#faf5eb', borderWidth: 2, borderStyle: 'solid', borderColor: '#c89d4c', borderRadius: 16, boxShadow: '0 16px 38px rgba(20, 36, 29, 0.22)' }
-    },
-    {
-      key: 'imperial-emerald', label: 'Galería Esmeralda', subtitle: 'Verde imperial y oro',
-      previewBg: '#152820', previewBorder: '2px solid #d4af63',
-      style: { framePreset: 'imperial-emerald', padding: 8, backgroundColor: '#152820', borderWidth: 2, borderStyle: 'solid', borderColor: '#d4af63', borderRadius: 16, boxShadow: '0 18px 42px rgba(10, 20, 16, 0.38)' }
-    },
-    {
-      key: 'double-gold', label: 'Doble Filete Oro', subtitle: 'Borde doble clásico',
-      previewBg: '#fffdf9', previewBorder: '4px double #c89d4c',
-      style: { framePreset: 'double-gold', padding: 6, backgroundColor: '#fffdf9', borderWidth: 5, borderStyle: 'double', borderColor: '#c89d4c', borderRadius: 14, boxShadow: '0 14px 32px rgba(197, 155, 72, 0.24)' }
-    },
-    {
-      key: 'velvet-burgundy', label: 'Terciopelo Real', subtitle: 'Borgoña y resplandor',
-      previewBg: '#2a050b', previewBorder: '2px solid #d4af37',
-      style: { framePreset: 'velvet-burgundy', padding: 8, backgroundColor: '#2a050b', borderWidth: 2, borderStyle: 'solid', borderColor: '#d4af37', borderRadius: 18, boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), 0 0 20px rgba(212, 175, 55, 0.28)' }
-    },
-    {
-      key: 'polaroid', label: 'Polaroid Atelier', subtitle: 'Marco blanco editorial',
-      previewBg: '#ffffff', previewBorder: '1px solid #dfd7ce',
-      style: { framePreset: 'polaroid', padding: 10, backgroundColor: '#ffffff', borderWidth: 1, borderStyle: 'solid', borderColor: '#dfd7ce', borderRadius: 8, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.18)' }
-    },
-    {
-      key: 'postage-stamp', label: 'Sello Filatélico', subtitle: 'Costura punteada',
-      previewBg: '#faf6ee', previewBorder: '2px dashed #b89768',
-      style: { framePreset: 'postage-stamp', padding: 7, backgroundColor: '#faf6ee', borderWidth: 2.5, borderStyle: 'dashed', borderColor: '#b89768', borderRadius: 10, boxShadow: '0 12px 26px rgba(0, 0, 0, 0.16)' }
-    },
-    {
-      key: 'glass-glow', label: 'Cristal & Luz', subtitle: 'Translúcido luminoso',
-      previewBg: 'rgba(255,255,255,0.45)', previewBorder: '1.5px solid #ffffff',
-      style: { framePreset: 'glass-glow', padding: 7, backgroundColor: 'rgba(255, 255, 255, 0.28)', borderWidth: 1.5, borderStyle: 'solid', borderColor: '#ffffff', borderRadius: 18, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.22), 0 0 18px rgba(255, 255, 255, 0.45)' }
-    },
-    {
-      key: 'gold-rim', label: 'Bisel Dorado', subtitle: 'Filo metálico directo',
-      previewBg: 'transparent', previewBorder: '2.5px solid #c89d4c',
-      style: { framePreset: 'gold-rim', padding: 0, backgroundColor: 'transparent', borderWidth: 2.5, borderStyle: 'solid', borderColor: '#c89d4c', borderRadius: 14, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.24)' }
-    },
-    {
-      key: 'floating-shadow', label: 'Sombra Galería', subtitle: 'Elevación profunda',
-      previewBg: 'transparent', previewBorder: '1px solid rgba(0,0,0,0.08)',
-      style: { framePreset: 'floating-shadow', padding: 0, backgroundColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', borderRadius: 16, boxShadow: '0 22px 48px rgba(0, 0, 0, 0.34)' }
-    }
-  ];
+      {
+        key: 'none', label: 'Sin marco', subtitle: 'Limpio a sangre',
+        previewBg: 'transparent', previewBorder: '1px solid #d5cbc4',
+        style: { framePreset: 'none', padding: 0, backgroundColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', boxShadow: 'none' }
+      },
+      {
+        key: 'museum-ivory', label: 'Paspartú Museo', subtitle: 'Marfil y oro fino',
+        previewBg: '#faf5eb', previewBorder: '2px solid #c89d4c',
+        style: { framePreset: 'museum-ivory', padding: 8, backgroundColor: '#faf5eb', borderWidth: 2, borderStyle: 'solid', borderColor: '#c89d4c', borderRadius: 16, boxShadow: '0 16px 38px rgba(20, 36, 29, 0.22)' }
+      },
+      {
+        key: 'imperial-emerald', label: 'Galería Esmeralda', subtitle: 'Verde imperial y oro',
+        previewBg: '#152820', previewBorder: '2px solid #d4af63',
+        style: { framePreset: 'imperial-emerald', padding: 8, backgroundColor: '#152820', borderWidth: 2, borderStyle: 'solid', borderColor: '#d4af63', borderRadius: 16, boxShadow: '0 18px 42px rgba(10, 20, 16, 0.38)' }
+      },
+      {
+        key: 'double-gold', label: 'Doble Filete Oro', subtitle: 'Borde doble clásico',
+        previewBg: '#fffdf9', previewBorder: '4px double #c89d4c',
+        style: { framePreset: 'double-gold', padding: 6, backgroundColor: '#fffdf9', borderWidth: 5, borderStyle: 'double', borderColor: '#c89d4c', borderRadius: 14, boxShadow: '0 14px 32px rgba(197, 155, 72, 0.24)' }
+      },
+      {
+        key: 'velvet-burgundy', label: 'Terciopelo Real', subtitle: 'Borgoña y resplandor',
+        previewBg: '#2a050b', previewBorder: '2px solid #d4af37',
+        style: { framePreset: 'velvet-burgundy', padding: 8, backgroundColor: '#2a050b', borderWidth: 2, borderStyle: 'solid', borderColor: '#d4af37', borderRadius: 18, boxShadow: '0 18px 40px rgba(0, 0, 0, 0.55), 0 0 20px rgba(212, 175, 55, 0.28)' }
+      },
+      {
+        key: 'polaroid', label: 'Polaroid Atelier', subtitle: 'Marco blanco editorial',
+        previewBg: '#ffffff', previewBorder: '1px solid #dfd7ce',
+        style: { framePreset: 'polaroid', padding: 10, backgroundColor: '#ffffff', borderWidth: 1, borderStyle: 'solid', borderColor: '#dfd7ce', borderRadius: 8, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.18)' }
+      },
+      {
+        key: 'postage-stamp', label: 'Sello Filatélico', subtitle: 'Costura punteada',
+        previewBg: '#faf6ee', previewBorder: '2px dashed #b89768',
+        style: { framePreset: 'postage-stamp', padding: 7, backgroundColor: '#faf6ee', borderWidth: 2.5, borderStyle: 'dashed', borderColor: '#b89768', borderRadius: 10, boxShadow: '0 12px 26px rgba(0, 0, 0, 0.16)' }
+      },
+      {
+        key: 'glass-glow', label: 'Cristal & Luz', subtitle: 'Translúcido luminoso',
+        previewBg: 'rgba(255,255,255,0.45)', previewBorder: '1.5px solid #ffffff',
+        style: { framePreset: 'glass-glow', padding: 7, backgroundColor: 'rgba(255, 255, 255, 0.28)', borderWidth: 1.5, borderStyle: 'solid', borderColor: '#ffffff', borderRadius: 18, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.22), 0 0 18px rgba(255, 255, 255, 0.45)' }
+      },
+      {
+        key: 'gold-rim', label: 'Bisel Dorado', subtitle: 'Filo metálico directo',
+        previewBg: 'transparent', previewBorder: '2.5px solid #c89d4c',
+        style: { framePreset: 'gold-rim', padding: 0, backgroundColor: 'transparent', borderWidth: 2.5, borderStyle: 'solid', borderColor: '#c89d4c', borderRadius: 14, boxShadow: '0 14px 34px rgba(0, 0, 0, 0.24)' }
+      },
+      {
+        key: 'floating-shadow', label: 'Sombra Galería', subtitle: 'Elevación profunda',
+        previewBg: 'transparent', previewBorder: '1px solid rgba(0,0,0,0.08)',
+        style: { framePreset: 'floating-shadow', padding: 0, backgroundColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', borderRadius: 16, boxShadow: '0 22px 48px rgba(0, 0, 0, 0.34)' }
+      }
+    ];
   readonly ornamentalFrameOverlays: Array<{
     key: string;
     label: string;
@@ -571,23 +929,23 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     suggestedMask: ImageMask;
     suggestedPreset: string;
   }> = [
-    {
-      key: 'gilded-gallery', label: 'Moldura Florentina', subtitle: 'Arco con esquineros en oro',
-      url: 'assets/templates/palazzo-orangerie/gilded-gallery-frame.svg', suggestedMask: 'arch', suggestedPreset: 'museum-ivory'
-    },
-    {
-      key: 'venetian-triptych', label: 'Marco Veneciano', subtitle: 'Doble bisel y rosetones',
-      url: 'assets/templates/palazzo-orangerie/venetian-triptych-frame.svg', suggestedMask: 'rounded', suggestedPreset: 'museum-ivory'
-    },
-    {
-      key: 'baroque-arch', label: 'Arco Barroco Imperial', subtitle: 'Columnas y cresta real',
-      url: 'assets/templates/palazzo-orangerie/baroque-arch-frame.svg', suggestedMask: 'arch', suggestedPreset: 'imperial-emerald'
-    },
-    {
-      key: 'renaissance-cameo', label: 'Camafeo Renacentista', subtitle: 'Medallón perlado con lazo',
-      url: 'assets/templates/palazzo-orangerie/renaissance-oval-cameo.svg', suggestedMask: 'oval', suggestedPreset: 'museum-ivory'
-    }
-  ];
+      {
+        key: 'gilded-gallery', label: 'Moldura Florentina', subtitle: 'Arco con esquineros en oro',
+        url: 'assets/templates/palazzo-orangerie/gilded-gallery-frame.svg', suggestedMask: 'arch', suggestedPreset: 'museum-ivory'
+      },
+      {
+        key: 'venetian-triptych', label: 'Marco Veneciano', subtitle: 'Doble bisel y rosetones',
+        url: 'assets/templates/palazzo-orangerie/venetian-triptych-frame.svg', suggestedMask: 'rounded', suggestedPreset: 'museum-ivory'
+      },
+      {
+        key: 'baroque-arch', label: 'Arco Barroco Imperial', subtitle: 'Columnas y cresta real',
+        url: 'assets/templates/palazzo-orangerie/baroque-arch-frame.svg', suggestedMask: 'arch', suggestedPreset: 'imperial-emerald'
+      },
+      {
+        key: 'renaissance-cameo', label: 'Camafeo Renacentista', subtitle: 'Medallón perlado con lazo',
+        url: 'assets/templates/palazzo-orangerie/renaissance-oval-cameo.svg', suggestedMask: 'oval', suggestedPreset: 'museum-ivory'
+      }
+    ];
   private readonly _legacyMasksRemoved: Array<{ key: ImageMask; label: string; icon: string }> = [
     { key: 'rounded', label: 'Redondeado', icon: '▢' }, { key: 'arch', label: 'Arco', icon: '∩' },
     { key: 'diamond', label: 'Rombo', icon: '◆' }, { key: 'hexagon', label: 'Hexágono', icon: '⬢' },
@@ -2980,7 +3338,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
         framePreset: 'none', borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent', padding: 0, borderRadius: 0, boxShadow: 'none', backgroundColor: 'transparent', objectPositionX: 50, objectPositionY: 50
 
-  
+
       };
       return layer;
     });
@@ -4470,7 +4828,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       )
     ).subscribe({
       next: (publicUrl) => {
-        try { URL.revokeObjectURL(blobUrl); } catch {}
+        try { URL.revokeObjectURL(blobUrl); } catch { }
         targetLayer.url = publicUrl;
         this.design.assets = this.design.assets || [];
         if (!this.design.assets.some((a) => a.url === publicUrl)) {
@@ -4489,7 +4847,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        try { URL.revokeObjectURL(blobUrl); } catch {}
+        try { URL.revokeObjectURL(blobUrl); } catch { }
         targetLayer.url = previousUrl;
         this.uploading = false;
         input.value = '';
@@ -4550,7 +4908,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   processPointerMoveOutside(event: PointerEvent): void {
-      if(this.canvasGesture || this.imageCropGesture) {
+    if (this.canvasGesture || this.imageCropGesture) {
       event.preventDefault();
       return;
     }
@@ -5820,9 +6178,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   layerMediaSource(layer: any): string {
     if (!layer) return '';
-    if (layer.binding === 'pass.qrCode' || layer.binding === 'guest.qrCode' || layer.binding === 'guest.qr' || layer.name?.toLowerCase().includes('qr')) {
+    if (this.isQrLayer(layer)) {
       const code = (this.previewGuest as any)?.checkInCode || 'VIP-ACCESO-DEMO';
-      return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(code)}`;
+      const color = this.cleanQrHex(layer.style?.qrColor || layer.style?.color, '1a1a1a');
+      const bgcolor = this.cleanQrHex(layer.style?.qrBgColor || layer.style?.backgroundColor, 'ffffff');
+      return `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(code)}&color=${color}&bgcolor=${bgcolor}&ecc=H&margin=1`;
     }
     return this.boundImageUrl(layer) || layer.url || '';
   }
@@ -7052,7 +7412,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
             console.log('[Template Reward Notice]:', res.rewardNotice);
           }
         },
-        error: () => {}
+        error: () => { }
       });
     }
 
@@ -8194,13 +8554,16 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       backgroundGradient: preset.backgroundGradient,
       backgroundOverlayOpacity: preset.backgroundOverlayOpacity,
       backgroundBlur: preset.backgroundBlur,
+      backgroundFilter: (preset as any).backgroundFilter || 'none',
+      backgroundVignette: !!(preset as any).backgroundVignette,
+      backgroundEffect: (preset as any).backgroundEffect || 'none',
       textColor: preset.textColor,
       accentColor: preset.accentColor,
       buttonBgColor: preset.buttonBgColor,
       buttonTextColor: preset.buttonTextColor,
       buttonRadius: preset.buttonRadius
     };
-        const layers = this.design.accessScreen.layers || [];
+    const layers = this.design.accessScreen.layers || [];
     const cardLayer = layers.find(l => l.binding === "access.card");
     if (cardLayer) {
       const isDark = (preset.cardBgColor || "").toLowerCase() === "#0f172a" || (preset.backgroundColor || "").toLowerCase() === "#1c2434" || (preset.textColor || "").toLowerCase() === "#ffffff";
@@ -8309,21 +8672,44 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   getAccessScreenBackgroundStyle(customAcc?: VisualAccessScreenDesign): Record<string, string> {
     const acc = customAcc || this.design?.accessScreen;
     if (!acc) return {};
+    const style: Record<string, string> = {};
     if (acc.backgroundType === 'image' && acc.backgroundImageUrl) {
-      return {
-        'background-image': `url("${acc.backgroundImageUrl}")`,
-        'background-size': 'cover',
-        'background-position': 'center center'
-      };
+      style['background-image'] = `url("${acc.backgroundImageUrl}")`;
+      style['background-size'] = 'cover';
+      style['background-position'] = 'center center';
+    } else if (acc.backgroundType === 'gradient' && acc.backgroundGradient) {
+      style['background'] = acc.backgroundGradient;
+    } else {
+      style['background-color'] = acc.backgroundColor || '#1c2434';
     }
-    if (acc.backgroundType === 'gradient' && acc.backgroundGradient) {
-      return {
-        'background': acc.backgroundGradient
-      };
+
+    const filters: string[] = [];
+    if (acc.backgroundBlur && acc.backgroundBlur > 0) {
+      filters.push(`blur(${acc.backgroundBlur}px)`);
     }
-    return {
-      'background-color': acc.backgroundColor || '#1c2434'
-    };
+    if (acc.backgroundFilter && acc.backgroundFilter !== 'none') {
+      const filterMap: Record<string, string> = {
+        golden: 'sepia(0.25) saturate(1.45) brightness(1.05) contrast(1.05)',
+        cinematic: 'grayscale(1) contrast(1.2) brightness(0.95)',
+        sepia: 'sepia(0.65) contrast(1.05) brightness(0.95)',
+        vintage: 'sepia(0.35) saturate(0.85) contrast(1.1) brightness(1.02)',
+        moody: 'contrast(1.25) brightness(0.8) saturate(1.2) hue-rotate(-10deg)',
+        emerald: 'hue-rotate(55deg) saturate(1.35) contrast(1.1)',
+        frost: 'saturate(0.65) hue-rotate(180deg) brightness(1.1) contrast(1.05)',
+        warm: 'saturate(1.5) brightness(1.03) hue-rotate(-15deg)',
+        noir: 'grayscale(1) contrast(1.5) brightness(0.85)'
+      };
+      if (filterMap[acc.backgroundFilter]) {
+        filters.push(filterMap[acc.backgroundFilter]);
+      }
+    }
+    if (filters.length > 0) {
+      style['filter'] = filters.join(' ');
+      if (acc.backgroundBlur && acc.backgroundBlur > 0) {
+        style['transform'] = 'scale(1.05)';
+      }
+    }
+    return style;
   }
 
   getAccessScreenCardStyle(customAcc?: VisualAccessScreenDesign): Record<string, string> {

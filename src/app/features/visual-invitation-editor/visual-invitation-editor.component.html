@@ -1,4 +1,4 @@
-﻿<div class="ve-loading" *ngIf="loading">
+<div class="ve-loading" *ngIf="loading">
   <div class="ve-loading-card">
     <div class="ve-loading-spinner"></div>
     <strong>Preparando editor visual...</strong>
@@ -322,12 +322,40 @@
                        [style.lineHeight]="l.style?.lineHeight || 1.3">
                     {{ evalPassText(l.text) }}
                   </div>
-                  <img *ngIf="l.type === 'image'"
-                       [src]="layerMediaSource(l)"
-                       alt="Elemento"
-                       style="width: 100%; height: 100%; display: block;"
-                       [style.objectFit]="l.style?.objectFit || 'contain'"
-                       [style.borderRadius.px]="l.style?.borderRadius || 0">
+                  <ng-container *ngIf="l.type === 'image'">
+                    <div *ngIf="isQrLayer(l)" class="styled-qr-wrapper"
+                      [class.frame-banner-bottom]="l.style?.qrFrameStyle === 'banner-bottom'"
+                      [class.frame-banner-top]="l.style?.qrFrameStyle === 'banner-top'"
+                      [class.frame-card-rounded]="l.style?.qrFrameStyle === 'card-rounded'"
+                      [class.frame-double-border]="l.style?.qrFrameStyle === 'double-border'"
+                      [style.borderColor]="l.style?.qrFrameColor || '#b8860b'"
+                      [style.backgroundColor]="l.style?.qrBgColor || '#ffffff'">
+                      <div *ngIf="l.style?.qrFrameStyle === 'banner-top'" class="styled-qr-banner top-banner"
+                        [style.backgroundColor]="l.style?.qrFrameColor || '#b8860b'"
+                        [style.color]="l.style?.qrFrameTextColor || '#ffffff'">
+                        {{ l.style?.qrFrameText || '★ PASE VIP ★' }}
+                      </div>
+                      <div class="styled-qr-canvas-holder">
+                        <img [src]="layerMediaSource(l)" alt="QR" class="styled-qr-img">
+                        <div *ngIf="l.style?.qrCenterLogo && l.style?.qrCenterLogo !== 'none'" class="styled-qr-center-badge"
+                          [style.backgroundColor]="l.style?.qrCenterLogoBg || '#ffffff'">
+                          <span *ngIf="getQrLogoIcon(l.style?.qrCenterLogo) as lQrIcon" class="qr-badge-icon">{{ lQrIcon }}</span>
+                          <span *ngIf="l.style?.qrCenterLogo === 'monogram'" class="qr-badge-monogram">{{ l.style?.qrCenterLogoText || 'VIP' }}</span>
+                        </div>
+                      </div>
+                      <div *ngIf="l.style?.qrFrameStyle === 'banner-bottom'" class="styled-qr-banner bottom-banner"
+                        [style.backgroundColor]="l.style?.qrFrameColor || '#b8860b'"
+                        [style.color]="l.style?.qrFrameTextColor || '#ffffff'">
+                        {{ l.style?.qrFrameText || '★ ESCANEAR AL ENTRAR ★' }}
+                      </div>
+                    </div>
+                    <img *ngIf="!isQrLayer(l)"
+                         [src]="layerMediaSource(l)"
+                         alt="Elemento"
+                         style="width: 100%; height: 100%; display: block;"
+                         [style.objectFit]="l.style?.objectFit || 'contain'"
+                         [style.borderRadius.px]="l.style?.borderRadius || 0">
+                  </ng-container>
                   <div *ngIf="l.type === 'shape'"
                        style="width: 100%; height: 100%;"
                        [style.backgroundColor]="l.style?.backgroundColor || '#000'"
@@ -342,6 +370,9 @@
           <div class="catalog-preview-viewport" *ngIf="catalogPreviewTab === 'access'">
             <div class="catalog-access-preview-stage" *ngIf="(activeTpl.accessScreen || activeTpl.design?.accessScreen) as previewAcc"
                  [ngStyle]="getAccessScreenBackgroundStyle(previewAcc)">
+              <div *ngIf="previewAcc.backgroundVignette" class="access-vignette-overlay"></div>
+              <div *ngIf="previewAcc.backgroundEffect && previewAcc.backgroundEffect !== 'none'"
+                class="access-effect-overlay" [ngClass]="'effect-' + previewAcc.backgroundEffect"></div>
               <div class="catalog-access-preview-card" [ngStyle]="getAccessScreenCardStyle(previewAcc)">
                 <span class="preview-acc-badge" [style.color]="previewAcc.primaryColor || '#c89b3c'">INVITACIÓN PERSONAL</span>
                 <h3 [style.fontFamily]="previewAcc.headingFont || 'inherit'" [style.color]="previewAcc.textColor || '#ffffff'">{{ previewAcc.title || 'Invitación Personal de Gala' }}</h3>
@@ -1994,8 +2025,16 @@
           <details class="theme-editor" open>
             <summary>Estilos y Presets Rápidos</summary>
             <p class="hint">Aplica combinaciones elegantes pre-diseñadas para listas cerradas.</p>
+            <div class="access-category-filters">
+              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'all'" (click)="accessPresetCategory = 'all'">Todos</button>
+              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'wedding'" (click)="accessPresetCategory = 'wedding'">💍 Boda & Gala</button>
+              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'xv'" (click)="accessPresetCategory = 'xv'">👑 XV Años</button>
+              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'baby'" (click)="accessPresetCategory = 'baby'">👶 Bautizo & Baby</button>
+              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'party'" (click)="accessPresetCategory = 'party'">🎵 Fiesta</button>
+              <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'minimal'" (click)="accessPresetCategory = 'minimal'">✨ Minimal</button>
+            </div>
             <div class="access-presets-grid">
-              <button *ngFor="let p of accessPresets" type="button" class="access-preset-card"
+              <button *ngFor="let p of getFilteredAccessPresets()" type="button" class="access-preset-card"
                 (click)="applyAccessPreset(p.key)">
                 <span class="preset-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
                 <div class="preset-info">
@@ -2065,6 +2104,42 @@
               <label>Desenfoque de fondo: {{ acc.backgroundBlur || 0 }}px
                 <input type="range" min="0" max="25" step="1" [(ngModel)]="acc.backgroundBlur"
                   (ngModelChange)="recordHistory()">
+              </label>
+            </div>
+
+            <div class="access-field-group">
+              <label>Filtro de ambiente / Lente
+                <select [(ngModel)]="acc.backgroundFilter" (ngModelChange)="recordHistory()">
+                  <option value="none">Normal (Sin filtro)</option>
+                  <option value="golden">✨ Golden Hour (Cálido dorado de gala)</option>
+                  <option value="cinematic">🎬 Blanco y Negro Cinematográfico</option>
+                  <option value="sepia">📜 Romance Vintage (Sepia elegante)</option>
+                  <option value="warm">🌅 Atardecer Cálido (Warm Glow)</option>
+                  <option value="moody">🌙 Noche Mística (Moody Nocturne)</option>
+                  <option value="emerald">🌿 Jardín Botánico Esmeralda</option>
+                  <option value="frost">❄️ Cristal Glaseado Nórdico</option>
+                  <option value="noir">🖤 Noir de Alto Contraste</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="access-field-group">
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="acc.backgroundVignette" (ngModelChange)="recordHistory()">
+                <span>Viñeta cinematográfica (enfoque de luz al centro)</span>
+              </label>
+            </div>
+
+            <div class="access-field-group">
+              <label>Efecto de partículas y atmósfera
+                <select [(ngModel)]="acc.backgroundEffect" (ngModelChange)="recordHistory()">
+                  <option value="none">Sin partículas</option>
+                  <option value="sparkles">✨ Destellos Dorados (Sparkles)</option>
+                  <option value="petals">🌸 Pétalos Románticos flotando</option>
+                  <option value="starlight">⭐ Polvo de Estrellas (Starlight)</option>
+                  <option value="bokeh">🟡 Luces Bokeh Festivas</option>
+                  <option value="fireflies">✨ Luciérnagas Mágicas</option>
+                </select>
               </label>
             </div>
           </details>
@@ -2892,6 +2967,9 @@
               (click)="selectSection(accessSectionProxy)">
               <div class="access-stage-bg" [ngStyle]="getAccessScreenBackgroundStyle()"></div>
               <div class="access-stage-overlay" [style.background]="getAccessScreenOverlayStyle()"></div>
+              <div *ngIf="design.accessScreen?.backgroundVignette" class="access-vignette-overlay"></div>
+              <div *ngIf="design.accessScreen?.backgroundEffect && design.accessScreen?.backgroundEffect !== 'none'"
+                class="access-effect-overlay" [ngClass]="'effect-' + design.accessScreen?.backgroundEffect"></div>
               <div class="section-top-toolbar" (click)="$event.stopPropagation()">
                 <div class="section-label" (click)="selectSection(accessSectionProxy)">
                   Pantalla de Acceso · {{ accessSimView === 'register' ? 'Auto-registro' : 'Ingreso con NIP' }}
@@ -2996,7 +3074,72 @@
                     class="functional-response-preview"><i>Sí asistiré</i><i>Tal vez</i><i>No asistiré</i></div>
                   <small>{{ layer.binding }}</small>
                 </div>
-                <div *ngIf="layer.type === 'image' && boundImageUrl(layer) as imageUrl" class="image-frame"
+                <!-- QR CODE ESTILIZADO -->
+                <div *ngIf="layer.type === 'image' && isQrLayer(layer)" class="styled-qr-wrapper"
+                  [class.frame-banner-bottom]="layer.style?.qrFrameStyle === 'banner-bottom'"
+                  [class.frame-banner-top]="layer.style?.qrFrameStyle === 'banner-top'"
+                  [class.frame-card-rounded]="layer.style?.qrFrameStyle === 'card-rounded'"
+                  [class.frame-double-border]="layer.style?.qrFrameStyle === 'double-border'"
+                  [style.borderColor]="layer.style?.qrFrameColor || '#b8860b'"
+                  [style.backgroundColor]="layer.style?.qrBgColor || '#ffffff'">
+
+                  <!-- Banner Superior si aplica -->
+                  <div *ngIf="layer.style?.qrFrameStyle === 'banner-top'" class="styled-qr-banner top-banner"
+                    [style.backgroundColor]="layer.style?.qrFrameColor || '#b8860b'"
+                    [style.color]="layer.style?.qrFrameTextColor || '#ffffff'">
+                    {{ layer.style?.qrFrameText || '★ PASE VIP ★' }}
+                  </div>
+
+                  <div class="styled-qr-canvas-holder">
+                    <img [src]="layerMediaSource(layer)" [alt]="layer.text || 'Código QR'" class="styled-qr-img">
+
+                    <!-- Ojos / Esquinas Estilizadas -->
+                    <ng-container *ngIf="layer.style?.qrEyeShape && layer.style?.qrEyeShape !== 'square'">
+                      <div class="qr-eye-overlay eye-tl" [ngClass]="'shape-' + layer.style?.qrEyeShape"
+                        [style.borderColor]="layer.style?.qrColor || '#1c1917'"
+                        [style.backgroundColor]="layer.style?.qrBgColor || '#ffffff'">
+                        <div class="qr-pupil" [ngClass]="'shape-' + layer.style?.qrEyeShape"
+                          [style.backgroundColor]="layer.style?.qrColor || '#1c1917'"></div>
+                      </div>
+                      <div class="qr-eye-overlay eye-tr" [ngClass]="'shape-' + layer.style?.qrEyeShape"
+                        [style.borderColor]="layer.style?.qrColor || '#1c1917'"
+                        [style.backgroundColor]="layer.style?.qrBgColor || '#ffffff'">
+                        <div class="qr-pupil" [ngClass]="'shape-' + layer.style?.qrEyeShape"
+                          [style.backgroundColor]="layer.style?.qrColor || '#1c1917'"></div>
+                      </div>
+                      <div class="qr-eye-overlay eye-bl" [ngClass]="'shape-' + layer.style?.qrEyeShape"
+                        [style.borderColor]="layer.style?.qrColor || '#1c1917'"
+                        [style.backgroundColor]="layer.style?.qrBgColor || '#ffffff'">
+                        <div class="qr-pupil" [ngClass]="'shape-' + layer.style?.qrEyeShape"
+                          [style.backgroundColor]="layer.style?.qrColor || '#1c1917'"></div>
+                      </div>
+                    </ng-container>
+
+                    <!-- Emblema / Logo Central -->
+                    <div *ngIf="layer.style?.qrCenterLogo && layer.style?.qrCenterLogo !== 'none'"
+                      class="styled-qr-center-badge"
+                      [style.backgroundColor]="layer.style?.qrCenterLogoBg || '#ffffff'"
+                      [style.borderColor]="layer.style?.qrBgColor || '#ffffff'">
+                      <span *ngIf="getQrLogoIcon(layer.style?.qrCenterLogo) as qrIcon" class="qr-badge-icon">{{ qrIcon }}</span>
+                      <span *ngIf="layer.style?.qrCenterLogo === 'monogram'" class="qr-badge-monogram"
+                        [style.color]="layer.style?.qrFrameColor || layer.style?.qrColor || '#1c1917'">
+                        {{ layer.style?.qrCenterLogoText || 'VIP' }}
+                      </span>
+                      <img *ngIf="layer.style?.qrCenterLogo === 'custom' && layer.style?.qrCenterLogoUrl"
+                        [src]="layer.style?.qrCenterLogoUrl" class="qr-badge-custom-img" alt="Logo">
+                    </div>
+                  </div>
+
+                  <!-- Banner Inferior si aplica -->
+                  <div *ngIf="layer.style?.qrFrameStyle === 'banner-bottom'" class="styled-qr-banner bottom-banner"
+                    [style.backgroundColor]="layer.style?.qrFrameColor || '#b8860b'"
+                    [style.color]="layer.style?.qrFrameTextColor || '#ffffff'">
+                    {{ layer.style?.qrFrameText || '★ ESCANEAR AL ENTRAR ★' }}
+                  </div>
+                </div>
+
+                <!-- IMAGEN NORMAL -->
+                <div *ngIf="layer.type === 'image' && !isQrLayer(layer) && boundImageUrl(layer) as imageUrl" class="image-frame"
                   [ngStyle]="imageMaskStyle(layer)" [class.crop-active]="croppingLayerId === layer.id"
                   (dblclick)="startImageCrop($event, section, layer)"
                   (pointerdown)="beginImageCropPan($event, layer)"><img [src]="imageUrl" [alt]="layer.text || ''"
@@ -3284,15 +3427,134 @@
             <aside *ngIf="isDynamicImageOutputLayer(layer)" class="plugin-binding-note"><strong>Imagen
                 vinculada</strong><code>{{ layer.binding }}</code><span>Cambia el archivo desde la configuración de
                 contenido. Aquí puedes ajustar tamaño, recorte, posición y estilo.</span></aside>
+            <!-- DISEÑO AVANZADO DE CÓDIGO QR -->
+            <section *ngIf="isQrLayer(layer)" class="qr-style-editor">
+              <div class="inspector-heading">
+                <h3>Diseño de Código QR</h3>
+                <small>Marco, banner de escaneo, esquinas y logotipo central</small>
+              </div>
+
+              <!-- Estilos Predefinidos -->
+              <div class="qr-presets-section">
+                <span class="qr-field-title">Estilos Rápidos</span>
+                <div class="qr-preset-chips">
+                  <button *ngFor="let p of qrDesignPresets" type="button" class="qr-chip-btn"
+                    [class.active]="layer.style?.qrStylePreset === p.key"
+                    (click)="applyQrPreset(layer, p.key)" [title]="p.desc">
+                    <span class="qr-chip-dot" [style.background]="p.frameColor"></span>
+                    <span>{{ p.name }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tipo de Marco -->
+              <div class="qr-inspector-group">
+                <label>Marco de presentación
+                  <select [ngModel]="layer.style?.qrFrameStyle || 'none'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameStyle', $event)">
+                    <option value="none">Sin marco (QR clásico suelto)</option>
+                    <option value="banner-bottom">Tarjeta con Banner Inferior (Estilo App)</option>
+                    <option value="banner-top">Tarjeta con Banner Superior</option>
+                    <option value="card-rounded">Tarjeta con Esquinas Redondeadas</option>
+                    <option value="double-border">Doble Filete de Gala</option>
+                  </select>
+                </label>
+              </div>
+
+              <!-- Texto del Banner -->
+              <div *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'" class="qr-inspector-group">
+                <label>Texto del banner
+                  <input type="text" [ngModel]="layer.style?.qrFrameText ?? '★ ESCANEAR AL ENTRAR ★'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameText', $event)"
+                    placeholder="Ej. ESCANEAR AL ENTRAR, PASE VIP, VALIDAR">
+                </label>
+              </div>
+
+              <!-- Forma de Ojos / Esquinas -->
+              <div class="qr-inspector-group">
+                <label>Forma de esquinas (Ojos del QR)
+                  <select [ngModel]="layer.style?.qrEyeShape || 'square'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrEyeShape', $event)">
+                    <option value="square">Cuadradas clásicas</option>
+                    <option value="leaf">Gota / Hoja orgánica (Diseño Moderno)</option>
+                    <option value="rounded">Redondeadas suaves</option>
+                    <option value="circle">Círculos concéntricos</option>
+                  </select>
+                </label>
+              </div>
+
+              <!-- Logo o Emblema Central -->
+              <div class="qr-inspector-group">
+                <label>Emblema o logo central
+                  <select [ngModel]="layer.style?.qrCenterLogo || 'none'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogo', $event)">
+                    <option value="none">Sin emblema central</option>
+                    <option value="crown">👑 Corona Real VIP</option>
+                    <option value="rings">💍 Anillos de Boda</option>
+                    <option value="heart">❤️ Corazón Romántico</option>
+                    <option value="champagne">🥂 Copas de Brindis</option>
+                    <option value="ticket">🎟️ Ticket de Acceso</option>
+                    <option value="baby">👶 Huella de Bebé (Bautizo)</option>
+                    <option value="music">🎵 Nota Musical (Fiesta / Playlist)</option>
+                    <option value="location">📍 Pin de Ubicación</option>
+                    <option value="wifi">🛜 Conexión Wi-Fi</option>
+                    <option value="monogram">🔤 Monograma / Iniciales</option>
+                    <option value="custom">🖼️ Logo personalizado (URL)</option>
+                  </select>
+                </label>
+              </div>
+
+              <!-- Monograma si aplica -->
+              <div *ngIf="layer.style?.qrCenterLogo === 'monogram'" class="qr-inspector-group">
+                <label>Texto del monograma (1-3 letras)
+                  <input type="text" maxlength="4" [ngModel]="layer.style?.qrCenterLogoText ?? 'VIP'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoText', $event)" placeholder="Ej. VIP o A&C">
+                </label>
+              </div>
+
+              <!-- Logo custom url si aplica -->
+              <div *ngIf="layer.style?.qrCenterLogo === 'custom'" class="qr-inspector-group">
+                <label>URL de imagen del logo
+                  <input type="url" [ngModel]="layer.style?.qrCenterLogoUrl || ''"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoUrl', $event)" placeholder="https://...">
+                </label>
+              </div>
+
+              <!-- Paleta de colores -->
+              <div class="qr-color-palette-grid">
+                <label>Color QR
+                  <input type="color" [ngModel]="layer.style?.qrColor || '#1c1917'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrColor', $event)">
+                </label>
+                <label>Fondo QR
+                  <input type="color" [ngModel]="layer.style?.qrBgColor || '#ffffff'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrBgColor', $event)">
+                </label>
+                <label *ngIf="layer.style?.qrFrameStyle && layer.style?.qrFrameStyle !== 'none'">Marco / Banner
+                  <input type="color" [ngModel]="layer.style?.qrFrameColor || '#b8860b'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameColor', $event)">
+                </label>
+                <label *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'">Texto Banner
+                  <input type="color" [ngModel]="layer.style?.qrFrameTextColor || '#ffffff'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameTextColor', $event)">
+                </label>
+                <label *ngIf="layer.style?.qrCenterLogo && layer.style?.qrCenterLogo !== 'none'">Fondo Emblema
+                  <input type="color" [ngModel]="layer.style?.qrCenterLogoBg || '#ffffff'"
+                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoBg', $event)">
+                </label>
+              </div>
+            </section>
+
+            <!-- CONTROLES NORMALES DE MEDIOS (SOLO SI NO ES QR) -->
             <label
-              *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">{{
+              *ngIf="!isQrLayer(layer) && ((layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio')">{{
               layer.type === 'image' ? 'URL del archivo' : 'URL del archivo o proveedor' }}<input [ngModel]="layer.url"
                 (ngModelChange)="onMediaUrlChange(layer, $event)" type="url"
                 [placeholder]="layer.type === 'video' ? 'YouTube, Vimeo o archivo MP4/WebM' : (layer.type === 'audio' ? 'Spotify, YouTube o archivo MP3/WAV' : 'https://...')"></label>
             <aside *ngIf="(layer.type === 'video' || layer.type === 'audio') && layer.url" class="plugin-binding-note">
               <strong>{{ mediaProviderLabel(layer.url) }}</strong><span>{{ mediaProviderHelp(layer) }}</span></aside>
             <label
-              *ngIf="(layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio'">Subir
+              *ngIf="!isQrLayer(layer) && ((layer.type === 'image' && !isDynamicImageOutputLayer(layer)) || layer.type === 'video' || layer.type === 'audio')">Subir
               archivo<input #layerUpload type="file"
                 [accept]="layer.type === 'image' ? 'image/*' : (layer.type === 'video' ? 'video/*' : 'audio/*')"
                 (change)="uploadImage(layerUpload, 'layer')"></label>
@@ -4719,14 +4981,15 @@
     (change)="onMobilePhotoSelected(mobilePhotoPicker)">
 </div>
   <!-- Modal Vista Previa del Pase VIP -->
-  <div class="ve-modal-overlay" *ngIf="passPreviewModalOpen" (click)="passPreviewModalOpen = false" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
+  <ng-template [ngIf]="passPreviewModalOpen">
+  <div class="ve-modal-overlay" (click)="closePassPreviewModal()" style="position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px;">
     <div class="ve-modal-content" (click)="$event.stopPropagation()" style="max-width: 540px; width: 100%; padding: 22px; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e1b18; display: flex; align-items: center; gap: 8px;">
           <lucide-icon name="eye" [strokeWidth]="1.8" style="width: 18px; height: 18px; color: var(--nw-accent-dark, #8a6747);"></lucide-icon>
           <span>Vista Previa del Pase VIP</span>
         </h3>
-        <button type="button" class="icon-button" (click)="passPreviewModalOpen = false" style="border: none; background: transparent; cursor: pointer; display: flex; align-items: center;">
+        <button type="button" class="icon-button" (click)="closePassPreviewModal()" style="border: none; background: transparent; cursor: pointer; display: flex; align-items: center;">
           <lucide-icon name="x" [strokeWidth]="2" style="width: 18px; height: 18px; color: #6e6157;"></lucide-icon>
         </button>
       </div>
@@ -4736,43 +4999,7 @@
              [style.height.px]="getPassSheetHeight(s)"
              [style.background]="s.background?.color || '#0b1426'"
              style="position: relative; overflow: hidden; border-radius: 18px; box-shadow: 0 12px 36px rgba(0,0,0,0.25); max-width: 100%;">
-          <div *ngFor="let l of s.layers"
-               [style.position]="'absolute'"
-               [style.left.%]="l.x"
-               [style.top.%]="l.y"
-               [style.width.%]="l.width"
-               [style.height.%]="l.height"
-               [style.zIndex]="l.zIndex || 1"
-               [style.borderRadius.px]="l.style?.borderRadius || 0"
-               [style.backgroundColor]="l.style?.backgroundColor || 'transparent'"
-               [style.borderColor]="l.style?.borderColor || 'transparent'"
-               [style.borderWidth.px]="l.style?.borderWidth || 0"
-               [style.borderStyle]="l.style?.borderWidth ? (l.style?.borderStyle || 'solid') : 'none'"
-               [style.boxShadow]="l.style?.boxShadow || 'none'">
-            <div *ngIf="l.type === 'text'"
-                 style="width: 100%; height: 100%; display: flex; align-items: center; box-sizing: border-box;"
-                 [style.justifyContent]="l.style?.textAlign === 'left' ? 'flex-start' : (l.style?.textAlign === 'right' ? 'flex-end' : 'center')"
-                 [style.textAlign]="l.style?.textAlign || 'center'"
-                 [style.color]="l.style?.color || '#ffffff'"
-                 [style.fontSize.px]="l.style?.fontSize || 14"
-                 [style.fontWeight]="l.style?.fontWeight || '400'"
-                 [style.fontFamily]="l.style?.fontFamily || 'inherit'"
-                 [style.letterSpacing.px]="l.style?.letterSpacing || 0"
-                 [style.lineHeight]="l.style?.lineHeight || 1.3">
-              {{ evalPassText(l.text) }}
-            </div>
-            <img *ngIf="l.type === 'image'"
-                 [src]="layerMediaSource(l)"
-                 alt="Elemento"
-                 style="width: 100%; height: 100%; display: block;"
-                 [style.objectFit]="l.style?.objectFit || 'contain'"
-                 [style.borderRadius.px]="l.style?.borderRadius || 0">
-            <div *ngIf="l.type === 'shape'"
-                 style="width: 100%; height: 100%;"
-                 [style.backgroundColor]="l.style?.backgroundColor || '#000'"
-                 [style.borderRadius.px]="l.style?.borderRadius || 0">
-            </div>
-          </div>
+          <ng-container *ngTemplateOutlet="layerSurfaceTemplate || null; context: { section: s }"></ng-container>
         </div>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
@@ -4780,7 +5007,8 @@
           <lucide-icon name="download" [strokeWidth]="1.8" style="width: 15px; height: 15px;"></lucide-icon>
           <span>Descargar Imagen</span>
         </button>
-        <button type="button" class="secondary" (click)="passPreviewModalOpen = false" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer;">Cerrar</button>
+        <button type="button" class="secondary" (click)="closePassPreviewModal()" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer;">Cerrar</button>
       </div>
     </div>
   </div>
+</ng-template>

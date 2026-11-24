@@ -7,6 +7,9 @@ export interface TemplateAccessScreenTheme {
   backgroundImageUrl?: string;
   backgroundOverlayOpacity: number;
   backgroundBlur: number;
+  backgroundFilter?: 'none' | 'cinematic' | 'golden' | 'sepia' | 'vintage' | 'moody' | 'emerald' | 'frost' | 'warm' | 'noir';
+  backgroundVignette?: boolean;
+  backgroundEffect?: 'none' | 'sparkles' | 'petals' | 'starlight' | 'bokeh' | 'fireflies';
   cardStyle: 'glass' | 'solid' | 'minimal' | 'bordered';
   cardBgColor: string;
   cardOpacity: number;
