@@ -8046,4 +8046,116 @@
   border-radius: 99px;
 }
 
+/* ── Interruptor Lista Cerrada (Habilitar / Deshabilitar) ── */
+.access-closed-list-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 0 14px 0;
+  border-radius: 11px;
+  background: #f8f6f2;
+  border: 1px solid var(--nw-border, #eadecc);
+  transition: all 0.2s ease;
+}
+
+.access-closed-list-toggle.is-active {
+  background: rgba(197, 155, 108, 0.10);
+  border-color: rgba(197, 155, 108, 0.45);
+}
+
+.closed-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.closed-toggle-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(46, 37, 33, 0.06);
+  color: var(--nw-text-2, #6e6157);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.access-closed-list-toggle.is-active .closed-toggle-icon {
+  background: rgba(197, 155, 108, 0.2);
+  color: var(--nw-accent-dark, #8a6747);
+}
+
+.closed-toggle-icon lucide-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.closed-toggle-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.closed-toggle-text strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nw-text, #2e2621);
+  line-height: 1.25;
+}
+
+.closed-toggle-text small {
+  font-size: 10.5px;
+  color: var(--nw-text-2, #6e6157);
+  line-height: 1.3;
+}
+
+.access-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.access-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.access-switch-slider {
+  position: absolute;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 99px;
+  transition: 0.2s ease;
+}
+
+.access-switch-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.access-switch input:checked + .access-switch-slider {
+  background-color: var(--nw-accent, #c59b6c);
+}
+
+.access-switch input:checked + .access-switch-slider::before {
+  transform: translateX(16px);
+}
+
+
 

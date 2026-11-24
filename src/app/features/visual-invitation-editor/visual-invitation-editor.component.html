@@ -608,64 +608,11 @@
   <!-- ============================================================== -->
   <!-- MODAL: CATÁLOGO DE ESTILOS Y DISEÑOS PARA PANTALLA DE ACCESO    -->
   <!-- ============================================================== -->
-  <div class="design-library-backdrop access-styles-backdrop" *ngIf="showAccessStylesModal"
-    (click)="closeAccessStylesModal()">
-    <section class="design-library-dialog access-styles-dialog" role="dialog" aria-modal="true"
-      aria-labelledby="accessStylesTitle" (click)="$event.stopPropagation()">
-      <header class="design-library-heading">
-        <div class="catalog-title-col">
-          <div class="catalog-eyebrow">
-            <span>4 Diseños Profesionales · Acceso + Auto-registro</span>
-          </div>
-          <h1 id="accessStylesTitle">Plantillas de Pantalla de Acceso y Auto-registro</h1>
-          <p>Cada diseño incluye todas las capas funcionales listas para usar y editar tanto en la vista de ingreso
-            como en el formulario de auto-registro.</p>
-        </div>
-        <div class="catalog-header-actions">
-          <button type="button" class="btn-publish-from-catalog"
-            (click)="applyCurrentTemplateAccessPreset(); closeAccessStylesModal()">
-            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Usar Estilo de la Plantilla
-          </button>
-          <button type="button" class="close-catalog-btn" title="Cerrar" (click)="closeAccessStylesModal()">
-            <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
-          </button>
-        </div>
-      </header>
-
-      <!-- CUADRÍCULA 2x2 DE LOS 4 DISEÑOS COMPLETOS -->
-      <div class="access-styles-modal-grid access-styles-grid-4">
-        <div *ngFor="let p of accessPresets" class="access-style-modal-card"
-          [class.is-selected]="p.key === design.accessScreen?.templateKey"
-          (click)="selectAccessPresetAndClose(p.key)">
-          <div class="style-modal-card-preview style-modal-mini-stage" [style.background]="p.previewBg">
-            <span class="style-modal-tag-pill">{{ p.tag }}</span>
-            <span *ngIf="p.key === design.accessScreen?.templateKey"
-              class="style-modal-active-badge">✓ Aplicado</span>
-            <div class="mini-artboard-card"
-              [style.background]="p.previewCardBg"
-              [style.border-color]="p.previewAccent"
-              [style.border-radius.px]="p.cardRadius > 16 ? 12 : p.cardRadius">
-              <span class="mini-badge" [style.color]="p.previewAccent" [style.border-color]="p.previewAccent">{{ p.badgeText }}</span>
-              <span class="mini-title" [style.color]="p.previewText" [style.font-family]="p.headingFont">{{ p.defaultTitle }}</span>
-              <span class="mini-input" [style.border-color]="p.previewAccent"></span>
-              <span class="mini-btn" [style.background]="p.buttonBgColor" [style.color]="p.buttonTextColor"
-                [style.border-radius.px]="p.buttonRadius > 14 ? 14 : p.buttonRadius">{{ p.buttonText }}</span>
-            </div>
-          </div>
-          <div class="style-modal-card-info">
-            <div class="style-modal-title-row">
-              <strong>{{ p.name }}</strong>
-            </div>
-            <small>{{ p.description }}</small>
-            <div class="style-modal-card-footer">
-              <span class="style-includes-pill">✓ Acceso + Auto-registro</span>
-              <span class="style-modal-card-apply">Aplicar →</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+  <app-access-styles-modal *ngIf="showAccessStylesModal" [presets]="accessPresets"
+    [activeKey]="design.accessScreen?.templateKey" (selectPreset)="selectAccessPresetAndClose($event)"
+    (useTemplateStyle)="applyCurrentTemplateAccessPreset(); closeAccessStylesModal()"
+    (closed)="closeAccessStylesModal()">
+  </app-access-styles-modal>
   <div class="design-import-backdrop" *ngIf="showImportDialog" (click)="closeDesignImporter()">
     <section class="design-import-dialog" role="dialog" aria-modal="true" aria-labelledby="designImportTitle"
       (click)="$event.stopPropagation()">
@@ -2049,7 +1996,7 @@
             <button type="button" class="access-drawer-return-btn" (click)="setEditorCanvasMode('invitation')"
               title="Salir de la pantalla de acceso y volver a diseñar las secciones de la invitación">
               <lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon>
-              <span>← Volver a la Invitación</span>
+              <span>Volver a la Invitación</span>
             </button>
           </div>
 
@@ -2075,44 +2022,30 @@
             </button>
           </div>
 
-          <!-- SELECTOR DE VISTA DEL LIENZO -->
-          <div class="access-drawer-view-toggle">
-            <button type="button" class="access-view-toggle-btn" [class.active]="accessSimView === 'login'"
-              (click)="setAccessSimView('login')" title="Diseñar vista de ingreso con NIP">
-              <lucide-icon name="key-round" [strokeWidth]="1.8"></lucide-icon>
-              <span>Ingreso / NIP</span>
-            </button>
-            <button type="button" class="access-view-toggle-btn" [class.active]="accessSimView === 'register'"
-              (click)="setAccessSimView('register')" title="Diseñar formulario de auto-registro">
-              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon>
-              <span>Auto-registro</span>
-            </button>
+          <!-- INTERRUPTOR HABILITAR / DESHABILITAR LISTA CERRADA -->
+          <div class="access-closed-list-toggle" [class.is-active]="isClosedGuestList">
+            <div class="closed-toggle-info">
+              <span class="closed-toggle-icon">
+                <lucide-icon [name]="closedListIcon" [strokeWidth]="2"></lucide-icon>
+              </span>
+              <div class="closed-toggle-text">
+                <strong>{{ closedListTitle }}</strong>
+                <small>{{ closedListHint }}</small>
+              </div>
+            </div>
+            <label class="access-switch" [title]="closedListToggleTitle">
+              <input type="checkbox" [checked]="isClosedGuestList" [disabled]="savingAccessMode"
+                (change)="toggleClosedGuestList($any($event.target).checked)">
+              <span class="access-switch-slider"></span>
+            </label>
           </div>
 
           <!-- SUBMENÚ 1: DISEÑO GENERAL DE PANTALLA DE ACCESO -->
           <div *ngIf="accessSubTab === 'design'">
 
             <div class="access-tools-header">
-              <div class="access-badge-indicator"
-                [class.is-closed]="invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users'">
-                <lucide-icon name="lock-keyhole" [strokeWidth]="2"></lucide-icon>
-                <span>{{ (invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users') ?
-                  'Lista
-                  Cerrada Activa' : 'Modo Público' }}</span>
-                <span>{{ (invitation?.accessMode === 'guest_list' || invitation?.accessMode === 'specific_users') ?
-                  'Lista Cerrada Activa' : 'Modo Público' }}</span>
-              </div>
               <h2>Pantalla de Acceso</h2>
-              <p class="hint">Diseña la pantalla de bienvenida y validación para tus invitados cuando tu invitación es
-                de
-                lista cerrada.</p>
-              <p class="hint">Diseña la pantalla de bienvenida y validación para tus invitados cuando tu invitación es
-                de lista cerrada.</p>
-              <p *ngIf="invitation?.accessMode !== 'guest_list' && invitation?.accessMode !== 'specific_users'"
-                class="access-mode-warning">
-                ℹ️ Esta pantalla se mostrará a los invitados cuando el acceso de la invitación esté configurado en
-                <strong>Lista cerrada</strong>. Puedes diseñar y probar su aspecto aquí mismo.
-              </p>
+              <p class="hint">Personaliza la bienvenida y validación de tus invitados.</p>
             </div>
 
             <!-- SELECTOR DE ESTILOS Y TEMAS (BOTÓN DE MENÚ MODAL) -->
@@ -2136,51 +2069,20 @@
             <div class="access-quick-actions">
               <button type="button" class="btn-access-action" (click)="setEditorCanvasMode('access')"
                 [class.active]="editorCanvasMode === 'access'">
-                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en el lienzo
+                <lucide-icon name="eye" [strokeWidth]="1.8"></lucide-icon> Ver en lienzo
               </button>
               <button type="button" class="btn-access-action" (click)="applyCurrentTemplateAccessPreset()"
-                title="Aplicar diseÃ±o y capas de la plantilla activa">
-                title="Aplicar diseño y capas de la plantilla activa">
+                title="Aplicar diseño oficial de la plantilla activa">
                 <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> De Plantilla
               </button>
               <button type="button" class="btn-access-action" (click)="syncAccessScreenWithTheme()">
-                <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar del tema
+                <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Heredar tema
               </button>
               <button type="button" class="btn-access-action" (click)="resetAccessScreenLayers()"
                 title="Restablecer elementos y capas iniciales">
                 <lucide-icon name="refresh-cw" [strokeWidth]="1.8"></lucide-icon> Restablecer
               </button>
             </div>
-
-            <!-- PRESETS ESTILOS -->
-            <details class="theme-editor" open>
-              <summary>Estilos y Presets Rápidos</summary>
-              <p class="hint">Aplica combinaciones elegantes pre-diseñadas para listas cerradas.</p>
-              <div class="access-category-filters">
-                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'all'"
-                  (click)="accessPresetCategory = 'all'">Todos</button>
-                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'wedding'"
-                  (click)="accessPresetCategory = 'wedding'">💍 Boda & Gala</button>
-                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'xv'"
-                  (click)="accessPresetCategory = 'xv'">👑 XV Años</button>
-                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'baby'"
-                  (click)="accessPresetCategory = 'baby'">👶 Bautizo & Baby</button>
-                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'party'"
-                  (click)="accessPresetCategory = 'party'">🎵 Fiesta</button>
-                <button type="button" class="access-cat-pill" [class.active]="accessPresetCategory === 'minimal'"
-                  (click)="accessPresetCategory = 'minimal'">✨ Minimal</button>
-              </div>
-              <div class="access-presets-grid">
-                <button *ngFor="let p of getFilteredAccessPresets()" type="button" class="access-preset-card"
-                  (click)="applyAccessPreset(p.key)">
-                  <span class="preset-icon"><lucide-icon [name]="p.icon" [strokeWidth]="2"></lucide-icon></span>
-                  <div class="preset-info">
-                    <strong>{{ p.name }}</strong>
-                    <small>{{ p.description }}</small>
-                  </div>
-                </button>
-              </div>
-            </details>
 
             <!-- FONDO DE LA PANTALLA -->
             <details class="theme-editor" open *ngIf="design.accessScreen as acc">

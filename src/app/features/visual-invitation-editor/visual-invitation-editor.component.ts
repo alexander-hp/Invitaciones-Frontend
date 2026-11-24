@@ -201,6 +201,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   accessSimMessage = '';
   accessPresetCategory: string = 'all';
   showAccessStylesModal: boolean = false;
+  savingAccessMode: boolean = false;
   readonly accessPresets = ACCESS_SCREEN_TEMPLATES;
 
   readonly qrDesignPresets = [
@@ -8367,6 +8368,56 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       setTimeout(() => this.fitCanvasToViewport(), 0);
     }
     this.cdr?.markForCheck();
+  }
+
+  get isClosedGuestList(): boolean {
+    return this.invitation?.accessMode === 'guest_list' || this.invitation?.accessMode === 'specific_users';
+  }
+
+  get closedListIcon(): string {
+    return this.isClosedGuestList ? 'lock-keyhole' : 'lock-open';
+  }
+
+  get closedListTitle(): string {
+    return this.isClosedGuestList ? 'Lista Cerrada Activa' : 'Modo Público';
+  }
+
+  get closedListHint(): string {
+    return this.isClosedGuestList
+      ? 'Solicita validación antes de ver la invitación.'
+      : 'Actívala para mostrar esta pantalla de acceso.';
+  }
+
+  get closedListToggleTitle(): string {
+    return this.isClosedGuestList ? 'Desactivar lista cerrada' : 'Activar lista cerrada';
+  }
+
+  toggleClosedGuestList(enabled: boolean): void {
+    if (!this.invitation || this.savingAccessMode) return;
+    const id = this.invitation._id || this.invitation.id || '';
+    if (!id) return;
+    const nextMode: 'guest_list' | 'public' = enabled ? 'guest_list' : 'public';
+    const previousMode = this.invitation.accessMode;
+    this.invitation.accessMode = nextMode;
+    this.savingAccessMode = true;
+    this.api.updateInvitation(id, { accessMode: nextMode }).subscribe({
+      next: ({ invitation }) => {
+        if (this.invitation && invitation?.accessMode) {
+          this.invitation.accessMode = invitation.accessMode;
+        }
+        this.savingAccessMode = false;
+        this.flash(enabled
+          ? 'Lista Cerrada activada: los invitados verán esta pantalla de acceso.'
+          : 'Lista Cerrada desactivada: la invitación ahora es pública.');
+        this.cdr?.markForCheck();
+      },
+      error: () => {
+        if (this.invitation) this.invitation.accessMode = previousMode;
+        this.savingAccessMode = false;
+        this.error = 'No se pudo cambiar el modo de acceso.';
+        this.cdr?.markForCheck();
+      }
+    });
   }
 
   openAccessStylesModal(): void {
