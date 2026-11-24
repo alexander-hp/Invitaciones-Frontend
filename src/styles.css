@@ -1422,3 +1422,60 @@ th {
   max-height: 100% !important;
   pointer-events: none;
 }
+
+/* Auth Draft Banner & Back to Landing */
+.nw-back-to-landing {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--nw-text-2, #6e6157);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--nw-border, #eadecc);
+  background: var(--nw-surface-2, #f5f1ea);
+  transition: all 0.2s ease;
+}
+
+.nw-back-to-landing:hover {
+  color: var(--nw-text, #2e2621);
+  border-color: var(--nw-accent, #c09c78);
+}
+
+.nw-pending-draft-banner {
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fffdf7 0%, #f9f0de 100%);
+  border: 1.5px solid rgba(212, 164, 55, 0.5);
+  box-shadow: 0 6px 18px rgba(184, 132, 34, 0.1);
+}
+
+.nw-pending-draft-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #6f490c;
+  margin-bottom: 4px;
+}
+
+.nw-pending-draft-banner p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #5c4b37;
+}
+
+.nw-pending-draft-cta {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: #241d17;
+  color: #f7d97e !important;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nw-pending-draft-cta:hover {
+  background: #14100d;
+}

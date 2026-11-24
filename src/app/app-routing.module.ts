@@ -1,4 +1,4 @@
-﻿import { NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
@@ -38,9 +38,17 @@ import { DocumentationComponent } from './features/documentation/documentation.c
 import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
 import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
+import { LandingComponent } from './features/landing/landing.component';
 
 const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'new/dashboard' },
+  { path: '', pathMatch: 'full', component: LandingComponent },
+  { path: 'landing', redirectTo: '' },
+  { path: 'inicio', redirectTo: '' },
+  { path: 'new/landing', component: LandingComponent },
+  {
+    path: 'new/demo/visual-editor',
+    loadChildren: () => import('./features/visual-invitation-editor/visual-invitation-editor.module').then((module) => module.VisualInvitationEditorModule)
+  },
   { path: 'login', redirectTo: 'new/login' },
   { path: 'register', redirectTo: 'new/register' },
   { path: 'password-reset', redirectTo: 'new/password-reset' },
@@ -99,7 +107,7 @@ const routes: Routes = [
   { path: 'new/documentacion', component: DocumentationComponent, canActivate: [AdminGuard] },
   { path: 'new/unauthorized', component: UnauthorizedComponent },
   { path: 'unauthorized', redirectTo: 'new/unauthorized' },
-  { path: '**', redirectTo: 'new/dashboard' }
+  { path: '**', redirectTo: '' }
 ];
 
 @NgModule({

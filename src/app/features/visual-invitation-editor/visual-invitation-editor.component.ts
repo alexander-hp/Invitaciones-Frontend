@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, QueryList, TemplateRef, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, Optional, QueryList, TemplateRef, ViewChild, ViewChildren } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -6,6 +6,8 @@ import { map, switchMap } from 'rxjs/operators';
 import html2canvas from 'html2canvas';
 import type { jsPDF as JsPdfDocument } from 'jspdf';
 import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
+import { LandingDraftService } from '../../core/landing-draft.service';
 import {
   DedicationModel, EventModel, GiftRegistryItem, GuestAccessResponse, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
   VisualAccessScreenDesign, VisualDesignTemplateModel, VisualInvitationDesign,
@@ -993,6 +995,38 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   ];
   readonly previewGallerySlots = [0, 1, 2, 3, 4, 5];
   readonly previewGuest = { name: 'Invitado de ejemplo', group: 'Familia', tableName: 'Mesa 5', seatLabel: 'A-12', allowedCompanions: 2 };
+  isGuestDemoMode = false;
+
+  get saveButtonLabel(): string {
+    if (this.saving) return 'Guardando...';
+    return this.isGuestDemoMode ? 'Guardar y crear evento' : 'Guardar';
+  }
+
+  get showTopNoticeBanner(): boolean {
+    return this.isGuestDemoMode || this.invitation?.status === 'published';
+  }
+
+  get topNoticeBadge(): string {
+    return this.isGuestDemoMode ? 'Modo invitado' : 'Modo borrador';
+  }
+
+  get topNoticeMessage(): string {
+    return this.isGuestDemoMode
+      ? 'Diseña libremente sin perder cambios. Al hacer clic en “Guardar y crear evento”, iniciarás sesión o crearás tu cuenta y tu evento conservará todo tu diseño.'
+      : 'Guardar y autoguardar no cambian la invitación pública. Usa “Publicar cambios” cuando esté lista.';
+  }
+
+  get topNoticeActionLabel(): string {
+    return this.isGuestDemoMode ? 'Guardar y crear cuenta →' : 'Ver pública';
+  }
+
+  onTopNoticeAction(): void {
+    if (this.isGuestDemoMode) {
+      this.save();
+    } else {
+      this.openPublicVersion();
+    }
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -1001,7 +1035,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     private designImporter: VisualDesignImporterService,
     private animatedExporter: VisualInvitationAnimatedExportService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    @Optional() private auth?: AuthService,
+    @Optional() private landingDraft?: LandingDraftService
   ) { }
 
   ngOnInit(): void {
@@ -1012,6 +1048,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       window.addEventListener('drop', this.onWindowDropOutside, { passive: false });
     });
     const id = this.route.snapshot.paramMap.get('id') || '';
+    if (!id || id === 'landing-draft') {
+      this.initGuestDemoEditor();
+      return;
+    }
     this.api.listInvitations().subscribe({
       next: ({ invitations }) => {
         this.invitation = invitations.find((item) => (item._id || item.id) === id);
@@ -2524,6 +2564,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   openPublishAudit(): void {
+    if (this.isGuestDemoMode) {
+      this.saveGuestDraftAndProceedToAuth();
+      return;
+    }
     this.publishAuditIssues = this.auditDesign();
     this.loadAuditAcknowledgements();
     this.showAcknowledgedAuditIssues = false;
@@ -8008,8 +8052,107 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return new Date(value).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
+  private initGuestDemoEditor(): void {
+    this.isGuestDemoMode = true;
+    const presetParam = this.route.snapshot.queryParamMap.get('preset') || undefined;
+    const draft = this.landingDraft?.ensureDraftForVisualEditor(presetParam);
+    if (!draft) {
+      this.fail('No fue posible iniciar el editor de prueba.');
+      return;
+    }
+    this.invitation = this.clone(draft.invitation);
+    this.event = this.clone(draft.event);
+    const storedDesign = this.invitation?.content?.visualDesignDraft;
+    const presetKey = presetParam || draft.visualPresetKey || 'boda-girasoles';
+    this.showOnboarding = !presetParam && !storedDesign?.sections?.length && !draft.hasUserEdits;
+    this.design = this.clone(
+      storedDesign?.sections?.length ? storedDesign : this.buildPreset(presetKey, true)
+    );
+    this.design.presentationMode = this.design.presentationMode || 'continuous';
+    this.design.responsiveMode = this.design.responsiveMode || 'shared';
+    this.design.assets = this.design.assets || [];
+    this.design.theme = this.design.theme || this.inferTheme();
+    this.normalizeInvitationContent();
+    this.normalizeModuleStyles();
+    if (!this.design.accessScreen && this.invitation?.content?.accessScreen) {
+      this.design.accessScreen = this.clone(this.invitation.content.accessScreen);
+    }
+    this.initAccessScreenDesign();
+    const passDraft = this.invitation?.content?.passDesignDraft || this.invitation?.content?.passDesign;
+    if (passDraft?.sections?.length) {
+      this.passDesign = this.clone(passDraft);
+    } else {
+      this.passDesign = buildDefaultPassDesign(this.invitation, this.event, (p) => this.uid(p), () => this.inferTheme());
+    }
+    this.selectedSectionId = this.design.sections[0]?.id || '';
+    this.persistGuestDemoLocally(false);
+    this.lastSavedSnapshot = this.designSnapshot();
+    setTimeout(() => this.fitCanvasToViewport());
+    this.startAutosave();
+    this.loading = false;
+  }
+
+  private persistGuestDemoLocally(markEdited = true): void {
+    if (!this.invitation || !this.landingDraft) return;
+    this.design.active = true;
+    this.normalizeDesignGeometry();
+    this.syncLegacyGallery();
+    const updatedContent: InvitationContent = {
+      ...(this.invitation.content || {}),
+      template: 'visual-builder',
+      sourceTemplateKey: this.invitation.content?.sourceTemplateKey || this.design.accessScreen?.templateKey || 'envelope-cards',
+      galleryItems: (this.invitation.content?.galleryItems || []).filter((item) => item.url?.trim()),
+      visualDesignDraft: this.clone(this.design),
+      visualDesign: { ...this.clone(this.design), active: true },
+      accessScreen: this.design.accessScreen ? this.clone(this.design.accessScreen) : this.invitation.content?.accessScreen,
+      passDesignDraft: this.passDesign ? this.clone(this.passDesign) : this.invitation.content?.passDesignDraft,
+      passDesign: this.passDesign ? this.clone(this.passDesign) : this.invitation.content?.passDesign
+    };
+    this.invitation.content = updatedContent;
+    if (this.event && updatedContent.headline && !this.event.title) {
+      this.event.title = updatedContent.headline;
+    }
+    this.landingDraft.saveDraft(
+      {
+        mode: 'visual',
+        event: this.event ? this.clone(this.event) : undefined,
+        invitation: this.clone(this.invitation)
+      },
+      markEdited
+    );
+  }
+
+  saveGuestDraftAndProceedToAuth(): void {
+    if (this.saving || this.publishing) return;
+    this.persistGuestDemoLocally(true);
+    this.landingDraft?.markPendingSave('visual');
+    this.markSaved();
+
+    if (this.auth?.isAuthenticated && this.landingDraft) {
+      this.saving = true;
+      this.error = '';
+      this.landingDraft.materializeDraftToAccount().subscribe({
+        next: ({ redirectCommands }) => {
+          this.saving = false;
+          this.router.navigate(redirectCommands);
+        },
+        error: (err) => {
+          this.saving = false;
+          this.error = err?.error?.message || 'No se pudo crear el evento con tu diseño.';
+        }
+      });
+      return;
+    }
+
+    this.router.navigate(['/new/login'], { queryParams: { intent: 'save-draft' } });
+  }
+
   save(): void {
     if (!this.invitation || this.saving || this.autosaving || this.publishing) return;
+    if (this.isGuestDemoMode) {
+      this.saveGuestDraftAndProceedToAuth();
+      return;
+    }
     this.saving = true;
     this.error = '';
     const request = this.persistDesign();
@@ -8022,6 +8165,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   publish(): void {
     if (!this.invitation || this.saving || this.autosaving || this.publishing) return;
+    if (this.isGuestDemoMode) {
+      this.saveGuestDraftAndProceedToAuth();
+      return;
+    }
     this.publishing = true;
     this.error = '';
     const id = this.invitation._id || this.invitation.id || '';
@@ -8064,6 +8211,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   back(): void {
+    if (this.isGuestDemoMode) {
+      this.persistGuestDemoLocally(true);
+      this.router.navigate(['/']);
+      return;
+    }
     const id = this.invitation?._id || this.invitation?.id;
     this.router.navigate(['/new/invitations', id, 'editor']);
   }
@@ -8073,6 +8225,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   openDraftPreview(): void {
+    if (this.isGuestDemoMode) {
+      this.persistGuestDemoLocally(true);
+      this.markSaved();
+      window.open(`/new/i/landing-draft?guestDraft=true&tpl=visual-builder&preview=true&device=${this.device}`, '_blank');
+      return;
+    }
     if (!this.invitation?.slug) return;
     const previewWindow = window.open('', '_blank');
     const openSavedDraft = () => {
@@ -11325,6 +11483,11 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   private autoSave(): void {
     if (this.showImportDialog || !this.hasUnsavedChanges || this.saving || this.publishing || this.autosaving || this.uploading) return;
+    if (this.isGuestDemoMode) {
+      this.persistGuestDemoLocally(true);
+      this.markSaved();
+      return;
+    }
     this.autosaving = true;
     this.autosaveState = 'Guardando...';
     const request = this.persistDesign();

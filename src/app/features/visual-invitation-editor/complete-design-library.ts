@@ -10,6 +10,8 @@ export interface CompleteDesignPreset {
 }
 
 export const COMPLETE_DESIGN_PRESETS: CompleteDesignPreset[] = [
+  { key: 'boda-girasoles', name: 'Elegancia R\u00fastica: Girasoles Radiantes, Madera & Anillos Dorados', description: 'Calidez campestre iluminada por girasoles dorados, madera r\u00fastica, alianzas entrelazadas y tonos miel.', category: 'boda', colors: ['#2d2112', '#faf3e8', '#d49b27'] },
+  { key: 'boda-navy-blue', name: 'Navy Blue & Gold: Azul Noche, Acuarela & Flores Nobles', description: 'Elegancia nocturna en acuarela azul medianoche, divisores florales ba\u00f1ados en oro fino y cristal marino.', category: 'boda', colors: ['#0d1b2a', '#f4efe6', '#d4af37'] },
   { key: 'palazzo-orangerie', name: 'Villa L\u2019Orangerie \u00b7 Atelier', description: 'Exclusiva Argon 4: Fresco italiano, cipreses nocturnos, arcos barrocos en oro viejo, sellos de lacre y 16 cap\u00edtulos editoriales.', category: 'general', colors: ['#152820', '#f6efe2', '#c89b3c'] },
   { key: 'haute-couture', name: 'Alta Costura Imperial', description: 'Est\u00e9tica de lujo editorial, marco arquitect\u00f3nico, oro fino y composici\u00f3n regia.', category: 'boda', colors: ['#fcfaf7', '#181514', '#c59b48'] },
   { key: 'xv-burgundy', name: 'Mis XV Borgo\u00f1a Real', description: 'Terciopelo borgo\u00f1a, encaje victoriano, rosas 3D con perlas y caligraf\u00eda de gala.', category: 'xv', colors: ['#5c0d18', '#faf6f0', '#d4af37'] },
@@ -27,6 +29,8 @@ type DesignPalette = {
 };
 
 const PALETTES: Record<string, DesignPalette> = {
+  'boda-girasoles': { background: '#2d2112', foreground: '#faf3e8', accent: '#d49b27', secondary: '#3c2b18', muted: '#e5d4b8', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', button: '#d49b27', buttonText: '#2d2112' },
+  'boda-navy-blue': { background: '#0d1b2a', foreground: '#f8f5ef', accent: '#d4af37', secondary: '#15283d', muted: '#cbd5e1', headingFont: "'Cinzel', serif", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#0d1b2a' },
   'palazzo-orangerie': { background: '#f6efe2', foreground: '#152820', accent: '#c89b3c', secondary: '#13221d', muted: '#52635a', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#152820', buttonText: '#f6efe2' },
   'haute-couture': { background: '#fcfaf7', foreground: '#181514', accent: '#c59b48', secondary: '#f4efe6', muted: '#7a7269', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#181514', buttonText: '#ffffff' },
   'xv-burgundy': { background: '#240308', foreground: '#faf6f0', accent: '#d4af37', secondary: '#180104', muted: '#e2d5c3', headingFont: "'Great Vibes', cursive", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#240308' },
@@ -82,7 +86,24 @@ export function buildCompleteDesign(
   };
   const rule = (x: number, y: number, width: number) => add('shape', '', x, y, width, .4, { backgroundColor: palette.accent, shapeKind: 'rectangle' }, { name: 'Linea decorativa' });
 
-  if (variant === 'haute-couture') {
+  if (variant === 'boda-girasoles') {
+    hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-girasoles/portada-bg.webp', overlay: 0.45 };
+    add('text', 'ELEGANCIA RÚSTICA · NUESTRA BODA', 10, 6, 80, 4, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 3 }, { name: 'Etiqueta rústica' });
+    const heroPhoto = coverUrl || 'assets/boda-girasoles/flores-girasoles.webp';
+    add('image', '', 20, 12, 60, 40, { objectFit: coverUrl ? 'cover' : 'contain', preserveAspectRatio: !coverUrl, frameEnabled: Boolean(coverUrl), imageMask: coverUrl ? 'arch' : 'none', padding: coverUrl ? 6 : 0, backgroundColor: coverUrl ? '#3c2b18' : 'transparent', borderRadius: coverUrl ? 120 : 0, borderWidth: coverUrl ? 2 : 0, borderColor: '#d49b27', borderStyle: 'solid' }, { url: heroPhoto, name: 'Girasoles / Portada' });
+    add('image', '', 42, 53, 16, 7, { objectFit: 'contain', preserveAspectRatio: true, backgroundColor: 'transparent' }, { url: 'assets/boda-girasoles/wedding-rings.png', name: 'Anillos dorados' });
+    add('text', title, 8, 61, 84, 15, { ...titleStyle, fontSize: 44, color: '#faf3e8', fontWeight: 700 }, { name: 'Nombres' });
+    rule(28, 77, 44);
+    if (event?.date) add('text', '{{event.date}}', 10, 79, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 700, letterSpacing: 2.5 }, { name: 'Fecha del evento' });
+  } else if (variant === 'boda-navy-blue') {
+    hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-navy-blue/watercolor-navy-bg.jpg', overlay: 0.35 };
+    add('text', 'GALA NUPCIAL · NAVY BLUE & GOLD', 10, 6, 80, 4, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 3 }, { name: 'Etiqueta de gala' });
+    const navyPhoto = coverUrl || 'assets/boda-navy-blue/flor-navy-3.webp';
+    add('image', '', 20, 12, 60, 40, { objectFit: coverUrl ? 'cover' : 'contain', preserveAspectRatio: !coverUrl, frameEnabled: Boolean(coverUrl), imageMask: coverUrl ? 'arch' : 'none', padding: coverUrl ? 7 : 0, backgroundColor: coverUrl ? '#15283d' : 'transparent', borderRadius: coverUrl ? 120 : 0, borderWidth: coverUrl ? 2 : 0, borderColor: '#d4af37', borderStyle: 'solid' }, { url: navyPhoto, name: 'Flores nobles / Portada' });
+    add('image', '', 25, 53, 50, 6, { objectFit: 'contain', preserveAspectRatio: true, backgroundColor: 'transparent' }, { url: 'assets/boda-navy-blue/flores-divisor-gold.png', name: 'Divisor floral de oro' });
+    add('text', title, 8, 60, 84, 16, { ...titleStyle, fontSize: 40, color: '#f8f5ef', fontWeight: 700, letterSpacing: 1.2 }, { name: 'Nombres' });
+    if (event?.date) add('text', '{{event.date}}', 10, 78, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 600, letterSpacing: 2.5 }, { name: 'Fecha del evento' });
+  } else if (variant === 'haute-couture') {
     rule(20, 7, 60);
     add('text', 'EXCLUSIVE CELEBRATION · HAUTE COUTURE', 10, 10, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 10, fontWeight: 700, letterSpacing: 3 });
     image(20, 16, 60, 44, 'arch');

@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { GoogleAuthService } from '../../core/google-auth.service';
+import { LandingDraftService } from '../../core/landing-draft.service';
 
 @Component({
   selector: 'app-new-login',
@@ -17,6 +18,10 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = false;
   error = '';
   showPassword = false;
+  hasPendingDraft = false;
+  draftSummary = '';
+  draftEventTitle = '';
+  creatingEventFromDraft = false;
 
   testimonials = [
     {
@@ -41,10 +46,19 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private googleAuth: GoogleAuthService
+    private route: ActivatedRoute,
+    private googleAuth: GoogleAuthService,
+    private landingDraft: LandingDraftService
   ) {}
 
   ngOnInit(): void {
+    const intentSave = this.route.snapshot.queryParamMap.get('intent') === 'save-draft';
+    if (this.landingDraft.hasPendingSave() || (intentSave && this.landingDraft.hasDraft())) {
+      this.hasPendingDraft = true;
+      this.draftSummary = this.landingDraft.getDraftSummaryLabel();
+      this.draftEventTitle = this.landingDraft.getDraft()?.event?.title || '';
+    }
+
     // Rotar testimonios automáticamente cada 5 segundos
     this.carouselInterval = setInterval(() => {
       this.nextTestimonial();
@@ -70,6 +84,25 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private finalizeAuthNavigation(): void {
+    if (this.hasPendingDraft || this.landingDraft.hasPendingSave()) {
+      this.creatingEventFromDraft = true;
+      this.loading = true;
+      this.landingDraft.materializeDraftToAccount().subscribe({
+        next: ({ redirectCommands }) => {
+          this.creatingEventFromDraft = false;
+          this.router.navigate(redirectCommands);
+        },
+        error: () => {
+          this.creatingEventFromDraft = false;
+          this.router.navigate(['/new/dashboard']);
+        }
+      });
+      return;
+    }
+    this.router.navigate(['/new/dashboard']);
+  }
+
   handleGoogleSignIn(idToken: string): void {
     this.loading = true;
     this.error = '';
@@ -79,7 +112,7 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
       accountType: 'client',
       role: 'client'
     }).subscribe({
-      next: () => this.router.navigate(['/new/dashboard']),
+      next: () => this.finalizeAuthNavigation(),
       error: (err) => {
         this.loading = false;
         this.error = err?.error?.message || 'Error al autenticar con Google.';
@@ -91,7 +124,7 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loading = true;
     this.error = '';
     this.auth.login(this.form).subscribe({
-      next: () => this.router.navigate(['/new/dashboard']),
+      next: () => this.finalizeAuthNavigation(),
       error: (error) => {
         if (error.status === 0) {
           this.error = `No se pudo conectar al servidor backend en ${this.auth.apiUrl}. Revisa que tu PC y celular estén en la misma red y que el Firewall permita el puerto 4000.`;
@@ -163,7 +196,7 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
       accountType: 'client',
       role: 'client'
     }).subscribe({
-      next: () => this.router.navigate(['/new/dashboard']),
+      next: () => this.finalizeAuthNavigation(),
       error: (error) => {
         this.error = error.error?.message || `No se pudo iniciar con ${provider}.`;
         this.loading = false;

@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { GoogleAuthService } from '../../core/google-auth.service';
+import { LandingDraftService } from '../../core/landing-draft.service';
 import { AccountType, UserRole } from '../../core/models';
 
 @Component({
@@ -24,6 +25,10 @@ export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = false;
   error = '';
   showPassword = false;
+  hasPendingDraft = false;
+  draftSummary = '';
+  draftEventTitle = '';
+  creatingEventFromDraft = false;
 
   accountTypes: Array<{ value: AccountType; label: string; role: UserRole }> = [
     { value: 'client', label: 'Cliente / anfitrión', role: 'client' },
@@ -57,10 +62,26 @@ export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private googleAuth: GoogleAuthService
+    private route: ActivatedRoute,
+    private googleAuth: GoogleAuthService,
+    private landingDraft: LandingDraftService
   ) {}
 
   ngOnInit(): void {
+    const intentSave = this.route.snapshot.queryParamMap.get('intent') === 'save-draft';
+    if (this.landingDraft.hasPendingSave() || (intentSave && this.landingDraft.hasDraft())) {
+      this.hasPendingDraft = true;
+      this.draftSummary = this.landingDraft.getDraftSummaryLabel();
+      this.draftEventTitle = this.landingDraft.getDraft()?.event?.title || '';
+      this.form = {
+        name: '',
+        email: '',
+        password: '',
+        accountType: 'client',
+        role: 'client'
+      };
+    }
+
     // Rotar testimonios automáticamente cada 5 segundos
     this.carouselInterval = setInterval(() => {
       this.nextTestimonial();
@@ -86,6 +107,25 @@ export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private finalizeAuthNavigation(): void {
+    if (this.hasPendingDraft || this.landingDraft.hasPendingSave()) {
+      this.creatingEventFromDraft = true;
+      this.loading = true;
+      this.landingDraft.materializeDraftToAccount().subscribe({
+        next: ({ redirectCommands }) => {
+          this.creatingEventFromDraft = false;
+          this.router.navigate(redirectCommands);
+        },
+        error: () => {
+          this.creatingEventFromDraft = false;
+          this.router.navigate(['/new/dashboard']);
+        }
+      });
+      return;
+    }
+    this.router.navigate(['/new/dashboard']);
+  }
+
   handleGoogleSignIn(idToken: string): void {
     this.loading = true;
     this.error = '';
@@ -99,7 +139,7 @@ export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
       accountType,
       role: role as Exclude<UserRole, 'admin'>
     }).subscribe({
-      next: () => this.router.navigate(['/new/dashboard']),
+      next: () => this.finalizeAuthNavigation(),
       error: (err) => {
         this.loading = false;
         this.error = err?.error?.message || 'Error al autenticar con Google.';
@@ -113,7 +153,7 @@ export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
     const selected = this.accountTypes.find((item) => item.value === this.form.accountType);
     this.form.role = selected?.role || 'client';
     this.auth.register(this.form).subscribe({
-      next: () => this.router.navigate(['/new/dashboard']),
+      next: () => this.finalizeAuthNavigation(),
       error: (error) => {
         this.error = error.error?.message || 'No se pudo crear la cuenta. Verifica tus datos.';
         this.loading = false;
@@ -189,7 +229,7 @@ export class NewRegisterComponent implements OnInit, OnDestroy, AfterViewInit {
       accountType,
       role: role as Exclude<UserRole, 'admin'>
     }).subscribe({
-      next: () => this.router.navigate(['/new/dashboard']),
+      next: () => this.finalizeAuthNavigation(),
       error: (error) => {
         this.error = error.error?.message || `No se pudo registrar con ${provider}.`;
         this.loading = false;

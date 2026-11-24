@@ -61,12 +61,14 @@ export class AppComponent implements OnInit {
   }
 
   get isNewLayout(): boolean {
-    const url = this.router.url;
-    return url.startsWith('/new') ||
-           url.startsWith('/i/') ||
-           url.startsWith('/e/') ||
-           url.startsWith('/embed/') ||
-           url.startsWith('/check-in/') ||
-           url.startsWith('/external-access/');
+    const cleanUrl = (this.router.url || '/').split('?')[0].split('#')[0];
+    return cleanUrl === '/' ||
+           cleanUrl === '' ||
+           cleanUrl.startsWith('/new') ||
+           cleanUrl.startsWith('/i/') ||
+           cleanUrl.startsWith('/e/') ||
+           cleanUrl.startsWith('/embed/') ||
+           cleanUrl.startsWith('/check-in/') ||
+           cleanUrl.startsWith('/external-access/');
   }
 }

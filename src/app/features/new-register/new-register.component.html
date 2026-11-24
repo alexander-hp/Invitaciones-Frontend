@@ -3,16 +3,26 @@
     
     <!-- LEFT SIDE: Form Column -->
     <div class="nw-auth-form-col">
-      <div class="nw-auth-brand">
-        <div class="nw-auth-logo">
-          <img src="assets/logos/velisse.svg" alt="Velisse" class="nw-auth-logo-img">
-        </div>
-        <span class="nw-brand-text">Velisse</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px;">
+        <a routerLink="/" class="nw-auth-brand" style="margin-bottom: 0; text-decoration: none;">
+          <div class="nw-auth-logo">
+            <img src="assets/logos/velisse.svg" alt="Velisse" class="nw-auth-logo-img">
+          </div>
+          <span class="nw-brand-text">Velisse</span>
+        </a>
+        <a routerLink="/" class="nw-back-to-landing">← Inicio</a>
+      </div>
+
+      <div *ngIf="hasPendingDraft" class="nw-pending-draft-banner">
+        <div class="nw-pending-draft-title">✨ Se creará tu evento con todos tus datos</div>
+        <p>
+          Al registrar tu cuenta crearemos automáticamente <strong>{{ draftEventTitle || 'tu evento' }}</strong> con <strong>{{ draftSummary }}</strong> sin perder ninguno de tus cambios.
+        </p>
       </div>
 
       <div class="nw-auth-header">
-        <h1>Crear cuenta</h1>
-        <p>Comienza a diseñar invitaciones interactivas en Velisse.</p>
+        <h1>{{ hasPendingDraft ? 'Crea tu cuenta y guarda tu evento' : 'Crear cuenta' }}</h1>
+        <p>{{ hasPendingDraft ? 'Completa tu registro para guardar tu plantilla personalizada y continuar editando.' : 'Comienza a diseñar invitaciones interactivas en Velisse.' }}</p>
       </div>
 
       <form (ngSubmit)="submit()" class="nw-form-container">
@@ -125,7 +135,8 @@
         </div>
 
         <button type="submit" class="nw-btn-primary nw-btn-submit" [disabled]="loading">
-          <span *ngIf="!loading">Crear Cuenta</span>
+          <span *ngIf="!loading">{{ hasPendingDraft ? 'Crear Cuenta y Guardar mi Evento' : 'Crear Cuenta' }}</span>
+          <span *ngIf="loading && creatingEventFromDraft" style="margin-right: 8px; font-size: 13px;">Creando tu evento...</span>
           <div *ngIf="loading" class="nw-spinner"></div>
         </button>
 
@@ -158,7 +169,8 @@
       </div>
 
       <div class="nw-auth-footer">
-        ¿Ya tienes cuenta? <a routerLink="/new/login">Inicia sesión</a>
+        ¿Ya tienes cuenta?
+        <a [routerLink]="['/new/login']" [queryParams]="hasPendingDraft ? { intent: 'save-draft' } : null">Inicia sesión</a>
       </div>
     </div>
 

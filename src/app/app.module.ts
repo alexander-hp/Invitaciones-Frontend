@@ -109,6 +109,7 @@ import { EventBookWidgetComponent } from './shared/components/event-book-widget/
 import { ImageDropzoneComponent } from './shared/components/image-dropzone/image-dropzone.component';
 import { VisualInvitationRendererModule } from './shared/components/visual-invitation-renderer/visual-invitation-renderer.module';
 import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
+import { LandingComponent } from './features/landing/landing.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 
@@ -121,6 +122,7 @@ import { environment } from '../environments/environment';
     EventBookWidgetComponent,
     ImageDropzoneComponent,
     GuestActivityComponent,
+    LandingComponent,
     DocumentationComponent,
     UnauthorizedComponent,
     CheckInStaffComponent,

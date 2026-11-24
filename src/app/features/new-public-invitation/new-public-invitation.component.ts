@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewChecked, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef, HostListener, Optional } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/api.service';
+import { LandingDraftService } from '../../core/landing-draft.service';
 import { TemplateTextOverlayService } from '../../core/template-text-overlay.service';
 import { generateInteractiveRuntimeScript } from '../../core/universal-invitation-runtime';
 import { getTemplateAccessPreset, TemplateAccessScreenPreset, isLegacyOrMismatchedAccessScreen } from '../../core/template-access-presets';
@@ -228,7 +229,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     private textOverlay: TemplateTextOverlayService,
     private elRef: ElementRef,
     private http: HttpClient,
-    private cdr?: ChangeDetectorRef
+    private cdr?: ChangeDetectorRef,
+    @Optional() private landingDraft?: LandingDraftService
   ) { }
   private iframeBridgeListener?: (e: MessageEvent) => void;
   private wasPlayingBeforeHidden = false;
@@ -330,6 +332,33 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     console.log('test edit: [PublicInv] Received bridge message from iframe:', type, event.data);
 
     switch (type) {
+      case 'LANDING_DRAFT_UPDATE':
+        if (event.data.draft && (this.isLandingDraftSlug() || this.route.snapshot.queryParamMap.get('guestDraft') === 'true')) {
+          const incoming = event.data.draft;
+          const nextInv = incoming.invitation ? JSON.parse(JSON.stringify(incoming.invitation)) : this.invitation;
+          const queryTpl = this.route.snapshot.queryParamMap.get('tpl');
+          if (nextInv?.content && queryTpl) {
+            nextInv.content.template = queryTpl;
+          }
+          if (incoming.event) {
+            this.event = JSON.parse(JSON.stringify(incoming.event));
+            if (nextInv) nextInv.event = this.event;
+          }
+          if (nextInv) {
+            this.invitation = nextInv;
+            this.cachedCurrentTemplate = undefined;
+            this.cachedAmbientThemeColor = undefined;
+            this.lastTemplateInvitationRef = undefined;
+            this.lastAmbientInvitationRef = undefined;
+            if (nextInv.content?.editedTexts && Object.keys(nextInv.content.editedTexts).length > 0) {
+              this.pendingEditedTexts = { ...nextInv.content.editedTexts };
+              this.editedTextsApplied = false;
+            }
+            this.startCountdown();
+            this.cdr?.markForCheck();
+          }
+        }
+        break;
       case 'INV_TOGGLE_MUSIC':
         this.toggleMusic();
         break;
@@ -540,7 +569,52 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.fetchPublishedInvitation(slug, sessionStorage.getItem(this.guestSessionStorageKey(slug)) || undefined);
   }
 
+  private isLandingDraftSlug(slug?: string): boolean {
+    const s = slug ?? (this.route.snapshot.paramMap.get('slug') || '');
+    return s === 'landing-draft' || this.route.snapshot.queryParamMap.get('guestDraft') === 'true';
+  }
+
+  private resolveGuestLandingDraft(slug: string): { invitation: InvitationModel; event: EventModel } | null {
+    const queryTpl = this.route.snapshot.queryParamMap.get('tpl') || undefined;
+    let draft = this.landingDraft?.getDraft() || null;
+    if (!draft && typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('velisse_landing_draft_v1');
+        if (raw) draft = JSON.parse(raw);
+      } catch {}
+    }
+    if (!draft && this.landingDraft) {
+      draft = this.landingDraft.ensureDraftForTemplate(queryTpl || 'boda-girasoles');
+    }
+    if (!draft) return null;
+
+    const invitation: InvitationModel = JSON.parse(JSON.stringify(draft.invitation));
+    const event: EventModel = JSON.parse(JSON.stringify(draft.event));
+    invitation.slug = slug || 'landing-draft';
+    invitation.event = event;
+    if (!invitation.content) invitation.content = {};
+    if (queryTpl) {
+      invitation.content.template = queryTpl;
+      if (queryTpl === 'visual-builder' && invitation.content.visualDesignDraft) {
+        invitation.content.visualDesign = { ...invitation.content.visualDesignDraft, active: true };
+      }
+    } else if (draft.mode === 'visual' && invitation.content.visualDesignDraft) {
+      invitation.content.template = 'visual-builder';
+      invitation.content.visualDesign = { ...invitation.content.visualDesignDraft, active: true };
+    }
+    return { invitation, event };
+  }
+
   private fetchPublishedInvitation(slug: string, token?: string): void {
+    if (this.isLandingDraftSlug(slug)) {
+      const resolved = this.resolveGuestLandingDraft(slug);
+      if (resolved) {
+        this.accessRequired = false;
+        this.event = resolved.event;
+        this.applyInvitation(resolved.invitation, slug);
+        return;
+      }
+    }
     const previewRequested = this.route.snapshot.queryParamMap.get('preview') === 'true';
     const ownerToken = localStorage.getItem('invitaciones_token');
     if (previewRequested && ownerToken) {
@@ -2263,7 +2337,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   loadPublicAlbum(): void {
-    if (!this.invitation?.content.privateAlbumEnabled) return;
+    if (!this.invitation?.content.privateAlbumEnabled || this.isLandingDraftSlug(this.invitation?.slug)) return;
     this.api.listPublicAlbum(this.invitation.slug, this.guestSessionToken).subscribe({
       next: ({ assets }) => {
         this.publicAlbumAssets = assets;
@@ -2277,7 +2351,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   }
 
   loadDedications(): void {
-    if (this.invitation?.content.dedicationSettings?.enabled === false) return;
+    if (this.invitation?.content.dedicationSettings?.enabled === false || this.isLandingDraftSlug(this.invitation?.slug)) return;
     this.api.listPublicInvitationDedications(this.invitation?.slug || '', this.guestSessionToken).subscribe({
       next: ({ dedications }) => this.dedications = dedications,
       error: () => this.dedications = []

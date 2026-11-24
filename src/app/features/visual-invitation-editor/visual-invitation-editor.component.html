@@ -75,7 +75,7 @@
       title="Explorar catálogo de plantillas Canva-style">
       <lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Plantillas</span>
     </button>
-    <button class="secondary publish-template-btn" type="button" (click)="openPublishTemplateModal()"
+    <button class="secondary publish-template-btn" type="button" [hidden]="isGuestDemoMode" (click)="openPublishTemplateModal()"
       title="Publicar mi diseño como plantilla comunitaria">
       <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon><span>Publicar</span>
       <span class="reward-pill-badge">5%</span>
@@ -85,21 +85,19 @@
     <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving"
       (click)="save()" title="Guardar">
       <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon>
-      <span>{{ saving ? 'Guardando...' : 'Guardar' }}</span>
+      <span>{{ saveButtonLabel }}</span>
     </button>
-    <button class="publish" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing"
+    <button class="publish" [hidden]="isGuestDemoMode" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing"
       (click)="openPublishAudit()" title="Publicar">
       <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
       <span>{{ publishing ? 'Publicando...' : 'Publicar' }}</span>
     </button>
   </header>
 
-  <div class="ve-notice draft-info" *ngIf="invitation?.status === 'published'">
-    <span class="draft-badge">Modo borrador</span>
-    <span class="draft-message">Guardar y autoguardar no cambian la invitación pública. Usa “Publicar cambios” cuando
-      esté lista.</span>
-    <button type="button" class="draft-view-btn" (click)="openPublicVersion()"><lucide-icon name="external-link"
-        [strokeWidth]="1.8"></lucide-icon><span>Ver pública</span></button>
+  <div class="ve-notice draft-info" *ngIf="showTopNoticeBanner">
+    <span class="draft-badge">{{ topNoticeBadge }}</span>
+    <span class="draft-message">{{ topNoticeMessage }}</span>
+    <button type="button" class="draft-view-btn" (click)="onTopNoticeAction()"><span>{{ topNoticeActionLabel }}</span></button>
   </div>
   <div class="ve-toast-container" aria-live="polite">
     <div class="ve-notice error" *ngIf="error">
