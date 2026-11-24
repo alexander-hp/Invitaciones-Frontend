@@ -1592,13 +1592,50 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.design.accessScreen!.layers = [];
     }
     if (!this._cachedAccessSectionProxy || this._cachedAccessSectionProxy.layers !== this.design.accessScreen!.layers) {
+      const getAcc = () => this.design.accessScreen!;
+      const bgProxy = {
+        get color(): string {
+          return getAcc().backgroundColor || '#1c2434';
+        },
+        set color(value: string) {
+          const acc = getAcc();
+          acc.backgroundColor = value;
+          acc.backgroundType = 'color';
+        },
+        get imageUrl(): string {
+          return getAcc().backgroundImageUrl || '';
+        },
+        set imageUrl(value: string) {
+          const acc = getAcc();
+          acc.backgroundImageUrl = value;
+          if (value && value.trim()) {
+            acc.backgroundType = 'image';
+          } else if (acc.backgroundType === 'image') {
+            acc.backgroundType = acc.backgroundGradient ? 'gradient' : 'color';
+          }
+        },
+        get overlay(): number {
+          const raw = Number(getAcc().backgroundOverlayOpacity ?? 0);
+          return raw > 1 ? Math.round((raw / 100) * 100) / 100 : raw;
+        },
+        set overlay(value: number) {
+          const num = Number(value) || 0;
+          getAcc().backgroundOverlayOpacity = Math.round(Math.max(0, Math.min(1, num > 1 ? num / 100 : num)) * 100);
+        }
+      };
       this._cachedAccessSectionProxy = {
         id: '__access_screen__',
         type: 'custom',
         title: 'Pantalla de Acceso',
-        enabled: true,
+        get enabled(): boolean {
+          return getAcc().enabled !== false;
+        },
+        set enabled(value: boolean) {
+          getAcc().enabled = Boolean(value);
+        },
         layout: 'canvas',
         height: this.artboardHeight,
+        background: bgProxy,
         layers: this.design.accessScreen!.layers
       };
     }
@@ -8777,8 +8814,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   getAccessScreenOverlayStyle(customAcc?: VisualAccessScreenDesign): string {
     const acc = customAcc || this.design?.accessScreen;
-    const opacity = (acc?.backgroundOverlayOpacity ?? 60) / 100;
-    return `rgba(0, 0, 0, ${opacity})`;
+    if (!acc) return 'transparent';
+    const raw = acc.backgroundOverlayOpacity !== undefined && acc.backgroundOverlayOpacity !== null
+      ? Number(acc.backgroundOverlayOpacity)
+      : (acc.backgroundType === 'image' ? 50 : 0);
+    const opacity = Math.max(0, Math.min(1, raw > 1 ? raw / 100 : raw));
+    return opacity > 0 ? `rgba(0, 0, 0, ${opacity})` : 'transparent';
   }
 
   private persistDesign() {
@@ -8788,6 +8829,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.syncLegacyGallery();
     const rawContent: any = {
       ...this.invitation?.content,
+      sourceTemplateKey: this.invitation?.content?.sourceTemplateKey || this.design.accessScreen?.templateKey || 'envelope-cards',
       galleryItems: (this.invitation?.content.galleryItems || []).filter((item) => item.url.trim()),
       visualDesignDraft: this.design,
       accessScreen: this.design.accessScreen || this.invitation?.content?.accessScreen,

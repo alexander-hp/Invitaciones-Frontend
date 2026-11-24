@@ -7274,6 +7274,10 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
+.access-canvas-section .layer-surface {
+  z-index: 5;
+}
+
 .access-canvas-section .functional-field-preview {
   padding: 8px 14px;
 }

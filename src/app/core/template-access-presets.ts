@@ -1799,11 +1799,23 @@ export function isLegacyOrMismatchedAccessScreen(
   currentTemplateKey?: string
 ): boolean {
   if (!acc) return true;
+  // If the access screen already has a recognized preset templateKey, it is valid and configured
+  if (acc.templateKey) {
+    const recognized = TEMPLATE_ACCESS_PRESETS.some(
+      p => p.templateId === acc.templateKey || p.aliases.some(a => a.toLowerCase() === acc.templateKey?.toLowerCase())
+    );
+    if (recognized) {
+      return false;
+    }
+  }
   if (currentTemplateKey) {
+    if (currentTemplateKey === 'visual-builder') {
+      return !acc.templateKey;
+    }
     const preset = getTemplateAccessPreset(currentTemplateKey);
-    // If no templateKey was stored on acc, it's legacy (unless in visual-builder mode)
+    // If no templateKey was stored on acc, it's legacy
     if (!acc.templateKey) {
-      return currentTemplateKey !== 'visual-builder';
+      return true;
     }
     // If stored templateKey does not match the active template ID or any of its aliases
     if (acc.templateKey !== preset.templateId && !preset.aliases.includes(acc.templateKey)) {

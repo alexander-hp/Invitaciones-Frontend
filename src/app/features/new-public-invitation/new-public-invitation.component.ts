@@ -1530,10 +1530,13 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (queryTpl) {
       return queryTpl;
     }
-    if (this.accessGateData?.template) {
+    if (this.accessScreenDesign?.templateKey && this.accessScreenDesign.templateKey !== 'visual-builder') {
+      return this.accessScreenDesign.templateKey;
+    }
+    if (this.accessGateData?.template && this.accessGateData.template !== 'visual-builder') {
       return this.accessGateData.template;
     }
-    if (this.invitation) {
+    if (this.invitation && this.currentTemplate !== 'visual-builder') {
       return this.currentTemplate;
     }
     return this.accessScreenDesign?.templateKey || 'envelope-cards';
@@ -1699,16 +1702,21 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         'background-position': 'center center'
       };
     }
+    if (acc?.backgroundType === 'gradient' && acc.backgroundGradient) {
+      return {
+        'background': acc.backgroundGradient
+      };
+    }
+    if (acc?.backgroundType === 'color' && acc.backgroundColor) {
+      return {
+        'background-color': acc.backgroundColor
+      };
+    }
     if (preset.theme.backgroundType === 'image' && preset.theme.backgroundImageUrl && !acc?.backgroundGradient) {
       return {
         'background-image': `url("${preset.theme.backgroundImageUrl}")`,
         'background-size': 'cover',
         'background-position': 'center center'
-      };
-    }
-    if (acc?.backgroundType === 'gradient' && acc.backgroundGradient) {
-      return {
-        'background': acc.backgroundGradient
       };
     }
     if (preset.theme.backgroundGradient) {
@@ -1729,9 +1737,14 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   getAccessGateOverlayStyle(): string {
     const acc = this.effectiveAccessDesign;
     const preset = this.currentAccessPreset;
+    if (acc && acc.backgroundOverlayOpacity !== undefined && acc.backgroundOverlayOpacity !== null) {
+      const raw = Number(acc.backgroundOverlayOpacity);
+      const opacity = Math.max(0, Math.min(1, raw > 1 ? raw / 100 : raw));
+      return opacity > 0 ? `rgba(0, 0, 0, ${opacity})` : 'transparent';
+    }
     const isImage = acc?.backgroundType === 'image' || (preset.theme.backgroundType === 'image' && !acc?.backgroundGradient);
     if (isImage) {
-      const opacity = Math.min((acc?.backgroundOverlayOpacity ?? preset.theme.backgroundOverlayOpacity ?? 50) / 100, 0.75);
+      const opacity = Math.min((preset.theme.backgroundOverlayOpacity ?? 50) / 100, 0.75);
       return `rgba(0, 0, 0, ${opacity})`;
     }
     return 'transparent';
@@ -1790,10 +1803,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   hasAccessLayers(): boolean {
     const acc = this.effectiveAccessDesign;
     if (!acc?.layers || acc.layers.length === 0) return false;
-    const isVisualBuilder = this.currentAccessTemplateKey === 'visual-builder';
     const hasCustomUserLayers = acc.layers.some(l =>
       Boolean(l.id) && !l.id.startsWith('layer-access-') && !l.id.startsWith('layer-selfreg-')
     );
+    // When an access screen preset is active (e.g. envelope-cards), use the bespoke template card
+    // unless custom user layers were specifically added
+    if (acc.templateKey && acc.templateKey !== 'visual-builder') {
+      return hasCustomUserLayers;
+    }
+    const isVisualBuilder = this.currentAccessTemplateKey === 'visual-builder';
     return isVisualBuilder || hasCustomUserLayers;
   }
 
@@ -1908,8 +1926,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       style['backdropFilter'] = s.backdropFilter;
       style['-webkit-backdrop-filter'] = s.backdropFilter;
     }
-    if (s.opacity !== undefined && s.opacity < 100) {
-      style['opacity'] = `${s.opacity / 100}`;
+    if (s.opacity !== undefined && s.opacity !== null) {
+      const op = Number(s.opacity);
+      style['opacity'] = `${op > 1 ? op / 100 : op}`;
     }
     return style;
   }
