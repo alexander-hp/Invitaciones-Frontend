@@ -217,8 +217,14 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
   private invitationHasPersistedDesign(invitation: InvitationModel): boolean {
     const content = invitation.content || {};
     const rootTemplate = invitation.template as any;
+    const invId = this.getInvitationId(invitation);
+    const slug = invitation.slug;
+    const storedTpl =
+      (invId && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_tpl_${invId}`) : null) ||
+      (slug && typeof localStorage !== 'undefined' ? localStorage.getItem(`inv_tpl_${slug}`) : null);
     return Boolean(
       String(content.template || '').trim() ||
+      String(storedTpl || '').trim() ||
       String(content.customHtml || '').trim() ||
       content.visualDesign?.active ||
       (typeof rootTemplate === 'string' ? rootTemplate.trim() : rootTemplate?._id || rootTemplate?.id)

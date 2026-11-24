@@ -1126,7 +1126,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   getAudioUrlForSection(sectionKey: string): string {
     const specific = this.getSectionSpecificMusicUrl(sectionKey);
     if (specific) return specific;
-    return this.invitation?.content?.musicUrl || '';
+    if (this.invitation?.content?.musicUrl) return this.invitation.content.musicUrl;
+    const tpl = this.currentTemplate;
+    if (tpl === 'boda-girasoles') return 'assets/boda-girasoles/all-of-me.mp3';
+    if (tpl === 'boda-navy-blue') return 'assets/boda-navy-blue/perfect.mp3';
+    if (tpl === 'boda-villa-perle') return 'assets/boda-villa-perle/autumn-wind.mp3';
+    if (tpl === 'boda-eleganza') return 'assets/boda-eleganza/waltz-sentimental.mp3';
+    if (tpl === 'boda-rosas') return 'assets/boda-rosas/ballerina.mp3';
+    if (tpl === 'boda-teatro') return 'assets/boda-teatro/intro-music.mp3';
+    return '';
   }
 
   private initAudio(): void {

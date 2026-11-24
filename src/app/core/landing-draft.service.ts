@@ -36,12 +36,27 @@ export interface LandingDraftState {
   visualPresetKey?: string;
   pendingSave: boolean;
   hasUserEdits: boolean;
+  customEventTitle?: boolean;
   updatedAt: string;
   event: EventModel;
   invitation: InvitationModel;
 }
 
 const DRAFT_STORAGE_KEY = 'velisse_landing_draft_v1';
+
+const DEFAULT_PLACEHOLDER_HEADLINES = new Set([
+  'Sofía & Mateo',
+  'Valeria & Sebastián',
+  'Valentina Sofía',
+  'Generación 2027 · Ingeniería & Negocios'
+]);
+
+const DEFAULT_PLACEHOLDER_TITLES = new Set([
+  'Boda de Sofía & Mateo',
+  'Boda de Valeria & Sebastián',
+  'Mis XV — Valentina Sofía',
+  'Generación 2027 · Ingeniería & Negocios'
+]);
 
 export const LANDING_TEMPLATES_CATALOG: LandingTemplateMeta[] = [
   {
@@ -250,6 +265,58 @@ export class LandingDraftService {
     return meta ? meta.name : draft.templateKey;
   }
 
+  formatEventTitleFromHeadline(headline: string, eventType: EventType = 'boda'): string {
+    const clean = this.stripHtml(headline).trim();
+    if (!clean) return 'Mi Evento Especial';
+    const lower = clean.toLowerCase();
+    if (
+      lower.startsWith('boda') ||
+      lower.startsWith('nuestra boda') ||
+      lower.startsWith('mis xv') ||
+      lower.startsWith('xv') ||
+      lower.startsWith('quince') ||
+      lower.startsWith('bautizo') ||
+      lower.startsWith('graduac') ||
+      lower.startsWith('cumple') ||
+      lower.startsWith('generación') ||
+      lower.startsWith('generacion')
+    ) {
+      return clean;
+    }
+    if (eventType === 'xv') return `Mis XV — ${clean}`;
+    if (eventType === 'bautizo') return `Bautizo de ${clean}`;
+    if (eventType === 'cumpleanos') return `Cumpleaños de ${clean}`;
+    if (eventType === 'graduacion') return `Graduación — ${clean}`;
+    if (eventType === 'boda') return `Boda de ${clean}`;
+    return clean;
+  }
+
+  isDefaultPlaceholderTitle(title?: string): boolean {
+    const clean = (title || '').trim();
+    return !clean || DEFAULT_PLACEHOLDER_TITLES.has(clean);
+  }
+
+  isDefaultPlaceholderHeadline(headline?: string): boolean {
+    const clean = (headline || '').trim();
+    return !clean || DEFAULT_PLACEHOLDER_HEADLINES.has(clean);
+  }
+
+  private stripHtml(raw?: string): string {
+    if (!raw) return '';
+    return String(raw)
+      .replace(/<br\s*\/?>/gi, ' ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private isHttpUrl(val?: string): boolean {
+    if (!val) return false;
+    return /^https?:\/\/.+/i.test(val.trim());
+  }
+
   private defaultFutureDate(daysAhead = 120): string {
     const target = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000);
     const yyyy = target.getFullYear();
@@ -314,20 +381,18 @@ export class LandingDraftService {
         type: isGrad ? 'Acto Académico' : 'Ceremonia Religiosa',
         name: isNavy ? 'Parroquia de San Agustín' : 'Capilla de Santa María',
         address: isNavy ? 'Horacio 921, Polanco, CDMX' : 'Plaza Principal s/n, Centro Histórico',
-        time: '17:00 hrs',
         mapUrl: 'https://maps.google.com/?q=Parroquia+San+Agustin+Polanco'
       },
       {
         type: 'Recepción & Gala',
         name: venueName,
         address: venueAddress,
-        time: '19:30 hrs',
         mapUrl: 'https://maps.google.com/?q=San+Miguel+de+Allende'
       }
     ];
 
     const itinerary = [
-      { time: '17:00', title: isGrad ? 'Acto Académico' : 'Ceremonia', description: locations[0].name },
+      { time: '17:00', title: isGrad ? 'Acto Académico' : 'Ceremonia', description: locations[0].name || '' },
       { time: '19:00', title: 'Cóctel de Bienvenida', description: 'Jardín principal y recepción de invitados' },
       { time: '20:30', title: isXv ? 'Vals Principal & Brindis' : 'Cena & Primer Baile', description: venueName },
       { time: '22:00', title: 'Fiesta & Celebración', description: 'Pista abierta toda la noche' }
@@ -340,7 +405,7 @@ export class LandingDraftService {
     const hosts = isXv
       ? ['Sr. Alejandro Morales & Sra. Elena Ruiz']
       : isGrad
-      ? [' Comité Organizador Generación 2027']
+      ? ['Comité Organizador Generación 2027']
       : ['Familia Hernández García', 'Familia Morales Ruiz'];
 
     const palette = isNavy
@@ -351,7 +416,7 @@ export class LandingDraftService {
       id: 'preview-landing-event',
       mode: 'invitation',
       type: eventType,
-      title: isXv ? `Mis XV — ${headline}` : isGrad ? headline : `Boda de ${headline}`,
+      title: this.formatEventTitleFromHeadline(headline, eventType),
       hosts,
       date: defaultDate,
       time: '17:00',
@@ -445,6 +510,7 @@ export class LandingDraftService {
       visualPresetKey: meta?.visualPresetKey || templateKey,
       pendingSave: false,
       hasUserEdits: false,
+      customEventTitle: false,
       updatedAt: new Date().toISOString(),
       event,
       invitation
@@ -460,7 +526,6 @@ export class LandingDraftService {
       return fresh;
     }
 
-    // Preserve user-customized event & invitation fields while switching template aesthetics
     const meta = this.getTemplateMeta(templateKey);
     const updated: LandingDraftState = {
       ...existing,
@@ -476,7 +541,6 @@ export class LandingDraftService {
           template: templateKey,
           musicUrl: meta?.musicUrl || existing.invitation.content?.musicUrl || '',
           palette: fresh.invitation.content?.palette || existing.invitation.content?.palette,
-          // Reset template-specific DOM text keys only if switching to a different base template
           editedTexts:
             existing.templateKey === templateKey
               ? existing.invitation.content?.editedTexts || {}
@@ -602,6 +666,159 @@ export class LandingDraftService {
     } catch {}
   }
 
+  private extractHeroTitleFromEditedTexts(editedTexts?: Record<string, string>): string {
+    if (!editedTexts) return '';
+    for (const [key, value] of Object.entries(editedTexts)) {
+      if (
+        key.includes('hero-title') ||
+        key.includes('pub-headline') ||
+        key.includes('__h1.') ||
+        key.includes('__h1__') ||
+        key.startsWith('h1')
+      ) {
+        const cleaned = this.stripHtml(value);
+        if (cleaned) return cleaned;
+      }
+    }
+    return '';
+  }
+
+  private sanitizeDeepMongoIds<T>(obj: T, parentKey?: string): T {
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.sanitizeDeepMongoIds(item, parentKey)) as unknown as T;
+    }
+    if (obj !== null && typeof obj === 'object') {
+      const record = obj as Record<string, unknown>;
+      const cleaned: Record<string, unknown> = {};
+      const isVisualSection = parentKey === 'sections' || (Array.isArray(record['layers']) && typeof record['type'] === 'string');
+      const isVisualLayer = parentKey === 'layers' || (typeof record['type'] === 'string' && 'x' in record && 'y' in record);
+      const isVisualAsset = parentKey === 'assets' || (typeof record['url'] === 'string' && typeof record['name'] === 'string');
+      const isGalleryItem = parentKey === 'galleryItems';
+      const allowsId = isVisualSection || isVisualLayer || isVisualAsset || isGalleryItem;
+
+      for (const [k, v] of Object.entries(record)) {
+        if (k === '__v' || k === '_id') continue;
+        if (k === 'id' && !allowsId) continue;
+        if (v !== undefined) {
+          cleaned[k] = this.sanitizeDeepMongoIds(v, k);
+        }
+      }
+      return cleaned as T;
+    }
+    return obj;
+  }
+
+  private buildBackendSafeContent(
+    raw: InvitationContent,
+    targetTemplate: string,
+    isVisual: boolean,
+    resolvedHeadline: string
+  ): InvitationContent {
+    const cleanLocations = (raw.locations || [])
+      .map((loc, idx) => {
+        const mapUrl = String(loc.mapUrl || '').trim();
+        const wazeUrl = String(loc.wazeUrl || '').trim();
+        return {
+          type: String(loc.type || 'recepción').trim(),
+          name: String(loc.name || '').trim(),
+          address: String(loc.address || '').trim(),
+          mapUrl: this.isHttpUrl(mapUrl) ? mapUrl : '',
+          wazeUrl: this.isHttpUrl(wazeUrl) ? wazeUrl : '',
+          notes: String(loc.notes || '').trim(),
+          priority: idx
+        };
+      })
+      .filter((loc) => loc.name || loc.address || loc.mapUrl);
+
+    const cleanItinerary = (raw.itinerary || [])
+      .map((item) => ({
+        time: String(item.time || '').trim(),
+        title: String(item.title || '').trim(),
+        description: String(item.description || '').trim()
+      }))
+      .filter((item) => item.time || item.title || item.description);
+
+    const cleanGifts = (raw.giftRegistry || [])
+      .map((item, idx) => {
+        const url = String(item.url || '').trim();
+        return {
+          store: String(item.store || '').trim() || undefined,
+          title: String(item.title || '').trim() || undefined,
+          label: String(item.label || item.title || item.store || '').trim() || undefined,
+          ...(this.isHttpUrl(url) ? { url } : {}),
+          note: String(item.note || '').trim() || undefined,
+          priority: idx
+        };
+      })
+      .filter((item) => item.store || item.title || item.url);
+
+    const rawClabe = String(raw.digitalEnvelope?.clabe || '').replace(/\D/g, '');
+    const rawAccount = String(raw.digitalEnvelope?.account || '').replace(/\D/g, '');
+    const digitalEnvelope: InvitationContent['digitalEnvelope'] = {
+      bank: String(raw.digitalEnvelope?.bank || '').trim(),
+      holder: String(raw.digitalEnvelope?.holder || resolvedHeadline || '').trim(),
+      ...(rawClabe.length === 18 ? { clabe: rawClabe } : {}),
+      ...(rawAccount.length >= 1 && rawAccount.length <= 20 ? { account: rawAccount } : {}),
+      note: String(raw.digitalEnvelope?.note || '').trim()
+    };
+
+    const safePayload: InvitationContent = {
+      template: targetTemplate,
+      headline: resolvedHeadline,
+      subheadline: String(raw.subheadline || raw.storyTitle || '').trim(),
+      message: String(raw.storyBody || raw.message || '').trim(),
+      dressCode: String(raw.dressCode || '').trim(),
+      palette: raw.palette || { primary: '#3d2b1f', secondary: '#faf3e8', accent: '#d49b27' },
+      ...(this.isHttpUrl(raw.musicUrl) ? { musicUrl: raw.musicUrl!.trim() } : {}),
+      ...(this.isHttpUrl(raw.coverImageUrl) ? { coverImageUrl: raw.coverImageUrl!.trim() } : {}),
+      locations: cleanLocations,
+      itinerary: cleanItinerary,
+      giftRegistry: cleanGifts,
+      digitalEnvelope,
+      giftSettings: {
+        enabled: raw.giftSettings?.enabled !== false,
+        showRegistry: raw.giftSettings?.showRegistry !== false,
+        showEnvelope: raw.giftSettings?.showEnvelope !== false
+      },
+      dedicationSettings: {
+        enabled: raw.dedicationSettings?.enabled !== false,
+        requireApproval: raw.dedicationSettings?.requireApproval !== false
+      },
+      sectionSettings: {
+        story: raw.sectionSettings?.story !== false,
+        locations: raw.sectionSettings?.locations !== false,
+        itinerary: raw.sectionSettings?.itinerary !== false,
+        dressCode: raw.sectionSettings?.dressCode !== false,
+        rsvp: raw.sectionSettings?.rsvp !== false,
+        giftRegistry: raw.sectionSettings?.giftRegistry !== false,
+        digitalEnvelope: raw.sectionSettings?.digitalEnvelope !== false,
+        lodging: Boolean(raw.sectionSettings?.lodging),
+        gallery: raw.sectionSettings?.gallery !== false,
+        guestAlbum: Boolean(raw.sectionSettings?.guestAlbum),
+        dedications: raw.sectionSettings?.dedications !== false,
+        backgroundMusic: raw.sectionSettings?.backgroundMusic !== false,
+        songRequests: raw.sectionSettings?.songRequests !== false
+      },
+      privateAlbumEnabled: Boolean(raw.privateAlbumEnabled)
+    };
+
+    if (isVisual && raw.visualDesignDraft) {
+      const cleanDesign = this.sanitizeDeepMongoIds({ ...raw.visualDesignDraft, active: true });
+      safePayload.visualDesignDraft = cleanDesign;
+      safePayload.visualDesign = cleanDesign;
+      if (raw.passDesignDraft || raw.passDesign) {
+        const cleanPass = this.sanitizeDeepMongoIds(raw.passDesignDraft || raw.passDesign);
+        safePayload.passDesignDraft = cleanPass;
+        safePayload.passDesign = cleanPass;
+      }
+      if (raw.accessScreen) {
+        safePayload.accessScreen = this.sanitizeDeepMongoIds(raw.accessScreen);
+      }
+    }
+
+    return safePayload;
+  }
+
   /**
    * Creates the real Event + Invitation in the backend for the newly authenticated user,
    * preserving every customized field, template selection, inline text overlay, or visual design.
@@ -619,57 +836,104 @@ export class LandingDraftService {
     const ev = draft.event;
     const inv = draft.invitation;
     const content = inv.content || {};
-    const validDate = ev.date && /^\d{4}-\d{2}-\d{2}/.test(ev.date) ? ev.date : this.defaultFutureDate(110);
-    const resolvedTitle =
-      (ev.title || '').trim() ||
-      (content.headline ? `Evento — ${content.headline.trim()}` : 'Mi Evento en Velisse');
+    const editedTexts =
+      content.editedTexts && Object.keys(content.editedTexts).length > 0
+        ? content.editedTexts
+        : undefined;
 
+    // Resolve customized headline (including live inline text edits on h1 / hero-title)
+    const inlineHeroText = this.extractHeroTitleFromEditedTexts(editedTexts);
+    const resolvedHeadline =
+      inlineHeroText ||
+      this.stripHtml(content.headline) ||
+      'Nuestra Celebración';
+
+    // Resolve Event Title: if the user edited the cover headline or inline hero title, reflect it in the Event name!
+    const eventType: EventType = ev.type || 'boda';
+    let resolvedTitle = (ev.title || '').trim();
+    if (
+      !draft.customEventTitle &&
+      this.isDefaultPlaceholderTitle(resolvedTitle) &&
+      !this.isDefaultPlaceholderHeadline(resolvedHeadline)
+    ) {
+      resolvedTitle = this.formatEventTitleFromHeadline(resolvedHeadline, eventType);
+    } else if (!resolvedTitle) {
+      resolvedTitle = this.formatEventTitleFromHeadline(resolvedHeadline, eventType);
+    }
+
+    const validDate =
+      ev.date && /^\d{4}-\d{2}-\d{2}/.test(ev.date) ? ev.date : this.defaultFutureDate(110);
+
+    const venueMapUrl = String(ev.venue?.mapUrl || content.locations?.[0]?.mapUrl || '').trim();
     const eventPayload: EventPayload = {
       mode: 'invitation',
-      type: ev.type || 'boda',
+      type: eventType,
       title: resolvedTitle,
       date: validDate,
       time: ev.time ? ev.time.trim() : undefined,
-      hosts: Array.isArray(ev.hosts) ? ev.hosts.filter(Boolean) : [],
+      hosts: Array.isArray(ev.hosts) ? ev.hosts.map((h) => String(h).trim()).filter(Boolean) : [],
       venue: {
-        name: ev.venue?.name || content.locations?.[0]?.name || '',
-        address: ev.venue?.address || content.locations?.[0]?.address || '',
-        mapUrl: ev.venue?.mapUrl || content.locations?.[0]?.mapUrl || ''
+        name: String(ev.venue?.name || content.locations?.[1]?.name || content.locations?.[0]?.name || '').trim(),
+        address: String(ev.venue?.address || content.locations?.[1]?.address || content.locations?.[0]?.address || '').trim(),
+        ...(this.isHttpUrl(venueMapUrl) ? { mapUrl: venueMapUrl } : {})
       }
     };
 
     const isVisual = draft.mode === 'visual';
-    const targetTemplate = isVisual ? 'visual-builder' : draft.templateKey || content.template || 'boda-girasoles';
-    const editedTexts = content.editedTexts && Object.keys(content.editedTexts).length > 0 ? content.editedTexts : undefined;
+    const targetTemplate = isVisual
+      ? 'visual-builder'
+      : draft.templateKey || content.template || 'boda-girasoles';
 
-    const cleanContent: InvitationContent = {
-      ...content,
-      template: targetTemplate
-    };
-
-    if (isVisual && cleanContent.visualDesignDraft) {
-      cleanContent.visualDesignDraft = { ...cleanContent.visualDesignDraft, active: true };
-      cleanContent.visualDesign = { ...cleanContent.visualDesignDraft, active: true };
-    } else if (!isVisual) {
-      if (cleanContent.visualDesign) cleanContent.visualDesign.active = false;
-      if (cleanContent.visualDesignDraft) cleanContent.visualDesignDraft.active = false;
-    }
+    const safeContent = this.buildBackendSafeContent(
+      content,
+      targetTemplate,
+      isVisual,
+      resolvedHeadline
+    );
 
     return this.api.createEvent(eventPayload).pipe(
       switchMap(({ event: createdEvent }) => {
         const createdEventId = (createdEvent._id || createdEvent.id || '') as string;
+
         const invPayload: InvitationPayload = {
           event: createdEventId,
           accessMode: inv.accessMode || 'open',
-          content: cleanContent,
-          rsvpSettings: inv.rsvpSettings || {
-            allowMaybe: true,
-            allowCompanionsDefault: true,
-            defaultAllowedCompanions: 2
+          content: safeContent,
+          rsvpSettings: {
+            allowMaybe: inv.rsvpSettings?.allowMaybe !== false,
+            allowCompanionsDefault: inv.rsvpSettings?.allowCompanionsDefault !== false,
+            defaultAllowedCompanions: Number(inv.rsvpSettings?.defaultAllowedCompanions ?? 2),
+            identityMethods: ['email', 'phone']
           }
         };
 
-        return this.api.createInvitation(invPayload).pipe(
+        const createInvWithFallback$ = this.api.createInvitation(invPayload).pipe(
+          catchError(() => {
+            // Guaranteed minimal fallback so the Event NEVER ends up without its Invitation
+            const fallbackPayload: InvitationPayload = {
+              event: createdEventId,
+              accessMode: 'open',
+              content: {
+                template: targetTemplate,
+                headline: resolvedHeadline,
+                subheadline: safeContent.subheadline,
+                message: safeContent.message,
+                dressCode: safeContent.dressCode,
+                itinerary: safeContent.itinerary,
+                sectionSettings: safeContent.sectionSettings,
+                ...(isVisual && safeContent.visualDesignDraft
+                  ? {
+                      visualDesignDraft: safeContent.visualDesignDraft,
+                      visualDesign: safeContent.visualDesign
+                    }
+                  : {})
+              }
+            };
+            return this.api.createInvitation(fallbackPayload);
+          })
+        );
+
+        return createInvWithFallback$.pipe(
           switchMap(({ invitation: createdInv }) => {
             const createdInvId = (createdInv._id || createdInv.id || '') as string;
             const createdSlug = createdInv.slug || '';
@@ -691,7 +955,7 @@ export class LandingDraftService {
                   eventId: createdEventId,
                   eventTitle: resolvedTitle,
                   eventSlug: createdSlug,
-                  eventType: eventPayload.type,
+                  eventType,
                   invitationId: createdInvId,
                   name: subName,
                   description: 'Edición personalizada guardada desde la página principal de Velisse.',

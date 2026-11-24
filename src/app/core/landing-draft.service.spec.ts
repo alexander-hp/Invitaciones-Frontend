@@ -46,15 +46,16 @@ describe('LandingDraftService', () => {
   it('preserves user edits when switching templates and materializes event + invitation on save', (done) => {
     const draft = service.ensureDraftForTemplate('boda-girasoles');
     draft.event.title = 'Boda de Ana & Carlos';
+    draft.customEventTitle = true;
     draft.invitation.content.headline = 'Ana & Carlos';
-    service.saveDraft({ event: draft.event, invitation: draft.invitation }, true);
+    service.saveDraft({ event: draft.event, customEventTitle: true, invitation: draft.invitation }, true);
 
     const switched = service.ensureDraftForTemplate('boda-navy-blue');
     expect(switched.templateKey).toBe('boda-navy-blue');
     expect(switched.event.title).toBe('Boda de Ana & Carlos');
     expect(switched.invitation.content.headline).toBe('Ana & Carlos');
 
-    switched.invitation.content.editedTexts = { 'hero-title': 'Ana & Carlos por Siempre' };
+    switched.invitation.content.editedTexts = { 'div__p__1': 'Te esperamos con mucha alegría' };
     service.saveDraft({ invitation: switched.invitation }, true);
     service.markPendingSave('template');
 

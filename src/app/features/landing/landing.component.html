@@ -520,13 +520,13 @@
           <ng-container *ngIf="studioTab === 'main'">
             <div class="vl-field">
               <label>Nombre del evento (para tu panel)</label>
-              <input type="text" [(ngModel)]="draftState.event.title" (ngModelChange)="onStudioFieldChange()"
+              <input type="text" [(ngModel)]="draftState.event.title" (ngModelChange)="onEventTitleManualChange()"
                 placeholder="Ej. Boda de Sofía & Mateo" />
             </div>
 
             <div class="vl-field">
               <label>Nombres / Título principal en portada</label>
-              <input type="text" [(ngModel)]="content.headline" (ngModelChange)="onStudioFieldChange()"
+              <input type="text" [(ngModel)]="content.headline" (ngModelChange)="onHeadlineFieldChange()"
                 placeholder="Ej. Sofía & Mateo" />
             </div>
 

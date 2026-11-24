@@ -93,9 +93,10 @@ export class NewLoginComponent implements OnInit, OnDestroy, AfterViewInit {
           this.creatingEventFromDraft = false;
           this.router.navigate(redirectCommands);
         },
-        error: () => {
+        error: (err) => {
           this.creatingEventFromDraft = false;
-          this.router.navigate(['/new/dashboard']);
+          this.loading = false;
+          this.error = err?.error?.message || 'Tu sesión inició, pero hubo un detalle al guardar el borrador. Intenta de nuevo.';
         }
       });
       return;

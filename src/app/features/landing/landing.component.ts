@@ -144,9 +144,15 @@ export class LandingComponent implements OnInit, OnDestroy {
   hostsText = '';
 
   private mutationObserver?: MutationObserver;
+  private iframeInputListener?: () => void;
+  private iframeInputTarget?: HTMLElement;
   private baselineTexts: Record<string, string> = {};
+  private baselineHeroTitle = '';
+  private baselineHeroSubtitle = '';
+  private baselineStoryBody = '';
   private toastTimer?: ReturnType<typeof setTimeout>;
   private liveSyncTimer?: ReturnType<typeof setTimeout>;
+  private inlineSyncTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     public auth: AuthService,
@@ -161,11 +167,13 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.detachIframeInputListener();
     if (this.mutationObserver) {
       this.mutationObserver.disconnect();
     }
     if (this.toastTimer) clearTimeout(this.toastTimer);
     if (this.liveSyncTimer) clearTimeout(this.liveSyncTimer);
+    if (this.inlineSyncTimer) clearTimeout(this.inlineSyncTimer);
   }
 
   @HostListener('document:keydown.escape')
@@ -341,6 +349,24 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.studioSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
+  onEventTitleManualChange(): void {
+    if (!this.draftState) return;
+    this.draftState.customEventTitle = Boolean((this.draftState.event.title || '').trim());
+    this.onStudioFieldChange();
+  }
+
+  onHeadlineFieldChange(): void {
+    if (!this.draftState?.invitation?.content) return;
+    const headline = (this.draftState.invitation.content.headline || '').trim();
+    if (headline && !this.draftState.customEventTitle) {
+      this.draftState.event.title = this.landingDraft.formatEventTitleFromHeadline(
+        headline,
+        this.draftState.event.type || 'boda'
+      );
+    }
+    this.onStudioFieldChange();
+  }
+
   onStudioFieldChange(): void {
     if (!this.draftState) return;
     this.draftState.event.hosts = this.hostsText
@@ -442,6 +468,9 @@ export class LandingComponent implements OnInit, OnDestroy {
         this.textOverlay.tagEditableElements(doc);
         if (Object.keys(this.baselineTexts).length === 0) {
           this.baselineTexts = this.textOverlay.extractTexts(doc);
+          this.baselineHeroTitle = this.readHeroTitleFromDoc(doc);
+          this.baselineHeroSubtitle = this.readHeroSubtitleFromDoc(doc);
+          this.baselineStoryBody = this.readStoryBodyFromDoc(doc);
         }
         const savedEdits = this.draftState?.invitation?.content?.editedTexts;
         if (savedEdits && Object.keys(savedEdits).length > 0) {
@@ -517,6 +546,9 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.textOverlay.tagEditableElements(doc);
       if (Object.keys(this.baselineTexts).length === 0) {
         this.baselineTexts = this.textOverlay.extractTexts(doc);
+        this.baselineHeroTitle = this.readHeroTitleFromDoc(doc);
+        this.baselineHeroSubtitle = this.readHeroSubtitleFromDoc(doc);
+        this.baselineStoryBody = this.readStoryBodyFromDoc(doc);
       }
       const selectors = [
         'h1', 'h2', 'h3', 'h4', 'p', 'span:not(.cd-val):not(.cd-sep)',
@@ -544,14 +576,56 @@ export class LandingComponent implements OnInit, OnDestroy {
     };
 
     markElements();
+    this.detachIframeInputListener();
 
     if (this.mutationObserver) {
       this.mutationObserver.disconnect();
     }
     if (enabled && doc.body) {
+      this.iframeInputTarget = doc.body;
+      this.iframeInputListener = () => {
+        if (this.inlineSyncTimer) clearTimeout(this.inlineSyncTimer);
+        this.inlineSyncTimer = setTimeout(() => {
+          this.captureInlineEditsFromStudioIframe();
+          this.persistStudioFormToDraft();
+        }, 180);
+      };
+      doc.body.addEventListener('input', this.iframeInputListener, true);
+      doc.body.addEventListener('blur', this.iframeInputListener, true);
+
       this.mutationObserver = new MutationObserver(() => markElements());
       this.mutationObserver.observe(doc.body, { childList: true, subtree: true });
     }
+  }
+
+  private detachIframeInputListener(): void {
+    if (this.iframeInputTarget && this.iframeInputListener) {
+      try {
+        this.iframeInputTarget.removeEventListener('input', this.iframeInputListener, true);
+        this.iframeInputTarget.removeEventListener('blur', this.iframeInputListener, true);
+      } catch {}
+    }
+    this.iframeInputTarget = undefined;
+    this.iframeInputListener = undefined;
+  }
+
+  private readHeroTitleFromDoc(doc: Document): string {
+    const el = doc.querySelector(
+      '.girasoles-hero-title, .navy-hero-title, .nw-pub-headline, .headline-modern, .env-title, header h1, main h1, h1'
+    );
+    return (el?.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private readHeroSubtitleFromDoc(doc: Document): string {
+    const el = doc.querySelector(
+      '.girasoles-hero-subtitle, .navy-hero-subtitle, .nw-pub-subheadline, .env-sub'
+    );
+    return (el?.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private readStoryBodyFromDoc(doc: Document): string {
+    const el = doc.querySelector('.story-paragraph, [data-section-key="story"] p');
+    return (el?.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
   private captureInlineEditsFromStudioIframe(): void {
@@ -559,14 +633,45 @@ export class LandingComponent implements OnInit, OnDestroy {
     try {
       const iframe = this.studioIframe?.nativeElement;
       const doc = iframe?.contentDocument || iframe?.contentWindow?.document;
-      if (!doc || Object.keys(this.baselineTexts).length === 0) return;
+      if (!doc) return;
+
+      this.textOverlay.tagEditableElements(doc);
       const currentTexts = this.textOverlay.extractTexts(doc);
-      const diff = this.textOverlay.diffTexts(this.baselineTexts, currentTexts);
-      if (Object.keys(diff).length > 0) {
-        this.draftState.invitation.content.editedTexts = {
-          ...(this.draftState.invitation.content.editedTexts || {}),
-          ...diff
-        };
+      if (Object.keys(this.baselineTexts).length > 0) {
+        const diff = this.textOverlay.diffTexts(this.baselineTexts, currentTexts);
+        if (Object.keys(diff).length > 0) {
+          this.draftState.invitation.content.editedTexts = {
+            ...(this.draftState.invitation.content.editedTexts || {}),
+            ...diff
+          };
+        }
+      }
+
+      // Sync direct cover title / subtitle / story edits back into structured content & event title
+      const liveHeroTitle = this.readHeroTitleFromDoc(doc);
+      if (
+        liveHeroTitle &&
+        ((this.baselineHeroTitle && liveHeroTitle !== this.baselineHeroTitle) ||
+          !this.landingDraft.isDefaultPlaceholderHeadline(liveHeroTitle))
+      ) {
+        this.draftState.invitation.content.headline = liveHeroTitle;
+        if (!this.draftState.customEventTitle) {
+          this.draftState.event.title = this.landingDraft.formatEventTitleFromHeadline(
+            liveHeroTitle,
+            this.draftState.event.type || 'boda'
+          );
+        }
+      }
+
+      const liveHeroSub = this.readHeroSubtitleFromDoc(doc);
+      if (liveHeroSub && this.baselineHeroSubtitle && liveHeroSub !== this.baselineHeroSubtitle) {
+        this.draftState.invitation.content.subheadline = liveHeroSub;
+      }
+
+      const liveStory = this.readStoryBodyFromDoc(doc);
+      if (liveStory && this.baselineStoryBody && liveStory !== this.baselineStoryBody) {
+        this.draftState.invitation.content.storyBody = liveStory;
+        this.draftState.invitation.content.message = liveStory;
       }
     } catch {}
   }
