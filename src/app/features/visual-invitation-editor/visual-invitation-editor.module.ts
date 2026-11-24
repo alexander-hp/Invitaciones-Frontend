@@ -7,9 +7,10 @@ import { VisualInvitationEditorComponent } from './visual-invitation-editor.comp
 import { VisualInvitationRendererModule } from '../../shared/components/visual-invitation-renderer/visual-invitation-renderer.module';
 import { VisualFontPickerComponent } from './visual-font-picker.component';
 import { AccessStylesModalComponent } from './access-styles-modal.component';
+import { PassStylesModalComponent } from './pass-styles-modal.component';
 
 @NgModule({
-  declarations: [VisualInvitationEditorComponent, VisualFontPickerComponent, AccessStylesModalComponent],
+  declarations: [VisualInvitationEditorComponent, VisualFontPickerComponent, AccessStylesModalComponent, PassStylesModalComponent],
   imports: [
     CommonModule,
     FormsModule,

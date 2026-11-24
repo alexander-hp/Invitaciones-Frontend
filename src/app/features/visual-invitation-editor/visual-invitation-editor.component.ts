@@ -31,6 +31,7 @@ import { buildPalazzoOrangerieDesign, isPalazzoOrangerieDesign, PALAZZO_ORANGERI
 import { createVisualDesignAiPrompt, createVisualDesignExchange } from './visual-design-exchange';
 import { buttonPresetStyle, VISUAL_BUTTON_PRESETS, VisualButtonPreset } from './visual-button-presets';
 import { PASS_CANVAS_PRESETS, PassCanvasPresetOption, buildDefaultPassDesign, createPassLayer } from './visual-pass-presets';
+import { PASS_TEMPLATE_SETS, buildPassDesignFromTemplateSet, getPassTemplateSetByKey } from './pass-template-sets';
 import { PHOTO_COMPOSITION_PRESETS, photoCompositionLayouts, photoCompositionSpacing, reflowPhotoCompositionLayouts, withPhotoCompositionSpacing } from './photo-composition-presets';
 
 type DeviceMode = 'mobile' | 'tablet' | 'desktop';
@@ -169,6 +170,9 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   passDesign?: VisualInvitationDesign;
   activePassSheetIndex: number = 0;
   passCanvasPresets: PassCanvasPresetOption[] = PASS_CANVAS_PRESETS;
+  readonly passTemplateSets = PASS_TEMPLATE_SETS;
+  showPassStylesModal = false;
+  savingPassType = false;
   passSubTab: 'format' | 'fields' | 'templates' | 'background' = 'format';
   passExporting = false;
   passPreviewModalOpen = false;
@@ -8418,6 +8422,102 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
         this.cdr?.markForCheck();
       }
     });
+  }
+
+  get isCustomPassEnabled(): boolean {
+    const content = this.invitation?.content;
+    if (!content) return false;
+    return content.passType === 'custom' || (content.passType !== 'generic' && Boolean(content.useCustomPass));
+  }
+
+  get passModeIcon(): string {
+    return this.isCustomPassEnabled ? 'ticket-check' : 'ticket';
+  }
+
+  get passModeTitle(): string {
+    return this.isCustomPassEnabled ? 'Pase Personalizado Activo' : 'Pase Genérico Activo';
+  }
+
+  get passModeHint(): string {
+    return this.isCustomPassEnabled
+      ? 'Tus invitados recibirán este diseño VIP.'
+      : 'Actívalo para enviar este diseño en vez del genérico.';
+  }
+
+  get passModeToggleTitle(): string {
+    return this.isCustomPassEnabled ? 'Cambiar a pase genérico' : 'Activar pase personalizado';
+  }
+
+  get activePassTemplateKey(): string {
+    return String((this.passDesign?.sections?.[0]?.pluginSettings as any)?.passTemplateKey || '');
+  }
+
+  get activePassTemplateName(): string {
+    const found = getPassTemplateSetByKey(this.activePassTemplateKey);
+    return found?.name || 'Diseño Personalizado';
+  }
+
+  get activePassTemplateIcon(): string {
+    const found = getPassTemplateSetByKey(this.activePassTemplateKey);
+    return found?.icon || 'ticket';
+  }
+
+  openPassStylesModal(): void {
+    this.showPassStylesModal = true;
+    this.cdr?.markForCheck();
+  }
+
+  closePassStylesModal(): void {
+    this.showPassStylesModal = false;
+    this.cdr?.markForCheck();
+  }
+
+  toggleCustomPassMode(enabled: boolean): void {
+    if (!this.invitation || this.savingPassType) return;
+    if (!this.passDesign?.sections?.length) {
+      this.passDesign = buildPassDesignFromTemplateSet('boda-imperial-oro', (p) => this.uid(p), this.activePassSheetPreset);
+    }
+    const prevType = this.invitation.content.passType;
+    const prevFlag = this.invitation.content.useCustomPass;
+    this.invitation.content.passType = enabled ? 'custom' : 'generic';
+    this.invitation.content.useCustomPass = enabled;
+    this.savingPassType = true;
+    this.persistDesign().subscribe({
+      next: ({ invitation }) => {
+        if (this.invitation && invitation?.content) {
+          this.invitation.content.passType = invitation.content.passType;
+          this.invitation.content.useCustomPass = invitation.content.useCustomPass;
+        }
+        this.savingPassType = false;
+        this.flash(enabled
+          ? 'Pase Personalizado activado para envíos y vista pública.'
+          : 'Pase Genérico activado (pase estándar del sistema).');
+        this.cdr?.markForCheck();
+      },
+      error: () => {
+        if (this.invitation) {
+          this.invitation.content.passType = prevType;
+          this.invitation.content.useCustomPass = prevFlag;
+        }
+        this.savingPassType = false;
+        this.error = 'No se pudo actualizar el tipo de pase.';
+        this.cdr?.markForCheck();
+      }
+    });
+  }
+
+  applyPassTemplateSet(templateKey: string): void {
+    const tpl = getPassTemplateSetByKey(templateKey);
+    if (!tpl) return;
+    this.recordHistory();
+    this.passDesign = buildPassDesignFromTemplateSet(tpl.key, (p) => this.uid(p), this.activePassSheetPreset);
+    this.activePassSheetIndex = 0;
+    this.clearLayerSelection();
+    this.showPassStylesModal = false;
+    this.editorCanvasMode = 'pass';
+    this.flash(`Set "${tpl.name}" aplicado (Frente y Reverso con campos VIP).`);
+    setTimeout(() => this.fitCanvasToViewport(), 0);
+    this.cdr?.markForCheck();
   }
 
   openAccessStylesModal(): void {

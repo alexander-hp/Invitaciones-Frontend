@@ -613,6 +613,10 @@
     (useTemplateStyle)="applyCurrentTemplateAccessPreset(); closeAccessStylesModal()"
     (closed)="closeAccessStylesModal()">
   </app-access-styles-modal>
+  <app-pass-styles-modal *ngIf="showPassStylesModal" [presets]="passTemplateSets"
+    [activeKey]="activePassTemplateKey" (selectPreset)="applyPassTemplateSet($event)"
+    (closed)="closePassStylesModal()">
+  </app-pass-styles-modal>
   <div class="design-import-backdrop" *ngIf="showImportDialog" (click)="closeDesignImporter()">
     <section class="design-import-dialog" role="dialog" aria-modal="true" aria-labelledby="designImportTitle"
       (click)="$event.stopPropagation()">
@@ -2549,7 +2553,7 @@
             <button type="button" class="access-drawer-return-btn" (click)="setEditorCanvasMode('invitation')"
               title="Salir del pase y volver a la invitación interactiva">
               <lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon>
-              <span>← Volver a la Invitación</span>
+              <span>Volver a la Invitación</span>
             </button>
           </div>
 
@@ -2572,9 +2576,43 @@
             </button>
           </div>
 
+          <!-- SWITCH PASE GENÉRICO VS PERSONALIZADO -->
+          <div class="access-closed-list-toggle" [class.is-active]="isCustomPassEnabled">
+            <div class="closed-toggle-info">
+              <span class="closed-toggle-icon">
+                <lucide-icon [name]="passModeIcon" [strokeWidth]="2"></lucide-icon>
+              </span>
+              <div class="closed-toggle-text">
+                <strong>{{ passModeTitle }}</strong>
+                <small>{{ passModeHint }}</small>
+              </div>
+            </div>
+            <label class="access-switch" [title]="passModeToggleTitle">
+              <input type="checkbox" [checked]="isCustomPassEnabled" [disabled]="savingPassType"
+                (change)="toggleCustomPassMode($any($event.target).checked)">
+              <span class="access-switch-slider"></span>
+            </label>
+          </div>
+
           <!-- SUBPESTAÑA 1: FORMATO Y HOJAS -->
           <div *ngIf="passSubTab === 'format'"
-            style="padding: 12px 14px; display: flex; flex-direction: column; gap: 14px;">
+            style="padding: 4px 2px 14px; display: flex; flex-direction: column; gap: 14px;">
+            <!-- SELECTOR DE SETS DE PLANTILLAS DE PASE VIP -->
+            <div class="access-style-trigger-card" style="margin: 0;">
+              <div class="style-trigger-meta">
+                <span class="style-trigger-icon">
+                  <lucide-icon [name]="activePassTemplateIcon" [strokeWidth]="1.8"></lucide-icon>
+                </span>
+                <div class="style-trigger-text">
+                  <span class="style-trigger-tag">Set de Pase VIP</span>
+                  <strong class="style-trigger-title">{{ activePassTemplateName }}</strong>
+                </div>
+              </div>
+              <button type="button" class="btn-open-styles-catalog" (click)="openPassStylesModal()">
+                <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
+                <span>Explorar Plantillas (4 Sets)</span>
+              </button>
+            </div>
             <div
               style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
               <label
