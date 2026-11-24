@@ -357,10 +357,19 @@
           </td>
           <td style="white-space:nowrap; padding: 12px 14px;">{{ (g.allowedCompanions || 0) + 1 }} personas</td>
           <td style="white-space:nowrap; padding: 12px 14px; text-align:center;">
-            <span *ngIf="g.accessPin" style="font-family:monospace; font-weight:700; font-size:12px; letter-spacing:1.5px; background:rgba(197, 155, 108, 0.12); color:var(--nw-accent, #c09c78); padding:3px 7px; border-radius:6px; border:1px solid rgba(197, 155, 108, 0.3);">
-              🔑 {{ g.accessPin }}
-            </span>
-            <span *ngIf="!g.accessPin" style="color:var(--nw-text-3); font-size:12px;">—</span>
+            <ng-container *ngIf="isEventPinMode; else individualGuestPin">
+              <span title="NIP único del evento (misma clave para todos los invitados)"
+                style="font-family:monospace; font-weight:700; font-size:12px; letter-spacing:1.5px; background:rgba(197, 155, 108, 0.16); color:var(--nw-accent, #c09c78); padding:3px 7px; border-radius:6px; border:1px solid rgba(197, 155, 108, 0.45);">
+                🔑 {{ activeEventPin }}
+              </span>
+              <span style="display:block; font-size:10px; color:var(--nw-text-3); margin-top:2px;">NIP del evento</span>
+            </ng-container>
+            <ng-template #individualGuestPin>
+              <span *ngIf="g.accessPin" style="font-family:monospace; font-weight:700; font-size:12px; letter-spacing:1.5px; background:rgba(197, 155, 108, 0.12); color:var(--nw-accent, #c09c78); padding:3px 7px; border-radius:6px; border:1px solid rgba(197, 155, 108, 0.3);">
+                🔑 {{ g.accessPin }}
+              </span>
+              <span *ngIf="!g.accessPin" style="color:var(--nw-text-3); font-size:12px;">—</span>
+            </ng-template>
           </td>
 
           <!-- Contacto Dividido en 2 Líneas (Teléfono arriba, Email abajo) -->

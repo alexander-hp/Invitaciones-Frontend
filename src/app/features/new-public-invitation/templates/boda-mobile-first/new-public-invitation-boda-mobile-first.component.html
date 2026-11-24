@@ -490,112 +490,18 @@
           </div>
 
           <!-- RSVP FORM -->
-          <form class="bmf-form" (ngSubmit)="submit()">
-            <div class="bmf-form-group">
-              <label>Nombre Completo *</label>
-              <input type="text" class="bmf-input" [(ngModel)]="rsvp.name" name="rsvpName" [readonly]="requiresGuestValidation" required placeholder="Tu nombre y apellido">
-            </div>
-
-            <div class="bmf-form-group" *ngIf="canIdentifyByEmail">
-              <label>Correo Electrónico</label>
-              <input type="email" class="bmf-input" [(ngModel)]="rsvp.email" name="rsvpEmail" [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-            </div>
-
-            <div class="bmf-form-row">
-              <div class="bmf-form-group col-country">
-                <label>País</label>
-                <input type="text" class="bmf-input" [(ngModel)]="rsvp.phoneCountryCode" name="rsvpPhoneCountry" placeholder="+52">
-              </div>
-              <div class="bmf-form-group col-phone">
-                <label>Teléfono WhatsApp</label>
-                <input type="tel" class="bmf-input" [(ngModel)]="rsvp.phoneNationalNumber" name="rsvpPhoneNational" placeholder="3312345678">
-              </div>
-            </div>
-
-            <div class="bmf-form-group">
-              <label>¿Nos acompañas? *</label>
-              <select class="bmf-select" [(ngModel)]="rsvp.response" name="rsvpResponse" (change)="onResponseChange()">
-                <option value="confirmed">Sí, confirmo con alegría mi asistencia</option>
-                <option value="declined">Lamentablemente no podré asistir</option>
-                <option *ngIf="canUseMaybe" value="maybe">Aún por confirmar</option>
-              </select>
-            </div>
-
-            <!-- COMPANIONS & MENU (IF CONFIRMED) -->
-            <ng-container *ngIf="isFinalAttendance">
-              <div class="bmf-form-group">
-                <label>Número de Acompañantes</label>
-                <input type="number" min="0" [max]="maxCompanions === null ? 10 : maxCompanions" class="bmf-input" [(ngModel)]="rsvp.companions" name="rsvpCompanions">
-              </div>
-
-              <div class="bmf-form-group">
-                <label>Nombres de tus Acompañantes</label>
-                <textarea class="bmf-textarea" [(ngModel)]="companionNamesText" name="companionNamesText" placeholder="Escribe un nombre completo por línea"></textarea>
-              </div>
-
-              <div class="bmf-form-group">
-                <label>Preferencia de Platillo / Menú</label>
-                <input type="text" class="bmf-input" [(ngModel)]="rsvp.mealPreference" name="rsvpMeal" placeholder="Ej: Res, Ave, Menú Infantil, Vegano">
-              </div>
-
-              <div class="bmf-form-group">
-                <label>Alergias o Restricciones Dietéticas</label>
-                <textarea class="bmf-textarea" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet" placeholder="Ej: Sin mariscos, celíaco, intolerante a lactosa"></textarea>
-              </div>
-            </ng-container>
-
-            <!-- DYNAMIC CUSTOM QUESTIONS -->
-            <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-              <div *ngFor="let q of invitation.rsvpSettings?.customQuestions" class="bmf-form-group">
-                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                <input *ngIf="q.type === 'text' || !q.type" type="text" class="bmf-input" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
-                <textarea *ngIf="q.type === 'textarea'" class="bmf-textarea" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-                <select *ngIf="q.type === 'select'" class="bmf-select" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
-                  <option value="">Selecciona una opción</option>
-                  <option *ngFor="let opt of q.options" [value]="opt">{{ opt }}</option>
-                </select>
-                <div *ngIf="q.type === 'boolean'" class="bmf-checkbox-row">
-                  <input type="checkbox" [id]="'bmf_cb_' + getQuestionKey(q)" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'cq_' + getQuestionKey(q)">
-                  <label [for]="'bmf_cb_' + getQuestionKey(q)">{{ q.label }}</label>
-                </div>
-              </div>
-            </ng-container>
-
-            <!-- DECLINED CONFIRMATION -->
-            <div *ngIf="rsvp.response === 'declined'" class="bmf-warning-card">
-              <p>Lamentamos que no puedas acompañarnos. Te recordaremos con mucho cariño.</p>
-              <div *ngIf="requiresDeclineConfirmation" class="bmf-checkbox-row">
-                <input type="checkbox" id="bmfDeclineCB" [(ngModel)]="declineConfirmed" name="bmfDeclineCB">
-                <label for="bmfDeclineCB">Confirmo definitivamente mi declinación</label>
-              </div>
-            </div>
-
-            <!-- MESSAGE TO BRIDE & GROOM -->
-            <div class="bmf-form-group">
-              <label>Mensaje para los novios</label>
-              <textarea class="bmf-textarea" [(ngModel)]="rsvp.message" name="rsvpMessage" placeholder="Escribe unas palabras de felicitación o cariño..."></textarea>
-            </div>
-
-            <!-- FEEDBACK BANNERS -->
-            <div *ngIf="error" class="bmf-form-error-banner">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              <span>{{ error }}</span>
-            </div>
-
-            <div *ngIf="success" class="bmf-form-success-banner">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              <span>{{ success }}</span>
-            </div>
-
-            <!-- SUBMIT BUTTON -->
-            <div class="bmf-submit-wrap">
-              <button type="submit" class="bmf-btn bmf-btn-gold bmf-btn-block bmf-btn-lg" [disabled]="sending">
-                <div *ngIf="sending" class="bmf-btn-spinner"></div>
-                <svg *ngIf="!sending" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                <span>{{ sending ? 'Enviando confirmación...' : 'Confirmar Asistencia' }}</span>
-              </button>
-            </div>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
         </div>
       </section>
 

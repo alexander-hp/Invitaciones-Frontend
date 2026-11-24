@@ -80,6 +80,7 @@ import { NewPublicInvitationBodaTeatroComponent } from './features/new-public-in
 import { NewPublicInvitationBodaEleganzaComponent } from './features/new-public-invitation/templates/template-boda-eleganza/new-public-invitation-boda-eleganza.component';
 import { NewPublicInvitationBodaRosasComponent } from './features/new-public-invitation/templates/template-boda-rosas/new-public-invitation-boda-rosas.component';
 import { NewPublicInvitationBodaGirasolesComponent } from './features/new-public-invitation/templates/template-boda-girasoles/new-public-invitation-boda-girasoles.component';
+import { UniversalRsvpFormComponent } from './features/new-public-invitation/components/universal-rsvp-form/universal-rsvp-form.component';
 import { NewPublicInvitationBodaNavyBlueComponent } from './features/new-public-invitation/templates/template-boda-navy-blue/new-public-invitation-boda-navy-blue.component';
 import { NewPublicInvitationXvBurgundyComponent } from './features/new-public-invitation/templates/template-xv-burgundy/new-public-invitation-xv-burgundy.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
@@ -189,6 +190,7 @@ import { environment } from '../environments/environment';
     NewPublicInvitationBodaEleganzaComponent,
     NewPublicInvitationBodaRosasComponent,
     NewPublicInvitationBodaGirasolesComponent,
+    UniversalRsvpFormComponent,
     NewPublicInvitationBodaNavyBlueComponent,
     NewPublicInvitationXvBurgundyComponent,
     RegisterComponent,

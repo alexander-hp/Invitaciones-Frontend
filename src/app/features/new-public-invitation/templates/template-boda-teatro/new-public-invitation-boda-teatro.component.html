@@ -312,75 +312,19 @@
           </p>
           <img src="assets/boda-teatro/flowers-divider.gif" alt="Flores" class="teatro-divider-gif">
 
-          <form (ngSubmit)="onSubmitRsvp()" class="teatro-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nombre del Invitado *</label>
-                <input type="text" [(ngModel)]="rsvp.name" name="teatroName" required class="teatro-input" placeholder="Tu nombre...">
-              </div>
-              <div class="form-group">
-                <label>Teléfono WhatsApp</label>
-                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="teatroPhone" class="teatro-input" placeholder="3312345678">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>¿Confirmas tu asistencia? *</label>
-              <select [(ngModel)]="rsvp.response" name="teatroResp" class="teatro-select">
-                <option value="confirmed">Sí, asistiré a la función de gala</option>
-                <option value="declined">Lamentablemente no podré asistir</option>
-                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Pendiente por confirmar</option>
-              </select>
-            </div>
-
-            <ng-container *ngIf="rsvp.response === 'confirmed'">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Acompañantes adicionales</label>
-                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="teatroComps" class="teatro-input">
-                </div>
-                <div class="form-group">
-                  <label>Menú de la Cena</label>
-                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="teatroMeal" class="teatro-input" placeholder="Tres tiempos, vegetariano, etc.">
-                </div>
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nombres de tus Acompañantes</label>
-                <textarea [(ngModel)]="companionNamesText" name="teatroCompNames" rows="2" class="teatro-textarea" placeholder="Un nombre por línea"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Restricciones Alimenticias o Alergias</label>
-                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="teatroDiet" class="teatro-input" placeholder="Ej: Celíaco, alérgico a nueces...">
-              </div>
-            </ng-container>
-
-            <!-- Preguntas Personalizadas Dinámicas -->
-            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
-              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
-                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                <input *ngIf="q.type === 'text' || !q.type" type="text" class="teatro-input"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
-                <textarea *ngIf="q.type === 'textarea'" class="teatro-textarea"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-              </div>
-            </ng-container>
-
-            <div class="form-group">
-              <label>Telegrama / Mensaje para los Novios</label>
-              <textarea [(ngModel)]="rsvp.message" name="teatroMsg" rows="2" class="teatro-textarea" placeholder="Escribe tus palabras..."></textarea>
-            </div>
-
-            <button type="submit" class="teatro-btn teatro-btn-gold" [disabled]="sending">
-              <span *ngIf="!sending">Confirmar Butaca de Honor</span>
-              <span *ngIf="sending">Registrando...</span>
-            </button>
-            <p *ngIf="success" class="teatro-alert success">{{ success }}</p>
-            <p *ngIf="error" class="teatro-alert error">{{ error }}</p>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            [darkTheme]="true"
+            (submitRsvp)="onSubmitRsvp()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>

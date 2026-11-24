@@ -379,101 +379,18 @@
             <p *ngIf="deadlineLabel" class="deadline">Favor de confirmar antes del {{ deadlineLabel }}</p>
           </div>
 
-          <form class="totro-form" (ngSubmit)="submit()">
-            <div class="form-group">
-              <label>Nombre del Asistente *</label>
-              <input type="text" class="totro-input" [(ngModel)]="rsvp.name" name="otroName" [readonly]="requiresGuestValidation" required placeholder="Nombre y Apellidos">
-            </div>
-
-            <div class="form-group" *ngIf="canIdentifyByEmail">
-              <label>Correo Electrónico</label>
-              <input type="email" class="totro-input" [(ngModel)]="rsvp.email" name="otroEmail" [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-            </div>
-
-            <div class="form-group" *ngIf="canIdentifyByPhone">
-              <label>Teléfono de Contacto</label>
-              <input type="tel" class="totro-input" [(ngModel)]="rsvp.phoneNationalNumber" name="otroPhone" placeholder="10 dígitos">
-            </div>
-
-            <div class="form-group">
-              <label>¿Confirmas tu asistencia al evento?</label>
-              <div class="radio-pill-group">
-                <label class="radio-pill" [class.selected]="rsvp.response === 'confirmed'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="confirmed" name="otroResp" (change)="onResponseChange()">
-                  <span>Confirmar Asistencia</span>
-                </label>
-                <label *ngIf="canUseMaybe" class="radio-pill" [class.selected]="rsvp.response === 'maybe'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="maybe" name="otroResp" (change)="onResponseChange()">
-                  <span>Por confirmar</span>
-                </label>
-                <label class="radio-pill" [class.selected]="rsvp.response === 'declined'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="declined" name="otroResp" (change)="onResponseChange()">
-                  <span>Declinar invitación</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Campos adicionales para confirmados -->
-            <div *ngIf="rsvp.response === 'confirmed'" class="confirmed-fields">
-              <div *ngIf="(maxCompanions || 0) > 0" class="form-group">
-                <label>Acompañantes adicionales (Máx: {{ maxCompanions }})</label>
-                <input type="number" class="totro-input" [(ngModel)]="rsvp.companions" name="otroComps" min="0" [max]="maxCompanions || 0">
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nombres de los acompañantes</label>
-                <textarea class="totro-textarea" [(ngModel)]="companionNamesText" name="otroCompNames" rows="2" placeholder="Uno por línea"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Opción o Preferencia de Menú</label>
-                <input type="text" class="totro-input" [(ngModel)]="rsvp.mealPreference" name="otroMeal" placeholder="Ej: Tres tiempos, vegetariano, kosher">
-              </div>
-
-              <div class="form-group">
-                <label>Requerimientos dietéticos o alergias</label>
-                <input type="text" class="totro-input" [(ngModel)]="rsvp.dietaryRestrictions" name="otroDiet" placeholder="Ej: Sin nueces, vegetariano">
-              </div>
-
-              <!-- Preguntas personalizadas dinámicas -->
-              <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-                <div *ngFor="let q of invitation.rsvpSettings?.customQuestions" class="form-group">
-                  <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                  <input *ngIf="q.type === 'text' || !q.type" type="text" class="totro-input" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'otro_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                  <textarea *ngIf="q.type === 'textarea'" class="totro-textarea" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'otro_cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-                  <select *ngIf="q.type === 'select'" class="totro-select" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'otro_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                    <option value="">Selecciona una opción</option>
-                    <option *ngFor="let opt of q.options" [value]="opt">{{ opt }}</option>
-                  </select>
-                  <div *ngIf="q.type === 'boolean'" class="checkbox-row">
-                    <input type="checkbox" [id]="'otro_cb_' + getQuestionKey(q)" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'otro_cq_' + getQuestionKey(q)">
-                    <label [for]="'otro_cb_' + getQuestionKey(q)">{{ q.label }}</label>
-                  </div>
-                </div>
-              </ng-container>
-            </div>
-
-            <!-- Confirmación de declinación -->
-            <div *ngIf="rsvp.response === 'declined' && requiresDeclineConfirmation" class="form-group decline-warning">
-              <label class="checkbox-row">
-                <input type="checkbox" [(ngModel)]="declineConfirmed" name="otroDeclineConf" required>
-                <span>Confirmo que no podré asistir al evento</span>
-              </label>
-            </div>
-
-            <div class="form-group">
-              <label>Notas o mensaje para los anfitriones</label>
-              <textarea class="totro-textarea" [(ngModel)]="rsvp.message" name="otroMsg" rows="3" placeholder="Escribe un mensaje..."></textarea>
-            </div>
-
-            <button type="submit" class="totro-btn totro-btn-emerald totro-btn-block" [disabled]="sending || (rsvp.response === 'declined' && requiresDeclineConfirmation && !declineConfirmed)">
-              <div *ngIf="sending" class="totro-spinner"></div>
-              <span>{{ sending ? 'Enviando...' : 'Confirmar Asistencia' }}</span>
-            </button>
-
-            <div *ngIf="success" class="totro-success-banner">{{ success }}</div>
-            <div *ngIf="error" class="totro-error-banner">{{ error }}</div>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>

@@ -421,102 +421,18 @@
             </div>
 
             <!-- FORM -->
-            <form class="bcl-form" (ngSubmit)="submit()">
-              <div class="bcl-form-group">
-                <label>Nombre y Apellido *</label>
-                <input type="text" class="bcl-input" [(ngModel)]="rsvp.name" name="bclName" [readonly]="requiresGuestValidation" required placeholder="Tu nombre completo">
-              </div>
-
-              <div class="bcl-form-group" *ngIf="canIdentifyByEmail">
-                <label>Correo Electrónico</label>
-                <input type="email" class="bcl-input" [(ngModel)]="rsvp.email" name="bclEmail" [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-              </div>
-
-              <div class="bcl-form-row">
-                <div class="bcl-form-group col-country">
-                  <label>País</label>
-                  <input type="text" class="bcl-input" [(ngModel)]="rsvp.phoneCountryCode" name="bclCountry" placeholder="+52">
-                </div>
-                <div class="bcl-form-group col-phone">
-                  <label>Teléfono WhatsApp</label>
-                  <input type="tel" class="bcl-input" [(ngModel)]="rsvp.phoneNationalNumber" name="bclPhone" placeholder="3312345678">
-                </div>
-              </div>
-
-              <div class="bcl-form-group">
-                <label>¿Confirmas tu asistencia? *</label>
-                <select class="bcl-select" [(ngModel)]="rsvp.response" name="bclResp" (change)="onResponseChange()">
-                  <option value="confirmed">Sí, confirmo con alegría mi asistencia</option>
-                  <option value="declined">Lamentablemente no podré asistir</option>
-                  <option *ngIf="canUseMaybe" value="maybe">Aún por confirmar</option>
-                </select>
-              </div>
-
-              <!-- IF CONFIRMED -->
-              <ng-container *ngIf="isFinalAttendance">
-                <div class="bcl-form-group">
-                  <label>Número de Acompañantes</label>
-                  <input type="number" min="0" [max]="maxCompanions === null ? 10 : maxCompanions" class="bcl-input" [(ngModel)]="rsvp.companions" name="bclCompanions">
-                </div>
-
-                <div class="bcl-form-group">
-                  <label>Nombres de tus Acompañantes</label>
-                  <textarea class="bcl-textarea" [(ngModel)]="companionNamesText" name="bclCompNames" placeholder="Escribe un nombre por línea"></textarea>
-                </div>
-
-                <div class="bcl-form-group">
-                  <label>Preferencia de Menú / Platillo</label>
-                  <input type="text" class="bcl-input" [(ngModel)]="rsvp.mealPreference" name="bclMeal" placeholder="Ej: Carne, Pollo, Vegano">
-                </div>
-
-                <div class="bcl-form-group">
-                  <label>Restricciones Alimentarias</label>
-                  <textarea class="bcl-textarea" [(ngModel)]="rsvp.dietaryRestrictions" name="bclDiet" placeholder="Ej: Sin nueces, celíaco, etc."></textarea>
-                </div>
-              </ng-container>
-
-              <!-- CUSTOM QUESTIONS -->
-              <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-                <div *ngFor="let q of invitation.rsvpSettings?.customQuestions" class="bcl-form-group">
-                  <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                  <input *ngIf="q.type === 'text' || !q.type" type="text" class="bcl-input" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bcl_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                  <textarea *ngIf="q.type === 'textarea'" class="bcl-textarea" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bcl_cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-                  <select *ngIf="q.type === 'select'" class="bcl-select" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bcl_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                    <option value="">Selecciona una opción</option>
-                    <option *ngFor="let opt of q.options" [value]="opt">{{ opt }}</option>
-                  </select>
-                  <div *ngIf="q.type === 'boolean'" class="bcl-checkbox-row">
-                    <input type="checkbox" [id]="'bcl_cb_' + getQuestionKey(q)" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bcl_cq_' + getQuestionKey(q)">
-                    <label [for]="'bcl_cb_' + getQuestionKey(q)">{{ q.label }}</label>
-                  </div>
-                </div>
-              </ng-container>
-
-              <!-- IF DECLINED -->
-              <div *ngIf="rsvp.response === 'declined'" class="bcl-warning-box">
-                <p>Lamentamos que no puedas acompañarnos. Te recordaremos con cariño.</p>
-                <div *ngIf="requiresDeclineConfirmation" class="bcl-checkbox-row">
-                  <input type="checkbox" id="bclDecConfirm" [(ngModel)]="declineConfirmed" name="bclDecConfirm">
-                  <label for="bclDecConfirm">Confirmo que he declinado la invitación</label>
-                </div>
-              </div>
-
-              <!-- HOST MESSAGE -->
-              <div class="bcl-form-group">
-                <label>Mensaje para los novios</label>
-                <textarea class="bcl-textarea" [(ngModel)]="rsvp.message" name="bclMsg" placeholder="Escribe unas palabras de cariño para los anfitriones..."></textarea>
-              </div>
-
-              <!-- FEEDBACK BANNERS -->
-              <div *ngIf="error" class="bcl-form-error-banner"><span>{{ error }}</span></div>
-              <div *ngIf="success" class="bcl-form-success-banner"><span>{{ success }}</span></div>
-
-              <!-- SUBMIT -->
-              <button type="submit" class="bcl-btn bcl-btn-gold bcl-btn-block bcl-btn-lg" [disabled]="sending">
-                <div *ngIf="sending" class="bcl-spinner"></div>
-                <span *ngIf="!sending">Confirmar Mi Asistencia (RSVP)</span>
-              </button>
-            </form>
+            <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
           </div>
         </div>
       </section>

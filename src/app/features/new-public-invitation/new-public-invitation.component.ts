@@ -520,8 +520,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.api.getGuestByToken(slug, personalToken).subscribe({
         next: ({ guest, guestSessionToken }) => {
           this.verifiedGuest = guest;
-          this.rsvp.name = guest.name;
-          this.rsvp.email = guest.email || '';
+          this.applyVerifiedGuestToRsvp(guest);
           this.guestSessionToken = guestSessionToken || '';
           if (guestSessionToken) sessionStorage.setItem(this.guestSessionStorageKey(slug), guestSessionToken);
           const search = new URLSearchParams(window.location.search);
@@ -1284,24 +1283,35 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     this.sending = true;
     this.error = '';
     this.success = '';
-    const { phoneCountryCode, phoneNationalNumber, ...rsvpBase } = this.rsvp;
-    const phonePayload = phoneNationalNumber
-      ? { phoneCountryCode: this.rsvp.phoneCountryCode || '+52', phoneNationalNumber: this.rsvp.phoneNationalNumber }
+    const { phoneCountryCode, phoneNationalNumber, companionNames: rsvpCompanionNames, mealPreference, dietaryRestrictions, menuSelection, ...rsvpBase } = this.rsvp as any;
+    const cleanDigits = String(phoneNationalNumber || '').replace(/\D/g, '');
+    const phonePayload = cleanDigits.length >= 6
+      ? { phoneCountryCode: phoneCountryCode || '+52', phoneNationalNumber: cleanDigits }
       : {};
-    const payload = {
+    const resolvedEmail = String(this.verifiedGuest?.email || this.rsvp.email || '').trim();
+    const maxAllowed = this.maxCompanions !== null && this.maxCompanions !== undefined ? Math.max(0, Number(this.maxCompanions)) : 10;
+    const requestedCompanions = this.isFinalAttendance
+      ? Math.max(0, Math.min(maxAllowed, Number(this.rsvp.companions || 0)))
+      : 0;
+    const resolvedCompanionNames: string[] = this.isFinalAttendance
+      ? (Array.isArray(rsvpCompanionNames) && rsvpCompanionNames.length ? rsvpCompanionNames : this.companionNames)
+      : [];
+    const payload: any = {
       ...rsvpBase,
       ...phonePayload,
       guest: this.verifiedGuest?.id,
       name: this.verifiedGuest?.name || this.rsvp.name,
-      email: this.verifiedGuest?.email || this.rsvp.email,
-      companions: this.isFinalAttendance ? Number(this.rsvp.companions || 0) : 0,
-      companionNames: this.isFinalAttendance ? this.companionNames : [],
-      mealPreference: this.isFinalAttendance ? this.rsvp.mealPreference : undefined,
-      dietaryRestrictions: this.isFinalAttendance ? this.rsvp.dietaryRestrictions : undefined,
-      menuSelection: this.isFinalAttendance ? this.rsvp.menuSelection : undefined,
+      ...(resolvedEmail ? { email: resolvedEmail } : {}),
+      companions: requestedCompanions,
+      companionNames: resolvedCompanionNames,
+      ...(this.isFinalAttendance && mealPreference ? { mealPreference } : {}),
+      ...(this.isFinalAttendance && dietaryRestrictions ? { dietaryRestrictions } : {}),
+      ...(this.isFinalAttendance && menuSelection ? { menuSelection } : {}),
       customAnswers: this.customQuestionAnswers,
       declineConfirmed: this.declineConfirmed
     };
+    delete payload.email;
+    if (resolvedEmail) payload.email = resolvedEmail;
     this.api.submitRsvp(this.invitation.slug, payload, this.guestSessionToken).subscribe({
       next: (response) => {
         this.success = response.updated ? '¡Tu respuesta fue actualizada con éxito!' : '¡Muchas gracias! Tu respuesta fue registrada.';
@@ -1374,11 +1384,9 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           if (!this.invitation) {
             this.fetchPublishedInvitation(slug, res.guestSessionToken);
           }
-          this.rsvp.name = res.guest.name;
-          this.rsvp.email = res.guest.email || this.guestAccessEmail || '';
+          this.applyVerifiedGuestToRsvp(res.guest, this.guestAccessEmail, this.guestAccessPhone);
           this.loadGuestActivity(false);
-          this.showToast(`¡Pase encontrado para ${res.guest.name}!`);
-          this.showPassModal = true;
+          this.showToast(`¡Bienvenido(a), ${res.guest.name}!`);
           this.cdr?.markForCheck();
         } else {
           this.accessMessage = res.message;
@@ -1451,7 +1459,6 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
           this.guestSessionToken = res.guestSessionToken;
           sessionStorage.setItem(this.guestSessionStorageKey(slug), res.guestSessionToken);
           this.fetchPublishedInvitation(slug, res.guestSessionToken);
-          this.showPassModal = true;
         }
         this.cdr?.markForCheck();
       },
@@ -2073,6 +2080,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         const newestNotice = this.activityNotifications.find((item) => !previousKeys.has(`${item.key}:${item.status}`));
         this.guestActivity = activity;
         this.verifiedGuest = activity.guest;
+        this.applyVerifiedGuestToRsvp(activity.guest);
         this.guestSubmittedSongsCount = activity.songRequests.length;
         this.guestActivityLoading = false;
         if (hadActivity && newestNotice) this.showToast(newestNotice.title);
@@ -2833,6 +2841,41 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
 
   get requiresGuestValidation(): boolean {
     return this.invitation?.accessMode === 'guest_list' || this.invitation?.accessMode === 'specific_users';
+  }
+
+  private applyVerifiedGuestToRsvp(guest: any, fallbackEmail?: string, fallbackPhone?: string): void {
+    if (!guest) return;
+    if (guest.name) this.rsvp.name = guest.name;
+    const email = guest.email || fallbackEmail || '';
+    if (email && !this.rsvp.email) this.rsvp.email = email;
+    const rawPhone = guest.phoneNationalNumber || guest.phone || fallbackPhone || '';
+    if (rawPhone && !this.rsvp.phoneNationalNumber) {
+      const cc = guest.phoneCountryCode;
+      if (cc && /^\+\d{1,4}$/.test(cc)) {
+        const digits = String(rawPhone).replace(/\D/g, '');
+        const ccDigits = cc.replace(/\D/g, '');
+        this.rsvp.phoneCountryCode = cc;
+        this.rsvp.phoneNationalNumber = digits.startsWith(ccDigits) && digits.length > 10 ? digits.slice(ccDigits.length) : digits;
+      } else {
+        const match = String(rawPhone).trim().match(/^(\+\d{1,3})\s*(.+)$/);
+        if (match) {
+          this.rsvp.phoneCountryCode = match[1];
+          this.rsvp.phoneNationalNumber = match[2].replace(/\D/g, '');
+        } else {
+          const digits = String(rawPhone).replace(/\D/g, '');
+          if (digits.length === 12 && digits.startsWith('52')) {
+            this.rsvp.phoneCountryCode = '+52';
+            this.rsvp.phoneNationalNumber = digits.slice(2);
+          } else {
+            this.rsvp.phoneNationalNumber = digits;
+          }
+        }
+      }
+    }
+    const max = this.maxCompanions;
+    if (max !== null && max !== undefined && Number(this.rsvp.companions || 0) > max) {
+      this.rsvp.companions = Math.max(0, max);
+    }
   }
 
   get isGuestList(): boolean {

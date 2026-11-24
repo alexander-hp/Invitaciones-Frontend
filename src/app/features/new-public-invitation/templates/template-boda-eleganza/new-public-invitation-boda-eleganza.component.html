@@ -309,75 +309,18 @@
           </p>
           <div class="eleganza-line-sep"></div>
 
-          <form (ngSubmit)="onSubmitRsvp()" class="eleganza-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nome e Cognome *</label>
-                <input type="text" [(ngModel)]="rsvp.name" name="eleganzaName" required class="eleganza-input" placeholder="Il tuo nome...">
-              </div>
-              <div class="form-group">
-                <label>Telefono WhatsApp</label>
-                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="eleganzaPhone" class="eleganza-input" placeholder="3312345678">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Sarai con noi? *</label>
-              <select [(ngModel)]="rsvp.response" name="eleganzaResp" class="eleganza-select">
-                <option value="confirmed">Sì, sarò presente con piacere</option>
-                <option value="declined">Purtroppo non potrò partecipare</option>
-                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Non sono ancora sicuro/a</option>
-              </select>
-            </div>
-
-            <ng-container *ngIf="rsvp.response === 'confirmed'">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Accompagnatori</label>
-                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="eleganzaComps" class="eleganza-input">
-                </div>
-                <div class="form-group">
-                  <label>Preferenza di Menu</label>
-                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="eleganzaMeal" class="eleganza-input" placeholder="Carne, pesce, vegetariano...">
-                </div>
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nomi degli Accompagnatori</label>
-                <textarea [(ngModel)]="companionNamesText" name="eleganzaCompNames" rows="2" class="eleganza-textarea" placeholder="Un nome per riga"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Allergie o Intolleranze</label>
-                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="eleganzaDiet" class="eleganza-input" placeholder="Celiachia, intolleranza al lattosio...">
-              </div>
-            </ng-container>
-
-            <!-- Preguntas Personalizadas Dinámicas -->
-            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
-              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
-                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                <input *ngIf="q.type === 'text' || !q.type" type="text" class="eleganza-input"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
-                <textarea *ngIf="q.type === 'textarea'" class="eleganza-textarea"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-              </div>
-            </ng-container>
-
-            <div class="form-group">
-              <label>Un Pensiero per gli Sposi</label>
-              <textarea [(ngModel)]="rsvp.message" name="eleganzaMsg" rows="2" class="eleganza-textarea" placeholder="Scrivi il tuo messaggio..."></textarea>
-            </div>
-
-            <button type="submit" class="eleganza-btn eleganza-btn-terra" [disabled]="sending">
-              <span *ngIf="!sending">Invia Conferma</span>
-              <span *ngIf="sending">Invio in corso...</span>
-            </button>
-            <p *ngIf="success" class="eleganza-alert success">{{ success }}</p>
-            <p *ngIf="error" class="eleganza-alert error">{{ error }}</p>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="onSubmitRsvp()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>

@@ -316,65 +316,18 @@
           Por favor ayúdanos confirmando tu asistencia con anticipación para contemplar tu lugar en este día tan especial.
         </p>
 
-        <form (ngSubmit)="submitRsvp.emit()" class="tpl3-rsvp-form">
-          <div class="tpl3-form-group">
-            <label>Nombre Completo *</label>
-            <input type="text" class="tpl3-input" [(ngModel)]="rsvp.name" name="rsvpName" required placeholder="Tu nombre y apellido">
-          </div>
-
-          <div class="tpl3-form-group">
-            <label>Correo Electrónico</label>
-            <input type="email" class="tpl3-input" [(ngModel)]="rsvp.email" name="rsvpEmail" placeholder="correo@ejemplo.com">
-          </div>
-
-          <div class="tpl3-form-group">
-            <label>Teléfono de Contacto</label>
-            <div style="display:flex; gap:8px;">
-              <input type="text" class="tpl3-input" style="max-width:80px;" [(ngModel)]="rsvp.phoneCountryCode" name="phoneCountry" placeholder="+52">
-              <input type="tel" class="tpl3-input" [(ngModel)]="rsvp.phoneNationalNumber" name="phoneNum" placeholder="10 dígitos">
-            </div>
-          </div>
-
-          <div class="tpl3-form-group">
-            <label>¿Asistirás al evento? *</label>
-            <div class="tpl3-radio-group">
-              <label class="tpl3-radio-btn" [class.selected]="rsvp.response === 'confirmed'">
-                <input type="radio" [(ngModel)]="rsvp.response" name="rsvpResponse" value="confirmed">
-                <span>Sí, con gusto asistiré</span>
-              </label>
-              <label class="tpl3-radio-btn" [class.selected]="rsvp.response === 'declined'">
-                <input type="radio" [(ngModel)]="rsvp.response" name="rsvpResponse" value="declined">
-                <span>Lamentablemente no podré</span>
-              </label>
-            </div>
-          </div>
-
-          <div *ngIf="rsvp.response === 'confirmed' && (invitation?.rsvpSettings?.defaultAllowedCompanions || 0) > 0" class="tpl3-form-group">
-            <label>Número de Acompañantes Extras</label>
-            <input type="number" class="tpl3-input" [(ngModel)]="rsvp.companions" name="companions" min="0" [max]="invitation?.rsvpSettings?.defaultAllowedCompanions || 5">
-          </div>
-
-          <div *ngIf="rsvp.response === 'confirmed'" class="tpl3-form-group">
-            <label>Restricciones Alimentarias o Alergias</label>
-            <input type="text" class="tpl3-input" [(ngModel)]="rsvp.dietaryRestrictions" name="dietary" placeholder="Vegetariano, celíaco, etc. (opcional)">
-          </div>
-
-          <div class="tpl3-form-group">
-            <label>Mensaje o Felicitación para los anfitriones</label>
-            <textarea class="tpl3-textarea" [(ngModel)]="rsvp.message" name="message" rows="3" placeholder="Escribe unas palabras..."></textarea>
-          </div>
-
-          <button type="submit" class="tpl3-btn tpl3-btn-primary tpl3-btn-block" [disabled]="sending || !rsvp.name" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-            <span>{{ sending ? 'Enviando confirmación...' : 'Enviar mi Confirmación' }}</span>
-          </button>
-
-          <p *ngIf="success" class="tpl3-alert-success" style="margin-top:12px;">{{ success }}</p>
-          <p *ngIf="error" class="tpl3-alert-error" style="margin-top:12px;">{{ error }}</p>
-        </form>
+        <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submitRsvp.emit()">
+          </app-universal-rsvp-form>
       </div>
     </section>
 

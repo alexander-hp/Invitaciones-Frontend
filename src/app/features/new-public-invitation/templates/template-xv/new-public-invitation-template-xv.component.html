@@ -391,101 +391,18 @@
             <p *ngIf="deadlineLabel" class="deadline">Favor de confirmar antes del {{ deadlineLabel }}</p>
           </div>
 
-          <form class="txv-form" (ngSubmit)="submit()">
-            <div class="form-group">
-              <label>Nombre del Invitado *</label>
-              <input type="text" class="txv-input" [(ngModel)]="rsvp.name" name="xvName" [readonly]="requiresGuestValidation" required placeholder="Nombre completo">
-            </div>
-
-            <div class="form-group" *ngIf="canIdentifyByEmail">
-              <label>Correo Electrónico</label>
-              <input type="email" class="txv-input" [(ngModel)]="rsvp.email" name="xvEmail" [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-            </div>
-
-            <div class="form-group" *ngIf="canIdentifyByPhone">
-              <label>WhatsApp / Teléfono</label>
-              <input type="tel" class="txv-input" [(ngModel)]="rsvp.phoneNationalNumber" name="xvPhone" placeholder="10 dígitos">
-            </div>
-
-            <div class="form-group">
-              <label>¿Nos acompañarás a la gala?</label>
-              <div class="radio-pill-group">
-                <label class="radio-pill" [class.selected]="rsvp.response === 'confirmed'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="confirmed" name="xvResp" (change)="onResponseChange()">
-                  <span>¡Claro que sí, ahí estaré!</span>
-                </label>
-                <label *ngIf="canUseMaybe" class="radio-pill" [class.selected]="rsvp.response === 'maybe'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="maybe" name="xvResp" (change)="onResponseChange()">
-                  <span>Por confirmar</span>
-                </label>
-                <label class="radio-pill" [class.selected]="rsvp.response === 'declined'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="declined" name="xvResp" (change)="onResponseChange()">
-                  <span>No podré asistir</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Campos adicionales para confirmados -->
-            <div *ngIf="rsvp.response === 'confirmed'" class="confirmed-fields">
-              <div *ngIf="(maxCompanions || 0) > 0" class="form-group">
-                <label>Acompañantes adicionales (Máx: {{ maxCompanions }})</label>
-                <input type="number" class="txv-input" [(ngModel)]="rsvp.companions" name="xvComps" min="0" [max]="maxCompanions || 0">
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nombres de tus acompañantes</label>
-                <textarea class="txv-textarea" [(ngModel)]="companionNamesText" name="xvCompNames" rows="2" placeholder="Uno por línea"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Preferencia de Menú / Platillo</label>
-                <input type="text" class="txv-input" [(ngModel)]="rsvp.mealPreference" name="xvMeal" placeholder="Ej: Pollo, Carne, Vegetariano">
-              </div>
-
-              <div class="form-group">
-                <label>Restricciones dietéticas</label>
-                <input type="text" class="txv-input" [(ngModel)]="rsvp.dietaryRestrictions" name="xvDiet" placeholder="Alergias o menú especial">
-              </div>
-
-              <!-- Preguntas personalizadas dinámicas -->
-              <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-                <div *ngFor="let q of invitation.rsvpSettings?.customQuestions" class="form-group">
-                  <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                  <input *ngIf="q.type === 'text' || !q.type" type="text" class="txv-input" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'xv_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                  <textarea *ngIf="q.type === 'textarea'" class="txv-textarea" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'xv_cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-                  <select *ngIf="q.type === 'select'" class="txv-select" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'xv_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                    <option value="">Selecciona una opción</option>
-                    <option *ngFor="let opt of q.options" [value]="opt">{{ opt }}</option>
-                  </select>
-                  <div *ngIf="q.type === 'boolean'" class="checkbox-row">
-                    <input type="checkbox" [id]="'xv_cb_' + getQuestionKey(q)" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'xv_cq_' + getQuestionKey(q)">
-                    <label [for]="'xv_cb_' + getQuestionKey(q)">{{ q.label }}</label>
-                  </div>
-                </div>
-              </ng-container>
-            </div>
-
-            <!-- Confirmación de declinación -->
-            <div *ngIf="rsvp.response === 'declined' && requiresDeclineConfirmation" class="form-group decline-warning">
-              <label class="checkbox-row">
-                <input type="checkbox" [(ngModel)]="declineConfirmed" name="xvDeclineConf" required>
-                <span>Confirmo que no podré acompañar a la quinceañera</span>
-              </label>
-            </div>
-
-            <div class="form-group">
-              <label>Mensaje especial para la Quinceañera</label>
-              <textarea class="txv-textarea" [(ngModel)]="rsvp.message" name="xvMsg" rows="3" placeholder="Escribe unas palabras para recordar..."></textarea>
-            </div>
-
-            <button type="submit" class="txv-btn txv-btn-rose txv-btn-block" [disabled]="sending || (rsvp.response === 'declined' && requiresDeclineConfirmation && !declineConfirmed)">
-              <div *ngIf="sending" class="txv-spinner"></div>
-              <span>{{ sending ? 'Enviando...' : 'Confirmar mi Asistencia a los XV' }}</span>
-            </button>
-
-            <div *ngIf="success" class="txv-success-banner">{{ success }}</div>
-            <div *ngIf="error" class="txv-error-banner">{{ error }}</div>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>

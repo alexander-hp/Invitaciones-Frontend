@@ -474,108 +474,18 @@
             </div>
           </div>
 
-          <form class="bdf-form-grid" (ngSubmit)="submit()">
-            <div class="bdf-field-col">
-              <label>Nombre y Apellido *</label>
-              <input type="text" class="bdf-input" [(ngModel)]="rsvp.name" name="bdfRsvpName" [readonly]="requiresGuestValidation" required placeholder="Tu nombre completo">
-            </div>
-
-            <div class="bdf-field-col" *ngIf="canIdentifyByEmail">
-              <label>Correo Electrónico</label>
-              <input type="email" class="bdf-input" [(ngModel)]="rsvp.email" name="bdfRsvpEmail" [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-            </div>
-
-            <div class="bdf-field-col">
-              <label>Código País</label>
-              <input type="text" class="bdf-input" [(ngModel)]="rsvp.phoneCountryCode" name="bdfCountry" placeholder="+52">
-            </div>
-
-            <div class="bdf-field-col">
-              <label>WhatsApp / Teléfono</label>
-              <input type="tel" class="bdf-input" [(ngModel)]="rsvp.phoneNationalNumber" name="bdfPhone" placeholder="3312345678">
-            </div>
-
-            <div class="bdf-field-col full">
-              <label>¿Confirmas tu asistencia a nuestra boda? *</label>
-              <select class="bdf-select" [(ngModel)]="rsvp.response" name="bdfResp" (change)="onResponseChange()">
-                <option value="confirmed">Sí, confirmo con honor y alegría mi asistencia</option>
-                <option value="declined">Lamentablemente no podré acompañarles</option>
-                <option *ngIf="canUseMaybe" value="maybe">Aún por confirmar</option>
-              </select>
-            </div>
-
-            <!-- COMPANIONS & MENU IF CONFIRMED -->
-            <ng-container *ngIf="isFinalAttendance">
-              <div class="bdf-field-col">
-                <label>Número de Acompañantes</label>
-                <input type="number" min="0" [max]="maxCompanions === null ? 10 : maxCompanions" class="bdf-input" [(ngModel)]="rsvp.companions" name="bdfCompanions">
-              </div>
-
-              <div class="bdf-field-col">
-                <label>Preferencia de Menú / Platillo</label>
-                <input type="text" class="bdf-input" [(ngModel)]="rsvp.mealPreference" name="bdfMeal" placeholder="Ej: Res, Ave, Salmón, Vegano">
-              </div>
-
-              <div class="bdf-field-col full">
-                <label>Nombres de tus Acompañantes</label>
-                <textarea class="bdf-textarea" [(ngModel)]="companionNamesText" name="bdfCompNames" placeholder="Escribe un nombre por línea"></textarea>
-              </div>
-
-              <div class="bdf-field-col full">
-                <label>Alergias o Restricciones Dietéticas</label>
-                <textarea class="bdf-textarea" [(ngModel)]="rsvp.dietaryRestrictions" name="bdfDiet" placeholder="Ej: Alergia a nueces o mariscos, celíaco"></textarea>
-              </div>
-            </ng-container>
-
-            <!-- CUSTOM QUESTIONS -->
-            <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-              <div *ngFor="let q of invitation.rsvpSettings?.customQuestions" class="bdf-field-col" [class.full]="q.type === 'textarea'">
-                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                <input *ngIf="q.type === 'text' || !q.type" type="text" class="bdf-input" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bdf_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                <textarea *ngIf="q.type === 'textarea'" class="bdf-textarea" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bdf_cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-                <select *ngIf="q.type === 'select'" class="bdf-select" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bdf_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                  <option value="">Selecciona una opción</option>
-                  <option *ngFor="let opt of q.options" [value]="opt">{{ opt }}</option>
-                </select>
-                <div *ngIf="q.type === 'boolean'" class="bdf-checkbox-inline">
-                  <input type="checkbox" [id]="'bdf_cq_cb_' + getQuestionKey(q)" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'bdf_cq_' + getQuestionKey(q)">
-                  <label [for]="'bdf_cq_cb_' + getQuestionKey(q)">{{ q.label }}</label>
-                </div>
-              </div>
-            </ng-container>
-
-            <!-- DECLINED CONFIRMATION -->
-            <div *ngIf="rsvp.response === 'declined'" class="bdf-field-col full bdf-warning-banner">
-              <p>Lamentamos profundamente que no puedas acompañarnos. Tu presencia se echará de menos.</p>
-              <div *ngIf="requiresDeclineConfirmation" class="bdf-checkbox-inline">
-                <input type="checkbox" id="bdfDecConfirm" [(ngModel)]="declineConfirmed" name="bdfDecConfirm">
-                <label for="bdfDecConfirm">Confirmo que he declinado la invitación</label>
-              </div>
-            </div>
-
-            <!-- MESSAGE TO HOSTS -->
-            <div class="bdf-field-col full">
-              <label>Dedicatoria o Mensaje a los Novios</label>
-              <textarea class="bdf-textarea" [(ngModel)]="rsvp.message" name="bdfRsvpMsg" placeholder="Escribe tus palabras cariñosas para los novios..."></textarea>
-            </div>
-
-            <!-- ERROR & SUCCESS -->
-            <div *ngIf="error" class="bdf-field-col full bdf-form-error-banner">
-              <span>{{ error }}</span>
-            </div>
-
-            <div *ngIf="success" class="bdf-field-col full bdf-form-success-banner">
-              <span>{{ success }}</span>
-            </div>
-
-            <!-- SUBMIT -->
-            <div class="bdf-field-col full bdf-center-action">
-              <button type="submit" class="bdf-btn bdf-btn-gold bdf-btn-lg" [disabled]="sending">
-                <div *ngIf="sending" class="bdf-spinner"></div>
-                <span *ngIf="!sending">Confirmar Mi Asistencia (RSVP)</span>
-              </button>
-            </div>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
         </div>
       </section>
 

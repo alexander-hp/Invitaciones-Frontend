@@ -2568,6 +2568,48 @@ export class NewInvitationEditorComponent implements OnInit, OnDestroy {
     this.ensureVisualDesignIds(rawContent.visualDesign);
     this.ensureVisualDesignIds(rawContent.visualDesignDraft);
 
+    if (rawContent.accessScreen) {
+      const syncedAccess = { ...rawContent.accessScreen };
+      const syncPinLayer = (layers?: any[]) => {
+        if (!Array.isArray(layers)) return layers;
+        return layers.map((layer) => {
+          if (layer?.binding !== 'access.pin') return layer;
+          return {
+            ...layer,
+            text: syncedAccess.pinInputLabel || layer.text,
+            placeholder: syncedAccess.pinInputPlaceholder || layer.placeholder
+          };
+        });
+      };
+      if (Array.isArray(syncedAccess.layers)) {
+        syncedAccess.layers = syncPinLayer(syncedAccess.layers);
+      }
+      rawContent.accessScreen = syncedAccess;
+
+      if (rawContent.visualDesign) {
+        const existingVdLayers = rawContent.visualDesign.accessScreen?.layers;
+        rawContent.visualDesign = {
+          ...rawContent.visualDesign,
+          accessScreen: {
+            ...(rawContent.visualDesign.accessScreen || {}),
+            ...syncedAccess,
+            ...(Array.isArray(existingVdLayers) && existingVdLayers.length ? { layers: syncPinLayer(existingVdLayers) } : {})
+          }
+        };
+      }
+      if (rawContent.visualDesignDraft) {
+        const existingDraftLayers = rawContent.visualDesignDraft.accessScreen?.layers;
+        rawContent.visualDesignDraft = {
+          ...rawContent.visualDesignDraft,
+          accessScreen: {
+            ...(rawContent.visualDesignDraft.accessScreen || {}),
+            ...syncedAccess,
+            ...(Array.isArray(existingDraftLayers) && existingDraftLayers.length ? { layers: syncPinLayer(existingDraftLayers) } : {})
+          }
+        };
+      }
+    }
+
     return {
       ...rawContent,
       songRequestSettings: this.getCleanSongRequestSettings(),

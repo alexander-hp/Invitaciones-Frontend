@@ -13,8 +13,24 @@ import {
 export class EventGuestsTabComponent implements OnInit, OnChanges {
   @Input() eventId!: string;
   @Input() tables: EventTableModel[] = [];
+  @Input() invitation?: InvitationModel;
   @Input() focusSection = '';
   @Output() guestsUpdated = new EventEmitter<void>();
+
+  get activeAccessScreen() {
+    return this.invitation?.content?.accessScreen
+      || this.invitation?.publishedContent?.accessScreen
+      || this.invitation?.content?.visualDesign?.accessScreen;
+  }
+
+  get isEventPinMode(): boolean {
+    const acc = this.activeAccessScreen;
+    return Boolean(acc?.requirePin && acc?.pinMode === 'event' && String(acc?.eventPin || '').trim());
+  }
+
+  get activeEventPin(): string {
+    return String(this.activeAccessScreen?.eventPin || '').trim();
+  }
 
   guests: GuestModel[] = [];
   invitations: InvitationModel[] = [];

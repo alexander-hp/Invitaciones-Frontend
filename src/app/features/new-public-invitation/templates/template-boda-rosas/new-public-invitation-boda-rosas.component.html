@@ -340,75 +340,18 @@
             <img src="assets/boda-rosas/floral-divider.png" alt="Divisor" class="flourish-sep-img">
           </div>
 
-          <form (ngSubmit)="onSubmitRsvp()" class="rosas-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nombre y Apellidos *</label>
-                <input type="text" [(ngModel)]="rsvp.name" name="rosasName" required class="rosas-input" placeholder="Tu nombre completo...">
-              </div>
-              <div class="form-group">
-                <label>Teléfono WhatsApp</label>
-                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="rosasPhone" class="rosas-input" placeholder="3312345678">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>¿Asistirás al evento? *</label>
-              <select [(ngModel)]="rsvp.response" name="rosasResp" class="rosas-select">
-                <option value="confirmed">Sí, confirmo con mucho gusto</option>
-                <option value="declined">Lamentablemente no podré asistir</option>
-                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Aún no estoy seguro/a</option>
-              </select>
-            </div>
-
-            <ng-container *ngIf="rsvp.response === 'confirmed'">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Acompañantes</label>
-                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="rosasComps" class="rosas-input">
-                </div>
-                <div class="form-group">
-                  <label>Preferencia de Platillo</label>
-                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="rosasMeal" class="rosas-input" placeholder="Carne, pollo, vegetariano...">
-                </div>
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nombres de los Acompañantes</label>
-                <textarea [(ngModel)]="companionNamesText" name="rosasCompNames" rows="2" class="rosas-textarea" placeholder="Escribe un nombre por renglón"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Alergias o Restricciones Alimentarias</label>
-                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="rosasDiet" class="rosas-input" placeholder="Ej. Vegetariano, alérgico a mariscos...">
-              </div>
-            </ng-container>
-
-            <!-- Preguntas Personalizadas Dinámicas -->
-            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
-              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
-                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                <input *ngIf="q.type === 'text' || !q.type" type="text" class="rosas-input"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
-                <textarea *ngIf="q.type === 'textarea'" class="rosas-textarea"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-              </div>
-            </ng-container>
-
-            <div class="form-group">
-              <label>Mensaje para los Novios</label>
-              <textarea [(ngModel)]="rsvp.message" name="rosasMsg" rows="2" class="rosas-textarea" placeholder="Escribe unas palabras de cariño..."></textarea>
-            </div>
-
-            <button type="submit" class="rosas-btn rosas-btn-rose" [disabled]="sending">
-              <span *ngIf="!sending">Enviar Confirmación</span>
-              <span *ngIf="sending">Enviando...</span>
-            </button>
-            <p *ngIf="success" class="rosas-alert success">{{ success }}</p>
-            <p *ngIf="error" class="rosas-alert error">{{ error }}</p>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="onSubmitRsvp()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>

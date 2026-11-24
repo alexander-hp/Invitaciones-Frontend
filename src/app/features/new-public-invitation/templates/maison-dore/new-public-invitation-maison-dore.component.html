@@ -473,73 +473,19 @@
         <p class="md-card-details">{{ success }}</p>
       </div>
 
-      <form *ngIf="!success" (ngSubmit)="submitRsvpForm()">
-        <!-- Selector Asistencia Sí / No -->
-        <div class="md-form-group">
-          <label class="md-label">¿Nos acompañarás en nuestro gran día?</label>
-          <div class="md-radio-group">
-            <div class="md-radio-card"
-                 [class.active]="rsvp.response === 'confirmed'"
-                 (click)="onRsvpResponseChange('confirmed')">
-              ✓ Sí, con gusto asistiré
-            </div>
-            <div class="md-radio-card"
-                 [class.active]="rsvp.response === 'declined'"
-                 (click)="onRsvpResponseChange('declined')">
-              ✕ Lamentablemente no podré
-            </div>
-          </div>
-        </div>
-
-        <div class="md-form-group">
-          <label class="md-label">Nombre Completo *</label>
-          <input type="text" class="md-input" [(ngModel)]="rsvp.name" name="name" required placeholder="Tu nombre y apellido" />
-        </div>
-
-        <div class="md-form-group">
-          <label class="md-label">Correo Electrónico</label>
-          <input type="email" class="md-input" [(ngModel)]="rsvp.email" name="email" placeholder="correo@ejemplo.com" />
-        </div>
-
-        <div class="md-form-group">
-          <label class="md-label">Teléfono / WhatsApp</label>
-          <input type="tel" class="md-input" [(ngModel)]="rsvp.phoneNationalNumber" name="phone" placeholder="10 dígitos" />
-        </div>
-
-        <!-- Acompañantes si confirma -->
-        <div *ngIf="rsvpConfirmedAttending" class="md-form-group">
-          <label class="md-label">Número de Acompañantes</label>
-          <select class="md-select" [(ngModel)]="rsvp.companions" name="companions">
-            <option [ngValue]="0">Sin acompañantes adicionales</option>
-            <option [ngValue]="1">+1 Acompañante</option>
-            <option [ngValue]="2">+2 Acompañantes</option>
-            <option [ngValue]="3">+3 Acompañantes</option>
-          </select>
-        </div>
-
-        <div *ngIf="rsvpConfirmedAttending && rsvp.companions > 0" class="md-form-group">
-          <label class="md-label">Nombre de tus acompañantes</label>
-          <input type="text" class="md-input" [(ngModel)]="companionNamesText" name="companionNames" placeholder="Nombres separados por coma" />
-        </div>
-
-        <div *ngIf="rsvpConfirmedAttending" class="md-form-group">
-          <label class="md-label">Restricciones Alimenticias / Alergias</label>
-          <input type="text" class="md-input" [(ngModel)]="rsvp.dietaryRestrictions" name="dietary" placeholder="Vegetariano, celíaco, alergia a mariscos..." />
-        </div>
-
-        <div class="md-form-group">
-          <label class="md-label">Mensaje para la pareja</label>
-          <textarea class="md-textarea" rows="3" [(ngModel)]="rsvp.message" name="message" placeholder="Escribe un mensaje de buenos deseos..."></textarea>
-        </div>
-
-        <div *ngIf="error" style="color: #b00020; margin-bottom: 16px; font-size: 0.9rem;">
-          {{ error }}
-        </div>
-
-        <button type="submit" class="md-submit-btn" [disabled]="sending">
-          {{ sending ? 'Enviando Confirmación...' : 'Enviar Confirmación' }}
-        </button>
-      </form>
+      <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            [darkTheme]="true"
+            (submitRsvp)="submitRsvpForm()">
+          </app-universal-rsvp-form>
     </div>
   </section>
 

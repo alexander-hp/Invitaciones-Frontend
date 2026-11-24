@@ -1178,7 +1178,12 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       ? [this.event.externalSiteUrl ? `Página del evento: ${this.event.externalSiteUrl}` : '', link ? `RSVP, pase y álbum: ${link}` : '']
       : [link];
     let body = this.isMessageEdited ? this.customMessageBody.trim() : this.getBodyTemplateForType(type);
-    const activePin = g.accessPin || '';
+    const acc = this.invitation?.content?.accessScreen
+      || this.invitation?.publishedContent?.accessScreen
+      || this.invitation?.content?.visualDesign?.accessScreen;
+    const activePin = (acc?.requirePin && acc?.pinMode === 'event' && String(acc?.eventPin || '').trim())
+      ? String(acc.eventPin).trim()
+      : (g.accessPin || '');
     body = body
       .replace(/\{\{\s*nombre\s*\}\}/gi, g.name || '')
       .replace(/\{\{\s*mesa\s*\}\}/gi, g.tableName || '')

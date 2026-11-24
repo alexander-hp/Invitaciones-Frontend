@@ -462,98 +462,18 @@
               </div>
               <h3 class="card-title">¿Nos acompañas?</h3>
 
-              <form (ngSubmit)="submitRsvp.emit()" class="card-form-scroll">
-                <div class="form-field">
-                  <label>Tu Nombre Completo *</label>
-                  <input type="text" class="card-input" [(ngModel)]="rsvp.name" name="rsvpName" required placeholder="Nombre y apellido" />
-                </div>
-
-                <div class="form-field">
-                  <label>Correo Electrónico</label>
-                  <input type="email" class="card-input" [(ngModel)]="rsvp.email" name="rsvpEmail" placeholder="correo@ejemplo.com" />
-                </div>
-
-                <div class="form-field">
-                  <label>Teléfono WhatsApp</label>
-                  <input type="tel" class="card-input" [(ngModel)]="rsvp.phoneNationalNumber" name="rsvpPhone" placeholder="3312345678" />
-                </div>
-
-                <div class="form-field">
-                  <label>¿Asistirás? *</label>
-                  <div class="rsvp-options-grid">
-                    <button type="button" 
-                            class="rsvp-opt-btn" 
-                            [class.selected]="rsvp.response === 'confirmed'"
-                            (click)="rsvp.response = 'confirmed'">
-                      Sí, asistiré
-                    </button>
-                    <button type="button" 
-                            class="rsvp-opt-btn" 
-                            [class.selected]="rsvp.response === 'declined'"
-                            (click)="rsvp.response = 'declined'">
-                      Lo siento, no podré
-                    </button>
-                  </div>
-                </div>
-
-                <div class="form-field" *ngIf="rsvp.response === 'confirmed'">
-                  <label>Número de Acompañantes</label>
-                  <input type="number" class="card-input" [(ngModel)]="rsvp.companions" name="rsvpCompanions" min="0" max="10" />
-                </div>
-
-                <div class="form-field" *ngIf="rsvp.response === 'confirmed'">
-                  <label>Nombres de Acompañantes</label>
-                  <textarea class="card-textarea" [(ngModel)]="companionNamesText" name="compNames" rows="2" placeholder="Un nombre por línea"></textarea>
-                </div>
-
-                <div class="form-field" *ngIf="rsvp.response === 'confirmed'">
-                  <label>Preferencia de Menú</label>
-                  <input type="text" class="card-input" [(ngModel)]="rsvp.mealPreference" name="rsvpMeal" placeholder="Carne, Pollo, Vegetariano..." />
-                </div>
-
-                <div class="form-field" *ngIf="rsvp.response === 'confirmed'">
-                  <label>Alergias o Restricciones</label>
-                  <input type="text" class="card-input" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet" placeholder="Ej: Mariscos, nueces, celíaco" />
-                </div>
-
-                <!-- CUSTOM QUESTIONS -->
-                <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
-                  <div *ngFor="let question of invitation?.rsvpSettings?.customQuestions" class="form-field">
-                    <label>{{ question.label }} {{ question.required ? '*' : '' }}</label>
-                    <input *ngIf="question.type === 'text' || !question.type" type="text" class="card-input"
-                      [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
-                      [name]="'cq_' + getQuestionKey(question)">
-
-                    <textarea *ngIf="question.type === 'textarea'" class="card-textarea"
-                      [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
-                      [name]="'cq_' + getQuestionKey(question)" rows="2"></textarea>
-
-                    <select *ngIf="question.type === 'select'" class="card-input"
-                      [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
-                      [name]="'cq_' + getQuestionKey(question)">
-                      <option value="">Seleccionar...</option>
-                      <option *ngFor="let opt of question.options" [value]="opt">{{ opt }}</option>
-                    </select>
-                  </div>
-                </ng-container>
-
-                <div class="form-field">
-                  <label>Mensaje para los anfitriones</label>
-                  <textarea class="card-textarea" [(ngModel)]="rsvp.message" name="rsvpMessage" rows="2" placeholder="Escribe un lindo mensaje..."></textarea>
-                </div>
-
-                <button type="submit" class="card-primary-btn" [disabled]="sending || !rsvp.name">
-                  <svg *ngIf="!sending" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                  <div *ngIf="sending" class="btn-spinner"></div>
-                  <span>{{ sending ? 'Enviando...' : 'Confirmar Mi Asistencia (RSVP)' }}</span>
-                </button>
-
-                <p class="form-success-msg" *ngIf="success">{{ success }}</p>
-                <p class="form-error-msg" *ngIf="error">{{ error }}</p>
-              </form>
+              <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submitRsvp.emit()">
+          </app-universal-rsvp-form>
             </div>
           </div>
         </div>

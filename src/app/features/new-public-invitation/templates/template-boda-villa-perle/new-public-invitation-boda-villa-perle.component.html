@@ -339,75 +339,18 @@
           </p>
           <img src="assets/boda-villa-perle/pearl-divider.png" alt="Perlas" class="perle-divider-img">
 
-          <form (ngSubmit)="onSubmitRsvp()" class="perle-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nombre Completo *</label>
-                <input type="text" [(ngModel)]="rsvp.name" name="rsvpName" required class="perle-input" placeholder="Tu nombre...">
-              </div>
-              <div class="form-group">
-                <label>Teléfono WhatsApp</label>
-                <input type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="rsvpPhone" class="perle-input" placeholder="3312345678">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>¿Nos acompañarás? *</label>
-              <select [(ngModel)]="rsvp.response" name="rsvpResp" class="perle-select">
-                <option value="confirmed">Sí, asistiré con mucho gusto</option>
-                <option value="declined">Lo lamento, no podré asistir</option>
-                <option *ngIf="invitation?.rsvpSettings?.allowMaybe" value="maybe">Aún no estoy seguro(a)</option>
-              </select>
-            </div>
-
-            <ng-container *ngIf="rsvp.response === 'confirmed'">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Número de Acompañantes</label>
-                  <input type="number" min="0" max="10" [(ngModel)]="rsvp.companions" name="rsvpComps" class="perle-input">
-                </div>
-                <div class="form-group">
-                  <label>Preferencia de Menú</label>
-                  <input type="text" [(ngModel)]="rsvp.mealPreference" name="rsvpMeal" class="perle-input" placeholder="Pollo, Carne, Vegetariano...">
-                </div>
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nombres de tus Acompañantes</label>
-                <textarea [(ngModel)]="companionNamesText" name="rsvpCompNames" rows="2" class="perle-textarea" placeholder="Escribe un nombre por línea"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Restricciones Alimenticias o Alergias</label>
-                <input type="text" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet" class="perle-input" placeholder="Ej: Intolerante a la lactosa, celíaco...">
-              </div>
-            </ng-container>
-
-            <!-- Preguntas Personalizadas Dinámicas -->
-            <ng-container *ngIf="invitation?.rsvpSettings?.customQuestions?.length">
-              <div *ngFor="let q of invitation?.rsvpSettings?.customQuestions" class="form-group">
-                <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                <input *ngIf="q.type === 'text' || !q.type" type="text" class="perle-input"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required">
-                <textarea *ngIf="q.type === 'textarea'" class="perle-textarea"
-                  [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
-                  [name]="'cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-              </div>
-            </ng-container>
-
-            <div class="form-group">
-              <label>Mensaje para los Novios</label>
-              <textarea [(ngModel)]="rsvp.message" name="rsvpMsg" rows="2" class="perle-textarea" placeholder="Un mensaje con tus buenos deseos..."></textarea>
-            </div>
-
-            <button type="submit" class="perle-btn perle-btn-gold" [disabled]="sending">
-              <span *ngIf="!sending">Enviar Confirmación</span>
-              <span *ngIf="sending">Guardando...</span>
-            </button>
-            <p *ngIf="success" class="perle-alert success">{{ success }}</p>
-            <p *ngIf="error" class="perle-alert error">{{ error }}</p>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="onSubmitRsvp()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>

@@ -1,0 +1,202 @@
+<form class="ursvp-form" [class.ursvp-dark]="darkTheme" [class.ursvp-compact]="isCompact" [ngStyle]="hostStyle" (ngSubmit)="onSubmit()" novalidate>
+  <!-- Banner de invitado verificado -->
+  <div *ngIf="verifiedGuest" class="ursvp-guest-banner">
+    <div class="ursvp-guest-badge-icon">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+    <div class="ursvp-guest-banner-text">
+      <strong>{{ verifiedGuest.name }}</strong>
+      <span>
+        {{ maxCompanions > 0
+          ? ('Pase personal + hasta ' + maxCompanions + (maxCompanions === 1 ? ' acompañante' : ' acompañantes'))
+          : 'Pase individual (1 lugar)' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- 1. Datos de contacto -->
+  <div class="ursvp-grid-2">
+    <div class="ursvp-field">
+      <label class="ursvp-label" for="ursvp-name">Nombre completo <span class="ursvp-req">*</span></label>
+      <input id="ursvp-name" type="text" [(ngModel)]="rsvp.name" name="ursvpName" required
+        class="ursvp-input" [readonly]="!!verifiedGuest?.name"
+        [class.ursvp-readonly]="!!verifiedGuest?.name"
+        placeholder="Tu nombre y apellido">
+    </div>
+
+    <div class="ursvp-field">
+      <label class="ursvp-label" for="ursvp-phone">Teléfono WhatsApp</label>
+      <div class="ursvp-phone-wrap">
+        <select [(ngModel)]="rsvp.phoneCountryCode" name="ursvpPhoneCode" class="ursvp-select ursvp-phone-code" aria-label="Código de país">
+          <option *ngFor="let c of countryCodes" [value]="c.code">{{ c.label }}</option>
+        </select>
+        <input id="ursvp-phone" type="tel" [(ngModel)]="rsvp.phoneNationalNumber" name="ursvpPhone"
+          class="ursvp-input ursvp-phone-num" placeholder="10 dígitos (ej. 5512345678)" maxlength="15">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Confirmación de asistencia (tarjetas interactivas) -->
+  <div class="ursvp-field">
+    <label class="ursvp-label">¿Podrás acompañarnos? <span class="ursvp-req">*</span></label>
+    <div class="ursvp-response-grid" [class.has-three]="canUseMaybe">
+      <button type="button" class="ursvp-choice-card"
+        [class.active]="rsvp.response === 'confirmed'"
+        [class.is-confirmed]="rsvp.response === 'confirmed'"
+        (click)="setResponse('confirmed')">
+        <span class="ursvp-choice-icon">✓</span>
+        <span class="ursvp-choice-title">Sí, asistiré</span>
+        <span class="ursvp-choice-sub">Confirmo mi lugar</span>
+      </button>
+
+      <button type="button" class="ursvp-choice-card"
+        [class.active]="rsvp.response === 'declined'"
+        [class.is-declined]="rsvp.response === 'declined'"
+        (click)="setResponse('declined')">
+        <span class="ursvp-choice-icon">✕</span>
+        <span class="ursvp-choice-title">No podré ir</span>
+        <span class="ursvp-choice-sub">Les deseo lo mejor</span>
+      </button>
+
+      <button *ngIf="canUseMaybe" type="button" class="ursvp-choice-card"
+        [class.active]="rsvp.response === 'maybe'"
+        [class.is-maybe]="rsvp.response === 'maybe'"
+        (click)="setResponse('maybe')">
+        <span class="ursvp-choice-icon">?</span>
+        <span class="ursvp-choice-title">Por confirmar</span>
+        <span class="ursvp-choice-sub">Aún no estoy seguro</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Confirmación de declinación -->
+  <label *ngIf="rsvp.response === 'declined' && requiresDeclineConfirmation" class="ursvp-checkbox-row">
+    <input type="checkbox" [ngModel]="declineConfirmed" (ngModelChange)="onDeclineConfirmChange($event)" name="ursvpDeclineConfirm">
+    <span>Confirmo que lamentablemente no podré asistir al evento.</span>
+  </label>
+
+  <!-- 3. Acompañantes (solo si confirma asistencia) -->
+  <ng-container *ngIf="rsvp.response === 'confirmed'">
+    <div class="ursvp-companions-box">
+      <div class="ursvp-companions-header">
+        <div>
+          <label class="ursvp-label" for="ursvp-companions-select" style="margin-bottom:2px;">Acompañantes</label>
+          <p class="ursvp-hint" *ngIf="maxCompanions > 0">
+            Puedes registrar hasta <strong>{{ maxCompanions }}</strong> {{ maxCompanions === 1 ? 'acompañante adicional' : 'acompañantes adicionales' }}.
+          </p>
+          <p class="ursvp-hint" *ngIf="maxCompanions === 0">
+            Tu invitación es personal (sin acompañantes adicionales).
+          </p>
+        </div>
+
+        <select *ngIf="maxCompanions > 0" id="ursvp-companions-select"
+          class="ursvp-select ursvp-companions-select"
+          [ngModel]="rsvp.companions"
+          (ngModelChange)="onCompanionsCountChange($event)"
+          name="ursvpCompanions">
+          <option *ngFor="let n of companionOptions" [ngValue]="n">
+            {{ n === 0 ? '0 — Solo yo' : (n === 1 ? '1 acompañante' : n + ' acompañantes') }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Lista estructurada de acompañantes (una fila por acompañante seleccionado) -->
+      <div *ngIf="companionRows.length > 0" class="ursvp-companions-list">
+        <div class="ursvp-companions-table-head">
+          <span>#</span>
+          <span>Nombre del acompañante</span>
+          <span>Alergia / Nota (opcional)</span>
+        </div>
+
+        <div *ngFor="let row of companionRows; let i = index; trackBy: trackByIndex" class="ursvp-companion-row">
+          <span class="ursvp-companion-idx">{{ i + 1 }}</span>
+          <input type="text" class="ursvp-input ursvp-input-sm"
+            [(ngModel)]="row.name" (ngModelChange)="onCompanionRowChange()"
+            [name]="'ursvpCompName_' + i"
+            [placeholder]="'Nombre del acompañante ' + (i + 1)">
+          <input type="text" class="ursvp-input ursvp-input-sm"
+            [(ngModel)]="row.note" (ngModelChange)="onCompanionRowChange()"
+            [name]="'ursvpCompNote_' + i"
+            placeholder="Ej. Vegetariano, niño...">
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Preguntas personalizadas configuradas en el evento -->
+    <div *ngIf="customQuestions.length > 0" class="ursvp-questions-section">
+      <div class="ursvp-section-divider">
+        <span>Detalles para tu asistencia</span>
+      </div>
+
+      <div class="ursvp-questions-grid">
+        <div *ngFor="let q of customQuestions; let qi = index"
+          class="ursvp-field"
+          [class.ursvp-col-full]="q.type === 'textarea' || q.type === 'boolean'">
+          <label class="ursvp-label">
+            {{ q.label }} <span *ngIf="q.required" class="ursvp-req">*</span>
+          </label>
+
+          <!-- Texto corto -->
+          <input *ngIf="!q.type || q.type === 'text'" type="text" class="ursvp-input"
+            [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+            [name]="'ursvpCq_' + qi" [required]="!!q.required"
+            placeholder="Escribe tu respuesta...">
+
+          <!-- Texto largo -->
+          <textarea *ngIf="q.type === 'textarea'" rows="2" class="ursvp-textarea"
+            [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+            [name]="'ursvpCq_' + qi" [required]="!!q.required"
+            placeholder="Escribe los detalles aquí..."></textarea>
+
+          <!-- Selector desplegable (dropdown) -->
+          <select *ngIf="q.type === 'select'" class="ursvp-select"
+            [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)"
+            [name]="'ursvpCq_' + qi" [required]="!!q.required">
+            <option value="">Selecciona una opción...</option>
+            <option *ngFor="let opt of (q.options || [])" [value]="opt">{{ opt }}</option>
+          </select>
+
+          <!-- Booleano (Sí / No) -->
+          <div *ngIf="q.type === 'boolean'" class="ursvp-bool-group">
+            <button type="button" class="ursvp-bool-btn"
+              [class.active]="getCustomAnswer(q) === true || getCustomAnswer(q) === 'Sí'"
+              (click)="setCustomAnswer(q, true)">
+              Sí
+            </button>
+            <button type="button" class="ursvp-bool-btn"
+              [class.active]="getCustomAnswer(q) === false || getCustomAnswer(q) === 'No'"
+              (click)="setCustomAnswer(q, false)">
+              No
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- 5. Mensaje para los anfitriones -->
+  <div class="ursvp-field">
+    <label class="ursvp-label" for="ursvp-message">Mensaje o felicitación (opcional)</label>
+    <textarea id="ursvp-message" [(ngModel)]="rsvp.message" name="ursvpMessage" rows="3"
+      class="ursvp-textarea" placeholder="Escribe un mensaje especial para los anfitriones..."></textarea>
+  </div>
+
+  <!-- Alertas -->
+  <div *ngIf="localError || error" class="ursvp-alert ursvp-alert-error" role="alert">
+    {{ localError || error }}
+  </div>
+  <div *ngIf="success" class="ursvp-alert ursvp-alert-success" role="status">
+    {{ success }}
+  </div>
+
+  <!-- Botón de envío -->
+  <div class="ursvp-actions">
+    <button type="submit" class="ursvp-submit-btn" [disabled]="sending">
+      <span *ngIf="sending" class="ursvp-spinner"></span>
+      <span>{{ sending ? 'Enviando confirmación...' : submitLabel }}</span>
+    </button>
+  </div>
+</form>

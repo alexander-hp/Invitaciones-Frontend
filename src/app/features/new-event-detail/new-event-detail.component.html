@@ -297,7 +297,7 @@
       <!-- Tab Content Components -->
       <app-event-info-tab *ngIf="activeTab === 'info'" [event]="event" [metrics]="eventMetrics" [focusSection]="selectedSection" (eventUpdated)="onEventUpdated()" (openInvitationWizard)="openCreateInvitationWizard()"></app-event-info-tab>
 
-      <app-event-guests-tab *ngIf="activeTab === 'guests'" [eventId]="eventId" [tables]="tables" [focusSection]="selectedSection" (guestsUpdated)="onGuestsUpdated()"></app-event-guests-tab>
+      <app-event-guests-tab *ngIf="activeTab === 'guests'" [eventId]="eventId" [tables]="tables" [invitation]="invitation" [focusSection]="selectedSection" (guestsUpdated)="onGuestsUpdated()"></app-event-guests-tab>
 
       <app-event-tables-tab *ngIf="activeTab === 'tables'" [eventId]="eventId" [guests]="guests" (tablesUpdated)="onTablesUpdated()"></app-event-tables-tab>
 

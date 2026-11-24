@@ -570,144 +570,18 @@
           </div>
 
           <!-- RSVP FORM -->
-          <form class="nw-pub-rsvp-form" (ngSubmit)="submit()">
-            <div class="nw-pub-form-grid">
-              <div class="nw-pub-field">
-                <label>Nombre Completo *</label>
-                <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.name" name="rsvpName" [readonly]="requiresGuestValidation"
-                  required placeholder="Tu nombre y apellido">
-              </div>
-
-              <div class="nw-pub-field" *ngIf="canIdentifyByEmail">
-                <label>Correo Electrónico</label>
-                <input type="email" class="nw-pub-input" [(ngModel)]="rsvp.email" name="rsvpEmail"
-                  [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-              </div>
-
-              <div class="nw-pub-field">
-                <label>Código de País</label>
-                <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.phoneCountryCode" name="rsvpPhoneCountry"
-                  placeholder="+52">
-              </div>
-
-              <div class="nw-pub-field">
-                <label>Teléfono WhatsApp</label>
-                <input type="tel" class="nw-pub-input" [(ngModel)]="rsvp.phoneNationalNumber" name="rsvpPhoneNational"
-                  placeholder="3312345678">
-              </div>
-
-              <div class="nw-pub-field full-width">
-                <label>¿Confirmas tu asistencia? *</label>
-                <select class="nw-pub-select" [(ngModel)]="rsvp.response" name="rsvpResponse" (change)="onResponseChange()">
-                  <option value="confirmed">Sí, asistiré con mucho gusto</option>
-                  <option value="declined">Lo siento, no podré asistir</option>
-                  <option *ngIf="canUseMaybe" value="maybe">Aún no estoy seguro(a)</option>
-                </select>
-              </div>
-
-              <!-- IF CONFIRMED -->
-              <ng-container *ngIf="isFinalAttendance">
-                <div class="nw-pub-field">
-                  <label>Número de Acompañantes</label>
-                  <input type="number" min="0" [max]="maxCompanions === null ? 10 : maxCompanions" class="nw-pub-input"
-                    [(ngModel)]="rsvp.companions" name="rsvpCompanions">
-                </div>
-
-                <div class="nw-pub-field full-width">
-                  <label>Nombres de tus Acompañantes</label>
-                  <textarea class="nw-pub-textarea" [(ngModel)]="companionNamesText" name="companionNamesText"
-                    placeholder="Escribe un nombre completo por línea"></textarea>
-                </div>
-
-                <div class="nw-pub-field">
-                  <label>Preferencia de Menú / Platillo</label>
-                  <input type="text" class="nw-pub-input" [(ngModel)]="rsvp.mealPreference" name="rsvpMeal"
-                    placeholder="Ej: Pollo, Carne, Vegetariano">
-                </div>
-
-                <div class="nw-pub-field full-width">
-                  <label>Alergias o Restricciones Alimenticias</label>
-                  <textarea class="nw-pub-textarea" [(ngModel)]="rsvp.dietaryRestrictions" name="rsvpDiet"
-                    placeholder="Ej: Alergia a mariscos, intolerante a la lactosa, celíaco"></textarea>
-                </div>
-              </ng-container>
-
-              <!-- CUSTOM QUESTIONS -->
-              <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-                <div *ngFor="let question of invitation.rsvpSettings?.customQuestions" class="nw-pub-field"
-                  [class.full-width]="question.type === 'textarea'">
-                  <label>{{ question.label }} {{ question.required ? '*' : '' }}</label>
-
-                  <input *ngIf="question.type === 'text' || !question.type" type="text" class="nw-pub-input"
-                    [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
-                    [name]="'cq_' + getQuestionKey(question)" [required]="!!question.required">
-
-                  <textarea *ngIf="question.type === 'textarea'" class="nw-pub-textarea"
-                    [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
-                    [name]="'cq_' + getQuestionKey(question)" [required]="!!question.required"></textarea>
-
-                  <select *ngIf="question.type === 'select'" class="nw-pub-select" [ngModel]="getCustomAnswer(question)"
-                    (ngModelChange)="setCustomAnswer(question, $event)" [name]="'cq_' + getQuestionKey(question)"
-                    [required]="!!question.required">
-                    <option value="">Selecciona una opción</option>
-                    <option *ngFor="let opt of question.options" [value]="opt">{{ opt }}</option>
-                  </select>
-
-                  <div *ngIf="question.type === 'boolean'" class="nw-pub-checkbox-field">
-                    <input type="checkbox" [id]="'cq_cb_' + getQuestionKey(question)"
-                      [ngModel]="getCustomAnswer(question)" (ngModelChange)="setCustomAnswer(question, $event)"
-                      [name]="'cq_' + getQuestionKey(question)">
-                    <label [for]="'cq_cb_' + getQuestionKey(question)">{{ question.label }}</label>
-                  </div>
-                </div>
-              </ng-container>
-
-              <!-- IF DECLINED -->
-              <div *ngIf="rsvp.response === 'declined'" class="nw-pub-field full-width nw-pub-warning-box">
-                <p>Lamentamos mucho que no nos puedas acompañar en este día tan especial.</p>
-                <div *ngIf="requiresDeclineConfirmation" class="nw-pub-checkbox-field">
-                  <input type="checkbox" id="declineCB" [(ngModel)]="declineConfirmed" name="declineCB">
-                  <label for="declineCB">Confirmo definitivamente que no podré asistir</label>
-                </div>
-              </div>
-
-              <!-- MESSAGE TO HOSTS -->
-              <div class="nw-pub-field full-width">
-                <label>Mensaje especial para los anfitriones</label>
-                <textarea class="nw-pub-textarea" [(ngModel)]="rsvp.message" name="rsvpMessage"
-                  placeholder="Escribe unas palabras cariñosas para los festejados..."></textarea>
-              </div>
-            </div>
-
-            <div *ngIf="error" class="nw-pub-form-error-banner">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <span>{{ error }}</span>
-            </div>
-
-            <div *ngIf="success" class="nw-pub-form-success-banner">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <span>{{ success }}</span>
-            </div>
-
-            <div class="nw-pub-rsvp-submit-wrap">
-              <button type="submit" class="nw-pub-btn nw-pub-btn-gold nw-pub-btn-lg"
-                [disabled]="sending">
-                <svg *ngIf="!sending" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-                <div *ngIf="sending" class="nw-pub-btn-spinner"></div>
-                <span>{{ sending ? 'Enviando confirmación...' : 'Confirmar Mi Asistencia (RSVP)' }}</span>
-              </button>
-            </div>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
         </div>
       </section>
 

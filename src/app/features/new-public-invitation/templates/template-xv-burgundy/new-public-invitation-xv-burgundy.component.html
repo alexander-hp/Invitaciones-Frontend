@@ -415,71 +415,19 @@
           </p>
           <span *ngIf="deadlineLabel" class="rsvp-deadline-badge">Fecha límite: {{ deadlineLabel }}</span>
 
-          <form class="xv-rsvp-form" (ngSubmit)="submit()">
-            <!-- Nombre -->
-            <div class="form-group">
-              <label for="rsvpName">Nombre Completo *</label>
-              <input type="text" id="rsvpName" name="name" [(ngModel)]="rsvp.name" required
-                     placeholder="Tu nombre completo..." class="xv-input">
-            </div>
-
-            <!-- Correo / Teléfono -->
-            <div class="form-row-2">
-              <div class="form-group" *ngIf="canIdentifyByEmail">
-                <label for="rsvpEmail">Correo Electrónico</label>
-                <input type="email" id="rsvpEmail" name="email" [(ngModel)]="rsvp.email"
-                       placeholder="tu@correo.com..." class="xv-input">
-              </div>
-              <div class="form-group" *ngIf="canIdentifyByPhone">
-                <label for="rsvpPhone">Teléfono / WhatsApp</label>
-                <input type="tel" id="rsvpPhone" name="phone" [(ngModel)]="rsvp.phoneNationalNumber"
-                       placeholder="10 dígitos..." class="xv-input">
-              </div>
-            </div>
-
-            <!-- Asistencia: Sí / No -->
-            <div class="form-group">
-              <label>¿Podrás asistir?</label>
-              <div class="rsvp-response-options">
-                <button type="button" class="rsvp-choice-btn" [class.selected]="rsvp.response === 'confirmed'"
-                        (click)="rsvp.response = 'confirmed'; onResponseChange()">
-                  <span class="choice-icon">✓</span>
-                  <span>¡Sí, con mucho gusto!</span>
-                </button>
-                <button type="button" class="rsvp-choice-btn danger" [class.selected]="rsvp.response === 'declined'"
-                        (click)="rsvp.response = 'declined'; onResponseChange()">
-                  <span class="choice-icon">✕</span>
-                  <span>Lo siento, no podré asistir</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Acompañantes si está confirmado -->
-            <div *ngIf="rsvp.response === 'confirmed' && (maxCompanions || 0) > 0" class="form-group">
-              <label for="rsvpCompanions">Número de Acompañantes (Máx. {{ maxCompanions }})</label>
-              <input type="number" id="rsvpCompanions" name="companions" [(ngModel)]="rsvp.companions"
-                     min="0" [max]="maxCompanions || 5" class="xv-input">
-            </div>
-
-            <!-- Restricciones Alimentarias -->
-            <div *ngIf="rsvp.response === 'confirmed'" class="form-group">
-              <label for="dietary">Alergias o Restricciones Alimentarias (Opcional)</label>
-              <input type="text" id="dietary" name="dietary" [(ngModel)]="rsvp.dietaryRestrictions"
-                     placeholder="Vegetariano, sin gluten, alergias..." class="xv-input">
-            </div>
-
-            <!-- Mensaje para la Quinceañera -->
-            <div class="form-group">
-              <label for="rsvpMessage">Mensaje para la Quinceañera</label>
-              <textarea id="rsvpMessage" name="message" [(ngModel)]="rsvp.message" rows="3"
-                        placeholder="Escribe tus buenos deseos..." class="xv-textarea"></textarea>
-            </div>
-
-            <button type="submit" class="xv-btn xv-btn-gold xv-btn-block" [disabled]="sending || !rsvp.name.trim()">
-              <span *ngIf="!sending">Enviar Confirmación</span>
-              <span *ngIf="sending">Enviando respuesta...</span>
-            </button>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            [darkTheme]="true"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
 
           <p *ngIf="success" class="xv-alert success">{{ success }}</p>
           <p *ngIf="error" class="xv-alert error">{{ error }}</p>

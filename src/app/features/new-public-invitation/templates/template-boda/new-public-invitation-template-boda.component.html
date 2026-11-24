@@ -384,101 +384,18 @@
             <p *ngIf="deadlineLabel" class="deadline">Favor de confirmar antes del {{ deadlineLabel }}</p>
           </div>
 
-          <form class="tboda-form" (ngSubmit)="submit()">
-            <div class="form-group">
-              <label>Nombre Completo *</label>
-              <input type="text" class="tboda-input" [(ngModel)]="rsvp.name" name="bodaName" [readonly]="requiresGuestValidation" required placeholder="Tu nombre">
-            </div>
-
-            <div class="form-group" *ngIf="canIdentifyByEmail">
-              <label>Correo Electrónico</label>
-              <input type="email" class="tboda-input" [(ngModel)]="rsvp.email" name="bodaEmail" [readonly]="requiresGuestValidation" placeholder="correo@ejemplo.com">
-            </div>
-
-            <div class="form-group" *ngIf="canIdentifyByPhone">
-              <label>WhatsApp / Teléfono</label>
-              <input type="tel" class="tboda-input" [(ngModel)]="rsvp.phoneNationalNumber" name="bodaPhone" placeholder="10 dígitos">
-            </div>
-
-            <div class="form-group">
-              <label>¿Nos acompañarás a celebrar?</label>
-              <div class="radio-pill-group">
-                <label class="radio-pill" [class.selected]="rsvp.response === 'confirmed'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="confirmed" name="bodaResp" (change)="onResponseChange()">
-                  <span>Sí, con gusto asistiré</span>
-                </label>
-                <label *ngIf="canUseMaybe" class="radio-pill" [class.selected]="rsvp.response === 'maybe'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="maybe" name="bodaResp" (change)="onResponseChange()">
-                  <span>Por confirmar</span>
-                </label>
-                <label class="radio-pill" [class.selected]="rsvp.response === 'declined'">
-                  <input type="radio" [(ngModel)]="rsvp.response" value="declined" name="bodaResp" (change)="onResponseChange()">
-                  <span>No podré asistir</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Campos adicionales para confirmados -->
-            <div *ngIf="rsvp.response === 'confirmed'" class="confirmed-fields">
-              <div *ngIf="(maxCompanions || 0) > 0" class="form-group">
-                <label>Acompañantes adicionales (Máx: {{ maxCompanions }})</label>
-                <input type="number" class="tboda-input" [(ngModel)]="rsvp.companions" name="bodaComps" min="0" [max]="maxCompanions || 0">
-              </div>
-
-              <div *ngIf="rsvp.companions > 0" class="form-group">
-                <label>Nombres de los acompañantes</label>
-                <textarea class="tboda-textarea" [(ngModel)]="companionNamesText" name="bodaCompNames" rows="2" placeholder="Un nombre por línea"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label>Preferencia de Menú / Platillo</label>
-                <input type="text" class="tboda-input" [(ngModel)]="rsvp.mealPreference" name="bodaMeal" placeholder="Ej: Pollo, Carne, Vegetariano">
-              </div>
-
-              <div class="form-group">
-                <label>Restricciones dietéticas o alergias</label>
-                <input type="text" class="tboda-input" [(ngModel)]="rsvp.dietaryRestrictions" name="bodaDiet" placeholder="Ej: Vegetariano, intolerante al gluten">
-              </div>
-
-              <!-- Preguntas dinámicas personalizadas -->
-              <ng-container *ngIf="invitation.rsvpSettings?.customQuestions?.length">
-                <div *ngFor="let q of invitation.rsvpSettings?.customQuestions" class="form-group">
-                  <label>{{ q.label }} {{ q.required ? '*' : '' }}</label>
-                  <input *ngIf="q.type === 'text' || !q.type" type="text" class="tboda-input" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'boda_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                  <textarea *ngIf="q.type === 'textarea'" class="tboda-textarea" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'boda_cq_' + getQuestionKey(q)" [required]="!!q.required"></textarea>
-                  <select *ngIf="q.type === 'select'" class="tboda-select" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'boda_cq_' + getQuestionKey(q)" [required]="!!q.required">
-                    <option value="">Selecciona una opción</option>
-                    <option *ngFor="let opt of q.options" [value]="opt">{{ opt }}</option>
-                  </select>
-                  <div *ngIf="q.type === 'boolean'" class="checkbox-row">
-                    <input type="checkbox" [id]="'boda_cb_' + getQuestionKey(q)" [ngModel]="getCustomAnswer(q)" (ngModelChange)="setCustomAnswer(q, $event)" [name]="'boda_cq_' + getQuestionKey(q)">
-                    <label [for]="'boda_cb_' + getQuestionKey(q)">{{ q.label }}</label>
-                  </div>
-                </div>
-              </ng-container>
-            </div>
-
-            <!-- Confirmación de declinación -->
-            <div *ngIf="rsvp.response === 'declined' && requiresDeclineConfirmation" class="form-group decline-warning">
-              <label class="checkbox-row">
-                <input type="checkbox" [(ngModel)]="declineConfirmed" name="bodaDeclineConf" required>
-                <span>Confirmo que no podré asistir al enlace matrimonial</span>
-              </label>
-            </div>
-
-            <div class="form-group">
-              <label>Mensaje o deseos para los novios</label>
-              <textarea class="tboda-textarea" [(ngModel)]="rsvp.message" name="bodaMsg" rows="3" placeholder="Escribe unas palabras de felicitación..."></textarea>
-            </div>
-
-            <button type="submit" class="tboda-btn tboda-btn-gold tboda-btn-block" [disabled]="sending || (rsvp.response === 'declined' && requiresDeclineConfirmation && !declineConfirmed)">
-              <div *ngIf="sending" class="tboda-spinner"></div>
-              <span>{{ sending ? 'Enviando confirmación...' : 'Enviar Confirmación Nupcial' }}</span>
-            </button>
-
-            <div *ngIf="success" class="tboda-success-banner">{{ success }}</div>
-            <div *ngIf="error" class="tboda-error-banner">{{ error }}</div>
-          </form>
+          <app-universal-rsvp-form
+            [invitation]="invitation"
+            [verifiedGuest]="verifiedGuest"
+            [rsvp]="rsvp"
+            [customAnswers]="customAnswers"
+            [(companionNamesText)]="companionNamesText"
+            [(declineConfirmed)]="declineConfirmed"
+            [sending]="sending"
+            [success]="success"
+            [error]="error"
+            (submitRsvp)="submit()">
+          </app-universal-rsvp-form>
         </div>
       </div>
     </section>
