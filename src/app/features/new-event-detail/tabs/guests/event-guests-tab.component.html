@@ -30,7 +30,7 @@
 
 <section class="nw-card" (click)="showImpExpMenu = false">
   <!-- Encabezado de la Sección -->
-  <div
+  <div data-tour="guests-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
       <h2
@@ -151,7 +151,7 @@
   </div>
 
   <!-- Barra de Filtros -->
-  <div
+  <div data-tour="guests-filters"
     style="display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
     <div style="flex: 1; min-width: 220px; position: relative;">
       <input class="nw-input" [(ngModel)]="guestSearch" (ngModelChange)="guestPage = 1"
@@ -194,7 +194,7 @@
   <div *ngIf="guestsLoading" class="nw-alert info nw-loading" style="margin-bottom:16px;">Cargando invitados...</div>
 
   <!-- Estado vacío cuando no hay ningún invitado registrado -->
-  <div *ngIf="!guestsLoading && guests.length === 0"
+  <div data-tour="guests-list" *ngIf="!guestsLoading && guests.length === 0"
     style="padding: 40px 24px; text-align: center; background: var(--nw-surface-2, #f5f1ea); border-radius: var(--nw-radius-sm, 12px); border: 1px dashed var(--nw-border, #eadecc); margin-bottom: 20px;">
     <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"
       stroke-linecap="round" stroke-linejoin="round"
@@ -305,7 +305,7 @@
   </div>
 
   <!-- Tabla de Invitados (Responsive & No Overflow) -->
-  <div class="nw-table-responsive" *ngIf="!guestsLoading && guests.length > 0"
+  <div data-tour="guests-list" class="nw-table-responsive" *ngIf="!guestsLoading && guests.length > 0"
     style="overflow-x: auto; max-width: 100%; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc);">
     <div *ngIf="filteredGuests.length === 0" style="padding:40px; text-align:center; color:var(--nw-text-3)">
       <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"

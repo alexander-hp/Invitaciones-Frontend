@@ -24,7 +24,7 @@
 
 <section class="nw-card">
   <!-- ENCABEZADO ESTÁNDAR DE LA SECCIÓN -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+  <div data-tour="dedications-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
       <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: var(--nw-text, #2e2621); font-family: var(--nw-font-display); display: flex; align-items: center; gap: 10px;">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent, #c09c78);">
@@ -49,7 +49,7 @@
   </div>
 
   <!-- TARJETAS DE MÉTRICAS KPI -->
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+  <div data-tour="dedications-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
     <div style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); padding: 14px 16px; box-shadow: var(--nw-shadow-sm);">
       <span style="font-size: 12px; font-weight: 600; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -94,7 +94,7 @@
   </div>
 
   <!-- FILTROS SEGMENTADOS DE ESTADO (PILLS) -->
-  <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+  <div data-tour="dedications-status-pills" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; background: var(--nw-surface-2, #f5f1ea); padding: 8px 12px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
     <button type="button" class="nw-btn nw-btn-sm" (click)="filterStatus = 'all'; dedicationPage = 1;"
       [class.nw-btn-primary]="filterStatus === 'all'" [class.nw-btn-ghost]="filterStatus !== 'all'"
       style="height: 34px; font-size: 12.5px; white-space: nowrap; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
@@ -135,7 +135,7 @@
   </div>
 
   <!-- BARRA DE BÚSQUEDA Y TIPO DE DEDICATORIA EN 1 FILA -->
-  <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
+  <div data-tour="dedications-search" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; background: var(--nw-surface-2, #f5f1ea); padding: 10px 14px; border-radius: var(--nw-radius-sm, 12px); border: 1px solid var(--nw-border, #eadecc); overflow-x: auto;">
     <div style="flex: 1; min-width: 220px; position: relative;">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px; top: 13px; color: var(--nw-text-3);">
         <circle cx="11" cy="11" r="8"></circle>
@@ -163,7 +163,7 @@
   </div>
 
   <!-- ESTADO VACÍO -->
-  <div *ngIf="!loadingDedications && filteredDedications.length === 0" class="nw-empty" style="padding: 40px 20px; text-align: center; color: var(--nw-text-3);">
+  <div data-tour="dedications-list" *ngIf="!loadingDedications && filteredDedications.length === 0" class="nw-empty" style="padding: 40px 20px; text-align: center; color: var(--nw-text-3);">
     <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-text-3); margin-bottom: 8px;">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>
@@ -176,7 +176,7 @@
   </div>
 
   <!-- GRID DE TARJETAS DE DEDICATORIAS -->
-  <div *ngIf="!loadingDedications && filteredDedications.length > 0" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+  <div data-tour="dedications-list" *ngIf="!loadingDedications && filteredDedications.length > 0" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
     <div *ngFor="let d of paginatedDedications" class="nw-card-item" style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius-sm, 12px); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; box-shadow: var(--nw-shadow-sm); transition: transform 0.2s, box-shadow 0.2s;">
       
       <div>

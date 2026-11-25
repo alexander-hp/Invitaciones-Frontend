@@ -1,16 +1,48 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { EventTutorialService, TutorialSectionKey, TutorialSectionMeta } from '../../core/event-tutorial.service';
 
 @Component({
   selector: '[app-new-sidebar]',
   templateUrl: './new-sidebar.component.html'
 })
 export class NewSidebarComponent {
+  showTutorialSections = false;
+
   constructor(
     public auth: AuthService,
+    public tutorialService: EventTutorialService,
     private router: Router
   ) {}
+
+  get availableTutorialSections(): TutorialSectionMeta[] {
+    if (!this.tutorialService.activeEventId) {
+      return this.tutorialService.sections;
+    }
+    return this.tutorialService.sections.filter(sec =>
+      this.tutorialService.allowedSections.includes(sec.key)
+    );
+  }
+
+  getActiveTutorialBadge(): string | null {
+    if (!this.tutorialService.activeEventId) return null;
+    const activeTab = this.tutorialService.activeTab;
+    if (!this.tutorialService.isTutorialSection(activeTab)) return null;
+    const meta = this.tutorialService.sections.find(s => s.key === activeTab);
+    return meta ? meta.shortLabel : null;
+  }
+
+  toggleTutorialSections(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showTutorialSections = !this.showTutorialSections;
+  }
+
+  startInteractiveTutorial(section?: TutorialSectionKey): void {
+    this.showTutorialSections = false;
+    this.tutorialService.triggerFromSidebar(section);
+  }
 
   getActiveEventId(): string | null {
     const url = this.router.url;

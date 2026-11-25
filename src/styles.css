@@ -1,3 +1,4 @@
+@import 'driver.js/dist/driver.css';
 @import 'aos/dist/aos.css';
 @import 'animate.css/animate.min.css';
 @import './app/features/new-invitation-editor/new-invitation-editor.component.css';

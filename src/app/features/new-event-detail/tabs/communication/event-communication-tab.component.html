@@ -1,5 +1,5 @@
 <section class="communication-workspace">
-  <header class="communication-heading">
+  <header class="communication-heading" data-tour="comms-header">
     <div>
       <p class="communication-eyebrow">EVENTO / COMUNICACIÓN</p>
       <h2>Invitaciones y mensajes</h2>
@@ -19,7 +19,7 @@
     <div><strong>{{ confirmedCommunicationGuests }}</strong><span>Confirmados</span></div>
   </div>
 
-  <nav class="communication-jumps" aria-label="Secciones de comunicación" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+  <nav class="communication-jumps" data-tour="comms-jumps" aria-label="Secciones de comunicación" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
     <button type="button" (click)="scrollToSection('comms-config-card')">1. Mensaje</button>
     <button type="button" (click)="scrollToSection('comms-recipients-card')">2. Destinatarios y envío</button>
     <button type="button" (click)="scrollToSection('comms-passes-banner')">Pases especiales</button>
@@ -1254,7 +1254,7 @@
   </div>
 
   <!-- Adjuntar Pase VIP en envíos generales -->
-  <div class="nw-card" style="margin-bottom:16px;">
+  <div class="nw-card" data-tour="comms-attach-pass" style="margin-bottom:16px;">
     <div class="nw-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"

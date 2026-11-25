@@ -14,7 +14,7 @@
     </div>
   </div>
 
-  <div class="nw-metrics" *ngIf="totalSeats || confirmedCount || pendingCount || declinedCount || checkedInCount">
+  <div class="nw-metrics" data-tour="info-metrics" *ngIf="totalSeats || confirmedCount || pendingCount || declinedCount || checkedInCount">
     <div class="nw-metric success"><span class="metric-label">Confirmados</span><span class="metric-value">{{
         confirmedCount }}</span></div>
     <div class="nw-metric warning"><span class="metric-label">Pendientes</span><span class="metric-value">{{

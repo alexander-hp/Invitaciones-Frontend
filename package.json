@@ -33,6 +33,7 @@
         "animate.css": "^4.1.1",
         "aos": "^2.3.4",
         "canvas-confetti": "^1.9.4",
+        "driver.js": "^1.14.0",
         "exceljs": "^4.4.0",
         "gifenc": "^1.0.3",
         "gsap": "^3.15.0",

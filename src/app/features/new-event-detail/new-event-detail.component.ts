@@ -1,6 +1,8 @@
-import { Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, Optional, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { EventTutorialService, TutorialSectionKey } from '../../core/event-tutorial.service';
 import {
   EventModel, DashboardMetrics, GuestModel, EventTableModel, InvitationModel, EventPermission
 } from '../../core/models';
@@ -49,7 +51,7 @@ interface EventGuideStep {
   selector: 'app-new-event-detail',
   templateUrl: './new-event-detail.component.html'
 })
-export class NewEventDetailComponent implements OnInit {
+export class NewEventDetailComponent implements OnInit, OnDestroy {
   sidebarOpen = false;
   activeTab: Tab = 'info';
   selectedSection = '';
@@ -114,10 +116,14 @@ export class NewEventDetailComponent implements OnInit {
     { key: 'backgroundMusic', icon: '', label: 'Música de Fondo', description: 'Audio principal que suena al navegar por la invitación.' }
   ];
 
+  private tutorialSub?: Subscription;
+  private pendingAutoTutorial = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    @Optional() private tutorialService?: EventTutorialService
   ) {}
 
   ngOnInit(): void {
@@ -128,6 +134,12 @@ export class NewEventDetailComponent implements OnInit {
       this.loadEvent();
     }
 
+    if (this.tutorialService) {
+      this.tutorialSub = this.tutorialService.tutorialRequest$.subscribe(requestedSection => {
+        this.startSectionTutorial(requestedSection);
+      });
+    }
+
     this.route.queryParamMap.subscribe(params => {
       const tabParam = params.get('tab') as Tab;
       if (tabParam && this.isValidTab(tabParam) && tabParam !== this.activeTab) {
@@ -135,11 +147,26 @@ export class NewEventDetailComponent implements OnInit {
         if (this.eventId) {
           localStorage.setItem(`newEventDetail_tab_${this.eventId}`, tabParam);
         }
+        this.syncTutorialContext();
       }
       const section = params.get('section') || '';
       this.selectedSection = this.isSectionForTab(this.activeTab, section) ? section : '';
       if (this.selectedSection) this.scrollToSelectedSection(this.selectedSection);
+
+      if (params.get('tutorial') === '1') {
+        if (this.event && !this.loading) {
+          this.consumeTutorialQueryParamAndRun();
+        } else {
+          this.pendingAutoTutorial = true;
+        }
+      }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.tutorialSub?.unsubscribe();
+    this.tutorialService?.stopTour();
+    this.tutorialService?.clearEventContext(this.eventId);
   }
 
   private isValidTab(tab: string): tab is Tab {
@@ -176,8 +203,13 @@ export class NewEventDetailComponent implements OnInit {
         this.event = { ...res.event, access: res.access || res.event.access };
         this.loading = false;
         if (!this.canOpenTab(this.activeTab)) this.selectTab('info');
+        this.syncTutorialContext();
         this.loadMetricsAndCounts();
         if (this.selectedSection) this.scrollToSelectedSection(this.selectedSection);
+        if (this.pendingAutoTutorial) {
+          this.pendingAutoTutorial = false;
+          this.consumeTutorialQueryParamAndRun();
+        }
       },
       error: err => {
         this.error = err?.error?.message || 'Error al cargar el evento';
@@ -243,10 +275,15 @@ export class NewEventDetailComponent implements OnInit {
 
   selectTab(tab: Tab, section = '', replaceUrl = true): void {
     if (!this.canOpenTab(tab)) tab = 'info';
+    const tabChanged = this.activeTab !== tab;
     this.activeTab = tab;
     this.selectedSection = this.isSectionForTab(tab, section) ? section : '';
     this.showQuickSearch = false;
     this.sidebarOpen = false;
+    if (tabChanged) {
+      this.tutorialService?.stopTour();
+    }
+    this.syncTutorialContext();
     if (this.eventId) {
       localStorage.setItem(`newEventDetail_tab_${this.eventId}`, tab);
     }
@@ -257,6 +294,53 @@ export class NewEventDetailComponent implements OnInit {
       replaceUrl
     });
     if (this.selectedSection) this.scrollToSelectedSection(this.selectedSection);
+  }
+
+  private getAllowedTutorialSections(): TutorialSectionKey[] {
+    const candidates: TutorialSectionKey[] = ['info', 'guests', 'tables', 'rsvps', 'communication', 'dj', 'dedications'];
+    return candidates.filter(sec => this.canOpenTab(sec));
+  }
+
+  private syncTutorialContext(): void {
+    if (!this.tutorialService || !this.eventId) return;
+    this.tutorialService.setEventContext(this.eventId, this.activeTab, this.getAllowedTutorialSections());
+  }
+
+  private consumeTutorialQueryParamAndRun(): void {
+    const targetSection = this.tutorialService?.isTutorialSection(this.activeTab) ? this.activeTab : 'info';
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tutorial: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+    this.startSectionTutorial(targetSection);
+  }
+
+  startSectionTutorial(requestedSection?: TutorialSectionKey): void {
+    if (!this.tutorialService || !this.event) return;
+    this.sidebarOpen = false;
+    this.showQuickSearch = false;
+    this.showJourneyGuide = false;
+
+    let target: TutorialSectionKey = requestedSection
+      || (this.tutorialService.isTutorialSection(this.activeTab) ? this.activeTab : 'info');
+    if (!this.canOpenTab(target)) {
+      target = 'info';
+    }
+
+    const needsTabSwitch = this.activeTab !== target;
+    if (needsTabSwitch) {
+      this.selectTab(target, '', true);
+    }
+
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      this.tutorialService?.runSectionTour(target, {
+        availableSections: this.getAllowedTutorialSections(),
+        onSelectSection: (nextSec) => this.startSectionTutorial(nextSec)
+      });
+    }, needsTabSwitch ? 220 : 120);
   }
 
   private scrollToSelectedSection(section: string): void {

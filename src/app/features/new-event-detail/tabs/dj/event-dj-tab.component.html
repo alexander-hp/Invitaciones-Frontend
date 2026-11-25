@@ -30,7 +30,7 @@
   </div>
 
   <!-- METRICAS DE RESUMEN -->
-  <div class="nw-metrics" style="margin-bottom: 20px;">
+  <div class="nw-metrics" data-tour="dj-metrics" style="margin-bottom: 20px;">
     <div class="nw-metric success">
       <span class="metric-label">Aprobadas</span>
       <span class="metric-value">{{ songApprovedCount }}</span>
@@ -91,7 +91,7 @@
   </div>
 
   <!-- HEADER DE SECCIÓN DE DJ -->
-  <div class="nw-card-header"
+  <div class="nw-card-header" data-tour="dj-header"
     style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
     <div>
       <h3
@@ -128,7 +128,7 @@
   </div>
 
   <!-- BUSCADOR DE YOUTUBE / MÚSICA -->
-  <div class="nw-card" style="margin-bottom: 24px;">
+  <div class="nw-card" data-tour="dj-youtube-search" style="margin-bottom: 24px;">
     <h3
       style="margin: 0 0 6px; font-family: var(--nw-font-display); font-size: 16px; font-weight: 700; color: var(--nw-text); display: flex; align-items: center; gap: 8px;">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
@@ -330,7 +330,7 @@
   </div>
 
   <!-- BARRA DE GESTIÓN Y FILTROS POR ESTADO -->
-  <div class="nw-card" style="padding: 12px 16px; margin-bottom: 16px;">
+  <div class="nw-card" data-tour="dj-filters" style="padding: 12px 16px; margin-bottom: 16px;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
 
       <!-- Selector DROPDOWN solo en Mobile (<=640px) -->
@@ -423,7 +423,7 @@
   <div *ngIf="loadingDj" class="nw-alert info">Cargando canciones solicitadas...</div>
 
   <!-- Estado vacío -->
-  <div *ngIf="!loadingDj && !filteredSongRequests.length" class="nw-empty"
+  <div data-tour="dj-list" *ngIf="!loadingDj && !filteredSongRequests.length" class="nw-empty"
     style="background: var(--nw-surface, #ffffff); padding: 40px 20px; border-radius: var(--nw-radius, 16px); border: 1px dashed var(--nw-border); text-align: center;">
     <span class="empty-icon" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
       <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"
@@ -442,7 +442,7 @@
   </div>
 
   <!-- LISTA DE CANCIONES (Fondo blanco global con tarjetas compactas encima) -->
-  <div
+  <div data-tour="dj-list"
     style="background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #eadecc); border-radius: var(--nw-radius, 16px); padding: 10px; display: grid; gap: 8px; width: 100%; box-sizing: border-box; overflow: hidden;"
     *ngIf="!loadingDj && filteredSongRequests.length">
     <div *ngFor="let song of paginatedSongRequests"

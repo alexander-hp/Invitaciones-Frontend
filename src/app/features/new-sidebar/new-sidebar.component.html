@@ -30,7 +30,7 @@
     <span>Dashboard</span>
   </a>
 
-  <a routerLink="/new/events" routerLinkActive="active">
+  <a routerLink="/new/events" routerLinkActive="active" data-tour="sidebar-events-link">
     <span class="nav-icon">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -99,6 +99,38 @@
 
 <span class="nw-sidebar-label">Tutoriales</span>
 <nav>
+  <div class="nw-sidebar-tutorial-row">
+    <a (click)="startInteractiveTutorial()" [class.active]="tutorialService.isRunning" style="cursor: pointer;" title="Iniciar recorrido interactivo de la sección actual">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="10 8 16 12 10 16 10 8"/>
+        </svg>
+      </span>
+      <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Tutorial</span>
+      <span *ngIf="getActiveTutorialBadge() as sectionBadge" class="nw-pill accent" style="font-size: 10px; padding: 1px 7px; font-weight: 700; margin-left: auto;">
+        {{ sectionBadge }}
+      </span>
+    </a>
+    <button *ngIf="getActiveEventId()" type="button" class="nw-sidebar-tutorial-expand" [class.open]="showTutorialSections"
+      (click)="toggleTutorialSections($event)" [attr.aria-expanded]="showTutorialSections"
+      title="Elegir sección del tutorial" aria-label="Elegir sección del tutorial">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+        [style.transform]="showTutorialSections ? 'rotate(180deg)' : 'none'" style="transition: transform 0.18s ease;">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+  </div>
+
+  <div *ngIf="showTutorialSections && getActiveEventId()" class="nw-sidebar-tutorial-sublist" role="menu" aria-label="Tutoriales por sección">
+    <button *ngFor="let sec of availableTutorialSections" type="button" class="nw-sidebar-tutorial-subitem"
+      [class.is-current]="tutorialService.activeTab === sec.key"
+      (click)="startInteractiveTutorial(sec.key)">
+      <span>{{ sec.label }}</span>
+      <span style="font-size: 11px; opacity: 0.7;">▶</span>
+    </button>
+  </div>
+
   <a (click)="navigateToGuide()" [class.active]="isGuideActive()" style="cursor: pointer;">
     <span class="nav-icon">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

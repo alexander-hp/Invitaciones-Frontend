@@ -31,7 +31,7 @@ export class AppComponent implements OnInit {
     CapApp.addListener('backButton', () => {
       // 1. If an open modal or guide is visible, close it first
       const openModalCloseBtn = document.querySelector(
-        '.nw-modal-backdrop .events-icon-button, .events-guide-backdrop .events-icon-button, .nw-modal-backdrop button.nw-btn-ghost, .nw-modal-backdrop [aria-label="Cerrar"]'
+        '.driver-popover-close-btn, .nw-modal-backdrop .events-icon-button, .events-guide-backdrop .events-icon-button, .nw-modal-backdrop button.nw-btn-ghost, .nw-modal-backdrop [aria-label="Cerrar"]'
       ) as HTMLElement;
       if (openModalCloseBtn) {
         openModalCloseBtn.click();

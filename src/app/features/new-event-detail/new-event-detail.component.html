@@ -167,7 +167,7 @@
 
       <!-- Reusable Event Header Widget & Navigation Tabs (Hidden when in Historial de cambios or Guía de usuario) -->
       <ng-container *ngIf="activeTab !== 'logs' && activeTab !== 'guide'">
-        <app-event-header [event]="event" [subtitle]="currentSubtitle" (summaryClick)="returnToOverview()">
+        <app-event-header data-tour="event-header" [event]="event" [subtitle]="currentSubtitle" (summaryClick)="returnToOverview()">
           <div class="event-header-actions-group">
             <button #journeyGuideButton *ngIf="guideSteps.length" type="button" class="event-header-btn guide-btn" (click)="openJourneyGuide()" aria-label="Abrir guía paso a paso" title="Abrir guía paso a paso">
               <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -190,7 +190,7 @@
         </app-event-header>
 
         <!-- Navigation Tabs -->
-        <div class="nw-tabs event-detail-tabs">
+        <div class="nw-tabs event-detail-tabs" data-tour="event-tabs">
           <button class="nw-tab" [class.active]="activeTab === 'info'" (click)="selectTab('info')">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
@@ -275,7 +275,7 @@
 
         
 
-      <section *ngIf="activeTab === 'info' && preparationSteps.length" class="event-preparation" aria-label="Preparación del evento">
+      <section *ngIf="activeTab === 'info' && preparationSteps.length" data-tour="info-preparation" class="event-preparation" aria-label="Preparación del evento">
         <div class="event-preparation-heading">
           <h2>Preparación del evento</h2>
           <span *ngIf="nextPreparationKey">Siguiente paso sugerido</span>
