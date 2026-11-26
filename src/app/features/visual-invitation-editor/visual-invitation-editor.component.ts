@@ -153,10 +153,12 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   };
 
   catalogTemplates: VisualDesignTemplateModel[] = [];
+  builtInCatalogCache: VisualDesignTemplateModel[] = [];
+  private builtInCatalogCacheKey = '';
   loadingCatalogTemplates = false;
   catalogSearch = '';
   catalogContentFilter: 'all' | 'full' | 'pass' | 'access' = 'all';
-  catalogTab: 'community' | 'personal' = 'community';
+  catalogTab: 'builtin' | 'community' | 'personal' = 'builtin';
   catalogSort: 'popular' | 'newest' | 'name' = 'popular';
   selectedCatalogTemplate?: VisualDesignTemplateModel;
   catalogPreviewTab: 'invitation' | 'pass' | 'access' = 'invitation';
@@ -685,6 +687,10 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     suggestedMask: ImageMask;
     suggestedPreset: string;
   }> = [
+      {
+        key: 'palais-sunburst', label: 'Arco Solar Art-Déco', subtitle: 'Cúpula astral en oro champagne',
+        url: 'assets/templates/palais-celeste/deco-sunburst-arch.svg', suggestedMask: 'arch', suggestedPreset: 'double-gold'
+      },
       {
         key: 'gilded-gallery', label: 'Moldura Florentina', subtitle: 'Arco con esquineros en oro',
         url: 'assets/templates/palazzo-orangerie/gilded-gallery-frame.svg', suggestedMask: 'arch', suggestedPreset: 'museum-ivory'
@@ -6949,12 +6955,72 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.applyCompleteDesign();
   }
 
+  getBuiltInPresetThumb(key: string): string {
+    const map: Record<string, string> = {
+      'palais-celeste': 'assets/templates/palais-celeste/preview-cover.jpg',
+      'boda-jardin-imperial': 'assets/template-previews/boda-jardin-imperial.jpg',
+      'boda-girasoles': 'assets/template-previews/boda-girasoles.jpg',
+      'boda-navy-blue': 'assets/template-previews/boda-navy-blue.jpg',
+      'palazzo-orangerie': 'assets/templates/palazzo-orangerie/garden-portrait.webp',
+      'haute-couture': 'assets/template-previews/maison-dore.jpg',
+      'xv-burgundy': 'assets/template-previews/xv-burgundy.jpg',
+      editorial: 'assets/template-previews/boda-desktop-first.jpg',
+      romantic: 'assets/template-previews/boda-rosas.jpg',
+      night: 'assets/template-previews/boda-creativa-premium.jpg',
+      celebration: 'assets/template-previews/template-graduacion.jpg',
+      birthday: 'assets/template-previews/template-cumpleanos.jpg',
+      baptism: 'assets/template-previews/template-bautizo.jpg'
+    };
+    return map[key] || 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+  }
+
+  get builtInCatalogTemplates(): VisualDesignTemplateModel[] {
+    const cacheKey = `${this.invitation?._id || 'draft'}_${this.invitation?.content?.headline || ''}_${this.event?.title || ''}`;
+    if (!this.builtInCatalogCache.length || this.builtInCatalogCacheKey !== cacheKey) {
+      this.builtInCatalogCacheKey = cacheKey;
+      this.builtInCatalogCache = this.builtInPresets.map((p) => this.mapPresetToTemplate(p));
+    }
+    return this.builtInCatalogCache;
+  }
+
+  setCatalogTab(tab: 'builtin' | 'community' | 'personal'): void {
+    this.catalogTab = tab;
+    if (tab === 'community' && !this.catalogTemplates.length && !this.loadingCatalogTemplates) {
+      this.loadCatalogTemplates();
+      return;
+    }
+    const list = this.displayedCatalogTemplates;
+    if (list.length > 0) {
+      const currentMatch = this.selectedCatalogTemplate
+        ? list.find((t) => t._id === this.selectedCatalogTemplate?._id)
+        : undefined;
+      this.selectCatalogTemplate(currentMatch || list[0]);
+    }
+  }
+
+  applyBuiltInPresetQuick(key: string, ev?: Event): void {
+    ev?.stopPropagation();
+    const tpl = this.builtInCatalogTemplates.find((t) => t._id === key);
+    if (!tpl) return;
+    this.selectCatalogTemplate(tpl);
+    this.applySelectedCatalogTemplate();
+  }
+
   get displayedCatalogTemplates(): VisualDesignTemplateModel[] {
-    const source = this.catalogTab === 'personal' ? this.personalTemplates : this.catalogTemplates;
+    const source =
+      this.catalogTab === 'builtin'
+        ? this.builtInCatalogTemplates
+        : this.catalogTab === 'personal'
+        ? this.personalTemplates
+        : this.catalogTemplates;
     if (!source || !source.length) return [];
     return source.filter((tpl) => {
-      if (this.libraryCategory !== 'all' && tpl.eventType !== this.libraryCategory && (tpl as any).category !== this.libraryCategory) {
-        return false;
+      if (this.libraryCategory !== 'all') {
+        const evType = tpl.eventType || (tpl as any).category || '';
+        const isGeneralMatch = evType === 'general' && (this.libraryCategory === 'otro' || this.catalogTab === 'builtin');
+        if (evType !== this.libraryCategory && !isGeneralMatch) {
+          return false;
+        }
       }
       if (this.catalogContentFilter === 'full' && (!tpl.includesInvitation || !this.hasPassDesign(tpl) || !this.hasAccessScreen(tpl))) {
         return false;
@@ -6999,17 +7065,36 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     return this.builtInPresets.find((preset) => preset.key === this.librarySelectedKey) || this.builtInPresets[0];
   }
 
-  openDesignLibrary(key?: string): void {
+  openDesignLibrary(key?: string, tab: 'builtin' | 'community' | 'personal' = 'builtin'): void {
     this.showDesignLibrary = true;
-    this.catalogTab = 'community';
+    this.catalogTab = tab;
     this.catalogContentFilter = 'all';
     this.catalogPreviewTab = 'invitation';
-    if (key) this.librarySelectedKey = key;
+    if (key) {
+      this.librarySelectedKey = key;
+      const builtInMatch = this.builtInCatalogTemplates.find((t) => t._id === key);
+      if (builtInMatch) {
+        this.catalogTab = 'builtin';
+        this.selectCatalogTemplate(builtInMatch);
+      }
+    } else if (this.catalogTab === 'builtin' && this.builtInCatalogTemplates.length > 0) {
+      const selectedMatch = this.builtInCatalogTemplates.find((t) => t._id === this.librarySelectedKey);
+      this.selectCatalogTemplate(selectedMatch || this.builtInCatalogTemplates[0]);
+    }
     this.loadCatalogTemplates();
   }
 
   loadCatalogTemplates(searchTerm?: string): void {
-    this.loadingCatalogTemplates = true;
+    if (this.catalogTab === 'builtin') {
+      const list = this.displayedCatalogTemplates;
+      if (list.length > 0) {
+        const match = this.librarySelectedKey
+          ? list.find((t) => t._id === this.librarySelectedKey)
+          : null;
+        this.selectCatalogTemplate(match || list[0]);
+      }
+    }
+    this.loadingCatalogTemplates = this.catalogTab === 'community';
     const term = searchTerm !== undefined ? searchTerm : (this.catalogSearch || undefined);
     this.api.listCatalogVisualDesignTemplates({
       eventType: this.libraryCategory === 'all' ? undefined : this.libraryCategory,
@@ -7020,20 +7105,21 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       next: ({ templates }) => {
         this.catalogTemplates = templates || [];
         this.loadingCatalogTemplates = false;
-        if (this.catalogTemplates.length > 0) {
-          const match = this.librarySelectedKey
-            ? this.catalogTemplates.find((t) => t._id === this.librarySelectedKey || (t as any).key === this.librarySelectedKey)
-            : null;
-          this.selectCatalogTemplate(match || this.catalogTemplates[0]);
-        } else if (this.builtInPresets?.length) {
-          this.catalogTemplates = this.builtInPresets.map((p) => this.mapPresetToTemplate(p));
-          this.selectCatalogTemplate(this.catalogTemplates[0]);
+        if (this.catalogTab === 'community') {
+          if (this.catalogTemplates.length > 0) {
+            const match = this.librarySelectedKey
+              ? this.catalogTemplates.find((t) => t._id === this.librarySelectedKey || (t as any).key === this.librarySelectedKey)
+              : null;
+            this.selectCatalogTemplate(match || this.catalogTemplates[0]);
+          } else if (this.builtInCatalogTemplates.length) {
+            this.selectCatalogTemplate(this.builtInCatalogTemplates[0]);
+          }
         }
       },
       error: () => {
         this.loadingCatalogTemplates = false;
-        if (this.builtInPresets?.length) {
-          this.catalogTemplates = this.builtInPresets.map((p) => this.mapPresetToTemplate(p));
+        if (this.catalogTab === 'community' && !this.catalogTemplates.length && this.builtInCatalogTemplates.length) {
+          this.catalogTemplates = [...this.builtInCatalogTemplates];
           this.selectCatalogTemplate(this.catalogTemplates[0]);
         }
       }
@@ -7090,27 +7176,66 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private mapPresetToTemplate(preset: CompleteDesignPreset): VisualDesignTemplateModel {
-    let thumbnail = 'assets/templates/palazzo-orangerie/garden-portrait.webp';
-    if (preset.key === 'xv-burgundy' || preset.category === 'xv') {
-      thumbnail = 'assets/templates/xv-burgundy/portrait.jpg';
-    } else if (preset.key === 'baptism' || preset.category === 'bautizo') {
-      thumbnail = 'assets/templates/palazzo-orangerie/villa-painting.png';
-    }
+    const thumbnail = this.getBuiltInPresetThumb(preset.key);
+    const builtDesign = this.buildPreset(preset.key);
+
+    const passKeyMap: Record<string, string> = {
+      'palais-celeste': 'palais-celeste-astral',
+      'boda-jardin-imperial': 'jardin-botanico-esmeralda',
+      'palazzo-orangerie': 'jardin-botanico-esmeralda',
+      'boda-girasoles': 'boda-imperial-oro',
+      'boda-navy-blue': 'velada-noir-gala',
+      'xv-burgundy': 'velada-noir-gala',
+      'haute-couture': 'boda-imperial-oro',
+      editorial: 'atelier-vogue-editorial',
+      romantic: 'boda-imperial-oro',
+      night: 'velada-noir-gala',
+      celebration: 'velada-noir-gala',
+      birthday: 'velada-noir-gala',
+      baptism: 'boda-imperial-oro'
+    };
+    const passSetKey = passKeyMap[preset.key] || 'boda-imperial-oro';
+    const passDesign = buildPassDesignFromTemplateSet(passSetKey, (prefix) => this.uid(prefix));
+
+    const accessKeyMap: Record<string, string> = {
+      'boda-jardin-imperial': 'boda-jardin-imperial',
+      'boda-girasoles': 'boda-girasoles',
+      'boda-navy-blue': 'boda-navy-blue',
+      'xv-burgundy': 'xv-burgundy',
+      'haute-couture': 'maison-dore',
+      editorial: 'boda-desktop-first',
+      romantic: 'boda-rosas',
+      night: 'boda-creativa-premium',
+      celebration: 'template-graduacion',
+      birthday: 'template-cumpleanos',
+      baptism: 'template-bautizo'
+    };
+    const accessScreen: VisualAccessScreenDesign = builtDesign.accessScreen
+      ? this.clone(builtDesign.accessScreen)
+      : applyTemplateAccessPreset(
+          { enabled: true },
+          accessKeyMap[preset.key] || 'envelope-cards',
+          this.event?.title || this.invitation?.content?.headline,
+          false
+        );
+
     return {
       _id: preset.key,
       name: preset.name,
       eventType: preset.category,
       description: preset.description,
       thumbnailUrl: thumbnail,
-      authorName: 'Velisse Studio · Oficial',
-      authorRewardPercent: 5,
+      authorName: 'Plantilla Prehecha · Velisse',
+      authorRewardPercent: 0,
       isPublic: true,
       includesInvitation: true,
       includesPass: true,
       includesAccess: true,
-      usageCount: 150,
-      tags: [preset.category, 'oficial', 'elegante'],
-      design: this.buildPreset(preset.key)
+      passDesign,
+      accessScreen,
+      usageCount: preset.key === 'palais-celeste' ? 312 : 185,
+      tags: [preset.category, 'prehecha', 'oficial', '3 en 1'],
+      design: builtDesign
     };
   }
 

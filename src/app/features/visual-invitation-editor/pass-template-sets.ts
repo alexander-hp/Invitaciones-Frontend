@@ -22,6 +22,21 @@ export interface PassTemplateSetOption {
 
 export const PASS_TEMPLATE_SETS: PassTemplateSetOption[] = [
   {
+    key: 'palais-celeste-astral',
+    name: 'Palais Céleste · Astral VIP',
+    tag: 'Nuevo · Gala Astral',
+    description: 'Zafiro medianoche y nácar Art-Déco con astrolabio de oro champagne y código QR de gala estelar.',
+    icon: 'sparkles',
+    previewBg: '#0b1428',
+    previewCardBg: '#122140',
+    previewAccent: '#d4aa5a',
+    previewText: '#faf6ee',
+    previewIsArch: true,
+    headingFont: "'Cinzel', serif",
+    bodyFont: "'Montserrat', sans-serif",
+    qrAccent: '#d4aa5a'
+  },
+  {
     key: 'boda-imperial-oro',
     name: 'Boda Imperial · Arco Dorado',
     tag: 'Boda Clásica',
@@ -113,7 +128,141 @@ export function buildPassDesignFromTemplateSet(
   let sheet1: VisualInvitationSection;
   let sheet2: VisualInvitationSection;
 
-  if (tpl.key === 'velada-noir-gala') {
+  if (tpl.key === 'palais-celeste-astral') {
+    // ═══ SET ASTRAL: PALAIS CÉLESTE · GALA ASTRAL & ART-DÉCO ═══
+    sheet1 = {
+      ...baseSheetMeta,
+      id: uid('sheet'),
+      title: 'Hoja 1 (Frente Astral)',
+      background: { color: '#081020', overlay: 0 },
+      layers: [
+        createPassLayer(uid, 'shape', 'Tarjeta Zafiro Medianoche', 5, 3, 90, 94, 1, {
+          backgroundColor: '#0e1b36',
+          borderColor: '#d4aa5a',
+          borderWidth: 1.8,
+          borderRadius: 22,
+          boxShadow: '0 22px 52px rgba(0,0,0,0.68)'
+        }),
+        createPassLayer(uid, 'shape', 'Arco Art-Déco Interior', 8, 5, 84, 90, 2, {
+          backgroundColor: 'transparent',
+          borderColor: 'rgba(212, 170, 90, 0.42)',
+          borderWidth: 1.2,
+          borderRadius: 180
+        }),
+        createPassLayer(uid, 'image', 'Astrolabio Dorado', 41, 6.5, 18, 9, 3, {
+          objectFit: 'contain'
+        }, { url: 'assets/templates/palais-celeste/celestial-astrolabe-crest.svg' }),
+        createPassLayer(uid, 'text', 'Insignia Astral', 12, 16, 76, 3.6, 4, {
+          color: '#ebd094',
+          fontSize: 10,
+          fontWeight: '700',
+          fontFamily: "'Montserrat', sans-serif",
+          textAlign: 'center',
+          letterSpacing: 2.6
+        }, { text: '★ PALAIS CÉLESTE · PASE VIP ★' }),
+        createPassLayer(uid, 'text', 'Título del Evento', 10, 20.5, 80, 9, 5, {
+          color: '#faf6ee',
+          fontSize: 23,
+          fontWeight: '700',
+          fontFamily: "'Cinzel', serif",
+          textAlign: 'center',
+          letterSpacing: 1.4,
+          lineHeight: 1.18
+        }, { text: '{{event.title}}' }),
+        createPassLayer(uid, 'text', 'Nombre del Invitado', 10, 31, 80, 6.5, 6, {
+          color: '#ebd094',
+          fontSize: 18,
+          fontWeight: '600',
+          fontFamily: "'Cormorant Garamond', serif",
+          textAlign: 'center'
+        }, { text: '{{guest.name}}' }),
+        createPassLayer(uid, 'text', 'Mesa y Lugares', 12, 38, 76, 5, 7, {
+          color: '#cbd5e1',
+          fontSize: 11.5,
+          fontWeight: '600',
+          fontFamily: "'Montserrat', sans-serif",
+          textAlign: 'center',
+          letterSpacing: 1
+        }, { text: '{{guest.table}}  ·  {{guest.companions}} LUGARES' }),
+        createPassLayer(uid, 'image', 'Código QR Astral', 25, 45.5, 50, 38, 8, {
+          objectFit: 'contain',
+          qrFrameStyle: 'banner-bottom',
+          qrFrameColor: '#d4aa5a',
+          qrFrameText: '★ ACCESO ASTRAL VIP ★',
+          qrFrameTextColor: '#0b1428',
+          qrBgColor: '#ffffff',
+          qrCenterLogo: 'crown',
+          qrCenterLogoBg: '#d4aa5a',
+          borderRadius: 14
+        }, { url: DEMO_QR_URL, binding: 'guest.qrCode' }),
+        createPassLayer(uid, 'text', 'Folio Check-in', 16, 86.5, 68, 4, 9, {
+          color: 'rgba(235, 208, 148, 0.85)',
+          fontSize: 10.5,
+          fontWeight: '700',
+          fontFamily: 'monospace',
+          textAlign: 'center',
+          letterSpacing: 2
+        }, { text: 'FOLIO: {{guest.checkInCode}}' })
+      ]
+    };
+    sheet2 = {
+      ...baseSheetMeta,
+      id: uid('sheet'),
+      title: 'Hoja 2 (Reverso Nacarado)',
+      background: { color: '#f6f1e6', overlay: 0 },
+      layers: [
+        createPassLayer(uid, 'shape', 'Pliego Nacarado Reverso', 5, 3, 90, 94, 1, {
+          backgroundColor: '#ffffff',
+          borderColor: '#c89d4c',
+          borderWidth: 1.6,
+          borderRadius: 22
+        }),
+        createPassLayer(uid, 'text', 'Cabecera Reverso', 14, 10, 72, 4, 2, {
+          color: '#9c7125',
+          fontSize: 10.5,
+          fontWeight: '700',
+          fontFamily: "'Montserrat', sans-serif",
+          textAlign: 'center',
+          letterSpacing: 2.5
+        }, { text: 'COORDENADAS & PROTOCOLO' }),
+        createPassLayer(uid, 'text', 'Evento Reverso', 12, 15.5, 76, 7.5, 3, {
+          color: '#0b1428',
+          fontSize: 21,
+          fontWeight: '700',
+          fontFamily: "'Cinzel', serif",
+          textAlign: 'center'
+        }, { text: '{{event.title}}' }),
+        createPassLayer(uid, 'shape', 'Caja Sede', 12, 25, 76, 18, 4, {
+          backgroundColor: '#f8f4ec',
+          borderColor: 'rgba(200, 157, 76, 0.45)',
+          borderWidth: 1,
+          borderRadius: 14
+        }),
+        createPassLayer(uid, 'text', 'Sede y Fecha', 14, 27.5, 72, 13, 5, {
+          color: '#1e293b',
+          fontSize: 12,
+          lineHeight: 1.6,
+          fontFamily: "'Montserrat', sans-serif",
+          textAlign: 'center'
+        }, { text: '{{event.venue}}\n{{event.date}} · {{event.time}}' }),
+        createPassLayer(uid, 'text', 'Indicaciones de Gala', 13, 47, 74, 28, 6, {
+          color: '#334155',
+          fontSize: 12,
+          lineHeight: 1.7,
+          fontFamily: "'Montserrat', sans-serif",
+          textAlign: 'left'
+        }, {
+          text: '• Presenta tu código QR digital o impreso al llegar.\n\n• Acceso personal válido para {{guest.companions}} personas en {{guest.table}}.\n\n• Gracias por ser parte de nuestra gran velada bajo las estrellas.'
+        }),
+        createPassLayer(uid, 'text', 'Despedida', 12, 79, 76, 8, 7, {
+          color: '#9c7125',
+          fontSize: 28,
+          fontFamily: "'Great Vibes', cursive",
+          textAlign: 'center'
+        }, { text: '¡Nos vemos bajo las estrellas!' })
+      ]
+    };
+  } else if (tpl.key === 'velada-noir-gala') {
     // ═══ SET 2: GALA NOCTURNA · NOIR VIP ═══
     sheet1 = {
       ...baseSheetMeta,

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 56" fill="none">
+  <defs>
+    <linearGradient id="cDivGold" x1="0" y1="28" x2="440" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#CFA352" stop-opacity="0.1"/>
+      <stop offset="25%" stop-color="#CFA352"/>
+      <stop offset="50%" stop-color="#F6E5B4"/>
+      <stop offset="75%" stop-color="#CFA352"/>
+      <stop offset="100%" stop-color="#CFA352" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <line x1="16" y1="28" x2="172" y2="28" stroke="url(#cDivGold)" stroke-width="1.1"/>
+  <line x1="268" y1="28" x2="424" y2="28" stroke="url(#cDivGold)" stroke-width="1.1"/>
+  <!-- Moon Phases & Central North Star -->
+  <circle cx="152" cy="28" r="3" fill="#CFA352"/>
+  <path d="M188 19C182 21 179 26 181 32C183 36 187 38 191 37C186 36 184 32 184 28C184 24 186 21 188 19Z" fill="#CFA352"/>
+  <path d="M220 8L224 22L238 28L224 34L220 48L216 34L202 28L216 22L220 8Z" fill="#F2DDA0" stroke="#CFA352" stroke-width="1"/>
+  <path d="M252 19C258 21 261 26 259 32C257 36 253 38 249 37C254 36 256 32 256 28C256 24 254 21 252 19Z" fill="#CFA352"/>
+  <circle cx="288" cy="28" r="3" fill="#CFA352"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
+  <defs>
+    <linearGradient id="astGold" x1="20" y1="20" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F6E5B5"/>
+      <stop offset="45%" stop-color="#CCA04E"/>
+      <stop offset="100%" stop-color="#9A6F22"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Astrolabe Outer & Inner Rings -->
+  <circle cx="110" cy="110" r="88" stroke="url(#astGold)" stroke-width="1.8"/>
+  <circle cx="110" cy="110" r="80" stroke="url(#astGold)" stroke-width="0.9" stroke-dasharray="3 4"/>
+  <ellipse cx="110" cy="110" rx="88" ry="34" transform="rotate(-28 110 110)" stroke="url(#astGold)" stroke-width="1.1" stroke-opacity="0.7"/>
+
+  <!-- Crescent Moon -->
+  <path d="M124 56C94 60 72 86 76 118C80 148 108 168 138 162C112 160 94 139 94 111C94 84 108 65 124 56Z" fill="url(#astGold)" fill-opacity="0.26" stroke="url(#astGold)" stroke-width="1.6"/>
+
+  <!-- Intertwined Wedding Rings -->
+  <circle cx="116" cy="116" r="16" stroke="url(#astGold)" stroke-width="2"/>
+  <circle cx="132" cy="116" r="16" stroke="url(#astGold)" stroke-width="2"/>
+
+  <!-- 8-Point North Star Finial -->
+  <path d="M132 62L135.5 74.5L148 78L135.5 81.5L132 94L128.5 81.5L116 78L128.5 74.5L132 62Z" fill="url(#astGold)"/>
+  <circle cx="110" cy="22" r="4" fill="url(#astGold)"/>
+  <circle cx="110" cy="198" r="4" fill="url(#astGold)"/>
+  <circle cx="22" cy="110" r="4" fill="url(#astGold)"/>
+  <circle cx="198" cy="110" r="4" fill="url(#astGold)"/>
+</svg>

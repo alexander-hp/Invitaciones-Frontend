@@ -8,9 +8,18 @@ import { VisualInvitationRendererModule } from '../../shared/components/visual-i
 import { VisualFontPickerComponent } from './visual-font-picker.component';
 import { AccessStylesModalComponent } from './access-styles-modal.component';
 import { PassStylesModalComponent } from './pass-styles-modal.component';
+import { BuiltinPresetsSidebarComponent } from './builtin-presets-sidebar.component';
+import { PublishTemplateModalComponent } from './publish-template-modal.component';
 
 @NgModule({
-  declarations: [VisualInvitationEditorComponent, VisualFontPickerComponent, AccessStylesModalComponent, PassStylesModalComponent],
+  declarations: [
+    VisualInvitationEditorComponent,
+    VisualFontPickerComponent,
+    AccessStylesModalComponent,
+    PassStylesModalComponent,
+    BuiltinPresetsSidebarComponent,
+    PublishTemplateModalComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,

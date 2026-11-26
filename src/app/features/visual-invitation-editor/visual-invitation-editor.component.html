@@ -75,8 +75,8 @@
       title="Explorar catálogo de plantillas Canva-style">
       <lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Plantillas</span>
     </button>
-    <button class="secondary publish-template-btn" type="button" [hidden]="isGuestDemoMode" (click)="openPublishTemplateModal()"
-      title="Publicar mi diseño como plantilla comunitaria">
+    <button class="secondary publish-template-btn" type="button" [hidden]="isGuestDemoMode"
+      (click)="openPublishTemplateModal()" title="Publicar mi diseño como plantilla comunitaria">
       <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon><span>Publicar</span>
       <span class="reward-pill-badge">5%</span>
     </button>
@@ -87,8 +87,8 @@
       <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon>
       <span>{{ saveButtonLabel }}</span>
     </button>
-    <button class="publish" [hidden]="isGuestDemoMode" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="publishing"
-      (click)="openPublishAudit()" title="Publicar">
+    <button class="publish" [hidden]="isGuestDemoMode" [class.tutorial-focus]="tutorialStep === 9" type="button"
+      [disabled]="publishing" (click)="openPublishAudit()" title="Publicar">
       <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
       <span>{{ publishing ? 'Publicando...' : 'Publicar' }}</span>
     </button>
@@ -97,7 +97,8 @@
   <div class="ve-notice draft-info" *ngIf="showTopNoticeBanner">
     <span class="draft-badge">{{ topNoticeBadge }}</span>
     <span class="draft-message">{{ topNoticeMessage }}</span>
-    <button type="button" class="draft-view-btn" (click)="onTopNoticeAction()"><span>{{ topNoticeActionLabel }}</span></button>
+    <button type="button" class="draft-view-btn" (click)="onTopNoticeAction()"><span>{{ topNoticeActionLabel
+        }}</span></button>
   </div>
   <div class="ve-toast-container" aria-live="polite">
     <div class="ve-notice error" *ngIf="error">
@@ -159,10 +160,15 @@
       <div class="catalog-toolbar">
         <div class="catalog-tabs-and-search">
           <div class="catalog-source-tabs">
-            <button type="button" [class.active]="catalogTab === 'community'" (click)="catalogTab = 'community'">
-              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon> Comunidad & Diseñadores
+            <button type="button" [class.active]="catalogTab === 'builtin'" (click)="setCatalogTab('builtin')">
+              <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Plantillas Prehechas ({{
+              builtInPresets.length }})
             </button>
-            <button type="button" [class.active]="catalogTab === 'personal'" (click)="catalogTab = 'personal'">
+            <button type="button" [class.active]="catalogTab === 'community'" (click)="setCatalogTab('community')">
+              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon> Comunidad &amp; Diseñadores ({{
+              catalogTemplates.length }})
+            </button>
+            <button type="button" [class.active]="catalogTab === 'personal'" (click)="setCatalogTab('personal')">
               <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Mis Plantillas ({{ personalTemplates.length
               }})
             </button>
@@ -239,6 +245,9 @@
                   <span class="badge-creator-reward" *ngIf="template.authorRewardPercent">
                     <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.authorRewardPercent }}%
                     creador
+                  </span>
+                  <span class="badge-official-preset" *ngIf="!template.authorRewardPercent && catalogTab === 'builtin'">
+                    Prehecha Oficial
                   </span>
                 </div>
 
@@ -481,127 +490,11 @@
   <!-- ============================================================== -->
   <!-- MODAL: PUBLICAR COMO PLANTILLA (CANVA-STYLE + 5% DE COMISIÓN) -->
   <!-- ============================================================== -->
-  <div class="publish-template-backdrop" *ngIf="showPublishTemplateModal" (click)="closePublishTemplateModal()">
-    <section class="publish-template-dialog" role="dialog" aria-modal="true" aria-labelledby="publishTemplateTitle"
-      (click)="$event.stopPropagation()">
-      <header class="publish-template-heading">
-        <div class="publish-eyebrow">
-          <span>Ecosistema de Creadores Canva-Style</span>
-          <span class="gold-badge">
-            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> 5% Comisión
-          </span>
-        </div>
-        <h1 id="publishTemplateTitle">Publicar mi Diseño como Plantilla</h1>
-        <p>Comparte tu creación en el catálogo de la comunidad. Otros usuarios podrán usarla para sus eventos y tú
-          generarás ingresos automáticamente.</p>
-        <button type="button" class="close-publish-btn" title="Cerrar modal" aria-label="Cerrar modal"
-          (click)="closePublishTemplateModal()">
-          <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
-        </button>
-      </header>
-
-      <div class="publish-template-body">
-        <!-- Banner del Programa de Creadores (5%) con SVG -->
-        <div class="creator-earnings-banner">
-          <div class="banner-icon">
-            <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
-          </div>
-          <div class="banner-text">
-            <strong>¡Gana el 5% cada vez que alguien use tu diseño!</strong>
-            <p>Por cada usuario que seleccione tu plantilla y active su evento o pase premium, recibirás automáticamente
-              el <strong>5% del costo</strong> acumulado en tu saldo de creador.</p>
-          </div>
-        </div>
-
-        <!-- Formulario de Publicación -->
-        <div class="publish-form-grid">
-          <div class="form-group full-width">
-            <label>Nombre de la Plantilla *</label>
-            <input type="text" [(ngModel)]="publishTemplateForm.name"
-              placeholder="Ej. Boda Jardín Toscana · Gala Nocturna" />
-          </div>
-
-          <div class="form-group">
-            <label>Categoría / Tipo de Evento</label>
-            <select [(ngModel)]="publishTemplateForm.eventType">
-              <option value="boda">Boda</option>
-              <option value="xv">XV Años</option>
-              <option value="bautizo">Bautizo</option>
-              <option value="graduacion">Graduación</option>
-              <option value="cumpleanos">Cumpleaños</option>
-              <option value="otro">Otro / General</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Nombre del Creador / Autor</label>
-            <input type="text" [(ngModel)]="publishTemplateForm.authorName" placeholder="Tu nombre o firma artística" />
-          </div>
-
-          <div class="form-group full-width">
-            <label>Descripción del Estilo</label>
-            <textarea [(ngModel)]="publishTemplateForm.description" rows="2"
-              placeholder="Describe los colores, tipografía, estilo visual e inspiración del diseño..."></textarea>
-          </div>
-
-          <div class="form-group full-width">
-            <label>Etiquetas (separadas por comas)</label>
-            <input type="text" [(ngModel)]="publishTemplateForm.tags"
-              placeholder="Ej. floral, oro, minimalista, acuarela, noche" />
-          </div>
-
-          <!-- Selección de Secciones Incluidas con SVG -->
-          <div class="form-group full-width inclusions-group">
-            <label>¿Qué secciones deseas incluir en la plantilla pública?</label>
-            <div class="inclusions-row">
-              <label class="inc-checkbox">
-                <input type="checkbox" [(ngModel)]="publishTemplateForm.includesInvitation" />
-                <div class="inc-checkbox-card">
-                  <span class="inc-icon">
-                    <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
-                  </span>
-                  <strong>Invitación Digital</strong>
-                  <small>{{ design?.sections?.length || 0 }} secciones con capas y elementos</small>
-                </div>
-              </label>
-
-              <label class="inc-checkbox">
-                <input type="checkbox" [(ngModel)]="publishTemplateForm.includesPass" />
-                <div class="inc-checkbox-card">
-                  <span class="inc-icon">
-                    <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon>
-                  </span>
-                  <strong>Pase VIP</strong>
-                  <small>{{ passDesign?.sections?.length || 0 }} hojas (Frente/Reverso) con QR</small>
-                </div>
-              </label>
-
-              <label class="inc-checkbox">
-                <input type="checkbox" [(ngModel)]="publishTemplateForm.includesAccess" />
-                <div class="inc-checkbox-card">
-                  <span class="inc-icon">
-                    <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
-                  </span>
-                  <strong>Pantalla de Acceso</strong>
-                  <small>Bienvenida y validación NIP</small>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <footer class="publish-template-footer">
-        <button type="button" class="secondary" [disabled]="publishingTemplate"
-          (click)="closePublishTemplateModal()">Cancelar</button>
-        <button type="button" class="primary btn-publish-confirm" [disabled]="publishingTemplate"
-          (click)="submitPublishTemplate()">
-          <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
-          <span>{{ publishingTemplate ? 'Publicando plantilla...' : 'Publicar en la Comunidad (+5%)' }}</span>
-        </button>
-      </footer>
-    </section>
-  </div>
+  <app-publish-template-modal *ngIf="showPublishTemplateModal" [form]="publishTemplateForm"
+    [publishing]="publishingTemplate" [sectionsCount]="design?.sections?.length || 0"
+    [passSheetsCount]="passDesign?.sections?.length || 0" (closed)="closePublishTemplateModal()"
+    (submitted)="submitPublishTemplate()">
+  </app-publish-template-modal>
 
   <!-- ============================================================== -->
   <!-- MODAL: CATÁLOGO DE ESTILOS Y DISEÑOS PARA PANTALLA DE ACCESO    -->
@@ -611,9 +504,8 @@
     (useTemplateStyle)="applyCurrentTemplateAccessPreset(); closeAccessStylesModal()"
     (closed)="closeAccessStylesModal()">
   </app-access-styles-modal>
-  <app-pass-styles-modal *ngIf="showPassStylesModal" [presets]="passTemplateSets"
-    [activeKey]="activePassTemplateKey" (selectPreset)="applyPassTemplateSet($event)"
-    (closed)="closePassStylesModal()">
+  <app-pass-styles-modal *ngIf="showPassStylesModal" [presets]="passTemplateSets" [activeKey]="activePassTemplateKey"
+    (selectPreset)="applyPassTemplateSet($event)" (closed)="closePassStylesModal()">
   </app-pass-styles-modal>
   <div class="design-import-backdrop" *ngIf="showImportDialog" (click)="closeDesignImporter()">
     <section class="design-import-dialog" role="dialog" aria-modal="true" aria-labelledby="designImportTitle"
@@ -1381,13 +1273,17 @@
         </div>
         <ng-container *ngIf="toolCategory === 'design'">
           <h2>Diseños y Plantillas</h2>
-          <button class="open-design-library" type="button" (click)="openDesignLibrary()"><span><lucide-icon
-                name="images" [strokeWidth]="1.8"></lucide-icon></span><strong>Catálogo
-              Canva-Style</strong><small>Explorar plantillas 3 en 1</small></button>
+          <button class="open-design-library" type="button"
+            (click)="openDesignLibrary(undefined, 'builtin')"><span><lucide-icon name="images"
+                [strokeWidth]="1.8"></lucide-icon></span><strong>Catálogo de
+              Plantillas</strong><small>Prehechas oficiales y comunidad 3 en 1</small></button>
           <button class="open-publish-template" type="button" (click)="openPublishTemplateModal()"><span
               class="earn-icon"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon></span>
             <div><strong>Publicar como Plantilla</strong><small>Gana el 5% por cada uso en la comunidad</small></div>
           </button>
+          <app-builtin-presets-sidebar [presets]="builtInPresets" (previewPreset)="openDesignLibrary($event, 'builtin')"
+            (applyPreset)="applyBuiltInPresetQuick($event.key, $event.event)">
+          </app-builtin-presets-sidebar>
           <details class="theme-editor" open *ngIf="design.theme as theme">
             <summary>Estilo global</summary>
             <p>Cambia colores, tipografías y botones sin mover el contenido.</p>

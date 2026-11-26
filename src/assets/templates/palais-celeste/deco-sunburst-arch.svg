@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" fill="none">
+  <defs>
+    <linearGradient id="decoGold" x1="0" y1="0" x2="600" y2="800" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F5E3AF"/>
+      <stop offset="35%" stop-color="#CBA050"/>
+      <stop offset="70%" stop-color="#F2DDA2"/>
+      <stop offset="100%" stop-color="#9A7026"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Stepped Art-Deco Frame -->
+  <path d="M18 68V36H50V18H550V36H582V68V732H550V764H582M18 732H50V764H18" stroke="url(#decoGold)" stroke-width="2"/>
+  <rect x="18" y="18" width="564" height="764" rx="8" stroke="url(#decoGold)" stroke-width="1.6"/>
+  <rect x="30" y="30" width="540" height="740" rx="4" stroke="url(#decoGold)" stroke-width="0.9" stroke-opacity="0.65"/>
+
+  <!-- Sunburst Crown Arch -->
+  <path d="M56 756V300C56 165.243 165.243 56 300 56C434.757 56 544 165.243 544 300V756" stroke="url(#decoGold)" stroke-width="2.2"/>
+  <g stroke="url(#decoGold)" stroke-width="1" stroke-opacity="0.55">
+    <line x1="300" y1="56" x2="300" y2="24"/>
+    <line x1="220" y1="70" x2="206" y2="38"/>
+    <line x1="380" y1="70" x2="394" y2="38"/>
+    <line x1="146" y1="112" x2="122" y2="86"/>
+    <line x1="454" y1="112" x2="478" y2="86"/>
+  </g>
+
+  <!-- Top North Star -->
+  <path d="M300 28L304.5 42.5L319 47L304.5 51.5L300 66L295.5 51.5L281 47L295.5 42.5L300 28Z" fill="url(#decoGold)"/>
+
+  <!-- Bottom Corner Diamonds -->
+  <path d="M46 742L56 756L46 770L36 756L46 742Z" fill="url(#decoGold)"/>
+  <path d="M554 742L564 756L554 770L544 756L554 742Z" fill="url(#decoGold)"/>
+</svg>

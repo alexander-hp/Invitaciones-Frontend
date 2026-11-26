@@ -1,5 +1,6 @@
 import { EventModel, InvitationContent, VisualInvitationDesign, VisualInvitationLayer, VisualInvitationSection } from '../../core/models';
 import { buildPalazzoOrangerieDesign } from './palazzo-orangerie-design';
+import { buildPalaisCelesteDesign } from './palais-celeste-design';
 
 export interface CompleteDesignPreset {
   key: string;
@@ -10,6 +11,7 @@ export interface CompleteDesignPreset {
 }
 
 export const COMPLETE_DESIGN_PRESETS: CompleteDesignPreset[] = [
+  { key: 'palais-celeste', name: 'Palais C\u00e9leste \u00b7 Noche Astral, C\u00fapula Art-D\u00e9co & N\u00e1car', description: 'Exclusiva 3 en 1: Zafiro medianoche, astrolabio de oro champagne, molduras solares Art-D\u00e9co, pliegos nacarados y 15 cap\u00edtulos interactivos.', category: 'boda', colors: ['#0b1428', '#f8f4ec', '#d4aa5a'] },
   { key: 'boda-jardin-imperial', name: 'Jard\u00edn Imperial \u00b7 L\u2019Orangerie: Invernadero Bot\u00e1nico & Fine-Art', description: 'Est\u00e9tica Quiet-Luxury en papel algod\u00f3n alabastro, verde cipr\u00e9s, arco de invernadero y detalles en oro champagne.', category: 'boda', colors: ['#f7f3eb', '#1d3528', '#b68b3a'] },
   { key: 'boda-girasoles', name: 'Elegancia R\u00fastica: Girasoles Radiantes, Madera & Anillos Dorados', description: 'Calidez campestre iluminada por girasoles dorados, madera r\u00fastica, alianzas entrelazadas y tonos miel.', category: 'boda', colors: ['#2d2112', '#faf3e8', '#d49b27'] },
   { key: 'boda-navy-blue', name: 'Navy Blue & Gold: Azul Noche, Acuarela & Flores Nobles', description: 'Elegancia nocturna en acuarela azul medianoche, divisores florales ba\u00f1ados en oro fino y cristal marino.', category: 'boda', colors: ['#0d1b2a', '#f4efe6', '#d4af37'] },
@@ -59,6 +61,9 @@ export function buildCompleteDesign(
   nextId: (prefix: string) => string,
   includeModules = true
 ): VisualInvitationDesign {
+  if (key === 'palais-celeste') {
+    return buildPalaisCelesteDesign(content, event, nextId, includeModules);
+  }
   if (key === 'palazzo-orangerie') {
     return buildPalazzoOrangerieDesign(content, event, nextId, includeModules);
   }

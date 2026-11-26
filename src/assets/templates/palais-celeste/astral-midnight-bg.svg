@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" fill="none">
+  <defs>
+    <radialGradient id="pcSky" cx="50%" cy="22%" r="82%">
+      <stop offset="0%" stop-color="#152647"/>
+      <stop offset="52%" stop-color="#0C172E"/>
+      <stop offset="100%" stop-color="#070E1E"/>
+    </radialGradient>
+    <linearGradient id="pcGold" x1="0" y1="0" x2="800" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F2DFA6"/>
+      <stop offset="45%" stop-color="#CFA454"/>
+      <stop offset="100%" stop-color="#9E7428"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1200" fill="url(#pcSky)"/>
+
+  <!-- Art-Deco Outer Stepped Frame -->
+  <rect x="24" y="24" width="752" height="1152" stroke="url(#pcGold)" stroke-opacity="0.22" stroke-width="1.2"/>
+  <path d="M24 84H64V44H104V24M776 84H736V44H696V24M24 1116H64V1156H104V1176M776 1116H736V1156H696V1176" stroke="url(#pcGold)" stroke-opacity="0.38" stroke-width="1.4"/>
+
+  <!-- Astrolabe Orbital Rings -->
+  <circle cx="400" cy="280" r="210" stroke="url(#pcGold)" stroke-opacity="0.12" stroke-width="1"/>
+  <circle cx="400" cy="280" r="290" stroke="url(#pcGold)" stroke-opacity="0.08" stroke-width="1" stroke-dasharray="4 6"/>
+  <ellipse cx="400" cy="280" rx="340" ry="120" transform="rotate(-18 400 280)" stroke="url(#pcGold)" stroke-opacity="0.1" stroke-width="1"/>
+
+  <!-- Subtle Constellation Lines & Stars -->
+  <g stroke="#E8CE8E" stroke-opacity="0.2" stroke-width="0.9">
+    <polyline points="110,160 165,210 218,190 260,245"/>
+    <polyline points="690,180 632,230 590,210 545,270"/>
+    <polyline points="130,920 195,880 250,910 305,865"/>
+    <polyline points="670,950 610,900 555,935 505,885"/>
+  </g>
+  <g fill="#F4E2B4" fill-opacity="0.55">
+    <circle cx="110" cy="160" r="2.5"/><circle cx="165" cy="210" r="3"/><circle cx="218" cy="190" r="2"/><circle cx="260" cy="245" r="2.5"/>
+    <circle cx="690" cy="180" r="2.5"/><circle cx="632" cy="230" r="3"/><circle cx="590" cy="210" r="2"/><circle cx="545" cy="270" r="2.5"/>
+    <circle cx="130" cy="920" r="2.5"/><circle cx="195" cy="880" r="3"/><circle cx="670" cy="950" r="2.5"/><circle cx="610" cy="900" r="3"/>
+    <circle cx="92" cy="520" r="2"/><circle cx="712" cy="560" r="2.2"/><circle cx="148" cy="690" r="1.8"/><circle cx="654" cy="730" r="2"/>
+  </g>
+</svg>
