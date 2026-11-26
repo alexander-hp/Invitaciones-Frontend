@@ -45,17 +45,22 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
   private errorTimeout?: any;
 
   builtinTemplates = [
-    /*
-    // Deshabilitada temporalmente segun solicitud (no seleccionable en catalogo)
     {
-      id: 'envelope-cards',
-      name: 'Sobre Interactivo & Cards Deslizables',
-      badge: 'Recomendado Movil',
-      description: 'Apertura animada de sobrecito digital con sello, verificacion opcional de acceso (correo/telefono), fondo de boda elegante y tarjetas independientes deslizables a izquierda/derecha.',
+      id: 'boda-jardin-imperial',
+      name: 'Jardín Imperial · L’Orangerie: Invernadero Botánico, Tríptico de Lacre & Fine-Art',
+      badge: 'Nueva • Edición #20',
+      description: 'Estética Quiet-Luxury inspirada en los invernaderos reales europeos: puertas tríptico con sello de lacre botánico, partículas de polen dorado al sol, arco arquitectónico, índice de capítulos y vinilo musical.',
       iconKey: 'envelope',
-      features: ['Sobre 3D animado', 'Navegacion por Swipe (Tarjetas)', 'Autenticacion en sobre', 'Optimizado Celulares']
+      features: ['Puertas tríptico 3D con lacre botánico', 'Partículas solares en vivo & arco de invernadero', 'Índice editorial de capítulos + vinilo musical', '100% de módulos interactivos + paleta de etiqueta']
     },
-    */
+    {
+      id: 'boda-girasoles',
+      name: 'Elegancia Rústica: Girasoles Radiantes, Madera & Anillos Dorados',
+      badge: 'Exclusiva Boda Rústica',
+      description: 'Calidez campestre y rústica iluminada por girasoles dorados, fondo texturizado, emblema de alianzas entrelazadas y canción All of Me de John Legend.',
+      iconKey: 'classic',
+      features: ['Bouquet de girasoles y anillos dorados', 'Paleta amarillo dorado, café madera y salvia', 'Contador rústico y sellos campestres', 'Canción All of Me integrada']
+    },
     {
       id: 'classic-vertical',
       name: 'Clásica Editorial Vertical',
@@ -64,17 +69,6 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       iconKey: 'classic',
       features: ['Scroll vertical continuo', 'Portada hero amplia', 'Lectura secuencial', 'Excelente en Escritorio']
     },
-    /*
-    // Deshabilitada temporalmente segun solicitud (no seleccionable en catalogo)
-    {
-      id: 'modern-minimal',
-      name: 'Plantilla 3: Glamour Moderno & Minimal',
-      badge: 'Plantilla 3',
-      description: 'Diseno vanguardista con estetica limpia, tarjetas flotantes glassmorphism, hero interactivo, timeline moderno y animacion fluida.',
-      iconKey: 'modern',
-      features: ['Estilo Glassmorphism', 'Diseno Minimalista & Lujo', 'Hero interactivo', 'Optimizada Movil & Desktop']
-    },
-    */
     {
       id: 'boda-mobile-first',
       name: 'Boda Mobile-First (Story Vertical)',
@@ -194,14 +188,6 @@ export class EditorPlansTabComponent implements OnInit, OnChanges, OnDestroy {
       description: 'Romance botánico delicado con video de apertura de rosas, fondo de pétalos flotantes, marco oval floral, torre de champagne para el brindis y tipografía caligráfica Pinyon Script.',
       iconKey: 'envelope',
       features: ['Video móvil floral y pétalos', 'Marco oval y esquinas botánicas', 'Torre de champagne para itinerario', 'Música Ballerina y paleta rosa palo']
-    },
-    {
-      id: 'boda-girasoles',
-      name: 'Elegancia Rústica: Girasoles Radiantes, Madera & Anillos Dorados',
-      badge: 'Exclusiva Boda Rústica',
-      description: 'Calidez campestre y rústica iluminada por girasoles dorados, fondo texturizado, emblema de alianzas entrelazadas y canción All of Me de John Legend.',
-      iconKey: 'classic',
-      features: ['Bouquet de girasoles y anillos dorados', 'Paleta amarillo dorado, café madera y salvia', 'Contador rústico y sellos campestres', 'Canción All of Me integrada']
     },
     {
       id: 'boda-navy-blue',

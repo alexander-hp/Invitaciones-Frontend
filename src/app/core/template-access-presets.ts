@@ -240,6 +240,14 @@ const CREST_BURGUNDY_TIARA = `<svg viewBox="0 0 72 72" width="56" height="56" fi
   <text x="36" y="44" font-family="'Great Vibes', cursive" font-size="13" fill="#fceef1" text-anchor="middle">XV</text>
 </svg>`;
 
+const CREST_JARDIN_IMPERIAL = `<svg viewBox="0 0 72 72" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="36" cy="36" r="32" fill="#1d3528" stroke="#b68b3a" stroke-width="1.8"/>
+  <path d="M24 52V32C24 25.373 29.373 20 36 20C42.627 20 48 25.373 48 32V52" stroke="#dfc280" stroke-width="1.4"/>
+  <circle cx="33.5" cy="39" r="5" stroke="#dfc280" stroke-width="1.4"/>
+  <circle cx="38.5" cy="39" r="5" stroke="#dfc280" stroke-width="1.4"/>
+  <path d="M36 14L37.5 18L41.5 19.5L37.5 21L36 25L34.5 21L30.5 19.5L34.5 18L36 14Z" fill="#dfc280"/>
+</svg>`;
+
 // Helper function to create WYSIWYG canvas layers for an access screen
 function buildStandardLayers(
   theme: TemplateAccessScreenTheme,
@@ -1697,6 +1705,65 @@ export const TEMPLATE_ACCESS_PRESETS: TemplateAccessScreenPreset[] = [
       TEMPLATE_ACCESS_PRESETS[20].theme,
       TEMPLATE_ACCESS_PRESETS[20].texts,
       CREST_BURGUNDY_TIARA,
+      acc,
+      eventTitle
+    )
+  },
+
+  // 22. Jardín Imperial · L’Orangerie: Invernadero Botánico & Fine-Art
+  {
+    templateId: 'boda-jardin-imperial',
+    aliases: ['boda-jardin-imperial', 'jardin-imperial', 'template-boda-jardin-imperial'],
+    name: 'Jardín Imperial · L’Orangerie: Invernadero Botánico, Tríptico de Lacre & Fine-Art',
+    theme: {
+      backgroundType: 'gradient',
+      backgroundColor: '#f7f3eb',
+      backgroundGradient: 'radial-gradient(ellipse at 50% 25%, #fcfaf5 0%, #ebe5d8 60%, #dce4dd 100%)',
+      backgroundOverlayOpacity: 15,
+      backgroundBlur: 8,
+      cardStyle: 'bordered',
+      cardBgColor: 'rgba(252, 250, 245, 0.96)',
+      cardOpacity: 96,
+      cardRadius: 24,
+      cardShadow: 'elevated',
+      cardBorder: '1.6px solid rgba(182, 139, 58, 0.65)',
+      cardBorderGlow: 'rgba(182, 139, 58, 0.25)',
+      primaryColor: '#1d3528',
+      textColor: '#1b241e',
+      accentColor: '#b68b3a',
+      inputBgColor: '#ffffff',
+      inputBorderColor: 'rgba(29, 53, 40, 0.25)',
+      inputTextColor: '#1b241e',
+      inputPlaceholderColor: 'rgba(27, 36, 30, 0.45)',
+      inputFocusBorderColor: '#b68b3a',
+      buttonBgColor: '#1d3528',
+      buttonTextColor: '#fcfaf5',
+      buttonRadius: 28,
+      headingFont: 'Cormorant Garamond',
+      bodyFont: 'Montserrat'
+    },
+    texts: {
+      badgeText: '✦ JARDÍN IMPERIAL • L’ORANGERIE BOTÁNICA ✦',
+      defaultTitle: 'Invitación al Invernadero Real',
+      defaultSubtitle: 'Ingresa tu correo o teléfono registrado para abrir las puertas de nuestra celebración.',
+      inputLabel: 'Correo o teléfono registrado',
+      inputPlaceholder: 'invitado@ejemplo.com o teléfono',
+      pinInputLabel: 'NIP de Invitado',
+      pinInputPlaceholder: 'Ingresa tu NIP',
+      buttonText: 'ABRIR PUERTAS DE L’ORANGERIE',
+      selfRegTitle: 'Solicitar Pase Personal',
+      selfRegSubtitle: 'Solicita tu invitación personal para acompañarnos en el Jardín Imperial.',
+      selfRegButtonText: 'SOLICITAR INVITACIÓN'
+    },
+    decorations: {
+      crestSvg: CREST_JARDIN_IMPERIAL,
+      frameAssetUrl: 'assets/boda-jardin-imperial/divider-olive-gold.svg',
+      specialEffect: 'petals'
+    },
+    buildLayers: (acc, eventTitle) => buildStandardLayers(
+      TEMPLATE_ACCESS_PRESETS[21].theme,
+      TEMPLATE_ACCESS_PRESETS[21].texts,
+      CREST_JARDIN_IMPERIAL,
       acc,
       eventTitle
     )

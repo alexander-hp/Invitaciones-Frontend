@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 840" fill="none">
+  <defs>
+    <linearGradient id="archGold" x1="0" y1="0" x2="600" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DFC17B"/>
+      <stop offset="35%" stop-color="#B58A38"/>
+      <stop offset="68%" stop-color="#EAD293"/>
+      <stop offset="100%" stop-color="#9A7125"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Editorial Double Rule -->
+  <rect x="18" y="18" width="564" height="804" rx="4" stroke="url(#archGold)" stroke-width="1.2" stroke-opacity="0.55"/>
+  <rect x="28" y="28" width="544" height="784" rx="2" stroke="#284737" stroke-width="0.75" stroke-opacity="0.24"/>
+
+  <!-- Grand Conservatory Arch -->
+  <path d="M64 786V316C64 185.661 169.661 80 300 80C430.339 80 536 185.661 536 316V786" stroke="url(#archGold)" stroke-width="2"/>
+  <path d="M78 786V316C78 193.393 177.393 94 300 94C422.607 94 522 193.393 522 316V786" stroke="#284737" stroke-width="0.9" stroke-opacity="0.32"/>
+
+  <!-- Subtle Radial Conservatory Fanlight at Top of Arch -->
+  <path d="M150 200C188 152 241 124 300 124C359 124 412 152 450 200" stroke="url(#archGold)" stroke-width="0.9" stroke-dasharray="4 4" stroke-opacity="0.5"/>
+  <circle cx="300" cy="54" r="5" fill="url(#archGold)"/>
+  <path d="M300 36L303 48L315 51L303 54L300 66L297 54L285 51L297 48L300 36Z" fill="url(#archGold)"/>
+
+  <!-- Corner Botanical Flourishes -->
+  <g stroke="url(#archGold)" stroke-width="1.2" fill="#2A4B39" fill-opacity="0.16">
+    <path d="M36 96C36 62 62 36 96 36"/>
+    <path d="M52 74C48 58 58 48 74 52C70 66 64 70 52 74Z"/>
+    <path d="M564 96C564 62 538 36 504 36"/>
+    <path d="M548 74C552 58 542 48 526 52C530 66 536 70 548 74Z"/>
+  </g>
+
+  <!-- Base Plinth Line -->
+  <line x1="48" y1="786" x2="552" y2="786" stroke="url(#archGold)" stroke-width="1.6"/>
+</svg>

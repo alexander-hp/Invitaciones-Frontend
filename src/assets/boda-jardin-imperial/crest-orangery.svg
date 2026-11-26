@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" fill="none">
+  <defs>
+    <linearGradient id="jiGold" x1="20" y1="10" x2="220" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DFC07A"/>
+      <stop offset="32%" stop-color="#B68B3A"/>
+      <stop offset="55%" stop-color="#F1DDA6"/>
+      <stop offset="80%" stop-color="#9B7228"/>
+      <stop offset="100%" stop-color="#D4B062"/>
+    </linearGradient>
+    <linearGradient id="jiLeaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3A5F4B"/>
+      <stop offset="100%" stop-color="#1D3528"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Palladian Orangery Arch -->
+  <path d="M74 152V84C74 58.595 94.595 38 120 38C145.405 38 166 58.595 166 84V152" stroke="url(#jiGold)" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M80 152V84C80 61.909 97.909 44 120 44C142.091 44 160 61.909 160 84V152" stroke="url(#jiGold)" stroke-width="0.9" stroke-opacity="0.75"/>
+
+  <!-- Glasshouse Mullions & Sunburst Tracery -->
+  <line x1="120" y1="44" x2="120" y2="148" stroke="url(#jiGold)" stroke-width="0.8" stroke-opacity="0.55"/>
+  <line x1="80" y1="84" x2="160" y2="84" stroke="url(#jiGold)" stroke-width="0.8" stroke-opacity="0.55"/>
+  <path d="M120 84L92 56M120 84L148 56M95 84C95 70.2 106.2 59 120 59C133.8 59 145 70.2 145 84" stroke="url(#jiGold)" stroke-width="0.8" stroke-opacity="0.5"/>
+  <line x1="64" y1="152" x2="176" y2="152" stroke="url(#jiGold)" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="74" y1="157" x2="166" y2="157" stroke="url(#jiGold)" stroke-width="0.9" stroke-opacity="0.7"/>
+
+  <!-- Top Finial Star -->
+  <path d="M120 16L122.6 24.4L131 27L122.6 29.6L120 38L117.4 29.6L109 27L117.4 24.4L120 16Z" fill="url(#jiGold)"/>
+  <circle cx="120" cy="11" r="2" fill="url(#jiGold)"/>
+
+  <!-- Intertwined Wedding Rings Inside Arch -->
+  <circle cx="113" cy="113" r="13.5" stroke="url(#jiGold)" stroke-width="2"/>
+  <circle cx="127" cy="113" r="13.5" stroke="url(#jiGold)" stroke-width="2"/>
+  <path d="M127 97.5L129.2 93L131.5 97.5L127 99.5L122.5 97.5L124.8 93L127 97.5Z" fill="url(#jiGold)"/>
+
+  <!-- Left Olive & Jasmine Branch -->
+  <path d="M98 166C68 156 46 130 42 88C40 68 47 48 58 34" stroke="url(#jiGold)" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M68 148C54 148 44 141 40 132C50 131 61 137 68 148Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M53 128C39 125 31 116 29 106C39 107 49 115 53 128Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M45 103C32 97 27 86 28 76C37 80 44 90 45 103Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M46 77C35 69 32 58 35 48C43 54 47 65 46 77Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M55 53C48 43 48 33 54 25C60 33 60 44 55 53Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <!-- Inner left leaves -->
+  <path d="M58 136C62 124 70 118 78 117C75 127 68 134 58 136Z" fill="url(#jiGold)" fill-opacity="0.32" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M47 109C53 98 62 93 70 94C65 103 57 109 47 109Z" fill="url(#jiGold)" fill-opacity="0.32" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M47 82C55 73 64 70 71 72C65 80 56 84 47 82Z" fill="url(#jiGold)" fill-opacity="0.32" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <circle cx="58" cy="118" r="3" fill="url(#jiGold)"/>
+  <circle cx="49" cy="90" r="2.6" fill="url(#jiGold)"/>
+
+  <!-- Right Olive & Jasmine Branch (Mirrored) -->
+  <path d="M142 166C172 156 194 130 198 88C200 68 193 48 182 34" stroke="url(#jiGold)" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M172 148C186 148 196 141 200 132C190 131 179 137 172 148Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M187 128C201 125 209 116 211 106C201 107 191 115 187 128Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M195 103C208 97 213 86 212 76C203 80 196 90 195 103Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M194 77C205 69 208 58 205 48C197 54 193 65 194 77Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M185 53C192 43 192 33 186 25C180 33 180 44 185 53Z" fill="url(#jiLeaf)" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <!-- Inner right leaves -->
+  <path d="M182 136C178 124 170 118 162 117C165 127 172 134 182 136Z" fill="url(#jiGold)" fill-opacity="0.32" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M193 109C187 98 178 93 170 94C175 103 183 109 193 109Z" fill="url(#jiGold)" fill-opacity="0.32" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <path d="M193 82C185 73 176 70 169 72C175 80 184 84 193 82Z" fill="url(#jiGold)" fill-opacity="0.32" stroke="url(#jiGold)" stroke-width="0.9"/>
+  <circle cx="182" cy="118" r="3" fill="url(#jiGold)"/>
+  <circle cx="191" cy="90" r="2.6" fill="url(#jiGold)"/>
+
+  <!-- Bottom Ribbon Knot -->
+  <path d="M98 166C108 172 132 172 142 166" stroke="url(#jiGold)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M120 170L108 184M120 170L132 184" stroke="url(#jiGold)" stroke-width="1.3" stroke-linecap="round"/>
+  <circle cx="120" cy="170" r="3.5" fill="url(#jiGold)"/>
+</svg>

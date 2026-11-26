@@ -459,6 +459,10 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       this.cachedAmbientThemeColor = '#0d1b2a';
       return '#0d1b2a';
     }
+    if (tpl === 'boda-jardin-imperial' || tpl === 'jardin-imperial' || tpl === 'template-boda-jardin-imperial') {
+      this.cachedAmbientThemeColor = '#1d3528';
+      return '#1d3528';
+    }
     if (tpl === 'maison-dore' || tpl === 'boda-creativa-premium') {
       this.cachedAmbientThemeColor = '#1c1917';
       return '#1c1917';
@@ -1159,6 +1163,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     const tpl = this.currentTemplate;
     if (tpl === 'boda-girasoles') return 'assets/boda-girasoles/all-of-me.mp3';
     if (tpl === 'boda-navy-blue') return 'assets/boda-navy-blue/perfect.mp3';
+    if (tpl === 'boda-jardin-imperial' || tpl === 'jardin-imperial' || tpl === 'template-boda-jardin-imperial') return 'assets/boda-eleganza/waltz-sentimental.mp3';
     if (tpl === 'boda-villa-perle') return 'assets/boda-villa-perle/autumn-wind.mp3';
     if (tpl === 'boda-eleganza') return 'assets/boda-eleganza/waltz-sentimental.mp3';
     if (tpl === 'boda-rosas') return 'assets/boda-rosas/ballerina.mp3';
@@ -2671,7 +2676,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       'boda-rosas', 'rosas', 'rosas-template', 'roses', 'template-boda-rosas',
       'boda-girasoles', 'girasoles', 'elegancia-girasoles', 'template-boda-girasoles',
       'boda-navy-blue', 'navy-blue', 'modelo-navy-blue', 'template-boda-navy-blue',
-      'xv-burgundy', 'template-xv-burgundy', 'mis-xv-burgundy', 'burgundy'
+      'xv-burgundy', 'template-xv-burgundy', 'mis-xv-burgundy', 'burgundy',
+      'boda-jardin-imperial', 'jardin-imperial', 'template-boda-jardin-imperial'
     ];
 
     if (knownNativeTemplates.includes(t)) {
@@ -2857,7 +2863,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       !this.isBodaRosasTemplate() &&
       !this.isBodaGirasolesTemplate() &&
       !this.isBodaNavyBlueTemplate() &&
-      !this.isXvBurgundyTemplate()
+      !this.isXvBurgundyTemplate() &&
+      !this.isBodaJardinImperialTemplate()
     );
   }
 
@@ -2973,6 +2980,12 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
     const t = this.currentTemplate;
     return t === 'xv-burgundy' || t === 'template-xv-burgundy' || t === 'mis-xv-burgundy' || t === 'burgundy';
+  }
+
+  isBodaJardinImperialTemplate(): boolean {
+    if (this.isVisualBuilderTemplate() || this.isCustomHtmlTemplate()) return false;
+    const t = this.currentTemplate;
+    return t === 'boda-jardin-imperial' || t === 'jardin-imperial' || t === 'template-boda-jardin-imperial';
   }
 
   get requiresGuestValidation(): boolean {
@@ -3544,6 +3557,8 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
         templateKey = 'envelope-cards';
       } else if (doc.querySelector('.tpl3-container, .modern-minimal, .tpl3-hero')) {
         templateKey = 'template-3';
+      } else if (doc.querySelector('.ji-main-wrapper, .ji-hero-arch-frame')) {
+        templateKey = 'boda-jardin-imperial';
       }
 
       if (!templateKey) return null;

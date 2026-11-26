@@ -1,0 +1,591 @@
+<!-- PLANTILLA #20: JARDÍN IMPERIAL · L’ORANGERIE (Invernadero Botánico, Tríptico de Lacre & Edición Fine-Art) -->
+<div class="ji-main-wrapper" [class.music-active]="isPlayingMusic">
+
+  <!-- BARRA SUPERIOR DE PROGRESO DE LECTURA EDITORIAL -->
+  <div class="ji-reading-progress-track" aria-hidden="true">
+    <div class="ji-reading-progress-fill" [style.width.%]="scrollProgress"></div>
+  </div>
+
+  <!-- 1. REPRODUCTOR FLOTANTE TIPO VINILO BOTÁNICO -->
+  <aside *ngIf="isSectionActive('music')" class="ji-audio-floating" [class.is-playing]="isPlayingMusic">
+    <button type="button" class="ji-audio-btn" (click)="toggleGlobalMusic()"
+      [title]="isPlayingMusic ? 'Pausar melodía' : 'Escuchar melodía de la boda'">
+      <span class="ji-vinyl-disc" [class.spinning]="isPlayingMusic">
+        <span class="ji-vinyl-center"></span>
+      </span>
+      <span class="ji-audio-meta">
+        <span class="ji-audio-eyebrow">{{ isPlayingMusic ? 'SONANDO AHORA' : 'AMBIENTACIÓN' }}</span>
+        <span class="ji-audio-label">{{ isPlayingMusic ? 'L’Orangerie Suite' : 'Activar Música' }}</span>
+      </span>
+      <span *ngIf="isPlayingMusic" class="ji-eq-bars" aria-hidden="true">
+        <i></i><i></i><i></i><i></i>
+      </span>
+    </button>
+  </aside>
+
+  <!-- 2. PUERTAS TRÍPTICO DE INVERNADERO & SELLO DE LACRE (PÚBLICO O ACCESO VIP) -->
+  <section *ngIf="!gatefoldOpened" class="ji-gatefold-stage" [class.is-opening]="gatefoldAnimating">
+    <!-- Puerta Izquierda -->
+    <div class="ji-gate-panel ji-gate-left">
+      <div class="ji-gate-ironwork"></div>
+      <div class="ji-gate-watermark">L’ORANGERIE</div>
+    </div>
+
+    <!-- Puerta Derecha -->
+    <div class="ji-gate-panel ji-gate-right">
+      <div class="ji-gate-ironwork"></div>
+      <div class="ji-gate-watermark">IMPÉRIALE</div>
+    </div>
+
+    <!-- Placa Central & Sello de Lacre Botánico -->
+    <div class="ji-gate-centerpiece">
+      <div class="ji-gate-card">
+        <span class="ji-gate-edition">ÉDITION NUPTIALE · JARDÍN DE INVIERNO</span>
+        <h2 class="ji-gate-title">{{ invitation?.content?.headline || event?.title || 'Nuestra Boda' }}</h2>
+        <p class="ji-gate-date" *ngIf="event?.date">{{ event?.date | date:'longDate':'':'es' }}</p>
+
+        <!-- Caso A: Acceso Privado con Lista VIP -->
+        <div *ngIf="requiresGuestValidation" class="ji-gate-vip-box">
+          <p class="ji-gate-desc">Ingresa tu correo electrónico o teléfono registrado para abrir las puertas del invernadero y revelar tu pase personal.</p>
+          <input type="text" [(ngModel)]="guestAccessSingleInput" placeholder="Correo electrónico o teléfono..."
+            class="ji-input" (keyup.enter)="onOpenGatefold()">
+          <button type="button" class="ji-btn ji-btn-cypress ji-btn-full" (click)="onOpenGatefold()" [disabled]="checkingGuest">
+            <span>{{ checkingGuest ? 'Verificando invitación...' : 'Desbloquear Invitación' }}</span>
+          </button>
+          <p *ngIf="error" class="ji-alert ji-alert-error">{{ error }}</p>
+        </div>
+
+        <!-- Caso B: Invitación Abierta con Sello de Lacre Táctil -->
+        <div *ngIf="!requiresGuestValidation" class="ji-gate-seal-action">
+          <button type="button" class="ji-wax-seal-btn" (click)="onOpenGatefold()" aria-label="Abrir invitación">
+            <img src="assets/boda-jardin-imperial/wax-seal-botanical.svg" alt="Sello Botánico" class="ji-wax-seal-img">
+            <span class="ji-wax-pulse"></span>
+          </button>
+          <span class="ji-seal-caption">Toca el sello de lacre para abrir la invitación</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO EDITORIAL PRINCIPAL -->
+  <main *ngIf="gatefoldOpened" class="ji-invitation-body">
+
+    <!-- ÍNDICE EDITORIAL FLOTANTE COMPACTO -->
+    <nav class="ji-chapter-nav" aria-label="Capítulos de la invitación">
+      <div class="ji-chapter-nav-inner">
+        <button type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-hero'" (click)="scrollToChapter('ji-hero')">Portada</button>
+        <button *ngIf="isSectionActive('story')" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-story'" (click)="scrollToChapter('ji-story')">Historia</button>
+        <button *ngIf="isSectionActive('locations') && displayLocations.length" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-locations'" (click)="scrollToChapter('ji-locations')">Sedes</button>
+        <button *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-itinerary'" (click)="scrollToChapter('ji-itinerary')">Programa</button>
+        <button *ngIf="isSectionActive('rsvp')" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-rsvp'" (click)="scrollToChapter('ji-rsvp')">RSVP</button>
+        <button *ngIf="isSectionActive('giftRegistry') || isSectionActive('digitalEnvelope')" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-gifts'" (click)="scrollToChapter('ji-gifts')">Regalos</button>
+        <button *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-gallery'" (click)="scrollToChapter('ji-gallery')">Galería</button>
+        <button *ngIf="isSectionActive('dedications') || isSectionActive('songRequests') || isSectionActive('collectiveAlbum')" type="button" class="ji-nav-pill" [class.active]="activeNavChapter === 'ji-community'" (click)="scrollToChapter('ji-community')">Deseos &amp; DJ</button>
+      </div>
+    </nav>
+
+    <!-- 3. PORTADA HERO: L’ORANGERIE BOTÁNICA & RAYOS DE SOL -->
+    <header *ngIf="isSectionActive('hero')" id="ji-hero" class="ji-hero-section" data-section-key="hero">
+      <canvas #pollenCanvas class="ji-pollen-canvas" aria-hidden="true"></canvas>
+
+      <div class="ji-hero-masthead" data-aos="fade-down">
+        <span class="ji-masthead-left">VOL. I · ÉDITION FINE-ART</span>
+        <span class="ji-masthead-dot">✦</span>
+        <span class="ji-masthead-right">JARDÍN IMPERIAL · L’ORANGERIE</span>
+      </div>
+
+      <div class="ji-hero-arch-frame" data-aos="zoom-in" data-aos-duration="950">
+        <img src="assets/boda-jardin-imperial/arch-botanical-frame.svg" alt="" aria-hidden="true" class="ji-arch-svg-overlay">
+
+        <div class="ji-hero-inner-content">
+          <img src="assets/boda-jardin-imperial/crest-orangery.svg" alt="Escudo Jardín Imperial" class="ji-hero-crest">
+
+          <span class="ji-hero-kicker">Tenemos el honor de invitarte a nuestra boda</span>
+          <h1 class="ji-hero-headline">{{ invitation?.content?.headline || event?.title || 'Sofía & Mateo' }}</h1>
+          <p class="ji-hero-subheadline">{{ invitation?.content?.subheadline || 'Donde el sol acaricia los olivos comienza nuestra eternidad' }}</p>
+
+          <!-- Retrato Opcional en Arco de Invernadero si hay Foto de Portada -->
+          <div *ngIf="coverPhotoUrl" class="ji-hero-portrait-arch" (click)="openLightbox(coverPhotoUrl)">
+            <img [src]="coverPhotoUrl" [alt]="invitation?.content?.headline || 'Portada'" class="ji-hero-portrait-img">
+          </div>
+
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+          <div class="ji-date-plaque">
+            <span class="ji-date-ornament">❧</span>
+            <span class="ji-date-label">{{ event?.date ? (event?.date | date:'fullDate':'':'es') : 'Sábado · Celebración de Gala' }}</span>
+            <span class="ji-date-ornament">❧</span>
+          </div>
+
+          <!-- CUENTA REGRESIVA EN MEDALLONES DE RELOJ SOLAR -->
+          <div *ngIf="isSectionActive('countdown')" class="ji-countdown-grid" data-aos="fade-up" data-aos-delay="150">
+            <div class="ji-cd-medallion">
+              <span class="ji-cd-number">{{ countdown.days }}</span>
+              <span class="ji-cd-unit">Días</span>
+            </div>
+            <div class="ji-cd-medallion">
+              <span class="ji-cd-number">{{ countdown.hours }}</span>
+              <span class="ji-cd-unit">Horas</span>
+            </div>
+            <div class="ji-cd-medallion">
+              <span class="ji-cd-number">{{ countdown.minutes }}</span>
+              <span class="ji-cd-unit">Minutos</span>
+            </div>
+            <div class="ji-cd-medallion">
+              <span class="ji-cd-number">{{ countdown.seconds }}</span>
+              <span class="ji-cd-unit">Segundos</span>
+            </div>
+          </div>
+
+          <div class="ji-hero-cta-row">
+            <button type="button" class="ji-btn ji-btn-cypress" (click)="addToGoogleCalendar()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Agendar Fecha</span>
+            </button>
+            <button type="button" class="ji-btn ji-btn-outline" (click)="shareOnWhatsApp()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+              <span>Compartir</span>
+            </button>
+            <button *ngIf="!requiresGuestValidation" type="button" class="ji-btn ji-btn-ghost-sm" (click)="replayGatefold()" title="Ver animación de apertura de puertas">
+              <span>✦ Ver Apertura</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4. PASE PERSONAL VIP ESTILO BOLETO DE INVERNADERO REAL -->
+    <section *ngIf="verifiedGuest" class="ji-section ji-pass-section" data-aos="fade-up">
+      <div class="ji-container">
+        <div class="ji-vip-ticket">
+          <div class="ji-vip-ticket-left">
+            <span class="ji-ticket-badge">PASE PERSONAL DE HONOR · VIP</span>
+            <h3 class="ji-ticket-guest">{{ verifiedGuest.name }}</h3>
+            <p class="ji-ticket-note">Presenta este pase digital en la recepción del evento para tu acceso preferencial.</p>
+
+            <div class="ji-ticket-meta-grid">
+              <div class="ji-ticket-stat" *ngIf="verifiedGuest.tableName">
+                <span class="ji-stat-lbl">Mesa Asignada</span>
+                <strong class="ji-stat-val">{{ verifiedGuest.tableName }}</strong>
+              </div>
+              <div class="ji-ticket-stat" *ngIf="verifiedGuest.seatLabel">
+                <span class="ji-stat-lbl">Lugar</span>
+                <strong class="ji-stat-val">{{ verifiedGuest.seatLabel }}</strong>
+              </div>
+              <div class="ji-ticket-stat">
+                <span class="ji-stat-lbl">Pases Reservados</span>
+                <strong class="ji-stat-val">{{ (verifiedGuest.allowedCompanions || 0) + 1 }} personas</strong>
+              </div>
+            </div>
+
+            <div class="ji-ticket-actions">
+              <button type="button" class="ji-btn ji-btn-cypress ji-btn-sm" (click)="downloadPassOutput.emit()">
+                <span>Descargar Pase</span>
+              </button>
+              <button type="button" class="ji-btn ji-btn-outline ji-btn-sm" (click)="resetGuestOutput.emit()">
+                <span>Cambiar Invitado</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="guestPassQrUrl" class="ji-vip-ticket-stub" (click)="openLightbox(guestPassQrUrl)">
+            <div class="ji-qr-frame">
+              <img [src]="guestPassQrUrl" alt="Código QR de Acceso" class="ji-qr-img">
+            </div>
+            <span class="ji-qr-caption">Toca para ampliar QR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. CAPÍTULO I: NUESTRA HISTORIA & ANFITRIONES -->
+    <section *ngIf="isSectionActive('story')" id="ji-story" class="ji-section" data-section-key="story">
+      <div class="ji-container">
+        <article class="ji-editorial-sheet" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CAPÍTULO I · NUESTRA HISTORIA</span>
+          <h2 class="ji-section-title">{{ invitation?.content?.storyTitle || 'Dos Caminos, Un Mismo Jardín' }}</h2>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+          <p class="ji-story-prose">{{ invitation?.content?.storyBody || invitation?.content?.message || 'Entre risas cómplices, promesas serenas y sueños compartidos descubrimos que el hogar más hermoso es caminar de la mano. Hoy abrimos las puertas de este día irrepetible para celebrarlo junto a las personas que más amamos.' }}</p>
+
+          <div *ngIf="event?.hosts?.length" class="ji-hosts-panel">
+            <span class="ji-hosts-eyebrow">Con el amor y la bendición de nuestros padres &amp; anfitriones</span>
+            <div class="ji-hosts-names">
+              <span *ngFor="let host of event?.hosts" class="ji-host-item">{{ host }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="hasSectionMusic('story')" class="ji-section-audio-wrap">
+            <button type="button" class="ji-sec-audio-btn" (click)="toggleSectionMusic('story')">
+              <span class="ji-sec-audio-dot" [class.playing]="isSectionMusicPlaying('story')"></span>
+              <span>{{ isSectionMusicPlaying('story') ? 'Pausar melodía del capítulo' : 'Escuchar melodía de nuestra historia' }}</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 6. CAPÍTULO II: SEDES & ARQUITECTURA DEL EVENTO -->
+    <section *ngIf="isSectionActive('locations') && displayLocations.length" id="ji-locations" class="ji-section ji-section-tinted" data-section-key="locations">
+      <div class="ji-container">
+        <div class="ji-section-header" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CAPÍTULO II · COORDENADAS</span>
+          <h2 class="ji-section-title">Sedes de la Celebración</h2>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+        </div>
+
+        <div class="ji-locations-grid">
+          <article *ngFor="let loc of displayLocations; let idx = index" class="ji-venue-card" data-aos="fade-up" [attr.data-aos-delay]="idx * 120">
+            <div class="ji-venue-arch-top">
+              <span class="ji-venue-index">0{{ idx + 1 }}</span>
+              <span class="ji-venue-type">{{ loc.type || 'Ceremonia & Recepción' }}</span>
+            </div>
+            <div class="ji-venue-body">
+              <h3 class="ji-venue-name">{{ loc.name }}</h3>
+              <p *ngIf="loc.time" class="ji-venue-time">Cita: <strong>{{ loc.time }}</strong></p>
+              <p *ngIf="loc.address" class="ji-venue-address">{{ loc.address }}</p>
+
+              <div class="ji-venue-actions">
+                <a *ngIf="loc.mapUrl" [href]="loc.mapUrl" target="_blank" rel="noopener noreferrer" class="ji-btn ji-btn-cypress ji-btn-sm">
+                  <span>Ver en Google Maps</span>
+                </a>
+                <a *ngIf="loc.wazeUrl" [href]="loc.wazeUrl" target="_blank" rel="noopener noreferrer" class="ji-btn ji-btn-outline ji-btn-sm">
+                  <span>Abrir en Waze</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. CAPÍTULO III: PROGRAMA / ITINERARIO BOTÁNICO -->
+    <section *ngIf="isSectionActive('itinerary') && invitation?.content?.itinerary?.length" id="ji-itinerary" class="ji-section" data-section-key="itinerary">
+      <div class="ji-container">
+        <div class="ji-editorial-sheet" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CAPÍTULO III · PROGRAMA</span>
+          <h2 class="ji-section-title"> Orden de la Velada</h2>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+          <div class="ji-timeline">
+            <div *ngFor="let item of invitation?.content?.itinerary; let idx = index" class="ji-timeline-item" data-aos="fade-up" [attr.data-aos-delay]="idx * 90">
+              <div class="ji-tl-time">
+                <span>{{ item.time }}</span>
+              </div>
+              <div class="ji-tl-stem">
+                <span class="ji-tl-leaf-node">✦</span>
+              </div>
+              <div class="ji-tl-card">
+                <h4 class="ji-tl-title">{{ item.title }}</h4>
+                <p *ngIf="item.description" class="ji-tl-desc">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. CAPÍTULO IV: CÓDIGO DE VESTIMENTA & PALETA SUGERIDA -->
+    <section *ngIf="isSectionActive('dressCode') && invitation?.content?.dressCode" class="ji-section ji-section-tinted" data-section-key="dressCode">
+      <div class="ji-container">
+        <div class="ji-editorial-sheet ji-dress-sheet" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CAPÍTULO IV · PROTOCOLO &amp; ESTILO</span>
+          <h2 class="ji-section-title">Código de Vestimenta</h2>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+          <div class="ji-dress-badge">{{ invitation?.content?.dressCode }}</div>
+          <p class="ji-dress-desc">
+            {{ invitation?.content?.dressCodeDescription || 'Inspirado en la elegancia atemporal de un jardín europeo. Agradecemos reservar el blanco, marfil y alabastro exclusivamente para la novia.' }}
+          </p>
+
+          <div class="ji-swatch-row" aria-label="Tonos armónicos sugeridos">
+            <div *ngFor="let sw of dressPaletteSwatches" class="ji-swatch-item">
+              <span class="ji-swatch-circle" [style.backgroundColor]="sw.hex"></span>
+              <span class="ji-swatch-label">{{ sw.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. CAPÍTULO V: CONFIRMACIÓN DE ASISTENCIA (RSVP) -->
+    <section *ngIf="isSectionActive('rsvp')" id="ji-rsvp" class="ji-section" data-section-key="rsvp">
+      <div class="ji-container">
+        <div class="ji-editorial-sheet ji-rsvp-sheet" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CAPÍTULO V · RÉPONDEZ S’IL VOUS PLAÎT</span>
+          <h2 class="ji-section-title">Confirmación de Asistencia</h2>
+          <p class="ji-rsvp-deadline" *ngIf="invitation?.rsvpSettings?.deadline">
+            Agradecemos confirmar antes del <strong>{{ invitation?.rsvpSettings?.deadline | date:'longDate':'':'es' }}</strong>
+          </p>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+          <div class="ji-rsvp-form-host">
+            <app-universal-rsvp-form
+              [invitation]="invitation"
+              [verifiedGuest]="verifiedGuest"
+              [rsvp]="rsvp"
+              [customAnswers]="customAnswers"
+              [(companionNamesText)]="companionNamesText"
+              [(declineConfirmed)]="declineConfirmed"
+              [sending]="sending"
+              [success]="success"
+              [error]="error"
+              [darkTheme]="false"
+              (submitRsvp)="onSubmitRsvp()">
+            </app-universal-rsvp-form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 & 11. CAPÍTULO VI: MESA DE REGALOS & LLUVIA DE SOBRES -->
+    <div id="ji-gifts">
+      <!-- 10. Mesa de Regalos -->
+      <section *ngIf="isSectionActive('giftRegistry') && invitation?.content?.giftRegistry?.length" class="ji-section ji-section-tinted" data-section-key="giftRegistry">
+        <div class="ji-container">
+          <div class="ji-section-header" data-aos="fade-up">
+            <span class="ji-chapter-numeral">CAPÍTULO VI · OBSEQUIOS</span>
+            <h2 class="ji-section-title">Mesa de Regalos</h2>
+            <p class="ji-section-lead">Su presencia es nuestro mejor regalo; si desean tener un detalle con nosotros, hemos dispuesto las siguientes opciones.</p>
+            <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+          </div>
+
+          <div class="ji-gifts-grid">
+            <article *ngFor="let reg of invitation?.content?.giftRegistry" class="ji-gift-card" data-aos="fade-up">
+              <div class="ji-gift-logo-box">
+                <img *ngIf="getStoreLogo(reg)" [src]="getStoreLogo(reg)" [alt]="reg.store || reg.title" class="ji-store-logo">
+                <span *ngIf="!getStoreLogo(reg)" class="ji-store-fallback">{{ reg.store || reg.title }}</span>
+              </div>
+              <h4 class="ji-gift-title">{{ reg.title || reg.store }}</h4>
+              <p *ngIf="reg.note" class="ji-gift-note">{{ reg.note }}</p>
+              <a *ngIf="reg.url" [href]="reg.url" target="_blank" rel="noopener noreferrer" class="ji-btn ji-btn-cypress ji-btn-sm">
+                <span>Visitar Mesa</span>
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. Sobre Digital / Datos Bancarios -->
+      <section *ngIf="isSectionActive('digitalEnvelope') && invitation?.content?.giftSettings?.showEnvelope !== false && (invitation?.content?.digitalEnvelope?.bank || invitation?.content?.digitalEnvelope?.clabe || invitation?.content?.digitalEnvelope?.account || invitation?.content?.digitalEnvelope?.qrImageUrl || invitation?.content?.digitalEnvelope?.note)"
+        class="ji-section" data-section-key="digitalEnvelope">
+        <div class="ji-container">
+          <div class="ji-editorial-sheet ji-envelope-sheet" data-aos="fade-up">
+            <span class="ji-chapter-numeral">DETALLE DIGITAL · LLUVIA DE SOBRES</span>
+            <h2 class="ji-section-title">Sobre Nupcial Digital</h2>
+            <p *ngIf="invitation?.content?.digitalEnvelope?.note" class="ji-section-lead">{{ invitation?.content?.digitalEnvelope?.note }}</p>
+            <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+            <div class="ji-bank-grid">
+              <div *ngIf="invitation?.content?.digitalEnvelope?.bank" class="ji-bank-cell">
+                <span class="ji-bank-lbl">Institución Bancaria</span>
+                <strong class="ji-bank-val">{{ invitation?.content?.digitalEnvelope?.bank }}</strong>
+              </div>
+              <div *ngIf="invitation?.content?.digitalEnvelope?.holder" class="ji-bank-cell">
+                <span class="ji-bank-lbl">Beneficiario</span>
+                <strong class="ji-bank-val">{{ invitation?.content?.digitalEnvelope?.holder }}</strong>
+              </div>
+              <div *ngIf="invitation?.content?.digitalEnvelope?.clabe" class="ji-bank-cell ji-bank-cell-wide">
+                <span class="ji-bank-lbl">CLABE Interbancaria</span>
+                <div class="ji-copy-inline">
+                  <strong class="ji-bank-val ji-mono">{{ invitation?.content?.digitalEnvelope?.clabe }}</strong>
+                  <button type="button" class="ji-copy-chip" (click)="copyText(invitation?.content?.digitalEnvelope?.clabe, 'clabe')">
+                    {{ copiedClabe ? '✓ Copiado' : 'Copiar CLABE' }}
+                  </button>
+                </div>
+              </div>
+              <div *ngIf="invitation?.content?.digitalEnvelope?.account" class="ji-bank-cell ji-bank-cell-wide">
+                <span class="ji-bank-lbl">Número de Cuenta / Tarjeta</span>
+                <div class="ji-copy-inline">
+                  <strong class="ji-bank-val ji-mono">{{ invitation?.content?.digitalEnvelope?.account }}</strong>
+                  <button type="button" class="ji-copy-chip" (click)="copyText(invitation?.content?.digitalEnvelope?.account, 'account')">
+                    {{ copiedAccount ? '✓ Copiado' : 'Copiar Cuenta' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="invitation?.content?.digitalEnvelope?.qrImageUrl" class="ji-bank-qr-wrap" (click)="openLightbox(invitation?.content?.digitalEnvelope?.qrImageUrl || '')">
+              <img [src]="invitation?.content?.digitalEnvelope?.qrImageUrl" alt="Código QR de transferencia" class="ji-bank-qr-img">
+              <span>Toca el código QR para pantalla completa</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 12. HOSPEDAJE SUGERIDO -->
+    <section *ngIf="isSectionActive('lodging') && invitation?.content?.lodging?.length" class="ji-section ji-section-tinted" data-section-key="lodging">
+      <div class="ji-container">
+        <div class="ji-section-header" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CONCIERGE DE VIAJE</span>
+          <h2 class="ji-section-title">Hospedaje Recomendado</h2>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+        </div>
+
+        <div class="ji-lodging-grid">
+          <article *ngFor="let hotel of invitation?.content?.lodging" class="ji-hotel-card" data-aos="fade-up">
+            <span class="ji-hotel-tag">ESTANCIA SUGERIDA</span>
+            <h3 class="ji-hotel-name">{{ hotel.name }}</h3>
+            <p *ngIf="hotel.description" class="ji-hotel-desc">{{ hotel.description }}</p>
+            <a *ngIf="hotel.url" [href]="hotel.url" target="_blank" rel="noopener noreferrer" class="ji-btn ji-btn-outline ji-btn-sm">
+              <span>Ver Tarifas &amp; Reservar</span>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. GALERÍA EDITORIAL EN ARCOS -->
+    <section *ngIf="isSectionActive('gallery') && invitation?.content?.gallery?.length" id="ji-gallery" class="ji-section" data-section-key="gallery">
+      <div class="ji-container">
+        <div class="ji-section-header" data-aos="fade-up">
+          <span class="ji-chapter-numeral">CAPÍTULO VII · RETRATOS</span>
+          <h2 class="ji-section-title">Galería Editorial</h2>
+          <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+        </div>
+
+        <div class="ji-gallery-mosaic">
+          <figure *ngFor="let photo of invitation?.content?.gallery; let idx = index"
+            class="ji-gallery-frame" [class.is-arched]="idx % 3 === 0"
+            (click)="openLightbox(photo)" data-aos="zoom-in" [attr.data-aos-delay]="(idx % 4) * 80">
+            <img [src]="photo" alt="Retrato de nuestra historia" class="ji-gallery-img" loading="lazy">
+            <figcaption class="ji-gallery-overlay">
+              <span>Ampliar Fotografía</span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. COMUNIDAD EN VIVO: ÁLBUM COLECTIVO, DEDICATORIAS & DJ -->
+    <div id="ji-community">
+      <!-- A. Álbum Colectivo en Vivo -->
+      <section *ngIf="isSectionActive('collectiveAlbum')" class="ji-section ji-section-tinted" data-section-key="collectiveAlbum">
+        <div class="ji-container">
+          <div class="ji-editorial-sheet" data-aos="fade-up">
+            <span class="ji-chapter-numeral">MEMORIAS COMPARTIDAS</span>
+            <h2 class="ji-section-title">Álbum Colectivo en Vivo</h2>
+            <p class="ji-section-lead">Captura la magia desde tu mirada y súbela en tiempo real a nuestro álbum nupcial.</p>
+
+            <div class="ji-album-uploader">
+              <input type="file" accept="image/*" (change)="onAlbumFileChange($event)" id="ji-album-file-input" class="ji-sr-only">
+              <label for="ji-album-file-input" class="ji-btn ji-btn-outline">
+                <span>{{ selectedAlbumFile ? selectedAlbumFile.name : 'Seleccionar Fotografía' }}</span>
+              </label>
+              <button *ngIf="selectedAlbumFile" type="button" class="ji-btn ji-btn-cypress" (click)="uploadSelectedPhoto()" [disabled]="uploadingAlbum">
+                <span>{{ uploadingAlbum ? 'Subiendo al álbum...' : 'Publicar en el Álbum' }}</span>
+              </button>
+            </div>
+            <p *ngIf="albumMessage" class="ji-alert ji-alert-success">{{ albumMessage }}</p>
+
+            <div *ngIf="publicAlbumAssets?.length" class="ji-polaroid-grid">
+              <figure *ngFor="let asset of publicAlbumAssets" class="ji-polaroid-card" (click)="openLightbox(asset.url)">
+                <img [src]="asset.url" alt="Foto compartida" class="ji-polaroid-img" loading="lazy">
+                <figcaption *ngIf="asset.uploaderName">Capturada por {{ asset.uploaderName }}</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- B. Libro de Firmas & Dedicatorias -->
+      <section *ngIf="isSectionActive('dedications')" class="ji-section" data-section-key="dedications">
+        <div class="ji-container">
+          <div class="ji-editorial-sheet" data-aos="fade-up">
+            <span class="ji-chapter-numeral">LIBRO DE HONOR</span>
+            <h2 class="ji-section-title">Dedicatorias &amp; Buenos Deseos</h2>
+            <img src="assets/boda-jardin-imperial/divider-olive-gold.svg" alt="" aria-hidden="true" class="ji-divider-svg">
+
+            <form (ngSubmit)="onSubmitDedication()" class="ji-dedication-form">
+              <div class="ji-field-group">
+                <label for="jiDedName">Tu Nombre o Familia *</label>
+                <input id="jiDedName" type="text" [(ngModel)]="dedication.publicName" name="jiDedName" required class="ji-input" placeholder="Ej. Familia Morales...">
+              </div>
+              <div class="ji-field-group">
+                <label for="jiDedMsg">Mensaje para los Novios *</label>
+                <textarea id="jiDedMsg" [(ngModel)]="dedication.message" name="jiDedMsg" rows="3" required class="ji-textarea" placeholder="Escribe unas palabras que atesoraremos por siempre..."></textarea>
+              </div>
+              <button type="submit" class="ji-btn ji-btn-cypress" [disabled]="sending">
+                <span>{{ sending ? 'Enviando...' : 'Estampar Dedicatoria' }}</span>
+              </button>
+              <p *ngIf="dedicationMessage" class="ji-alert ji-alert-success">{{ dedicationMessage }}</p>
+            </form>
+
+            <div *ngIf="dedications?.length" class="ji-dedications-grid">
+              <blockquote *ngFor="let item of dedications" class="ji-dedication-note">
+                <p>“{{ item.message }}”</p>
+                <footer>— {{ item.publicName }}</footer>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- C. Curaduría Musical & Peticiones al DJ -->
+      <section *ngIf="isSectionActive('songRequests')" class="ji-section ji-section-tinted" data-section-key="songRequests">
+        <div class="ji-container">
+          <div class="ji-editorial-sheet" data-aos="fade-up">
+            <span class="ji-chapter-numeral">CURADURÍA MUSICAL · PISTA DE BAILE</span>
+            <h2 class="ji-section-title">Sugiere una Canción al DJ</h2>
+            <p class="ji-section-lead">¿Qué melodía hará que te levantes a celebrar con nosotros toda la noche?</p>
+
+            <div class="ji-dj-box">
+              <div class="ji-dj-search-bar">
+                <input type="text" [(ngModel)]="songSearchQuery" placeholder="Busca por canción, artista o enlace..."
+                  class="ji-input" (keyup.enter)="onSearchSong()">
+                <button type="button" class="ji-btn ji-btn-cypress" (click)="onSearchSong()" [disabled]="searchingSongs">
+                  <span>{{ searchingSongs ? 'Buscando...' : 'Buscar Tema' }}</span>
+                </button>
+              </div>
+
+              <div *ngIf="songSearchResults?.length" class="ji-song-results">
+                <div *ngFor="let s of songSearchResults" class="ji-song-row" (click)="onSelectSong(s)">
+                  <img [src]="s.thumbnailUrl" alt="Portada" class="ji-song-thumb">
+                  <div class="ji-song-info">
+                    <strong>{{ s.title }}</strong>
+                    <span>{{ s.artist }}</span>
+                  </div>
+                  <button type="button" class="ji-btn ji-btn-outline ji-btn-xs">Elegir</button>
+                </div>
+              </div>
+
+              <div *ngIf="songRequest.title" class="ji-selected-song-panel">
+                <div class="ji-selected-song-header">
+                  <span class="ji-song-pill">SELECCIONADA</span>
+                  <strong>{{ songRequest.title }}</strong>
+                  <span *ngIf="songRequest.artist">· {{ songRequest.artist }}</span>
+                </div>
+                <input *ngIf="allowDedicationsEnabled" type="text" [(ngModel)]="songRequest.dedication"
+                  placeholder="Nota opcional o dedicatoria para el DJ..." class="ji-input">
+                <button type="button" class="ji-btn ji-btn-cypress" (click)="onSubmitSongRequest()" [disabled]="songRequestSending">
+                  <span>{{ songRequestSending ? 'Enviando al DJ...' : 'Enviar Petición Musical' }}</span>
+                </button>
+              </div>
+
+              <p *ngIf="songRequestMessage" class="ji-alert ji-alert-success">{{ songRequestMessage }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 15. COLOFÓN EDITORIAL (FOOTER) -->
+    <footer class="ji-footer">
+      <img src="assets/boda-jardin-imperial/crest-orangery.svg" alt="" aria-hidden="true" class="ji-footer-crest">
+      <div class="ji-footer-names">{{ invitation?.content?.headline || event?.title || 'Nuestra Celebración' }}</div>
+      <p class="ji-footer-quote">Gracias por florecer junto a nosotros en el día más luminoso de nuestra historia.</p>
+      <div *ngIf="!invitation?.content?.hideBranding" class="ji-footer-colophon">
+        <span>VELISSE FINE-ART PRESS · JARDÍN IMPERIAL L’ORANGERIE</span>
+      </div>
+    </footer>
+
+  </main>
+</div>

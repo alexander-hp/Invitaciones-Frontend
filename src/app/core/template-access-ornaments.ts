@@ -263,6 +263,16 @@ export const TEMPLATE_VISUAL_ENHANCEMENTS: Record<string, TemplateAccessVisualEn
     secondaryGlowColor: 'rgba(136, 19, 55, 0.38)',
     footerLabel: 'MIS XV BORGOÑA REAL · CORONA IMPERIAL',
     isDark: true
+  },
+  'boda-jardin-imperial': {
+    cornerStyle: 'botanical',
+    frameVariant: 'botanical-frame',
+    dividerStyle: 'laurel',
+    backdropPattern: 'botanical',
+    ambientGlowColor: 'rgba(182, 139, 58, 0.28)',
+    secondaryGlowColor: 'rgba(29, 53, 40, 0.22)',
+    footerLabel: 'JARDÍN IMPERIAL · L’ORANGERIE BOTÁNICA',
+    isDark: false
   }
 };
 

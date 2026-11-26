@@ -10,6 +10,7 @@ export interface CompleteDesignPreset {
 }
 
 export const COMPLETE_DESIGN_PRESETS: CompleteDesignPreset[] = [
+  { key: 'boda-jardin-imperial', name: 'Jard\u00edn Imperial \u00b7 L\u2019Orangerie: Invernadero Bot\u00e1nico & Fine-Art', description: 'Est\u00e9tica Quiet-Luxury en papel algod\u00f3n alabastro, verde cipr\u00e9s, arco de invernadero y detalles en oro champagne.', category: 'boda', colors: ['#f7f3eb', '#1d3528', '#b68b3a'] },
   { key: 'boda-girasoles', name: 'Elegancia R\u00fastica: Girasoles Radiantes, Madera & Anillos Dorados', description: 'Calidez campestre iluminada por girasoles dorados, madera r\u00fastica, alianzas entrelazadas y tonos miel.', category: 'boda', colors: ['#2d2112', '#faf3e8', '#d49b27'] },
   { key: 'boda-navy-blue', name: 'Navy Blue & Gold: Azul Noche, Acuarela & Flores Nobles', description: 'Elegancia nocturna en acuarela azul medianoche, divisores florales ba\u00f1ados en oro fino y cristal marino.', category: 'boda', colors: ['#0d1b2a', '#f4efe6', '#d4af37'] },
   { key: 'palazzo-orangerie', name: 'Villa L\u2019Orangerie \u00b7 Atelier', description: 'Exclusiva Argon 4: Fresco italiano, cipreses nocturnos, arcos barrocos en oro viejo, sellos de lacre y 16 cap\u00edtulos editoriales.', category: 'general', colors: ['#152820', '#f6efe2', '#c89b3c'] },
@@ -29,6 +30,7 @@ type DesignPalette = {
 };
 
 const PALETTES: Record<string, DesignPalette> = {
+  'boda-jardin-imperial': { background: '#f7f3eb', foreground: '#1d3528', accent: '#b68b3a', secondary: '#e8efe8', muted: '#4a6b58', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', button: '#1d3528', buttonText: '#fcfaf5' },
   'boda-girasoles': { background: '#2d2112', foreground: '#faf3e8', accent: '#d49b27', secondary: '#3c2b18', muted: '#e5d4b8', headingFont: "'Cormorant Garamond', serif", bodyFont: 'Montserrat, sans-serif', button: '#d49b27', buttonText: '#2d2112' },
   'boda-navy-blue': { background: '#0d1b2a', foreground: '#f8f5ef', accent: '#d4af37', secondary: '#15283d', muted: '#cbd5e1', headingFont: "'Cinzel', serif", bodyFont: 'Montserrat, sans-serif', button: '#d4af37', buttonText: '#0d1b2a' },
   'palazzo-orangerie': { background: '#f6efe2', foreground: '#152820', accent: '#c89b3c', secondary: '#13221d', muted: '#52635a', headingFont: "'Cinzel Decorative', serif", bodyFont: 'Montserrat, sans-serif', button: '#152820', buttonText: '#f6efe2' },
@@ -86,7 +88,19 @@ export function buildCompleteDesign(
   };
   const rule = (x: number, y: number, width: number) => add('shape', '', x, y, width, .4, { backgroundColor: palette.accent, shapeKind: 'rectangle' }, { name: 'Linea decorativa' });
 
-  if (variant === 'boda-girasoles') {
+  if (variant === 'boda-jardin-imperial') {
+    hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-jardin-imperial/orangery-bg-pattern.svg', overlay: 0 };
+    add('image', '', 4, 3, 92, 94, { objectFit: 'contain', preserveAspectRatio: false, backgroundColor: 'transparent' }, { url: 'assets/boda-jardin-imperial/arch-botanical-frame.svg', name: 'Arco de Invernadero' });
+    add('image', '', 36, 9, 28, 16, { objectFit: 'contain', preserveAspectRatio: true, backgroundColor: 'transparent' }, { url: 'assets/boda-jardin-imperial/crest-orangery.svg', name: 'Escudo L’Orangerie' });
+    add('text', 'JARDÍN IMPERIAL · L’ORANGERIE', 12, 27, 76, 4, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 3 }, { name: 'Rótulo editorial' });
+    add('text', title, 8, 33, 84, 15, { ...titleStyle, fontSize: 46, color: palette.foreground, fontWeight: 600 }, { name: 'Nombres de los novios' });
+    if (coverUrl) {
+      add('image', '', 26, 49, 48, 22, { objectFit: 'cover', preserveAspectRatio: false, frameEnabled: true, imageMask: 'arch', padding: 6, backgroundColor: '#fcfaf5', borderRadius: 120, borderWidth: 1.5, borderColor: '#b68b3a', borderStyle: 'solid' }, { url: coverUrl, name: 'Retrato en arco' });
+    } else {
+      add('image', '', 24, 52, 52, 6, { objectFit: 'contain', preserveAspectRatio: true, backgroundColor: 'transparent' }, { url: 'assets/boda-jardin-imperial/divider-olive-gold.svg', name: 'Divisor olivo & oro' });
+    }
+    if (event?.date) add('text', '{{event.date}}', 10, 74, 80, 5, { ...bodyStyle, color: palette.foreground, fontSize: 13, fontWeight: 600, letterSpacing: 2.5 }, { name: 'Fecha del evento' });
+  } else if (variant === 'boda-girasoles') {
     hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-girasoles/portada-bg-clean.jpg', overlay: 0.35 };
     add('text', 'Boda de', 10, 6, 80, 5, { ...bodyStyle, color: '#f5efe6', fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 500, letterSpacing: 2 }, { name: 'Subtítulo (Boda de)' });
     add('text', title, 6, 13, 88, 13, { ...titleStyle, fontSize: 46, color: '#faf3e8', fontWeight: 700 }, { name: 'Nombres de los novios' });
@@ -165,13 +179,13 @@ export function buildCompleteDesign(
   const introEyebrow = variant === 'haute-couture'
     ? 'NUESTRA CELEBRACIÓN'
     : variant === 'xv-burgundy'
-    ? 'MIS QUINCE AÑOS'
-    : variant === 'birthday' ? 'NOS VEMOS EN LA FIESTA' : variant === 'baptism' ? 'UN DÍA PARA COMPARTIR' : 'NOS VEMOS PRONTO';
+      ? 'MIS QUINCE AÑOS'
+      : variant === 'birthday' ? 'NOS VEMOS EN LA FIESTA' : variant === 'baptism' ? 'UN DÍA PARA COMPARTIR' : 'NOS VEMOS PRONTO';
   const introFallback = variant === 'haute-couture'
     ? 'Nos complace invitarte a ser parte de este momento inolvidable'
     : variant === 'xv-burgundy'
-    ? 'Te invito a compartir conmigo una noche mágica e inolvidable'
-    : variant === 'birthday' ? 'Acompáñanos a festejar' : variant === 'baptism' ? 'Celebremos este momento en familia' : 'Acompáñanos a celebrar';
+      ? 'Te invito a compartir conmigo una noche mágica e inolvidable'
+      : variant === 'birthday' ? 'Acompáñanos a festejar' : variant === 'baptism' ? 'Celebremos este momento en familia' : 'Acompáñanos a celebrar';
   if (variant === 'xv-burgundy') {
     intro.background = { ...(intro.background || {}), color: '#180104', imageUrl: '' };
     intro.layers = [
@@ -208,16 +222,16 @@ export function buildCompleteDesign(
   const order = variant === 'haute-couture'
     ? ['countdown', 'story', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'album', 'dedications', 'songs']
     : variant === 'xv-burgundy'
-    ? ['countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'story', 'dedications', 'album', 'songs']
-    : variant === 'birthday'
-    ? ['countdown', 'locations', 'itinerary', 'gallery', 'rsvp', 'gifts', 'dressCode', 'story', 'album', 'songs', 'dedications', 'lodging']
-    : variant === 'baptism'
-      ? ['story', 'countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'rsvp', 'gifts', 'dedications', 'album', 'lodging', 'songs']
-      : variant === 'romantic'
-    ? ['story', 'countdown', 'gallery', 'locations', 'itinerary', 'dressCode', 'gifts', 'lodging', 'rsvp', 'dedications', 'album', 'songs']
-    : variant === 'night'
-      ? ['countdown', 'locations', 'itinerary', 'story', 'gallery', 'dressCode', 'gifts', 'lodging', 'rsvp', 'songs', 'album', 'dedications']
-      : ['countdown', 'story', 'locations', 'itinerary', 'gallery', 'dressCode', 'gifts', 'lodging', 'rsvp', 'album', 'dedications', 'songs'];
+      ? ['countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'gifts', 'lodging', 'rsvp', 'story', 'dedications', 'album', 'songs']
+      : variant === 'birthday'
+        ? ['countdown', 'locations', 'itinerary', 'gallery', 'rsvp', 'gifts', 'dressCode', 'story', 'album', 'songs', 'dedications', 'lodging']
+        : variant === 'baptism'
+          ? ['story', 'countdown', 'locations', 'itinerary', 'dressCode', 'gallery', 'rsvp', 'gifts', 'dedications', 'album', 'lodging', 'songs']
+          : variant === 'romantic'
+            ? ['story', 'countdown', 'gallery', 'locations', 'itinerary', 'dressCode', 'gifts', 'lodging', 'rsvp', 'dedications', 'album', 'songs']
+            : variant === 'night'
+              ? ['countdown', 'locations', 'itinerary', 'story', 'gallery', 'dressCode', 'gifts', 'lodging', 'rsvp', 'songs', 'album', 'dedications']
+              : ['countdown', 'story', 'locations', 'itinerary', 'gallery', 'dressCode', 'gifts', 'lodging', 'rsvp', 'album', 'dedications', 'songs'];
   order.forEach((type) => {
     const module = modules.find((item) => item.type === type);
     if (!module?.show) return;

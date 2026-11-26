@@ -60,6 +60,28 @@ const DEFAULT_PLACEHOLDER_TITLES = new Set([
 
 export const LANDING_TEMPLATES_CATALOG: LandingTemplateMeta[] = [
   {
+    id: 'boda-jardin-imperial',
+    name: 'Jardín Imperial · L’Orangerie: Invernadero Botánico, Tríptico de Lacre & Fine-Art',
+    shortName: 'Jardín Imperial · L’Orangerie',
+    badge: 'Nueva • Edición #20',
+    category: 'boda',
+    featured: true,
+    previewImage: 'assets/template-previews/boda-jardin-imperial.jpg',
+    accentColor: '#b68b3a',
+    themeBg: '#1d3528',
+    musicTrackLabel: 'L’Orangerie Suite — Vals Sentimental',
+    musicUrl: 'assets/boda-eleganza/waltz-sentimental.mp3',
+    description:
+      'Estética Quiet-Luxury inspirada en los invernaderos reales europeos: puertas tríptico con sello de lacre botánico, partículas solares en vivo, arco arquitectónico e índice editorial.',
+    features: [
+      'Puertas tríptico 3D con lacre botánico',
+      'Partículas solares y arco de invernadero',
+      'Índice editorial + vinilo musical',
+      'Paleta alabastro, ciprés y oro champagne'
+    ],
+    visualPresetKey: 'boda-jardin-imperial'
+  },
+  {
     id: 'boda-girasoles',
     name: 'Elegancia Rústica: Girasoles Radiantes, Madera & Anillos Dorados',
     shortName: 'Elegancia Rústica · Girasoles',
@@ -330,6 +352,7 @@ export class LandingDraftService {
     const isXv = meta?.category === 'xv' || templateKey.includes('xv');
     const isGrad = meta?.category === 'graduacion' || templateKey.includes('graduacion');
     const isNavy = templateKey === 'boda-navy-blue';
+    const isJardin = templateKey === 'boda-jardin-imperial';
 
     const eventType: EventType = meta?.category || (isXv ? 'xv' : isGrad ? 'graduacion' : 'boda');
     const defaultDate = this.defaultFutureDate(110);
@@ -410,6 +433,8 @@ export class LandingDraftService {
 
     const palette = isNavy
       ? { primary: '#0d1b2a', secondary: '#1b263b', accent: '#d4af37' }
+      : isJardin
+      ? { primary: '#1d3528', secondary: '#f7f3eb', accent: '#b68b3a' }
       : { primary: '#3d2b1f', secondary: '#faf3e8', accent: '#d49b27' };
 
     const event: EventModel = {
@@ -563,6 +588,8 @@ export class LandingDraftService {
     const baseTemplateKey =
       presetKey === 'boda-navy-blue'
         ? 'boda-navy-blue'
+        : presetKey === 'boda-jardin-imperial'
+        ? 'boda-jardin-imperial'
         : presetKey === 'boda-girasoles'
         ? 'boda-girasoles'
         : existing?.templateKey && existing.templateKey !== 'visual-builder'

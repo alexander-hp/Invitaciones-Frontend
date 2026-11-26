@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 56" fill="none">
+  <defs>
+    <linearGradient id="divGold" x1="0" y1="28" x2="420" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C8A252" stop-opacity="0.15"/>
+      <stop offset="22%" stop-color="#B68B3A"/>
+      <stop offset="50%" stop-color="#E7CC86"/>
+      <stop offset="78%" stop-color="#B68B3A"/>
+      <stop offset="100%" stop-color="#C8A252" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hairlines -->
+  <line x1="16" y1="28" x2="156" y2="28" stroke="url(#divGold)" stroke-width="1"/>
+  <line x1="264" y1="28" x2="404" y2="28" stroke="url(#divGold)" stroke-width="1"/>
+
+  <!-- Central Jasmine & Diamond Filigree -->
+  <path d="M210 10L215 23L228 28L215 33L210 46L205 33L192 28L205 23L210 10Z" fill="#B68B3A" fill-opacity="0.18" stroke="url(#divGold)" stroke-width="1.3"/>
+  <circle cx="210" cy="28" r="3.2" fill="#B68B3A"/>
+
+  <!-- Left Botanical Sprig -->
+  <path d="M192 28C178 28 164 23 150 18" stroke="#335844" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M192 28C178 28 164 33 150 38" stroke="#335844" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M178 25C172 17 164 14 156 15C160 22 169 26 178 25Z" fill="#2A4B39" fill-opacity="0.82"/>
+  <path d="M178 31C172 39 164 42 156 41C160 34 169 30 178 31Z" fill="#B68B3A" fill-opacity="0.45"/>
+  <path d="M158 28C150 22 141 21 134 24C140 29 149 31 158 28Z" fill="#2A4B39" fill-opacity="0.72"/>
+  <circle cx="184" cy="20" r="2" fill="#B68B3A"/>
+  <circle cx="184" cy="36" r="2" fill="#B68B3A"/>
+  <circle cx="126" cy="28" r="2.2" fill="#B68B3A"/>
+
+  <!-- Right Botanical Sprig -->
+  <path d="M228 28C242 28 256 23 270 18" stroke="#335844" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M228 28C242 28 256 33 270 38" stroke="#335844" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M242 25C248 17 256 14 264 15C260 22 251 26 242 25Z" fill="#2A4B39" fill-opacity="0.82"/>
+  <path d="M242 31C248 39 256 42 264 41C260 34 251 30 242 31Z" fill="#B68B3A" fill-opacity="0.45"/>
+  <path d="M262 28C270 22 279 21 286 24C280 29 271 31 262 28Z" fill="#2A4B39" fill-opacity="0.72"/>
+  <circle cx="236" cy="20" r="2" fill="#B68B3A"/>
+  <circle cx="236" cy="36" r="2" fill="#B68B3A"/>
+  <circle cx="294" cy="28" r="2.2" fill="#B68B3A"/>
+</svg>

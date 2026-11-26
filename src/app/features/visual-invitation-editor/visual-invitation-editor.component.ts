@@ -520,6 +520,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     rsvp: 'Confirmación RSVP', dedications: 'Dedicatorias', songs: 'Peticiones al DJ', album: 'Álbum colectivo', guestPass: 'Mesa y pase'
   };
   readonly importableTemplates = [
+    { key: 'boda-jardin-imperial', label: 'Jardín Imperial · L’Orangerie' },
+    { key: 'boda-girasoles', label: 'Elegancia Rústica' },
     // { key: 'envelope-cards', label: 'Sobre interactivo y cards' }, // Deshabilitada temporalmente
     { key: 'classic-vertical', label: 'Clásica editorial vertical' },
     // { key: 'modern-minimal', label: 'Glamour moderno y minimal' }, // Deshabilitada temporalmente
@@ -538,7 +540,6 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     { key: 'boda-teatro', label: 'Gran Teatro' },
     { key: 'boda-eleganza', label: 'Eleganza Italiana' },
     { key: 'boda-rosas', label: 'Romance Floral' },
-    { key: 'boda-girasoles', label: 'Elegancia Rústica' },
     { key: 'boda-navy-blue', label: 'Navy Blue & Gold' },
     { key: 'xv-burgundy', label: 'Mis XV Borgoña Real' }
   ];
