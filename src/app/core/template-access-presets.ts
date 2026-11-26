@@ -1533,7 +1533,7 @@ export const TEMPLATE_ACCESS_PRESETS: TemplateAccessScreenPreset[] = [
     theme: {
       backgroundType: 'image',
       backgroundColor: '#1c130d',
-      backgroundImageUrl: 'assets/boda-girasoles/portada-bg.webp',
+      backgroundImageUrl: 'assets/boda-girasoles/portada-bg-clean.jpg',
       backgroundOverlayOpacity: 45,
       backgroundBlur: 8,
       cardStyle: 'bordered',

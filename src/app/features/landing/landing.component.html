@@ -392,28 +392,28 @@
   <footer class="vl-footer">
     <div class="vl-container">
       <div class="vl-footer-cta">
-        <div>
+        <div class="vl-footer-cta-copy">
           <h2>¿Listo para dar vida a la invitación de tus sueños?</h2>
-          <p>Empieza personalizando una plantilla gratis o accede directamente a tu cuenta Velisse.</p>
+          <p>Empieza personalizando una plantilla gratis o accede a tu cuenta Velisse.</p>
         </div>
         <div class="vl-footer-cta-buttons">
-          <button type="button" class="vl-btn vl-btn-gold vl-btn-lg" (click)="openTemplateStudio('boda-girasoles')">
+          <button type="button" class="vl-btn vl-btn-gold vl-btn-sm" (click)="openTemplateStudio('boda-girasoles')">
             Personalizar Plantilla
           </button>
-          <button type="button" class="vl-btn vl-btn-outline-light vl-btn-lg" (click)="goToLogin()">
+          <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="goToLogin()">
             Iniciar sesión
           </button>
         </div>
       </div>
 
       <div class="vl-footer-bottom">
-        <div class="vl-brand">
+        <div class="vl-brand vl-footer-brand">
           <span class="vl-brand-logo">
             <img src="assets/logos/velisse.svg" alt="Velisse" />
           </span>
           <span class="vl-brand-copy">
-            <strong style="color:#faf7f2">Velisse</strong>
-            <small style="color:rgba(250,247,242,0.65)">by KyndraSoft · Invitaciones Digitales</small>
+            <strong>Velisse</strong>
+            <small>by KyndraSoft · Invitaciones Digitales</small>
           </span>
         </div>
 
@@ -507,12 +507,12 @@
       <aside class="vl-studio-sidebar">
         <div class="vl-studio-tabs">
           <button type="button" [class.active]="studioTab === 'main'" (click)="selectStudioTab('main')">Portada y Fecha</button>
-          <button type="button" [class.active]="studioTab === 'story'" (click)="selectStudioTab('story')">Historia y Código</button>
-          <button type="button" [class.active]="studioTab === 'schedule'" (click)="selectStudioTab('schedule')">Sedes y Horarios</button>
           <button type="button" [class.active]="studioTab === 'inline'" (click)="selectStudioTab('inline')">
             Textos en Vivo
             <span *ngIf="editedTextsCount" class="vl-count-pill">{{ editedTextsCount }}</span>
           </button>
+          <button type="button" [class.active]="studioTab === 'story'" (click)="selectStudioTab('story')">Historia y Código</button>
+          <button type="button" [class.active]="studioTab === 'schedule'" (click)="selectStudioTab('schedule')">Sedes y Horarios</button>
         </div>
 
         <div class="vl-studio-form-scroll">

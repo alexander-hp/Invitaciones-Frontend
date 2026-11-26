@@ -8068,6 +8068,40 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     this.design = this.clone(
       storedDesign?.sections?.length ? storedDesign : this.buildPreset(presetKey, true)
     );
+    // Migrate legacy portada-bg.webp (with baked-in text) to clean background + editable text layers
+    for (const sec of this.design.sections || []) {
+      if (sec.background?.imageUrl === 'assets/boda-girasoles/portada-bg.webp') {
+        sec.background.imageUrl = 'assets/boda-girasoles/portada-bg-clean.jpg';
+        const hasTextLayer = (sec.layers || []).some((l) => l.type === 'text');
+        if (!hasTextLayer) {
+          sec.layers = sec.layers || [];
+          sec.layers.unshift(
+            {
+              id: this.uid('layer'),
+              type: 'text',
+              name: 'Subtítulo (Boda de)',
+              text: 'Boda de',
+              x: 10,
+              y: 6,
+              width: 80,
+              height: 5,
+              style: { color: '#f5efe6', fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 500, letterSpacing: 2, textAlign: 'center', backgroundColor: 'transparent', padding: 0 }
+            },
+            {
+              id: this.uid('layer'),
+              type: 'text',
+              name: 'Nombres de los novios',
+              text: this.invitation?.content?.headline ? '{{invitation.headline}}' : '{{event.title}}',
+              x: 6,
+              y: 13,
+              width: 88,
+              height: 13,
+              style: { color: '#faf3e8', fontFamily: "'Cormorant Garamond', serif", fontSize: 46, fontWeight: 700, lineHeight: 1.08, textAlign: 'center', backgroundColor: 'transparent', padding: 0 }
+            }
+          );
+        }
+      }
+    }
     this.design.presentationMode = this.design.presentationMode || 'continuous';
     this.design.responsiveMode = this.design.responsiveMode || 'shared';
     this.design.assets = this.design.assets || [];

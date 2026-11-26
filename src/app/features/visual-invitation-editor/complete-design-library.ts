@@ -87,14 +87,14 @@ export function buildCompleteDesign(
   const rule = (x: number, y: number, width: number) => add('shape', '', x, y, width, .4, { backgroundColor: palette.accent, shapeKind: 'rectangle' }, { name: 'Linea decorativa' });
 
   if (variant === 'boda-girasoles') {
-    hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-girasoles/portada-bg.webp', overlay: 0.45 };
-    add('text', 'ELEGANCIA RÚSTICA · NUESTRA BODA', 10, 6, 80, 4, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 3 }, { name: 'Etiqueta rústica' });
+    hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-girasoles/portada-bg-clean.jpg', overlay: 0.35 };
+    add('text', 'Boda de', 10, 6, 80, 5, { ...bodyStyle, color: '#f5efe6', fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 500, letterSpacing: 2 }, { name: 'Subtítulo (Boda de)' });
+    add('text', title, 6, 13, 88, 13, { ...titleStyle, fontSize: 46, color: '#faf3e8', fontWeight: 700 }, { name: 'Nombres de los novios' });
     const heroPhoto = coverUrl || 'assets/boda-girasoles/flores-girasoles.webp';
-    add('image', '', 20, 12, 60, 40, { objectFit: coverUrl ? 'cover' : 'contain', preserveAspectRatio: !coverUrl, frameEnabled: Boolean(coverUrl), imageMask: coverUrl ? 'arch' : 'none', padding: coverUrl ? 6 : 0, backgroundColor: coverUrl ? '#3c2b18' : 'transparent', borderRadius: coverUrl ? 120 : 0, borderWidth: coverUrl ? 2 : 0, borderColor: '#d49b27', borderStyle: 'solid' }, { url: heroPhoto, name: 'Girasoles / Portada' });
-    add('image', '', 42, 53, 16, 7, { objectFit: 'contain', preserveAspectRatio: true, backgroundColor: 'transparent' }, { url: 'assets/boda-girasoles/wedding-rings.png', name: 'Anillos dorados' });
-    add('text', title, 8, 61, 84, 15, { ...titleStyle, fontSize: 44, color: '#faf3e8', fontWeight: 700 }, { name: 'Nombres' });
-    rule(28, 77, 44);
-    if (event?.date) add('text', '{{event.date}}', 10, 79, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 700, letterSpacing: 2.5 }, { name: 'Fecha del evento' });
+    add('image', '', 26, 28, 48, 28, { objectFit: coverUrl ? 'cover' : 'contain', preserveAspectRatio: !coverUrl, frameEnabled: Boolean(coverUrl), imageMask: coverUrl ? 'arch' : 'none', padding: coverUrl ? 6 : 0, backgroundColor: coverUrl ? '#3c2b18' : 'transparent', borderRadius: coverUrl ? 120 : 0, borderWidth: coverUrl ? 2 : 0, borderColor: '#d49b27', borderStyle: 'solid' }, { url: heroPhoto, name: 'Girasoles / Portada' });
+    add('image', '', 42, 58, 16, 7, { objectFit: 'contain', preserveAspectRatio: true, backgroundColor: 'transparent' }, { url: 'assets/boda-girasoles/wedding-rings.png', name: 'Anillos dorados' });
+    rule(28, 68, 44);
+    if (event?.date) add('text', '{{event.date}}', 10, 72, 80, 5, { ...bodyStyle, color: palette.accent, fontSize: 13, fontWeight: 700, letterSpacing: 2.5 }, { name: 'Fecha del evento' });
   } else if (variant === 'boda-navy-blue') {
     hero.background = { ...(hero.background || {}), color: palette.background, imageUrl: 'assets/boda-navy-blue/watercolor-navy-bg.jpg', overlay: 0.35 };
     add('text', 'GALA NUPCIAL · NAVY BLUE & GOLD', 10, 6, 80, 4, { ...bodyStyle, color: palette.accent, fontSize: 11, fontWeight: 700, letterSpacing: 3 }, { name: 'Etiqueta de gala' });
