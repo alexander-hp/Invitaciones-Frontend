@@ -1,12 +1,162 @@
-<section class="auth-page">
-  <form class="panel auth-card" (ngSubmit)="submit()">
-    <p class="eyebrow">Contacto</p>
-    <h1>Escribenos</h1>
-    <label>Nombre<input name="name" [(ngModel)]="form.name" minlength="2" required></label>
-    <label>Email<input name="email" type="email" [(ngModel)]="form.email" required></label>
-    <label>Mensaje<textarea name="message" [(ngModel)]="form.message" minlength="10" required></textarea></label>
-    <p *ngIf="success" class="success">{{ success }}</p>
-    <p *ngIf="error" class="error">{{ error }}</p>
-    <button class="primary" type="submit" [disabled]="loading">{{ loading ? 'Enviando...' : 'Enviar mensaje' }}</button>
-  </form>
-</section>
+<div class="vc-page">
+  <!-- Navbar Velisse -->
+  <header class="vc-navbar">
+    <div class="vc-container vc-nav-inner">
+      <a routerLink="/" class="vc-brand" aria-label="Velisse Inicio">
+        <span class="vc-brand-logo">
+          <img src="assets/logos/velisse.svg" alt="Velisse" />
+        </span>
+        <span class="vc-brand-copy">
+          <strong>Velisse</strong>
+          <small>Invitaciones &amp; Eventos</small>
+        </span>
+      </a>
+
+      <div class="vc-nav-actions">
+        <a routerLink="/" class="vc-btn vc-btn-ghost">← Volver al inicio</a>
+        <ng-container *ngIf="auth.isAuthenticated; else guestActions">
+          <a routerLink="/new/dashboard" class="vc-btn vc-btn-dark">Ir a mi Dashboard →</a>
+        </ng-container>
+        <ng-template #guestActions>
+          <a routerLink="/new/login" class="vc-btn vc-btn-outline">Iniciar sesión</a>
+          <a routerLink="/new/register" class="vc-btn vc-btn-gold">Crear cuenta</a>
+        </ng-template>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="vc-main">
+    <div class="vc-glow vc-glow-1"></div>
+    <div class="vc-glow vc-glow-2"></div>
+
+    <div class="vc-container vc-content">
+      <div class="vc-header">
+        <span class="vc-eyebrow">✦ Contacto y Atención Personalizada</span>
+        <h1>Estamos aquí para ayudarte con tu <em>evento</em></h1>
+        <p>
+          ¿Tienes dudas sobre plantillas, pases QR, mesas o planes? Escríbenos y nuestro equipo te responderá a la brevedad.
+        </p>
+      </div>
+
+      <div class="vc-grid">
+        <!-- Columna Izquierda: Tarjetas de información -->
+        <aside class="vc-info-col">
+          <article class="vc-info-card">
+            <div class="vc-icon-box">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div>
+              <span class="vc-info-label">Tiempo de respuesta</span>
+              <strong>Menos de 24 horas hábiles</strong>
+              <p>Atención directa por nuestro equipo de soporte.</p>
+            </div>
+          </article>
+
+          <article class="vc-info-card">
+            <div class="vc-icon-box">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <div>
+              <span class="vc-info-label">Correo electrónico</span>
+              <a href="mailto:soporte@invitaciones.com" class="vc-info-link">soporte&#64;invitaciones.com</a>
+              <p>Ideal para consultas detalladas o soporte de tu cuenta.</p>
+            </div>
+          </article>
+
+          <article class="vc-info-card">
+            <div class="vc-icon-box">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div>
+              <span class="vc-info-label">Horario de atención</span>
+              <strong>Lunes a Viernes · 9:00 AM – 6:00 PM</strong>
+              <p>Hora del centro de México.</p>
+            </div>
+          </article>
+
+          <div class="vc-planner-card">
+            <span class="vc-planner-badge">✦ Para Wedding Planners &amp; Agencias</span>
+            <h3>¿Gestionas múltiples eventos al año?</h3>
+            <p>
+              Pregúntanos por <strong>Planner Pro</strong> y te ayudamos a configurar tu cuenta con acceso ilimitado a plantillas, croquis y pases VIP.
+            </p>
+          </div>
+        </aside>
+
+        <!-- Columna Derecha: Formulario -->
+        <section class="vc-form-card">
+          <div class="vc-form-head">
+            <h2>Envíanos un mensaje</h2>
+            <p>Completa los datos y te responderemos directamente a tu correo.</p>
+          </div>
+
+          <div class="vc-topics">
+            <span class="vc-topics-label">Tema (opcional)</span>
+            <div class="vc-topic-pills">
+              <button *ngFor="let topic of topics" type="button" class="vc-topic-pill"
+                [class.active]="selectedTopic === topic" (click)="selectTopic(topic)">
+                {{ topic }}
+              </button>
+            </div>
+          </div>
+
+          <form class="vc-form" (ngSubmit)="submit()">
+            <div class="vc-form-row">
+              <label class="vc-field">
+                <span>Nombre completo</span>
+                <input name="name" type="text" [(ngModel)]="form.name" minlength="2" required
+                  placeholder="Ej. Sofía Hernández" />
+              </label>
+
+              <label class="vc-field">
+                <span>Correo electrónico</span>
+                <input name="email" type="email" [(ngModel)]="form.email" required
+                  placeholder="tu@correo.com" />
+              </label>
+            </div>
+
+            <label class="vc-field">
+              <span>¿En qué podemos ayudarte?</span>
+              <textarea name="message" [(ngModel)]="form.message" minlength="10" required rows="5"
+                placeholder="Cuéntanos sobre tu evento, duda o lo que necesitas..."></textarea>
+            </label>
+
+            <div *ngIf="success" class="vc-alert vc-alert-success">
+              <span>✓</span>
+              <span>{{ success }}</span>
+            </div>
+
+            <div *ngIf="error" class="vc-alert vc-alert-error">
+              <span>!</span>
+              <span>{{ error }}</span>
+            </div>
+
+            <div class="vc-form-footer">
+              <small>Tus datos son confidenciales y solo se usan para responderte.</small>
+              <button class="vc-btn vc-btn-gold vc-btn-submit" type="submit"
+                [disabled]="loading || !form.name.trim() || !form.email.trim() || !form.message.trim()">
+                <svg *ngIf="!loading" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>{{ loading ? 'Enviando mensaje...' : 'Enviar mensaje' }}</span>
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>

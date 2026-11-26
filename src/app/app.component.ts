@@ -64,6 +64,8 @@ export class AppComponent implements OnInit {
     const cleanUrl = (this.router.url || '/').split('?')[0].split('#')[0];
     return cleanUrl === '/' ||
            cleanUrl === '' ||
+           cleanUrl === '/contact' ||
+           cleanUrl.startsWith('/contact/') ||
            cleanUrl.startsWith('/new') ||
            cleanUrl.startsWith('/i/') ||
            cleanUrl.startsWith('/e/') ||
