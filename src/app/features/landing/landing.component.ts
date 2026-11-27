@@ -32,7 +32,12 @@ export class LandingComponent implements OnInit, OnDestroy {
   @ViewChild('previewIframe') previewIframe?: ElementRef<HTMLIFrameElement>;
 
   mobileMenuOpen = false;
+  draftBannerDismissed = false;
   catalogFilter: CatalogFilter = 'all';
+
+  dismissDraftBanner(): void {
+    this.draftBannerDismissed = true;
+  }
 
   readonly templates: LandingTemplateMeta[] = LANDING_TEMPLATES_CATALOG;
   readonly featuredTemplates: LandingTemplateMeta[] = LANDING_TEMPLATES_CATALOG.filter(

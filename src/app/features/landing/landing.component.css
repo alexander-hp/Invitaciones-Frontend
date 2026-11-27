@@ -303,6 +303,31 @@
   text-transform: uppercase;
 }
 
+.vl-draft-ribbon-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vl-draft-ribbon-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 247, 242, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #faf7f2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.vl-draft-ribbon-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(212, 175, 55, 0.6);
+}
+
 /* ================= HERO ================= */
 .vl-hero {
   position: relative;
@@ -1905,6 +1930,112 @@
 }
 
 @media (max-width: 600px) {
+  .vl-container {
+    padding: 0 16px;
+  }
+
+  .vl-hide-mobile {
+    display: none;
+  }
+
+  .vl-nav-inner {
+    height: 64px;
+    gap: 8px;
+  }
+
+  .vl-brand-copy small {
+    display: none;
+  }
+
+  .vl-nav-actions {
+    gap: 8px;
+  }
+
+  .vl-nav-actions .vl-btn-ghost {
+    display: none;
+  }
+
+  .vl-nav-actions .vl-btn-primary {
+    padding: 8px 13px;
+    font-size: 13px;
+  }
+
+  .vl-draft-ribbon {
+    display: none;
+  }
+
+  .vl-hero {
+    padding: 24px 0 36px;
+  }
+
+  .vl-hero-grid {
+    gap: 24px;
+  }
+
+  .vl-eyebrow-pill {
+    font-size: 11px;
+    padding: 5px 11px;
+    margin-bottom: 14px;
+  }
+
+  .vl-hero-title {
+    font-size: 29px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  .vl-hero-lead {
+    font-size: 15px;
+    line-height: 1.55;
+    margin-bottom: 20px;
+  }
+
+  .vl-hero-cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .vl-hero-cta-row .vl-btn-lg {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 18px;
+    font-size: 15px;
+  }
+
+  .vl-hero-highlights {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-top: 16px;
+  }
+
+  .vl-highlight-divider {
+    display: none;
+  }
+
+  .vl-highlight-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(223, 210, 192, 0.7);
+  }
+
+  .vl-highlight-item strong {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .vl-highlight-item span {
+    font-size: 12px;
+    text-align: right;
+  }
+
   .vl-features-grid,
   .vl-steps-grid,
   .vl-catalog-grid,

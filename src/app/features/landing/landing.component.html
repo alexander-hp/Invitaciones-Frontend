@@ -35,8 +35,8 @@
       </nav>
 
       <div class="vl-nav-actions">
-        <button *ngIf="hasSavedDraft" type="button" class="vl-btn vl-btn-draft vl-hide-sm" (click)="resumeExistingDraft()"
-          [title]="'Continuar editando: ' + savedDraftSummary">
+        <button *ngIf="hasSavedDraft" type="button" class="vl-btn vl-btn-draft vl-hide-sm"
+          (click)="resumeExistingDraft()" [title]="'Continuar editando: ' + savedDraftSummary">
           <span class="vl-pulse-dot"></span>
           <span>Continuar borrador</span>
         </button>
@@ -61,606 +61,658 @@
   </header>
 
   <!-- ================= BANNER DE BORRADOR ACTIVO ================= -->
-  <div *ngIf="hasSavedDraft" class="vl-draft-ribbon">
-    <div class="vl-container vl-draft-ribbon-inner">
-      <div class="vl-draft-ribbon-text">
-        <span class="vl-ribbon-badge">Borrador guardado en este dispositivo</span>
-        <span>Tienes avances en <strong>{{ savedDraftSummary }}</strong>. Sigue personalizando o guárdalo creando tu cuenta sin perder tus cambios.</span>
-      </div>
-      <div class="vl-draft-ribbon-actions">
-        <button type="button" class="vl-btn vl-btn-sm vl-btn-outline-light" (click)="resumeExistingDraft()">Seguir editando</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= HERO PRINCIPAL ================= -->
-  <section class="vl-hero">
-    <div class="vl-hero-glow vl-hero-glow-1"></div>
-    <div class="vl-hero-glow vl-hero-glow-2"></div>
-
-    <div class="vl-container vl-hero-grid">
-      <div class="vl-hero-copy">
-        <div class="vl-eyebrow-pill">
-          <span>✦</span>
-          <span>Suite Integral para Bodas, XV Años &amp; Eventos Exclusivos</span>
+    <div *ngIf="hasSavedDraft && !draftBannerDismissed" class="vl-draft-ribbon">
+      <div class="vl-container vl-draft-ribbon-inner">
+        <div class="vl-draft-ribbon-text">
+          <span class="vl-ribbon-badge">Borrador guardado en este dispositivo</span>
+          <span>Tienes avances en <strong>{{ savedDraftSummary }}</strong>. Sigue personalizando o guárdalo creando tu
+            cuenta sin perder tus cambios.</span>
         </div>
-
-        <h1 class="vl-hero-title">
-          Invitaciones digitales que <em>emocionan</em> y organizan todo tu evento en un solo lugar.
-        </h1>
-
-        <p class="vl-hero-lead">
-          Prueba y personaliza nuestras plantillas interactivas o diseña desde cero en el <strong>Editor Visual</strong> sin registrarte primero. Cuando estés listo para guardar, inicia sesión o crea tu cuenta y tu evento se creará automáticamente con todos tus datos intactos.
-        </p>
-
-        <div class="vl-hero-cta-row">
-          <button type="button" class="vl-btn vl-btn-gold vl-btn-lg" (click)="scrollToSection('plantillas-exclusivas')">
-            <span>Ver y Editar Plantillas</span>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
+        <div class="vl-draft-ribbon-actions">
+          <button type="button" class="vl-btn vl-btn-sm vl-btn-outline-light" (click)="resumeExistingDraft()">Seguir
+            editando</button>
+          <button type="button" class="vl-draft-ribbon-close" (click)="dismissDraftBanner()"
+            aria-label="Cerrar aviso de borrador" title="Cerrar">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-
-          <button type="button" class="vl-btn vl-btn-dark vl-btn-lg" (click)="openVisualEditor('boda-girasoles')">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
-            </svg>
-            <span>Probar Editor Visual</span>
-          </button>
-
-          <button *ngIf="!auth.isAuthenticated" type="button" class="vl-btn vl-btn-outline vl-btn-lg" (click)="goToLogin()">
-            Iniciar sesión
-          </button>
         </div>
-
-        <div class="vl-hero-highlights">
-          <div class="vl-highlight-item">
-            <strong>RSVP + Pases QR</strong>
-            <span>Check-in digital en recepción</span>
-          </div>
-          <div class="vl-highlight-divider"></div>
-          <div class="vl-highlight-item">
-            <strong>Croquis de Mesas</strong>
-            <span>Asignación inteligente de lugares</span>
-          </div>
-          <div class="vl-highlight-divider"></div>
-          <div class="vl-highlight-item">
-            <strong>Edición en Vivo</strong>
-            <span>Prueba gratis sin perder datos</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tarjetas flotantes de las 2 plantillas estrella -->
-      <div class="vl-hero-showcase">
-        <article class="vl-showcase-card vl-showcase-girasoles" (click)="openTemplateStudio('boda-girasoles')">
-          <div class="vl-showcase-img-wrap">
-            <img src="assets/template-previews/boda-girasoles.jpg" alt="Elegancia Rústica: Girasoles Radiantes" />
-            <span class="vl-showcase-tag">🌻 Boda Rústica</span>
-          </div>
-          <div class="vl-showcase-meta">
-            <h3>Elegancia Rústica: Girasoles, Madera &amp; Anillos Dorados</h3>
-            <span class="vl-showcase-cta">Personalizar ahora →</span>
-          </div>
-        </article>
-
-        <article class="vl-showcase-card vl-showcase-navy" (click)="openTemplateStudio('boda-navy-blue')">
-          <div class="vl-showcase-img-wrap">
-            <img src="assets/template-previews/boda-navy-blue.jpg" alt="Navy Blue & Gold: Azul Noche" />
-            <span class="vl-showcase-tag vl-tag-navy">✦ Gala Nupcial</span>
-          </div>
-          <div class="vl-showcase-meta">
-            <h3>Navy Blue &amp; Gold: Azul Noche, Acuarela &amp; Flores Nobles</h3>
-            <span class="vl-showcase-cta">Personalizar ahora →</span>
-          </div>
-        </article>
       </div>
     </div>
-  </section>
 
-  <!-- ================= INFORMACIÓN PARA LOS USUARIOS (BENEFICIOS) ================= -->
-  <section id="beneficios" class="vl-section vl-section-surface">
-    <div class="vl-container">
-      <div class="vl-section-header">
-        <span class="vl-eyebrow">Todo para Anfitriones y Planners</span>
-        <h2>Mucho más que una invitación: el centro de control completo de tu celebración</h2>
-        <p>Desde el primer anuncio hasta el último baile, Velisse automatiza tus confirmaciones, mesas, pases QR y la experiencia interactiva de cada invitado.</p>
-      </div>
+    <!-- ================= HERO PRINCIPAL ================= -->
+    <section class="vl-hero">
+      <div class="vl-hero-glow vl-hero-glow-1"></div>
+      <div class="vl-hero-glow vl-hero-glow-2"></div>
 
-      <div class="vl-features-grid">
-        <article *ngFor="let feat of platformFeatures" class="vl-feature-card">
-          <span class="vl-feature-badge">{{ feat.badge }}</span>
-          <h3>{{ feat.title }}</h3>
-          <p>{{ feat.description }}</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= PLANTILLAS DESTACADAS & CATÁLOGO EDITABLE ================= -->
-  <section id="plantillas-exclusivas" class="vl-section">
-    <div class="vl-container">
-      <div class="vl-section-header">
-        <span class="vl-eyebrow">Colección Interactiva · Prueba en Vivo</span>
-        <h2>Elige una plantilla, edítala a tu gusto y guárdala cuando estés listo</h2>
-        <p>Personaliza textos, nombres, fecha, ubicaciones e itinerario ahora mismo. Al hacer clic en <strong>Guardar</strong>, iniciarás sesión o crearás tu cuenta y tu evento conservará todo tu trabajo.</p>
-      </div>
-
-      <!-- SPOTLIGHT DE LAS 2 PLANTILLAS PRINCIPALES SOLICITADAS -->
-      <div class="vl-flagship-grid">
-        <article *ngFor="let tpl of featuredTemplates" class="vl-flagship-card"
-          [class.is-navy]="tpl.id === 'boda-navy-blue'"
-          [class.is-girasoles]="tpl.id === 'boda-girasoles'">
-          <div class="vl-flagship-media">
-            <img [src]="tpl.previewImage" [alt]="tpl.name" loading="lazy" />
-            <div class="vl-flagship-media-overlay">
-              <button type="button" class="vl-btn vl-btn-light vl-btn-sm" (click)="openQuickPreview(tpl)">
-                Vista previa interactiva
-              </button>
-            </div>
-            <span class="vl-flagship-badge">{{ tpl.badge }}</span>
+      <div class="vl-container vl-hero-grid">
+        <div class="vl-hero-copy">
+          <div class="vl-eyebrow-pill">
+            <span>✦</span>
+            <span>Suite Integral para Bodas, XV Años &amp; Eventos Exclusivos</span>
           </div>
 
-          <div class="vl-flagship-body">
-            <div class="vl-flagship-music" *ngIf="tpl.musicTrackLabel">
-              <span>♪ Música integrada:</span>
-              <strong>{{ tpl.musicTrackLabel }}</strong>
-            </div>
+          <h1 class="vl-hero-title">
+            Invitaciones digitales que <em>emocionan</em> y organizan todo tu evento en un solo lugar.
+          </h1>
 
-            <h3>{{ tpl.name }}</h3>
-            <p>{{ tpl.description }}</p>
-
-            <ul class="vl-flagship-features">
-              <li *ngFor="let item of tpl.features">
-                <span class="vl-check">✓</span>
-                <span>{{ item }}</span>
-              </li>
-            </ul>
-
-            <div class="vl-flagship-actions">
-              <button type="button" class="vl-btn vl-btn-gold" (click)="openTemplateStudio(tpl.id)">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                <span>Editar esta plantilla</span>
-              </button>
-
-              <button type="button" class="vl-btn vl-btn-outline" (click)="openVisualEditor(tpl.visualPresetKey)">
-                <span>Abrir en Editor Visual</span>
-              </button>
-
-              <button type="button" class="vl-btn vl-btn-ghost" (click)="openQuickPreview(tpl)">
-                <span>Ver demo</span>
-              </button>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <!-- MÁS PLANTILLAS DEL CATÁLOGO -->
-      <div class="vl-catalog-subheader">
-        <div>
-          <h3>Explora más estilos de la colección Velisse</h3>
-          <p>Todas las plantillas incluyen confirmación RSVP, ubicaciones, música, galería y edición inmediata.</p>
-        </div>
-        <div class="vl-filter-pills" role="tablist" aria-label="Filtrar plantillas">
-          <button type="button" [class.active]="catalogFilter === 'all'" (click)="catalogFilter = 'all'">Todas</button>
-          <button type="button" [class.active]="catalogFilter === 'featured'" (click)="catalogFilter = 'featured'">Destacadas</button>
-          <button type="button" [class.active]="catalogFilter === 'boda'" (click)="catalogFilter = 'boda'">Bodas</button>
-          <button type="button" [class.active]="catalogFilter === 'xv'" (click)="catalogFilter = 'xv'">XV Años</button>
-          <button type="button" [class.active]="catalogFilter === 'graduacion'" (click)="catalogFilter = 'graduacion'">Graduaciones</button>
-        </div>
-      </div>
-
-      <div class="vl-catalog-grid">
-        <article *ngFor="let tpl of filteredTemplates" class="vl-tpl-card">
-          <div class="vl-tpl-thumb" (click)="openQuickPreview(tpl)">
-            <img [src]="tpl.previewImage" [alt]="tpl.name" loading="lazy" />
-            <span class="vl-tpl-badge">{{ tpl.badge }}</span>
-          </div>
-          <div class="vl-tpl-content">
-            <h4>{{ tpl.name }}</h4>
-            <p>{{ tpl.description }}</p>
-            <div class="vl-tpl-actions">
-              <button type="button" class="vl-btn vl-btn-primary vl-btn-sm" (click)="openTemplateStudio(tpl.id)">
-                Personalizar
-              </button>
-              <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="openQuickPreview(tpl)">
-                Vista previa
-              </button>
-              <button type="button" class="vl-btn vl-btn-ghost vl-btn-sm" (click)="openVisualEditor(tpl.visualPresetKey)" title="Editar en lienzo visual">
-                Editor Visual
-              </button>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= SECCIÓN DEL EDITOR VISUAL ================= -->
-  <section id="editor-visual" class="vl-section vl-visual-banner-section">
-    <div class="vl-container">
-      <div class="vl-visual-banner">
-        <div class="vl-visual-copy">
-          <span class="vl-eyebrow vl-eyebrow-gold">Lienzo Interactivo Drag &amp; Drop</span>
-          <h2>¿Prefieres libertad creativa absoluta? Entra directo al Editor Visual</h2>
-          <p>
-            Acomoda textos, marcos fotográficos, videos, música, botones y módulos funcionales (RSVP, mapa, pase QR, álbum y peticiones al DJ) en vista para celular, tablet y escritorio.
+          <p class="vl-hero-lead">
+            Prueba y personaliza nuestras plantillas interactivas o diseña desde cero en el <strong>Editor
+              Visual</strong> sin registrarte primero. Cuando estés listo para guardar, inicia sesión o crea tu cuenta y
+            tu evento se creará automáticamente con todos tus datos intactos.
           </p>
 
-          <ul class="vl-visual-perks">
-            <li>✦ Capas editables estilo estudio de diseño con deshacer/rehacer</li>
-            <li>✦ Incluye presets listos de <strong>Elegancia Rústica (Girasoles)</strong> y <strong>Navy Blue &amp; Gold</strong></li>
-            <li>✦ Diseña también tu Pase VIP con QR y Pantalla de Acceso</li>
-            <li>✦ Autoguardado local: al presionar <strong>Guardar y crear evento</strong> se vincula a tu nueva cuenta</li>
-          </ul>
-
-          <div class="vl-visual-cta-group">
-            <button type="button" class="vl-btn vl-btn-gold vl-btn-lg" (click)="openVisualEditor('boda-girasoles')">
-              Abrir Editor Visual · Girasoles 🌻
+          <div class="vl-hero-cta-row">
+            <button type="button" class="vl-btn vl-btn-gold vl-btn-lg"
+              (click)="scrollToSection('plantillas-exclusivas')">
+              <span>Ver y Editar Plantillas</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
             </button>
-            <button type="button" class="vl-btn vl-btn-outline-light vl-btn-lg" (click)="openVisualEditor('boda-navy-blue')">
-              Abrir Editor Visual · Navy Blue &amp; Gold ✦
+
+            <button type="button" class="vl-btn vl-btn-dark vl-btn-lg" (click)="openVisualEditor('boda-girasoles')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+              </svg>
+              <span>Probar Editor Visual</span>
+            </button>
+
+            <button *ngIf="!auth.isAuthenticated" type="button" class="vl-btn vl-btn-outline vl-btn-lg"
+              (click)="goToLogin()">
+              Iniciar sesión
+            </button>
+          </div>
+
+          <div class="vl-hero-highlights">
+            <div class="vl-highlight-item">
+              <strong>RSVP + Pases QR</strong>
+              <span>Check-in digital en recepción</span>
+            </div>
+            <div class="vl-highlight-divider"></div>
+            <div class="vl-highlight-item">
+              <strong>Croquis de Mesas</strong>
+              <span>Asignación inteligente de lugares</span>
+            </div>
+            <div class="vl-highlight-divider"></div>
+            <div class="vl-highlight-item">
+              <strong>Edición en Vivo</strong>
+              <span>Prueba gratis sin perder datos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjetas flotantes de las 2 plantillas estrella -->
+        <div class="vl-hero-showcase">
+          <article class="vl-showcase-card vl-showcase-girasoles" (click)="openTemplateStudio('boda-girasoles')">
+            <div class="vl-showcase-img-wrap">
+              <img src="assets/template-previews/boda-girasoles.jpg" alt="Elegancia Rústica: Girasoles Radiantes" />
+              <span class="vl-showcase-tag">🌻 Boda Rústica</span>
+            </div>
+            <div class="vl-showcase-meta">
+              <h3>Elegancia Rústica: Girasoles, Madera &amp; Anillos Dorados</h3>
+              <span class="vl-showcase-cta">Personalizar ahora →</span>
+            </div>
+          </article>
+
+          <article class="vl-showcase-card vl-showcase-navy" (click)="openTemplateStudio('boda-navy-blue')">
+            <div class="vl-showcase-img-wrap">
+              <img src="assets/template-previews/boda-navy-blue.jpg" alt="Navy Blue & Gold: Azul Noche" />
+              <span class="vl-showcase-tag vl-tag-navy">✦ Gala Nupcial</span>
+            </div>
+            <div class="vl-showcase-meta">
+              <h3>Navy Blue &amp; Gold: Azul Noche, Acuarela &amp; Flores Nobles</h3>
+              <span class="vl-showcase-cta">Personalizar ahora →</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= INFORMACIÓN PARA LOS USUARIOS (BENEFICIOS) ================= -->
+    <section id="beneficios" class="vl-section vl-section-surface">
+      <div class="vl-container">
+        <div class="vl-section-header">
+          <span class="vl-eyebrow">Todo para Anfitriones y Planners</span>
+          <h2>Mucho más que una invitación: el centro de control completo de tu celebración</h2>
+          <p>Desde el primer anuncio hasta el último baile, Velisse automatiza tus confirmaciones, mesas, pases QR y la
+            experiencia interactiva de cada invitado.</p>
+        </div>
+
+        <div class="vl-features-grid">
+          <article *ngFor="let feat of platformFeatures" class="vl-feature-card">
+            <span class="vl-feature-badge">{{ feat.badge }}</span>
+            <h3>{{ feat.title }}</h3>
+            <p>{{ feat.description }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PLANTILLAS DESTACADAS & CATÁLOGO EDITABLE ================= -->
+    <section id="plantillas-exclusivas" class="vl-section">
+      <div class="vl-container">
+        <div class="vl-section-header">
+          <span class="vl-eyebrow">Colección Interactiva · Prueba en Vivo</span>
+          <h2>Elige una plantilla, edítala a tu gusto y guárdala cuando estés listo</h2>
+          <p>Personaliza textos, nombres, fecha, ubicaciones e itinerario ahora mismo. Al hacer clic en
+            <strong>Guardar</strong>, iniciarás sesión o crearás tu cuenta y tu evento conservará todo tu trabajo.</p>
+        </div>
+
+        <!-- SPOTLIGHT DE LAS 2 PLANTILLAS PRINCIPALES SOLICITADAS -->
+        <div class="vl-flagship-grid">
+          <article *ngFor="let tpl of featuredTemplates" class="vl-flagship-card"
+            [class.is-navy]="tpl.id === 'boda-navy-blue'" [class.is-girasoles]="tpl.id === 'boda-girasoles'">
+            <div class="vl-flagship-media">
+              <img [src]="tpl.previewImage" [alt]="tpl.name" loading="lazy" />
+              <div class="vl-flagship-media-overlay">
+                <button type="button" class="vl-btn vl-btn-light vl-btn-sm" (click)="openQuickPreview(tpl)">
+                  Vista previa interactiva
+                </button>
+              </div>
+              <span class="vl-flagship-badge">{{ tpl.badge }}</span>
+            </div>
+
+            <div class="vl-flagship-body">
+              <div class="vl-flagship-music" *ngIf="tpl.musicTrackLabel">
+                <span>♪ Música integrada:</span>
+                <strong>{{ tpl.musicTrackLabel }}</strong>
+              </div>
+
+              <h3>{{ tpl.name }}</h3>
+              <p>{{ tpl.description }}</p>
+
+              <ul class="vl-flagship-features">
+                <li *ngFor="let item of tpl.features">
+                  <span class="vl-check">✓</span>
+                  <span>{{ item }}</span>
+                </li>
+              </ul>
+
+              <div class="vl-flagship-actions">
+                <button type="button" class="vl-btn vl-btn-gold" (click)="openTemplateStudio(tpl.id)">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Editar esta plantilla</span>
+                </button>
+
+                <button type="button" class="vl-btn vl-btn-outline" (click)="openVisualEditor(tpl.visualPresetKey)">
+                  <span>Abrir en Editor Visual</span>
+                </button>
+
+                <button type="button" class="vl-btn vl-btn-ghost" (click)="openQuickPreview(tpl)">
+                  <span>Ver demo</span>
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- MÁS PLANTILLAS DEL CATÁLOGO -->
+        <div class="vl-catalog-subheader">
+          <div>
+            <h3>Explora más estilos de la colección Velisse</h3>
+            <p>Todas las plantillas incluyen confirmación RSVP, ubicaciones, música, galería y edición inmediata.</p>
+          </div>
+          <div class="vl-filter-pills" role="tablist" aria-label="Filtrar plantillas">
+            <button type="button" [class.active]="catalogFilter === 'all'"
+              (click)="catalogFilter = 'all'">Todas</button>
+            <button type="button" [class.active]="catalogFilter === 'featured'"
+              (click)="catalogFilter = 'featured'">Destacadas</button>
+            <button type="button" [class.active]="catalogFilter === 'boda'"
+              (click)="catalogFilter = 'boda'">Bodas</button>
+            <button type="button" [class.active]="catalogFilter === 'xv'" (click)="catalogFilter = 'xv'">XV
+              Años</button>
+            <button type="button" [class.active]="catalogFilter === 'graduacion'"
+              (click)="catalogFilter = 'graduacion'">Graduaciones</button>
+          </div>
+        </div>
+
+        <div class="vl-catalog-grid">
+          <article *ngFor="let tpl of filteredTemplates" class="vl-tpl-card">
+            <div class="vl-tpl-thumb" (click)="openQuickPreview(tpl)">
+              <img [src]="tpl.previewImage" [alt]="tpl.name" loading="lazy" />
+              <span class="vl-tpl-badge">{{ tpl.badge }}</span>
+            </div>
+            <div class="vl-tpl-content">
+              <h4>{{ tpl.name }}</h4>
+              <p>{{ tpl.description }}</p>
+              <div class="vl-tpl-actions">
+                <button type="button" class="vl-btn vl-btn-primary vl-btn-sm" (click)="openTemplateStudio(tpl.id)">
+                  Personalizar
+                </button>
+                <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="openQuickPreview(tpl)">
+                  Vista previa
+                </button>
+                <button type="button" class="vl-btn vl-btn-ghost vl-btn-sm"
+                  (click)="openVisualEditor(tpl.visualPresetKey)" title="Editar en lienzo visual">
+                  Editor Visual
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN DEL EDITOR VISUAL ================= -->
+    <section id="editor-visual" class="vl-section vl-visual-banner-section">
+      <div class="vl-container">
+        <div class="vl-visual-banner">
+          <div class="vl-visual-copy">
+            <span class="vl-eyebrow vl-eyebrow-gold">Lienzo Interactivo Drag &amp; Drop</span>
+            <h2>¿Prefieres libertad creativa absoluta? Entra directo al Editor Visual</h2>
+            <p>
+              Acomoda textos, marcos fotográficos, videos, música, botones y módulos funcionales (RSVP, mapa, pase QR,
+              álbum y peticiones al DJ) en vista para celular, tablet y escritorio.
+            </p>
+
+            <ul class="vl-visual-perks">
+              <li>✦ Capas editables estilo estudio de diseño con deshacer/rehacer</li>
+              <li>✦ Incluye presets listos de <strong>Elegancia Rústica (Girasoles)</strong> y <strong>Navy Blue &amp;
+                  Gold</strong></li>
+              <li>✦ Diseña también tu Pase VIP con QR y Pantalla de Acceso</li>
+              <li>✦ Autoguardado local: al presionar <strong>Guardar y crear evento</strong> se vincula a tu nueva
+                cuenta</li>
+            </ul>
+
+            <div class="vl-visual-cta-group">
+              <button type="button" class="vl-btn vl-btn-gold vl-btn-lg" (click)="openVisualEditor('boda-girasoles')">
+                Abrir Editor Visual · Girasoles 🌻
+              </button>
+              <button type="button" class="vl-btn vl-btn-outline-light vl-btn-lg"
+                (click)="openVisualEditor('boda-navy-blue')">
+                Abrir Editor Visual · Navy Blue &amp; Gold ✦
+              </button>
+            </div>
+          </div>
+
+          <div class="vl-visual-mockup" aria-hidden="true">
+            <div class="vl-mockup-window">
+              <div class="vl-mockup-topbar">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="vl-mockup-title">Velisse · Editor Visual</span>
+                <span class="vl-mockup-save">Guardar y crear evento</span>
+              </div>
+              <div class="vl-mockup-workspace">
+                <div class="vl-mockup-tools">
+                  <span>Diseño</span>
+                  <span>Elementos</span>
+                  <span>Fotos</span>
+                  <span>RSVP &amp; QR</span>
+                  <span>Secciones</span>
+                </div>
+                <div class="vl-mockup-canvas">
+                  <div class="vl-mockup-phone">
+                    <span class="vl-phone-eyebrow">NUESTRA BODA</span>
+                    <strong>Sofía &amp; Mateo</strong>
+                    <small>Hacienda Los Girasoles · 17:00 hrs</small>
+                    <span class="vl-phone-btn">Confirmar Asistencia</span>
+                  </div>
+                </div>
+                <div class="vl-mockup-inspector">
+                  <div class="vl-insp-line w80"></div>
+                  <div class="vl-insp-swatches">
+                    <i style="background:#2d2112"></i>
+                    <i style="background:#d49b27"></i>
+                    <i style="background:#0d1b2a"></i>
+                    <i style="background:#d4af37"></i>
+                  </div>
+                  <div class="vl-insp-line w60"></div>
+                  <div class="vl-insp-box"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CÓMO FUNCIONA EN 3 PASOS ================= -->
+    <section id="como-funciona" class="vl-section vl-section-surface">
+      <div class="vl-container">
+        <div class="vl-section-header">
+          <span class="vl-eyebrow">Flujo sin Fricción</span>
+          <h2>Diseña primero, crea tu cuenta al guardar y no pierdas ni un detalle</h2>
+        </div>
+
+        <div class="vl-steps-grid">
+          <article *ngFor="let item of workflowSteps" class="vl-step-card">
+            <span class="vl-step-num">{{ item.step }}</span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PREGUNTAS FRECUENTES ================= -->
+    <section id="preguntas" class="vl-section">
+      <div class="vl-container vl-faq-container">
+        <div class="vl-section-header">
+          <span class="vl-eyebrow">Resolvemos tus dudas</span>
+          <h2>Preguntas frecuentes</h2>
+        </div>
+
+        <div class="vl-faq-list">
+          <article *ngFor="let item of faqs; let idx = index" class="vl-faq-item" [class.open]="item.open">
+            <button type="button" class="vl-faq-question" (click)="toggleFaq(idx)">
+              <span>{{ item.q }}</span>
+              <span class="vl-faq-icon">{{ item.open ? '−' : '+' }}</span>
+            </button>
+            <p *ngIf="item.open" class="vl-faq-answer">{{ item.a }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CTA FINAL & FOOTER ================= -->
+    <footer class="vl-footer">
+      <div class="vl-container">
+        <div class="vl-footer-cta">
+          <div class="vl-footer-cta-copy">
+            <h2>¿Listo para dar vida a la invitación de tus sueños?</h2>
+            <p>Empieza personalizando una plantilla gratis o accede a tu cuenta Velisse.</p>
+          </div>
+          <div class="vl-footer-cta-buttons">
+            <button type="button" class="vl-btn vl-btn-gold vl-btn-sm" (click)="openTemplateStudio('boda-girasoles')">
+              Personalizar Plantilla
+            </button>
+            <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="goToLogin()">
+              Iniciar sesión
             </button>
           </div>
         </div>
 
-        <div class="vl-visual-mockup" aria-hidden="true">
-          <div class="vl-mockup-window">
-            <div class="vl-mockup-topbar">
-              <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-              <span class="vl-mockup-title">Velisse · Editor Visual</span>
-              <span class="vl-mockup-save">Guardar y crear evento</span>
-            </div>
-            <div class="vl-mockup-workspace">
-              <div class="vl-mockup-tools">
-                <span>Diseño</span>
-                <span>Elementos</span>
-                <span>Fotos</span>
-                <span>RSVP &amp; QR</span>
-                <span>Secciones</span>
-              </div>
-              <div class="vl-mockup-canvas">
-                <div class="vl-mockup-phone">
-                  <span class="vl-phone-eyebrow">NUESTRA BODA</span>
-                  <strong>Sofía &amp; Mateo</strong>
-                  <small>Hacienda Los Girasoles · 17:00 hrs</small>
-                  <span class="vl-phone-btn">Confirmar Asistencia</span>
-                </div>
-              </div>
-              <div class="vl-mockup-inspector">
-                <div class="vl-insp-line w80"></div>
-                <div class="vl-insp-swatches">
-                  <i style="background:#2d2112"></i>
-                  <i style="background:#d49b27"></i>
-                  <i style="background:#0d1b2a"></i>
-                  <i style="background:#d4af37"></i>
-                </div>
-                <div class="vl-insp-line w60"></div>
-                <div class="vl-insp-box"></div>
-              </div>
-            </div>
+        <div class="vl-footer-bottom">
+          <div class="vl-brand vl-footer-brand">
+            <span class="vl-brand-logo">
+              <img src="assets/logos/velisse.svg" alt="Velisse" />
+            </span>
+            <span class="vl-brand-copy">
+              <strong>Velisse</strong>
+              <small>by KyndraSoft · Invitaciones Digitales</small>
+            </span>
+          </div>
+
+          <div class="vl-footer-links">
+            <a routerLink="/new/login">Iniciar sesión</a>
+            <a routerLink="/new/register">Crear cuenta</a>
+            <a routerLink="/contact">Contacto</a>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </footer>
+  </div>
 
-  <!-- ================= CÓMO FUNCIONA EN 3 PASOS ================= -->
-  <section id="como-funciona" class="vl-section vl-section-surface">
-    <div class="vl-container">
-      <div class="vl-section-header">
-        <span class="vl-eyebrow">Flujo sin Fricción</span>
-        <h2>Diseña primero, crea tu cuenta al guardar y no pierdas ni un detalle</h2>
-      </div>
-
-      <div class="vl-steps-grid">
-        <article *ngFor="let item of workflowSteps" class="vl-step-card">
-          <span class="vl-step-num">{{ item.step }}</span>
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.description }}</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= PREGUNTAS FRECUENTES ================= -->
-  <section id="preguntas" class="vl-section">
-    <div class="vl-container vl-faq-container">
-      <div class="vl-section-header">
-        <span class="vl-eyebrow">Resolvemos tus dudas</span>
-        <h2>Preguntas frecuentes</h2>
-      </div>
-
-      <div class="vl-faq-list">
-        <article *ngFor="let item of faqs; let idx = index" class="vl-faq-item" [class.open]="item.open">
-          <button type="button" class="vl-faq-question" (click)="toggleFaq(idx)">
-            <span>{{ item.q }}</span>
-            <span class="vl-faq-icon">{{ item.open ? '−' : '+' }}</span>
-          </button>
-          <p *ngIf="item.open" class="vl-faq-answer">{{ item.a }}</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= CTA FINAL & FOOTER ================= -->
-  <footer class="vl-footer">
-    <div class="vl-container">
-      <div class="vl-footer-cta">
-        <div class="vl-footer-cta-copy">
-          <h2>¿Listo para dar vida a la invitación de tus sueños?</h2>
-          <p>Empieza personalizando una plantilla gratis o accede a tu cuenta Velisse.</p>
-        </div>
-        <div class="vl-footer-cta-buttons">
-          <button type="button" class="vl-btn vl-btn-gold vl-btn-sm" (click)="openTemplateStudio('boda-girasoles')">
-            Personalizar Plantilla
-          </button>
-          <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="goToLogin()">
-            Iniciar sesión
-          </button>
-        </div>
-      </div>
-
-      <div class="vl-footer-bottom">
-        <div class="vl-brand vl-footer-brand">
-          <span class="vl-brand-logo">
-            <img src="assets/logos/velisse.svg" alt="Velisse" />
-          </span>
-          <span class="vl-brand-copy">
-            <strong>Velisse</strong>
-            <small>by KyndraSoft · Invitaciones Digitales</small>
-          </span>
-        </div>
-
-        <div class="vl-footer-links">
-          <a routerLink="/new/login">Iniciar sesión</a>
-          <a routerLink="/new/register">Crear cuenta</a>
-          <a routerLink="/contact">Contacto</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-</div>
-
-<!-- =======================================================================
+  <!-- =======================================================================
      MODAL 1: VISTA PREVIA RÁPIDA EN VIVO
      ======================================================================= -->
-<div class="vl-modal-backdrop" *ngIf="previewModalOpen && previewTemplate" (click)="closeQuickPreview()">
-  <div class="vl-preview-modal" (click)="$event.stopPropagation()">
-    <header class="vl-studio-topbar">
-      <div class="vl-studio-title">
-        <span class="vl-studio-badge">{{ previewTemplate.badge }}</span>
-        <strong>{{ previewTemplate.name }}</strong>
-      </div>
+  <div class="vl-modal-backdrop" *ngIf="previewModalOpen && previewTemplate" (click)="closeQuickPreview()">
+    <div class="vl-preview-modal" (click)="$event.stopPropagation()">
+      <header class="vl-studio-topbar">
+        <div class="vl-studio-title">
+          <span class="vl-studio-badge">{{ previewTemplate.badge }}</span>
+          <strong>{{ previewTemplate.name }}</strong>
+        </div>
 
-      <div class="vl-viewport-switch">
-        <button type="button" [class.active]="previewDevice === 'mobile'" (click)="previewDevice = 'mobile'">Celular</button>
-        <button type="button" [class.active]="previewDevice === 'desktop'" (click)="previewDevice = 'desktop'">Escritorio</button>
-      </div>
+        <div class="vl-viewport-switch">
+          <button type="button" [class.active]="previewDevice === 'mobile'"
+            (click)="previewDevice = 'mobile'">Celular</button>
+          <button type="button" [class.active]="previewDevice === 'desktop'"
+            (click)="previewDevice = 'desktop'">Escritorio</button>
+        </div>
 
-      <div class="vl-studio-actions">
-        <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="openVisualEditor(previewTemplate.visualPresetKey)">
-          Editor Visual
-        </button>
-        <button type="button" class="vl-btn vl-btn-gold vl-btn-sm" (click)="editFromPreview()">
-          Personalizar y editar →
-        </button>
-        <button type="button" class="vl-icon-close" (click)="closeQuickPreview()" aria-label="Cerrar">✕</button>
-      </div>
-    </header>
+        <div class="vl-studio-actions">
+          <button type="button" class="vl-btn vl-btn-outline vl-btn-sm"
+            (click)="openVisualEditor(previewTemplate.visualPresetKey)">
+            Editor Visual
+          </button>
+          <button type="button" class="vl-btn vl-btn-gold vl-btn-sm" (click)="editFromPreview()">
+            Personalizar y editar →
+          </button>
+          <button type="button" class="vl-icon-close" (click)="closeQuickPreview()" aria-label="Cerrar">✕</button>
+        </div>
+      </header>
 
-    <div class="vl-preview-stage" [class.is-mobile]="previewDevice === 'mobile'">
-      <div class="vl-iframe-shell">
-        <iframe *ngIf="previewSafeUrl" #previewIframe [src]="previewSafeUrl" title="Vista previa de plantilla"
-          (load)="previewIframeLoading = false"></iframe>
+      <div class="vl-preview-stage" [class.is-mobile]="previewDevice === 'mobile'">
+        <div class="vl-iframe-shell">
+          <iframe *ngIf="previewSafeUrl" #previewIframe [src]="previewSafeUrl" title="Vista previa de plantilla"
+            (load)="previewIframeLoading = false"></iframe>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- =======================================================================
+  <!-- =======================================================================
      MODAL 2: ESTUDIO INTERACTIVO DE EDICIÓN DE PLANTILLAS (MODO INVITADO)
      ======================================================================= -->
-<div class="vl-modal-backdrop" *ngIf="studioOpen && draftState && draftState.invitation.content as content" (click)="closeTemplateStudio()">
-  <div class="vl-studio-modal" (click)="$event.stopPropagation()">
+  <div class="vl-modal-backdrop" *ngIf="studioOpen && draftState && draftState.invitation.content as content"
+    (click)="closeTemplateStudio()">
+    <div class="vl-studio-modal" (click)="$event.stopPropagation()">
 
-    <!-- Barra Superior del Estudio -->
-    <header class="vl-studio-topbar">
-      <div class="vl-studio-left">
-        <button type="button" class="vl-back-chip" (click)="closeTemplateStudio()">← Volver</button>
-        <div class="vl-studio-selector">
-          <label for="studioTplSelect">Plantilla:</label>
-          <select id="studioTplSelect" [ngModel]="studioTemplateKey" (ngModelChange)="switchStudioTemplate($event)">
-            <option *ngFor="let item of templates" [value]="item.id">{{ item.name }}</option>
-          </select>
+      <!-- Barra Superior del Estudio -->
+      <header class="vl-studio-topbar">
+        <div class="vl-studio-left">
+          <button type="button" class="vl-back-chip" (click)="closeTemplateStudio()">← Volver</button>
+          <div class="vl-studio-selector">
+            <label for="studioTplSelect">Plantilla:</label>
+            <select id="studioTplSelect" [ngModel]="studioTemplateKey" (ngModelChange)="switchStudioTemplate($event)">
+              <option *ngFor="let item of templates" [value]="item.id">{{ item.name }}</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div class="vl-viewport-switch">
-        <button type="button" [class.active]="studioViewport === 'mobile'" (click)="studioViewport = 'mobile'">📱 Celular</button>
-        <button type="button" [class.active]="studioViewport === 'desktop'" (click)="studioViewport = 'desktop'">🖥️ Escritorio</button>
-      </div>
+        <div class="vl-viewport-switch">
+          <button type="button" [class.active]="studioViewport === 'mobile'" (click)="studioViewport = 'mobile'">📱
+            Celular</button>
+          <button type="button" [class.active]="studioViewport === 'desktop'" (click)="studioViewport = 'desktop'">🖥️
+            Escritorio</button>
+        </div>
 
-      <div class="vl-studio-actions">
-        <button type="button" class="vl-btn vl-btn-outline vl-btn-sm" (click)="openVisualEditor(activeStudioMeta?.visualPresetKey)">
-          Abrir en Editor Visual
-        </button>
-        <button type="button" class="vl-btn vl-btn-gold" [disabled]="savingAndCreating" (click)="saveTemplateAndProceed()">
-          <span *ngIf="!savingAndCreating">💾 Guardar y crear mi evento →</span>
-          <span *ngIf="savingAndCreating">Guardando evento...</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Toast informativo -->
-    <div *ngIf="studioToast" class="vl-studio-toast">
-      <span>✨ {{ studioToast }}</span>
-    </div>
-
-    <!-- Cuerpo Dividido: Formulario + Vista Previa Interactiva -->
-    <div class="vl-studio-body">
-      <aside class="vl-studio-sidebar">
-        <div class="vl-studio-tabs">
-          <button type="button" [class.active]="studioTab === 'main'" (click)="selectStudioTab('main')">Portada y Fecha</button>
-          <button type="button" [class.active]="studioTab === 'inline'" (click)="selectStudioTab('inline')">
-            Textos en Vivo
-            <span *ngIf="editedTextsCount" class="vl-count-pill">{{ editedTextsCount }}</span>
+        <div class="vl-studio-actions">
+          <button type="button" class="vl-btn vl-btn-outline vl-btn-sm"
+            (click)="openVisualEditor(activeStudioMeta?.visualPresetKey)">
+            Abrir en Editor Visual
           </button>
-          <button type="button" [class.active]="studioTab === 'story'" (click)="selectStudioTab('story')">Historia y Código</button>
-          <button type="button" [class.active]="studioTab === 'schedule'" (click)="selectStudioTab('schedule')">Sedes y Horarios</button>
+          <button type="button" class="vl-btn vl-btn-gold" [disabled]="savingAndCreating"
+            (click)="saveTemplateAndProceed()">
+            <span *ngIf="!savingAndCreating">💾 Guardar y crear mi evento →</span>
+            <span *ngIf="savingAndCreating">Guardando evento...</span>
+          </button>
         </div>
+      </header>
 
-        <div class="vl-studio-form-scroll">
-          <!-- TAB 1: DATOS PRINCIPALES -->
-          <ng-container *ngIf="studioTab === 'main'">
-            <div class="vl-field">
-              <label>Nombre del evento (para tu panel)</label>
-              <input type="text" [(ngModel)]="draftState.event.title" (ngModelChange)="onEventTitleManualChange()"
-                placeholder="Ej. Boda de Sofía & Mateo" />
-            </div>
+      <!-- Toast informativo -->
+      <div *ngIf="studioToast" class="vl-studio-toast">
+        <span>✨ {{ studioToast }}</span>
+      </div>
 
-            <div class="vl-field">
-              <label>Nombres / Título principal en portada</label>
-              <input type="text" [(ngModel)]="content.headline" (ngModelChange)="onHeadlineFieldChange()"
-                placeholder="Ej. Sofía & Mateo" />
-            </div>
+      <!-- Cuerpo Dividido: Formulario + Vista Previa Interactiva -->
+      <div class="vl-studio-body">
+        <aside class="vl-studio-sidebar">
+          <div class="vl-studio-tabs">
+            <button type="button" [class.active]="studioTab === 'main'" (click)="selectStudioTab('main')">Portada y
+              Fecha</button>
+            <button type="button" [class.active]="studioTab === 'inline'" (click)="selectStudioTab('inline')">
+              Textos en Vivo
+              <span *ngIf="editedTextsCount" class="vl-count-pill">{{ editedTextsCount }}</span>
+            </button>
+            <button type="button" [class.active]="studioTab === 'story'" (click)="selectStudioTab('story')">Historia y
+              Código</button>
+            <button type="button" [class.active]="studioTab === 'schedule'" (click)="selectStudioTab('schedule')">Sedes
+              y Horarios</button>
+          </div>
 
-            <div class="vl-field">
-              <label>Subtítulo o frase de portada</label>
-              <textarea rows="2" [(ngModel)]="content.subheadline" (ngModelChange)="onStudioFieldChange()"
-                placeholder="Ej. El amor florece en cada momento"></textarea>
-            </div>
-
-            <div class="vl-field-row">
+          <div class="vl-studio-form-scroll">
+            <!-- TAB 1: DATOS PRINCIPALES -->
+            <ng-container *ngIf="studioTab === 'main'">
               <div class="vl-field">
-                <label>Fecha del evento</label>
-                <input type="date" [(ngModel)]="draftState.event.date" (ngModelChange)="onStudioFieldChange()" />
+                <label>Nombre del evento (para tu panel)</label>
+                <input type="text" [(ngModel)]="draftState.event.title" (ngModelChange)="onEventTitleManualChange()"
+                  placeholder="Ej. Boda de Sofía & Mateo" />
               </div>
+
               <div class="vl-field">
-                <label>Hora de inicio</label>
-                <input type="time" [(ngModel)]="draftState.event.time" (ngModelChange)="onStudioFieldChange()" />
+                <label>Nombres / Título principal en portada</label>
+                <input type="text" [(ngModel)]="content.headline" (ngModelChange)="onHeadlineFieldChange()"
+                  placeholder="Ej. Sofía & Mateo" />
               </div>
-            </div>
 
-            <div class="vl-field">
-              <label>Tipo de celebración</label>
-              <select [ngModel]="draftState.event.type" (ngModelChange)="onEventTypeChange($event)">
-                <option value="boda">Boda</option>
-                <option value="xv">XV Años</option>
-                <option value="graduacion">Graduación</option>
-                <option value="bautizo">Bautizo</option>
-                <option value="cumpleanos">Cumpleaños</option>
-                <option value="otro">Otro evento</option>
-              </select>
-            </div>
-
-            <div class="vl-field">
-              <label>Padres o anfitriones (separados por coma)</label>
-              <input type="text" [(ngModel)]="hostsText" (ngModelChange)="onStudioFieldChange()"
-                placeholder="Familia Hernández, Familia Morales" />
-            </div>
-          </ng-container>
-
-          <!-- TAB 2: HISTORIA Y CÓDIGO DE VESTIMENTA -->
-          <ng-container *ngIf="studioTab === 'story'">
-            <div class="vl-field">
-              <label>Título de la sección Historia</label>
-              <input type="text" [(ngModel)]="content.storyTitle" (ngModelChange)="onStudioFieldChange()"
-                placeholder="Unidos por el Destino" />
-            </div>
-
-            <div class="vl-field">
-              <label>Mensaje de bienvenida / Nuestra historia</label>
-              <textarea rows="4" [(ngModel)]="content.storyBody" (ngModelChange)="content.message = content.storyBody; onStudioFieldChange()"
-                placeholder="Comparte un mensaje emotivo para tus invitados..."></textarea>
-            </div>
-
-            <div class="vl-field">
-              <label>Código de vestimenta (Dress Code)</label>
-              <input type="text" [(ngModel)]="content.dressCode" (ngModelChange)="onStudioFieldChange()"
-                placeholder="Ej. Formal / Etiqueta Rigurosa" />
-            </div>
-          </ng-container>
-
-          <!-- TAB 3: UBICACIONES E ITINERARIO -->
-          <ng-container *ngIf="studioTab === 'schedule'">
-            <div class="vl-subblock-header">
-              <strong>Ubicaciones del evento</strong>
-              <button type="button" class="vl-mini-btn" (click)="addLocation()">+ Agregar lugar</button>
-            </div>
-
-            <div *ngFor="let loc of content.locations; let i = index" class="vl-repeater-card">
-              <div class="vl-repeater-top">
-                <span>Ubicación #{{ i + 1 }}</span>
-                <button *ngIf="(content.locations?.length || 0) > 1" type="button" class="vl-remove-btn" (click)="removeLocation(i)">Eliminar</button>
+              <div class="vl-field">
+                <label>Subtítulo o frase de portada</label>
+                <textarea rows="2" [(ngModel)]="content.subheadline" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Ej. El amor florece en cada momento"></textarea>
               </div>
-              <input type="text" [(ngModel)]="loc.type" (ngModelChange)="onStudioFieldChange()" placeholder="Tipo (Ej. Ceremonia o Recepción)" />
-              <input type="text" [(ngModel)]="loc.name" (ngModelChange)="onStudioFieldChange()" placeholder="Nombre del salón o iglesia" />
-              <input type="text" [(ngModel)]="loc.address" (ngModelChange)="onStudioFieldChange()" placeholder="Dirección completa" />
-              <input type="url" [(ngModel)]="loc.mapUrl" (ngModelChange)="onStudioFieldChange()" placeholder="Enlace de Google Maps (opcional)" />
-            </div>
 
-            <div class="vl-subblock-header" style="margin-top: 18px;">
-              <strong>Itinerario de actividades</strong>
-              <button type="button" class="vl-mini-btn" (click)="addItineraryItem()">+ Agregar horario</button>
-            </div>
-
-            <div *ngFor="let item of content.itinerary; let j = index" class="vl-repeater-card">
-              <div class="vl-repeater-top">
-                <span>Actividad #{{ j + 1 }}</span>
-                <button *ngIf="(content.itinerary?.length || 0) > 1" type="button" class="vl-remove-btn" (click)="removeItineraryItem(j)">Eliminar</button>
-              </div>
               <div class="vl-field-row">
-                <input type="text" [(ngModel)]="item.time" (ngModelChange)="onStudioFieldChange()" placeholder="19:00" />
-                <input type="text" [(ngModel)]="item.title" (ngModelChange)="onStudioFieldChange()" placeholder="Actividad (Ej. Recepción)" />
+                <div class="vl-field">
+                  <label>Fecha del evento</label>
+                  <input type="date" [(ngModel)]="draftState.event.date" (ngModelChange)="onStudioFieldChange()" />
+                </div>
+                <div class="vl-field">
+                  <label>Hora de inicio</label>
+                  <input type="time" [(ngModel)]="draftState.event.time" (ngModelChange)="onStudioFieldChange()" />
+                </div>
               </div>
-              <input type="text" [(ngModel)]="item.description" (ngModelChange)="onStudioFieldChange()" placeholder="Detalle o salón" />
-            </div>
-          </ng-container>
 
-          <!-- TAB 4: EDICIÓN DIRECTA DE TEXTOS SOBRE LA PLANTILLA -->
-          <ng-container *ngIf="studioTab === 'inline'">
-            <div class="vl-inline-helper">
-              <h4>Edición tipo documento sobre la vista previa</h4>
-              <p>Activa la edición directa y haz clic sobre cualquier encabezado, etiqueta o párrafo dentro de la invitación a la derecha para escribir libremente.</p>
-
-              <label class="vl-inline-toggle">
-                <input type="checkbox" [checked]="inlineTextMode" (change)="toggleInlineTextMode()" />
-                <span>{{ inlineTextMode ? 'Edición directa activada en la vista previa' : 'Activar edición directa de textos' }}</span>
-              </label>
-
-              <div *ngIf="editedTextsCount > 0" class="vl-inline-stats">
-                <span>Has personalizado <strong>{{ editedTextsCount }}</strong> bloque(s) de texto.</span>
-                <button type="button" class="vl-remove-btn" (click)="resetInlineTexts()">Restablecer originales</button>
+              <div class="vl-field">
+                <label>Tipo de celebración</label>
+                <select [ngModel]="draftState.event.type" (ngModelChange)="onEventTypeChange($event)">
+                  <option value="boda">Boda</option>
+                  <option value="xv">XV Años</option>
+                  <option value="graduacion">Graduación</option>
+                  <option value="bautizo">Bautizo</option>
+                  <option value="cumpleanos">Cumpleaños</option>
+                  <option value="otro">Otro evento</option>
+                </select>
               </div>
-            </div>
-          </ng-container>
-        </div>
 
-        <footer class="vl-studio-sidebar-footer">
-          <small>Tus cambios se respaldan automáticamente. Al guardar crearás tu cuenta y tu evento quedará listo.</small>
-          <button type="button" class="vl-btn vl-btn-gold vl-btn-block" [disabled]="savingAndCreating" (click)="saveTemplateAndProceed()">
-            {{ auth.isAuthenticated ? 'Guardar y crear mi evento ahora →' : 'Guardar e ir a Iniciar Sesión / Crear Cuenta →' }}
-          </button>
-        </footer>
-      </aside>
+              <div class="vl-field">
+                <label>Padres o anfitriones (separados por coma)</label>
+                <input type="text" [(ngModel)]="hostsText" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Familia Hernández, Familia Morales" />
+              </div>
+            </ng-container>
 
-      <!-- Vista Previa Derecha -->
-      <div class="vl-studio-preview-pane" [class.is-mobile]="studioViewport === 'mobile'">
-        <div class="vl-studio-preview-hint" *ngIf="inlineTextMode">
-          ✍️ Modo edición directa activo: haz clic en cualquier texto de la plantilla para modificarlo.
-        </div>
-        <div class="vl-iframe-shell">
-          <div *ngIf="!studioIframeLoaded" class="vl-iframe-loader">Cargando plantilla interactiva...</div>
-          <iframe *ngIf="studioSafeUrl" #studioIframe [src]="studioSafeUrl" title="Editor en vivo de plantilla"
-            (load)="onStudioIframeLoad(studioIframe)"></iframe>
+            <!-- TAB 2: HISTORIA Y CÓDIGO DE VESTIMENTA -->
+            <ng-container *ngIf="studioTab === 'story'">
+              <div class="vl-field">
+                <label>Título de la sección Historia</label>
+                <input type="text" [(ngModel)]="content.storyTitle" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Unidos por el Destino" />
+              </div>
+
+              <div class="vl-field">
+                <label>Mensaje de bienvenida / Nuestra historia</label>
+                <textarea rows="4" [(ngModel)]="content.storyBody"
+                  (ngModelChange)="content.message = content.storyBody; onStudioFieldChange()"
+                  placeholder="Comparte un mensaje emotivo para tus invitados..."></textarea>
+              </div>
+
+              <div class="vl-field">
+                <label>Código de vestimenta (Dress Code)</label>
+                <input type="text" [(ngModel)]="content.dressCode" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Ej. Formal / Etiqueta Rigurosa" />
+              </div>
+            </ng-container>
+
+            <!-- TAB 3: UBICACIONES E ITINERARIO -->
+            <ng-container *ngIf="studioTab === 'schedule'">
+              <div class="vl-subblock-header">
+                <strong>Ubicaciones del evento</strong>
+                <button type="button" class="vl-mini-btn" (click)="addLocation()">+ Agregar lugar</button>
+              </div>
+
+              <div *ngFor="let loc of content.locations; let i = index" class="vl-repeater-card">
+                <div class="vl-repeater-top">
+                  <span>Ubicación #{{ i + 1 }}</span>
+                  <button *ngIf="(content.locations?.length || 0) > 1" type="button" class="vl-remove-btn"
+                    (click)="removeLocation(i)">Eliminar</button>
+                </div>
+                <input type="text" [(ngModel)]="loc.type" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Tipo (Ej. Ceremonia o Recepción)" />
+                <input type="text" [(ngModel)]="loc.name" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Nombre del salón o iglesia" />
+                <input type="text" [(ngModel)]="loc.address" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Dirección completa" />
+                <input type="url" [(ngModel)]="loc.mapUrl" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Enlace de Google Maps (opcional)" />
+              </div>
+
+              <div class="vl-subblock-header" style="margin-top: 18px;">
+                <strong>Itinerario de actividades</strong>
+                <button type="button" class="vl-mini-btn" (click)="addItineraryItem()">+ Agregar horario</button>
+              </div>
+
+              <div *ngFor="let item of content.itinerary; let j = index" class="vl-repeater-card">
+                <div class="vl-repeater-top">
+                  <span>Actividad #{{ j + 1 }}</span>
+                  <button *ngIf="(content.itinerary?.length || 0) > 1" type="button" class="vl-remove-btn"
+                    (click)="removeItineraryItem(j)">Eliminar</button>
+                </div>
+                <div class="vl-field-row">
+                  <input type="text" [(ngModel)]="item.time" (ngModelChange)="onStudioFieldChange()"
+                    placeholder="19:00" />
+                  <input type="text" [(ngModel)]="item.title" (ngModelChange)="onStudioFieldChange()"
+                    placeholder="Actividad (Ej. Recepción)" />
+                </div>
+                <input type="text" [(ngModel)]="item.description" (ngModelChange)="onStudioFieldChange()"
+                  placeholder="Detalle o salón" />
+              </div>
+            </ng-container>
+
+            <!-- TAB 4: EDICIÓN DIRECTA DE TEXTOS SOBRE LA PLANTILLA -->
+            <ng-container *ngIf="studioTab === 'inline'">
+              <div class="vl-inline-helper">
+                <h4>Edición tipo documento sobre la vista previa</h4>
+                <p>Activa la edición directa y haz clic sobre cualquier encabezado, etiqueta o párrafo dentro de la
+                  invitación a la derecha para escribir libremente.</p>
+
+                <label class="vl-inline-toggle">
+                  <input type="checkbox" [checked]="inlineTextMode" (change)="toggleInlineTextMode()" />
+                  <span>{{ inlineTextMode ? 'Edición directa activada en la vista previa' : 'Activar edición directa de
+                    textos' }}</span>
+                </label>
+
+                <div *ngIf="editedTextsCount > 0" class="vl-inline-stats">
+                  <span>Has personalizado <strong>{{ editedTextsCount }}</strong> bloque(s) de texto.</span>
+                  <button type="button" class="vl-remove-btn" (click)="resetInlineTexts()">Restablecer
+                    originales</button>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+
+          <footer class="vl-studio-sidebar-footer">
+            <small>Tus cambios se respaldan automáticamente. Al guardar crearás tu cuenta y tu evento quedará
+              listo.</small>
+            <button type="button" class="vl-btn vl-btn-gold vl-btn-block" [disabled]="savingAndCreating"
+              (click)="saveTemplateAndProceed()">
+              {{ auth.isAuthenticated ? 'Guardar y crear mi evento ahora →' : 'Guardar e ir a Iniciar Sesión / Crear
+              Cuenta →' }}
+            </button>
+          </footer>
+        </aside>
+
+        <!-- Vista Previa Derecha -->
+        <div class="vl-studio-preview-pane" [class.is-mobile]="studioViewport === 'mobile'">
+          <div class="vl-studio-preview-hint" *ngIf="inlineTextMode">
+            ✍️ Modo edición directa activo: haz clic en cualquier texto de la plantilla para modificarlo.
+          </div>
+          <div class="vl-iframe-shell">
+            <div *ngIf="!studioIframeLoaded" class="vl-iframe-loader">Cargando plantilla interactiva...</div>
+            <iframe *ngIf="studioSafeUrl" #studioIframe [src]="studioSafeUrl" title="Editor en vivo de plantilla"
+              (load)="onStudioIframeLoad(studioIframe)"></iframe>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
