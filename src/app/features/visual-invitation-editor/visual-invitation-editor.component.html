@@ -134,15 +134,8 @@
       (click)="$event.stopPropagation()">
       <header class="design-library-heading">
         <div class="catalog-title-col">
-          <div class="catalog-eyebrow">
-            <span>Catálogo de Plantillas · Canva Style</span>
-            <span class="creator-reward-tag">
-              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Gana el 5% por cada uso
-            </span>
-          </div>
-          <h1 id="designLibraryTitle">Plantillas Completas para tu Celebración</h1>
-          <p>Explora diseños 3 en 1 creados por la comunidad y diseñadores oficiales: Invitación interactiva, Pase VIP y
-            Pantalla de Acceso con validación NIP.</p>
+          <h1 id="designLibraryTitle">Plantillas para tu Celebración</h1>
+          <p>Elige un diseño prehecho o de la comunidad y personaliza cada capa libremente.</p>
         </div>
         <div class="catalog-header-actions">
           <button type="button" class="btn-publish-from-catalog"
@@ -156,26 +149,23 @@
         </div>
       </header>
 
-      <!-- Barra de herramientas: Búsqueda, Pestañas Comunidad / Mis Plantillas y Filtros -->
+      <!-- Barra compacta: Pestañas, Buscador y Categorías -->
       <div class="catalog-toolbar">
         <div class="catalog-tabs-and-search">
           <div class="catalog-source-tabs">
             <button type="button" [class.active]="catalogTab === 'builtin'" (click)="setCatalogTab('builtin')">
-              <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Plantillas Prehechas ({{
-              builtInPresets.length }})
+              <lucide-icon name="palette" [strokeWidth]="1.8"></lucide-icon> Prehechas ({{ builtInPresets.length }})
             </button>
             <button type="button" [class.active]="catalogTab === 'community'" (click)="setCatalogTab('community')">
-              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon> Comunidad &amp; Diseñadores ({{
-              catalogTemplates.length }})
+              <lucide-icon name="users" [strokeWidth]="1.8"></lucide-icon> Comunidad ({{ catalogTemplates.length }})
             </button>
             <button type="button" [class.active]="catalogTab === 'personal'" (click)="setCatalogTab('personal')">
-              <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Mis Plantillas ({{ personalTemplates.length
-              }})
+              <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon> Mis Plantillas ({{ personalTemplates.length }})
             </button>
           </div>
           <div class="catalog-search-wrap">
             <input type="text" [(ngModel)]="catalogSearch" (ngModelChange)="loadCatalogTemplates($event)"
-              placeholder="Buscar por tema, estilo o creador (ej. Boda, Oro, Floral, Princesa)..." />
+              placeholder="Buscar por estilo, tema o nombre..." />
             <button *ngIf="catalogSearch" type="button" class="btn-clear-search"
               (click)="catalogSearch = ''; loadCatalogTemplates('')">
               <lucide-icon name="x" [strokeWidth]="2"></lucide-icon>
@@ -186,27 +176,15 @@
         <div class="catalog-filters-row">
           <nav class="design-library-filters" aria-label="Filtrar por tipo de evento">
             <button
-              *ngFor="let filter of [{key:'all',label:'Todas las categorías'},{key:'boda',label:'Boda'},{key:'xv',label:'XV Años'},{key:'bautizo',label:'Bautizo'},{key:'graduacion',label:'Graduación'},{key:'cumpleanos',label:'Cumpleaños'},{key:'otro',label:'Otros'}]"
+              *ngFor="let filter of [{key:'all',label:'Todas'},{key:'boda',label:'Boda'},{key:'xv',label:'XV Años'},{key:'bautizo',label:'Bautizo'},{key:'graduacion',label:'Graduación'},{key:'cumpleanos',label:'Cumpleaños'},{key:'otro',label:'Otros'}]"
               type="button" [class.active]="libraryCategory === filter.key" (click)="setLibraryCategory(filter.key)">{{
               filter.label }}</button>
           </nav>
 
           <div class="catalog-content-chips">
-            <button type="button" [class.active]="catalogContentFilter === 'all'"
-              (click)="catalogContentFilter = 'all'">
-              Todas
-            </button>
             <button type="button" [class.active]="catalogContentFilter === 'full'"
-              (click)="catalogContentFilter = 'full'">
-              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Completas (3 en 1)
-            </button>
-            <button type="button" [class.active]="catalogContentFilter === 'pass'"
-              (click)="catalogContentFilter = 'pass'">
-              <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Con Pase VIP
-            </button>
-            <button type="button" [class.active]="catalogContentFilter === 'access'"
-              (click)="catalogContentFilter = 'access'">
-              <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Con Acceso
+              (click)="catalogContentFilter = catalogContentFilter === 'full' ? 'all' : 'full'">
+              <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> Solo 3 en 1
             </button>
           </div>
         </div>
@@ -236,58 +214,31 @@
               (click)="selectCatalogTemplate(template)">
 
               <div class="template-card-header">
-                <!-- Badges con SVG -->
                 <div class="template-card-badges">
                   <span class="badge-3in1"
                     *ngIf="template.includesInvitation !== false && hasPassDesign(template) && hasAccessScreen(template)">
-                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> 3 en 1
+                    3 en 1
                   </span>
                   <span class="badge-creator-reward" *ngIf="template.authorRewardPercent">
-                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.authorRewardPercent }}%
-                    creador
+                    {{ template.authorRewardPercent }}% creador
                   </span>
                   <span class="badge-official-preset" *ngIf="!template.authorRewardPercent && catalogTab === 'builtin'">
-                    Prehecha Oficial
+                    Oficial
                   </span>
                 </div>
 
-                <!-- Miniatura Visual Real de la Plantilla -->
                 <div class="template-card-thumb-container">
                   <img [src]="getTemplateThumbnail(template)" class="template-card-thumb-img"
-                    alt="Vista previa de {{ template.name }}" loading="lazy" />
-                  <div class="template-thumb-overlay">
-                    <span class="art-title">{{ template.name }}</span>
-                  </div>
+                    [alt]="template.name" (error)="onTemplateThumbError($event, template)" />
                 </div>
               </div>
 
               <div class="design-library-card-copy">
-                <div class="card-author-row">
-                  <span class="author-name">
-                    <lucide-icon name="users" [strokeWidth]="1.8"
-                      style="width: 12px; height: 12px; display: inline-block; vertical-align: -1px; margin-right: 3px;"></lucide-icon>
-                    {{ template.authorName || 'Velisse Oficial' }}
-                  </span>
-                  <span class="usage-count" *ngIf="template.usageCount">
-                    <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon> {{ template.usageCount }} usos
-                  </span>
-                </div>
                 <strong class="template-title">{{ template.name }}</strong>
-                <small class="template-desc">{{ template.description || 'Diseño temático con tipografías y elementos
-                  coordinados.' }}</small>
-
-                <!-- Inclusiones con SVG -->
-                <div class="card-inclusions">
-                  <span class="inc-chip active">
-                    <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon> Invitación
-                  </span>
-                  <span class="inc-chip" [class.active]="hasPassDesign(template)">
-                    <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon> Pase VIP
-                  </span>
-                  <span class="inc-chip" [class.active]="hasAccessScreen(template)">
-                    <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon> Acceso
-                  </span>
-                </div>
+                <span class="template-meta-line">
+                  {{ template.authorName || 'Velisse Oficial' }}
+                  <ng-container *ngIf="template.usageCount"> · {{ template.usageCount }} usos</ng-container>
+                </span>
               </div>
             </button>
           </div>
@@ -421,51 +372,26 @@
             </div>
           </div>
 
-          <!-- Opciones de Aplicación Selectiva Rediseñadas con SVG -->
-          <div class="selective-import-box">
-            <div class="selective-import-header">
-              <strong>¿Qué componentes deseas aplicar a tu evento?</strong>
-              <small>Tus invitados registrados, mesas y fecha no se modificarán.</small>
-            </div>
-            <div class="selective-import-grid">
-              <label class="selective-option-card" [class.selected]="catalogApplyOptions.invitation"
-                [class.disabled]="!activeTpl.design?.sections?.length">
-                <input type="checkbox" [(ngModel)]="catalogApplyOptions.invitation"
-                  [disabled]="!activeTpl.design?.sections?.length" />
-                <div class="option-icon-box">
-                  <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
-                </div>
-                <div class="option-texts">
-                  <strong>Invitación Digital</strong>
-                  <small>Estructura y diseño interactivo</small>
-                </div>
-              </label>
-
-              <label class="selective-option-card" [class.selected]="catalogApplyOptions.pass"
-                [class.disabled]="!hasPassDesign(activeTpl)">
-                <input type="checkbox" [(ngModel)]="catalogApplyOptions.pass" [disabled]="!hasPassDesign(activeTpl)" />
-                <div class="option-icon-box">
-                  <lucide-icon name="ticket" [strokeWidth]="1.8"></lucide-icon>
-                </div>
-                <div class="option-texts">
-                  <strong>Pase VIP</strong>
-                  <small>Hojas de pase y código QR</small>
-                </div>
-              </label>
-
-              <label class="selective-option-card" [class.selected]="catalogApplyOptions.access"
-                [class.disabled]="!hasAccessScreen(activeTpl)">
-                <input type="checkbox" [(ngModel)]="catalogApplyOptions.access"
-                  [disabled]="!hasAccessScreen(activeTpl)" />
-                <div class="option-icon-box">
-                  <lucide-icon name="lock-keyhole" [strokeWidth]="1.8"></lucide-icon>
-                </div>
-                <div class="option-texts">
-                  <strong>Pantalla de Acceso</strong>
-                  <small>Bienvenida y validación NIP</small>
-                </div>
-              </label>
-            </div>
+          <!-- Opciones de Aplicación Selectiva Compactas en 1 fila -->
+          <div class="selective-import-bar">
+            <span class="selective-bar-label">Aplicar:</span>
+            <label class="selective-pill" [class.selected]="catalogApplyOptions.invitation"
+              [class.disabled]="!activeTpl.design?.sections?.length">
+              <input type="checkbox" [(ngModel)]="catalogApplyOptions.invitation"
+                [disabled]="!activeTpl.design?.sections?.length" />
+              <span>Invitación</span>
+            </label>
+            <label class="selective-pill" [class.selected]="catalogApplyOptions.pass"
+              [class.disabled]="!hasPassDesign(activeTpl)">
+              <input type="checkbox" [(ngModel)]="catalogApplyOptions.pass" [disabled]="!hasPassDesign(activeTpl)" />
+              <span>Pase VIP</span>
+            </label>
+            <label class="selective-pill" [class.selected]="catalogApplyOptions.access"
+              [class.disabled]="!hasAccessScreen(activeTpl)">
+              <input type="checkbox" [(ngModel)]="catalogApplyOptions.access"
+                [disabled]="!hasAccessScreen(activeTpl)" />
+              <span>Acceso</span>
+            </label>
           </div>
         </div>
       </div>
@@ -1281,9 +1207,6 @@
               class="earn-icon"><lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon></span>
             <div><strong>Publicar como Plantilla</strong><small>Gana el 5% por cada uso en la comunidad</small></div>
           </button>
-          <app-builtin-presets-sidebar [presets]="builtInPresets" (previewPreset)="openDesignLibrary($event, 'builtin')"
-            (applyPreset)="applyBuiltInPresetQuick($event.key, $event.event)">
-          </app-builtin-presets-sidebar>
           <details class="theme-editor" open *ngIf="design.theme as theme">
             <summary>Estilo global</summary>
             <p>Cambia colores, tipografías y botones sin mover el contenido.</p>

@@ -6957,21 +6957,31 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
 
   getBuiltInPresetThumb(key: string): string {
     const map: Record<string, string> = {
-      'palais-celeste': 'assets/templates/palais-celeste/preview-cover.jpg',
-      'boda-jardin-imperial': 'assets/template-previews/boda-jardin-imperial.jpg',
-      'boda-girasoles': 'assets/template-previews/boda-girasoles.jpg',
-      'boda-navy-blue': 'assets/template-previews/boda-navy-blue.jpg',
-      'palazzo-orangerie': 'assets/templates/palazzo-orangerie/garden-portrait.webp',
-      'haute-couture': 'assets/template-previews/maison-dore.jpg',
-      'xv-burgundy': 'assets/template-previews/xv-burgundy.jpg',
-      editorial: 'assets/template-previews/boda-desktop-first.jpg',
-      romantic: 'assets/template-previews/boda-rosas.jpg',
-      night: 'assets/template-previews/boda-creativa-premium.jpg',
-      celebration: 'assets/template-previews/template-graduacion.jpg',
-      birthday: 'assets/template-previews/template-cumpleanos.jpg',
-      baptism: 'assets/template-previews/template-bautizo.jpg'
+      'palais-celeste': '/assets/templates/palais-celeste/preview-cover.jpg',
+      'boda-jardin-imperial': '/assets/template-previews/boda-jardin-imperial.jpg',
+      'boda-girasoles': '/assets/template-previews/boda-girasoles.jpg',
+      'boda-navy-blue': '/assets/template-previews/boda-navy-blue.jpg',
+      'palazzo-orangerie': '/assets/templates/palazzo-orangerie/garden-portrait.webp',
+      'haute-couture': '/assets/template-previews/maison-dore.jpg',
+      'xv-burgundy': '/assets/template-previews/xv-burgundy.jpg',
+      editorial: '/assets/template-previews/boda-desktop-first.jpg',
+      romantic: '/assets/template-previews/boda-rosas.jpg',
+      night: '/assets/template-previews/boda-creativa-premium.jpg',
+      celebration: '/assets/template-previews/template-graduacion.jpg',
+      birthday: '/assets/template-previews/template-cumpleanos.jpg',
+      baptism: '/assets/template-previews/template-bautizo.jpg'
     };
-    return map[key] || 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+    return map[key] || '/assets/templates/palazzo-orangerie/garden-portrait.webp';
+  }
+
+  onTemplateThumbError(event: Event, template?: VisualDesignTemplateModel): void {
+    const img = event.target as HTMLImageElement | null;
+    if (!img || img.dataset['fallbackApplied'] === '1') return;
+    img.dataset['fallbackApplied'] = '1';
+    const isXv = template?.eventType === 'xv' || template?._id === 'xv-burgundy';
+    img.src = isXv
+      ? '/assets/templates/xv-burgundy/portrait.jpg'
+      : '/assets/templates/palazzo-orangerie/garden-portrait.webp';
   }
 
   get builtInCatalogTemplates(): VisualDesignTemplateModel[] {
@@ -7279,8 +7289,13 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       this.libraryPreviewDesign = candidate;
       this.libraryPreviewInvitation = {
         ...this.invitation,
-        content: { ...(this.invitation.content || {}), visualDesign: candidate }
+        content: {
+          ...(this.invitation.content || {}),
+          visualDesignDraft: undefined,
+          visualDesign: candidate
+        }
       };
+      this.cdr?.markForCheck();
     }
   }
 

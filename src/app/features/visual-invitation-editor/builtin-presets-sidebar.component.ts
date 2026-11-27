@@ -12,7 +12,7 @@ import { CompleteDesignPreset } from './complete-design-library';
         <div *ngFor="let preset of presets" class="sidebar-preset-card"
           (click)="previewPreset.emit(preset.key)"
           [title]="'Ver vista previa de ' + preset.name">
-          <img [src]="thumbMap[preset.key] || defaultThumb" [alt]="preset.name" class="sidebar-preset-thumb" loading="lazy">
+          <img [src]="thumbMap[preset.key] || defaultThumb" [alt]="preset.name" class="sidebar-preset-thumb" (error)="onThumbError($event)">
           <div class="sidebar-preset-info">
             <div class="sidebar-preset-swatches">
               <i [style.background]="preset.colors[0]"></i>
@@ -36,22 +36,29 @@ export class BuiltinPresetsSidebarComponent {
   @Output() previewPreset = new EventEmitter<string>();
   @Output() applyPreset = new EventEmitter<{ key: string; event: Event }>();
 
-  readonly defaultThumb = 'assets/templates/palazzo-orangerie/garden-portrait.webp';
+  readonly defaultThumb = '/assets/templates/palazzo-orangerie/garden-portrait.webp';
   readonly thumbMap: Record<string, string> = {
-    'palais-celeste': 'assets/templates/palais-celeste/preview-cover.jpg',
-    'boda-jardin-imperial': 'assets/template-previews/boda-jardin-imperial.jpg',
-    'boda-girasoles': 'assets/template-previews/boda-girasoles.jpg',
-    'boda-navy-blue': 'assets/template-previews/boda-navy-blue.jpg',
-    'palazzo-orangerie': 'assets/templates/palazzo-orangerie/garden-portrait.webp',
-    'haute-couture': 'assets/template-previews/maison-dore.jpg',
-    'xv-burgundy': 'assets/template-previews/xv-burgundy.jpg',
-    editorial: 'assets/template-previews/boda-desktop-first.jpg',
-    romantic: 'assets/template-previews/boda-rosas.jpg',
-    night: 'assets/template-previews/boda-creativa-premium.jpg',
-    celebration: 'assets/template-previews/template-graduacion.jpg',
-    birthday: 'assets/template-previews/template-cumpleanos.jpg',
-    baptism: 'assets/template-previews/template-bautizo.jpg'
+    'palais-celeste': '/assets/templates/palais-celeste/preview-cover.jpg',
+    'boda-jardin-imperial': '/assets/template-previews/boda-jardin-imperial.jpg',
+    'boda-girasoles': '/assets/template-previews/boda-girasoles.jpg',
+    'boda-navy-blue': '/assets/template-previews/boda-navy-blue.jpg',
+    'palazzo-orangerie': '/assets/templates/palazzo-orangerie/garden-portrait.webp',
+    'haute-couture': '/assets/template-previews/maison-dore.jpg',
+    'xv-burgundy': '/assets/template-previews/xv-burgundy.jpg',
+    editorial: '/assets/template-previews/boda-desktop-first.jpg',
+    romantic: '/assets/template-previews/boda-rosas.jpg',
+    night: '/assets/template-previews/boda-creativa-premium.jpg',
+    celebration: '/assets/template-previews/template-graduacion.jpg',
+    birthday: '/assets/template-previews/template-cumpleanos.jpg',
+    baptism: '/assets/template-previews/template-bautizo.jpg'
   };
+
+  onThumbError(ev: Event): void {
+    const img = ev.target as HTMLImageElement | null;
+    if (!img || img.dataset['fallbackApplied'] === '1') return;
+    img.dataset['fallbackApplied'] = '1';
+    img.src = this.defaultThumb;
+  }
 
   onPreviewClick(key: string, ev: Event): void {
     ev.stopPropagation();
