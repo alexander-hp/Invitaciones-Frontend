@@ -1,9 +1,10 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, Optional } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import html2canvas from 'html2canvas';
 import { firstValueFrom, Subscription } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { EventTutorialService } from '../../core/event-tutorial.service';
 import {
   EventModel,
   GuestModel,
@@ -297,8 +298,13 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private apiService: ApiService,
-    private confirmDialogService: ConfirmDialogService
+    private confirmDialogService: ConfirmDialogService,
+    @Optional() private tutorialService?: EventTutorialService
   ) {}
+
+  openTutorial(): void {
+    void this.tutorialService?.runPageTour('pass-editor');
+  }
 
   async ngOnInit(): Promise<void> {
     this.routeSub = this.route.paramMap.subscribe(async (params) => {
@@ -313,6 +319,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.tutorialService?.stopTour();
     this.routeSub?.unsubscribe();
     if (this.autosaveTimer) {
       clearTimeout(this.autosaveTimer);

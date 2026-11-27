@@ -1,7 +1,7 @@
 <div class="logs-container">
 
   <!-- Quick Summary Metrics Cards -->
-  <div class="logs-metrics-grid">
+  <div class="logs-metrics-grid" data-tour="logs-metrics">
     <div class="metric-card">
       <div class="metric-icon-box bg-blue">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
@@ -44,7 +44,7 @@
   </div>
 
   <!-- Filters & Search Toolbar -->
-  <div class="logs-toolbar-card">
+  <div class="logs-toolbar-card" data-tour="logs-toolbar">
     <div style="display: flex; align-items: center; gap: 12px; width: 100%; flex-wrap: wrap;">
       <div class="logs-search-wrapper" style="flex: 1; min-width: 240px;">
         <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -116,7 +116,7 @@
   </div>
 
   <!-- Timeline List of Logs -->
-  <div *ngIf="logs.length > 0" class="logs-timeline">
+  <div *ngIf="logs.length > 0" class="logs-timeline" data-tour="logs-timeline">
     <div *ngFor="let log of logs" class="log-item-card" [class.expanded]="isExpanded(log)">
       <div class="log-main-row" (click)="toggleExpand(log)">
         <!-- Category Icon Box -->

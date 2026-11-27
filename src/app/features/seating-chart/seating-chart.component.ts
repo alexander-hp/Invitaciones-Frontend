@@ -1,9 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Optional, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, from, of } from 'rxjs';
 import { mergeMap, toArray } from 'rxjs/operators';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { EventTutorialService } from '../../core/event-tutorial.service';
 import { AutoAssignStrategy, AutoAssignTablesResponse, EventModel, EventTableModel, GuestModel, GuestStatus, TableAutoAssignStrategy, TableShape } from '../../core/models';
 
 interface DragState {
@@ -16,7 +17,7 @@ interface DragState {
 }
 
 @Component({ selector: 'app-seating-chart', templateUrl: './seating-chart.component.html' })
-export class SeatingChartComponent implements OnInit, AfterViewInit {
+export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('svgCanvas') svgCanvas!: ElementRef<SVGSVGElement>;
 
   event?: EventModel;
@@ -262,8 +263,17 @@ export class SeatingChartComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private router: Router,
     private api: ApiService,
-    private confirmDialogService: ConfirmDialogService
+    private confirmDialogService: ConfirmDialogService,
+    @Optional() private tutorialService?: EventTutorialService
   ) {}
+
+  openTutorial(): void {
+    void this.tutorialService?.runPageTour('seating-chart');
+  }
+
+  ngOnDestroy(): void {
+    this.tutorialService?.stopTour();
+  }
 
   ngOnInit(): void {
     this.load();

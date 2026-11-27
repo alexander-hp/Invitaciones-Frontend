@@ -26,11 +26,7 @@ export class NewSidebarComponent {
   }
 
   getActiveTutorialBadge(): string | null {
-    if (!this.tutorialService.activeEventId) return null;
-    const activeTab = this.tutorialService.activeTab;
-    if (!this.tutorialService.isTutorialSection(activeTab)) return null;
-    const meta = this.tutorialService.sections.find(s => s.key === activeTab);
-    return meta ? meta.shortLabel : null;
+    return this.tutorialService.getActiveBadgeForUrl(this.router.url);
   }
 
   toggleTutorialSections(event: Event): void {

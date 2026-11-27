@@ -45,7 +45,7 @@
   </div>
 
   <!-- Hero Banner -->
-  <div class="ug-hero">
+  <div class="ug-hero" data-tour="guide-hero">
     <div class="ug-hero-content">
       <div class="ug-hero-icon">
         <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -76,7 +76,7 @@
   <!-- Layout: sidebar nav + content -->
   <div class="ug-layout">
     <!-- Left navigation -->
-    <nav class="ug-nav">
+    <nav class="ug-nav" data-tour="guide-nav">
       <div class="ug-nav-label">Secciones principales</div>
       <button
         *ngFor="let section of sections"
@@ -93,7 +93,7 @@
     </nav>
 
     <!-- Content area -->
-    <div class="ug-content" *ngIf="activeGuide as guide">
+    <div class="ug-content" data-tour="guide-content" *ngIf="activeGuide as guide">
       <!-- Guide header -->
       <div class="ug-content-header">
         <div class="ug-content-icon" [innerHTML]="guide.icon"></div>

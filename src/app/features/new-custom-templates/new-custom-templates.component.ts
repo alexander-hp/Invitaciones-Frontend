@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService } from '../../core/api.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { EventTutorialService } from '../../core/event-tutorial.service';
 import {
   CustomTemplateSubmission,
   VisualDesignTemplateModel,
@@ -14,7 +15,7 @@ import {
   templateUrl: './new-custom-templates.component.html',
   styleUrls: ['./new-custom-templates.component.css']
 })
-export class NewCustomTemplatesComponent implements OnInit {
+export class NewCustomTemplatesComponent implements OnInit, OnDestroy {
   // Origen de plantillas
   templateSource: 'visual' | 'usages' | 'custom' = 'visual';
 
@@ -95,8 +96,17 @@ export class NewCustomTemplatesComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private confirmDialog: ConfirmDialogService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    @Optional() private tutorialService?: EventTutorialService
   ) { }
+
+  openTutorial(): void {
+    void this.tutorialService?.runPageTour('template-management');
+  }
+
+  ngOnDestroy(): void {
+    this.tutorialService?.stopTour();
+  }
 
   ngOnInit(): void {
     this.loadSettings();

@@ -1,6 +1,6 @@
 <div class="vpe-container" *ngIf="!loading && design">
   <!-- ════════ TOPBAR (Estilo Kyndra Luxury & Canva) ════════ -->
-  <header class="ve-topbar">
+  <header class="ve-topbar" data-tour="vpe-topbar">
     <button class="icon-button ve-back-button" type="button" title="Volver a Pases" (click)="goBack()">
       <lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon>
     </button>
@@ -24,6 +24,11 @@
 
     <!-- Acciones Principales -->
     <div class="vpe-topbar-actions">
+      <button class="secondary" type="button" (click)="openTutorial()" title="Iniciar tutorial interactivo del editor de pases">
+        <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon>
+        <span>Tutorial</span>
+      </button>
+
       <!-- Botón Exportar / Descargar Estilo Canva -->
       <details class="vpe-export-menu" #exportMenu>
         <summary class="secondary vpe-export-btn" title="Descargar pase para imprimir o compartir">
@@ -59,7 +64,7 @@
   </header>
 
   <!-- ════════ SUBBAR (Lienzo, Formato, Zoom y Simulación de Invitado) ════════ -->
-  <div class="vpe-subbar">
+  <div class="vpe-subbar" data-tour="vpe-subbar">
     <div class="vpe-subbar-left">
       <!-- Selector de Formato de la Hoja Activa -->
       <div class="vpe-control-pill">
@@ -117,7 +122,7 @@
   </div>
 
   <!-- ════════ SHEETS BAR (Hojas del Pase VIP) ════════ -->
-  <div class="vpe-sheets-bar">
+  <div class="vpe-sheets-bar" data-tour="vpe-sheets-bar">
     <div class="vpe-sheets-left">
       <div class="vpe-sheets-nav">
         <button *ngFor="let sec of design.sections; let idx = index"
@@ -172,7 +177,7 @@
   <!-- ════════ WORKSPACE (Estilo Canva: Rail Lateral + Cajón + Lienzo + Inspector) ════════ -->
   <div class="ve-workspace" [class.tools-collapsed]="toolsCollapsed">
     <!-- ── LEFT NAVIGATION RAIL (Estilo Canva) ── -->
-    <nav class="vpe-nav-rail">
+    <nav class="vpe-nav-rail" data-tour="vpe-nav-rail">
       <button type="button"
               class="vpe-rail-item"
               [class.active]="toolCategory === 'fields' && !toolsCollapsed"
@@ -666,7 +671,7 @@
     </main>
 
     <!-- ── RIGHT SIDEBAR: Inspector Panel ── -->
-    <aside class="ve-inspector vpe-inspector-panel">
+    <aside class="ve-inspector vpe-inspector-panel" data-tour="vpe-inspector">
       <div class="vpe-inspector-segmented">
         <button type="button" class="vpe-tab-btn" [class.active]="inspectorTab === 'layer'" (click)="inspectorTab = 'layer'">
           Elemento

@@ -7,6 +7,7 @@ import html2canvas from 'html2canvas';
 import type { jsPDF as JsPdfDocument } from 'jspdf';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { EventTutorialService } from '../../core/event-tutorial.service';
 import { LandingDraftService } from '../../core/landing-draft.service';
 import {
   DedicationModel, EventModel, GiftRegistryItem, GuestAccessResponse, InvitationContent, InvitationGalleryItem, InvitationLocation, InvitationLodgingItem, InvitationModel, InvitationModerationSettings, PlaceSearchResult, RsvpSettings,
@@ -86,7 +87,7 @@ type FunctionalTestData = {
 @Component({
   selector: 'app-visual-invitation-editor',
   templateUrl: './visual-invitation-editor.component.html',
-  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css', './visual-invitation-editor.library.css', './visual-invitation-editor.tutorial.css']
+  styleUrls: ['./visual-invitation-editor.component.css', './visual-invitation-editor.responsive-preview.css', './visual-invitation-editor.export.css', './visual-invitation-editor.icons.css', './visual-invitation-editor.library.css']
 })
 export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   @ViewChild('layerSurfaceTemplate') layerSurfaceTemplate: TemplateRef<any> | null = null;
@@ -110,19 +111,6 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   selectedPluginPartKey = '';
   toolCategory: ToolCategory = 'elements';
   toolsCollapsed = false;
-  tutorialStep = -1;
-  readonly tutorialSteps = [
-    { title: 'Tu espacio de diseño', description: 'A la izquierda eliges qué agregar, en el centro acomodas la invitación y a la derecha cambias las propiedades de lo seleccionado.' },
-    { title: 'Empieza con un diseño', description: 'Explora diseños completos o ajusta colores, tipografía y botones desde Diseño. En Más también puedes importar una plantilla hecha con otra IA.' },
-    { title: 'Agrega elementos', description: 'Añade texto, fotos, video, audio, botones, formas y marcos. Arrastra cada pieza al lienzo y colócala donde la necesites.' },
-    { title: 'Usa tus archivos', description: 'Sube imágenes, videos y música, o busca recursos. Selecciona un archivo para usarlo como portada, fondo o elemento del diseño.' },
-    { title: 'Conecta funciones reales', description: 'Agrega RSVP, pase, mesa, mapas, regalos, álbum, dedicatorias o peticiones al DJ. Estos módulos guardan respuestas; no son solo decoración.' },
-    { title: 'Organiza el lienzo', description: 'Selecciona, mueve y cambia el tamaño de los objetos. La barra del lienzo te permite activar cuadrícula, ajuste, márgenes y zoom.' },
-    { title: 'Personaliza cada detalle', description: 'Selecciona una sección u objeto y usa Propiedades para editarlo. En Capas cambias el orden o eliges piezas superpuestas; Versiones permite recuperar diseños.' },
-    { title: 'Comprueba cada dispositivo', description: 'Alterna entre celular, tablet y escritorio. Puedes ajustar cada tamaño y abrir la vista comparativa desde Más antes de publicar.' },
-    { title: 'Prueba la experiencia', description: 'En Más encontrarás la vista comparativa, la prueba de formularios y la descarga. Usa Vista previa para ver la invitación como invitado.' },
-    { title: 'Guarda y publica', description: 'Guarda el diseño mientras trabajas. Publicar revisa advertencias antes de hacerlo visible; podrás volver a editarlo después. Repite esta guía desde Más.' }
-  ];
   device: DeviceMode = 'mobile';
   loading = true;
   saving = false;
@@ -1044,7 +1032,8 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     @Optional() private auth?: AuthService,
-    @Optional() private landingDraft?: LandingDraftService
+    @Optional() private landingDraft?: LandingDraftService,
+    @Optional() private tutorialService?: EventTutorialService
   ) { }
 
   ngOnInit(): void {
@@ -1128,6 +1117,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.tutorialService?.stopTour();
     this.stopPointerInteraction();
     window.removeEventListener('dragenter', this.onWindowDragEnterOutside);
     window.removeEventListener('dragover', this.onWindowDragOverOutside);
@@ -1622,43 +1612,55 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   }
 
   private maybeStartTutorial(): void {
-    if (this.showOnboarding) return;
+    if (this.showOnboarding || this.showDesignLibrary) return;
     try {
       if (localStorage.getItem('kyndra-visual-editor-tutorial-v1')) return;
     } catch { /* El tutorial también funciona sin almacenamiento local. */ }
-    setTimeout(() => this.openTutorial());
+    setTimeout(() => {
+      if (!this.showOnboarding && !this.showDesignLibrary) {
+        this.openTutorial();
+      }
+    }, 240);
   }
 
   openTutorial(): void {
-    this.tutorialStep = 0;
-    this.prepareTutorialStep();
-  }
-
-  changeTutorialStep(direction: number): void {
-    if (this.tutorialStep < 0) return;
-    if (this.tutorialStep + direction >= this.tutorialSteps.length) { this.closeTutorial(); return; }
-    this.tutorialStep = Math.max(0, this.tutorialStep + direction);
-    this.prepareTutorialStep();
+    if (this.tutorialService) {
+      void this.tutorialService.runPageTour('visual-editor', {
+        onStepActivate: (stepId) => this.applyTutorialStepContext(stepId),
+        onClosed: () => this.markTutorialSeen()
+      });
+    }
   }
 
   closeTutorial(): void {
-    this.tutorialStep = -1;
-    try { localStorage.setItem('kyndra-visual-editor-tutorial-v1', 'seen'); } catch { /* The guide remains available from Más. */ }
+    this.tutorialService?.stopTour();
+    this.markTutorialSeen();
   }
 
-  private prepareTutorialStep(): void {
-    const categories: Partial<Record<number, ToolCategory>> = { 1: 'design', 2: 'elements', 3: 'assets', 4: 'functions' };
-    const category = categories[this.tutorialStep];
+  private markTutorialSeen(): void {
+    try { localStorage.setItem('kyndra-visual-editor-tutorial-v1', 'seen'); } catch { /* The guide remains available from Tutorial / Más. */ }
+  }
+
+  applyTutorialStepContext(stepId: string): void {
+    const categories: Partial<Record<string, ToolCategory>> = {
+      design: 'design',
+      elements: 'elements',
+      assets: 'assets',
+      functions: 'functions',
+      sections: 'sections'
+    };
+    const category = categories[stepId];
     if (category) {
-      this.toolCategory = category;
+      this.selectToolCategory(category);
       this.toolsCollapsed = false;
       this.setMobilePanel('tools');
-    } else if (this.tutorialStep === 6) {
+    } else if (stepId === 'inspector') {
       this.inspectorView = 'properties';
       this.setMobilePanel('inspector');
     } else {
       this.setMobilePanel('canvas');
     }
+    this.cdr?.markForCheck?.();
   }
 
   openMobileInspector(): void {
@@ -5140,7 +5142,7 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown', ['$event'])
   handleKeyboard(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
-    if (event.key === 'Escape' && this.tutorialStep >= 0) { this.closeTutorial(); return; }
+    if (event.key === 'Escape' && this.tutorialService?.isRunning) { this.closeTutorial(); return; }
     if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName)) return;
     const modifier = event.ctrlKey || event.metaKey;
     if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? this.redo() : this.undo(); return; }

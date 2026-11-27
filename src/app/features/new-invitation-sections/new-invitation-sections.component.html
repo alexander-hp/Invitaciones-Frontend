@@ -52,7 +52,7 @@
     </div>
 
     <!-- TARJETAS METRICAS DE RESUMEN -->
-    <div *ngIf="!loading && invitation" class="nw-metrics"
+    <div *ngIf="!loading && invitation" class="nw-metrics" data-tour="inv-sections-metrics"
       style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
       <div class="nw-metric success">
         <span class="metric-label">Secciones Activas</span>
@@ -97,7 +97,7 @@
       style="margin-top:20px; padding-bottom:80px; display:flex; flex-direction:column; gap:20px;">
 
       <!-- PANEL 1: Secciones Activas -->
-      <div class="nw-card panel" style="border-left: 4px solid var(--nw-success);">
+      <div class="nw-card panel" data-tour="inv-sections-active" style="border-left: 4px solid var(--nw-success);">
         <div class="section-heading">
           <div
             style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
@@ -315,7 +315,7 @@
       </div>
 
       <!-- PANEL 2: Secciones Desactivadas (Sólo si existen secciones inactivas) -->
-      <div *ngIf="inactiveSections.length > 0" class="nw-card panel"
+      <div *ngIf="inactiveSections.length > 0" class="nw-card panel" data-tour="inv-sections-inactive"
         style="border-left: 4px solid var(--nw-border); opacity: 0.95;">
         <div class="section-heading">
           <div

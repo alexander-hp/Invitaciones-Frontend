@@ -30,7 +30,7 @@
 
   <!-- Main -->
   <main class="nw-main">
-    <div class="nw-page-header">
+    <div class="nw-page-header" data-tour="dashboard-header">
       <div>
         <h1>Dashboard</h1>
         <p>Resumen general de tus eventos e invitaciones</p>
@@ -71,7 +71,7 @@
     </div>
 
     <!-- Metrics -->
-    <section class="nw-metrics" *ngIf="!loading && !collapsedMetrics">
+    <section class="nw-metrics" data-tour="dashboard-metrics" *ngIf="!loading && !collapsedMetrics">
       <div class="nw-metric accent">
         <span class="metric-label">Eventos</span>
         <span class="metric-value">{{ metrics.events }}</span>
@@ -215,7 +215,7 @@
     </section>
 
     <!-- Additional Stats & Utilities Section -->
-    <div class="nw-stats-grid" *ngIf="!loading && metrics.guests > 0">
+    <div class="nw-stats-grid" data-tour="dashboard-rates" *ngIf="!loading && metrics.guests > 0">
       
       <!-- Confirmation Rate -->
       <section class="nw-card" style="display: flex; flex-direction: column;">
@@ -274,7 +274,7 @@
     </div>
 
     <!-- Recent Events -->
-    <section style="margin-top: 24px;">
+    <section data-tour="dashboard-recent-events" style="margin-top: 24px;">
       <div class="nw-card-header">
         <h3>Eventos recientes</h3>
         <a routerLink="/new/events" class="nw-btn nw-btn-ghost nw-btn-sm">Ver todos</a>

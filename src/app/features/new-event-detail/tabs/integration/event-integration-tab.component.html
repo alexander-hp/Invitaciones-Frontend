@@ -24,7 +24,7 @@
 <section *ngIf="event">
 
   <!-- 1. ENCABEZADO ESTÁNDAR DE SECCIÓN (PATRÓN UNIVERSAL DE DISEÑO) -->
-  <div class="nw-card" style="margin-bottom:24px; padding:24px;">
+  <div class="nw-card" data-tour="integration-header" style="margin-bottom:24px; padding:24px;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
       <div>
         <h2
@@ -89,7 +89,7 @@
   </div>
 
   <!-- ASISTENTE DE INTEGRACIÓN PARA IA -->
-  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+  <div class="nw-card" data-tour="integration-ai-assistant" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:22px;">
       <div style="max-width:760px;">
         <span class="nw-pill gold" style="font-size:11px; font-weight:800; margin-bottom:8px;">GUÍA LISTA PARA CUALQUIER IA</span>
@@ -319,7 +319,7 @@
   </div>
 
   <!-- SECCIÓN 2: GESTOR DE ENLACES DE ACCESO Y TOKENS DE INTEGRACIÓN (DATOS REALES DEL BACKEND) -->
-  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+  <div class="nw-card" data-tour="integration-tokens" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
     <div class="nw-card-header"
       style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
       <div>
@@ -490,7 +490,7 @@
   </div>
 
   <!-- SECCIÓN 3: CONFIGURACIÓN DEL PORTAL EXTERNO & MÓDULOS -->
-  <div class="nw-card" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
+  <div class="nw-card" data-tour="integration-portal-config" style="margin-bottom:24px; padding:24px; border-top:4px solid var(--nw-accent, #c09c78);">
     <div class="nw-card-header"
       style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
       <div style="display:flex; align-items:center; gap:12px;">

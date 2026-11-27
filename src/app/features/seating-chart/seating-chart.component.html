@@ -13,7 +13,7 @@
 <div class="nw-croquis-shell">
 
   <!-- ═══════════════ HEADER SUPERIOR COLAPSABLE ═══════════════ -->
-  <div class="nw-croquis-hero">
+  <div class="nw-croquis-hero" data-tour="croquis-hero">
     <!-- Siempre visible: Barra de Navegación Rápida & Botón Salir -->
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
       <!-- Botón para Volver al Evento (Siempre Visible) -->
@@ -49,11 +49,22 @@
         </span>
       </div>
 
-      <!-- Botón para Expandir/Colapsar el Encabezado Superior -->
-      <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showHeroHeader = !showHeroHeader"
-        style="font-size: 12px; font-weight: 700; color: var(--nw-accent); border-color: var(--nw-border);">
-        {{ showHeroHeader ? '▲ Ocultar Encabezado' : '▼ Mostrar Encabezado' }}
-      </button>
+      <!-- Botón para Expandir/Colapsar el Encabezado Superior + Tutorial -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="openTutorial()"
+          style="font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;"
+          title="Iniciar tutorial interactivo del croquis">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+          <span>Tutorial</span>
+        </button>
+        <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="showHeroHeader = !showHeroHeader"
+          style="font-size: 12px; font-weight: 700; color: var(--nw-accent); border-color: var(--nw-border);">
+          {{ showHeroHeader ? '▲ Ocultar Encabezado' : '▼ Mostrar Encabezado' }}
+        </button>
+      </div>
     </div>
 
     <!-- Contenido Expandido del Encabezado (Visible cuando showHeroHeader es verdadero) -->
@@ -164,7 +175,7 @@
     <div class="nw-canvas-wrapper">
 
       <!-- BARRA SUPERIOR DEL LIENZO (Pestañas de Niveles con Botón Eliminar & Zoom) -->
-      <div class="nw-canvas-topbar">
+      <div class="nw-canvas-topbar" data-tour="croquis-canvas-topbar">
         <!-- Pestañas de Niveles / Pisos -->
         <div class="nw-floor-tabs">
           <div *ngFor="let f of floorsList" class="nw-floor-tab" [class.active]="activeFloor === f.id"
@@ -201,7 +212,7 @@
       </div>
 
       <!-- CONTENEDOR DEL LIENZO SVG (MAXIMIZADO AL 100% SIN DESBORDAMIENTO) -->
-      <div class="nw-canvas-container" style="flex: 1; height: 100%; min-height: 0; position: relative;">
+      <div class="nw-canvas-container" data-tour="croquis-canvas" style="flex: 1; height: 100%; min-height: 0; position: relative;">
         <svg #svgCanvas [attr.viewBox]="viewBoxStr" width="100%" height="100%"
           style="cursor: grab; display: block; height: 100%;" (mousedown)="onSvgMouseDown($event)"
           (mousemove)="onSvgMouseMove($event)" (mouseup)="onSvgMouseUp()" (mouseleave)="onSvgMouseUp()">
@@ -469,7 +480,7 @@
     </div>
 
     <!-- COLUMNA DERECHA: PANEL DE INVITADOS SIN MESA (DRAGGABLE CHIPS) -->
-    <div class="nw-guest-panel">
+    <div class="nw-guest-panel" data-tour="croquis-guests-panel">
       <div class="nw-guest-panel-header" style="display: flex; align-items: center; justify-content: space-between;">
         <span>👥 Invitados sin mesa</span>
         <span class="nw-pill accent" style="font-size: 11px;">{{ unassignedGuests.length }}</span>

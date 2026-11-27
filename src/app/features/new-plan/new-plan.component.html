@@ -39,7 +39,7 @@
     <div *ngIf="!loading && currentPlan" style="display: grid; gap: 24px; margin-top: 24px; max-width: 900px;">
 
       <!-- Plan Info Card -->
-      <section class="nw-card" style="position: relative; overflow: hidden;">
+      <section class="nw-card" data-tour="plan-current-card" style="position: relative; overflow: hidden;">
         <!-- Left border color line -->
         <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-accent);"></div>
 
@@ -262,7 +262,7 @@
       </section>
 
       <!-- Billing History Card -->
-      <section class="nw-card" style="position: relative; overflow: hidden;">
+      <section class="nw-card" data-tour="plan-history-card" style="position: relative; overflow: hidden;">
         <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--nw-accent);"></div>
 
         <h3

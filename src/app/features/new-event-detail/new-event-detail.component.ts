@@ -297,7 +297,18 @@ export class NewEventDetailComponent implements OnInit, OnDestroy {
   }
 
   private getAllowedTutorialSections(): TutorialSectionKey[] {
-    const candidates: TutorialSectionKey[] = ['info', 'guests', 'tables', 'rsvps', 'communication', 'dj', 'dedications'];
+    const candidates: TutorialSectionKey[] = [
+      'info',
+      'guests',
+      'tables',
+      'rsvps',
+      'album',
+      'communication',
+      'dj',
+      'dedications',
+      'integration',
+      'logs'
+    ];
     return candidates.filter(sec => this.canOpenTab(sec));
   }
 

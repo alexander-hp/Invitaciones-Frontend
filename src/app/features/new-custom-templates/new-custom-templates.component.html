@@ -33,7 +33,17 @@
         </p>
       </div>
 
-      <div style="display:flex; gap:10px; align-items:center;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <a routerLink="/new/dashboard" class="nw-btn nw-btn-ghost nw-btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          <span>← Dashboard</span>
+        </a>
+        <button class="nw-btn nw-btn-secondary nw-btn-sm" type="button" (click)="openTutorial()" style="display:inline-flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+          <span>Tutorial</span>
+        </button>
         <button class="nw-btn nw-btn-ghost nw-btn-sm" type="button" (click)="loadData()" [disabled]="loading" style="display:inline-flex; align-items:center; gap:6px;">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spin-icon]="loading">
             <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
@@ -45,7 +55,7 @@
     </div>
 
     <!-- BANNER DE CONFIGURACIÓN GLOBAL: APROBACIÓN AUTOMÁTICA -->
-    <div class="nw-card auto-approve-banner" style="margin-bottom:24px; padding:20px 24px; border-left:4px solid var(--nw-accent); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+    <div class="nw-card auto-approve-banner" data-tour="tpl-admin-policy" style="margin-bottom:24px; padding:20px 24px; border-left:4px solid var(--nw-accent); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
       <div style="display:flex; align-items:center; gap:16px; min-width:280px; flex:1;">
         <div class="auto-approve-icon-box" [class.active]="autoApproveTemplates">
           <svg *ngIf="autoApproveTemplates" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -89,7 +99,7 @@
     </div>
 
     <!-- SELECTOR DE ORIGEN DE PLANTILLA -->
-    <div class="template-source-nav">
+    <div class="template-source-nav" data-tour="tpl-admin-sources">
       <!-- Pestaña 1: Plantillas Comunitarias (3 en 1) -->
       <button type="button" class="source-nav-card" [class.active]="templateSource === 'visual'" (click)="setTemplateSource('visual')">
         <div class="source-nav-icon">
@@ -231,7 +241,7 @@
     </div>
 
     <!-- CONTROLES Y FILTROS (Plantillas Visuales y Custom) -->
-    <div *ngIf="templateSource !== 'usages'" class="nw-card" style="padding:14px 18px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+    <div *ngIf="templateSource !== 'usages'" class="nw-card" data-tour="tpl-admin-filters" style="padding:14px 18px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
       <!-- Pestañas de Estado -->
       <div class="nw-tab-group" style="display:flex; gap:6px; flex-wrap:wrap;">
         <button type="button" class="nw-btn nw-btn-sm"

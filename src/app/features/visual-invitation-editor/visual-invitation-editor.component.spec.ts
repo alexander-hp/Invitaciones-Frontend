@@ -30,33 +30,51 @@ describe('VisualInvitationEditorComponent persistence', () => {
     (component as any).markSaved();
   });
 
-  it('walks through the editor panels without changing the invitation', () => {
+  it('walks through the editor panels via driver.js tutorial callbacks without changing the invitation', () => {
     const original = JSON.stringify(component.design);
+    const tutorialSpy = {
+      runPageTour: jasmine.createSpy('runPageTour').and.resolveTo(),
+      stopTour: jasmine.createSpy('stopTour'),
+      isRunning: false
+    };
+    (component as any).tutorialService = tutorialSpy;
+
     component.openTutorial();
-    expect(component.tutorialStep).toBe(0);
-    component.changeTutorialStep(1);
+    expect(tutorialSpy.runPageTour).toHaveBeenCalledWith('visual-editor', jasmine.any(Object));
+
+    component.applyTutorialStepContext('design');
     expect(component.toolCategory).toBe('design');
     expect(component.mobilePanel).toBe('tools');
-    component.changeTutorialStep(1);
+    component.applyTutorialStepContext('elements');
     expect(component.toolCategory).toBe('elements');
-    component.changeTutorialStep(1);
+    component.applyTutorialStepContext('assets');
     expect(component.toolCategory).toBe('assets');
-    component.changeTutorialStep(1);
+    component.applyTutorialStepContext('functions');
     expect(component.toolCategory).toBe('functions');
-    component.changeTutorialStep(1);
+    component.applyTutorialStepContext('sections');
+    expect(component.toolCategory).toBe('sections');
+    component.applyTutorialStepContext('canvas');
     expect(component.mobilePanel).toBe('canvas');
-    component.changeTutorialStep(1);
+    component.applyTutorialStepContext('inspector');
     expect(component.mobilePanel).toBe('inspector');
     expect(JSON.stringify(component.design)).toBe(original);
   });
 
-  it('allows dismissing and reopening the tutorial', () => {
+  it('allows dismissing and reopening the driver.js tutorial', () => {
+    const tutorialSpy = {
+      runPageTour: jasmine.createSpy('runPageTour').and.resolveTo(),
+      stopTour: jasmine.createSpy('stopTour'),
+      isRunning: true
+    };
+    (component as any).tutorialService = tutorialSpy;
+
     component.openTutorial();
+    expect(tutorialSpy.runPageTour).toHaveBeenCalledTimes(1);
     component.closeTutorial();
-    expect(component.tutorialStep).toBe(-1);
+    expect(tutorialSpy.stopTour).toHaveBeenCalledTimes(1);
     expect(localStorage.getItem('kyndra-visual-editor-tutorial-v1')).toBe('seen');
     component.openTutorial();
-    expect(component.tutorialStep).toBe(0);
+    expect(tutorialSpy.runPageTour).toHaveBeenCalledTimes(2);
     localStorage.removeItem('kyndra-visual-editor-tutorial-v1');
   });
 

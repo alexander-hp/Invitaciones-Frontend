@@ -140,7 +140,7 @@
     <ng-container *ngIf="event">
       <!-- Standard Page Header when viewing Historial de cambios or Guía de usuario -->
       <div *ngIf="activeTab === 'logs' || activeTab === 'guide'" class="nw-page-header">
-        <div *ngIf="activeTab === 'logs'">
+        <div *ngIf="activeTab === 'logs'" data-tour="logs-header">
           <h1 style="display: flex; align-items: center; gap: 10px;">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--nw-accent);">
               <polyline points="12 8 12 12 14 14"></polyline>

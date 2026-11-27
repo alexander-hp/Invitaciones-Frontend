@@ -12,7 +12,7 @@
 
 <section class="nw-card">
   <!-- Encabezado de la Sección -->
-  <div
+  <div data-tour="album-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
     <div>
       <h2
@@ -198,7 +198,7 @@
   </div>
 
   <!-- 🏷️ SECCIÓN: ÁLBUMES POR ETIQUETAS (TAGS) Y TODOS -->
-  <div style="margin-bottom: 16px;">
+  <div data-tour="album-tags" style="margin-bottom: 16px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
       <span
         style="font-size: 13px; font-weight: 700; color: var(--nw-text-2, #6e6157); text-transform: uppercase; letter-spacing: 0.5px;">
@@ -453,7 +453,7 @@
   </style>
 
   <!-- Grid de Fotografías del Álbum Paginadas -->
-  <div *ngIf="!loadingAlbum && filteredAlbumAssets.length > 0"
+  <div *ngIf="!loadingAlbum && filteredAlbumAssets.length > 0" data-tour="album-grid"
     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px;">
 
     <div *ngFor="let asset of paginatedAlbumAssets; trackBy: trackByAssetId" class="nw-album-card"

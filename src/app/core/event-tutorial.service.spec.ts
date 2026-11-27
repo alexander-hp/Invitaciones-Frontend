@@ -14,7 +14,7 @@ describe('EventTutorialService', () => {
     document.querySelectorAll('.driver-popover, .driver-overlay, .driver-layer').forEach(el => el.remove());
   });
 
-  it('registers all 7 requested event sections', () => {
+  it('registers all 10 event sections', () => {
     const { service } = createService();
     const keys = service.sections.map(s => s.key);
     expect(keys).toEqual([
@@ -22,9 +22,12 @@ describe('EventTutorialService', () => {
       'guests',
       'tables',
       'rsvps',
+      'album',
       'communication',
       'dj',
-      'dedications'
+      'dedications',
+      'integration',
+      'logs'
     ] as TutorialSectionKey[]);
   });
 
@@ -40,7 +43,7 @@ describe('EventTutorialService', () => {
     expect(emitted).toEqual([undefined, 'tables']);
   });
 
-  it('navigates back to event detail with tutorial query param when on event sub-route', () => {
+  it('navigates back to event detail with tutorial query param when requesting a specific event section from sub-route', () => {
     const { service, navigate } = createService('/new/events/6a987c1ede9c0bcfa6744500/seating');
     service.triggerFromSidebar('tables');
 
@@ -48,5 +51,21 @@ describe('EventTutorialService', () => {
       ['/new/events', '6a987c1ede9c0bcfa6744500'],
       { queryParams: { tab: 'tables', tutorial: '1' } }
     );
+  });
+
+  it('resolves contextual page tours from platform routes', () => {
+    const { service } = createService('/new/dashboard');
+    expect(service.resolvePageTourFromUrl('/new/dashboard')).toBe('dashboard');
+    expect(service.resolvePageTourFromUrl('/new/events')).toBe('events');
+    expect(service.resolvePageTourFromUrl('/new/events/6a987c1ede9c0bcfa6744500/seating')).toBe('seating-chart');
+    expect(service.resolvePageTourFromUrl('/new/invitations/abc123/visual-editor')).toBe('visual-editor');
+    expect(service.resolvePageTourFromUrl('/new/demo/visual-editor')).toBe('visual-editor');
+    expect(service.resolvePageTourFromUrl('/new/invitations/abc123/pass-editor')).toBe('pass-editor');
+    expect(service.resolvePageTourFromUrl('/new/invitations/abc123/editor')).toBe('invitation-editor');
+    expect(service.resolvePageTourFromUrl('/new/invitations/abc123/sections')).toBe('invitation-sections');
+    expect(service.resolvePageTourFromUrl('/new/plan')).toBe('plan');
+    expect(service.resolvePageTourFromUrl('/new/contact')).toBe('contact');
+    expect(service.resolvePageTourFromUrl('/new/guia')).toBe('user-guide');
+    expect(service.resolvePageTourFromUrl('/new/template-management')).toBe('template-management');
   });
 });

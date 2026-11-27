@@ -8,7 +8,7 @@
 <div class="visual-editor" *ngIf="!loading && invitation && design"
   [class.mobile-has-selection]="mobilePanel === 'canvas' && selectedLayerCount"
   [class.has-draft-notice]="invitation.status === 'published'" (focusin)="beginPropertyEdit($event)">
-  <header class="ve-topbar">
+  <header class="ve-topbar" data-tour="ve-topbar">
     <button class="icon-button ve-back-button" type="button" title="Volver a la invitación"
       (click)="back()"><lucide-icon name="arrow-left" [strokeWidth]="2"></lucide-icon></button>
     <div class="ve-title">
@@ -27,7 +27,7 @@
           [strokeWidth]="1.8"></lucide-icon></button>
     </div>
     <div class="ve-topbar-spacer"></div>
-    <div class="segmented device-segmented" [class.tutorial-focus]="tutorialStep === 7"
+    <div class="segmented device-segmented" data-tour="ve-device-switcher"
       aria-label="Vista por dispositivo">
       <button type="button" [class.active]="device === 'mobile'" (click)="setDevice('mobile')" title="Vista Celular">
         <lucide-icon name="smartphone" [strokeWidth]="1.8"></lucide-icon>
@@ -43,7 +43,7 @@
         <span class="device-label">Escritorio</span>
       </button>
     </div>
-    <details class="topbar-more" [class.tutorial-focus]="tutorialStep === 8" #moreMenu>
+    <details class="topbar-more" data-tour="ve-more-menu" #moreMenu>
       <summary aria-label="Más herramientas"><lucide-icon name="ellipsis"
           [strokeWidth]="1.8"></lucide-icon><span>Más</span></summary>
       <div class="topbar-menu">
@@ -54,7 +54,7 @@
         <button type="button" (click)="moreMenu.open=false;openPublishTemplateModal()"><lucide-icon name="sparkles"
             [strokeWidth]="1.8"></lucide-icon> Publicar como plantilla (+5%)</button>
         <button type="button" (click)="moreMenu.open=false;openTutorial()"><lucide-icon name="circle-help"
-            [strokeWidth]="1.8"></lucide-icon> Guía del editor</button>
+            [strokeWidth]="1.8"></lucide-icon> Guía interactiva (Tutorial)</button>
         <button type="button" (click)="moreMenu.open=false;openDesignImporter()"><lucide-icon name="sparkles"
             [strokeWidth]="1.8"></lucide-icon> Crear con IA o importar</button>
         <button type="button" (click)="moreMenu.open=false;openResponsivePreview()"><lucide-icon name="panels-top-left"
@@ -71,23 +71,27 @@
             [strokeWidth]="1.8"></lucide-icon> Ver versión pública</button>
       </div>
     </details>
-    <button class="secondary template-catalog-btn" type="button" (click)="openDesignLibrary()"
+    <button class="secondary" type="button" (click)="openTutorial()"
+      title="Iniciar tutorial interactivo paso a paso">
+      <lucide-icon name="circle-help" [strokeWidth]="1.8"></lucide-icon><span>Tutorial</span>
+    </button>
+    <button class="secondary template-catalog-btn" data-tour="ve-templates-btn" type="button" (click)="openDesignLibrary()"
       title="Explorar catálogo de plantillas Canva-style">
       <lucide-icon name="images" [strokeWidth]="1.8"></lucide-icon><span>Plantillas</span>
     </button>
-    <button class="secondary publish-template-btn" type="button" [hidden]="isGuestDemoMode"
+    <button class="secondary publish-template-btn" data-tour="ve-publish-tpl-btn" type="button" [hidden]="isGuestDemoMode"
       (click)="openPublishTemplateModal()" title="Publicar mi diseño como plantilla comunitaria">
       <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon><span>Publicar</span>
       <span class="reward-pill-badge">5%</span>
     </button>
     <button class="secondary preview-command" type="button" (click)="openDraftPreview()"><lucide-icon name="eye"
         [strokeWidth]="1.8"></lucide-icon><span>Vista previa</span> ↗</button>
-    <button class="primary" [class.tutorial-focus]="tutorialStep === 9" type="button" [disabled]="saving"
+    <button class="primary" data-tour="ve-save-publish" type="button" [disabled]="saving"
       (click)="save()" title="Guardar">
       <lucide-icon name="save" [strokeWidth]="1.8"></lucide-icon>
       <span>{{ saveButtonLabel }}</span>
     </button>
-    <button class="publish" [hidden]="isGuestDemoMode" [class.tutorial-focus]="tutorialStep === 9" type="button"
+    <button class="publish" [hidden]="isGuestDemoMode" type="button"
       [disabled]="publishing" (click)="openPublishAudit()" title="Publicar">
       <lucide-icon name="cloud-upload" [strokeWidth]="1.8"></lucide-icon>
       <span>{{ publishing ? 'Publicando...' : 'Publicar' }}</span>
@@ -112,20 +116,6 @@
       <button type="button" class="ve-toast-close" (click)="message = ''" title="Cerrar">✕</button>
     </div>
   </div>
-  <section class="ve-tutorial" *ngIf="tutorialStep >= 0" role="region" aria-labelledby="tutorialTitle"
-    aria-live="polite">
-    <header><span>Guía del editor</span><button type="button" title="Cerrar guía" aria-label="Cerrar guía"
-        (click)="closeTutorial()">×</button></header>
-    <div class="tutorial-progress"><span>Paso {{ tutorialStep + 1 }} de {{ tutorialSteps.length }}</span>
-      <div aria-hidden="true"><i [style.width.%]="(tutorialStep + 1) * 100 / tutorialSteps.length"></i></div>
-    </div>
-    <h2 id="tutorialTitle">{{ tutorialSteps[tutorialStep].title }}</h2>
-    <p>{{ tutorialSteps[tutorialStep].description }}</p>
-    <footer><button type="button" [disabled]="tutorialStep === 0"
-        (click)="changeTutorialStep(-1)">Anterior</button><button type="button" class="tutorial-next"
-        (click)="changeTutorialStep(1)">{{ tutorialStep === tutorialSteps.length - 1 ? 'Terminar' : 'Siguiente'
-        }}</button></footer>
-  </section>
   <!-- ========================================== -->
   <!-- MODAL: CATÁLOGO DE PLANTILLAS CANVA-STYLE  -->
   <!-- ========================================== -->
@@ -1145,31 +1135,31 @@
           [title]="toolsCollapsed ? 'Expandir biblioteca' : 'Contraer biblioteca'"
           [attr.aria-expanded]="!toolsCollapsed" (click)="toolsCollapsed=!toolsCollapsed"><lucide-icon
             [name]="toolsCollapsed ? 'panel-left-open' : 'panel-left-close'" [strokeWidth]="1.8"></lucide-icon></button>
-        <button type="button" title="Diseño" [class.active]="toolCategory === 'design'"
-          [class.tutorial-focus]="tutorialStep === 1" [attr.aria-pressed]="toolCategory === 'design'"
+        <button type="button" data-tour="ve-cat-design" title="Diseño" [class.active]="toolCategory === 'design'"
+          [attr.aria-pressed]="toolCategory === 'design'"
           (click)="selectToolCategory('design');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
             name="palette" [strokeWidth]="1.8"></lucide-icon><span>Diseño</span></button>
-        <button type="button" title="Elementos" [class.active]="toolCategory === 'elements'"
-          [class.tutorial-focus]="tutorialStep === 2" [attr.aria-pressed]="toolCategory === 'elements'"
+        <button type="button" data-tour="ve-cat-elements" title="Elementos" [class.active]="toolCategory === 'elements'"
+          [attr.aria-pressed]="toolCategory === 'elements'"
           (click)="selectToolCategory('elements');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
             name="shapes" [strokeWidth]="1.8"></lucide-icon><span>Elementos</span></button>
-        <button type="button" title="Archivos" [class.active]="toolCategory === 'assets'"
-          [class.tutorial-focus]="tutorialStep === 3" [attr.aria-pressed]="toolCategory === 'assets'"
+        <button type="button" data-tour="ve-cat-assets" title="Archivos" [class.active]="toolCategory === 'assets'"
+          [attr.aria-pressed]="toolCategory === 'assets'"
           (click)="selectToolCategory('assets');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="images"
             [strokeWidth]="1.8"></lucide-icon><span>Archivos</span></button>
-        <button type="button" title="Funciones" [class.active]="toolCategory === 'functions'"
-          [class.tutorial-focus]="tutorialStep === 4" [attr.aria-pressed]="toolCategory === 'functions'"
+        <button type="button" data-tour="ve-cat-functions" title="Funciones" [class.active]="toolCategory === 'functions'"
+          [attr.aria-pressed]="toolCategory === 'functions'"
           (click)="selectToolCategory('functions');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
             name="blocks" [strokeWidth]="1.8"></lucide-icon><span>Funciones</span></button>
-        <button type="button" title="Secciones" [class.active]="toolCategory === 'sections'"
+        <button type="button" data-tour="ve-cat-sections" title="Secciones" [class.active]="toolCategory === 'sections'"
           [attr.aria-pressed]="toolCategory === 'sections'"
           (click)="selectToolCategory('sections');toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon
             name="layers" [strokeWidth]="1.8"></lucide-icon><span>Secciones</span></button>
-        <button type="button" title="Pantalla de Acceso" [class.active]="toolCategory === 'access'"
+        <button type="button" data-tour="ve-cat-access" title="Pantalla de Acceso" [class.active]="toolCategory === 'access'"
           [attr.aria-pressed]="toolCategory === 'access'"
           (click)="selectAccessCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="lock-keyhole"
             [strokeWidth]="1.8"></lucide-icon><span>Acceso</span></button>
-        <button type="button" title="Pase VIP" [class.active]="toolCategory === 'pass'"
+        <button type="button" data-tour="ve-cat-pass" title="Pase VIP" [class.active]="toolCategory === 'pass'"
           [attr.aria-pressed]="toolCategory === 'pass'"
           (click)="selectPassCategory();toolsCollapsed=false;toolContent.scrollTop=0"><lucide-icon name="ticket"
             [strokeWidth]="1.8"></lucide-icon><span>Pase VIP</span></button>
@@ -2571,7 +2561,7 @@
 
     <main #editorStage class="ve-stage" [class.touch-gesturing]="touchGestureActive">
       <div class="touch-zoom-indicator" *ngIf="touchZoomVisible">{{ touchGestureLabel }}</div>
-      <div class="canvas-toolbar" [class.tutorial-focus]="tutorialStep === 5" aria-label="Controles del lienzo">
+      <div class="canvas-toolbar" data-tour="ve-canvas-toolbar" aria-label="Controles del lienzo">
         <button class="canvas-quick-action" type="button" (click)="setMobilePanel('tools')">+ Agregar</button>
         <button class="canvas-quick-action" type="button" *ngIf="!selectedLayerCount"
           (click)="toolCategory='functions'; setMobilePanel('tools')">Funciones</button>
@@ -3218,7 +3208,7 @@
             escritorio</button>
         </div>
       </details>
-      <div class="inspector-tabs" [class.tutorial-focus]="tutorialStep === 6">
+      <div class="inspector-tabs" data-tour="ve-inspector-tabs">
         <button type="button" [class.active]="inspectorView === 'properties'"
           (click)="inspectorView='properties'">Propiedades</button>
         <button type="button" [class.active]="inspectorView === 'layers'"

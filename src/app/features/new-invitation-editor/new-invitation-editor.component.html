@@ -64,7 +64,7 @@
         [backLabel]="event?.title || 'Detalle del Evento'"></app-event-header>
 
       <div class="inv-editor-toolbar">
-        <div class="inv-editor-toolbar-main">
+        <div class="inv-editor-toolbar-main" data-tour="inv-editor-toolbar">
           <div class="inv-editor-heading">
             <strong>Editar invitación</strong>
             <span class="nw-pill" [class.success]="invitation.status === 'published'"
@@ -96,7 +96,7 @@
             </button>
           </div>
         </div>
-        <nav class="inv-editor-navigation" aria-label="Herramientas de la invitación">
+        <nav class="inv-editor-navigation" data-tour="inv-editor-nav" aria-label="Herramientas de la invitación">
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab !== 'plans' && activeTab !== 'all'"
             (click)="setActiveTab('content', true)">Editar por pasos</button>
           <button type="button" class="inv-editor-nav-button" [class.active]="activeTab === 'plans'"
@@ -615,6 +615,7 @@
       </div>
 
       <!-- CARDS DE CONTENIDO -->
+      <div data-tour="inv-editor-workspace">
 
       <!-- 1. Contenido Principal (Mandatorio) -->
       <app-editor-content-tab *ngIf="activeTab === 'content' || activeTab === 'all'" [invitation]="invitation"
@@ -1306,6 +1307,7 @@
         </div>
       </div>
 
+      </div>
     </ng-container>
   </main>
 </div>
