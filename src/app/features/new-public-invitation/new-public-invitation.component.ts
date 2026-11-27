@@ -138,34 +138,15 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
   isSimulatingGuest = false;
   previewSection: 'invitation' | 'access' | 'register' = 'invitation';
 
-  private readonly demoQrSvgDataUrl: string =
-    'data:image/svg+xml;charset=utf-8,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220">` +
-      `<rect width="220" height="220" rx="14" fill="#ffffff"/>` +
-      `<g fill="#1c1917">` +
-      `<rect x="18" y="18" width="54" height="54" rx="6"/>` +
-      `<rect x="26" y="26" width="38" height="38" rx="3" fill="#ffffff"/>` +
-      `<rect x="34" y="34" width="22" height="22" rx="2"/>` +
-      `<rect x="148" y="18" width="54" height="54" rx="6"/>` +
-      `<rect x="156" y="26" width="38" height="38" rx="3" fill="#ffffff"/>` +
-      `<rect x="164" y="34" width="22" height="22" rx="2"/>` +
-      `<rect x="18" y="148" width="54" height="54" rx="6"/>` +
-      `<rect x="26" y="156" width="38" height="38" rx="3" fill="#ffffff"/>` +
-      `<rect x="34" y="164" width="22" height="22" rx="2"/>` +
-      `<rect x="86" y="20" width="12" height="12"/><rect x="110" y="20" width="12" height="12"/><rect x="122" y="32" width="12" height="12"/>` +
-      `<rect x="86" y="44" width="24" height="12"/><rect x="98" y="56" width="12" height="12"/><rect x="122" y="56" width="12" height="24"/>` +
-      `<rect x="20" y="86" width="12" height="12"/><rect x="44" y="86" width="24" height="12"/><rect x="86" y="86" width="12" height="24"/>` +
-      `<rect x="110" y="86" width="24" height="12"/><rect x="148" y="86" width="12" height="12"/><rect x="172" y="86" width="28" height="12"/>` +
-      `<rect x="32" y="110" width="24" height="12"/><rect x="68" y="110" width="12" height="24"/><rect x="98" y="110" width="24" height="24"/>` +
-      `<rect x="134" y="110" width="12" height="12"/><rect x="160" y="110" width="12" height="24"/><rect x="184" y="110" width="16" height="12"/>` +
-      `<rect x="20" y="122" width="12" height="12"/><rect x="44" y="122" width="12" height="12"/><rect x="134" y="134" width="24" height="12"/>` +
-      `<rect x="86" y="148" width="12" height="24"/><rect x="110" y="148" width="24" height="12"/><rect x="148" y="148" width="24" height="24"/>` +
-      `<rect x="184" y="148" width="16" height="24"/><rect x="98" y="172" width="24" height="12"/><rect x="134" y="172" width="12" height="28"/>` +
-      `<rect x="86" y="186" width="12" height="14"/><rect x="110" y="186" width="12" height="14"/><rect x="160" y="184" width="40" height="16"/>` +
-      `</g>` +
-      `</svg>`
-    );
+  private readonly demoQrUrl: string = (() => {
+    const landingUrl =
+      typeof window !== 'undefined' &&
+      window.location.origin &&
+      window.location.protocol.startsWith('http')
+        ? `${window.location.origin}/`
+        : 'https://velisse.app/';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=10&data=${encodeURIComponent(landingUrl)}`;
+  })();
 
   readonly previewGuestData: GuestAccessResponse['guest'] = {
     id: 'preview-guest-sample',
@@ -177,7 +158,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
     tableName: 'Mesa 5',
     seatLabel: 'A-12',
     checkInCode: 'DEMO-PASS-QR',
-    qrCode: this.demoQrSvgDataUrl,
+    qrCode: this.demoQrUrl,
     status: 'pending'
   };
 
@@ -192,7 +173,7 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       tableName: 'Mesa 5',
       seatLabel: 'A-12',
       checkInCode: 'DEMO-PASS-QR',
-      qrCode: this.demoQrSvgDataUrl,
+      qrCode: this.demoQrUrl,
       status: 'pending'
     },
     rsvp: {

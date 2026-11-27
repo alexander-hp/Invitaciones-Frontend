@@ -42,7 +42,14 @@ export function visualTemplateContext(
     'guest.seat': guest?.seatLabel || 'por asignar',
     'guest.companions': guest ? Number(guest.allowedCompanions || 0) : 0,
     'guest.checkInCode': guest?.checkInCode || 'VIP-7492',
-    'guest.qrCode': guest?.checkInCode ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(guest.checkInCode)}` : 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VIP',
+    'guest.qrCode':
+      guest?.checkInCode && guest.checkInCode !== 'DEMO-PASS-QR'
+        ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(guest.checkInCode)}`
+        : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(
+            typeof window !== 'undefined' && window.location.origin && window.location.protocol.startsWith('http')
+              ? `${window.location.origin}/`
+              : 'https://velisse.app/'
+          )}`,
     'event.title': event?.title || '',
     'event.date': formatEventDate(event?.date),
     'event.time': event?.time || '',
