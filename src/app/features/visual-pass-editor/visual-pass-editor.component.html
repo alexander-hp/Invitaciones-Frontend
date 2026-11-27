@@ -107,6 +107,13 @@
         <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
         <span>Plantilla VIP</span>
       </button>
+
+      <!-- Crear Pase VIP a partir de una imagen propia -->
+      <input #passFromImageInput type="file" accept="image/*" style="display: none;" (change)="createPassFromImage($event)" />
+      <button type="button" class="secondary vpe-reset-pill" (click)="passFromImageInput.click()" [disabled]="uploadingImage" title="Sube tu propio diseño o imagen y coloca el QR y datos dinámicos encima">
+        <lucide-icon name="image" [strokeWidth]="1.8"></lucide-icon>
+        <span>{{ uploadingImage ? 'Cargando...' : 'Desde imagen' }}</span>
+      </button>
     </div>
 
     <div class="vpe-subbar-right">

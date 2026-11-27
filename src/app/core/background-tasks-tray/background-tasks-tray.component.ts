@@ -69,7 +69,7 @@ import { BackgroundTask, BackgroundTasksService } from '../background-tasks.serv
           <div class="bg-task-stats">
             <span class="bg-task-count">
               {{ task.current }} / {{ task.total }}
-              <small>{{ task.kind === 'zip' ? 'pases' : 'destinatarios' }}</small>
+              <small>{{ task.unitLabel || (task.kind === 'zip' ? 'pases' : (task.kind === 'table_qrs_zip' ? 'mesas' : 'destinatarios')) }}</small>
             </span>
             <span class="bg-task-pct">{{ task.percent }}%</span>
           </div>

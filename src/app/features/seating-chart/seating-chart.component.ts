@@ -2,7 +2,9 @@ import { Component, OnInit, OnDestroy, Optional, ViewChild, ElementRef, AfterVie
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, from, of } from 'rxjs';
 import { mergeMap, toArray } from 'rxjs/operators';
+import * as JSZip from 'jszip';
 import { ApiService } from '../../core/api.service';
+import { BackgroundTasksService } from '../../core/background-tasks.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { EventTutorialService } from '../../core/event-tutorial.service';
 import { AutoAssignStrategy, AutoAssignTablesResponse, EventModel, EventTableModel, GuestModel, GuestStatus, TableAutoAssignStrategy, TableShape } from '../../core/models';
@@ -21,6 +23,8 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('svgCanvas') svgCanvas!: ElementRef<SVGSVGElement>;
 
   event?: EventModel;
+  invitationSlug = '';
+  exportingAsset = false;
   tables: EventTableModel[] = [];
   guests: GuestModel[] = [];
   loading = true;
@@ -149,7 +153,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!floorObj) return;
 
     const count = this.floorTableCount(floorId);
-    const confirmMsg = count > 0 
+    const confirmMsg = count > 0
       ? `¿Eliminar el nivel "${floorObj.name}"? Sus ${count} mesa(s) se moverán automáticamente a Planta Baja.`
       : `¿Estás seguro de eliminar el nivel "${floorObj.name}"?`;
 
@@ -264,8 +268,9 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private api: ApiService,
     private confirmDialogService: ConfirmDialogService,
+    private backgroundTasks: BackgroundTasksService,
     @Optional() private tutorialService?: EventTutorialService
-  ) {}
+  ) { }
 
   openTutorial(): void {
     void this.tutorialService?.runPageTour('seating-chart');
@@ -279,14 +284,16 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
     this.load();
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   load(): void {
     const eventId = this.route.snapshot.paramMap.get('id') || '';
     this.loading = true;
     this.api.getEvent(eventId).subscribe({
-      next: ({ event }) => {
+      next: (res: any) => {
+        const event = res.event;
         this.event = event;
+        this.invitationSlug = res.invitation?.slug || res.event?.invitationSlug || '';
         if (event.venue?.width) {
           this.venueWidth = event.venue.width;
         }
@@ -363,7 +370,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadGuests(eventId: string): void {
-    this.api.listGuests(eventId).subscribe({ next: ({ guests }) => this.guests = guests, error: () => {} });
+    this.api.listGuests(eventId).subscribe({ next: ({ guests }) => this.guests = guests, error: () => { } });
   }
 
   get eventId(): string { return this.event?._id || this.event?.id || ''; }
@@ -390,7 +397,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
   get missingTables(): Array<{ name: string; guests: number; seats: number }> {
     const tableNames = new Set(this.tables.map(t => t.name.trim().toLowerCase()));
     const missingMap = new Map<string, { name: string; guests: number; seats: number }>();
-    
+
     this.guests.forEach(g => {
       if (g.tableName && g.tableName.trim()) {
         const nameTrimmed = g.tableName.trim();
@@ -403,7 +410,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
     });
-    
+
     return Array.from(missingMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
@@ -560,16 +567,16 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
       x, y, order: this.tables.length
     }).subscribe({
       next: ({ table }) => {
-        this.tables = [...this.tables, { 
-          ...table, 
-          x: table.x || x, 
-          y: table.y || y, 
-          shape: table.shape || this.newTable.shape, 
-          width: table.width || Math.round(this.newTable.width * 100), 
-          height: table.height || Math.round(this.newTable.height * 100), 
+        this.tables = [...this.tables, {
+          ...table,
+          x: table.x || x,
+          y: table.y || y,
+          shape: table.shape || this.newTable.shape,
+          width: table.width || Math.round(this.newTable.width * 100),
+          height: table.height || Math.round(this.newTable.height * 100),
           floor: table.floor || targetFloorId,
           floorName: table.floorName || floorObj.name,
-          guests: [] 
+          guests: []
         }];
         this.activeFloor = targetFloorId;
         this.showCreateModal = false;
@@ -593,7 +600,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
     this.createError = '';
 
     const existingNames = new Set(this.tables.map(t => t.name.toLowerCase()));
-    
+
     let startNumber = 1;
     const prefixLower = prefix.toLowerCase();
     const regex = new RegExp(`^${prefixLower}\\s*(\\d+)$`, 'i');
@@ -805,14 +812,14 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
       x, y, order: this.tables.length
     }).subscribe({
       next: ({ table }) => {
-        this.tables = [...this.tables, { 
-          ...table, 
-          x: table.x || x, 
-          y: table.y || y, 
-          shape: table.shape || 'round', 
-          width: table.width || 120, 
-          height: table.height || 120, 
-          guests: [] 
+        this.tables = [...this.tables, {
+          ...table,
+          x: table.x || x,
+          y: table.y || y,
+          shape: table.shape || 'round',
+          width: table.width || 120,
+          height: table.height || 120,
+          guests: []
         }];
         this.creating = false;
         // Reload to recalculate occupancies and assigned guests lists
@@ -1038,7 +1045,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
         this.api.updateTable(this.eventId, this.getTableId(table), {
           x: Math.round(table.x || 0),
           y: Math.round(table.y || 0)
-        } as any).subscribe({ error: () => {} });
+        } as any).subscribe({ error: () => { } });
       }
       this.drag.active = false;
     }
@@ -1112,7 +1119,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
         this.message = `${guest.name} desasignado`;
         setTimeout(() => this.message = '', 3000);
       },
-      error: () => {}
+      error: () => { }
     });
   }
 
@@ -1129,6 +1136,399 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
   tableCy(t: EventTableModel): number { return (t.y || 0) + (t.height || 120) / 2; }
   tableRx(t: EventTableModel): number { return (t.width || 120) / 2; }
   tableRy(t: EventTableModel): number { return (t.height || 120) / 2; }
+
+  get guestTables(): EventTableModel[] {
+    return this.tables.filter(t => !this.isElementShape(t.shape));
+  }
+
+  getTableFloorName(table: EventTableModel): string {
+    const floorId = table.floor || 1;
+    return this.floorsList.find(f => f.id === floorId)?.name || `Nivel ${floorId}`;
+  }
+
+  getTableQrTargetUrl(table: EventTableModel): string {
+    const origin =
+      typeof window !== 'undefined' &&
+        window.location.origin &&
+        window.location.protocol.startsWith('http')
+        ? window.location.origin
+        : 'https://velisse.app';
+    if (this.invitationSlug) {
+      return `${origin}/new/i/${encodeURIComponent(this.invitationSlug)}?table=${encodeURIComponent(table.name)}`;
+    }
+    return `${origin}/?event=${encodeURIComponent(this.event?.title || 'Evento')}&table=${encodeURIComponent(table.name)}`;
+  }
+
+  getTableQrImageUrl(table: EventTableModel, size = 320): string {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=10&data=${encodeURIComponent(this.getTableQrTargetUrl(table))}`;
+  }
+
+  private sanitizeFilename(value: string): string {
+    return (value || 'archivo').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_') || 'archivo';
+  }
+
+  private async renderTableQrCardBlob(table: EventTableModel): Promise<Blob> {
+    const canvas = document.createElement('canvas');
+    const W = 720;
+    const H = 920;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+
+    // Background
+    ctx.fillStyle = '#faf7f2';
+    ctx.fillRect(0, 0, W, H);
+
+    // Luxury border
+    ctx.strokeStyle = '#c09c78';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(26, 26, W - 52, H - 52);
+    ctx.strokeStyle = 'rgba(192, 156, 120, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(38, 38, W - 76, H - 76);
+
+    // Event title
+    ctx.fillStyle = '#8b6f4e';
+    ctx.font = '700 18px Inter, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText((this.event?.title || 'EVENTO ESPECIAL').toUpperCase(), W / 2, 92, W - 120);
+
+    // Table Name
+    ctx.fillStyle = '#1e1b18';
+    ctx.font = '800 46px Georgia, serif';
+    ctx.fillText(table.name, W / 2, 155, W - 120);
+
+    // Floor & Capacity subtitle
+    ctx.fillStyle = '#6b645b';
+    ctx.font = '600 20px Inter, Arial, sans-serif';
+    ctx.fillText(`${this.getTableFloorName(table)}  ·  ${table.occupied || 0}/${table.capacity} lugares`, W / 2, 195);
+
+    // QR White Box
+    const qrBoxSize = 410;
+    const qrBoxX = (W - qrBoxSize) / 2;
+    const qrBoxY = 235;
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(24, 20, 17, 0.12)';
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 8;
+    ctx.fillRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+    ctx.shadowColor = 'transparent';
+    ctx.strokeStyle = '#e6d9c6';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+
+    // Load QR image
+    const qrImg = await new Promise<HTMLImageElement | null>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = this.getTableQrImageUrl(table, 380);
+    });
+
+    if (qrImg) {
+      ctx.drawImage(qrImg, qrBoxX + 20, qrBoxY + 20, qrBoxSize - 40, qrBoxSize - 40);
+    }
+
+    // Hint text
+    ctx.fillStyle = '#475569';
+    ctx.font = '600 20px Inter, Arial, sans-serif';
+    ctx.fillText('Escanea el código QR para abrir tu invitación', W / 2, 695);
+
+    // Guests preview (up to 6 names)
+    const assigned = (table.guests || []).map(g => g.name).filter(Boolean);
+    if (assigned.length) {
+      ctx.fillStyle = '#8b6f4e';
+      ctx.font = '700 15px Inter, Arial, sans-serif';
+      ctx.fillText(`INVITADOS EN ESTA MESA (${assigned.length})`, W / 2, 745);
+
+      ctx.fillStyle = '#334155';
+      ctx.font = '500 17px Inter, Arial, sans-serif';
+      const maxLines = 4;
+      const chunks: string[] = [];
+      for (let i = 0; i < assigned.length && chunks.length < maxLines; i += 2) {
+        const pair = assigned.slice(i, i + 2).join('  ·  ');
+        chunks.push(pair);
+      }
+      if (assigned.length > maxLines * 2) {
+        chunks[chunks.length - 1] += ` (+${assigned.length - maxLines * 2} más)`;
+      }
+      chunks.forEach((line, idx) => {
+        ctx.fillText(line, W / 2, 778 + idx * 26, W - 120);
+      });
+    }
+
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No se pudo generar la imagen QR')), 'image/png');
+    });
+  }
+
+  async downloadSingleTableQR(table: EventTableModel): Promise<void> {
+    if (!table || this.isElementShape(table.shape) || this.exportingAsset) return;
+    this.exportingAsset = true;
+    try {
+      const blob = await this.renderTableQrCardBlob(table);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `QR_${this.sanitizeFilename(table.name)}.png`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      this.message = `QR de ${table.name} descargado.`;
+      setTimeout(() => this.message = '', 3500);
+    } catch {
+      this.error = `No se pudo generar el QR de ${table.name}.`;
+      setTimeout(() => this.error = '', 4000);
+    } finally {
+      this.exportingAsset = false;
+    }
+  }
+
+  async downloadTableQRsZip(): Promise<void> {
+    const tables = this.guestTables;
+    const eventId = this.eventId || 'croquis';
+    if (!tables.length) {
+      this.error = 'No hay mesas creadas para generar códigos QR.';
+      setTimeout(() => this.error = '', 3500);
+      return;
+    }
+    if (this.backgroundTasks.isRunning(eventId, 'table_qrs_zip')) return;
+
+    const eventTitle = this.event?.title || 'Evento';
+    const taskId = this.backgroundTasks.beginCustomTask({
+      eventId,
+      title: 'QRs de Mesas en ZIP',
+      subtitle: 'Generando tarjetas QR en segundo plano...',
+      kind: 'table_qrs_zip',
+      total: tables.length,
+      unitLabel: 'mesas',
+      initialStatusText: `Preparando ${tables.length} códigos QR de mesas...`
+    });
+
+    try {
+      const zip = new JSZip();
+      let generated = 0;
+      for (const t of tables) {
+        this.backgroundTasks.updateTaskProgress(taskId, generated, `Generando QR de ${t.name}...`);
+        const blob = await this.renderTableQrCardBlob(t);
+        zip.file(`QR_${this.sanitizeFilename(t.name)}.png`, blob);
+        generated++;
+        this.backgroundTasks.updateTaskProgress(taskId, generated, `QR de ${t.name} listo (${generated}/${tables.length})`);
+      }
+
+      this.backgroundTasks.updateTaskProgress(taskId, tables.length, 'Empaquetando archivo ZIP final...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const fileName = `QRs_Mesas_${this.sanitizeFilename(eventTitle)}.zip`;
+      const url = window.URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      this.backgroundTasks.finishCustomTask(
+        taskId,
+        tables.length,
+        0,
+        `${fileName} descargado (${tables.length} mesas).`,
+        false
+      );
+    } catch {
+      this.backgroundTasks.finishCustomTask(
+        taskId,
+        0,
+        tables.length,
+        'Ocurrió un error al generar el ZIP de QRs de mesas.',
+        true
+      );
+    }
+  }
+
+  exportTableQRsPDF(): void {
+    const tables = this.guestTables;
+    if (!tables.length) {
+      this.error = 'No hay mesas creadas para exportar tarjetas QR.';
+      setTimeout(() => this.error = '', 3500);
+      return;
+    }
+    const printWin = window.open('', '_blank');
+    if (!printWin) return;
+
+    const eventTitle = this.event?.title || 'Evento Especial';
+    const eventDateStr = this.formatDate(this.event?.date);
+    const cardsHtml = tables.map((t) => {
+      const qrUrl = this.getTableQrImageUrl(t, 280);
+      const guestsHtml = (t.guests || []).length
+        ? `<div class="qr-guests">${(t.guests || []).map(g => `<span>${g.name}</span>`).join('')}</div>`
+        : `<div class="qr-guests empty">Sin invitados asignados aún</div>`;
+      return `
+        <article class="qr-card">
+          <div class="qr-event">${eventTitle}</div>
+          <h2 class="qr-table-name">${t.name}</h2>
+          <div class="qr-meta">${this.getTableFloorName(t)} · ${t.occupied || 0}/${t.capacity} lugares</div>
+          <div class="qr-box"><img src="${qrUrl}" alt="QR ${t.name}" /></div>
+          <div class="qr-hint">Escanea para abrir la invitación</div>
+          ${guestsHtml}
+        </article>
+      `;
+    }).join('');
+
+    printWin.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>QRs de Mesas - ${eventTitle}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; font-family: 'Segoe UI', system-ui, sans-serif; background: #fff; color: #1e1b18; }
+    .header { text-align: center; margin-bottom: 18px; }
+    .header h1 { margin: 0; font-size: 20px; }
+    .header p { margin: 4px 0 0; font-size: 12px; color: #64748b; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .qr-card {
+      border: 2px solid #c09c78;
+      border-radius: 14px;
+      padding: 18px 16px;
+      text-align: center;
+      background: #faf7f2;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .qr-event { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8b6f4e; }
+    .qr-table-name { margin: 4px 0 2px; font-size: 24px; font-family: Georgia, serif; }
+    .qr-meta { font-size: 11px; color: #6b645b; margin-bottom: 12px; }
+    .qr-box { display: inline-flex; padding: 10px; background: #fff; border: 1px solid #e6d9c6; border-radius: 12px; margin-bottom: 8px; }
+    .qr-box img { width: 170px; height: 170px; display: block; }
+    .qr-hint { font-size: 11px; color: #475569; margin-bottom: 10px; }
+    .qr-guests { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; font-size: 10px; color: #334155; }
+    .qr-guests span { background: #fff; border: 1px solid #e2d8c8; border-radius: 999px; padding: 2px 8px; }
+    .qr-guests.empty { color: #94a3b8; font-style: italic; }
+    @media print { body { padding: 8mm; } .no-print { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="header no-print">
+    <h1>Tarjetas QR de Mesas — ${eventTitle}</h1>
+    <p>${eventDateStr} · ${tables.length} mesas listas para imprimir</p>
+  </div>
+  <div class="grid">${cardsHtml}</div>
+  <script>window.onload = function () { setTimeout(function () { window.print(); }, 500); };</script>
+</body>
+</html>`);
+    printWin.document.close();
+  }
+
+  exportFloorPNG(): void {
+    const svgEl = this.svgCanvas?.nativeElement;
+    if (!svgEl) return;
+    try {
+      const clone = svgEl.cloneNode(true) as SVGSVGElement;
+      const w = this.venueWidth * 100;
+      const h = this.venueHeight * 100;
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      clone.setAttribute('width', String(w));
+      clone.setAttribute('height', String(h));
+
+      const xml = new XMLSerializer().serializeToString(clone);
+      const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+      const url = window.URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = () => {
+        const scale = 2;
+        const headerH = 72;
+        const canvas = document.createElement('canvas');
+        canvas.width = w * scale;
+        canvas.height = (h + headerH) * scale;
+        const ctx = canvas.getContext('2d')!;
+        ctx.scale(scale, scale);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h + headerH);
+
+        ctx.fillStyle = '#1e1b18';
+        ctx.font = '800 22px Inter, Arial, sans-serif';
+        ctx.fillText(`${this.event?.title || 'Croquis de Mesas'} — ${this.activeFloorObject.name}`, 24, 34);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 13px Inter, Arial, sans-serif';
+        ctx.fillText(`${this.visibleTables.length} elementos · ${this.venueWidth}m × ${this.venueHeight}m`, 24, 56);
+
+        ctx.drawImage(img, 0, headerH, w, h);
+        window.URL.revokeObjectURL(url);
+
+        canvas.toBlob((pngBlob) => {
+          if (!pngBlob) return;
+          const dlUrl = window.URL.createObjectURL(pngBlob);
+          const a = document.createElement('a');
+          a.href = dlUrl;
+          a.download = `Croquis_${this.sanitizeFilename(this.event?.title || 'Evento')}_${this.sanitizeFilename(this.activeFloorObject.name)}.png`;
+          a.click();
+          window.URL.revokeObjectURL(dlUrl);
+          this.message = `Imagen del croquis (${this.activeFloorObject.name}) descargada.`;
+          setTimeout(() => this.message = '', 3500);
+        }, 'image/png');
+      };
+      img.src = url;
+    } catch {
+      this.error = 'No se pudo exportar la imagen PNG del croquis.';
+      setTimeout(() => this.error = '', 3500);
+    }
+  }
+
+  exportGuestListCSV(): void {
+    const escapeCsv = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    const rows: string[] = [
+      ['Nivel', 'Mesa', 'Capacidad', 'Ocupados', 'Invitado', 'Lugares', 'Grupo', 'Estado', 'Asiento'].map(escapeCsv).join(',')
+    ];
+
+    for (const t of this.guestTables) {
+      const floorName = this.getTableFloorName(t);
+      const assigned = t.guests || [];
+      if (!assigned.length) {
+        rows.push([floorName, t.name, t.capacity, 0, '(Sin invitados)', 0, '', '', ''].map(escapeCsv).join(','));
+      } else {
+        for (const g of assigned) {
+          const fullGuest = this.guests.find(item => (item._id || item.id) === g.id);
+          rows.push([
+            floorName,
+            t.name,
+            t.capacity,
+            t.occupied || 0,
+            g.name,
+            g.seats || 1,
+            g.group || fullGuest?.group || '',
+            fullGuest?.status || (g.checkedIn ? 'checked_in' : 'assigned'),
+            g.seatLabel || fullGuest?.seatLabel || ''
+          ].map(escapeCsv).join(','));
+        }
+      }
+    }
+
+    for (const g of this.unassignedGuests) {
+      rows.push([
+        'Sin asignar',
+        'Sin mesa',
+        '',
+        '',
+        g.name,
+        (g.allowedCompanions || 0) + 1,
+        g.group || '',
+        g.status || '',
+        g.seatLabel || ''
+      ].map(escapeCsv).join(','));
+    }
+
+    const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Lista_Mesas_${this.sanitizeFilename(this.event?.title || 'Evento')}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    this.message = 'Lista de mesas e invitados (CSV / Excel) descargada.';
+    setTimeout(() => this.message = '', 3500);
+  }
 
   // ── Export Multi-Floor Plan PDF ──
   exportPDFPlan(): void {
@@ -1202,7 +1602,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
             break;
         }
 
-        const seatsSvg = this.seatPositions(t).map((s, si) => 
+        const seatsSvg = this.seatPositions(t).map((s, si) =>
           `<circle cx="${s.cx}" cy="${s.cy}" r="6" fill="${si < (t.occupied || 0) ? '#c09c78' : '#e2e8f0'}" stroke="#94a3b8" stroke-width="1.2"/>`
         ).join('');
 
@@ -1218,7 +1618,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
         const isElem = this.isElementShape(t.shape);
         if (isElem) return; // No generar tarjeta de armar sillas para pista/escenario
 
-        const guestsList = t.guests?.map(g => 
+        const guestsList = t.guests?.map(g =>
           `<li>
             <span class="chk-box">[ ]</span>
             <span class="guest-name"><strong>${g.name}</strong></span>
@@ -1729,7 +2129,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
       cancelText: 'Cancelar'
     }).then((accepted: boolean) => {
       if (!accepted) return;
-      
+
       this.loading = true;
       const requests = missingNames.map((tableName, index) => {
         return this.api.createTable(this.eventId, {

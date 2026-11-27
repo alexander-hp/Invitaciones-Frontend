@@ -300,7 +300,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
     private apiService: ApiService,
     private confirmDialogService: ConfirmDialogService,
     @Optional() private tutorialService?: EventTutorialService
-  ) {}
+  ) { }
 
   openTutorial(): void {
     void this.tutorialService?.runPageTour('pass-editor');
@@ -579,7 +579,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
             existing = parsed;
           }
         }
-      } catch {}
+      } catch { }
     }
 
     // A valid pass design MUST only contain passSheet sections
@@ -639,6 +639,123 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
     this.flash('Plantilla VIP oficial restaurada.');
   }
 
+  private getLandingDemoQrUrl(): string {
+    const landingUrl =
+      typeof window !== 'undefined' &&
+        window.location.origin &&
+        window.location.protocol.startsWith('http')
+        ? `${window.location.origin}/`
+        : 'https://velisse.app/';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(landingUrl)}`;
+  }
+
+  async createPassFromImage(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file || !this.activeSheet) return;
+    input.value = '';
+
+    if (!file.type.startsWith('image/')) {
+      this.flash('Selecciona un archivo de imagen válido (PNG, JPG o WEBP).');
+      return;
+    }
+
+    this.uploadingImage = true;
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        reader.readAsDataURL(file);
+      });
+
+      const dims = await new Promise<{ w: number; h: number }>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth || 420, h: img.naturalHeight || 660 });
+        img.onerror = () => resolve({ w: 420, h: 660 });
+        img.src = dataUrl;
+      });
+
+      const isLandscape = dims.w > dims.h;
+      const targetWidth = isLandscape ? 580 : 420;
+      const ratio = dims.h / Math.max(1, dims.w);
+      const sheetW = Math.min(840, Math.max(280, Math.round(targetWidth)));
+      const sheetH = Math.min(860, Math.max(260, Math.round(sheetW * ratio)));
+
+      const sheet = this.activeSheet;
+      sheet.pluginSettings = sheet.pluginSettings || {};
+      sheet.pluginSettings['sheetPreset'] = 'custom';
+      sheet.pluginSettings['sheetWidth'] = sheetW;
+      sheet.pluginSettings['sheetHeight'] = sheetH;
+      sheet.height = sheetH;
+      if (this.design.canvasSize) {
+        this.design.canvasSize.preset = 'custom';
+        this.design.canvasSize.width = sheetW;
+        this.design.canvasSize.height = sheetH;
+      }
+      sheet.background = { color: '#0b1426', overlay: 0 };
+
+      const uid = (p: string) => this.uid(p);
+      const bgLayer = createPassLayer(uid, 'image', 'Imagen base del pase', 0, 0, 100, 100, 1, {
+        objectFit: 'cover',
+        borderRadius: 0
+      }, {
+        url: dataUrl,
+        locked: true
+      });
+
+      const qrW = isLandscape ? 24 : 36;
+      const qrH = Math.min(46, Math.max(20, Math.round((qrW * sheetW) / Math.max(1, sheetH))));
+      const qrX = isLandscape ? 70 : Math.round((100 - qrW) / 2);
+      const qrY = isLandscape ? Math.round((100 - qrH) / 2) : 54;
+
+      const qrLayer = createPassLayer(uid, 'image', 'Código QR Dinámico', qrX, qrY, qrW, qrH, 2, {
+        borderRadius: 12,
+        backgroundColor: '#ffffff',
+        padding: 8,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)'
+      }, {
+        binding: 'pass.qrCode',
+        url: this.getLandingDemoQrUrl()
+      });
+
+      const nameLayer = createPassLayer(uid, 'text', 'Nombre del Invitado', isLandscape ? 6 : 10, isLandscape ? 32 : 16, isLandscape ? 58 : 80, 8, 3, {
+        color: '#ffffff',
+        fontSize: 22,
+        fontWeight: '800',
+        textAlign: isLandscape ? 'left' : 'center',
+        backgroundColor: 'rgba(15, 23, 42, 0.45)',
+        borderRadius: 10,
+        padding: 6
+      }, {
+        text: '{{guest.name}}'
+      });
+
+      const tableLayer = createPassLayer(uid, 'text', 'Mesa y Asiento', isLandscape ? 6 : 14, isLandscape ? 46 : 27, isLandscape ? 58 : 72, 6, 4, {
+        color: '#f3cf68',
+        fontSize: 14,
+        fontWeight: '700',
+        textAlign: isLandscape ? 'left' : 'center',
+        backgroundColor: 'rgba(15, 23, 42, 0.45)',
+        borderRadius: 8,
+        padding: 4
+      }, {
+        text: 'Mesa: {{guest.table}}  ·  Asiento: {{guest.seat}}'
+      });
+
+      sheet.layers = [bgLayer, qrLayer, nameLayer, tableLayer];
+      this.selectLayer(qrLayer);
+      this.pushHistory();
+      this.flash('Pase creado desde tu imagen. Arrastra el QR y los textos donde prefieras.');
+
+      await this.uploadImageFile(file, bgLayer);
+    } catch {
+      this.flash('No se pudo cargar la imagen seleccionada.');
+    } finally {
+      this.uploadingImage = false;
+    }
+  }
+
   private inferTheme(): NonNullable<VisualInvitationDesign['theme']> {
     return {
       backgroundColor: '#0b1426',
@@ -675,7 +792,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
       if (this.invitationId && this.design) {
         localStorage.setItem(`pass_draft_${this.invitationId}`, JSON.stringify(this.design));
       }
-    } catch {}
+    } catch { }
 
     if (this.autosaveTimer) {
       clearTimeout(this.autosaveTimer);
@@ -1195,7 +1312,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
       } else {
         this.audioElement.src = url;
       }
-      this.audioElement.play().catch(() => {});
+      this.audioElement.play().catch(() => { });
       this.audioPlaying = true;
     }
   }
@@ -1322,7 +1439,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
     if (!item && event.dataTransfer) {
       try {
         item = JSON.parse(event.dataTransfer.getData('application/json'));
-      } catch {}
+      } catch { }
     }
     this.draggedPaletteItem = null;
     if (!item) return;
@@ -1436,7 +1553,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
           borderRadius: 8
         }, {
           binding: 'pass.qrCode',
-          url: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VIP-DEMO'
+          url: this.getLandingDemoQrUrl()
         });
         break;
       case 'name':
@@ -2146,7 +2263,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
       // Guardar también copia local segura
       try {
         localStorage.setItem(`pass_draft_${this.invitationId}`, JSON.stringify(this.design));
-      } catch {}
+      } catch { }
 
       this.autosaveState = 'Al día';
       this.saving = false;
@@ -2199,7 +2316,7 @@ export class VisualPassEditorComponent implements OnInit, OnDestroy {
       }
       try {
         localStorage.setItem(`pass_draft_${this.invitationId}`, JSON.stringify(this.design));
-      } catch {}
+      } catch { }
 
       this.autosaveState = 'Al día';
       this.publishing = false;

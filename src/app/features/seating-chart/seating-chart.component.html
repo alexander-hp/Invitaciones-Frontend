@@ -41,9 +41,28 @@
           (click)="createMissingAssignedTables()">
           🪑 Crear mesas ({{ missingTables.length }})
         </button>
-        <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="exportPDFPlan()" title="Exportar PDF">
-          📄 PDF
-        </button>
+        <details class="nw-croquis-download-menu" #compactDownloadMenu style="position: relative; display: inline-block;">
+          <summary class="nw-btn nw-btn-ghost nw-btn-sm" style="list-style: none; cursor: pointer; font-weight: 600;">
+            📥 Descargar ▾
+          </summary>
+          <div style="position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 245px; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #e5d8c5); border-radius: 12px; box-shadow: 0 14px 32px rgba(0,0,0,0.16); padding: 6px; display: flex; flex-direction: column; gap: 4px;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="compactDownloadMenu.open=false; exportTableQRsPDF()">
+              📱 Tarjetas QR de mesas (PDF)
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" [disabled]="exportingAsset" (click)="compactDownloadMenu.open=false; downloadTableQRsZip()">
+              🗂️ QRs de mesas individuales (ZIP)
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="compactDownloadMenu.open=false; exportPDFPlan()">
+              📄 Plano del croquis (PDF)
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="compactDownloadMenu.open=false; exportFloorPNG()">
+              🖼️ Imagen del croquis (PNG)
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="compactDownloadMenu.open=false; exportGuestListCSV()">
+              📊 Lista mesas e invitados (Excel/CSV)
+            </button>
+          </div>
+        </details>
         <span style="font-size: 12px; color: var(--nw-text-2); font-weight: 600;">
           🏢 Nivel: <strong>{{ activeFloorObject.name }}</strong>
         </span>
@@ -107,10 +126,28 @@
             Crear mesas asignadas ({{ missingTables.length }})
           </button>
 
-          <button class="nw-btn nw-btn-ghost" (click)="exportPDFPlan()" title="Exportar plano en PDF"
-            style="font-weight: 600;">
-            📄 Exportar PDF
-          </button>
+          <details class="nw-croquis-download-menu" #heroDownloadMenu style="position: relative; display: inline-block;">
+            <summary class="nw-btn nw-btn-ghost" style="list-style: none; cursor: pointer; font-weight: 700;" title="Descargar plano, QRs de mesas y lista de invitados">
+              📥 {{ exportingAsset ? 'Generando...' : 'Descargar ▾' }}
+            </summary>
+            <div style="position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 265px; background: var(--nw-surface, #ffffff); border: 1px solid var(--nw-border, #e5d8c5); border-radius: 12px; box-shadow: 0 14px 32px rgba(0,0,0,0.16); padding: 6px; display: flex; flex-direction: column; gap: 4px;">
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="heroDownloadMenu.open=false; exportTableQRsPDF()">
+                📱 Tarjetas QR de mesas (PDF)
+              </button>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" [disabled]="exportingAsset" (click)="heroDownloadMenu.open=false; downloadTableQRsZip()">
+                🗂️ QRs de mesas individuales (ZIP)
+              </button>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="heroDownloadMenu.open=false; exportPDFPlan()">
+                📄 Plano del croquis (PDF)
+              </button>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="heroDownloadMenu.open=false; exportFloorPNG()">
+                🖼️ Imagen del croquis (PNG)
+              </button>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" style="justify-content: flex-start; text-align: left; width: 100%;" (click)="heroDownloadMenu.open=false; exportGuestListCSV()">
+                📊 Lista mesas e invitados (Excel/CSV)
+              </button>
+            </div>
+          </details>
 
           <button class="nw-btn nw-btn-ghost nw-btn-sm" (click)="clearAssignments()"
             [disabled]="clearingTables || !hasAssignedGuests" title="Desasignar a todos los invitados"
@@ -469,7 +506,14 @@
               </div>
             </div>
 
-            <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top: 8px; width: 100%; font-size: 12px;"
+            <button *ngIf="!isElementShape(selectedTable.shape)" class="nw-btn nw-btn-secondary nw-btn-sm"
+              style="margin-top: 8px; width: 100%; font-size: 12px; font-weight: 700;"
+              [disabled]="exportingAsset"
+              (click)="downloadSingleTableQR(selectedTable)">
+              📱 Descargar QR de esta mesa
+            </button>
+
+            <button class="nw-btn nw-btn-danger nw-btn-sm" style="margin-top: 6px; width: 100%; font-size: 12px;"
               (click)="deleteTable(selectedTable)">
               🗑️ Eliminar esta mesa
             </button>

@@ -3,7 +3,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { ApiService } from './api.service';
 import { GuestMessageType } from './models';
 
-export type BackgroundTaskKind = 'email' | 'whatsapp' | 'special_passes' | 'zip';
+export type BackgroundTaskKind = 'email' | 'whatsapp' | 'special_passes' | 'zip' | 'table_qrs_zip';
 
 export interface BackgroundTask {
   id: string;
@@ -11,6 +11,7 @@ export interface BackgroundTask {
   title: string;
   subtitle: string;
   kind: BackgroundTaskKind;
+  unitLabel?: string;
   current: number;
   total: number;
   percent: number;
@@ -60,6 +61,63 @@ export class BackgroundTasksService {
   dismissTask(taskId: string): void {
     this.clearIntervalFor(taskId);
     this.tasksSubject.next(this.tasks.filter((t) => t.id !== taskId));
+  }
+
+  beginCustomTask(config: {
+    eventId: string;
+    title: string;
+    subtitle: string;
+    kind: BackgroundTaskKind;
+    total: number;
+    unitLabel?: string;
+    initialStatusText?: string;
+  }): string {
+    const id = `${config.kind}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const task: BackgroundTask = {
+      id,
+      eventId: config.eventId,
+      title: config.title,
+      subtitle: config.subtitle,
+      kind: config.kind,
+      unitLabel: config.unitLabel,
+      current: 0,
+      total: config.total,
+      percent: config.total > 0 ? 2 : 0,
+      statusText: config.initialStatusText || 'Iniciando proceso en segundo plano...',
+      completed: false,
+      failed: false,
+      minimized: false,
+      successCount: 0,
+      errorCount: 0
+    };
+    const filtered = this.tasks.filter(
+      (t) => !(t.eventId === config.eventId && t.kind === config.kind && t.completed)
+    );
+    this.tasksSubject.next([...filtered, task]);
+    return id;
+  }
+
+  updateTaskProgress(taskId: string, current: number, statusText: string): void {
+    this.updateTask(taskId, (t) => {
+      const clampedCurrent = Math.min(t.total, Math.max(0, current));
+      const pct = t.total > 0 ? Math.min(99, Math.max(1, Math.round((clampedCurrent / t.total) * 100))) : 0;
+      return {
+        ...t,
+        current: clampedCurrent,
+        percent: pct,
+        statusText
+      };
+    });
+  }
+
+  finishCustomTask(
+    taskId: string,
+    successCount: number,
+    errorCount: number,
+    statusText: string,
+    failed = false
+  ): void {
+    this.completeTask(taskId, successCount, errorCount, statusText, failed);
   }
 
   runBulkEmail(params: {
@@ -400,8 +458,9 @@ export class BackgroundTasksService {
           'Registrando bloqueo de cupo especial en el servidor...'
         ];
       case 'zip':
+      case 'table_qrs_zip':
         return [
-          'Inicializando renderizador de pases en el servidor...',
+          'Inicializando renderizador en el servidor...',
           'Generando imágenes PNG de alta resolución (2x Retina)...',
           'Empaquetando tarjetas oficiales en el archivo ZIP...',
           'Preparando descarga automática del archivo...'
