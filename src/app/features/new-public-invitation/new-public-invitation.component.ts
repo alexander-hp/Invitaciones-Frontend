@@ -406,6 +406,55 @@ export class NewPublicInvitationComponent implements OnInit, OnDestroy, AfterVie
       case 'INV_OPEN_LIGHTBOX':
         if (event.data.url) this.openLightbox(event.data.url);
         break;
+      case 'STUDIO_SCROLL_TO_SECTION':
+        if (event.data.section) {
+          this.scrollToStudioSection(event.data.section);
+        }
+        break;
+    }
+  }
+
+  scrollToStudioSection(section: string): void {
+    if (section === 'hero' || section === 'portada') {
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
+      return;
+    }
+    let el = document.querySelector<HTMLElement>(`[data-section-key="${section}"]`);
+    if (!el) {
+      if (section === 'story') {
+        el = document.querySelector<HTMLElement>('[data-section-key="story"], [data-section="story"], #story, #historia, .story-section, [class*="story"]');
+      } else if (section === 'dressCode') {
+        el = document.querySelector<HTMLElement>('[data-section-key="dressCode"], [data-section-key="dress-code"], [data-section="dressCode"], #dressCode, #dress-code, #codigo, [class*="dresscode"], [class*="dress-code"]');
+      } else if (section === 'locations') {
+        el = document.querySelector<HTMLElement>('[data-section-key="locations"], [data-section="locations"], #locations, #sedes, #ubicaciones, [class*="locations"], [class*="venue"]');
+      } else if (section === 'itinerary') {
+        el = document.querySelector<HTMLElement>('[data-section-key="itinerary"], [data-section="itinerary"], #itinerary, #horarios, #programa, [class*="itinerary"]');
+      }
+    }
+    if (!el) {
+      const terms = section === 'story'
+        ? ['historia', 'story', 'nuestra historia']
+        : section === 'dressCode'
+        ? ['código de vestimenta', 'dress code', 'etiqueta', 'vestimenta']
+        : section === 'locations'
+        ? ['dónde', 'donde', 'ubicación', 'ubicacion', 'lugares', 'recepción', 'ceremonia']
+        : ['itinerario', 'horario', 'programa', 'cronograma'];
+
+      const candidates = Array.from(document.querySelectorAll('section, article, div, h2, h3, h4'));
+      for (const candidate of candidates) {
+        const txt = (candidate.textContent || '').toLowerCase();
+        if (terms.some(t => txt.includes(t)) && (candidate as HTMLElement).offsetHeight > 20) {
+          el = candidate as HTMLElement;
+          break;
+        }
+      }
+    }
+    if (el) {
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch {
+        el.scrollIntoView();
+      }
     }
   }
 

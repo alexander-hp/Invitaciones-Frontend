@@ -137,6 +137,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   // Interactive Template Studio Modal State
   studioOpen = false;
   studioTab: StudioTab = 'main';
+  studioMobilePane: 'edit' | 'preview' = 'edit';
   studioViewport: 'mobile' | 'desktop' = 'desktop';
   studioTemplateKey = 'boda-girasoles';
   studioSafeUrl: SafeResourceUrl | null = null;
@@ -294,6 +295,10 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.mobileMenuOpen = false;
     this.studioTemplateKey = templateKey;
     this.studioTab = 'main';
+    this.studioMobilePane = 'edit';
+    if (typeof window !== 'undefined' && window.innerWidth <= 820) {
+      this.studioViewport = 'mobile';
+    }
     this.inlineTextMode = false;
     this.studioIframeLoaded = false;
     this.baselineTexts = {};
@@ -304,6 +309,22 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.ensureDraftArrays();
     this.refreshStudioIframeUrl();
     this.studioOpen = true;
+  }
+
+  setStudioMobilePane(pane: 'edit' | 'preview'): void {
+    if (pane === 'edit' && this.inlineTextMode) {
+      this.captureInlineEditsFromStudioIframe();
+      this.persistStudioFormToDraft();
+    }
+    this.studioMobilePane = pane;
+    if (pane === 'preview') {
+      const target = this.studioTab === 'story'
+        ? 'story'
+        : this.studioTab === 'schedule'
+        ? 'locations'
+        : 'hero';
+      setTimeout(() => this.scrollToStudioSection(target, true), 100);
+    }
   }
 
   switchStudioTemplate(templateKey: string): void {
@@ -357,7 +378,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   onEventTitleManualChange(): void {
     if (!this.draftState) return;
     this.draftState.customEventTitle = Boolean((this.draftState.event.title || '').trim());
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('hero');
   }
 
   onHeadlineFieldChange(): void {
@@ -369,10 +390,88 @@ export class LandingComponent implements OnInit, OnDestroy {
         this.draftState.event.type || 'boda'
       );
     }
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('hero');
   }
 
-  onStudioFieldChange(): void {
+  private lastScrolledSection = '';
+  private scrollDebounceTimer?: ReturnType<typeof setTimeout>;
+
+  scrollToStudioSection(section: 'hero' | 'story' | 'dressCode' | 'locations' | 'itinerary', force = false): void {
+    if (!force && this.lastScrolledSection === section) {
+      return;
+    }
+    this.lastScrolledSection = section;
+
+    if (this.scrollDebounceTimer) {
+      clearTimeout(this.scrollDebounceTimer);
+    }
+
+    this.scrollDebounceTimer = setTimeout(() => {
+      const win = this.studioIframe?.nativeElement?.contentWindow;
+      if (win) {
+        try {
+          win.postMessage(
+            {
+              type: 'STUDIO_SCROLL_TO_SECTION',
+              section
+            },
+            window.location.origin
+          );
+        } catch {}
+      }
+
+      try {
+        const doc = this.studioIframe?.nativeElement?.contentDocument || win?.document;
+        if (!doc) return;
+
+        if (section === 'hero') {
+          win?.scrollTo({ top: 0, behavior: 'smooth' });
+          doc.documentElement?.scrollTo({ top: 0, behavior: 'smooth' });
+          doc.body?.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+
+        let el: HTMLElement | null = null;
+        if (section === 'story') {
+          el = doc.querySelector<HTMLElement>('[data-section-key="story"], [data-section="story"], #story, #historia, .story-section');
+        } else if (section === 'dressCode') {
+          el = doc.querySelector<HTMLElement>('[data-section-key="dressCode"], [data-section-key="dress-code"], [data-section="dressCode"], #dressCode, #dress-code, #codigo, [class*="dresscode"], [class*="dress-code"]');
+        } else if (section === 'locations') {
+          el = doc.querySelector<HTMLElement>('[data-section-key="locations"], [data-section="locations"], #locations, #sedes, #ubicaciones, [class*="locations"], [class*="venue"]');
+        } else if (section === 'itinerary') {
+          el = doc.querySelector<HTMLElement>('[data-section-key="itinerary"], [data-section="itinerary"], #itinerary, #horarios, #programa, [class*="itinerary"]');
+        }
+
+        if (!el) {
+          const terms = section === 'story'
+            ? ['historia', 'story', 'nuestra historia']
+            : section === 'dressCode'
+            ? ['código de vestimenta', 'dress code', 'etiqueta', 'vestimenta']
+            : section === 'locations'
+            ? ['dónde', 'donde', 'ubicación', 'ubicacion', 'lugares', 'recepción', 'ceremonia']
+            : ['itinerario', 'horario', 'programa', 'cronograma'];
+
+          const elements = Array.from(doc.querySelectorAll('section, article, div, h2, h3, h4'));
+          for (const candidate of elements) {
+            const txt = (candidate.textContent || '').toLowerCase();
+            if (terms.some(t => txt.includes(t)) && (candidate as HTMLElement).offsetHeight > 20) {
+              el = candidate as HTMLElement;
+              break;
+            }
+          }
+        }
+
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch {}
+    }, 50);
+  }
+
+  onStudioFieldChange(section?: 'hero' | 'story' | 'dressCode' | 'locations' | 'itinerary'): void {
+    if (section) {
+      this.scrollToStudioSection(section);
+    }
     if (!this.draftState) return;
     this.draftState.event.hosts = this.hostsText
       .split(',')
@@ -398,7 +497,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   onEventTypeChange(newType: EventType): void {
     if (!this.draftState) return;
     this.draftState.event.type = newType;
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('hero');
   }
 
   addLocation(): void {
@@ -411,13 +510,15 @@ export class LandingComponent implements OnInit, OnDestroy {
       mapUrl: ''
     };
     this.draftState.invitation.content.locations.push(nextLoc);
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('locations');
+    this.scrollToStudioSection('locations', true);
   }
 
   removeLocation(index: number): void {
     if (!this.draftState?.invitation?.content?.locations) return;
     this.draftState.invitation.content.locations.splice(index, 1);
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('locations');
+    this.scrollToStudioSection('locations', true);
   }
 
   addItineraryItem(): void {
@@ -428,13 +529,15 @@ export class LandingComponent implements OnInit, OnDestroy {
       title: 'Momento especial',
       description: 'Descripción breve'
     });
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('itinerary');
+    this.scrollToStudioSection('itinerary', true);
   }
 
   removeItineraryItem(index: number): void {
     if (!this.draftState?.invitation?.content?.itinerary) return;
     this.draftState.invitation.content.itinerary.splice(index, 1);
-    this.onStudioFieldChange();
+    this.onStudioFieldChange('itinerary');
+    this.scrollToStudioSection('itinerary', true);
   }
 
   private persistStudioFormToDraft(): void {
@@ -501,13 +604,22 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.applyContentEditableToIframe(doc, this.inlineTextMode);
     }
     if (this.inlineTextMode) {
+      if (typeof window !== 'undefined' && window.innerWidth <= 820) {
+        this.studioMobilePane = 'preview';
+      }
       this.showStudioToast('Haz clic sobre cualquier título o párrafo en la vista previa para editarlo directamente.');
     }
   }
 
   selectStudioTab(tab: StudioTab): void {
     this.studioTab = tab;
-    if (tab === 'inline' && !this.inlineTextMode) {
+    if (tab === 'main') {
+      this.scrollToStudioSection('hero', true);
+    } else if (tab === 'story') {
+      this.scrollToStudioSection('story', true);
+    } else if (tab === 'schedule') {
+      this.scrollToStudioSection('locations', true);
+    } else if (tab === 'inline' && !this.inlineTextMode) {
       this.toggleInlineTextMode(true);
     }
   }

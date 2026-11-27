@@ -101,8 +101,8 @@
 
           <p class="vl-hero-lead">
             Prueba y personaliza nuestras plantillas interactivas o diseña desde cero en el <strong>Editor
-              Visual</strong> sin registrarte primero. Cuando estés listo para guardar, inicia sesión o crea tu cuenta y
-            tu evento se creará automáticamente con todos tus datos intactos.
+              Visual</strong> sin registrarte primero.<span class="vl-hide-mobile"> Cuando estés listo para guardar, inicia sesión o crea tu cuenta y
+            tu evento se creará automáticamente con todos tus datos intactos.</span>
           </p>
 
           <div class="vl-hero-cta-row">
@@ -123,7 +123,7 @@
               <span>Probar Editor Visual</span>
             </button>
 
-            <button *ngIf="!auth.isAuthenticated" type="button" class="vl-btn vl-btn-outline vl-btn-lg"
+            <button *ngIf="!auth.isAuthenticated" type="button" class="vl-btn vl-btn-outline vl-btn-lg vl-hide-mobile"
               (click)="goToLogin()">
               Iniciar sesión
             </button>
@@ -530,6 +530,18 @@
         </div>
       </header>
 
+      <!-- Selector móvil: Editar datos vs Vista previa -->
+      <div class="vl-studio-mobile-switch" role="tablist" aria-label="Modo de estudio móvil">
+        <button type="button" role="tab" [attr.aria-selected]="studioMobilePane === 'edit'"
+          [class.active]="studioMobilePane === 'edit'" (click)="setStudioMobilePane('edit')">
+          ✏️ Editar datos
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="studioMobilePane === 'preview'"
+          [class.active]="studioMobilePane === 'preview'" (click)="setStudioMobilePane('preview')">
+          👁️ Vista previa
+        </button>
+      </div>
+
       <!-- Toast informativo -->
       <div *ngIf="studioToast" class="vl-studio-toast">
         <span>✨ {{ studioToast }}</span>
@@ -537,7 +549,7 @@
 
       <!-- Cuerpo Dividido: Formulario + Vista Previa Interactiva -->
       <div class="vl-studio-body">
-        <aside class="vl-studio-sidebar">
+        <aside class="vl-studio-sidebar" [class.vl-mobile-pane-hidden]="studioMobilePane !== 'edit'">
           <div class="vl-studio-tabs">
             <button type="button" [class.active]="studioTab === 'main'" (click)="selectStudioTab('main')">Portada y
               Fecha</button>
@@ -556,36 +568,39 @@
             <ng-container *ngIf="studioTab === 'main'">
               <div class="vl-field">
                 <label>Nombre del evento (para tu panel)</label>
-                <input type="text" [(ngModel)]="draftState.event.title" (ngModelChange)="onEventTitleManualChange()"
-                  placeholder="Ej. Boda de Sofía & Mateo" />
+                <input type="text" [(ngModel)]="draftState.event.title" (focus)="scrollToStudioSection('hero')"
+                  (ngModelChange)="onEventTitleManualChange()" placeholder="Ej. Boda de Sofía & Mateo" />
               </div>
 
               <div class="vl-field">
                 <label>Nombres / Título principal en portada</label>
-                <input type="text" [(ngModel)]="content.headline" (ngModelChange)="onHeadlineFieldChange()"
-                  placeholder="Ej. Sofía & Mateo" />
+                <input type="text" [(ngModel)]="content.headline" (focus)="scrollToStudioSection('hero')"
+                  (ngModelChange)="onHeadlineFieldChange()" placeholder="Ej. Sofía & Mateo" />
               </div>
 
               <div class="vl-field">
                 <label>Subtítulo o frase de portada</label>
-                <textarea rows="2" [(ngModel)]="content.subheadline" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Ej. El amor florece en cada momento"></textarea>
+                <textarea rows="2" [(ngModel)]="content.subheadline" (focus)="scrollToStudioSection('hero')"
+                  (ngModelChange)="onStudioFieldChange('hero')" placeholder="Ej. El amor florece en cada momento"></textarea>
               </div>
 
               <div class="vl-field-row">
                 <div class="vl-field">
                   <label>Fecha del evento</label>
-                  <input type="date" [(ngModel)]="draftState.event.date" (ngModelChange)="onStudioFieldChange()" />
+                  <input type="date" [(ngModel)]="draftState.event.date" (focus)="scrollToStudioSection('hero')"
+                    (ngModelChange)="onStudioFieldChange('hero')" />
                 </div>
                 <div class="vl-field">
                   <label>Hora de inicio</label>
-                  <input type="time" [(ngModel)]="draftState.event.time" (ngModelChange)="onStudioFieldChange()" />
+                  <input type="time" [(ngModel)]="draftState.event.time" (focus)="scrollToStudioSection('hero')"
+                    (ngModelChange)="onStudioFieldChange('hero')" />
                 </div>
               </div>
 
               <div class="vl-field">
                 <label>Tipo de celebración</label>
-                <select [ngModel]="draftState.event.type" (ngModelChange)="onEventTypeChange($event)">
+                <select [ngModel]="draftState.event.type" (focus)="scrollToStudioSection('hero')"
+                  (ngModelChange)="onEventTypeChange($event)">
                   <option value="boda">Boda</option>
                   <option value="xv">XV Años</option>
                   <option value="graduacion">Graduación</option>
@@ -597,8 +612,8 @@
 
               <div class="vl-field">
                 <label>Padres o anfitriones (separados por coma)</label>
-                <input type="text" [(ngModel)]="hostsText" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Familia Hernández, Familia Morales" />
+                <input type="text" [(ngModel)]="hostsText" (focus)="scrollToStudioSection('hero')"
+                  (ngModelChange)="onStudioFieldChange('hero')" placeholder="Familia Hernández, Familia Morales" />
               </div>
             </ng-container>
 
@@ -606,21 +621,21 @@
             <ng-container *ngIf="studioTab === 'story'">
               <div class="vl-field">
                 <label>Título de la sección Historia</label>
-                <input type="text" [(ngModel)]="content.storyTitle" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Unidos por el Destino" />
+                <input type="text" [(ngModel)]="content.storyTitle" (focus)="scrollToStudioSection('story')"
+                  (ngModelChange)="onStudioFieldChange('story')" placeholder="Unidos por el Destino" />
               </div>
 
               <div class="vl-field">
                 <label>Mensaje de bienvenida / Nuestra historia</label>
-                <textarea rows="4" [(ngModel)]="content.storyBody"
-                  (ngModelChange)="content.message = content.storyBody; onStudioFieldChange()"
+                <textarea rows="4" [(ngModel)]="content.storyBody" (focus)="scrollToStudioSection('story')"
+                  (ngModelChange)="content.message = content.storyBody; onStudioFieldChange('story')"
                   placeholder="Comparte un mensaje emotivo para tus invitados..."></textarea>
               </div>
 
               <div class="vl-field">
                 <label>Código de vestimenta (Dress Code)</label>
-                <input type="text" [(ngModel)]="content.dressCode" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Ej. Formal / Etiqueta Rigurosa" />
+                <input type="text" [(ngModel)]="content.dressCode" (focus)="scrollToStudioSection('dressCode')"
+                  (ngModelChange)="onStudioFieldChange('dressCode')" placeholder="Ej. Formal / Etiqueta Rigurosa" />
               </div>
             </ng-container>
 
@@ -637,14 +652,14 @@
                   <button *ngIf="(content.locations?.length || 0) > 1" type="button" class="vl-remove-btn"
                     (click)="removeLocation(i)">Eliminar</button>
                 </div>
-                <input type="text" [(ngModel)]="loc.type" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Tipo (Ej. Ceremonia o Recepción)" />
-                <input type="text" [(ngModel)]="loc.name" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Nombre del salón o iglesia" />
-                <input type="text" [(ngModel)]="loc.address" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Dirección completa" />
-                <input type="url" [(ngModel)]="loc.mapUrl" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Enlace de Google Maps (opcional)" />
+                <input type="text" [(ngModel)]="loc.type" (focus)="scrollToStudioSection('locations')"
+                  (ngModelChange)="onStudioFieldChange('locations')" placeholder="Tipo (Ej. Ceremonia o Recepción)" />
+                <input type="text" [(ngModel)]="loc.name" (focus)="scrollToStudioSection('locations')"
+                  (ngModelChange)="onStudioFieldChange('locations')" placeholder="Nombre del salón o iglesia" />
+                <input type="text" [(ngModel)]="loc.address" (focus)="scrollToStudioSection('locations')"
+                  (ngModelChange)="onStudioFieldChange('locations')" placeholder="Dirección completa" />
+                <input type="url" [(ngModel)]="loc.mapUrl" (focus)="scrollToStudioSection('locations')"
+                  (ngModelChange)="onStudioFieldChange('locations')" placeholder="Enlace de Google Maps (opcional)" />
               </div>
 
               <div class="vl-subblock-header" style="margin-top: 18px;">
@@ -659,13 +674,13 @@
                     (click)="removeItineraryItem(j)">Eliminar</button>
                 </div>
                 <div class="vl-field-row">
-                  <input type="text" [(ngModel)]="item.time" (ngModelChange)="onStudioFieldChange()"
-                    placeholder="19:00" />
-                  <input type="text" [(ngModel)]="item.title" (ngModelChange)="onStudioFieldChange()"
-                    placeholder="Actividad (Ej. Recepción)" />
+                  <input type="text" [(ngModel)]="item.time" (focus)="scrollToStudioSection('itinerary')"
+                    (ngModelChange)="onStudioFieldChange('itinerary')" placeholder="19:00" />
+                  <input type="text" [(ngModel)]="item.title" (focus)="scrollToStudioSection('itinerary')"
+                    (ngModelChange)="onStudioFieldChange('itinerary')" placeholder="Actividad (Ej. Recepción)" />
                 </div>
-                <input type="text" [(ngModel)]="item.description" (ngModelChange)="onStudioFieldChange()"
-                  placeholder="Detalle o salón" />
+                <input type="text" [(ngModel)]="item.description" (focus)="scrollToStudioSection('itinerary')"
+                  (ngModelChange)="onStudioFieldChange('itinerary')" placeholder="Detalle o salón" />
               </div>
             </ng-container>
 
@@ -703,7 +718,8 @@
         </aside>
 
         <!-- Vista Previa Derecha -->
-        <div class="vl-studio-preview-pane" [class.is-mobile]="studioViewport === 'mobile'">
+        <div class="vl-studio-preview-pane" [class.is-mobile]="studioViewport === 'mobile'"
+          [class.vl-mobile-pane-hidden]="studioMobilePane !== 'preview'">
           <div class="vl-studio-preview-hint" *ngIf="inlineTextMode">
             ✍️ Modo edición directa activo: haz clic en cualquier texto de la plantilla para modificarlo.
           </div>

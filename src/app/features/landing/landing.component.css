@@ -1593,6 +1593,10 @@
   border-bottom: 1px solid #ecd9a3;
 }
 
+.vl-studio-mobile-switch {
+  display: none;
+}
+
 .vl-studio-body {
   flex: 1;
   min-height: 0;
@@ -1919,13 +1923,159 @@
     border-top: 1px solid #e6dac8;
   }
 
+  .vl-modal-backdrop {
+    padding: 0;
+  }
+
+  .vl-studio-modal,
+  .vl-preview-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .vl-studio-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .vl-studio-left {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .vl-back-chip {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 12.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .vl-studio-selector {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .vl-studio-selector label {
+    display: none;
+  }
+
+  .vl-studio-selector select {
+    width: 100%;
+    max-width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+  }
+
+  .vl-studio-topbar .vl-viewport-switch {
+    display: none;
+  }
+
+  .vl-studio-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .vl-studio-actions .vl-btn {
+    padding: 8px 11px;
+    font-size: 12px;
+    white-space: nowrap;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .vl-studio-actions .vl-btn-gold {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .vl-studio-mobile-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #2a211a;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+    flex-shrink: 0;
+  }
+
+  .vl-studio-mobile-switch button {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(250, 247, 242, 0.8);
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+
+  .vl-studio-mobile-switch button.active {
+    background: #faf7f2;
+    color: #1f1914;
+    border-color: #faf7f2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
   .vl-studio-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .vl-studio-sidebar {
+    flex: 1;
+    min-height: 0;
+    border-right: none;
+  }
+
+  .vl-studio-tabs {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .vl-studio-tabs button {
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+
+  .vl-studio-form-scroll {
+    padding: 14px 12px 24px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vl-field-row {
     grid-template-columns: 1fr;
-    overflow-y: auto;
+  }
+
+  .vl-studio-sidebar-footer {
+    display: none;
   }
 
   .vl-studio-preview-pane {
-    min-height: 540px;
+    flex: 1;
+    min-height: 0;
+    padding: 8px;
+  }
+
+  .vl-studio-preview-pane.is-mobile .vl-iframe-shell,
+  .vl-preview-stage.is-mobile .vl-iframe-shell {
+    max-width: 100%;
+    border-radius: 12px;
+    border: none;
+  }
+
+  .vl-mobile-pane-hidden {
+    display: none !important;
   }
 }
 
@@ -1935,7 +2085,7 @@
   }
 
   .vl-hide-mobile {
-    display: none;
+    display: none !important;
   }
 
   .vl-nav-inner {
@@ -1965,36 +2115,105 @@
   }
 
   .vl-hero {
-    padding: 24px 0 36px;
+    padding: 20px 0 32px;
   }
 
   .vl-hero-grid {
-    gap: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .vl-hero-copy {
+    display: contents;
   }
 
   .vl-eyebrow-pill {
+    order: 1;
+    align-self: center;
     font-size: 11px;
-    padding: 5px 11px;
-    margin-bottom: 14px;
-  }
-
-  .vl-hero-title {
-    font-size: 29px;
-    line-height: 1.15;
+    padding: 5px 12px;
     margin-bottom: 12px;
   }
 
+  .vl-hero-title {
+    order: 2;
+    text-align: center;
+    font-size: 27px;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
   .vl-hero-lead {
-    font-size: 15px;
-    line-height: 1.55;
-    margin-bottom: 20px;
+    order: 3;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+
+  .vl-hero-showcase {
+    order: 4;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    margin: 0 0 18px;
+  }
+
+  .vl-hero-showcase .vl-showcase-card {
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 12px 26px rgba(36, 29, 23, 0.12);
+  }
+
+  .vl-hero-showcase .vl-showcase-img-wrap {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+  }
+
+  .vl-hero-showcase .vl-showcase-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .vl-hero-showcase .vl-showcase-tag {
+    top: 8px;
+    left: 8px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .vl-hero-showcase .vl-showcase-meta {
+    padding: 10px 10px 12px;
+    gap: 6px;
+  }
+
+  .vl-hero-showcase .vl-showcase-meta h3 {
+    font-size: 12.5px;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .vl-hero-showcase .vl-showcase-cta {
+    font-size: 11px;
+    padding: 5px 9px;
   }
 
   .vl-hero-cta-row {
+    order: 5;
+    width: 100%;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
   }
 
   .vl-hero-cta-row .vl-btn-lg {
@@ -2005,10 +2224,12 @@
   }
 
   .vl-hero-highlights {
+    order: 6;
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 10px;
-    padding-top: 16px;
+    gap: 8px;
+    padding-top: 14px;
   }
 
   .vl-highlight-divider {
@@ -2039,7 +2260,6 @@
   .vl-features-grid,
   .vl-steps-grid,
   .vl-catalog-grid,
-  .vl-hero-showcase,
   .vl-flagship-features {
     grid-template-columns: 1fr;
   }
