@@ -1,8 +1,9 @@
 import { Component, EventEmitter, Input, OnInit, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { firstValueFrom } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
 import { ConfirmDialogService } from '../../../../core/confirm-dialog.service';
+import { BackgroundTasksService } from '../../../../core/background-tasks.service';
 import {
   EventModel, GuestModel, InvitationModel, DashboardMetrics, WhatsAppProvider,
   WhatsAppMediaAssetModel, WhatsAppMediaInspection, WhatsAppMediaType, GuestMessageType, GuestCommunicationStatus
@@ -44,19 +45,33 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
 
   private progressInterval: any = null;
   private whatsappStatusInterval: ReturnType<typeof setInterval> | null = null;
+  private bgTaskCompletedSub?: Subscription;
 
   whatsappMediaAssets: WhatsAppMediaAssetModel[] = [];
 
   guestMessage = '';
   guestError = '';
   emailSending = '';
-  emailBulkSending = false;
   whatsappSending = '';
-  whatsappBulkSending = false;
   downloadingPass = '';
-  downloadingZip = false;
   zipProgress = '';
   whatsappMediaUploading = false;
+
+  get emailBulkSending(): boolean {
+    return this.backgroundTasks.isRunning(this.event?._id || this.event?.id, 'email');
+  }
+
+  get whatsappBulkSending(): boolean {
+    return this.backgroundTasks.isRunning(this.event?._id || this.event?.id, 'whatsapp');
+  }
+
+  get specialGuestsSending(): boolean {
+    return this.backgroundTasks.isRunning(this.event?._id || this.event?.id, 'special_passes');
+  }
+
+  get downloadingZip(): boolean {
+    return this.backgroundTasks.isRunning(this.event?._id || this.event?.id, 'zip');
+  }
 
   progressModal: ProgressModalState = {
     visible: false,
@@ -102,7 +117,6 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   deliveryModeWithImage = false;
   selectedSpecialGuestIds = new Set<string>();
   private sentSpecialGuestIds = new Set<string>();
-  specialGuestsSending = false;
   resendingSpecialGuestId = '';
 
   selectedMessageType: GuestMessageType = 'invitation';
@@ -194,7 +208,8 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
   constructor(
     private apiService: ApiService,
     private confirmDialogService: ConfirmDialogService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private backgroundTasks: BackgroundTasksService
   ) { }
 
   ngOnInit(): void {
@@ -204,6 +219,23 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
       this.loadCommunicationData();
       this.whatsappStatusInterval = setInterval(() => this.refreshWhatsAppStatus(), 15000);
     }
+    this.bgTaskCompletedSub = this.backgroundTasks.taskCompleted$.subscribe((evt) => {
+      const currentEventId = this.event?._id || this.event?.id;
+      if (!currentEventId || evt.eventId !== currentEventId) return;
+      if (evt.kind === 'special_passes' && evt.results?.length) {
+        this.markSpecialPassesAsSent(evt.results);
+      }
+      if (evt.message) {
+        this.guestMessage = evt.message;
+        this.guestError = '';
+      } else if (evt.error) {
+        this.guestError = evt.error;
+      }
+      if (evt.kind !== 'zip' && evt.successCount > 0) {
+        this.messagesSent.emit();
+      }
+      this.loadCommunicationData();
+    });
     this.initSpecialGuests();
     this.updatePreviewMessage();
   }
@@ -740,6 +772,7 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
 
   ngOnDestroy(): void {
     this.clearProgressInterval();
+    this.bgTaskCompletedSub?.unsubscribe();
     if (this.whatsappStatusInterval) clearInterval(this.whatsappStatusInterval);
   }
 
@@ -877,33 +910,12 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     }).then(confirmed => {
       if (!confirmed) return;
 
-      this.specialGuestsSending = true;
       const guestIds = Array.from(this.selectedSpecialGuestIds);
-      this.openProgressModal('Envío de Pases Especiales', 'El servidor está procesando y enviando los pases VIP...', 'special_passes', count);
-      this.updateProgressStep(1, count, '', `Enviando lote de ${count} pases con imagen...`);
-
-      this.apiService.sendBulkWhatsApp(id, {
-        confirm: true,
+      this.backgroundTasks.runSpecialPasses({
+        eventId: id,
         messageType: this.selectedMessageType,
         messageBody: this.customMessageForSend,
-        guestIds: guestIds,
-        attachPass: true
-      }).subscribe({
-        next: (res: any) => {
-          this.specialGuestsSending = false;
-          const sent = res.sent ?? 0;
-          const failed = (res.failed ?? 0) + (res.skipped ?? 0) + Math.max(0, count - (res.requested ?? count));
-          this.markSpecialPassesAsSent(res.results || []);
-          this.finishProgressModal(sent, failed, sent ? `Se enviaron ${sent} pases VIP con imagen.${failed ? ` ${failed} no se enviaron; puedes reintentarlos.` : ''}` : 'No se envió ningún pase con imagen. Revisa los resultados y vuelve a intentarlo.');
-          this.guestMessage = sent ? `Se enviaron ${sent} pases con imagen.${failed ? ` ${failed} pendientes de reintento.` : ''}` : '';
-          this.guestError = sent ? '' : (res.results?.find((result: any) => result.error)?.error || 'No se envió ningún pase con imagen.');
-          if (sent > 0) this.messagesSent.emit();
-        },
-        error: (err: any) => {
-          this.specialGuestsSending = false;
-          this.finishProgressModal(0, count, 'Error al enviar pases a invitados especiales.');
-          this.guestError = err?.error?.message || 'Error al enviar pases a invitados especiales';
-        }
+        guestIds
       });
     });
   }
@@ -962,31 +974,12 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     }).then(confirmed => {
       if (!confirmed) return;
 
-      this.emailBulkSending = true;
-      const total = recipients.length;
-      this.openProgressModal('Envío Masivo de Email', 'El servidor está procesando los correos electrónicos...', 'email', total);
-      this.updateProgressStep(1, total, '', `Procesando lote masivo de ${total} correos...`);
-
-      this.apiService.sendBulkEmail(id, {
-        confirm: true,
+      this.backgroundTasks.runBulkEmail({
+        eventId: id,
         messageType: this.selectedMessageType,
         messageBody: this.customMessageForSend,
         guestIds: recipients.map(g => this.getGuestId(g)),
         attachPass: this.includePassInMessage
-      }).subscribe({
-        next: res => {
-          this.emailBulkSending = false;
-          const sent = res.sent || 0;
-          const failed = res.failed || 0;
-          this.finishProgressModal(sent, failed, `Proceso finalizado: ${sent} emails enviados exitosamente.`);
-          this.guestMessage = `Se enviaron ${sent} emails con éxito.` + (failed > 0 ? ` (${failed} fallidos)` : '');
-          this.messagesSent.emit();
-        },
-        error: err => {
-          this.emailBulkSending = false;
-          this.finishProgressModal(0, total, 'Error al enviar emails masivos.');
-          this.guestError = err?.error?.message || 'Error al enviar emails masivos';
-        }
       });
     });
   }
@@ -1005,31 +998,12 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     }).then(confirmed => {
       if (!confirmed) return;
 
-      this.whatsappBulkSending = true;
-      const total = recipients.length;
-      this.openProgressModal('Envío Masivo de WhatsApp', 'El servidor está procesando los mensajes de WhatsApp...', 'whatsapp', total);
-      this.updateProgressStep(1, total, '', `Procesando lote masivo de ${total} mensajes...`);
-
-      this.apiService.sendBulkWhatsApp(id, {
-        confirm: true,
+      this.backgroundTasks.runBulkWhatsApp({
+        eventId: id,
         messageType: this.selectedMessageType,
         messageBody: this.customMessageForSend,
         guestIds: recipients.map(g => this.getGuestId(g)),
         attachPass: this.includePassInMessage
-      }).subscribe({
-        next: res => {
-          this.whatsappBulkSending = false;
-          const sent = res.sent || 0;
-          const failed = res.failed || 0;
-          this.finishProgressModal(sent, failed, `Proceso finalizado: ${sent} mensajes de WhatsApp enviados.`);
-          this.guestMessage = `Se enviaron ${sent} mensajes de WhatsApp con éxito.` + (failed > 0 ? ` (${failed} fallidos)` : '');
-          this.messagesSent.emit();
-        },
-        error: err => {
-          this.whatsappBulkSending = false;
-          this.finishProgressModal(0, total, 'Error al enviar WhatsApp masivo.');
-          this.guestError = err?.error?.message || 'Error al enviar WhatsApp masivo';
-        }
       });
     });
   }
@@ -1339,31 +1313,10 @@ export class EventCommunicationTabComponent implements OnInit, OnChanges, OnDest
     const id = this.event?._id || this.event?.id;
     if (!id || !this.guests.length || this.downloadingZip) return;
 
-    this.downloadingZip = true;
-    const total = this.guests.length;
-    this.openProgressModal('Descarga Masiva de Pases en ZIP', 'Generando imágenes de pases VIP en alta resolución...', 'zip', total);
-    const eventTitle = (this.event?.title || 'Evento').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_');
-
-    this.updateProgressStep(1, total, '', 'El servidor está renderizando y empaquetando los pases...');
-
-    this.apiService.downloadAllPassesZip(id).subscribe({
-      next: (blob: Blob) => {
-        this.downloadingZip = false;
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Pases_VIP_${eventTitle}.zip`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-
-        this.finishProgressModal(total, 0, `Archivo Pases_VIP_${eventTitle}.zip descargado con éxito (${total} pases oficiales).`);
-        this.guestMessage = `Se descargaron exitosamente ${total} pases en formato ZIP.`;
-      },
-      error: (err: any) => {
-        this.downloadingZip = false;
-        this.finishProgressModal(0, total, 'Ocurrió un error al generar el archivo ZIP en el servidor.');
-        this.guestError = err?.error?.message || 'Error al descargar archivo ZIP de pases';
-      }
+    this.backgroundTasks.runDownloadAllPassesZip({
+      eventId: id,
+      eventTitle: this.event?.title || 'Evento',
+      total: this.guests.length
     });
   }
 

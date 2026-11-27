@@ -104,6 +104,7 @@ import { VisualTemplateTextEditorModalComponent } from './features/new-invitatio
 import { VisualTemplateCustomizerModalComponent } from './features/new-invitation-editor/modals/visual-template-customizer-modal/visual-template-customizer-modal.component';
 
 import { ConfirmDialogComponent } from './core/confirm-dialog/confirm-dialog.component';
+import { BackgroundTasksTrayComponent } from './core/background-tasks-tray/background-tasks-tray.component';
 import { QrScannerModalComponent } from './core/qr-scanner-modal/qr-scanner-modal.component';
 import { EventHeaderComponent } from './core/event-header/event-header.component';
 import { EventBookWidgetComponent } from './shared/components/event-book-widget/event-book-widget.component';
@@ -118,6 +119,7 @@ import { environment } from '../environments/environment';
   declarations: [
     AppComponent,
     ConfirmDialogComponent,
+    BackgroundTasksTrayComponent,
     QrScannerModalComponent,
     EventHeaderComponent,
     EventBookWidgetComponent,
