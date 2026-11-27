@@ -1,28 +1,64 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NavigationCancel, NavigationEnd, NavigationError, RouteConfigLoadEnd, RouteConfigLoadStart, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { AuthService } from './core/auth.service';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Invitaciones';
   user$ = this.auth.user$;
+  isAppLoading = true;
+  private routerSub?: Subscription;
+  private fallbackTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     public auth: AuthService,
     public router: Router,
     private location: Location
-  ) {}
+  ) {
+    if (this.router.navigated) {
+      this.isAppLoading = false;
+    }
+
+    this.routerSub = this.router.events.subscribe((event) => {
+      if (event instanceof RouteConfigLoadStart) {
+        this.isAppLoading = true;
+      } else if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError ||
+        event instanceof RouteConfigLoadEnd
+      ) {
+        this.isAppLoading = false;
+        if (this.fallbackTimer) {
+          clearTimeout(this.fallbackTimer);
+          this.fallbackTimer = undefined;
+        }
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.auth.loadCurrentUser();
     this.setupNativeBackButton();
+    // Safety fallback in case initial navigation has already settled or no router event fires
+    this.fallbackTimer = setTimeout(() => {
+      this.isAppLoading = false;
+    }, 2500);
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+    if (this.fallbackTimer) {
+      clearTimeout(this.fallbackTimer);
+    }
   }
 
   private setupNativeBackButton(): void {

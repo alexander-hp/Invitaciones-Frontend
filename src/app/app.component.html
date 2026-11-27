@@ -1,3 +1,11 @@
+<div *ngIf="isAppLoading" class="vl-app-splash" role="status" aria-label="Cargando Velisse">
+  <div class="vl-app-splash-logo">
+    <img src="assets/logos/velisse.svg" alt="Velisse" />
+  </div>
+  <div class="vl-app-splash-brand">Velisse</div>
+  <div class="vl-app-splash-bar" aria-hidden="true"></div>
+</div>
+
 <ng-container *ngIf="isNewLayout; else classicLayout">
   <router-outlet></router-outlet>
 </ng-container>

@@ -94,7 +94,7 @@ export class EventTutorialService {
   constructor(
     private router: Router,
     private ngZone: NgZone
-  ) {}
+  ) { }
 
   setEventContext(eventId: string | null, activeTab: string, allowedSections?: TutorialSectionKey[]): void {
     this.activeEventId = eventId;
@@ -295,10 +295,10 @@ export class EventTutorialService {
         ...(element ? { element } : {}),
         ...(stepId && opts?.onStepActivate
           ? {
-              onHighlightStarted: () => {
-                this.ngZone.run(() => opts.onStepActivate!(stepId));
-              }
+            onHighlightStarted: () => {
+              this.ngZone.run(() => opts.onStepActivate!(stepId));
             }
+          }
           : {}),
         popover: {
           title: raw.title,
