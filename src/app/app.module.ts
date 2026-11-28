@@ -1,4 +1,4 @@
-import { NgModule, LOCALE_ID } from '@angular/core';
+import { NgModule, LOCALE_ID, ErrorHandler } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 
@@ -10,6 +10,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthTokenInterceptor } from './core/auth-token.interceptor';
+import { AnalyticsHttpInterceptor } from './core/analytics-http.interceptor';
+import { AnalyticsErrorHandler } from './core/analytics-error.handler';
 import { CheckInStaffComponent } from './features/check-in-staff/check-in-staff.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { EventDetailComponent } from './features/event-detail/event-detail.component';
@@ -86,6 +88,7 @@ import { NewPublicInvitationBodaNavyBlueComponent } from './features/new-public-
 import { NewPublicInvitationXvBurgundyComponent } from './features/new-public-invitation/templates/template-xv-burgundy/new-public-invitation-xv-burgundy.component';
 import { NewPublicInvitationBodaJardinImperialComponent } from './features/new-public-invitation/templates/template-boda-jardin-imperial/new-public-invitation-boda-jardin-imperial.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
+import { NewAdminAnalyticsComponent } from './features/new-admin-analytics/new-admin-analytics.component';
 import { NewInvitationSectionsComponent } from './features/new-invitation-sections/new-invitation-sections.component';
 import { NewMemberInviteComponent } from './features/new-member-invite/new-member-invite.component';
 import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.component';
@@ -154,6 +157,7 @@ import { environment } from '../environments/environment';
     NewMemberInviteComponent,
     NewUserGuideComponent,
     NewCustomTemplatesComponent,
+    NewAdminAnalyticsComponent,
     LoginComponent,
     NewLoginComponent,
     NewRegisterComponent,
@@ -224,7 +228,12 @@ import { environment } from '../environments/environment';
   // or after 30 seconds (whichever comes first).
   registrationStrategy: 'registerWhenStable:30000'
 })],
-  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true }, { provide: LOCALE_ID, useValue: 'es' }],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthTokenInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: AnalyticsHttpInterceptor, multi: true },
+    { provide: ErrorHandler, useClass: AnalyticsErrorHandler },
+    { provide: LOCALE_ID, useValue: 'es' }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

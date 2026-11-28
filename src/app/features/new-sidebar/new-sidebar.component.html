@@ -84,6 +84,17 @@
 <ng-container *ngIf="auth.isAdmin">
   <span class="nw-sidebar-label">Administración</span>
   <nav>
+    <a routerLink="/new/admin/analytics" routerLinkActive="active">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+      </span>
+      <span>Analítica, UX &amp; QA</span>
+    </a>
+
     <a routerLink="/new/template-management" routerLinkActive="active">
       <span class="nav-icon">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -38,6 +38,7 @@ import { NewUserGuideComponent } from './features/new-user-guide/new-user-guide.
 import { DocumentationComponent } from './features/documentation/documentation.component';
 import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 import { NewCustomTemplatesComponent } from './features/new-custom-templates/new-custom-templates.component';
+import { NewAdminAnalyticsComponent } from './features/new-admin-analytics/new-admin-analytics.component';
 import { GuestActivityComponent } from './features/guest-activity/guest-activity.component';
 import { LandingComponent } from './features/landing/landing.component';
 
@@ -80,6 +81,8 @@ const routes: Routes = [
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
   { path: 'new/template-management', component: NewCustomTemplatesComponent, canActivate: [AdminGuard] },
+  { path: 'new/admin/analytics', component: NewAdminAnalyticsComponent, canActivate: [AdminGuard] },
+  { path: 'new/analytics', redirectTo: 'new/admin/analytics' },
   { path: 'new/admin/template-management', redirectTo: 'new/template-management' },
   { path: 'new/custom-templates', redirectTo: 'new/template-management' },
   { path: 'new/admin/templates', redirectTo: 'new/template-management' },

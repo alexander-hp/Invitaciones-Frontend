@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, RouteConfigLoadEnd, RouteConfigLoadStart, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { AuthService } from './core/auth.service';
+import { AnalyticsTrackerService } from './core/analytics-tracker.service';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { Subscription } from 'rxjs';
@@ -21,7 +22,8 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     public auth: AuthService,
     public router: Router,
-    private location: Location
+    private location: Location,
+    private analyticsTracker: AnalyticsTrackerService
   ) {
     if (this.router.navigated) {
       this.isAppLoading = false;
@@ -47,6 +49,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.auth.loadCurrentUser();
+    this.analyticsTracker.initialize();
     this.setupNativeBackButton();
     // Safety fallback in case initial navigation has already settled or no router event fires
     this.fallbackTimer = setTimeout(() => {

@@ -1,0 +1,1278 @@
+<div class="nw-shell">
+  <!-- Notificaciones flotantes -->
+  <div class="nw-toast-container" *ngIf="toastMessage || toastError">
+    <div *ngIf="toastMessage" class="nw-toast success">
+      <span class="svg-inline-wrap">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>{{ toastMessage }}</span>
+      </span>
+      <button type="button" class="nw-toast-close" (click)="toastMessage = ''" aria-label="Cerrar notificación">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div *ngIf="toastError" class="nw-toast error">
+      <span class="svg-inline-wrap">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ toastError }}</span>
+      </span>
+      <button type="button" class="nw-toast-close" (click)="toastError = ''" aria-label="Cerrar error">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menú móvil -->
+  <button class="nw-hamburger" [class.open]="sidebarOpen" (click)="sidebarOpen = !sidebarOpen" aria-label="Menú lateral">
+    <svg *ngIf="!sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+    <svg *ngIf="sidebarOpen" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+  <div class="nw-sidebar-overlay" [class.visible]="sidebarOpen" (click)="sidebarOpen = false"></div>
+
+  <!-- Sidebar global -->
+  <aside class="nw-sidebar" [class.open]="sidebarOpen" app-new-sidebar></aside>
+
+  <!-- Contenido Principal -->
+  <main class="nw-main analytics-main">
+    <!-- Encabezado Ejecutivo -->
+    <header class="analytics-hero">
+      <div class="analytics-hero-left">
+        <div class="analytics-badges-row">
+          <span class="nw-pill accent">Panel de Administración</span>
+          <span class="nw-pill success privacy-lock-pill">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <span>100% Propio en tu Backend (MongoDB) · Sin Servicios Externos</span>
+          </span>
+          <span class="nw-pill info" *ngIf="snapshot?.storageStats as st">
+            {{ st.totalStoredEvents | number }} eventos en BD ({{ formatStorageSize(st.estimatedSizeKb) }})
+          </span>
+        </div>
+
+        <h1>Centro de Analítica de Producto, UX &amp; QA</h1>
+        <p>
+          Telemetría pasiva persistente en tu propia base de datos (sin grabaciones de pantalla ni encuestas) para identificar en qué página y sección se pierden los usuarios, qué módulos usan más y qué corregir en la siguiente actualización.
+        </p>
+      </div>
+
+      <div class="analytics-hero-controls">
+        <!-- Selector Base de Datos Real vs Simulación de Muestra -->
+        <div class="analytics-source-switcher" role="group" aria-label="Modo de visualización">
+          <button
+            type="button"
+            class="source-chip"
+            [class.active]="sourceMode === 'backend_db'"
+            (click)="setSourceMode('backend_db')">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <span>Datos Reales (MongoDB)</span>
+          </button>
+          <button
+            type="button"
+            class="source-chip"
+            [class.active]="sourceMode === 'demo_preview'"
+            (click)="setSourceMode('demo_preview')"
+            title="Explora un ejemplo con alto tráfico sin tocar tu base de datos">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Vista Muestra</span>
+          </button>
+        </div>
+
+        <!-- Barra de Rango, Acciones y Botón RESETEAR TODO -->
+        <div class="analytics-toolbar-row">
+          <div class="range-pills">
+            <button
+              *ngFor="let r of rangeOptions"
+              type="button"
+              class="range-pill-btn"
+              [class.active]="selectedRange === r.key"
+              (click)="setRange(r.key)">
+              {{ r.label }}
+            </button>
+          </div>
+
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="refreshSnapshot()" [disabled]="loading">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+              <polyline points="21 3 21 8 16 8"></polyline>
+            </svg>
+            <span>{{ loading ? 'Cargando...' : 'Actualizar' }}</span>
+          </button>
+
+          <button type="button" class="nw-btn nw-btn-focus nw-btn-sm" (click)="exportRoadmapReportCsv()" [disabled]="!snapshot">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Exportar CSV</span>
+          </button>
+
+          <button
+            type="button"
+            class="nw-btn nw-btn-danger nw-btn-sm"
+            (click)="confirmAndReset('all')"
+            [disabled]="resetting"
+            title="Borra permanentemente todos los registros de analítica en MongoDB para reiniciar contadores">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>{{ resetting ? 'Borrando...' : 'Resetear Todo' }}</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Barra de Segmentación Global (Dispositivo y Rol) -->
+    <div class="segment-filter-bar" *ngIf="sourceMode === 'backend_db'">
+      <div class="segment-filter-group">
+        <span class="segment-label">Segmentar BD por:</span>
+        <select class="nw-select nw-select-compact" [(ngModel)]="deviceFilter" (change)="onGlobalSegmentChange()" aria-label="Filtrar dispositivo">
+          <option value="ALL">Todos los dispositivos</option>
+          <option value="Web Móvil">Web Móvil</option>
+          <option value="Web Desktop">Web Desktop</option>
+          <option value="Android App">Android App (Capacitor)</option>
+        </select>
+
+        <select class="nw-select nw-select-compact" [(ngModel)]="roleFilter" (change)="onGlobalSegmentChange()" aria-label="Filtrar rol">
+          <option value="ALL">Todos los usuarios</option>
+          <option value="guest">Invitados públicos (guest)</option>
+          <option value="client">Clientes (client)</option>
+          <option value="organizer">Organizadores (organizer)</option>
+          <option value="admin">Administradores (admin)</option>
+        </select>
+
+        <label class="inline-diag-check">
+          <input type="checkbox" [(ngModel)]="includeDiagnostics" (change)="onGlobalSegmentChange()" />
+          <span>Incluir sondas de prueba QA</span>
+        </label>
+      </div>
+
+      <div class="last-reset-tag" *ngIf="snapshot?.storageStats?.lastResetAt as lastReset">
+        Último reseteo: <strong>{{ formatRelativeDate(lastReset) }}</strong>
+        <span *ngIf="snapshot?.storageStats?.lastResetBy">por {{ snapshot!.storageStats.lastResetBy }}</span>
+      </div>
+    </div>
+
+    <!-- Navegación de 7 Pestañas Especializadas (Iconos SVG) -->
+    <nav class="nw-tabs analytics-tabs" aria-label="Secciones de analítica">
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'overview'" (click)="setTab('overview')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Resumen &amp; Roadmap</span>
+        <span class="tab-counter" *ngIf="snapshot?.insights?.length">{{ snapshot!.insights.length }}</span>
+      </button>
+
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'funnels'" (click)="setTab('funnels')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+        <span>¿Dónde se pierden? (Embudos)</span>
+      </button>
+
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'features'" (click)="setTab('features')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>Secciones, Pestañas &amp; Uso</span>
+      </button>
+
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'ux'" (click)="setTab('ux')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+          <path d="m13 13 6 6"></path>
+        </svg>
+        <span>Diseño &amp; Fricción UX</span>
+        <span class="tab-counter warn" *ngIf="snapshot?.kpis?.uxFrictionCount">{{ snapshot!.kpis.uxFrictionCount }}</span>
+      </button>
+
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'qa'" (click)="setTab('qa')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>QA, Errores &amp; API</span>
+        <span class="tab-counter danger" *ngIf="snapshot?.kpis?.qaErrorsCount">{{ snapshot!.kpis.qaErrorsCount }}</span>
+      </button>
+
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'live'" (click)="setTab('live')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <span>Eventos Recientes BD</span>
+        <span class="tab-counter">{{ snapshot?.recentLiveEvents?.length || 0 }}</span>
+      </button>
+
+      <button type="button" class="nw-tab" [class.active]="activeTab === 'settings'" (click)="setTab('settings')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>Motor BD &amp; Reseteo</span>
+      </button>
+    </nav>
+
+    <p *ngIf="loading" class="nw-alert info">Consultando agregaciones en MongoDB...</p>
+
+    <ng-container *ngIf="!loading && snapshot as data">
+      <!-- Banner cuando BD está recién reseteada / vacía -->
+      <div class="analytics-mode-banner" *ngIf="isDatabaseEmptyInPeriod">
+        <div>
+          <strong>Base de datos lista y limpia (0 eventos en este filtro):</strong>
+          Por defecto, tus propios clics como <code>admin</code> no se graban para no ensuciar las métricas de clientes reales.
+          Puedes activar <em>"Rastrear también usuarios con rol admin"</em> en <strong>Motor BD &amp; Reseteo</strong>, lanzar una sonda en <strong>QA</strong>, o ver la <strong>Vista Muestra</strong>.
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" data-analytics-probe="true" (click)="triggerDiagnostic('funnel_step')">
+            Enviar Evento de Prueba a BD
+          </button>
+          <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="setSourceMode('demo_preview')">
+            Ver Vista Muestra
+          </button>
+        </div>
+      </div>
+
+      <!-- Banner cuando está en modo muestra -->
+      <div class="analytics-mode-banner" *ngIf="sourceMode === 'demo_preview'">
+        <div>
+          <strong>Vista Muestra de Referencia (No modifica tu BD):</strong>
+          Así lucen los embudos, abandonos y alertas con tráfico acumulado. Pulsa <strong>Datos Reales (MongoDB)</strong> en cualquier momento para volver a tu base de datos real.
+        </div>
+        <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" (click)="setSourceMode('backend_db')">
+          Volver a Datos Reales (MongoDB)
+        </button>
+      </div>
+
+      <!-- =========================================================
+           PESTAÑA 1: RESUMEN EJECUTIVO & ROADMAP AUTOMÁTICO
+           ========================================================= -->
+      <section *ngIf="activeTab === 'overview'" class="analytics-section">
+        <div class="nw-metrics analytics-kpi-grid">
+          <div class="nw-metric accent">
+            <span class="metric-label">Usuarios Únicos</span>
+            <span class="metric-value">{{ data.kpis.activeUsers | number }}</span>
+            <span class="kpi-subtext">{{ data.kpis.totalSessions | number }} sesiones registradas</span>
+          </div>
+
+          <div class="nw-metric info">
+            <span class="metric-label">Vistas de Sección</span>
+            <span class="metric-value">{{ data.kpis.totalPageviews | number }}</span>
+            <span class="kpi-subtext">Estancia activa media: {{ formatDuration(data.kpis.avgDwellSeconds) }}</span>
+          </div>
+
+          <div class="nw-metric success">
+            <span class="metric-label">Conversión Embudo</span>
+            <span class="metric-value">{{ data.kpis.globalConversionRate }}%</span>
+            <span class="kpi-subtext">De entrada a editor de invitación</span>
+          </div>
+
+          <div class="nw-metric warning">
+            <span class="metric-label">Fricciones UX</span>
+            <span class="metric-value">{{ data.kpis.uxFrictionCount | number }}</span>
+            <span class="kpi-subtext">{{ data.kpis.rageClicksCount }} rage · {{ data.kpis.deadClicksCount }} dead · {{ data.kpis.abandonedFormsCount }} forms</span>
+          </div>
+
+          <div class="nw-metric danger">
+            <span class="metric-label">Errores QA / HTTP</span>
+            <span class="metric-value">{{ data.kpis.qaErrorsCount | number }}</span>
+            <span class="kpi-subtext">Tasa fallo API: {{ data.kpis.apiErrorRate }}%</span>
+          </div>
+
+          <div class="nw-metric info">
+            <span class="metric-label">Latencia Media API</span>
+            <span class="metric-value">{{ data.kpis.avgApiLatencyMs }}<small style="font-size: 16px; font-weight: 600;"> ms</small></span>
+            <span class="kpi-subtext">{{ data.kpis.avgApiLatencyMs < 350 ? 'Óptima' : 'Revisar endpoints lentos' }}</span>
+          </div>
+        </div>
+
+        <div class="analytics-two-col">
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3>Tendencia de Sesiones, Uso de Funciones y Fricción</h3>
+                <p class="card-subtitle">Evolución por hora (24h) o por día en tu base de datos</p>
+              </div>
+              <div class="chart-legend">
+                <span class="legend-item"><i class="dot gold"></i> Sesiones</span>
+                <span class="legend-item"><i class="dot green"></i> Acciones Clave</span>
+                <span class="legend-item"><i class="dot rose"></i> Fricción UX (x4)</span>
+              </div>
+            </div>
+
+            <div class="svg-chart-container" *ngIf="data.dailyTrend.length; else emptyTrend">
+              <svg viewBox="0 0 640 190" preserveAspectRatio="none" class="trend-svg">
+                <line x1="24" y1="30" x2="616" y2="30" class="grid-line" />
+                <line x1="24" y1="90" x2="616" y2="90" class="grid-line" />
+                <line x1="24" y1="150" x2="616" y2="150" class="grid-line" />
+
+                <polyline [attr.points]="getTrendPolyline('sessions')" fill="none" stroke="#c09c78" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                <polyline [attr.points]="getTrendPolyline('conversions')" fill="none" stroke="#4a7f62" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+                <polyline [attr.points]="getTrendPolyline('frictions')" fill="none" stroke="#b75959" stroke-width="2.2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round" />
+
+                <g *ngFor="let pt of getTrendPointCoords('sessions')">
+                  <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#c09c78" />
+                  <text [attr.x]="pt.x" y="182" text-anchor="middle" class="axis-label">{{ pt.label }}</text>
+                </g>
+              </svg>
+            </div>
+            <ng-template #emptyTrend>
+              <div class="empty-chart-box">Aún no hay puntos temporales suficientes en este periodo.</div>
+            </ng-template>
+          </div>
+
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3>Salud de Embudos Críticos</h3>
+                <p class="card-subtitle">Selecciona un embudo para inspeccionar en qué paso caen</p>
+              </div>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="setTab('funnels')">
+                <span>Detalle</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div class="mini-funnel-list">
+              <div class="mini-funnel-card" *ngFor="let fn of data.funnels" (click)="selectedFunnelId = fn.id; setTab('funnels')">
+                <div class="mini-funnel-top">
+                  <strong>{{ fn.title }}</strong>
+                  <span class="nw-pill" [ngClass]="fn.totalCompletionRate >= 50 ? 'success' : 'warning'">
+                    {{ fn.totalCompletionRate }}% completado
+                  </span>
+                </div>
+                <div class="nw-progress" style="margin: 8px 0;">
+                  <div class="nw-progress-fill" [style.width.%]="fn.totalCompletionRate"></div>
+                </div>
+                <div class="mini-funnel-drop">
+                  <span>Mayor pérdida:</span>
+                  <strong>{{ fn.biggestDropStep }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Motor de Prioridades de Actualización (con Página + Ruta + Sección exacta) -->
+        <div class="nw-card" style="margin-top: 20px;">
+          <div class="nw-card-header">
+            <div>
+              <h3 class="section-heading-with-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--nw-accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="6"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+                <span>Prioridades Sugeridas para tu Próxima Actualización</span>
+              </h3>
+              <p class="card-subtitle">Generadas automáticamente por el Backend indicando la página exacta y el bloque donde ocurre cada hallazgo</p>
+            </div>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="exportSnapshotJson()">Exportar JSON</button>
+          </div>
+
+          <div class="insights-grid" *ngIf="data.insights.length; else emptyInsights">
+            <article class="insight-card" *ngFor="let item of data.insights">
+              <div class="insight-header">
+                <span class="nw-pill" [ngClass]="priorityBadgeClass(item.priority)">{{ item.priority }}</span>
+                <span class="insight-area">{{ item.area }}</span>
+              </div>
+
+              <!-- Ubicación explícita: Página + Ruta + Bloque/Sección interna -->
+              <div class="insight-location-bar">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                </svg>
+                <span class="loc-page-name">Página: <strong>{{ item.pageLabel || item.affectedRoute }}</strong></span>
+                <code class="route-code">{{ item.affectedRoute }}</code>
+                <span class="loc-section-tag" *ngIf="item.pageSection">· {{ item.pageSection }}</span>
+              </div>
+
+              <h4>{{ item.title }}</h4>
+              <p class="insight-evidence"><strong>Evidencia BD:</strong> {{ item.evidence }}</p>
+              <div class="insight-action">
+                <strong>Acción sugerida:</strong> {{ item.suggestedAction }}
+              </div>
+            </article>
+          </div>
+          <ng-template #emptyInsights>
+            <p class="nw-alert success">Sin alertas críticas pendientes con los datos actuales.</p>
+          </ng-template>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PESTAÑA 2: EMBUDOS, SALIDAS DEFINITIVAS Y FORMULARIOS
+           ========================================================= -->
+      <section *ngIf="activeTab === 'funnels'" class="analytics-section">
+        <div class="funnel-selector-grid">
+          <button
+            *ngFor="let f of data.funnels"
+            type="button"
+            class="source-nav-card"
+            [class.active]="selectedFunnelId === f.id"
+            (click)="selectedFunnelId = f.id">
+            <div class="source-nav-content">
+              <div class="source-nav-title-row">
+                <span class="source-nav-title">{{ f.title }}</span>
+                <span class="nw-pill accent">{{ f.totalCompletionRate }}% global</span>
+              </div>
+              <span class="source-nav-desc">{{ f.subtitle }}</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="nw-card" *ngIf="activeFunnel as funnel">
+          <div class="nw-card-header">
+            <div>
+              <h3>{{ funnel.title }}</h3>
+              <p class="card-subtitle">Progresión calculada por usuarios únicos en MongoDB</p>
+            </div>
+            <span class="nw-pill danger" *ngIf="funnel.biggestDropStep">{{ funnel.biggestDropStep }}</span>
+          </div>
+
+          <div class="funnel-steps-stack">
+            <div class="funnel-step-row" *ngFor="let step of funnel.steps">
+              <div class="funnel-step-meta">
+                <span class="step-badge">{{ step.stepNumber }}</span>
+                <div>
+                  <div class="step-title">{{ step.label }}</div>
+                  <code class="route-code">{{ step.routeHint }}</code>
+                </div>
+              </div>
+
+              <div class="funnel-bar-track-wrap">
+                <div class="funnel-bar-track">
+                  <div
+                    class="funnel-bar-fill"
+                    [class.high-drop]="step.dropOffRate >= 25"
+                    [style.width.%]="step.conversionFromStart">
+                    <span>{{ step.users | number }} usuarios ({{ step.conversionFromStart }}%)</span>
+                  </div>
+                </div>
+                <div class="funnel-step-stats">
+                  <span>Estancia media: <strong>{{ formatDuration(step.avgTimeSec) }}</strong></span>
+                  <span *ngIf="step.stepNumber > 1" [class.drop-alert]="step.dropOffRate >= 20">
+                    Se pierden aquí: <strong>{{ step.dropOffUsers | number }} ({{ step.dropOffRate }}%)</strong>
+                  </span>
+                  <span *ngIf="step.stepNumber === 1" class="step-entry-tag">Base inicial (100%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-two-col" style="margin-top: 20px;">
+          <!-- Pantallas donde cierran definitivamente la pestaña o app -->
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Pantallas de Salida Definitiva (Exit Pages)</span>
+                </h3>
+                <p class="card-subtitle">Secciones donde el usuario cierra la pestaña o sale de la aplicación móvil</p>
+              </div>
+            </div>
+
+            <div class="nw-table-wrap" *ngIf="data.exitRoutes?.length; else noExits">
+              <table class="nw-table">
+                <thead>
+                  <tr>
+                    <th>Página / Ruta</th>
+                    <th>Cierres</th>
+                    <th>% Fuga</th>
+                    <th>Estancia Previa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let ex of data.exitRoutes">
+                    <td>
+                      <div style="font-weight: 700;">{{ ex.label }}</div>
+                      <code class="route-code">{{ ex.route }}</code>
+                    </td>
+                    <td><strong>{{ ex.exits || 0 }}</strong></td>
+                    <td><span class="nw-pill" [ngClass]="ex.exitRatePct >= 35 ? 'danger' : 'warning'">{{ ex.exitRatePct }}%</span></td>
+                    <td>{{ formatDuration(ex.avgDwellSec) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noExits>
+              <p class="nw-alert info">Sin cierres definitivos registrados aún en este rango.</p>
+            </ng-template>
+          </div>
+
+          <!-- Abandono silencioso de formularios -->
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                  <span>Abandono de Formularios (Último Campo)</span>
+                </h3>
+                <p class="card-subtitle">En qué página y en qué input dejan de escribir antes de salir sin guardar</p>
+              </div>
+            </div>
+
+            <div class="nw-table-wrap" *ngIf="data.formAbandonments.length; else noFormAbandons">
+              <table class="nw-table">
+                <thead>
+                  <tr>
+                    <th>Formulario y Página</th>
+                    <th>% Abandono</th>
+                    <th>Último Campo Tocado</th>
+                    <th>Tiempo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let fa of data.formAbandonments">
+                    <td>
+                      <div style="font-weight: 700;">{{ fa.formName }}</div>
+                      <code class="route-code">{{ fa.route }}</code>
+                    </td>
+                    <td>
+                      <span class="nw-pill" [ngClass]="fa.abandonRatePct >= 25 ? 'danger' : 'warning'">
+                        {{ fa.abandonRatePct }}% ({{ fa.abandoned }}/{{ fa.starts }})
+                      </span>
+                    </td>
+                    <td><strong>{{ fa.lastTouchedField }}</strong></td>
+                    <td>{{ formatDuration(fa.avgTimeBeforeExitSec) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noFormAbandons>
+              <p class="nw-alert info">Sin abandonos de formulario registrados en este rango.</p>
+            </ng-template>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PESTAÑA 3: SECCIONES, SUB-PESTAÑAS Y FUNCIONES
+           ========================================================= -->
+      <section *ngIf="activeTab === 'features'" class="analytics-section">
+        <div class="nw-card">
+          <div class="nw-card-header" style="flex-wrap: wrap;">
+            <div>
+              <h3>Mapa Completo de Uso por Página</h3>
+              <p class="card-subtitle">Todas las rutas visitadas con usuarios únicos, tiempo activo real, lectura (scroll) y diagnóstico</p>
+            </div>
+
+            <div class="filter-controls-inline">
+              <select class="nw-select nw-select-compact" [(ngModel)]="sectionGroupFilter" aria-label="Filtrar módulo">
+                <option *ngFor="let grp of moduleGroups" [value]="grp">
+                  {{ grp === 'ALL' ? 'Todos los módulos' : grp }}
+                </option>
+              </select>
+              <input
+                type="search"
+                class="nw-input nw-input-compact"
+                placeholder="Buscar ruta o página..."
+                [(ngModel)]="sectionSearch" />
+            </div>
+          </div>
+
+          <div class="nw-table-wrap" *ngIf="filteredSections.length; else emptySections">
+            <table class="nw-table">
+              <thead>
+                <tr>
+                  <th>Página / Ruta</th>
+                  <th>Módulo</th>
+                  <th>Vistas</th>
+                  <th>Usuarios</th>
+                  <th>Estancia Activa</th>
+                  <th>Scroll Medio</th>
+                  <th>% Salida</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let sec of filteredSections">
+                  <td>
+                    <div style="font-weight: 700;">{{ sec.label }}</div>
+                    <code class="route-code">{{ sec.route }}</code>
+                  </td>
+                  <td>{{ sec.moduleGroup }}</td>
+                  <td><strong>{{ sec.views | number }}</strong></td>
+                  <td>{{ sec.uniqueUsers | number }}</td>
+                  <td>{{ formatDuration(sec.avgDwellSec) }}</td>
+                  <td>
+                    <div class="inline-meter">
+                      <div class="inline-meter-bar"><span [style.width.%]="sec.avgScrollPct"></span></div>
+                      <small>{{ sec.avgScrollPct }}%</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span [style.color]="sec.exitRatePct >= 38 ? 'var(--nw-danger)' : 'var(--nw-text)'" style="font-weight: 700;">
+                      {{ sec.exitRatePct }}%
+                    </span>
+                  </td>
+                  <td>
+                    <span class="nw-pill" [ngClass]="adoptionBadgeClass(sec.adoptionStatus)">{{ sec.adoptionStatus }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #emptySections>
+            <p class="nw-alert info">No hay vistas registradas para este filtro.</p>
+          </ng-template>
+        </div>
+
+        <div class="analytics-two-col" style="margin-top: 20px;">
+          <!-- Uso de Sub-pestañas Internas -->
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>Sub-pestañas Internas Más Usadas</span>
+                </h3>
+                <p class="card-subtitle">Pestañas dentro del Detalle del Evento (Invitados, Mesas, DJ, Álbum...) y Editores</p>
+              </div>
+            </div>
+
+            <div class="nw-table-wrap" *ngIf="data.subTabsUsage?.length; else noSubTabs">
+              <table class="nw-table">
+                <thead>
+                  <tr>
+                    <th>Pestaña Interna</th>
+                    <th>Página Contenedora</th>
+                    <th>Aperturas</th>
+                    <th>Usuarios</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let st of data.subTabsUsage">
+                    <td><span class="nw-pill accent">{{ st.tabName }}</span></td>
+                    <td>
+                      <div style="font-size: 13px; font-weight: 600;">{{ st.routeLabel }}</div>
+                      <code class="route-code">{{ st.route }}</code>
+                    </td>
+                    <td><strong>{{ st.opens | number }}</strong></td>
+                    <td>{{ st.uniqueUsers | number }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noSubTabs>
+              <p class="nw-alert info">Conforme los usuarios abran pestañas dentro de eventos o editores aparecerán aquí.</p>
+            </ng-template>
+          </div>
+
+          <!-- Adopción de Funcionalidades -->
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                  <span>Adopción de Funciones Clave</span>
+                </h3>
+                <p class="card-subtitle">Penetración sobre el total de usuarios activos</p>
+              </div>
+            </div>
+
+            <div class="mini-funnel-list" *ngIf="data.features.length; else noFeatureEvents">
+              <div class="feature-adoption-card" *ngFor="let feat of data.features">
+                <div class="feature-top">
+                  <strong>{{ feat.label }}</strong>
+                  <span class="nw-pill info">{{ feat.category }}</span>
+                </div>
+                <div class="feature-numbers">
+                  <span><strong>{{ feat.uses | number }}</strong> usos</span>
+                  <span><strong>{{ feat.uniqueUsers | number }}</strong> usuarios</span>
+                  <span><strong>{{ feat.adoptionPct }}%</strong> adopción</span>
+                </div>
+                <div class="nw-progress" style="margin: 8px 0;">
+                  <div class="nw-progress-fill" [style.width.%]="feat.adoptionPct"></div>
+                </div>
+                <p class="feature-rec">{{ feat.recommendation }}</p>
+              </div>
+            </div>
+            <ng-template #noFeatureEvents>
+              <p class="nw-alert info">Aún no se han disparado acciones clave en este periodo.</p>
+            </ng-template>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PESTAÑA 4: DISEÑO & FRICCIÓN UX
+           ========================================================= -->
+      <section *ngIf="activeTab === 'ux'" class="analytics-section">
+        <div class="nw-card">
+          <div class="nw-card-header" style="flex-wrap: wrap;">
+            <div>
+              <h3 class="section-heading-with-icon">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+                  <path d="m13 13 6 6"></path>
+                </svg>
+                <span>Puntos de Frustración Visual (Rage Clicks &amp; Dead Clicks)</span>
+              </h3>
+              <p class="card-subtitle">Muestra exactamente en qué página, sección interna y selector CSS ocurre cada toque fallido</p>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <div class="range-pills">
+                <button type="button" class="range-pill-btn" [class.active]="uxFilterType === 'ALL'" (click)="uxFilterType = 'ALL'">Todos</button>
+                <button type="button" class="range-pill-btn" [class.active]="uxFilterType === 'rage_click'" (click)="uxFilterType = 'rage_click'">Rage Clicks</button>
+                <button type="button" class="range-pill-btn" [class.active]="uxFilterType === 'dead_click'" (click)="uxFilterType = 'dead_click'">Dead Clicks</button>
+                <button type="button" class="range-pill-btn" [class.active]="uxFilterType === 'form_abandon'" (click)="uxFilterType = 'form_abandon'">Formularios</button>
+              </div>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="confirmAndReset('ux')" *ngIf="sourceMode === 'backend_db' && data.uxIncidents.length">
+                Limpiar Fricciones UX
+              </button>
+            </div>
+          </div>
+
+          <div class="nw-table-wrap" *ngIf="filteredUxIncidents.length; else cleanUxState">
+            <table class="nw-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Página y Sección Interna</th>
+                  <th>Elemento / Selector</th>
+                  <th>Frecuencia</th>
+                  <th>Dispositivos</th>
+                  <th>Diagnóstico Sugerido</th>
+                  <th>Último</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ux of filteredUxIncidents">
+                  <td>
+                    <span class="nw-pill" [ngClass]="ux.severity === 'alta' ? 'danger' : ux.severity === 'media' ? 'warning' : 'info'">
+                      {{ formatUxTypeLabel(ux.type) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="font-weight: 700;">{{ ux.routeLabel }}</div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px;">
+                      <code class="route-code">{{ ux.route }}</code>
+                      <span class="page-section-chip" *ngIf="ux.pageSection">{{ ux.pageSection }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 700;">{{ ux.targetLabel }}</div>
+                    <code class="route-code">{{ ux.selector }}</code>
+                  </td>
+                  <td><strong>{{ ux.occurrences }}x</strong> ({{ ux.affectedUsers }} usrs)</td>
+                  <td>{{ ux.deviceSplit }}</td>
+                  <td style="max-width: 300px; font-size: 13px; color: var(--nw-text-2);">{{ ux.diagnosis }}</td>
+                  <td style="white-space: nowrap; font-size: 12.5px;">{{ formatRelativeDate(ux.lastSeen) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #cleanUxState>
+            <p class="nw-alert success">Sin incidentes de fricción UX registrados.</p>
+          </ng-template>
+        </div>
+
+        <div class="analytics-two-col" style="margin-top: 20px;">
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                  </svg>
+                  <span>Experiencia por Dispositivo</span>
+                </h3>
+                <p class="card-subtitle">Web Móvil vs Web Desktop vs App Android Capacitor</p>
+              </div>
+            </div>
+            <div class="device-cards-grid">
+              <div class="device-stat-card" *ngFor="let dev of data.devices">
+                <div class="device-card-head">
+                  <h4>{{ dev.device }}</h4>
+                  <span class="nw-pill accent">{{ dev.sharePct }}%</span>
+                </div>
+                <div class="device-metrics-list">
+                  <div><span>Sesiones:</span> <strong>{{ dev.sessions | number }}</strong></div>
+                  <div><span>Carga media:</span> <strong>{{ dev.avgLoadMs }} ms</strong></div>
+                  <div><span>Fricción táctil:</span> <strong [style.color]="dev.frictionRatePct > 3 ? 'var(--nw-danger)' : 'inherit'">{{ dev.frictionRatePct }}%</strong></div>
+                  <div><span>Error QA:</span> <strong>{{ dev.errorRatePct }}%</strong></div>
+                  <div><span>Conversión:</span> <strong style="color: var(--nw-success);">{{ dev.conversionPct }}%</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  <span>Actividad por Rol de Usuario</span>
+                </h3>
+                <p class="card-subtitle">Proporción entre invitados públicos y organizadores autenticados</p>
+              </div>
+            </div>
+            <div class="nw-table-wrap" *ngIf="data.rolesBreakdown?.length; else noRoles">
+              <table class="nw-table">
+                <thead>
+                  <tr>
+                    <th>Tipo de Usuario</th>
+                    <th>Usuarios</th>
+                    <th>Sesiones</th>
+                    <th>Eventos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of data.rolesBreakdown">
+                    <td><strong>{{ formatRoleLabel(r.role) }}</strong></td>
+                    <td>{{ r.users | number }}</td>
+                    <td>{{ r.sessions | number }}</td>
+                    <td>{{ r.events | number }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noRoles>
+              <p class="nw-alert info">Sin desglose de roles registrado aún.</p>
+            </ng-template>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PESTAÑA 5: QA, ERRORES JS/ANGULAR Y SALUD DE API
+           ========================================================= -->
+      <section *ngIf="activeTab === 'qa'" class="analytics-section">
+        <div class="nw-card qa-probe-banner">
+          <div>
+            <strong class="section-heading-with-icon" style="font-size: 14px;">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="var(--nw-accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span>Banco de Pruebas QA Directo a MongoDB:</span>
+            </strong>
+            <span>Dispara eventos controlados para comprobar el guardado persistente en tu Backend (puedes borrarlos luego con 1 clic).</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" data-analytics-probe="true" (click)="triggerDiagnostic('ux_rage')">
+              Simular Rage Click
+            </button>
+            <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" data-analytics-probe="true" (click)="triggerDiagnostic('qa_error')">
+              Simular Excepción QA
+            </button>
+            <button type="button" class="nw-btn nw-btn-primary nw-btn-sm" data-analytics-probe="true" (click)="triggerDiagnostic('funnel_step')">
+              Probar Guardado BD
+            </button>
+            <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="confirmAndReset('diagnostics')">
+              Borrar Pruebas
+            </button>
+          </div>
+        </div>
+
+        <div class="nw-card" style="margin-top: 18px;">
+          <div class="nw-card-header" style="flex-wrap: wrap;">
+            <div>
+              <h3 class="section-heading-with-icon">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Excepciones Runtime, Fallos HTTP y Saltos Visuales</span>
+              </h3>
+              <p class="card-subtitle">Con página exacta y última acción del usuario (breadcrumb) antes de ocurrir el error</p>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <div class="range-pills">
+                <button type="button" class="range-pill-btn" [class.active]="qaFilterKind === 'ALL'" (click)="qaFilterKind = 'ALL'">Todos</button>
+                <button type="button" class="range-pill-btn" [class.active]="qaFilterKind === 'runtime_exception'" (click)="qaFilterKind = 'runtime_exception'">JS / Angular</button>
+                <button type="button" class="range-pill-btn" [class.active]="qaFilterKind === 'http_error'" (click)="qaFilterKind = 'http_error'">HTTP 4xx/5xx</button>
+                <button type="button" class="range-pill-btn" [class.active]="qaFilterKind === 'slow_endpoint'" (click)="qaFilterKind = 'slow_endpoint'">Lentitud</button>
+              </div>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="confirmAndReset('qa')" *ngIf="sourceMode === 'backend_db' && data.qaIssues.length">
+                Limpiar Historial QA
+              </button>
+            </div>
+          </div>
+
+          <div class="nw-table-wrap" *ngIf="filteredQaIssues.length; else zeroBugsState">
+            <table class="nw-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Detalle del Error</th>
+                  <th>Página / Ruta</th>
+                  <th>Frecuencia</th>
+                  <th>Entorno</th>
+                  <th>Acción Previa (Breadcrumb)</th>
+                  <th>Último</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let bug of filteredQaIssues">
+                  <td>
+                    <span class="nw-pill" [ngClass]="bug.severity === 'critica' ? 'danger' : bug.severity === 'alta' ? 'warning' : 'info'">
+                      {{ formatQaKindLabel(bug.kind) }}
+                    </span>
+                  </td>
+                  <td>
+                    <strong>{{ bug.title }}</strong>
+                    <div *ngIf="bug.stackTop" style="font-size: 11.5px; color: var(--nw-text-3); margin-top: 2px;">{{ bug.stackTop }}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 700;" *ngIf="bug.pageLabel">{{ bug.pageLabel }}</div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+                      <code class="route-code">{{ bug.routeOrEndpoint }}</code>
+                      <span class="page-section-chip" *ngIf="bug.pageSection">{{ bug.pageSection }}</span>
+                    </div>
+                  </td>
+                  <td><strong>{{ bug.occurrences }}x</strong> ({{ bug.affectedUsers }} usrs)</td>
+                  <td>{{ bug.browserDevice }}</td>
+                  <td style="font-size: 13px; color: var(--nw-text-2);">{{ bug.lastBreadcrumb }}</td>
+                  <td style="white-space: nowrap; font-size: 12.5px;">{{ formatRelativeDate(bug.lastSeen) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #zeroBugsState>
+            <p class="nw-alert success">Cero errores QA registrados en este filtro.</p>
+          </ng-template>
+        </div>
+
+        <div class="nw-card" style="margin-top: 20px;">
+          <div class="nw-card-header">
+            <div>
+              <h3 class="section-heading-with-icon">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span>Salud y Latencia por Endpoint API</span>
+              </h3>
+              <p class="card-subtitle">Medición automática real desde los clientes hacia tu servidor Express</p>
+            </div>
+          </div>
+
+          <div class="nw-table-wrap" *ngIf="data.apiHealth.length; else emptyApiHealth">
+            <table class="nw-table">
+              <thead>
+                <tr>
+                  <th>Método</th>
+                  <th>Endpoint</th>
+                  <th>Llamadas</th>
+                  <th>Promedio</th>
+                  <th>Máximo / p95</th>
+                  <th>Fallos</th>
+                  <th>% Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ep of data.apiHealth">
+                  <td><span class="nw-pill info">{{ ep.method }}</span></td>
+                  <td><code class="route-code">{{ ep.endpoint }}</code></td>
+                  <td>{{ ep.calls | number }}</td>
+                  <td>{{ ep.avgLatencyMs }} ms</td>
+                  <td>
+                    <strong [style.color]="ep.p95LatencyMs >= configForm.slowApiThresholdMs ? 'var(--nw-warning)' : 'inherit'">
+                      {{ ep.p95LatencyMs }} ms
+                    </strong>
+                  </td>
+                  <td>{{ ep.failures }}</td>
+                  <td>
+                    <span class="nw-pill" [ngClass]="ep.errorRatePct >= 2 ? 'danger' : 'success'">
+                      {{ ep.errorRatePct }}%
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #emptyApiHealth>
+            <p class="nw-alert info">Aún no hay muestras de latencia API almacenadas para este filtro.</p>
+          </ng-template>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PESTAÑA 6: ÚLTIMOS EVENTOS GUARDADOS EN MONGODB
+           ========================================================= -->
+      <section *ngIf="activeTab === 'live'" class="analytics-section">
+        <div class="nw-card">
+          <div class="nw-card-header" style="flex-wrap: wrap;">
+            <div>
+              <h3 class="section-heading-with-icon">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                <span>Últimos 50 Eventos Persistidos en MongoDB</span>
+              </h3>
+              <p class="card-subtitle">Auditoría cronológica directa de la colección <code>analyticsevents</code></p>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <div class="range-pills">
+                <button type="button" class="range-pill-btn" [class.active]="liveEventFilter === 'ALL'" (click)="liveEventFilter = 'ALL'">Todos</button>
+                <button type="button" class="range-pill-btn" [class.active]="liveEventFilter === 'NAV'" (click)="liveEventFilter = 'NAV'">Navegación / Uso</button>
+                <button type="button" class="range-pill-btn" [class.active]="liveEventFilter === 'UX'" (click)="liveEventFilter = 'UX'">Fricción UX</button>
+                <button type="button" class="range-pill-btn" [class.active]="liveEventFilter === 'QA'" (click)="liveEventFilter = 'QA'">QA / API</button>
+              </div>
+              <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="refreshSnapshot()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                  <polyline points="21 3 21 8 16 8"></polyline>
+                </svg>
+                <span>Recargar</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="nw-table-wrap" *ngIf="filteredLiveEvents.length; else noLiveEvents">
+            <table class="nw-table">
+              <thead>
+                <tr>
+                  <th>Fecha / Hora</th>
+                  <th>Evento</th>
+                  <th>Página y Sección</th>
+                  <th>Rol / Dispositivo</th>
+                  <th>Detalles Registrados</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ev of filteredLiveEvents">
+                  <td style="white-space: nowrap; font-size: 12.5px;">{{ ev.occurredAt | date:'dd/MM HH:mm:ss' }}</td>
+                  <td>
+                    <span class="nw-pill" [ngClass]="formatEventBadgeClass(ev.event)">{{ ev.event }}</span>
+                  </td>
+                  <td>
+                    <div style="font-weight: 700;">{{ ev.routeLabel }}</div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+                      <code class="route-code">{{ ev.route }}</code>
+                      <span class="page-section-chip" *ngIf="ev.pageSection">{{ ev.pageSection }}</span>
+                    </div>
+                  </td>
+                  <td style="font-size: 12.5px;">{{ ev.userRole }} · {{ ev.deviceType }} ({{ ev.browser }})</td>
+                  <td style="font-size: 12.5px; color: var(--nw-text-2); max-width: 400px;">
+                    <span *ngIf="ev.sectionTab">Pestaña: <strong>{{ ev.sectionTab }}</strong> · </span>
+                    <span *ngIf="ev.targetLabel">Elemento: <strong>{{ ev.targetLabel }}</strong> · </span>
+                    <span *ngIf="ev.dwellSeconds">Estancia: <strong>{{ ev.dwellSeconds }}s</strong> (Scroll {{ ev.maxScrollPct || 0 }}%) · </span>
+                    <span *ngIf="ev.errorMessage">Error: <strong>{{ ev.errorMessage }}</strong> · </span>
+                    <span *ngIf="ev.endpoint">API: <strong>{{ ev.httpMethod }} {{ ev.endpoint }} ({{ ev.durationMs }}ms)</strong></span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noLiveEvents>
+            <p class="nw-alert info">
+              No hay eventos recientes en MongoDB con este filtro. Recuerda que puedes activar el rastreo de cuentas Admin en <strong>Motor BD &amp; Reseteo</strong> si deseas probar navegando con tu propia cuenta.
+            </p>
+          </ng-template>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PESTAÑA 7: CONFIGURACIÓN EN MONGODB & ZONA DE RESETEO
+           ========================================================= -->
+      <section *ngIf="activeTab === 'settings'" class="analytics-section">
+        <div class="analytics-two-col">
+          <!-- Ajustes Persistidos en SystemSetting (MongoDB) -->
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  </svg>
+                  <span>Configuración Global del Tracker (Persistida en BD)</span>
+                </h3>
+                <p class="card-subtitle">Se guarda en la colección <code>systemsettings</code> de MongoDB y aplica a todos los dispositivos</p>
+              </div>
+            </div>
+
+            <form (ngSubmit)="saveServerConfig()" class="settings-form-stack">
+              <div class="toggle-checks-box">
+                <label class="check-row">
+                  <input type="checkbox" name="captureEnabled" [(ngModel)]="configForm.captureEnabled" />
+                  <span>
+                    <strong>Activar recolección automática global</strong><br />
+                    <small class="field-hint">Si lo desactivas, el Backend dejará de guardar nuevos eventos hasta que vuelvas a encenderlo.</small>
+                  </span>
+                </label>
+
+                <label class="check-row">
+                  <input type="checkbox" name="trackAdminUsers" [(ngModel)]="configForm.trackAdminUsers" />
+                  <span>
+                    <strong>Rastrear también usuarios con rol <code>admin</code></strong><br />
+                    <small class="field-hint">Útil para hacer pruebas tú mismo. En producción conviene dejarlo apagado para medir solo clientes e invitados reales.</small>
+                  </span>
+                </label>
+
+                <label class="check-row">
+                  <input type="checkbox" name="captureApiHealthSample" [(ngModel)]="configForm.captureApiHealthSample" />
+                  <span>
+                    <strong>Registrar muestras de latencia de llamadas API exitosas</strong><br />
+                    <small class="field-hint">Los errores 4xx/5xx y llamadas lentas se capturan siempre; esta opción añade el cálculo de latencia promedio de rutas sanas.</small>
+                  </span>
+                </label>
+              </div>
+
+              <div class="nw-form-grid">
+                <label class="nw-label">
+                  <span>Retención automática en MongoDB (Índice TTL)</span>
+                  <select class="nw-select" name="retentionDays" [(ngModel)]="configForm.retentionDays">
+                    <option [ngValue]="30">30 días (Ultra ligero)</option>
+                    <option [ngValue]="60">60 días</option>
+                    <option [ngValue]="90">90 días (Recomendado)</option>
+                    <option [ngValue]="180">180 días (6 meses)</option>
+                    <option [ngValue]="365">365 días (1 año)</option>
+                  </select>
+                  <small class="field-hint">MongoDB purga sola los eventos vencidos sin saturar disco.</small>
+                </label>
+
+                <label class="nw-label">
+                  <span>Umbral de alerta para API lenta (ms)</span>
+                  <input
+                    type="number"
+                    min="300"
+                    max="15000"
+                    step="100"
+                    class="nw-input"
+                    name="slowApiThresholdMs"
+                    [(ngModel)]="configForm.slowApiThresholdMs" />
+                  <small class="field-hint">Cualquier endpoint que tarde más aparecerá en QA.</small>
+                </label>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="nw-btn nw-btn-primary" [disabled]="savingConfig">
+                  {{ savingConfig ? 'Guardando...' : 'Guardar Ajustes en Base de Datos' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Estado de Almacenamiento y Zona de Reseteo / Borrado -->
+          <div class="nw-card">
+            <div class="nw-card-header">
+              <div>
+                <h3 class="section-heading-with-icon">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="var(--nw-danger)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  <span>Estado de Almacenamiento y Zona de Reseteo</span>
+                </h3>
+                <p class="card-subtitle">Limpia contadores después de lanzar una nueva versión o tras terminar tus pruebas de QA</p>
+              </div>
+            </div>
+
+            <div class="storage-summary-box">
+              <div><span>Documentos actuales en MongoDB:</span> <strong>{{ data.storageStats.totalStoredEvents | number }}</strong></div>
+              <div><span>Espacio estimado en colección:</span> <strong>{{ formatStorageSize(data.storageStats.estimatedSizeKb) }}</strong></div>
+              <div><span>Registro más antiguo:</span> <strong>{{ data.storageStats.oldestEventAt ? (data.storageStats.oldestEventAt | date:'dd/MM/yyyy HH:mm') : 'Sin registros' }}</strong></div>
+              <div><span>Último reseteo ejecutado:</span> <strong>{{ formatRelativeDate(data.storageStats.lastResetAt) }}</strong></div>
+            </div>
+
+            <div class="reset-actions-stack">
+              <div class="reset-row-card">
+                <div>
+                  <strong>Limpiar solo Sondas de Prueba</strong>
+                  <p>Elimina los eventos disparados con los botones de diagnóstico manteniendo intactos a tus usuarios reales.</p>
+                </div>
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="confirmAndReset('diagnostics')" [disabled]="resetting">
+                  Borrar Pruebas
+                </button>
+              </div>
+
+              <div class="reset-row-card">
+                <div>
+                  <strong>Resetear Incidentes de Fricción UX</strong>
+                  <p>Úsalo después de rediseñar botones o formularios para medir desde cero si desaparecieron los rage/dead clicks.</p>
+                </div>
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="confirmAndReset('ux')" [disabled]="resetting">
+                  Resetear UX
+                </button>
+              </div>
+
+              <div class="reset-row-card">
+                <div>
+                  <strong>Resetear Historial de Errores QA &amp; API</strong>
+                  <p>Limpia excepciones y alertas HTTP antiguas tras desplegar un parche correctivo.</p>
+                </div>
+                <button type="button" class="nw-btn nw-btn-ghost nw-btn-sm" (click)="confirmAndReset('qa')" [disabled]="resetting">
+                  Resetear QA
+                </button>
+              </div>
+
+              <div class="reset-row-card danger-zone">
+                <div>
+                  <strong>Resetear y Borrar TODO el Historial</strong>
+                  <p>Vacía por completo la colección <code>analyticsevents</code> en MongoDB para reiniciar todas las estadísticas a cero.</p>
+                </div>
+                <button type="button" class="nw-btn nw-btn-danger nw-btn-sm" (click)="confirmAndReset('all')" [disabled]="resetting">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  <span>Borrar Todo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </main>
+</div>
