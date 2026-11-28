@@ -328,6 +328,62 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       centerBg: '#c9a87c'
     },
     {
+      key: 'astral-navy',
+      name: 'Azul Noche Astral',
+      desc: 'Banner superior azul noche y acentos dorados',
+      frameStyle: 'banner-top',
+      frameColor: '#1e3a5f',
+      frameText: '★ ACCESO ASTRAL VIP ★',
+      frameTextColor: '#f3cf68',
+      qrColor: '#0f172a',
+      qrBgColor: '#ffffff',
+      eyeShape: 'leaf',
+      centerLogo: 'monogram',
+      centerBg: '#1e3a5f'
+    },
+    {
+      key: 'champagne-pearl',
+      name: 'Champagne & Perla',
+      desc: 'Doble filete champagne sobre fondo marfil',
+      frameStyle: 'double-border',
+      frameColor: '#b08d57',
+      frameText: '',
+      frameTextColor: '#b08d57',
+      qrColor: '#3f3021',
+      qrBgColor: '#fffcf7',
+      eyeShape: 'rounded',
+      centerLogo: 'rings',
+      centerBg: '#faf3e6'
+    },
+    {
+      key: 'burgundy-xv',
+      name: 'XV Borgoña Real',
+      desc: 'Banner borgoña imperial con corona',
+      frameStyle: 'banner-bottom',
+      frameColor: '#7f1d1d',
+      frameText: '★ MIS XV AÑOS ★',
+      frameTextColor: '#fde68a',
+      qrColor: '#450a0a',
+      qrBgColor: '#ffffff',
+      eyeShape: 'leaf',
+      centerLogo: 'crown',
+      centerBg: '#7f1d1d'
+    },
+    {
+      key: 'terracotta-boho',
+      name: 'Terracota Boho',
+      desc: 'Tarjeta redondeada cálida con ojos circulares',
+      frameStyle: 'card-rounded',
+      frameColor: '#b45309',
+      frameText: '',
+      frameTextColor: '#ffffff',
+      qrColor: '#78350f',
+      qrBgColor: '#fffbeb',
+      eyeShape: 'circle',
+      centerLogo: 'heart',
+      centerBg: '#fef3c7'
+    },
+    {
       key: 'raw-classic',
       name: 'QR Clásico Puro',
       desc: 'Sin marco ni adornos, escaneo estándar',
@@ -342,6 +398,73 @@ export class VisualInvitationEditorComponent implements OnInit, OnDestroy {
       centerBg: '#ffffff'
     }
   ];
+
+  uploadingQrLogo = false;
+
+  async uploadQrCenterLogo(layer: VisualInvitationLayer, event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file || !layer) return;
+    input.value = '';
+
+    if (!file.type.startsWith('image/')) {
+      this.flash('Selecciona una imagen válida (PNG, JPG, SVG o WEBP).');
+      return;
+    }
+
+    this.uploadingQrLogo = true;
+    this.cdr?.markForCheck();
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        reader.readAsDataURL(file);
+      });
+
+      this.setQrStyleProp(layer, 'qrCenterLogo', 'custom');
+      this.setQrStyleProp(layer, 'qrCenterLogoUrl', dataUrl);
+      if (!layer.style?.qrCenterLogoBg) {
+        this.setQrStyleProp(layer, 'qrCenterLogoBg', '#ffffff');
+      }
+      this.flash('Imagen aplicada al centro del código QR.');
+
+      const eventId = typeof this.invitation?.event === 'string'
+        ? this.invitation.event
+        : (this.invitation?.event as any)?._id;
+      if (eventId) {
+        try {
+          const ext = file.type?.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+          const cleanName = file.name && file.name !== 'image.png' ? file.name : `qr_logo_${Date.now()}.${ext}`;
+          const res = await firstValueFrom(
+            this.api.createUploadUrl({
+              fileName: cleanName,
+              contentType: file.type || 'image/png',
+              folder: 'assets',
+              event: eventId,
+              size: file.size
+            })
+          );
+          await firstValueFrom(this.api.uploadAsset(res.uploadUrl, file));
+          if (res.publicUrl) {
+            this.setQrStyleProp(layer, 'qrCenterLogoUrl', res.publicUrl);
+          }
+        } catch {
+          // Conserva dataUrl local si la subida en segundo plano falla
+        }
+      }
+    } catch {
+      this.flash('No se pudo cargar la imagen del logo.');
+    } finally {
+      this.uploadingQrLogo = false;
+      this.cdr?.markForCheck();
+    }
+  }
+
+  clearQrCenterLogo(layer: VisualInvitationLayer): void {
+    this.setQrStyleProp(layer, 'qrCenterLogoUrl', '');
+    this.setQrStyleProp(layer, 'qrCenterLogo', 'none');
+  }
 
   getFilteredAccessPresets(): any[] {
     return this.accessPresets;

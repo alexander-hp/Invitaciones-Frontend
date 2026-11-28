@@ -3397,122 +3397,189 @@
                 contenido. Aquí puedes ajustar tamaño, recorte, posición y estilo.</span></aside>
             <!-- DISEÑO AVANZADO DE CÓDIGO QR -->
             <section *ngIf="isQrLayer(layer)" class="qr-style-editor">
-              <div class="inspector-heading">
-                <h3>Diseño de Código QR</h3>
-                <small>Marco, banner de escaneo, esquinas y logotipo central</small>
+              <div class="qr-editor-header">
+                <span class="qr-header-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    <path d="M14 14h3v3h-3z"></path>
+                    <path d="M20 14v3h-1"></path>
+                    <path d="M14 20h7"></path>
+                  </svg>
+                </span>
+                <div class="qr-header-copy">
+                  <h3>Diseño de Código QR</h3>
+                  <small>Marco, banner, esquinas e imagen central</small>
+                </div>
               </div>
 
-              <!-- Estilos Predefinidos -->
-              <div class="qr-presets-section">
-                <span class="qr-field-title">Estilos Rápidos</span>
+              <!-- Estilos Predefinidos (Grid 2 columnas) -->
+              <div class="qr-subcard">
+                <span class="qr-field-title">Estilos Rápidos ({{ qrDesignPresets.length }})</span>
                 <div class="qr-preset-chips">
                   <button *ngFor="let p of qrDesignPresets" type="button" class="qr-chip-btn"
                     [class.active]="layer.style?.qrStylePreset === p.key" (click)="applyQrPreset(layer, p.key)"
                     [title]="p.desc">
-                    <span class="qr-chip-dot" [style.background]="p.frameColor"></span>
-                    <span>{{ p.name }}</span>
+                    <span class="qr-chip-swatch" [style.background]="p.frameColor" [style.borderColor]="p.qrColor"></span>
+                    <span class="qr-chip-label">{{ p.name }}</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Tipo de Marco -->
-              <div class="qr-inspector-group">
-                <label>Marco de presentación
-                  <select [ngModel]="layer.style?.qrFrameStyle || 'none'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameStyle', $event)">
-                    <option value="none">Sin marco (QR clásico suelto)</option>
-                    <option value="banner-bottom">Tarjeta con Banner Inferior (Estilo App)</option>
-                    <option value="banner-top">Tarjeta con Banner Superior</option>
-                    <option value="card-rounded">Tarjeta con Esquinas Redondeadas</option>
-                    <option value="double-border">Doble Filete de Gala</option>
-                  </select>
-                </label>
+              <!-- Marco, Banner y Esquinas -->
+              <div class="qr-subcard">
+                <span class="qr-field-title">Marco y Esquinas</span>
+
+                <div class="qr-inspector-group">
+                  <label>Marco de presentación
+                    <select [ngModel]="layer.style?.qrFrameStyle || 'none'"
+                      (ngModelChange)="setQrStyleProp(layer, 'qrFrameStyle', $event)">
+                      <option value="none">Sin marco (QR clásico suelto)</option>
+                      <option value="banner-bottom">Tarjeta con Banner Inferior</option>
+                      <option value="banner-top">Tarjeta con Banner Superior</option>
+                      <option value="card-rounded">Tarjeta con Esquinas Redondeadas</option>
+                      <option value="double-border">Doble Filete de Gala</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'"
+                  class="qr-inspector-group">
+                  <label>Texto del banner
+                    <input type="text" [ngModel]="layer.style?.qrFrameText ?? '★ ESCANEAR AL ENTRAR ★'"
+                      (ngModelChange)="setQrStyleProp(layer, 'qrFrameText', $event)"
+                      placeholder="Ej. ESCANEAR AL ENTRAR, PASE VIP">
+                  </label>
+                </div>
+
+                <div class="qr-inspector-group" style="margin-bottom: 0;">
+                  <label>Forma de esquinas (Ojos del QR)
+                    <select [ngModel]="layer.style?.qrEyeShape || 'square'"
+                      (ngModelChange)="setQrStyleProp(layer, 'qrEyeShape', $event)">
+                      <option value="square">Cuadradas clásicas</option>
+                      <option value="leaf">Gota / Hoja orgánica</option>
+                      <option value="rounded">Redondeadas suaves</option>
+                      <option value="circle">Círculos concéntricos</option>
+                    </select>
+                  </label>
+                </div>
               </div>
 
-              <!-- Texto del Banner -->
-              <div *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'"
-                class="qr-inspector-group">
-                <label>Texto del banner
-                  <input type="text" [ngModel]="layer.style?.qrFrameText ?? '★ ESCANEAR AL ENTRAR ★'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameText', $event)"
-                    placeholder="Ej. ESCANEAR AL ENTRAR, PASE VIP, VALIDAR">
-                </label>
-              </div>
+              <!-- Centro del QR: Emblema, Monograma o Imagen Propia -->
+              <div class="qr-subcard">
+                <span class="qr-field-title">Centro del QR (Logo o Imagen)</span>
 
-              <!-- Forma de Ojos / Esquinas -->
-              <div class="qr-inspector-group">
-                <label>Forma de esquinas (Ojos del QR)
-                  <select [ngModel]="layer.style?.qrEyeShape || 'square'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrEyeShape', $event)">
-                    <option value="square">Cuadradas clásicas</option>
-                    <option value="leaf">Gota / Hoja orgánica (Diseño Moderno)</option>
-                    <option value="rounded">Redondeadas suaves</option>
-                    <option value="circle">Círculos concéntricos</option>
-                  </select>
-                </label>
-              </div>
+                <div class="qr-inspector-group">
+                  <label>Tipo de emblema central
+                    <select [ngModel]="layer.style?.qrCenterLogo || 'none'"
+                      (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogo', $event)">
+                      <option value="none">Sin emblema central</option>
+                      <option value="custom">Imagen o logotipo propio</option>
+                      <option value="monogram">Monograma / Iniciales</option>
+                      <option value="crown">Corona Real VIP</option>
+                      <option value="rings">Anillos de Boda</option>
+                      <option value="heart">Corazón Romántico</option>
+                      <option value="champagne">Copas de Brindis</option>
+                      <option value="ticket">Ticket de Acceso</option>
+                      <option value="baby">Huella de Bebé (Bautizo)</option>
+                      <option value="music">Nota Musical (Fiesta / Playlist)</option>
+                      <option value="location">Pin de Ubicación</option>
+                      <option value="wifi">Conexión Wi-Fi</option>
+                    </select>
+                  </label>
+                </div>
 
-              <!-- Logo o Emblema Central -->
-              <div class="qr-inspector-group">
-                <label>Emblema o logo central
-                  <select [ngModel]="layer.style?.qrCenterLogo || 'none'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogo', $event)">
-                    <option value="none">Sin emblema central</option>
-                    <option value="crown">👑 Corona Real VIP</option>
-                    <option value="rings">💍 Anillos de Boda</option>
-                    <option value="heart">❤️ Corazón Romántico</option>
-                    <option value="champagne">🥂 Copas de Brindis</option>
-                    <option value="ticket">🎟️ Ticket de Acceso</option>
-                    <option value="baby">👶 Huella de Bebé (Bautizo)</option>
-                    <option value="music">🎵 Nota Musical (Fiesta / Playlist)</option>
-                    <option value="location">📍 Pin de Ubicación</option>
-                    <option value="wifi">🛜 Conexión Wi-Fi</option>
-                    <option value="monogram">🔤 Monograma / Iniciales</option>
-                    <option value="custom">🖼️ Logo personalizado (URL)</option>
-                  </select>
-                </label>
-              </div>
+                <!-- Subida directa de imagen al centro del QR -->
+                <div class="qr-logo-upload-box">
+                  <input #qrLogoFileInput type="file" accept="image/*" style="display: none;"
+                    (change)="uploadQrCenterLogo(layer, $event)" />
 
-              <!-- Monograma si aplica -->
-              <div *ngIf="layer.style?.qrCenterLogo === 'monogram'" class="qr-inspector-group">
-                <label>Texto del monograma (1-3 letras)
-                  <input type="text" maxlength="4" [ngModel]="layer.style?.qrCenterLogoText ?? 'VIP'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoText', $event)" placeholder="Ej. VIP o A&C">
-                </label>
-              </div>
+                  <div class="qr-logo-upload-row">
+                    <div class="qr-logo-thumb" *ngIf="layer.style?.qrCenterLogo === 'custom' && layer.style?.qrCenterLogoUrl">
+                      <img [src]="layer.style?.qrCenterLogoUrl" alt="Logo del QR" />
+                    </div>
+                    <button type="button" class="qr-upload-btn" [disabled]="uploadingQrLogo"
+                      (click)="qrLogoFileInput.click()">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <span>{{ uploadingQrLogo ? 'Subiendo...' : (layer.style?.qrCenterLogo === 'custom' && layer.style?.qrCenterLogoUrl ? 'Cambiar imagen' : 'Subir imagen al centro') }}</span>
+                    </button>
+                    <button *ngIf="layer.style?.qrCenterLogo === 'custom' && layer.style?.qrCenterLogoUrl"
+                      type="button" class="qr-clear-logo-btn" (click)="clearQrCenterLogo(layer)" title="Quitar imagen">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
 
-              <!-- Logo custom url si aplica -->
-              <div *ngIf="layer.style?.qrCenterLogo === 'custom'" class="qr-inspector-group">
-                <label>URL de imagen del logo
-                  <input type="url" [ngModel]="layer.style?.qrCenterLogoUrl || ''"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoUrl', $event)" placeholder="https://...">
-                </label>
+                <!-- Monograma si aplica -->
+                <div *ngIf="layer.style?.qrCenterLogo === 'monogram'" class="qr-inspector-group" style="margin-top: 10px; margin-bottom: 0;">
+                  <label>Texto del monograma (1-4 letras)
+                    <input type="text" maxlength="4" [ngModel]="layer.style?.qrCenterLogoText ?? 'VIP'"
+                      (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoText', $event)" placeholder="Ej. VIP o A&C">
+                  </label>
+                </div>
+
+                <!-- Logo custom url opcional -->
+                <div *ngIf="layer.style?.qrCenterLogo === 'custom'" class="qr-inspector-group" style="margin-top: 10px; margin-bottom: 0;">
+                  <label>O pega una URL de imagen
+                    <input type="url" [ngModel]="layer.style?.qrCenterLogoUrl || ''"
+                      (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoUrl', $event)" placeholder="https://...">
+                  </label>
+                </div>
               </div>
 
               <!-- Paleta de colores -->
-              <div class="qr-color-palette-grid">
-                <label>Color QR
-                  <input type="color" [ngModel]="layer.style?.qrColor || '#1c1917'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrColor', $event)">
-                </label>
-                <label>Fondo QR
-                  <input type="color" [ngModel]="layer.style?.qrBgColor || '#ffffff'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrBgColor', $event)">
-                </label>
-                <label *ngIf="layer.style?.qrFrameStyle && layer.style?.qrFrameStyle !== 'none'">Marco / Banner
-                  <input type="color" [ngModel]="layer.style?.qrFrameColor || '#b8860b'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameColor', $event)">
-                </label>
-                <label
-                  *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'">Texto
-                  Banner
-                  <input type="color" [ngModel]="layer.style?.qrFrameTextColor || '#ffffff'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrFrameTextColor', $event)">
-                </label>
-                <label *ngIf="layer.style?.qrCenterLogo && layer.style?.qrCenterLogo !== 'none'">Fondo Emblema
-                  <input type="color" [ngModel]="layer.style?.qrCenterLogoBg || '#ffffff'"
-                    (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoBg', $event)">
-                </label>
+              <div class="qr-subcard" style="margin-bottom: 0;">
+                <span class="qr-field-title">Paleta de Colores</span>
+                <div class="qr-color-palette-grid">
+                  <label>
+                    <span>Color QR</span>
+                    <div class="qr-color-input-wrap">
+                      <input type="color" [ngModel]="layer.style?.qrColor || '#1c1917'"
+                        (ngModelChange)="setQrStyleProp(layer, 'qrColor', $event)">
+                      <code>{{ layer.style?.qrColor || '#1c1917' }}</code>
+                    </div>
+                  </label>
+                  <label>
+                    <span>Fondo QR</span>
+                    <div class="qr-color-input-wrap">
+                      <input type="color" [ngModel]="layer.style?.qrBgColor || '#ffffff'"
+                        (ngModelChange)="setQrStyleProp(layer, 'qrBgColor', $event)">
+                      <code>{{ layer.style?.qrBgColor || '#ffffff' }}</code>
+                    </div>
+                  </label>
+                  <label *ngIf="layer.style?.qrFrameStyle && layer.style?.qrFrameStyle !== 'none'">
+                    <span>Marco / Banner</span>
+                    <div class="qr-color-input-wrap">
+                      <input type="color" [ngModel]="layer.style?.qrFrameColor || '#b8860b'"
+                        (ngModelChange)="setQrStyleProp(layer, 'qrFrameColor', $event)">
+                      <code>{{ layer.style?.qrFrameColor || '#b8860b' }}</code>
+                    </div>
+                  </label>
+                  <label *ngIf="layer.style?.qrFrameStyle === 'banner-bottom' || layer.style?.qrFrameStyle === 'banner-top'">
+                    <span>Texto Banner</span>
+                    <div class="qr-color-input-wrap">
+                      <input type="color" [ngModel]="layer.style?.qrFrameTextColor || '#ffffff'"
+                        (ngModelChange)="setQrStyleProp(layer, 'qrFrameTextColor', $event)">
+                      <code>{{ layer.style?.qrFrameTextColor || '#ffffff' }}</code>
+                    </div>
+                  </label>
+                  <label *ngIf="layer.style?.qrCenterLogo && layer.style?.qrCenterLogo !== 'none'">
+                    <span>Fondo Emblema</span>
+                    <div class="qr-color-input-wrap">
+                      <input type="color" [ngModel]="layer.style?.qrCenterLogoBg || '#ffffff'"
+                        (ngModelChange)="setQrStyleProp(layer, 'qrCenterLogoBg', $event)">
+                      <code>{{ layer.style?.qrCenterLogoBg || '#ffffff' }}</code>
+                    </div>
+                  </label>
+                </div>
               </div>
             </section>
 
