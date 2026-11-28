@@ -2428,6 +2428,15 @@
                 <lucide-icon name="sparkles" [strokeWidth]="1.8"></lucide-icon>
                 <span>Explorar Plantillas (4 Sets)</span>
               </button>
+              <input #passFromImageInput type="file" accept="image/*" style="display: none;" (change)="createPassFromImage($event)" />
+              <button type="button" class="btn-open-styles-catalog"
+                style="margin-top: 6px; background: #ffffff; color: #241d17; border: 1px solid var(--nw-border, #eadecc);"
+                [disabled]="uploadingPassImage"
+                (click)="passFromImageInput.click()"
+                title="Sube tu propio diseño o imagen y coloca el código QR y datos dinámicos encima">
+                <lucide-icon name="image" [strokeWidth]="1.8"></lucide-icon>
+                <span>{{ uploadingPassImage ? 'Cargando imagen...' : 'Crear desde imagen' }}</span>
+              </button>
             </div>
             <div
               style="background: var(--nw-surface-2, #f5f1ea); border-radius: 12px; padding: 12px; border: 1px solid var(--nw-border, #eadecc);">
