@@ -1146,6 +1146,16 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.floorsList.find(f => f.id === floorId)?.name || `Nivel ${floorId}`;
   }
 
+  private encodeBase64Url(obj: unknown): string {
+    const json = JSON.stringify(obj);
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
   getTableQrTargetUrl(table: EventTableModel): string {
     const origin =
       typeof window !== 'undefined' &&
@@ -1153,10 +1163,28 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
         window.location.protocol.startsWith('http')
         ? window.location.origin
         : 'https://velisse.app';
-    if (this.invitationSlug) {
-      return `${origin}/new/i/${encodeURIComponent(this.invitationSlug)}?table=${encodeURIComponent(table.name)}`;
-    }
-    return `${origin}/?event=${encodeURIComponent(this.event?.title || 'Evento')}&table=${encodeURIComponent(table.name)}`;
+    const payload = {
+      e: this.event?.title || 'Evento Especial',
+      dt: this.event?.date ? this.formatDate(this.event.date) : '',
+      v: this.event?.venue?.name || '',
+      f: this.getTableFloorName(table),
+      t: table.name,
+      c: table.capacity,
+      o: table.occupied || 0,
+      s: this.invitationSlug || '',
+      g: (table.guests || []).slice(0, 24).map((g) => ({
+        n: g.name,
+        s: g.seats || 1,
+        ...(g.seatLabel ? { st: g.seatLabel } : {}),
+        ...(g.group ? { gr: g.group } : {}),
+        ...(g.checkedIn !== undefined ? { ci: g.checkedIn } : {})
+      }))
+    };
+    const encoded = this.encodeBase64Url(payload);
+    const tid = this.getTableId(table);
+    const eid = this.eventId;
+    const extra = eid && tid ? `&eid=${encodeURIComponent(eid)}&tid=${encodeURIComponent(tid)}` : '';
+    return `${origin}/new/mesa?d=${encoded}${extra}`;
   }
 
   getTableQrImageUrl(table: EventTableModel, size = 320): string {
@@ -1233,7 +1261,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
     // Hint text
     ctx.fillStyle = '#475569';
     ctx.font = '600 20px Inter, Arial, sans-serif';
-    ctx.fillText('Escanea el código QR para abrir tu invitación', W / 2, 695);
+    ctx.fillText('Escanea el QR para ver los invitados de esta mesa', W / 2, 695);
 
     // Guests preview (up to 6 names)
     const assigned = (table.guests || []).map(g => g.name).filter(Boolean);
@@ -1367,7 +1395,7 @@ export class SeatingChartComponent implements OnInit, AfterViewInit, OnDestroy {
           <h2 class="qr-table-name">${t.name}</h2>
           <div class="qr-meta">${this.getTableFloorName(t)} · ${t.occupied || 0}/${t.capacity} lugares</div>
           <div class="qr-box"><img src="${qrUrl}" alt="QR ${t.name}" /></div>
-          <div class="qr-hint">Escanea para abrir la invitación</div>
+          <div class="qr-hint">Escanea para ver los invitados de esta mesa</div>
           ${guestsHtml}
         </article>
       `;

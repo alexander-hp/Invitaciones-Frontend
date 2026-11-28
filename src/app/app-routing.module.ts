@@ -18,6 +18,7 @@ import { NewDashboardComponent } from './features/new-dashboard/new-dashboard.co
 import { NewEventsComponent } from './features/new-events/new-events.component';
 import { NewEventDetailComponent } from './features/new-event-detail/new-event-detail.component';
 import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
+import { TableQrViewComponent } from './features/table-qr-view/table-qr-view.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
 import { PublicInvitationComponent } from './features/public-invitation/public-invitation.component';
@@ -75,6 +76,7 @@ const routes: Routes = [
   { path: 'new/events', component: NewEventsComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id', component: NewEventDetailComponent, canActivate: [AuthGuard] },
   { path: 'new/events/:id/seating', component: SeatingChartComponent, canActivate: [AuthGuard] },
+  { path: 'new/mesa', component: TableQrViewComponent },
   { path: 'new/contact', component: NewContactComponent, canActivate: [AuthGuard] },
   { path: 'new/plan', component: NewPlanComponent, canActivate: [AuthGuard] },
   { path: 'new/template-management', component: NewCustomTemplatesComponent, canActivate: [AdminGuard] },

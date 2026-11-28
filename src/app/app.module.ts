@@ -39,6 +39,7 @@ import { EventIntegrationTabComponent } from './features/new-event-detail/tabs/i
 import { EventLogsTabComponent } from './features/new-event-detail/tabs/logs/event-logs-tab.component';
 
 import { SeatingChartComponent } from './features/seating-chart/seating-chart.component';
+import { TableQrViewComponent } from './features/table-qr-view/table-qr-view.component';
 import { PasswordResetConfirmComponent } from './features/password-reset-confirm/password-reset-confirm.component';
 import { PasswordResetComponent } from './features/password-reset/password-reset.component';
 import { NewPasswordResetComponent } from './features/new-password-reset/new-password-reset.component';
@@ -170,6 +171,7 @@ import { environment } from '../environments/environment';
     EventIntegrationTabComponent,
     EventLogsTabComponent,
     SeatingChartComponent,
+    TableQrViewComponent,
     PasswordResetConfirmComponent,
     PasswordResetComponent,
     NewPasswordResetComponent,
